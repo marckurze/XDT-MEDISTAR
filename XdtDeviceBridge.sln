@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XdtDeviceBridge.App", "XdtDeviceBridge.App/XdtDeviceBridge.App.csproj", "{5B09A991-D3D5-4D66-9E2E-CCAAE7E484E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XdtDeviceBridge.Core", "XdtDeviceBridge.Core/XdtDeviceBridge.Core.csproj", "{4A966E5A-C7A9-4F6E-8A02-C3C050D35F4A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XdtDeviceBridge.Infrastructure", "XdtDeviceBridge.Infrastructure/XdtDeviceBridge.Infrastructure.csproj", "{F23ECA88-C3F8-4C3F-867D-A638CB355EA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XdtDeviceBridge.Tests", "XdtDeviceBridge.Tests/XdtDeviceBridge.Tests.csproj", "{DFA7D7DC-2573-43D2-885A-AEF2A4A84D83}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B09A991-D3D5-4D66-9E2E-CCAAE7E484E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B09A991-D3D5-4D66-9E2E-CCAAE7E484E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B09A991-D3D5-4D66-9E2E-CCAAE7E484E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B09A991-D3D5-4D66-9E2E-CCAAE7E484E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A966E5A-C7A9-4F6E-8A02-C3C050D35F4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A966E5A-C7A9-4F6E-8A02-C3C050D35F4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A966E5A-C7A9-4F6E-8A02-C3C050D35F4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A966E5A-C7A9-4F6E-8A02-C3C050D35F4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F23ECA88-C3F8-4C3F-867D-A638CB355EA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F23ECA88-C3F8-4C3F-867D-A638CB355EA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F23ECA88-C3F8-4C3F-867D-A638CB355EA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F23ECA88-C3F8-4C3F-867D-A638CB355EA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFA7D7DC-2573-43D2-885A-AEF2A4A84D83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFA7D7DC-2573-43D2-885A-AEF2A4A84D83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFA7D7DC-2573-43D2-885A-AEF2A4A84D83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFA7D7DC-2573-43D2-885A-AEF2A4A84D83}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

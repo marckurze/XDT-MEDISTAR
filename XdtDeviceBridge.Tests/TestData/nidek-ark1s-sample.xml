@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Root>
+  <Patient>
+    <Id>PAT-100</Id>
+    <Name>Max Mustermann</Name>
+  </Patient>
+  <R>
+    <AR>
+      <ARList No="1">
+        <Sphere>-1.00</Sphere>
+        <Cylinder>-0.50</Cylinder>
+        <Axis>091</Axis>
+      </ARList>
+      <ARMedian>
+        <Sphere>-1.25</Sphere>
+        <Cylinder>-0.50</Cylinder>
+        <Axis>090</Axis>
+        <SE>-1.50</SE>
+      </ARMedian>
+    </AR>
+  </R>
+  <L>
+    <AR>
+      <ARMedian>
+        <Sphere>-1.00</Sphere>
+        <Cylinder>-0.25</Cylinder>
+        <Axis>085</Axis>
+        <SE>-1.12</SE>
+      </ARMedian>
+    </AR>
+  </L>
+  <PD>
+    <PDList>
+      <FarPD>62.0</FarPD>
+      <NearPD>59.0</NearPD>
+    </PDList>
+  </PD>
+</Root>
