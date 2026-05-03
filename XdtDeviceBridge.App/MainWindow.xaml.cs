@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
+    private readonly XdtExportBuilder _xdtExportBuilder = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -70,6 +71,7 @@ public partial class MainWindow : Window
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
+            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
@@ -83,6 +85,7 @@ public partial class MainWindow : Window
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
+            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             AppendProfileMessage("Keine Exportprofile geladen. Exportregeln können nicht angezeigt werden.");
             return;
         }
@@ -107,6 +110,7 @@ public partial class MainWindow : Window
         {
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
+            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             return;
         }
 
@@ -118,11 +122,13 @@ public partial class MainWindow : Window
         ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {rules.Count} Exportregeln";
         ExportRulesGrid.SelectedIndex = rules.Count > 0 ? 0 : -1;
         ShowExportRulePreviewForSelectedRule();
+        ShowFullExportPreviewForSelectedProfile();
     }
 
     private void ExportRulesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         ShowExportRulePreviewForSelectedRule();
+        ShowFullExportPreviewForSelectedProfile();
     }
 
     private void ShowExportRulePreviewForSelectedRule()
@@ -154,15 +160,7 @@ public partial class MainWindow : Window
 
         var result = _lastPipelineResult;
         var patient = result.Patient ?? CreateEmptyPatientData();
-        var previewSourcePath = GetPreviewSourcePath(rule, result);
-        var previewRule = new MappingRule(
-            Id: $"preview-{rule.Id}",
-            TargetFieldCode: string.IsNullOrWhiteSpace(rule.TargetFieldCode) ? "PREVIEW" : rule.TargetFieldCode,
-            TargetName: rule.TargetName,
-            SourcePath: previewSourcePath,
-            OutputTemplate: rule.OutputTemplate,
-            SortOrder: 1,
-            IsEnabled: true);
+        var previewRule = CreatePreviewMappingRule(rule, result);
 
         var mappingResult = _mappingEngine.Map(
             patient,
@@ -173,7 +171,7 @@ public partial class MainWindow : Window
         var renderedValue = mappingResult.Records.FirstOrDefault()?.Value;
         builder.AppendLine(renderedValue ?? string.Empty);
 
-        var unresolvedPlaceholders = GetUnresolvedPlaceholders(rule.OutputTemplate, previewSourcePath, patient, result.Measurements);
+        var unresolvedPlaceholders = GetUnresolvedPlaceholders(rule.OutputTemplate, previewRule.SourcePath, patient, result.Measurements);
         if (mappingResult.HasErrors || unresolvedPlaceholders.Count > 0)
         {
             builder.AppendLine();
@@ -185,6 +183,93 @@ public partial class MainWindow : Window
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private void ShowFullExportPreviewForSelectedProfile()
+    {
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
+            return;
+        }
+
+        FullExportPreviewTextBox.Text = FormatFullExportPreview(exportProfile);
+    }
+
+    private string FormatFullExportPreview(ExportProfileDefinition exportProfile)
+    {
+        if (_lastPipelineResult is null)
+        {
+            return "Noch keine Beispielwerte geladen. Bitte zuerst im Tab Verarbeitung eine AIS-GDT-Datei und eine Gerätedatei verarbeiten.";
+        }
+
+        var result = _lastPipelineResult;
+        var patient = result.Patient ?? CreateEmptyPatientData();
+        var mappingRules = exportProfile.Rules
+            .Select(rule => CreatePreviewMappingRule(rule, result))
+            .ToList();
+        var mappingResult = _mappingEngine.Map(patient, result.Measurements, mappingRules);
+        var exportResult = _xdtExportBuilder.Build(mappingResult.Records);
+        var unresolvedPlaceholders = exportProfile.Rules
+            .SelectMany(rule =>
+            {
+                var mappingRule = CreatePreviewMappingRule(rule, result);
+                return GetUnresolvedPlaceholders(rule.OutputTemplate, mappingRule.SourcePath, patient, result.Measurements)
+                    .Select(placeholder => $"{rule.TargetFieldCode} {rule.TargetName}: {placeholder}");
+            })
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var builder = new StringBuilder();
+        builder.AppendLine($"Exportprofil: {exportProfile.Metadata.Name}");
+
+        if (mappingResult.Issues.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Mapping-Fehler:");
+            foreach (var issue in mappingResult.Issues)
+            {
+                builder.AppendLine($"- {issue.Severity}: {issue.Message} SourcePath={issue.SourcePath}, TargetFieldCode={issue.TargetFieldCode}");
+            }
+        }
+
+        if (unresolvedPlaceholders.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Ein oder mehrere Platzhalter konnten nicht aufgelöst werden:");
+            foreach (var placeholder in unresolvedPlaceholders)
+            {
+                builder.AppendLine($"- {placeholder}");
+            }
+        }
+
+        if (exportResult.Issues.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("ExportBuilder-Fehler:");
+            foreach (var issue in exportResult.Issues)
+            {
+                builder.AppendLine($"- {issue.Severity}: {issue.Message} FieldCode={issue.FieldCode}, Value={issue.Value}");
+            }
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("ExportContent:");
+        builder.Append(exportResult.Content.Length == 0 ? "(leer)" : exportResult.Content);
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static MappingRule CreatePreviewMappingRule(ExportRuleDefinition rule, ProcessingPipelineResult result)
+    {
+        return new MappingRule(
+            Id: $"preview-{rule.Id}",
+            TargetFieldCode: string.IsNullOrWhiteSpace(rule.TargetFieldCode) ? "PREVIEW" : rule.TargetFieldCode,
+            TargetName: rule.TargetName,
+            SourcePath: GetPreviewSourcePath(rule, result),
+            OutputTemplate: rule.OutputTemplate,
+            SortOrder: rule.SortOrder,
+            IsEnabled: rule.IsEnabled);
     }
 
     private static string GetPreviewSourcePath(ExportRuleDefinition rule, ProcessingPipelineResult result)
@@ -748,6 +833,8 @@ public partial class MainWindow : Window
         MeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
         ExportPreviewTextBox.Text = _lastPipelineResult.ExportContent;
         AvailablePlaceholdersTextBox.Text = FormatAvailablePlaceholders(_lastPipelineResult);
+        ShowExportRulePreviewForSelectedRule();
+        ShowFullExportPreviewForSelectedProfile();
 
         _plannedFileName = _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
         PlannedFileNameText.Text = $"Geplanter Dateiname: {_plannedFileName}";

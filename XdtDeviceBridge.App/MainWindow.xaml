@@ -131,6 +131,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <GroupBox Header="Profilübersicht" Grid.Row="0" Margin="0,0,0,8">
@@ -237,7 +238,19 @@
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Verfügbare Platzhalter" Grid.Row="4" Margin="0,0,0,8">
+                        <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="4" Margin="0,0,0,8">
+                            <TextBox x:Name="FullExportPreviewTextBox"
+                                     Margin="8"
+                                     MinHeight="260"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="NoWrap"
+                                     FontFamily="Consolas"
+                                     HorizontalScrollBarVisibility="Auto"
+                                     VerticalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+
+                        <GroupBox Header="Verfügbare Platzhalter" Grid.Row="5" Margin="0,0,0,8">
                             <TextBox x:Name="AvailablePlaceholdersTextBox"
                                      Margin="8"
                                      MinHeight="220"
@@ -247,7 +260,7 @@
                                      VerticalScrollBarVisibility="Auto"/>
                         </GroupBox>
 
-                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="5">
+                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="6">
                             <TextBox x:Name="ProfileMessagesTextBox"
                                      Margin="8"
                                      MinHeight="160"
