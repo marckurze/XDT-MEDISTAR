@@ -131,10 +131,10 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
 
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-horizontal");
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-horizontal-base");
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-vertical");
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-vertical-base");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal", "R/PrismX");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal-base", "R/PrismX/@base");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical", "R/PrismY");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical-base", "R/PrismY/@base");
         Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-horizontal");
         Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-horizontal-base");
         Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-vertical");
@@ -142,11 +142,39 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateNidekLm7Default_ShouldUseValidatedRightSourcePaths()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
+
+        AssertRequiredMeasurement(profile, "lm7-r-sphere", "R/Sphare");
+        AssertRequiredMeasurement(profile, "lm7-r-cylinder", "R/Cylinder");
+        AssertRequiredMeasurement(profile, "lm7-r-axis", "R/Axis");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal", "R/PrismX");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal-base", "R/PrismX/@base");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical", "R/PrismY");
+        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical-base", "R/PrismY/@base");
+    }
+
+    [Fact]
     public void CreateNidekLm7Default_ShouldContainPdMeasurement()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
 
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-pd" && m.SourcePath == "PD/Distance");
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-pd", "PD/Distance");
+    }
+
+    [Fact]
+    public void CreateNidekLm7Default_ShouldMarkLeftValuesAsUnvalidatedAndOptional()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
+
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-l-sphere", "L/Sphare");
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-l-cylinder", "L/Cylinder");
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-l-axis", "L/Axis");
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-l-prism-horizontal", "L/PrismX");
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-l-prism-horizontal-base", "L/PrismX/@base");
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-l-prism-vertical", "L/PrismY");
+        AssertUnvalidatedOptionalMeasurement(profile, "lm7-l-prism-vertical-base", "L/PrismY/@base");
     }
 
     [Fact]
@@ -160,6 +188,15 @@ public sealed class DeviceProfileDefinitionTests
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);
+    }
+
+    private static void AssertUnvalidatedOptionalMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
+    {
+        Assert.Contains(profile.Measurements, m =>
+            m.Id == id
+            && m.SourcePath == sourcePath
+            && !m.IsRequired
+            && (m.Description ?? string.Empty).Contains("noch zu validieren", StringComparison.OrdinalIgnoreCase));
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)
