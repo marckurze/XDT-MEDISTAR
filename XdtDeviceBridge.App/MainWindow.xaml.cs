@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private readonly LicenseEvaluator _licenseEvaluator = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
+    private readonly MappingEngine _mappingEngine = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -68,6 +69,7 @@ public partial class MainWindow : Window
             ExportProfileComboBox.ItemsSource = null;
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
+            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
@@ -80,6 +82,7 @@ public partial class MainWindow : Window
             ExportProfileComboBox.ItemsSource = null;
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
+            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             AppendProfileMessage("Keine Exportprofile geladen. Exportregeln können nicht angezeigt werden.");
             return;
         }
@@ -113,6 +116,218 @@ public partial class MainWindow : Window
 
         ExportRulesGrid.ItemsSource = rules;
         ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {rules.Count} Exportregeln";
+        ExportRulesGrid.SelectedIndex = rules.Count > 0 ? 0 : -1;
+        ShowExportRulePreviewForSelectedRule();
+    }
+
+    private void ExportRulesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        ShowExportRulePreviewForSelectedRule();
+    }
+
+    private void ShowExportRulePreviewForSelectedRule()
+    {
+        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition rule)
+        {
+            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
+            return;
+        }
+
+        ExportRulePreviewTextBox.Text = FormatExportRulePreview(rule);
+    }
+
+    private string FormatExportRulePreview(ExportRuleDefinition rule)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"TargetFieldCode: {rule.TargetFieldCode}");
+        builder.AppendLine($"TargetName: {rule.TargetName}");
+        builder.AppendLine("OutputTemplate:");
+        builder.AppendLine(rule.OutputTemplate);
+        builder.AppendLine();
+
+        if (_lastPipelineResult is null)
+        {
+            builder.AppendLine("Vorschau:");
+            builder.AppendLine("Noch keine Beispielwerte geladen.");
+            return builder.ToString().TrimEnd();
+        }
+
+        var result = _lastPipelineResult;
+        var patient = result.Patient ?? CreateEmptyPatientData();
+        var previewSourcePath = GetPreviewSourcePath(rule, result);
+        var previewRule = new MappingRule(
+            Id: $"preview-{rule.Id}",
+            TargetFieldCode: string.IsNullOrWhiteSpace(rule.TargetFieldCode) ? "PREVIEW" : rule.TargetFieldCode,
+            TargetName: rule.TargetName,
+            SourcePath: previewSourcePath,
+            OutputTemplate: rule.OutputTemplate,
+            SortOrder: 1,
+            IsEnabled: true);
+
+        var mappingResult = _mappingEngine.Map(
+            patient,
+            result.Measurements,
+            new[] { previewRule });
+
+        builder.AppendLine("Gerenderte Vorschau:");
+        var renderedValue = mappingResult.Records.FirstOrDefault()?.Value;
+        builder.AppendLine(renderedValue ?? string.Empty);
+
+        var unresolvedPlaceholders = GetUnresolvedPlaceholders(rule.OutputTemplate, previewSourcePath, patient, result.Measurements);
+        if (mappingResult.HasErrors || unresolvedPlaceholders.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Ein oder mehrere Platzhalter konnten nicht aufgelöst werden.");
+            foreach (var placeholder in unresolvedPlaceholders)
+            {
+                builder.AppendLine($"- {placeholder}");
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string GetPreviewSourcePath(ExportRuleDefinition rule, ProcessingPipelineResult result)
+    {
+        if (!string.IsNullOrWhiteSpace(rule.SourcePath))
+        {
+            return rule.SourcePath;
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.Patient?.PatientNumber))
+        {
+            return "AIS.PatientNumber";
+        }
+
+        var firstMeasurementPath = result.Measurements.FirstOrDefault(measurement => !string.IsNullOrWhiteSpace(measurement.SourcePath))?.SourcePath;
+        return firstMeasurementPath is null ? "AIS.PatientNumber" : $"Device.{firstMeasurementPath}";
+    }
+
+    private static PatientData CreateEmptyPatientData()
+    {
+        return new PatientData(
+            PatientNumber: null,
+            LastName: null,
+            FirstName: null,
+            BirthDate: null,
+            PostalCodeCity: null,
+            Street: null,
+            GenderCode: null,
+            SourceSystem: null,
+            TargetSystem: null,
+            GdtVersion: null,
+            ExaminationType: null);
+    }
+
+    private static IReadOnlyList<string> GetUnresolvedPlaceholders(
+        string template,
+        string previewSourcePath,
+        PatientData patient,
+        IReadOnlyList<MeasurementValue> measurements)
+    {
+        var unresolved = new List<string>();
+        var measurementPaths = measurements
+            .Select(measurement => measurement.SourcePath)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var token in ExtractPlaceholderTokens(template))
+        {
+            var sourceToken = SplitPreviewFormatToken(token);
+            if (string.Equals(sourceToken, "value", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!CanResolvePreviewSource(previewSourcePath, patient, measurementPaths))
+                {
+                    unresolved.Add(token);
+                }
+
+                continue;
+            }
+
+            if (sourceToken.StartsWith("patient.", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(GetPatientPreviewValue($"AIS.{sourceToken[8..]}", patient)))
+                {
+                    unresolved.Add(token);
+                }
+
+                continue;
+            }
+
+            if (sourceToken.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!measurementPaths.Contains(sourceToken[7..]))
+                {
+                    unresolved.Add(token);
+                }
+
+                continue;
+            }
+
+            unresolved.Add(token);
+        }
+
+        return unresolved;
+    }
+
+    private static IEnumerable<string> ExtractPlaceholderTokens(string template)
+    {
+        var index = 0;
+
+        while (index < template.Length)
+        {
+            var openIndex = template.IndexOf('{', index);
+            if (openIndex < 0)
+            {
+                break;
+            }
+
+            var closeIndex = template.IndexOf('}', openIndex + 1);
+            if (closeIndex < 0)
+            {
+                break;
+            }
+
+            yield return template[(openIndex + 1)..closeIndex];
+            index = closeIndex + 1;
+        }
+    }
+
+    private static string SplitPreviewFormatToken(string token)
+    {
+        var separatorIndex = token.LastIndexOf(':');
+        return separatorIndex < 0 ? token : token[..separatorIndex];
+    }
+
+    private static bool CanResolvePreviewSource(
+        string sourcePath,
+        PatientData patient,
+        HashSet<string> measurementPaths)
+    {
+        if (sourcePath.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
+        {
+            return measurementPaths.Contains(sourcePath[7..]);
+        }
+
+        return !string.IsNullOrWhiteSpace(GetPatientPreviewValue(sourcePath, patient));
+    }
+
+    private static string? GetPatientPreviewValue(string sourcePath, PatientData patient)
+    {
+        return sourcePath switch
+        {
+            "AIS.PatientNumber" => patient.PatientNumber,
+            "AIS.LastName" => patient.LastName,
+            "AIS.FirstName" => patient.FirstName,
+            "AIS.BirthDate" => patient.BirthDate,
+            "AIS.Street" => patient.Street,
+            "AIS.PostalCodeCity" => patient.PostalCodeCity,
+            "AIS.GenderCode" => patient.GenderCode,
+            "AIS.SourceSystem" => patient.SourceSystem,
+            "AIS.TargetSystem" => patient.TargetSystem,
+            "AIS.GdtVersion" => patient.GdtVersion,
+            "AIS.ExaminationType" => patient.ExaminationType,
+            _ => null
+        };
     }
 
     private static string FormatProfileNames(ProfileCatalog catalog)

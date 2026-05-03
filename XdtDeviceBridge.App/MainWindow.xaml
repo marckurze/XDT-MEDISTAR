@@ -183,6 +183,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -211,7 +212,8 @@
                                           CanUserDeleteRows="False"
                                           MinHeight="260"
                                           HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto">
+                                          VerticalScrollBarVisibility="Auto"
+                                          SelectionChanged="ExportRulesGrid_SelectionChanged">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="SortOrder" Binding="{Binding SortOrder}" Width="80"/>
                                         <DataGridTextColumn Header="TargetFieldCode" Binding="{Binding TargetFieldCode}" Width="120"/>
@@ -223,6 +225,15 @@
                                         <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="260"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                <GroupBox Header="Regelvorschau" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                    <TextBox x:Name="ExportRulePreviewTextBox"
+                                             Margin="8"
+                                             MinHeight="180"
+                                             IsReadOnly="True"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             VerticalScrollBarVisibility="Auto"/>
+                                </GroupBox>
                             </Grid>
                         </GroupBox>
 
