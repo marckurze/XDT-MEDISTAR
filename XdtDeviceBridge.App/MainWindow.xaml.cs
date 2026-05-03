@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        DraftRuleTypeComboBox.ItemsSource = Enum.GetValues<ExportRuleType>();
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -72,6 +73,7 @@ public partial class MainWindow : Window
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
+            ClearDraftRuleEditor();
             AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
@@ -86,6 +88,7 @@ public partial class MainWindow : Window
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
+            ClearDraftRuleEditor();
             AppendProfileMessage("Keine Exportprofile geladen. Exportregeln können nicht angezeigt werden.");
             return;
         }
@@ -111,6 +114,7 @@ public partial class MainWindow : Window
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
+            ClearDraftRuleEditor();
             return;
         }
 
@@ -127,6 +131,7 @@ public partial class MainWindow : Window
 
     private void ExportRulesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
+        LoadDraftFromSelectedRule();
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
     }
@@ -172,6 +177,16 @@ public partial class MainWindow : Window
         builder.AppendLine(renderedValue ?? string.Empty);
 
         var unresolvedPlaceholders = GetUnresolvedPlaceholders(rule.OutputTemplate, previewRule.SourcePath, patient, result.Measurements);
+        if (mappingResult.Issues.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Mapping-Hinweise:");
+            foreach (var issue in mappingResult.Issues)
+            {
+                builder.AppendLine($"- {issue.Severity}: {issue.Message} SourcePath={issue.SourcePath}, TargetFieldCode={issue.TargetFieldCode}");
+            }
+        }
+
         if (mappingResult.HasErrors || unresolvedPlaceholders.Count > 0)
         {
             builder.AppendLine();
@@ -196,7 +211,10 @@ public partial class MainWindow : Window
         FullExportPreviewTextBox.Text = FormatFullExportPreview(exportProfile);
     }
 
-    private string FormatFullExportPreview(ExportProfileDefinition exportProfile)
+    private string FormatFullExportPreview(
+        ExportProfileDefinition exportProfile,
+        ExportRuleDefinition? draftRule = null,
+        string? replaceRuleId = null)
     {
         if (_lastPipelineResult is null)
         {
@@ -205,12 +223,13 @@ public partial class MainWindow : Window
 
         var result = _lastPipelineResult;
         var patient = result.Patient ?? CreateEmptyPatientData();
-        var mappingRules = exportProfile.Rules
+        var effectiveRules = GetEffectiveExportRules(exportProfile, draftRule, replaceRuleId);
+        var mappingRules = effectiveRules
             .Select(rule => CreatePreviewMappingRule(rule, result))
             .ToList();
         var mappingResult = _mappingEngine.Map(patient, result.Measurements, mappingRules);
         var exportResult = _xdtExportBuilder.Build(mappingResult.Records);
-        var unresolvedPlaceholders = exportProfile.Rules
+        var unresolvedPlaceholders = effectiveRules
             .SelectMany(rule =>
             {
                 var mappingRule = CreatePreviewMappingRule(rule, result);
@@ -222,6 +241,10 @@ public partial class MainWindow : Window
 
         var builder = new StringBuilder();
         builder.AppendLine($"Exportprofil: {exportProfile.Metadata.Name}");
+        if (draftRule is not null)
+        {
+            builder.AppendLine("Entwurfsregel aktiv: Diese Vorschau ist temporär und wurde nicht gespeichert.");
+        }
 
         if (mappingResult.Issues.Count > 0)
         {
@@ -258,6 +281,124 @@ public partial class MainWindow : Window
         builder.Append(exportResult.Content.Length == 0 ? "(leer)" : exportResult.Content);
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> GetEffectiveExportRules(
+        ExportProfileDefinition exportProfile,
+        ExportRuleDefinition? draftRule,
+        string? replaceRuleId)
+    {
+        if (draftRule is null || string.IsNullOrWhiteSpace(replaceRuleId))
+        {
+            return exportProfile.Rules;
+        }
+
+        return exportProfile.Rules
+            .Select(rule => rule.Id == replaceRuleId ? draftRule : rule)
+            .ToList();
+    }
+
+    private void LoadDraftFromSelectedRule()
+    {
+        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition rule)
+        {
+            ClearDraftRuleEditor();
+            return;
+        }
+
+        DraftTargetFieldCodeTextBox.Text = rule.TargetFieldCode;
+        DraftTargetNameTextBox.Text = rule.TargetName;
+        DraftRuleTypeComboBox.SelectedItem = rule.RuleType;
+        DraftSourcePathTextBox.Text = rule.SourcePath ?? string.Empty;
+        DraftOutputTemplateTextBox.Text = rule.OutputTemplate;
+        DraftSortOrderTextBox.Text = rule.SortOrder.ToString();
+        DraftIsEnabledCheckBox.IsChecked = rule.IsEnabled;
+        DraftDescriptionTextBox.Text = rule.Description ?? string.Empty;
+    }
+
+    private void ClearDraftRuleEditor()
+    {
+        DraftTargetFieldCodeTextBox.Text = string.Empty;
+        DraftTargetNameTextBox.Text = string.Empty;
+        DraftRuleTypeComboBox.SelectedItem = ExportRuleType.Template;
+        DraftSourcePathTextBox.Text = string.Empty;
+        DraftOutputTemplateTextBox.Text = string.Empty;
+        DraftSortOrderTextBox.Text = string.Empty;
+        DraftIsEnabledCheckBox.IsChecked = false;
+        DraftDescriptionTextBox.Text = string.Empty;
+    }
+
+    private void UpdateDraftPreview_Click(object sender, RoutedEventArgs e)
+    {
+        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition selectedRule)
+        {
+            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
+            FullExportPreviewTextBox.Text = "Keine Exportregel ausgewählt.";
+            return;
+        }
+
+        if (!TryCreateDraftRule(selectedRule, out var draftRule, out var message))
+        {
+            ExportRulePreviewTextBox.Text = message;
+            FullExportPreviewTextBox.Text = message;
+            return;
+        }
+
+        ExportRulePreviewTextBox.Text = FormatExportRulePreview(draftRule);
+
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
+            return;
+        }
+
+        FullExportPreviewTextBox.Text = FormatFullExportPreview(exportProfile, draftRule, selectedRule.Id);
+    }
+
+    private void ResetDraft_Click(object sender, RoutedEventArgs e)
+    {
+        LoadDraftFromSelectedRule();
+        ShowExportRulePreviewForSelectedRule();
+        ShowFullExportPreviewForSelectedProfile();
+    }
+
+    private bool TryCreateDraftRule(
+        ExportRuleDefinition selectedRule,
+        out ExportRuleDefinition draftRule,
+        out string message)
+    {
+        draftRule = selectedRule;
+        message = string.Empty;
+
+        var targetFieldCode = DraftTargetFieldCodeTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(targetFieldCode))
+        {
+            message = "TargetFieldCode darf nicht leer sein. Entwurfsvorschau wurde nicht aktualisiert.";
+            return false;
+        }
+
+        if (!int.TryParse(DraftSortOrderTextBox.Text.Trim(), out var sortOrder))
+        {
+            message = "SortOrder muss eine ganze Zahl sein. Entwurfsvorschau wurde nicht aktualisiert.";
+            return false;
+        }
+
+        var ruleType = DraftRuleTypeComboBox.SelectedItem is ExportRuleType selectedRuleType
+            ? selectedRuleType
+            : selectedRule.RuleType;
+
+        draftRule = new ExportRuleDefinition(
+            Id: selectedRule.Id,
+            TargetFieldCode: targetFieldCode,
+            TargetName: DraftTargetNameTextBox.Text.Trim(),
+            RuleType: ruleType,
+            SourcePath: string.IsNullOrWhiteSpace(DraftSourcePathTextBox.Text) ? null : DraftSourcePathTextBox.Text.Trim(),
+            OutputTemplate: DraftOutputTemplateTextBox.Text,
+            SortOrder: sortOrder,
+            IsEnabled: DraftIsEnabledCheckBox.IsChecked == true,
+            Description: string.IsNullOrWhiteSpace(DraftDescriptionTextBox.Text) ? null : DraftDescriptionTextBox.Text.Trim());
+
+        return true;
     }
 
     private static MappingRule CreatePreviewMappingRule(ExportRuleDefinition rule, ProcessingPipelineResult result)

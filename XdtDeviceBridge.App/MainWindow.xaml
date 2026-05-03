@@ -132,6 +132,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <GroupBox Header="Profilübersicht" Grid.Row="0" Margin="0,0,0,8">
@@ -238,7 +239,62 @@
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="4" Margin="0,0,0,8">
+                        <GroupBox Header="Exportregel-Entwurf" Grid.Row="4" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Grid.ColumnSpan="4"
+                                           Text="Entwurfsmodus: Änderungen werden noch nicht gespeichert."
+                                           FontWeight="Bold"
+                                           Foreground="DarkRed"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="TargetFieldCode:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DraftTargetFieldCodeTextBox" Margin="0,0,16,8"/>
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="TargetName:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <TextBox Grid.Row="1" Grid.Column="3" x:Name="DraftTargetNameTextBox" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="RuleType:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <ComboBox Grid.Row="2" Grid.Column="1" x:Name="DraftRuleTypeComboBox" Margin="0,0,16,8"/>
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="SortOrder:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <TextBox Grid.Row="2" Grid.Column="3" x:Name="DraftSortOrderTextBox" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="SourcePath:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" x:Name="DraftSourcePathTextBox" Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="OutputTemplate:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="1"
+                                         Grid.ColumnSpan="3"
+                                         x:Name="DraftOutputTemplateTextBox"
+                                         MinHeight="80"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Margin="0,0,0,8"/>
+                                <CheckBox Grid.Row="5" Grid.Column="1" x:Name="DraftIsEnabledCheckBox" Content="IsEnabled" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Grid.Row="5" Grid.Column="2" Text="Description:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <DockPanel Grid.Row="5" Grid.Column="3">
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
+                                        <Button Content="Entwurfsvorschau aktualisieren" Width="210" Margin="0,0,8,0" Click="UpdateDraftPreview_Click"/>
+                                        <Button Content="Entwurf zurücksetzen" Width="160" Click="ResetDraft_Click"/>
+                                    </StackPanel>
+                                    <TextBox x:Name="DraftDescriptionTextBox"/>
+                                </DockPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="5" Margin="0,0,0,8">
                             <TextBox x:Name="FullExportPreviewTextBox"
                                      Margin="8"
                                      MinHeight="260"
@@ -250,7 +306,7 @@
                                      VerticalScrollBarVisibility="Auto"/>
                         </GroupBox>
 
-                        <GroupBox Header="Verfügbare Platzhalter" Grid.Row="5" Margin="0,0,0,8">
+                        <GroupBox Header="Verfügbare Platzhalter" Grid.Row="6" Margin="0,0,0,8">
                             <TextBox x:Name="AvailablePlaceholdersTextBox"
                                      Margin="8"
                                      MinHeight="220"
@@ -260,7 +316,7 @@
                                      VerticalScrollBarVisibility="Auto"/>
                         </GroupBox>
 
-                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="6">
+                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="7">
                             <TextBox x:Name="ProfileMessagesTextBox"
                                      Margin="8"
                                      MinHeight="160"
