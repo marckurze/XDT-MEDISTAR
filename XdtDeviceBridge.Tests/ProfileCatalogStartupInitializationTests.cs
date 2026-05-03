@@ -15,8 +15,8 @@ public sealed class ProfileCatalogStartupInitializationTests
         var catalog = catalogService.Load(paths);
 
         Assert.Single(catalog.AisProfiles);
-        Assert.Single(catalog.DeviceProfiles);
-        Assert.Single(catalog.ExportProfiles);
+        Assert.Equal(6, catalog.DeviceProfiles.Count);
+        Assert.Equal(6, catalog.ExportProfiles.Count);
         Assert.Single(catalog.InterfaceProfiles);
         Assert.Contains("XdtDeviceBridgeTests", paths.BaseFolder);
     }

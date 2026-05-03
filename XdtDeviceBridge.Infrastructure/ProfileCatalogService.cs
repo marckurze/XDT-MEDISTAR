@@ -62,10 +62,67 @@ public sealed class ProfileCatalogService
     {
         ArgumentNullException.ThrowIfNull(paths);
 
-        SaveDefaultIfMissing(GetAisFolder(paths), DefaultAisProfiles.CreateMedistarDefault(), _repository.SaveAisProfile);
-        SaveDefaultIfMissing(GetDevicesFolder(paths), DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(), _repository.SaveDeviceProfileDefinition);
-        SaveDefaultIfMissing(GetExportsFolder(paths), DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(), _repository.SaveExportProfileDefinition);
-        SaveDefaultIfMissing(GetInterfacesFolder(paths), DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(), _repository.SaveInterfaceProfileDefinition);
+        foreach (var profile in CreateDefaultAisProfiles())
+        {
+            SaveDefaultIfMissing(GetAisFolder(paths), profile, _repository.SaveAisProfile);
+        }
+
+        foreach (var profile in CreateDefaultDeviceProfiles())
+        {
+            SaveDefaultIfMissing(GetDevicesFolder(paths), profile, _repository.SaveDeviceProfileDefinition);
+        }
+
+        foreach (var profile in CreateDefaultExportProfiles())
+        {
+            SaveDefaultIfMissing(GetExportsFolder(paths), profile, _repository.SaveExportProfileDefinition);
+        }
+
+        foreach (var profile in CreateDefaultInterfaceProfiles())
+        {
+            SaveDefaultIfMissing(GetInterfacesFolder(paths), profile, _repository.SaveInterfaceProfileDefinition);
+        }
+    }
+
+    private static IReadOnlyList<AisProfile> CreateDefaultAisProfiles()
+    {
+        return new[]
+        {
+            DefaultAisProfiles.CreateMedistarDefault()
+        };
+    }
+
+    private static IReadOnlyList<DeviceProfileDefinition> CreateDefaultDeviceProfiles()
+    {
+        return new[]
+        {
+            DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
+            DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(),
+            DefaultDeviceProfileDefinitions.CreateTopconCl300Default(),
+            DefaultDeviceProfileDefinitions.CreateTopconKr800Default(),
+            DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault()
+        };
+    }
+
+    private static IReadOnlyList<ExportProfileDefinition> CreateDefaultExportProfiles()
+    {
+        return new[]
+        {
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault()
+        };
+    }
+
+    private static IReadOnlyList<InterfaceProfileDefinition> CreateDefaultInterfaceProfiles()
+    {
+        return new[]
+        {
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault()
+        };
     }
 
     private static IReadOnlyList<TProfile> LoadProfiles<TProfile>(

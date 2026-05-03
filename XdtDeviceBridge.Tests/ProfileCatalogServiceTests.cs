@@ -58,13 +58,48 @@ public sealed class ProfileCatalogServiceTests
         var catalog = _service.Load(paths);
 
         Assert.Single(catalog.AisProfiles);
-        Assert.Single(catalog.DeviceProfiles);
-        Assert.Single(catalog.ExportProfiles);
+        Assert.Equal(6, catalog.DeviceProfiles.Count);
+        Assert.Equal(6, catalog.ExportProfiles.Count);
         Assert.Single(catalog.InterfaceProfiles);
         Assert.Equal("ais-medistar-default", catalog.AisProfiles[0].Metadata.Id);
-        Assert.Equal("device-nidek-ark1s-default", catalog.DeviceProfiles[0].Metadata.Id);
-        Assert.Equal("export-medistar-nidek-ark1s-default", catalog.ExportProfiles[0].Metadata.Id);
+        AssertExpectedDeviceDefaults(catalog);
+        AssertExpectedExportDefaults(catalog);
         Assert.Equal("interface-medistar-nidek-ark1s-default", catalog.InterfaceProfiles[0].Metadata.Id);
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldCreateAllExpectedDeviceProfileDefinitions()
+    {
+        var paths = CreateAppDataPaths();
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        AssertExpectedDeviceDefaults(catalog);
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldCreateAllExpectedExportProfileDefinitions()
+    {
+        var paths = CreateAppDataPaths();
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        AssertExpectedExportDefaults(catalog);
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldKeepMedistarAisProfileAvailable()
+    {
+        var paths = CreateAppDataPaths();
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        Assert.Contains(catalog.AisProfiles, profile =>
+            profile.Metadata.Id == "ais-medistar-default"
+            && profile.Name == "MEDISTAR");
     }
 
     [Fact]
@@ -77,14 +112,34 @@ public sealed class ProfileCatalogServiceTests
         };
         _service.Save(paths, new ProfileCatalog(
             AisProfiles: new[] { customAisProfile },
-            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
-            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            DeviceProfiles: new[] { DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault() with { DeviceType = "Custom Tonometer/Pachymeter" } },
+            ExportProfiles: new[] { DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault() with { OutputEncoding = "Custom-Encoding" } },
             InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
 
         _service.EnsureDefaultProfiles(paths);
         var catalog = _service.Load(paths);
 
         Assert.Contains(catalog.AisProfiles, profile => profile.Metadata.Id == "ais-medistar-default" && profile.Name == "Custom MEDISTAR");
+        Assert.Contains(catalog.DeviceProfiles, profile => profile.Metadata.Id == "device-topcon-trk2p-default" && profile.DeviceType == "Custom Tonometer/Pachymeter");
+        Assert.Contains(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-trk2p-default" && profile.OutputEncoding == "Custom-Encoding");
+        Assert.Equal(6, catalog.DeviceProfiles.Count);
+        Assert.Equal(6, catalog.ExportProfiles.Count);
+    }
+
+    [Fact]
+    public void Load_ShouldReadAllExpectedProfilesAfterEnsureDefaultProfiles()
+    {
+        var paths = CreateAppDataPaths();
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        Assert.Single(catalog.AisProfiles);
+        Assert.Equal(6, catalog.DeviceProfiles.Count);
+        Assert.Equal(6, catalog.ExportProfiles.Count);
+        Assert.Single(catalog.InterfaceProfiles);
+        AssertExpectedDeviceDefaults(catalog);
+        AssertExpectedExportDefaults(catalog);
     }
 
     [Fact]
@@ -126,5 +181,29 @@ public sealed class ProfileCatalogServiceTests
             DeviceProfiles: new[] { DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() },
             ExportProfiles: new[] { DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() },
             InterfaceProfiles: new[] { DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() });
+    }
+
+    private static void AssertExpectedDeviceDefaults(ProfileCatalog catalog)
+    {
+        var ids = catalog.DeviceProfiles.Select(profile => profile.Metadata.Id).ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("device-nidek-ark1s-default", ids);
+        Assert.Contains("device-nidek-lm7-default", ids);
+        Assert.Contains("device-nidek-nt530p-default", ids);
+        Assert.Contains("device-topcon-cl300-default", ids);
+        Assert.Contains("device-topcon-kr800-default", ids);
+        Assert.Contains("device-topcon-trk2p-default", ids);
+    }
+
+    private static void AssertExpectedExportDefaults(ProfileCatalog catalog)
+    {
+        var ids = catalog.ExportProfiles.Select(profile => profile.Metadata.Id).ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("export-medistar-nidek-ark1s-default", ids);
+        Assert.Contains("export-medistar-nidek-lm7-default", ids);
+        Assert.Contains("export-medistar-nidek-nt530p-default", ids);
+        Assert.Contains("export-medistar-topcon-cl300-default", ids);
+        Assert.Contains("export-medistar-topcon-kr800-default", ids);
+        Assert.Contains("export-medistar-topcon-trk2p-default", ids);
     }
 }
