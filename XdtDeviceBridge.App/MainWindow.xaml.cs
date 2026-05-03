@@ -198,6 +198,56 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ImportLicenseFile_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "Lizenzdatei (*.json)|*.json|Alle Dateien (*.*)|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var importedLicense = _licenseFileRepository.Load(dialog.FileName);
+            var validationIssues = LicenseInfoValidator.Validate(importedLicense);
+            if (validationIssues.Count > 0)
+            {
+                AppendMessage("Lizenzdatei ist ungültig und wurde nicht übernommen.");
+                foreach (var issue in validationIssues)
+                {
+                    AppendMessage($"[Lizenz] {issue}");
+                }
+
+                return;
+            }
+
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var installation = _installationInfo ?? _installationInfoProvider.GetOrCreate(paths.BaseFolder);
+            _installationInfo = installation;
+
+            _licenseFileRepository.Save(paths.LicenseFile, importedLicense);
+
+            var activeLicensedDeviceCount = CountActiveLicensedDevices();
+            var evaluation = _licenseEvaluator.Evaluate(importedLicense, installation, activeLicensedDeviceCount, DateTime.UtcNow);
+            ShowLicenseStatus(
+                installation,
+                FormatLicenseStatus(evaluation),
+                evaluation.ActiveLicensedDeviceCount,
+                evaluation.LicensedDeviceCount);
+
+            AppendMessage($"Lizenzdatei erfolgreich importiert: {dialog.FileName}");
+        }
+        catch (Exception ex)
+        {
+            AppendMessage($"Lizenzdatei konnte nicht importiert werden: {ex.Message}");
+        }
+    }
+
     private void ExportTemplatePackage_Click(object sender, RoutedEventArgs e)
     {
         if (_profileCatalog is null)
