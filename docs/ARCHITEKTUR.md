@@ -167,6 +167,298 @@ Typische Inhalte:
 
 Die Lizenzierung soll in der ersten marktfähigen Ausbaustufe offline funktionieren. Die App prüft eine signierte Lizenzdatei lokal mit einem öffentlichen Prüfschlüssel.
 
+### 2.7 Mehrere Untersuchungsarten pro Gerätedatei
+
+Die V2-Architektur muss Geräte unterstützen, deren Messdateien mehrere Untersuchungsarten enthalten. Das betrifft insbesondere kombinierte oder umfangreiche XML-Formate.
+
+Beispiele aus den vorliegenden Beispieldaten:
+
+- NIDEK AR1S: Autorefraktion und PD
+- NIDEK LM7: Lensmeter/Scheitelbrechwertmesser mit Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung und PD
+- NIDEK NT530P: Tonometrie, Pachymetrie, korrigierter IOP und Bild-/Protokollverweise
+- TOPCON CL300: Lensmeterdaten im Ophthalmology-/JOIA-XML-Format
+- TOPCON KR800: Refraktion, Keratometrie, subjektive Refraktions-/VA-/PD-Daten
+- TOPCON TRK2P: Tonometrie und Pachymetrie/CCT
+
+Ein `DeviceProfile` muss dafür künftig beschreiben können:
+
+- welche Untersuchungsarten in einer Datei erkannt werden können
+- welche Untersuchungsarten aktiv ausgelesen werden sollen
+- welche Untersuchungsarten ignoriert werden sollen
+- ob Untersuchungsarten getrennt oder zusammengefasst exportiert werden
+- welche Messwertgruppen zu welcher Untersuchungsart gehören
+
+Beispiele für kombinierte Gerätedateien:
+
+- TOPCON KR800 enthält `REF`, `KM` und `SBJ`.
+- TOPCON TRK2P enthält `TM` und `CCT`.
+- NIDEK NT530P enthält `NT` und `PACHY`.
+
+### 2.8 Mehrere Ergebnis-Templates pro Profil
+
+Ein `ExportProfile` muss mehrere Ergebnis-Templates für eine Gerätedatei enthalten können. Diese Templates können denselben Ziel-Feldcode mehrfach nutzen oder unterschiedliche Ziel-Feldcodes beschreiben.
+
+Beispiele:
+
+- ARK1S:
+  - `6228` Ergebnis rechts
+  - `6228` Ergebnis links
+- LM7:
+  - Lensmeter rechts mit Sphäre/Zylinder/Achse/Prisma/PD
+  - Lensmeter links mit Sphäre/Zylinder/Achse/Prisma
+- NT530P:
+  - Pachymetrie rechts
+  - Pachymetrie links
+  - Tonometrie/korrigierter IOP rechts/links
+  - EV-Verweis auf Messprotokoll
+- KR800:
+  - Refraktion rechts/links
+  - Keratometrie rechts/links
+  - optional subjektive/VA-/PD-Daten
+
+Die Ausgabe-Syntax muss pro Untersuchungsart und pro Ergebniszeile konfigurierbar sein.
+
+### 2.9 Attachment- und Dokumentenmodell
+
+Die V2-Architektur soll perspektivisch ein Attachment-/Dokumentenmodell erhalten.
+
+Mögliche Modelle:
+
+- `AttachmentDefinition`
+- `AttachmentExportRule`
+- `DocumentExportProfile`
+- `ExternalViewerReference`
+
+Diese Modelle sollen beschreiben:
+
+- welche Zusatzdateien erwartet werden
+- wie Zusatzdateien gefunden werden
+- wohin Zusatzdateien kopiert werden
+- wie ein AIS-Verweis erzeugt wird
+- ob eine Datei Pflicht oder optional ist
+- welche Dateitypen erlaubt sind, z. B. JPG, PDF, XML, HTML
+- welche Zielordnerstruktur pro AIS oder Profil verwendet wird
+- wie Dateinamen eindeutig erzeugt werden
+- ob vorhandene Dateien überschrieben werden dürfen
+
+Beispiele:
+
+- NIDEK NT530P erzeugt zusätzlich JPG-Dateien.
+- Andere Geräte können PDF-Protokolle erzeugen.
+- Eine XML-Datei kann auf Zusatzdateien verweisen, z. B. `PACHYImage`.
+
+### 2.10 MEDISTAR EV-Verweise
+
+Für MEDISTAR muss perspektivisch ein Mechanismus für externe Verweise unterstützt werden. Ein solcher Verweis kann in einer Karteikartenzeile erscheinen und auf ein hinterlegtes Dokument oder Messprotokoll zeigen.
+
+Beispiel:
+
+```text
+EV:{000000003B} NT-530P Messung
+```
+
+Ein Exportprofil muss dafür konfigurieren können:
+
+- ob ein EV-Verweis erzeugt werden soll
+- ob EV-Kennung/Schlüssel erzeugt oder übernommen werden
+- wohin Dokumente abgelegt werden
+- wie Ergebnistext und EV-Verweis kombiniert werden
+- welche Dokumente Pflicht oder optional sind
+
+Beispielausgabe:
+
+```text
+P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
+```
+
+Die exakte MEDISTAR-EV-Struktur muss später anhand funktionierender Praxisbeispiele validiert werden.
+
+### 2.11 Optionale Dokumentenerzeugung und EV-Verknüpfung
+
+Die V2-Architektur soll perspektivisch optional aus AIS- und Gerätedaten ein lesbares Messprotokoll erzeugen können. Dieser Baustein ist zusätzlich zum XDT-Export zu verstehen und darf den validierten MEDISTAR/NIDEK-ARK1S-Prototyp nicht ersetzen.
+
+Ziel ist ein automatisch erzeugtes Protokoll, das maschinenlesbare Gerätedaten für Ärzte und Praxispersonal übersichtlich darstellt. Das Dokument kann gedruckt, archiviert oder über einen MEDISTAR-EV-Verweis geöffnet werden.
+
+#### Dokumenttyp
+
+Die bevorzugte Ausgabeform für selbst erzeugte Protokolle ist PDF.
+
+PDF ist geeignet, weil es:
+
+- gut lesbar ist
+- druckbar ist
+- archivierbar ist
+- mehrseitige Messprotokolle unterstützt
+- optional Praxislogo, Briefkopf, Fußzeile und Layout aufnehmen kann
+
+JPEG oder andere Bildformate sollen nur verwendet werden, wenn das Gerät solche Dateien selbst liefert oder ein AIS dies ausdrücklich benötigt.
+
+#### Mögliche Architekturmodelle
+
+Zusätzlich zu `AttachmentDefinition`, `AttachmentExportRule`, `DocumentExportProfile` und `ExternalViewerReference` sind perspektivisch folgende Konzepte sinnvoll:
+
+- `GeneratedDocumentDefinition`
+- `DocumentTemplate`
+- `DocumentLayoutSection`
+- `DocumentStorageOptions`
+- `DocumentGenerationResult`
+- `DocumentGenerationIssue`
+
+Diese Modelle sollen beschreiben:
+
+- ob ein Dokument erzeugt werden soll
+- welcher Dokumenttyp verwendet wird, zunächst PDF
+- ob das Dokument zusätzlich zum XDT-Export entsteht
+- ob die Dokumenterzeugung Pflicht oder optional ist
+- ob ein Dokument nur bei erfolgreicher Verarbeitung erzeugt wird
+- welche AIS-Daten und Messwerte enthalten sind
+- welches Layout und welche Abschnitte verwendet werden
+- wohin das Dokument abgelegt wird
+- wie der Dateiname erzeugt wird
+- ob ein EV-Verweis erzeugt wird
+- wie Fehler bewertet werden
+
+#### Dokumentinhalt
+
+Ein erzeugtes PDF soll aus `PatientData`, AIS-Kontext, Geräteprofil und `MeasurementValues` aufgebaut werden können.
+
+Mögliche Inhalte:
+
+- Praxis-/Systemhinweis
+- Patientennummer
+- Patientenname
+- Geburtsdatum
+- Untersuchungsart
+- Gerät/Hersteller/Modell
+- Untersuchungsdatum/Uhrzeit
+- Messwerte rechts/links
+- PD-Werte
+- Tonometrie
+- Pachymetrie
+- Keratometrie
+- Einzelmessungen optional
+- technische Zusatzwerte optional
+- Hinweis auf Quelle/Gerätedatei optional
+
+#### Templatebasierter Aufbau
+
+Die Dokumenterzeugung soll templatebasiert erfolgen. PDF-Templates sollen je Geräte-/Exportprofil unterschiedlich sein können.
+
+Konfigurierbar sein sollen:
+
+- Titel
+- Abschnitte
+- Tabellen
+- Reihenfolge der Werte
+- sichtbare Messwertgruppen
+- Beschriftungen
+- Einheiten
+- optional Logo/Briefkopf
+- optional Fußzeile
+- Dateiname
+- Ablagepfad
+
+#### Dokumentablage
+
+Der Ablageort für erzeugte Dokumente muss frei konfigurierbar sein.
+
+Erlaubt sein sollen:
+
+- lokale Ordner
+- Netzwerkpfade
+- UNC-Pfade, z. B. `\\SERVER\Freigabe\XdtBridge\Dokumente`
+
+Anforderungen an die Ablage:
+
+- Ablagepfad pro Interface-/Exportprofil definierbar
+- Schreibrechte prüfen
+- Ordner muss existieren oder optional erstellt werden können
+- Dateinamen eindeutig erzeugen
+- vorhandene Dateien nicht unbeabsichtigt überschreiben
+- Pfade mit `FolderSafetyValidator` oder vergleichbarer Logik prüfen
+- keine Ablage in Systemordnern oder unsicheren Root-Pfaden
+
+Eine konfigurierbare Ordnerstruktur soll unterstützt werden, z. B. nach Jahr/Monat, Praxis/Standort, Gerät, Patientennummer oder Untersuchungsdatum.
+
+Beispiel:
+
+```text
+\\SERVER\Medistar\EV\ARK1S\2026\05\4701-1\ARK1S_4701-1_20260502_150533.pdf
+```
+
+#### EV-Verknüpfung
+
+Für MEDISTAR soll optional ein EV-Verweis erzeugt werden können, der auf ein erzeugtes PDF oder eine vom Gerät gelieferte Zusatzdatei verweist.
+
+Anforderungen:
+
+- EV-Verweis erzeugen: ja/nein
+- EV-Texttemplate konfigurierbar
+- EV-Kennung/Referenz erzeugen oder aus AIS-/Gerätekontext ableiten
+- EV-Zeile mit XDT-Ergebniszeilen kombinieren
+- Doppelklick in MEDISTAR soll später das abgelegte Dokument öffnen können
+- genaue MEDISTAR-EV-Struktur anhand funktionierender Praxisbeispiele validieren
+
+Beispiel:
+
+```text
+EV:{000000003B} NT-530P Messung
+```
+
+#### Zusammenspiel mit bestehenden Gerätedateien
+
+Die Architektur muss zwei Fälle unterscheiden:
+
+Fall A: Das Gerät liefert selbst eine Zusatzdatei, z. B. JPG oder PDF. Die App ordnet diese Datei der Messung zu, kopiert sie in den Zielordner und erzeugt optional einen EV-Verweis.
+
+Fall B: Das Gerät liefert nur maschinenlesbare Werte. Die App erzeugt selbst ein PDF-Messprotokoll aus den gelesenen Werten und erzeugt optional einen EV-Verweis.
+
+Beide Fälle sollen pro Profil konfigurierbar sein.
+
+#### Fehlerverhalten
+
+Wenn die Dokumenterzeugung fehlschlägt, muss ein `DocumentGenerationIssue` oder vergleichbarer Fehler entstehen. Der Benutzer muss eine verständliche Meldung erhalten.
+
+Das Verhalten muss pro Profil konfigurierbar sein:
+
+- Verarbeitung abbrechen, wenn Dokument Pflicht ist
+- Verarbeitung fortsetzen, wenn Dokument optional ist
+
+Wenn ein EV-Verweis erzeugt werden soll, aber das Dokument nicht geschrieben werden konnte, darf kein blinder EV-Verweis erzeugt werden.
+
+#### Datenschutz und Sicherheit
+
+Erzeugte Dokumente enthalten potenziell Patientendaten und medizinische Messwerte.
+
+Anforderungen:
+
+- Ablage nur in konfigurierten Ordnern
+- keine automatische Ablage in unsicheren temporären Ordnern
+- Zugriffsschutz über Praxis-/Windows-/Netzwerkrechtekonzept
+- Pfade und Dateinamen sollen keine unnötigen Patientendaten enthalten, sofern vermeidbar
+- Protokollierung soll keine vollständigen medizinischen Inhalte unnötig duplizieren
+- Dokumentexport muss im AVV/Datenschutzkonzept berücksichtigt werden
+
+Für die aktuelle Version wird noch keine PDF-Erzeugung und kein produktiver EV-Verweis implementiert.
+
+### 2.12 XML-Parser und Namespaces
+
+Die Architektur muss unterschiedliche XML-Varianten unterstützen.
+
+Beispiele:
+
+- NIDEK XML ohne komplexe Namespaces
+- TOPCON/Ophthalmology XML mit JOIA-Namespaces
+
+Geräteprofile müssen Parseroptionen definieren können:
+
+- Namespace ignorieren
+- Namespace beibehalten
+- bekannte Namespace-Präfixe verwenden
+- XPath-/Pfadmodus
+
+SourcePaths sollen für Anwender lesbar bleiben. Namespace-Details dürfen den späteren Mapping-Editor nicht unbedienbar machen.
+
 ---
 
 ## 3. Datenfluss
@@ -186,6 +478,15 @@ AISProfile + DeviceProfile + ExportProfile
 
 ExportRecords
   -> XDT-Datei
+
+optionale Zusatzdateien
+  -> AttachmentRecords / ExternalViewerReference
+  -> Dokumentablage / AIS-Verweis
+
+optional erzeugtes Messprotokoll
+  -> DocumentTemplate + MeasurementValues + PatientData
+  -> PDF-Dokument
+  -> Dokumentablage / optionaler EV-Verweis
 ```
 
 ### 3.1 AIS-GDT zu PatientData/AisContext
@@ -234,6 +535,36 @@ Der Exportgenerator schreibt aus den ExportRecords eine XDT-konforme Datei:
 - definierte Zeilenreihenfolge
 - Zielordner aus dem InterfaceProfile
 - optional Archivierung oder Bereinigung nach erfolgreicher Verarbeitung
+
+### 3.5 Zusatzdateien zu Dokumentablage und AIS-Verweis
+
+Für spätere Geräteprofile mit Bild- oder Protokolldateien muss der Datenfluss um Zusatzdateien erweitert werden.
+
+Die App soll zugehörige Begleitdateien anhand von Dateinamen, Zeitstempel oder XML-Verweisen erkennen können. Ein Attachment-/Dokumentenmodell erzeugt daraus strukturierte `AttachmentRecords` oder `ExternalViewerReference`-Informationen.
+
+Diese Informationen können anschließend:
+
+- Dateien in eine definierte Zielordnerstruktur kopieren
+- eindeutige Dateinamen erzeugen
+- fehlende Pflichtdateien als Fehler melden
+- fehlende optionale Dateien als Warnung protokollieren
+- MEDISTAR-EV-Verweise oder andere AIS-Dokumentverweise erzeugen
+
+### 3.6 Selbst erzeugte PDF-Messprotokolle
+
+Wenn ein Gerät nur maschinenlesbare Werte liefert, kann die App perspektivisch selbst ein PDF-Messprotokoll erzeugen.
+
+Der Datenfluss besteht dann aus:
+
+1. AIS- und Patientendaten einlesen
+2. Gerätedaten normalisieren
+3. Dokumenttemplate des Interface-/Exportprofils auswählen
+4. Messwerte und Patientenkontext in Abschnitte, Tabellen und Beschriftungen übertragen
+5. PDF-Datei erzeugen
+6. PDF in den konfigurierten Dokumentordner schreiben
+7. optional einen MEDISTAR-EV-Verweis in den XDT-Export aufnehmen
+
+Die Dokumenterzeugung ist optional und darf nur dann die Verarbeitung blockieren, wenn sie im Profil ausdrücklich als Pflicht markiert ist.
 
 ---
 
@@ -439,6 +770,24 @@ Der aktuelle funktionsfähige Prototyp bleibt unverändert:
 - Untersuchungsart über `8402`
 - Ergebnistext über zwei `6228`-Zeilen
 
+### 8.7 Erkenntnisse aus weiteren Beispieldaten
+
+Die weiteren Beispieldaten zeigen, dass die V2-Architektur über das erste ARK1S-Refraktionsprofil hinausgehen muss. Insbesondere müssen Geräteprofile mehrere Untersuchungsarten pro Datei, mehrere Ergebnis-Templates, unterschiedliche XML-Namespaces und optionale oder verpflichtende Begleitdateien beschreiben können.
+
+Beispielhafte MEDISTAR-Ausgaben aus den Daten:
+
+```text
+V0   R.:S=+ 6.50 Z=- 1.75*172 P=0.75 OUT 1.00 UP           PD= 59
+V0   L.:S=+ 6.00 Z=- 2.25*  2 P=0.50 OUT 1.50 UP
+
+Y  PR: 559 560 558 [559] µm
+Y  PL: 559 560 [560] µm
+P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
+
+V1 R.:S=- 0.25 Z=- 0.25* 49                              PD=61
+V1 L.:S=+ 0.00 Z=- 0.50* 63                              PD=61
+```
+
 ---
 
 ## 9. Nächste Integrationsschritte
@@ -475,5 +824,13 @@ Nicht Ziel des ersten Schritts:
 - Herstellerdatenbank
 - automatische Synchronisation
 - vollständige Profilverwaltung für alle Geräteklassen
+- Umsetzung von MEDISTAR-EV-Verweisen
+- PDF-/JPG-Ablage und Dokumentenverwaltung
+- selbst erzeugte PDF-Messprotokolle
+- Mehruntersuchungs-Profile für KR800, TRK2P, NT530P oder vergleichbare Geräte
 
 Die Architektur soll so vorbereitet werden, dass diese Erweiterungen später möglich sind, ohne den validierten Prototypen neu schreiben zu müssen.
+
+Die aktuellen Beispieldaten dienen zunächst zur Erweiterung des Pflichtenhefts und der Architektur. Die funktionsfähige MEDISTAR/NIDEK-ARK1S-Verarbeitung bleibt unverändert.
+
+Der aktuelle Prototyp erzeugt weiterhin nur MEDISTAR-kompatible XDT-Ergebniszeilen. PDF-Protokolle und produktive EV-Dokumentverknüpfungen sind zukünftige optionale Bausteine.

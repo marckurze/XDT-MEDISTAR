@@ -948,3 +948,353 @@ Das Pflichtenheft hält aber fest:
 - Terminalserver-/Remote-Desktop-Betrieb muss berücksichtigt werden.
 - Lizenz- und Konfigurationsdaten müssen benutzer- bzw. instanzbezogen speicherbar sein.
 - keine Patientendaten dürfen zur Lizenzierung verwendet oder übertragen werden.
+
+---
+
+## 14. Erweiterte Geräte, Untersuchungsarten und Zusatzdokumente
+
+Die bisher validierte MEDISTAR/NIDEK-ARK1S-Verarbeitung bildet nur das erste Standardprofil. Die weiteren Beispieldaten zeigen, dass die Anwendung perspektivisch mehrere Geräteklassen, mehrere Untersuchungsarten pro Datei und begleitende Dokumente unterstützen muss.
+
+Für die aktuelle Version wird noch keine Umsetzung von EV-Verweisen, PDF-/JPG-Ablage oder Mehruntersuchungs-Profilen implementiert. Die Beispieldaten dienen zunächst zur Erweiterung des Pflichtenhefts und der Architektur. Die funktionsfähige MEDISTAR/NIDEK-ARK1S-Verarbeitung bleibt unverändert.
+
+### 14.1 Weitere Gerätetypen und Untersuchungsarten
+
+Die App muss perspektivisch nicht nur NIDEK ARK1S und Refraktion unterstützen, sondern auch weitere Geräte und Untersuchungsarten.
+
+Beispiele aus den Beispieldaten:
+
+- NIDEK AR1S: Autorefraktion und PD
+- NIDEK LM7: Lensmeter/Scheitelbrechwertmesser mit Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung und PD
+- NIDEK NT530P: Tonometrie, Pachymetrie, korrigierter IOP und Bild-/Protokollverweise
+- TOPCON CL300: Lensmeterdaten im Ophthalmology-/JOIA-XML-Format
+- TOPCON KR800: Refraktion, Keratometrie, subjektive Refraktions-/VA-/PD-Daten
+- TOPCON TRK2P: Tonometrie und Pachymetrie/CCT
+
+Daraus folgt, dass Geräteprofile künftig nicht nur Messwertpfade, sondern auch Untersuchungsarten, Messwertgruppen, Ausgabearten und gerätespezifische Besonderheiten beschreiben müssen.
+
+### 14.2 Mehrere Untersuchungsarten pro Gerätedatei
+
+Ein Gerät kann mehrere Untersuchungsarten in einer Datei liefern.
+
+Beispiele:
+
+- TOPCON KR800 enthält `REF`, `KM` und `SBJ`.
+- TOPCON TRK2P enthält `TM` und `CCT`.
+- NIDEK NT530P enthält `NT` und `PACHY`.
+
+Die App muss daher pro Geräteprofil definieren können:
+
+- welche Untersuchungsarten ausgelesen werden sollen
+- welche Untersuchungsarten ignoriert werden sollen
+- welche Untersuchungsarten in getrennte Ergebniszeilen geschrieben werden
+- welche Untersuchungsarten in getrennte XDT-Felder geschrieben werden
+- welche Untersuchungsarten zusammengefasst werden
+
+### 14.3 Geräteprofile mit mehreren Ergebnis-Templates
+
+Ein Geräteprofil bzw. Exportprofil muss mehrere Ergebnis-Templates enthalten können.
+
+Beispiele:
+
+- ARK1S:
+  - `6228` Ergebnis rechts
+  - `6228` Ergebnis links
+- LM7:
+  - Lensmeter rechts mit Sphäre, Zylinder, Achse, Prisma und PD
+  - Lensmeter links mit Sphäre, Zylinder, Achse und Prisma
+- NT530P:
+  - Pachymetrie rechts
+  - Pachymetrie links
+  - Tonometrie/korrigierter IOP rechts/links
+  - EV-Verweis auf Messprotokoll
+- KR800:
+  - Refraktion rechts/links
+  - Keratometrie rechts/links
+  - optional subjektive/VA-/PD-Daten
+
+Das Export-/Mapping-Profil muss dafür mehrere Ausgabezeilen, mehrere Ziel-Feldkennungen und denselben Ziel-Feldcode mehrfach unterstützen.
+
+### 14.4 Zusatzdateien, Attachments und Dokumentenverweise
+
+Die App muss perspektivisch Begleitdateien unterstützen.
+
+Beispiele:
+
+- NIDEK NT530P erzeugt zusätzlich JPG-Dateien.
+- Andere Geräte können PDF-Protokolle erzeugen.
+- Die XML-Datei kann auf Zusatzdateien verweisen, z. B. `PACHYImage`.
+
+Anforderungen:
+
+- zugehörige Begleitdateien zur Messung erkennen
+- Begleitdateien anhand Dateinamen, Zeitstempel oder XML-Verweis zuordnen
+- Begleitdateien in eine definierte Zielordnerstruktur kopieren
+- Zielordnerstruktur pro AIS/Profil konfigurierbar machen
+- optional vorhandene Dateien nicht überschreiben
+- Dateinamen eindeutig erzeugen
+- Fehler bei fehlenden Begleitdateien protokollieren
+- Begleitdateien dürfen keine Verarbeitung blockieren, wenn sie als optional markiert sind
+- Begleitdateien müssen Verarbeitung blockieren, wenn sie als erforderlich markiert sind
+
+### 14.5 MEDISTAR EV-Verweise
+
+Für MEDISTAR muss perspektivisch ein Mechanismus für externe Verweise unterstützt werden.
+
+Beispiel:
+
+```text
+EV:{000000003B} NT-530P Messung
+```
+
+Durch Doppelklick in MEDISTAR kann ein hinterlegtes Dokument oder Messprotokoll geöffnet werden.
+
+Anforderungen:
+
+- EV-Verweise müssen pro Exportprofil konfigurierbar sein
+- EV-Kennung/Schlüssel muss erzeugt oder übernommen werden können
+- Ablagepfad für Dokumente muss konfigurierbar sein
+- Windows-Ordnerstruktur muss pro AIS-Profil definierbar sein
+- Exportregel muss Ergebnistext und EV-Verweis kombinieren können
+
+Beispielausgabe:
+
+```text
+P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
+```
+
+Hinweis: Die exakte MEDISTAR-EV-Struktur muss später anhand funktionierender Praxisbeispiele validiert werden.
+
+### 14.6 XML-Parser und Namespaces
+
+Die App muss verschiedene XML-Varianten unterstützen.
+
+Beispiele:
+
+- NIDEK XML ohne komplexe Namespaces
+- TOPCON/Ophthalmology XML mit JOIA-Namespaces
+
+Anforderungen:
+
+- XML-Parser muss Namespaces entweder normalisieren oder profilabhängig berücksichtigen können
+- SourcePaths sollen für Anwender lesbar bleiben
+- Namespace-Details dürfen den Mapping-Editor nicht unbedienbar machen
+- Geräteprofil muss Parseroptionen definieren können:
+  - Namespace ignorieren
+  - Namespace beibehalten
+  - bekannte Namespace-Präfixe verwenden
+  - XPath-/Pfadmodus
+
+### 14.7 MEDISTAR-Beispielausgaben aus Beispieldaten
+
+NIDEK LM7:
+
+```text
+V0   R.:S=+ 6.50 Z=- 1.75*172 P=0.75 OUT 1.00 UP           PD= 59
+V0   L.:S=+ 6.00 Z=- 2.25*  2 P=0.50 OUT 1.50 UP
+```
+
+NIDEK NT530P:
+
+```text
+Y  PR: 559 560 558 [559] µm
+Y  PL: 559 560 [560] µm
+P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
+```
+
+NIDEK ARK1S:
+
+```text
+V1 R.:S=- 0.25 Z=- 0.25* 49                              PD=61
+V1 L.:S=+ 0.00 Z=- 0.50* 63                              PD=61
+```
+
+---
+
+## 15. Optionale Dokumentenerzeugung und EV-Verknüpfung
+
+### 15.1 Ziel
+
+Die Anwendung soll perspektivisch optional aus den eingelesenen AIS- und Gerätedaten ein lesbares Messprotokoll erzeugen können.
+
+Hintergrund: Viele Gerätedateien sind maschinenlesbar, aber für Ärzte nicht angenehm lesbar. Ein automatisch erzeugtes PDF-Messprotokoll kann die gemessenen Werte übersichtlich darstellen und bei Bedarf ausgedruckt oder über einen MEDISTAR-EV-Verweis geöffnet werden.
+
+### 15.2 Dokumenttyp
+
+Die bevorzugte Ausgabeform für selbst erzeugte Protokolle ist PDF.
+
+Begründung:
+
+- gut lesbar
+- druckbar
+- archivierbar
+- mehrseitig möglich
+- geeignet für Messprotokolle
+- optional mit Praxislogo oder Layout erweiterbar
+
+JPEG oder andere Bildformate sollen nur verwendet werden, wenn das Gerät selbst solche Dateien liefert oder ein AIS dies ausdrücklich benötigt.
+
+### 15.3 Optionale Aktivierung
+
+Die PDF-/Dokumentenerzeugung muss pro Schnittstellenprofil optional aktivierbar sein.
+
+Konfigurierbare Optionen:
+
+- Dokument erzeugen: ja/nein
+- Dokumenttyp, zunächst PDF
+- Dokument zusätzlich zum XDT-Export erzeugen
+- Dokument nur erzeugen, wenn Verarbeitung erfolgreich war
+- Dokumenterzeugung als Pflicht oder optional
+- Verhalten bei Fehlern der Dokumenterzeugung
+
+### 15.4 Dokumentinhalt
+
+Das erzeugte PDF soll aus AIS-Daten und Gerätewerten aufgebaut werden können.
+
+Mögliche Inhalte:
+
+- Praxis-/Systemhinweis
+- Patientennummer
+- Patientenname
+- Geburtsdatum
+- Untersuchungsart
+- Gerät/Hersteller/Modell
+- Untersuchungsdatum/Uhrzeit
+- Messwerte rechts/links
+- PD-Werte
+- Tonometrie
+- Pachymetrie
+- Keratometrie
+- Einzelmessungen optional
+- technische Zusatzwerte optional
+- Hinweis auf Quelle/Gerätedatei optional
+
+### 15.5 Layout und Templates
+
+Die Dokumenterzeugung soll perspektivisch templatebasiert erfolgen.
+
+Konfigurierbar sein sollen:
+
+- Titel
+- Abschnitte
+- Tabellen
+- Reihenfolge der Werte
+- sichtbare Messwertgruppen
+- Beschriftungen
+- Einheiten
+- optional Logo/Briefkopf
+- optional Fußzeile
+- Dateiname
+- Ablagepfad
+
+Die PDF-Templates sollen je Geräte-/Exportprofil unterschiedlich sein können.
+
+### 15.6 Dokumentablage
+
+Der Ablageort für erzeugte Dokumente muss frei konfigurierbar sein.
+
+Erlaubt sein sollen:
+
+- lokale Ordner
+- Netzwerkpfade
+- UNC-Pfade, z. B. `\\SERVER\Freigabe\XdtBridge\Dokumente`
+
+Anforderungen:
+
+- Ablagepfad pro Interface-/Exportprofil definierbar
+- Schreibrechte müssen geprüft werden
+- Ordner muss existieren oder optional erstellt werden können
+- Dateinamen müssen eindeutig erzeugt werden
+- vorhandene Dateien dürfen nicht unbeabsichtigt überschrieben werden
+- Pfade müssen durch `FolderSafetyValidator` oder vergleichbare Logik geprüft werden
+- keine Ablage in Systemordnern oder unsicheren Root-Pfaden
+
+### 15.7 Ordnerstruktur
+
+Die App soll eine konfigurierbare Ordnerstruktur für Dokumente unterstützen.
+
+Beispiele:
+
+- pro Jahr/Monat
+- pro Praxis/Standort
+- pro Gerät
+- pro Patientennummer
+- pro Untersuchungsdatum
+
+Beispiel:
+
+```text
+\\SERVER\Medistar\EV\ARK1S\2026\05\4701-1\ARK1S_4701-1_20260502_150533.pdf
+```
+
+### 15.8 EV-Verknüpfung in MEDISTAR
+
+Für MEDISTAR soll perspektivisch optional ein EV-Verweis erzeugt werden können, der auf das erzeugte PDF oder eine vom Gerät gelieferte Zusatzdatei verweist.
+
+Anforderungen:
+
+- EV-Verweis erzeugen: ja/nein
+- EV-Texttemplate konfigurierbar
+- EV-Kennung/Referenz muss erzeugt oder aus AIS-/Gerätekontext abgeleitet werden können
+- EV-Zeile muss mit XDT-Ergebniszeilen kombinierbar sein
+- Doppelklick in MEDISTAR soll später das abgelegte Dokument öffnen können
+- genaue MEDISTAR-EV-Struktur muss anhand funktionierender Praxisbeispiele validiert werden
+
+Beispiel:
+
+```text
+EV:{000000003B} NT-530P Messung
+```
+
+### 15.9 Zusammenspiel mit bestehenden Gerätedateien
+
+Die App muss zwei Fälle unterscheiden können:
+
+Fall A:
+
+Das Gerät liefert selbst eine Zusatzdatei, z. B. JPG oder PDF. Die App ordnet diese Datei der Messung zu, kopiert sie in den Zielordner und erzeugt optional einen EV-Verweis.
+
+Fall B:
+
+Das Gerät liefert nur maschinenlesbare Werte. Die App erzeugt selbst ein PDF-Messprotokoll aus den gelesenen Werten und erzeugt optional einen EV-Verweis.
+
+Beide Fälle sollen pro Profil konfigurierbar sein.
+
+### 15.10 Verhalten bei Fehlern
+
+Wenn die Dokumenterzeugung fehlschlägt:
+
+- Fehler muss protokolliert werden
+- Benutzer muss verständliche Meldung erhalten
+- Verhalten muss konfigurierbar sein:
+  - Verarbeitung abbrechen, wenn Dokument Pflicht ist
+  - Verarbeitung fortsetzen, wenn Dokument optional ist
+
+Wenn ein EV-Verweis erzeugt werden soll, aber das Dokument nicht geschrieben werden konnte:
+
+- EV-Verweis darf nicht blind erzeugt werden
+- Fehler muss sichtbar sein
+
+### 15.11 Datenschutz und Sicherheit
+
+Erzeugte Dokumente enthalten potenziell Patientendaten und medizinische Messwerte.
+
+Anforderungen:
+
+- Ablage nur in konfigurierten Ordnern
+- keine automatische Ablage in unsicheren temporären Ordnern
+- Zugriffsschutz liegt beim Praxis-/Windows-/Netzwerkrechtekonzept
+- Pfade und Dateinamen dürfen keine unnötigen Patientendaten enthalten, sofern vermeidbar
+- Protokollierung soll keine vollständigen medizinischen Inhalte unnötig duplizieren
+- Dokumentexport muss im AVV/Datenschutzkonzept berücksichtigt werden
+
+### 15.12 Abgrenzung Version 1
+
+Für die aktuelle Version wird noch keine PDF-Erzeugung und kein produktiver EV-Verweis implementiert.
+
+Der aktuelle Prototyp erzeugt:
+
+- MEDISTAR-kompatible XDT-Ergebniszeilen
+- noch keine PDF-Protokolle
+- noch keine EV-Dokumentverknüpfung
+
+Die Dokumentenerzeugung wird als zukünftiger optionaler Baustein vorgesehen.
