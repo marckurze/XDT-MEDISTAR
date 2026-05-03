@@ -21,10 +21,13 @@ public partial class MainWindow : Window
     private readonly InstallationInfoProvider _installationInfoProvider = new();
     private readonly LicenseFileRepository _licenseFileRepository = new();
     private readonly LicenseEvaluator _licenseEvaluator = new();
+    private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
+    private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
     private ProfileCatalog? _profileCatalog;
+    private InstallationInfo? _installationInfo;
     private string? _plannedFileName;
 
     public MainWindow()
@@ -67,6 +70,7 @@ public partial class MainWindow : Window
         {
             var paths = _appDataPathProvider.GetDefaultUserPaths();
             var installation = _installationInfoProvider.GetOrCreate(paths.BaseFolder);
+            _installationInfo = installation;
             var activeLicensedDeviceCount = CountActiveLicensedDevices();
 
             if (!File.Exists(paths.LicenseFile))
@@ -109,6 +113,7 @@ public partial class MainWindow : Window
             LicenseStatusText.Text = "Lizenzstatus konnte nicht initialisiert werden";
             LicenseActiveDeviceCountText.Text = "0";
             LicenseLicensedDeviceCountText.Text = "0";
+            _installationInfo = null;
             AppendMessage($"Lizenzstatus konnte nicht initialisiert werden: {ex.Message}");
         }
     }
@@ -145,6 +150,52 @@ public partial class MainWindow : Window
             LicenseStatus.NotLicensed => "Nicht lizenziert / Test- oder Lizenzaktivierung erforderlich",
             _ => evaluation.Status.ToString()
         };
+    }
+
+    private void ExportLicenseRequest_Click(object sender, RoutedEventArgs e)
+    {
+        if (_installationInfo is null)
+        {
+            AppendMessage("Lizenzanfrage kann nicht exportiert werden, weil keine Installationsinformationen geladen sind.");
+            return;
+        }
+
+        if (_profileCatalog is null)
+        {
+            AppendMessage("Lizenzanfrage kann nicht exportiert werden, weil keine V2-Profile geladen sind.");
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "Lizenzanfrage (*.json)|*.json|Alle Dateien (*.*)|*.*",
+            FileName = "XdtDeviceBridge_Lizenzanfrage.json",
+            DefaultExt = ".json",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var request = _licenseRequestBuilder.Build(
+                _installationInfo,
+                _profileCatalog.InterfaceProfiles,
+                "XDT_DEVICE_BRIDGE",
+                "0.1.0",
+                DateTime.UtcNow);
+
+            _licenseRequestFileRepository.Save(dialog.FileName, request);
+            AppendMessage($"Lizenzanfrage erfolgreich exportiert: {dialog.FileName}");
+        }
+        catch (Exception ex)
+        {
+            AppendMessage($"Lizenzanfrage konnte nicht exportiert werden: {ex.Message}");
+        }
     }
 
     private void ExportTemplatePackage_Click(object sender, RoutedEventArgs e)
