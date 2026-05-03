@@ -170,13 +170,55 @@
                         </StackPanel>
 
                         <GroupBox Header="Profilnamen" Grid.Row="2" Margin="0,0,0,8">
-                            <TextBox x:Name="ProfileNamesTextBox"
-                                     Margin="8"
-                                     MinHeight="220"
-                                     IsReadOnly="True"
-                                     AcceptsReturn="True"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"/>
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="150"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Geräte" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="4" Text="Exportprofile" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="6" Text="Schnittstellen" FontWeight="Bold" Margin="0,0,0,4"/>
+
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="0"
+                                         x:Name="AisProfileNamesTextBox"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"/>
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="2"
+                                         x:Name="DeviceProfileNamesTextBox"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"/>
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="4"
+                                         x:Name="ExportProfileNamesTextBox"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"/>
+                                <TextBox Grid.Row="1"
+                                         Grid.Column="6"
+                                         x:Name="InterfaceProfileNamesTextBox"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"/>
+                            </Grid>
                         </GroupBox>
 
                         <GroupBox Header="Exportregeln" Grid.Row="3" Margin="0,0,0,8">
@@ -191,13 +233,19 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Text="Exportprofil:"
+                                           FontWeight="Bold"
+                                           Margin="0,0,8,8"
+                                           ToolTip="Legt fest, wie AIS-Daten und Gerätewerte in eine Rückgabedatei geschrieben werden."/>
                                 <ComboBox Grid.Row="0"
                                           Grid.Column="1"
                                           x:Name="ExportProfileComboBox"
                                           DisplayMemberPath="Metadata.Name"
                                           MinWidth="360"
                                           Margin="0,0,0,8"
+                                          ToolTip="Legt fest, wie AIS-Daten und Gerätewerte in eine Rückgabedatei geschrieben werden."
                                           SelectionChanged="ExportProfileComboBox_SelectionChanged"/>
                                 <TextBlock Grid.Row="1"
                                            Grid.Column="0"
@@ -217,14 +265,46 @@
                                           VerticalScrollBarVisibility="Auto"
                                           SelectionChanged="ExportRulesGrid_SelectionChanged">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="SortOrder" Binding="{Binding SortOrder}" Width="80"/>
-                                        <DataGridTextColumn Header="TargetFieldCode" Binding="{Binding TargetFieldCode}" Width="120"/>
-                                        <DataGridTextColumn Header="TargetName" Binding="{Binding TargetName}" Width="160"/>
-                                        <DataGridTextColumn Header="RuleType" Binding="{Binding RuleType}" Width="110"/>
-                                        <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="220"/>
-                                        <DataGridTextColumn Header="OutputTemplate" Binding="{Binding OutputTemplate}" Width="420"/>
-                                        <DataGridCheckBoxColumn Header="IsEnabled" Binding="{Binding IsEnabled}" Width="90"/>
-                                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="260"/>
+                                        <DataGridTextColumn Binding="{Binding SortOrder}" Width="80">
+                                            <DataGridTextColumn.Header>
+                                                <TextBlock Text="SortOrder" ToolTip="Reihenfolge der Ausgabezeilen in der erzeugten XDT-Datei."/>
+                                            </DataGridTextColumn.Header>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Binding="{Binding TargetFieldCode}" Width="120">
+                                            <DataGridTextColumn.Header>
+                                                <TextBlock Text="TargetFieldCode" ToolTip="XDT/GDT-Feldkennung, in die der Wert geschrieben wird, z. B. 6228 für Ergebnistext."/>
+                                            </DataGridTextColumn.Header>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Binding="{Binding TargetName}" Width="160">
+                                            <DataGridTextColumn.Header>
+                                                <TextBlock Text="TargetName" ToolTip="Interner Anzeigename der Exportregel."/>
+                                            </DataGridTextColumn.Header>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Binding="{Binding RuleType}" Width="110">
+                                            <DataGridTextColumn.Header>
+                                                <TextBlock Text="RuleType" ToolTip="Art der Regel: fester Wert, AIS-Feld, Gerätewert oder zusammengesetztes Template."/>
+                                            </DataGridTextColumn.Header>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Binding="{Binding SourcePath}" Width="220">
+                                            <DataGridTextColumn.Header>
+                                                <TextBlock Text="SourcePath" ToolTip="Quelle des Werts, z. B. AIS.PatientNumber oder Device.R/AR/ARMedian/Sphere."/>
+                                            </DataGridTextColumn.Header>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Binding="{Binding OutputTemplate}" Width="420">
+                                            <DataGridTextColumn.Header>
+                                                <TextBlock Text="OutputTemplate" ToolTip="Ausgabeformat. Platzhalter werden in geschweiften Klammern geschrieben, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}."/>
+                                            </DataGridTextColumn.Header>
+                                        </DataGridTextColumn>
+                                        <DataGridCheckBoxColumn Binding="{Binding IsEnabled}" Width="90">
+                                            <DataGridCheckBoxColumn.Header>
+                                                <TextBlock Text="IsEnabled" ToolTip="Legt fest, ob diese Regel beim Export berücksichtigt wird."/>
+                                            </DataGridCheckBoxColumn.Header>
+                                        </DataGridCheckBoxColumn>
+                                        <DataGridTextColumn Binding="{Binding Description}" Width="260">
+                                            <DataGridTextColumn.Header>
+                                                <TextBlock Text="Description" ToolTip="Beschreibung oder Hinweis zur Regel."/>
+                                            </DataGridTextColumn.Header>
+                                        </DataGridTextColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                                 <GroupBox Header="Regelvorschau" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
@@ -262,17 +342,17 @@
                                            FontWeight="Bold"
                                            Foreground="DarkRed"
                                            Margin="0,0,0,8"/>
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="TargetFieldCode:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DraftTargetFieldCodeTextBox" Margin="0,0,16,8"/>
-                                <TextBlock Grid.Row="1" Grid.Column="2" Text="TargetName:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="1" Grid.Column="3" x:Name="DraftTargetNameTextBox" Margin="0,0,0,8"/>
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="RuleType:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <ComboBox Grid.Row="2" Grid.Column="1" x:Name="DraftRuleTypeComboBox" Margin="0,0,16,8"/>
-                                <TextBlock Grid.Row="2" Grid.Column="2" Text="SortOrder:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="2" Grid.Column="3" x:Name="DraftSortOrderTextBox" Margin="0,0,0,8"/>
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="SourcePath:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" x:Name="DraftSourcePathTextBox" Margin="0,0,0,8"/>
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="OutputTemplate:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="TargetFieldCode:" FontWeight="Bold" Margin="0,0,8,8" ToolTip="XDT/GDT-Feldkennung, in die der Wert geschrieben wird, z. B. 6228 für Ergebnistext."/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DraftTargetFieldCodeTextBox" Margin="0,0,16,8" ToolTip="XDT/GDT-Feldkennung, in die der Wert geschrieben wird, z. B. 6228 für Ergebnistext."/>
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="TargetName:" FontWeight="Bold" Margin="0,0,8,8" ToolTip="Interner Anzeigename der Exportregel."/>
+                                <TextBox Grid.Row="1" Grid.Column="3" x:Name="DraftTargetNameTextBox" Margin="0,0,0,8" ToolTip="Interner Anzeigename der Exportregel."/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="RuleType:" FontWeight="Bold" Margin="0,0,8,8" ToolTip="Art der Regel: fester Wert, AIS-Feld, Gerätewert oder zusammengesetztes Template."/>
+                                <ComboBox Grid.Row="2" Grid.Column="1" x:Name="DraftRuleTypeComboBox" Margin="0,0,16,8" ToolTip="Art der Regel: fester Wert, AIS-Feld, Gerätewert oder zusammengesetztes Template."/>
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="SortOrder:" FontWeight="Bold" Margin="0,0,8,8" ToolTip="Reihenfolge der Ausgabezeilen in der erzeugten XDT-Datei."/>
+                                <TextBox Grid.Row="2" Grid.Column="3" x:Name="DraftSortOrderTextBox" Margin="0,0,0,8" ToolTip="Reihenfolge der Ausgabezeilen in der erzeugten XDT-Datei."/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="SourcePath:" FontWeight="Bold" Margin="0,0,8,8" ToolTip="Quelle des Werts, z. B. AIS.PatientNumber oder Device.R/AR/ARMedian/Sphere."/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" x:Name="DraftSourcePathTextBox" Margin="0,0,0,8" ToolTip="Quelle des Werts, z. B. AIS.PatientNumber oder Device.R/AR/ARMedian/Sphere."/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="OutputTemplate:" FontWeight="Bold" Margin="0,0,8,8" ToolTip="Ausgabeformat. Platzhalter werden in geschweiften Klammern geschrieben, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}."/>
                                 <TextBox Grid.Row="4"
                                          Grid.Column="1"
                                          Grid.ColumnSpan="3"
@@ -281,15 +361,16 @@
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
                                          VerticalScrollBarVisibility="Auto"
+                                         ToolTip="Ausgabeformat. Platzhalter werden in geschweiften Klammern geschrieben, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}."
                                          Margin="0,0,0,8"/>
-                                <CheckBox Grid.Row="5" Grid.Column="1" x:Name="DraftIsEnabledCheckBox" Content="IsEnabled" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                                <TextBlock Grid.Row="5" Grid.Column="2" Text="Description:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <CheckBox Grid.Row="5" Grid.Column="1" x:Name="DraftIsEnabledCheckBox" Content="IsEnabled" VerticalAlignment="Center" Margin="0,0,16,0" ToolTip="Legt fest, ob diese Regel beim Export berücksichtigt wird."/>
+                                <TextBlock Grid.Row="5" Grid.Column="2" Text="Description:" FontWeight="Bold" Margin="0,0,8,0" ToolTip="Beschreibung oder Hinweis zur Regel."/>
                                 <DockPanel Grid.Row="5" Grid.Column="3">
                                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
                                         <Button Content="Entwurfsvorschau aktualisieren" Width="210" Margin="0,0,8,0" Click="UpdateDraftPreview_Click"/>
                                         <Button Content="Entwurf zurücksetzen" Width="160" Click="ResetDraft_Click"/>
                                     </StackPanel>
-                                    <TextBox x:Name="DraftDescriptionTextBox"/>
+                                    <TextBox x:Name="DraftDescriptionTextBox" ToolTip="Beschreibung oder Hinweis zur Regel."/>
                                 </DockPanel>
                             </Grid>
                         </GroupBox>
@@ -306,14 +387,26 @@
                                      VerticalScrollBarVisibility="Auto"/>
                         </GroupBox>
 
-                        <GroupBox Header="Verfügbare Platzhalter" Grid.Row="6" Margin="0,0,0,8">
-                            <TextBox x:Name="AvailablePlaceholdersTextBox"
-                                     Margin="8"
-                                     MinHeight="220"
-                                     IsReadOnly="True"
-                                     AcceptsReturn="True"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"/>
+                        <GroupBox Header="Verfügbare Platzhalter"
+                                  Grid.Row="6"
+                                  Margin="0,0,0,8"
+                                  ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,8">
+                                    Platzhalter müssen mit geschweiften Klammern geschrieben werden, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}. Runde Klammern wie (Device.Date) werden nicht ersetzt.
+                                </TextBlock>
+                                <TextBox Grid.Row="1"
+                                         x:Name="AvailablePlaceholdersTextBox"
+                                         MinHeight="220"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"/>
+                            </Grid>
                         </GroupBox>
 
                         <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="7">

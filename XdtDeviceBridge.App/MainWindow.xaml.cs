@@ -54,7 +54,7 @@ public partial class MainWindow : Window
             ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
             InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
             ProfileBaseFolderText.Text = paths.BaseFolder;
-            ProfileNamesTextBox.Text = FormatProfileNames(catalog);
+            ShowProfileNameColumns(catalog);
             InitializeExportRulesView(catalog);
             AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
             ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
@@ -67,7 +67,7 @@ public partial class MainWindow : Window
             InterfaceProfileCountText.Text = "-";
             _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
-            ProfileNamesTextBox.Text = "Keine Profile geladen.";
+            ClearProfileNameColumns();
             ExportProfileComboBox.ItemsSource = null;
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
@@ -156,6 +156,9 @@ public partial class MainWindow : Window
         builder.AppendLine(rule.OutputTemplate);
         builder.AppendLine();
 
+        var roundBracketPlaceholders = GetRoundBracketPlaceholderCandidates(rule.OutputTemplate);
+        AppendRoundBracketPlaceholderHint(builder, roundBracketPlaceholders);
+
         if (_lastPipelineResult is null)
         {
             builder.AppendLine("Vorschau:");
@@ -193,7 +196,7 @@ public partial class MainWindow : Window
             builder.AppendLine("Ein oder mehrere Platzhalter konnten nicht aufgelöst werden.");
             foreach (var placeholder in unresolvedPlaceholders)
             {
-                builder.AppendLine($"- {placeholder}");
+                builder.AppendLine($"- Platzhalter konnte nicht aufgelöst werden: {{{placeholder}}}");
             }
         }
 
@@ -234,7 +237,7 @@ public partial class MainWindow : Window
             {
                 var mappingRule = CreatePreviewMappingRule(rule, result);
                 return GetUnresolvedPlaceholders(rule.OutputTemplate, mappingRule.SourcePath, patient, result.Measurements)
-                    .Select(placeholder => $"{rule.TargetFieldCode} {rule.TargetName}: {placeholder}");
+                    .Select(placeholder => $"Platzhalter konnte nicht aufgelöst werden: {{{placeholder}}} ({rule.TargetFieldCode} {rule.TargetName})");
             })
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -495,6 +498,69 @@ public partial class MainWindow : Window
         return unresolved;
     }
 
+    private static IReadOnlyList<string> GetRoundBracketPlaceholderCandidates(string template)
+    {
+        var candidates = new List<string>();
+        var index = 0;
+
+        while (index < template.Length)
+        {
+            var openIndex = template.IndexOf('(', index);
+            if (openIndex < 0)
+            {
+                break;
+            }
+
+            var closeIndex = template.IndexOf(')', openIndex + 1);
+            if (closeIndex < 0)
+            {
+                break;
+            }
+
+            var token = template[(openIndex + 1)..closeIndex].Trim();
+            if (LooksLikePlaceholderToken(token))
+            {
+                candidates.Add(token);
+            }
+
+            index = closeIndex + 1;
+        }
+
+        return candidates
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static bool LooksLikePlaceholderToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return false;
+        }
+
+        var sourceToken = SplitPreviewFormatToken(token);
+        return sourceToken.StartsWith("AIS.", StringComparison.OrdinalIgnoreCase)
+            || sourceToken.StartsWith("Device.", StringComparison.OrdinalIgnoreCase)
+            || sourceToken.StartsWith("Patient.", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourceToken, "value", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void AppendRoundBracketPlaceholderHint(StringBuilder builder, IReadOnlyList<string> placeholders)
+    {
+        if (placeholders.Count == 0)
+        {
+            return;
+        }
+
+        builder.AppendLine("Runde Klammern werden nicht als Platzhalter erkannt. Verwenden Sie geschweifte Klammern, z. B. {Device.Date}.");
+        foreach (var placeholder in placeholders)
+        {
+            builder.AppendLine($"- ({placeholder})");
+        }
+
+        builder.AppendLine();
+    }
+
     private static IEnumerable<string> ExtractPlaceholderTokens(string template)
     {
         var index = 0;
@@ -556,33 +622,24 @@ public partial class MainWindow : Window
         };
     }
 
-    private static string FormatProfileNames(ProfileCatalog catalog)
+    private void ShowProfileNameColumns(ProfileCatalog catalog)
     {
-        if (catalog.AisProfiles.Count == 0
-            && catalog.DeviceProfiles.Count == 0
-            && catalog.ExportProfiles.Count == 0
-            && catalog.InterfaceProfiles.Count == 0)
-        {
-            return "Keine Profile geladen.";
-        }
-
-        var builder = new StringBuilder();
-        AppendProfileSection(builder, "AIS", catalog.AisProfiles.Select(profile => profile.Name));
-        AppendProfileSection(builder, "Geräte", catalog.DeviceProfiles.Select(profile => profile.Metadata.Name));
-        AppendProfileSection(builder, "Exportprofile", catalog.ExportProfiles.Select(profile => profile.Metadata.Name));
-        AppendProfileSection(builder, "Schnittstellenprofile", catalog.InterfaceProfiles.Select(profile => profile.Metadata.Name));
-
-        return builder.ToString().TrimEnd();
+        AisProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.AisProfiles.Select(profile => profile.Name));
+        DeviceProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.DeviceProfiles.Select(profile => profile.Metadata.Name));
+        ExportProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.ExportProfiles.Select(profile => profile.Metadata.Name));
+        InterfaceProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.InterfaceProfiles.Select(profile => profile.Metadata.Name));
     }
 
-    private static void AppendProfileSection(StringBuilder builder, string title, IEnumerable<string> names)
+    private void ClearProfileNameColumns()
     {
-        if (builder.Length > 0)
-        {
-            builder.AppendLine();
-        }
+        AisProfileNamesTextBox.Text = "Keine Profile geladen.";
+        DeviceProfileNamesTextBox.Text = string.Empty;
+        ExportProfileNamesTextBox.Text = string.Empty;
+        InterfaceProfileNamesTextBox.Text = string.Empty;
+    }
 
-        builder.AppendLine($"{title}:");
+    private static string FormatProfileNameColumn(IEnumerable<string> names)
+    {
         var orderedNames = names
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
@@ -590,14 +647,10 @@ public partial class MainWindow : Window
 
         if (orderedNames.Count == 0)
         {
-            builder.AppendLine("- Keine Profile geladen.");
-            return;
+            return "Keine Profile geladen.";
         }
 
-        foreach (var name in orderedNames)
-        {
-            builder.AppendLine($"- {name}");
-        }
+        return string.Join(Environment.NewLine, orderedNames);
     }
 
     private void InitializeLicenseOverview()
