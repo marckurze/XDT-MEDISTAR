@@ -53,6 +53,7 @@ public partial class MainWindow : Window
             ProfileBaseFolderText.Text = paths.BaseFolder;
             ProfileNamesTextBox.Text = FormatProfileNames(catalog);
             InitializeExportRulesView(catalog);
+            AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
             ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
         }
         catch (Exception ex)
@@ -67,6 +68,7 @@ public partial class MainWindow : Window
             ExportProfileComboBox.ItemsSource = null;
             ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
+            AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
     }
@@ -530,6 +532,7 @@ public partial class MainWindow : Window
         ShowPatient(_lastPipelineResult.Patient);
         MeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
         ExportPreviewTextBox.Text = _lastPipelineResult.ExportContent;
+        AvailablePlaceholdersTextBox.Text = FormatAvailablePlaceholders(_lastPipelineResult);
 
         _plannedFileName = _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
         PlannedFileNameText.Text = $"Geplanter Dateiname: {_plannedFileName}";
@@ -584,6 +587,50 @@ public partial class MainWindow : Window
         BirthDateText.Text = patient?.BirthDate ?? string.Empty;
         StreetText.Text = patient?.Street ?? string.Empty;
         PostalCodeCityText.Text = patient?.PostalCodeCity ?? string.Empty;
+    }
+
+    private static string FormatAvailablePlaceholders(ProcessingPipelineResult result)
+    {
+        var devicePlaceholders = result.Measurements
+            .Select(measurement => measurement.SourcePath)
+            .Where(sourcePath => !string.IsNullOrWhiteSpace(sourcePath))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(sourcePath => sourcePath, StringComparer.OrdinalIgnoreCase)
+            .Select(sourcePath => $"Device.{sourcePath}")
+            .ToList();
+
+        var builder = new StringBuilder();
+        builder.AppendLine("AIS-Platzhalter:");
+        builder.AppendLine("- AIS.PatientNumber");
+        builder.AppendLine("- AIS.LastName");
+        builder.AppendLine("- AIS.FirstName");
+        builder.AppendLine("- AIS.BirthDate");
+        builder.AppendLine("- AIS.Street");
+        builder.AppendLine("- AIS.PostalCodeCity");
+        builder.AppendLine("- AIS.ExaminationType");
+        builder.AppendLine();
+        builder.AppendLine("Device-Platzhalter:");
+
+        if (devicePlaceholders.Count == 0)
+        {
+            builder.AppendLine("- Keine Geräte-Platzhalter erkannt.");
+            return builder.ToString().TrimEnd();
+        }
+
+        foreach (var placeholder in devicePlaceholders)
+        {
+            builder.AppendLine($"- {placeholder}");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("Formatbeispiele:");
+        var examplePlaceholder = devicePlaceholders[0];
+        foreach (var format in new[] { "Raw", "Diopter", "Axis", "Pd", "Iop", "Pachy", "Prism", "Keratometry" })
+        {
+            builder.AppendLine($"- {{{examplePlaceholder}:{format}}}");
+        }
+
+        return builder.ToString().TrimEnd();
     }
 
     private void ShowIssues(IEnumerable<ProcessingIssue> issues)
