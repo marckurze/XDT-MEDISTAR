@@ -90,6 +90,68 @@ Spätere Profilanforderung:
 - Exportprofil `MEDISTAR + NIDEK LM7`
 - Ergebniszeilen über `6228` oder MEDISTAR-konfiguriertes Ziel prüfen
 
+## 4.1 NIDEK LM7 – erkannte SourcePaths
+
+Analysierte Beispieldateien:
+
+- `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK LM7\MEDISTAR Eintrag Lensmeter.txt`
+- `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK LM7\RKT\TXT\LM7.XML`
+
+Im Repository selbst wurden keine LM7-Beispieldateien gefunden. Die lokale Datei `LM7.XML` ist ein XML-Fragment ohne XML-Deklaration und ohne vollständigen Root-Knoten. Das Fragment enthält aktuell nur den Knoten `R` für das rechte Auge. Linkes Auge und PD sind im vorliegenden XML-Fragment nicht enthalten und müssen deshalb weiterhin anhand weiterer Beispieldateien validiert werden.
+
+Beobachtete XML-Struktur:
+
+```xml
+<R>
+  <Sphare unit="D">1.50</Sphare>
+  <Cylinder unit="D">-0.50</Cylinder>
+  <Axis unit="deg">128</Axis>
+  <SE unit="D"></SE>
+  <ADD unit="D">1.50</ADD>
+  <ADD2 unit="D"></ADD2>
+  <NearSphare unit="D">3.00</NearSphare>
+  <NearSphare2 unit="D"></NearSphare2>
+  <Prism unit="pri">2.00</Prism>
+  <PrismBase unit="deg">251</PrismBase>
+  <PrismX unit="pri" base="out">0.75</PrismX>
+  <PrismY unit="pri" base="down">2.00</PrismY>
+  <UVTransmittance unit="%">83</UVTransmittance>
+</R>
+```
+
+Erkannte bzw. abgeleitete SourcePaths:
+
+| Messwert | Erkannter SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| R Sphere | `R/Sphare` | `1.50` | erkannt; Schreibweise im XML lautet `Sphare`, nicht `Sphere` |
+| R Cylinder | `R/Cylinder` | `-0.50` | erkannt |
+| R Axis | `R/Axis` | `128` | erkannt |
+| R PrismHorizontal | `R/PrismX` | `0.75` | erkannt |
+| R PrismHorizontalBase | `R/PrismX/@base` | `out` | erkannt; Schreibweise für MEDISTAR-Ausgabe später auf `OUT` normalisieren |
+| R PrismVertical | `R/PrismY` | `2.00` | erkannt |
+| R PrismVerticalBase | `R/PrismY/@base` | `down` | erkannt; Schreibweise für MEDISTAR-Ausgabe später auf `DOWN` oder fachlich passende MEDISTAR-Notation normalisieren |
+| L Sphere | `L/Sphare` | - | noch zu validieren; linkes Auge im vorliegenden XML-Fragment nicht enthalten |
+| L Cylinder | `L/Cylinder` | - | noch zu validieren; linkes Auge im vorliegenden XML-Fragment nicht enthalten |
+| L Axis | `L/Axis` | - | noch zu validieren; linkes Auge im vorliegenden XML-Fragment nicht enthalten |
+| L PrismHorizontal | `L/PrismX` | - | noch zu validieren; linkes Auge im vorliegenden XML-Fragment nicht enthalten |
+| L PrismHorizontalBase | `L/PrismX/@base` | - | noch zu validieren; linkes Auge im vorliegenden XML-Fragment nicht enthalten |
+| L PrismVertical | `L/PrismY` | - | noch zu validieren; linkes Auge im vorliegenden XML-Fragment nicht enthalten |
+| L PrismVerticalBase | `L/PrismY/@base` | - | noch zu validieren; linkes Auge im vorliegenden XML-Fragment nicht enthalten |
+| PD | noch nicht erkannt | `59` im MEDISTAR-Beispiel | noch zu validieren; PD steht im MEDISTAR-Zielbild, aber nicht in `LM7.XML` |
+
+Zusätzlich beobachtete Felder:
+
+- `R/SE`
+- `R/ADD`
+- `R/ADD2`
+- `R/NearSphare`
+- `R/NearSphare2`
+- `R/Prism`
+- `R/PrismBase`
+- `R/UVTransmittance`
+
+Die Beziehung zwischen `Prism`/`PrismBase` und den getrennten Komponenten `PrismX`/`PrismY` muss fachlich noch validiert werden. Für das spätere LM7-Profil sind `PrismX` und `PrismY` besonders relevant, weil sie der MEDISTAR-Beispielausgabe mit horizontaler und vertikaler Prisma-Komponente nahekommen.
+
 ## 5. NIDEK NT530P
 
 Gerätetyp: Non-Contact-Tonometer / Pachymeter
