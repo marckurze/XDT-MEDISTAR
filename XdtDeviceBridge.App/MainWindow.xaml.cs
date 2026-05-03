@@ -52,6 +52,7 @@ public partial class MainWindow : Window
             InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
             ProfileBaseFolderText.Text = paths.BaseFolder;
             ProfileNamesTextBox.Text = FormatProfileNames(catalog);
+            InitializeExportRulesView(catalog);
             ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
         }
         catch (Exception ex)
@@ -63,8 +64,53 @@ public partial class MainWindow : Window
             _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
             ProfileNamesTextBox.Text = "Keine Profile geladen.";
+            ExportProfileComboBox.ItemsSource = null;
+            ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
+            ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
+    }
+
+    private void InitializeExportRulesView(ProfileCatalog catalog)
+    {
+        if (catalog.ExportProfiles.Count == 0)
+        {
+            ExportProfileComboBox.ItemsSource = null;
+            ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
+            ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
+            AppendProfileMessage("Keine Exportprofile geladen. Exportregeln können nicht angezeigt werden.");
+            return;
+        }
+
+        var exportProfiles = catalog.ExportProfiles
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        ExportProfileComboBox.ItemsSource = exportProfiles;
+        ExportProfileComboBox.SelectedIndex = 0;
+        ShowExportRulesForSelectedProfile();
+    }
+
+    private void ExportProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        ShowExportRulesForSelectedProfile();
+    }
+
+    private void ShowExportRulesForSelectedProfile()
+    {
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
+            ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
+            return;
+        }
+
+        var rules = exportProfile.Rules
+            .OrderBy(rule => rule.SortOrder)
+            .ToList();
+
+        ExportRulesGrid.ItemsSource = rules;
+        ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {rules.Count} Exportregeln";
     }
 
     private static string FormatProfileNames(ProfileCatalog catalog)
