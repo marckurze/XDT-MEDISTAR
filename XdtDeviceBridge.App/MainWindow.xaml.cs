@@ -1,6 +1,9 @@
 using Microsoft.Win32;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using XdtDeviceBridge.Core;
 using XdtDeviceBridge.Infrastructure;
@@ -25,17 +28,22 @@ public partial class MainWindow : Window
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
+    private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
+    private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
     private ProfileCatalog? _profileCatalog;
     private InstallationInfo? _installationInfo;
     private string? _plannedFileName;
+    private bool _updatingPlaceholderRows;
 
     public MainWindow()
     {
         InitializeComponent();
         DraftRuleTypeComboBox.ItemsSource = Enum.GetValues<ExportRuleType>();
+        AisPlaceholdersGrid.ItemsSource = _aisPlaceholderRows;
+        DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -56,7 +64,7 @@ public partial class MainWindow : Window
             ProfileBaseFolderText.Text = paths.BaseFolder;
             ShowProfileNameColumns(catalog);
             InitializeExportRulesView(catalog);
-            AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
+            UpdatePlaceholderTables();
             ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
         }
         catch (Exception ex)
@@ -74,7 +82,7 @@ public partial class MainWindow : Window
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             ClearDraftRuleEditor();
-            AvailablePlaceholdersTextBox.Text = "Noch keine Gerätedaten geladen.";
+            ClearPlaceholderTables();
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
     }
@@ -317,6 +325,7 @@ public partial class MainWindow : Window
         DraftSortOrderTextBox.Text = rule.SortOrder.ToString();
         DraftIsEnabledCheckBox.IsChecked = rule.IsEnabled;
         DraftDescriptionTextBox.Text = rule.Description ?? string.Empty;
+        RefreshPlaceholderUsageFromDraft();
     }
 
     private void ClearDraftRuleEditor()
@@ -329,9 +338,15 @@ public partial class MainWindow : Window
         DraftSortOrderTextBox.Text = string.Empty;
         DraftIsEnabledCheckBox.IsChecked = false;
         DraftDescriptionTextBox.Text = string.Empty;
+        RefreshPlaceholderUsageFromDraft();
     }
 
     private void UpdateDraftPreview_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateDraftPreviewFromCurrentDraft();
+    }
+
+    private void UpdateDraftPreviewFromCurrentDraft()
     {
         if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition selectedRule)
         {
@@ -561,6 +576,373 @@ public partial class MainWindow : Window
         builder.AppendLine();
     }
 
+    private void DraftOutputTemplateTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (_updatingPlaceholderRows)
+        {
+            return;
+        }
+
+        RefreshPlaceholderUsageFromDraft();
+    }
+
+    private void PlaceholderUseCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_updatingPlaceholderRows || sender is not System.Windows.Controls.CheckBox checkBox)
+        {
+            return;
+        }
+
+        if (checkBox.DataContext is not PlaceholderRow row)
+        {
+            return;
+        }
+
+        if (row.IsUsed)
+        {
+            InsertPlaceholderIntoDraft(row.Placeholder);
+        }
+        else
+        {
+            RemovePlaceholderFromDraft(row.Placeholder);
+        }
+
+        RefreshPlaceholderUsageFromDraft();
+        UpdateDraftPreviewFromCurrentDraft();
+    }
+
+    private void UpdatePlaceholderTables()
+    {
+        _updatingPlaceholderRows = true;
+        try
+        {
+            _aisPlaceholderRows.Clear();
+            foreach (var row in CreateAisPlaceholderRows())
+            {
+                _aisPlaceholderRows.Add(row);
+            }
+
+            _devicePlaceholderRows.Clear();
+            foreach (var row in CreateDevicePlaceholderRows())
+            {
+                _devicePlaceholderRows.Add(row);
+            }
+
+            DevicePlaceholdersStatusText.Text = _lastPipelineResult is null
+                ? "Device-Platzhalter - noch keine Gerätedaten geladen"
+                : $"Device-Platzhalter - {_devicePlaceholderRows.Count} erkannt";
+        }
+        finally
+        {
+            _updatingPlaceholderRows = false;
+        }
+
+        RefreshPlaceholderUsageFromDraft();
+    }
+
+    private void ClearPlaceholderTables()
+    {
+        _updatingPlaceholderRows = true;
+        try
+        {
+            _aisPlaceholderRows.Clear();
+            _devicePlaceholderRows.Clear();
+            DevicePlaceholdersStatusText.Text = "Device-Platzhalter - noch keine Gerätedaten geladen";
+        }
+        finally
+        {
+            _updatingPlaceholderRows = false;
+        }
+    }
+
+    private IReadOnlyList<PlaceholderRow> CreateAisPlaceholderRows()
+    {
+        var patient = _lastPipelineResult?.Patient;
+        var rows = new[]
+        {
+            CreatePlaceholderRow("AIS.PatientNumber", GetPatientPreviewValueOrNull("AIS.PatientNumber", patient), 0),
+            CreatePlaceholderRow("AIS.LastName", GetPatientPreviewValueOrNull("AIS.LastName", patient), 1),
+            CreatePlaceholderRow("AIS.FirstName", GetPatientPreviewValueOrNull("AIS.FirstName", patient), 2),
+            CreatePlaceholderRow("AIS.BirthDate", GetPatientPreviewValueOrNull("AIS.BirthDate", patient), 3),
+            CreatePlaceholderRow("AIS.ExaminationType", GetPatientPreviewValueOrNull("AIS.ExaminationType", patient), 4),
+            CreatePlaceholderRow("AIS.Street", GetPatientPreviewValueOrNull("AIS.Street", patient), 5),
+            CreatePlaceholderRow("AIS.PostalCodeCity", GetPatientPreviewValueOrNull("AIS.PostalCodeCity", patient), 6)
+        };
+
+        return rows
+            .OrderByDescending(row => row.HasValue)
+            .ThenBy(row => row.SortOrder)
+            .ToList();
+    }
+
+    private IReadOnlyList<PlaceholderRow> CreateDevicePlaceholderRows()
+    {
+        if (_lastPipelineResult is null)
+        {
+            return Array.Empty<PlaceholderRow>();
+        }
+
+        return _lastPipelineResult.Measurements
+            .Where(measurement => !string.IsNullOrWhiteSpace(measurement.SourcePath))
+            .GroupBy(measurement => measurement.SourcePath, StringComparer.OrdinalIgnoreCase)
+            .Select(group =>
+            {
+                var firstWithValue = group.FirstOrDefault(measurement => !string.IsNullOrWhiteSpace(measurement.Value));
+                var measurement = firstWithValue ?? group.First();
+                var placeholder = $"Device.{group.Key}";
+                return new PlaceholderRow(
+                    placeholder,
+                    GetFriendlyPlaceholderName(placeholder, measurement.DisplayName),
+                    measurement.Value ?? string.Empty,
+                    sortOrder: 0);
+            })
+            .OrderByDescending(row => row.HasValue)
+            .ThenBy(row => row.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(row => row.Placeholder, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static PlaceholderRow CreatePlaceholderRow(string placeholder, string? value, int sortOrder)
+    {
+        return new PlaceholderRow(
+            placeholder,
+            GetFriendlyPlaceholderName(placeholder, displayName: null),
+            value ?? string.Empty,
+            sortOrder);
+    }
+
+    private void RefreshPlaceholderUsageFromDraft()
+    {
+        var template = DraftOutputTemplateTextBox.Text ?? string.Empty;
+        _updatingPlaceholderRows = true;
+        try
+        {
+            foreach (var row in _aisPlaceholderRows.Concat(_devicePlaceholderRows))
+            {
+                row.IsUsed = TemplateContainsPlaceholder(template, row.Placeholder);
+            }
+        }
+        finally
+        {
+            _updatingPlaceholderRows = false;
+        }
+    }
+
+    private void InsertPlaceholderIntoDraft(string placeholder)
+    {
+        var text = DraftOutputTemplateTextBox.Text ?? string.Empty;
+        if (TemplateContainsPlaceholder(text, placeholder))
+        {
+            return;
+        }
+
+        var token = BuildPlaceholderToken(placeholder);
+        var insertionIndex = Math.Clamp(DraftOutputTemplateTextBox.CaretIndex, 0, text.Length);
+        var prefix = insertionIndex > 0 && !char.IsWhiteSpace(text[insertionIndex - 1]) ? " " : string.Empty;
+        var suffix = insertionIndex < text.Length && !char.IsWhiteSpace(text[insertionIndex]) ? " " : string.Empty;
+        var insertion = $"{prefix}{token}{suffix}";
+
+        DraftOutputTemplateTextBox.Text = text.Insert(insertionIndex, insertion);
+        DraftOutputTemplateTextBox.CaretIndex = insertionIndex + prefix.Length + token.Length;
+        DraftOutputTemplateTextBox.Focus();
+    }
+
+    private void RemovePlaceholderFromDraft(string placeholder)
+    {
+        var text = DraftOutputTemplateTextBox.Text ?? string.Empty;
+        var pattern = @"\{" + Regex.Escape(placeholder) + @"(?::[^{}]+)?\}";
+        var updatedText = Regex.Replace(text, pattern, string.Empty, RegexOptions.IgnoreCase);
+        updatedText = CleanupRemovedPlaceholderWhitespace(updatedText);
+
+        DraftOutputTemplateTextBox.Text = updatedText;
+        DraftOutputTemplateTextBox.CaretIndex = Math.Min(DraftOutputTemplateTextBox.CaretIndex, updatedText.Length);
+        DraftOutputTemplateTextBox.Focus();
+    }
+
+    private static string CleanupRemovedPlaceholderWhitespace(string text)
+    {
+        var lines = text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n')
+            .Select(line => line.TrimEnd());
+
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static bool TemplateContainsPlaceholder(string template, string placeholder)
+    {
+        return ExtractPlaceholderTokens(template)
+            .Select(SplitPreviewFormatToken)
+            .Any(token => string.Equals(token, placeholder, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string BuildPlaceholderToken(string placeholder)
+    {
+        var suggestedFormat = GetSuggestedFormat(placeholder);
+        return string.IsNullOrWhiteSpace(suggestedFormat)
+            ? $"{{{placeholder}}}"
+            : $"{{{placeholder}:{suggestedFormat}}}";
+    }
+
+    private static string? GetSuggestedFormat(string placeholder)
+    {
+        if (!placeholder.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var normalized = placeholder[7..];
+        if (ContainsAny(normalized, "Sphere", "Sphare", "Cylinder", "SE"))
+        {
+            return "Diopter";
+        }
+
+        if (ContainsAny(normalized, "Axis"))
+        {
+            return "Axis";
+        }
+
+        if (ContainsAny(normalized, "FarPD", "NearPD", "PD"))
+        {
+            return "Pd";
+        }
+
+        if (ContainsAny(normalized, "IOP", "CorrectedIOP", "/NT", "NT/"))
+        {
+            return "Iop";
+        }
+
+        if (ContainsAny(normalized, "Pachy", "PACHY", "CCT"))
+        {
+            return "Pachy";
+        }
+
+        if (ContainsAny(normalized, "Prism"))
+        {
+            return "Prism";
+        }
+
+        if (ContainsAny(normalized, "Keratometry", "K1", "K2", "Power", "Radius"))
+        {
+            return "Keratometry";
+        }
+
+        return null;
+    }
+
+    private static string GetFriendlyPlaceholderName(string placeholder, string? displayName)
+    {
+        return placeholder switch
+        {
+            "AIS.PatientNumber" => "Patientennummer",
+            "AIS.LastName" => "Nachname",
+            "AIS.FirstName" => "Vorname",
+            "AIS.BirthDate" => "Geburtsdatum",
+            "AIS.ExaminationType" => "Untersuchungsart",
+            "AIS.Street" => "Straße",
+            "AIS.PostalCodeCity" => "PLZ / Ort",
+            _ => GetFriendlyDevicePlaceholderName(placeholder, displayName)
+        };
+    }
+
+    private static string GetFriendlyDevicePlaceholderName(string placeholder, string? displayName)
+    {
+        var sourcePath = placeholder.StartsWith("Device.", StringComparison.OrdinalIgnoreCase)
+            ? placeholder[7..]
+            : placeholder;
+        var eye = GetFriendlyEyeName(sourcePath);
+
+        string name;
+        if (ContainsAny(sourcePath, "FarPD"))
+        {
+            name = "Pupillendistanz Ferne";
+        }
+        else if (ContainsAny(sourcePath, "NearPD"))
+        {
+            name = "Pupillendistanz Nähe";
+        }
+        else if (ContainsAny(sourcePath, "PD"))
+        {
+            name = "Pupillendistanz";
+        }
+        else if (ContainsAny(sourcePath, "Sphere", "Sphare"))
+        {
+            name = "Sphäre";
+        }
+        else if (ContainsAny(sourcePath, "Cylinder"))
+        {
+            name = "Zylinder";
+        }
+        else if (ContainsAny(sourcePath, "Axis"))
+        {
+            name = "Achse";
+        }
+        else if (ContainsAny(sourcePath, "SE"))
+        {
+            name = "Sphärisches Äquivalent";
+        }
+        else if (ContainsAny(sourcePath, "IOP", "CorrectedIOP", "/NT", "NT/"))
+        {
+            name = "Augeninnendruck";
+        }
+        else if (ContainsAny(sourcePath, "Pachy", "PACHY", "CCT"))
+        {
+            name = "Pachymetrie / Hornhautdicke";
+        }
+        else if (ContainsAny(sourcePath, "Prism"))
+        {
+            name = "Prisma";
+        }
+        else if (ContainsAny(sourcePath, "Keratometry", "K1", "K2", "Power", "Radius"))
+        {
+            name = "Keratometrie";
+        }
+        else
+        {
+            name = !string.IsNullOrWhiteSpace(displayName)
+                ? displayName.Trim()
+                : DeriveNameFromSourcePath(sourcePath);
+        }
+
+        return string.IsNullOrWhiteSpace(eye) || name.Contains("Pupillendistanz", StringComparison.OrdinalIgnoreCase)
+            ? name
+            : $"{name} {eye}";
+    }
+
+    private static string GetFriendlyEyeName(string sourcePath)
+    {
+        var segments = sourcePath.Split(new[] { '/', '.', '[', ']', '@', '=', '\'' }, StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(segment => string.Equals(segment, "R", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(segment, "Right", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "rechts";
+        }
+
+        if (segments.Any(segment => string.Equals(segment, "L", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(segment, "Left", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "links";
+        }
+
+        return string.Empty;
+    }
+
+    private static string DeriveNameFromSourcePath(string sourcePath)
+    {
+        var lastSegment = sourcePath
+            .Split(new[] { '/', '.', '[', ']', '@', '=', '\'' }, StringSplitOptions.RemoveEmptyEntries)
+            .LastOrDefault();
+
+        return string.IsNullOrWhiteSpace(lastSegment)
+            ? sourcePath
+            : lastSegment;
+    }
+
+    private static bool ContainsAny(string value, params string[] parts)
+    {
+        return parts.Any(part => value.Contains(part, StringComparison.OrdinalIgnoreCase));
+    }
+
     private static IEnumerable<string> ExtractPlaceholderTokens(string template)
     {
         var index = 0;
@@ -620,6 +1002,11 @@ public partial class MainWindow : Window
             "AIS.ExaminationType" => patient.ExaminationType,
             _ => null
         };
+    }
+
+    private static string? GetPatientPreviewValueOrNull(string sourcePath, PatientData? patient)
+    {
+        return patient is null ? null : GetPatientPreviewValue(sourcePath, patient);
     }
 
     private void ShowProfileNameColumns(ProfileCatalog catalog)
@@ -1026,7 +1413,7 @@ public partial class MainWindow : Window
         ShowPatient(_lastPipelineResult.Patient);
         MeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
         ExportPreviewTextBox.Text = _lastPipelineResult.ExportContent;
-        AvailablePlaceholdersTextBox.Text = FormatAvailablePlaceholders(_lastPipelineResult);
+        UpdatePlaceholderTables();
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
 
@@ -1085,50 +1472,6 @@ public partial class MainWindow : Window
         PostalCodeCityText.Text = patient?.PostalCodeCity ?? string.Empty;
     }
 
-    private static string FormatAvailablePlaceholders(ProcessingPipelineResult result)
-    {
-        var devicePlaceholders = result.Measurements
-            .Select(measurement => measurement.SourcePath)
-            .Where(sourcePath => !string.IsNullOrWhiteSpace(sourcePath))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(sourcePath => sourcePath, StringComparer.OrdinalIgnoreCase)
-            .Select(sourcePath => $"Device.{sourcePath}")
-            .ToList();
-
-        var builder = new StringBuilder();
-        builder.AppendLine("AIS-Platzhalter:");
-        builder.AppendLine("- AIS.PatientNumber");
-        builder.AppendLine("- AIS.LastName");
-        builder.AppendLine("- AIS.FirstName");
-        builder.AppendLine("- AIS.BirthDate");
-        builder.AppendLine("- AIS.Street");
-        builder.AppendLine("- AIS.PostalCodeCity");
-        builder.AppendLine("- AIS.ExaminationType");
-        builder.AppendLine();
-        builder.AppendLine("Device-Platzhalter:");
-
-        if (devicePlaceholders.Count == 0)
-        {
-            builder.AppendLine("- Keine Geräte-Platzhalter erkannt.");
-            return builder.ToString().TrimEnd();
-        }
-
-        foreach (var placeholder in devicePlaceholders)
-        {
-            builder.AppendLine($"- {placeholder}");
-        }
-
-        builder.AppendLine();
-        builder.AppendLine("Formatbeispiele:");
-        var examplePlaceholder = devicePlaceholders[0];
-        foreach (var format in new[] { "Raw", "Diopter", "Axis", "Pd", "Iop", "Pachy", "Prism", "Keratometry" })
-        {
-            builder.AppendLine($"- {{{examplePlaceholder}:{format}}}");
-        }
-
-        return builder.ToString().TrimEnd();
-    }
-
     private void ShowIssues(IEnumerable<ProcessingIssue> issues)
     {
         var visibleIssues = issues
@@ -1179,5 +1522,45 @@ public partial class MainWindow : Window
 
         textBox.AppendText(message);
         textBox.ScrollToEnd();
+    }
+
+    private sealed class PlaceholderRow : INotifyPropertyChanged
+    {
+        private bool _isUsed;
+
+        public PlaceholderRow(string placeholder, string displayName, string value, int sortOrder)
+        {
+            Placeholder = placeholder;
+            DisplayName = displayName;
+            Value = value;
+            SortOrder = sortOrder;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public string Placeholder { get; }
+
+        public string DisplayName { get; }
+
+        public string Value { get; }
+
+        public int SortOrder { get; }
+
+        public bool HasValue => !string.IsNullOrWhiteSpace(Value);
+
+        public bool IsUsed
+        {
+            get => _isUsed;
+            set
+            {
+                if (_isUsed == value)
+                {
+                    return;
+                }
+
+                _isUsed = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsUsed)));
+            }
+        }
     }
 }

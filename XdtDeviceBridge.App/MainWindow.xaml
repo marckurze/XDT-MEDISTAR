@@ -361,7 +361,8 @@
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
                                          VerticalScrollBarVisibility="Auto"
-                                         ToolTip="Ausgabeformat. Platzhalter werden in geschweiften Klammern geschrieben, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}."
+                                          ToolTip="Ausgabeformat. Platzhalter werden in geschweiften Klammern geschrieben, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}."
+                                         TextChanged="DraftOutputTemplateTextBox_TextChanged"
                                          Margin="0,0,0,8"/>
                                 <CheckBox Grid.Row="5" Grid.Column="1" x:Name="DraftIsEnabledCheckBox" Content="IsEnabled" VerticalAlignment="Center" Margin="0,0,16,0" ToolTip="Legt fest, ob diese Regel beim Export berücksichtigt wird."/>
                                 <TextBlock Grid.Row="5" Grid.Column="2" Text="Description:" FontWeight="Bold" Margin="0,0,8,0" ToolTip="Beschreibung oder Hinweis zur Regel."/>
@@ -394,18 +395,84 @@
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="220"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="220"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,8">
                                     Platzhalter müssen mit geschweiften Klammern geschrieben werden, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}. Runde Klammern wie (Device.Date) werden nicht ersetzt.
+                                    Über die Checkbox "Verwenden" kann ein Platzhalter in den aktuellen Entwurf eingefügt oder daraus entfernt werden. Der Ergebnistext bleibt weiterhin frei editierbar.
                                 </TextBlock>
-                                <TextBox Grid.Row="1"
-                                         x:Name="AvailablePlaceholdersTextBox"
-                                         MinHeight="220"
-                                         IsReadOnly="True"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         VerticalScrollBarVisibility="Auto"/>
+                                <TextBlock Grid.Row="1" Text="AIS-Platzhalter" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <DataGrid Grid.Row="2"
+                                          x:Name="AisPlaceholdersGrid"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasValue}" Value="True">
+                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="220" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Verständlicher Name" Binding="{Binding DisplayName}" Width="180" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
+                                        <DataGridTemplateColumn Header="Verwenden" Width="90">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                              HorizontalAlignment="Center"
+                                                              Checked="PlaceholderUseCheckBox_Changed"
+                                                              Unchecked="PlaceholderUseCheckBox_Changed"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Grid.Row="3" x:Name="DevicePlaceholdersStatusText" Text="Device-Platzhalter" FontWeight="Bold" Margin="0,8,0,4"/>
+                                <DataGrid Grid.Row="4"
+                                          x:Name="DevicePlaceholdersGrid"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasValue}" Value="True">
+                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="260" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Verständlicher Name" Binding="{Binding DisplayName}" Width="210" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
+                                        <DataGridTemplateColumn Header="Verwenden" Width="90">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                              HorizontalAlignment="Center"
+                                                              Checked="PlaceholderUseCheckBox_Changed"
+                                                              Unchecked="PlaceholderUseCheckBox_Changed"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </Grid>
                         </GroupBox>
 
