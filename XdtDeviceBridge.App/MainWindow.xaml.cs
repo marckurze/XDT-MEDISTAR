@@ -51,6 +51,7 @@ public partial class MainWindow : Window
             ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
             InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
             ProfileBaseFolderText.Text = paths.BaseFolder;
+            ProfileNamesTextBox.Text = FormatProfileNames(catalog);
         }
         catch (Exception ex)
         {
@@ -60,7 +61,52 @@ public partial class MainWindow : Window
             InterfaceProfileCountText.Text = "-";
             _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
+            ProfileNamesTextBox.Text = "Keine Profile geladen.";
             AppendMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
+        }
+    }
+
+    private static string FormatProfileNames(ProfileCatalog catalog)
+    {
+        if (catalog.AisProfiles.Count == 0
+            && catalog.DeviceProfiles.Count == 0
+            && catalog.ExportProfiles.Count == 0
+            && catalog.InterfaceProfiles.Count == 0)
+        {
+            return "Keine Profile geladen.";
+        }
+
+        var builder = new StringBuilder();
+        AppendProfileSection(builder, "AIS", catalog.AisProfiles.Select(profile => profile.Name));
+        AppendProfileSection(builder, "Geräte", catalog.DeviceProfiles.Select(profile => profile.Metadata.Name));
+        AppendProfileSection(builder, "Exportprofile", catalog.ExportProfiles.Select(profile => profile.Metadata.Name));
+        AppendProfileSection(builder, "Schnittstellenprofile", catalog.InterfaceProfiles.Select(profile => profile.Metadata.Name));
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendProfileSection(StringBuilder builder, string title, IEnumerable<string> names)
+    {
+        if (builder.Length > 0)
+        {
+            builder.AppendLine();
+        }
+
+        builder.AppendLine($"{title}:");
+        var orderedNames = names
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        if (orderedNames.Count == 0)
+        {
+            builder.AppendLine("- Keine Profile geladen.");
+            return;
+        }
+
+        foreach (var name in orderedNames)
+        {
+            builder.AppendLine($"- {name}");
         }
     }
 

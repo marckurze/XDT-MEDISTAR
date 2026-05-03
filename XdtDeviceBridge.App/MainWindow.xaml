@@ -63,6 +63,17 @@
                     <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,0" Click="ExportTemplatePackage_Click"/>
                     <Button Content="Templatepaket importieren" Width="190" Click="ImportTemplatePackage_Click"/>
                 </StackPanel>
+                <TextBox Grid.Row="2"
+                         Grid.Column="0"
+                         Grid.ColumnSpan="10"
+                         x:Name="ProfileNamesTextBox"
+                         Margin="0,8,0,0"
+                         MinHeight="120"
+                         MaxHeight="180"
+                         IsReadOnly="True"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"/>
             </Grid>
         </GroupBox>
 
