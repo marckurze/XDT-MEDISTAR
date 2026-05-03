@@ -31,6 +31,10 @@
 
         <GroupBox Header="Profile" Grid.Row="3" Margin="0,0,0,8">
             <Grid Margin="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="80"/>
@@ -43,16 +47,17 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="AIS:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Column="1" x:Name="AisProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Column="2" Text="Geräte:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Column="3" x:Name="DeviceProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Column="4" Text="Export:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Column="5" x:Name="ExportProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Column="6" Text="Schnittstellen:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Column="7" x:Name="InterfaceProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Column="8" Text="BaseFolder:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Column="9" x:Name="ProfileBaseFolderText" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="AisProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Geräte:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="DeviceProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="4" Text="Export:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="5" x:Name="ExportProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="6" Text="Schnittstellen:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="7" x:Name="InterfaceProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="8" Text="BaseFolder:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Row="0" Grid.Column="9" x:Name="ProfileBaseFolderText" TextTrimming="CharacterEllipsis"/>
+                <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="10" Content="Templatepaket exportieren" Width="190" Margin="0,8,0,0" HorizontalAlignment="Left" Click="ExportTemplatePackage_Click"/>
             </Grid>
         </GroupBox>
 

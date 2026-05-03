@@ -14,9 +14,11 @@ public partial class MainWindow : Window
     private readonly FileExportService _fileExportService = new();
     private readonly AppDataPathProvider _appDataPathProvider = new();
     private readonly ProfileCatalogService _profileCatalogService = new();
+    private readonly TemplatePackageExporter _templatePackageExporter = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
+    private ProfileCatalog? _profileCatalog;
     private string? _plannedFileName;
 
     public MainWindow()
@@ -32,6 +34,7 @@ public partial class MainWindow : Window
             var paths = _appDataPathProvider.GetDefaultUserPaths();
             _profileCatalogService.EnsureDefaultProfiles(paths);
             var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
 
             AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
             DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
@@ -45,9 +48,80 @@ public partial class MainWindow : Window
             DeviceProfileCountText.Text = "-";
             ExportProfileCountText.Text = "-";
             InterfaceProfileCountText.Text = "-";
+            _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
             AppendMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
+    }
+
+    private void ExportTemplatePackage_Click(object sender, RoutedEventArgs e)
+    {
+        if (_profileCatalog is null)
+        {
+            AppendMessage("Templatepaket kann nicht exportiert werden, weil keine V2-Profile geladen sind.");
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
+            FileName = "XdtDeviceBridge_MEDISTAR_NIDEK_ARK1S_Template.zip",
+            DefaultExt = ".zip",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var request = CreateTemplatePackageExportRequest(_profileCatalog, DateTime.UtcNow);
+            _templatePackageExporter.Export(dialog.FileName, request);
+            AppendMessage($"Templatepaket erfolgreich exportiert: {dialog.FileName}");
+        }
+        catch (Exception ex)
+        {
+            AppendMessage($"Templatepaket konnte nicht exportiert werden: {ex.Message}");
+        }
+    }
+
+    private static TemplatePackageExportRequest CreateTemplatePackageExportRequest(ProfileCatalog catalog, DateTime createdAtUtc)
+    {
+        var includedProfiles = catalog.AisProfiles.Select(profile => profile.Metadata)
+            .Concat(catalog.DeviceProfiles.Select(profile => profile.Metadata))
+            .Concat(catalog.ExportProfiles.Select(profile => profile.Metadata))
+            .Concat(catalog.InterfaceProfiles.Select(profile => profile.Metadata))
+            .ToArray();
+
+        var package = new TemplatePackage(
+            Metadata: new ProfileMetadata(
+                Id: "package-medistar-nidek-ark1s",
+                Name: "MEDISTAR + NIDEK ARK1S",
+                ProfileKind: ProfileKind.TemplatePackage,
+                Description: "Validated MEDISTAR/NIDEK ARK1S template package",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK ARK1S",
+                Version: "1.0.0",
+                CreatedAt: new DateTimeOffset(createdAtUtc),
+                UpdatedAt: new DateTimeOffset(createdAtUtc),
+                CreatedBy: Environment.UserName,
+                IsBuiltIn: false,
+                IsUserDefined: true),
+            IncludedProfiles: includedProfiles,
+            PackageFormatVersion: "1.0",
+            CreatedAt: createdAtUtc,
+            CreatedBy: Environment.UserName,
+            Description: "Validated MEDISTAR/NIDEK ARK1S template package");
+
+        return new TemplatePackageExportRequest(
+            Package: package,
+            AisProfiles: catalog.AisProfiles,
+            DeviceProfiles: catalog.DeviceProfiles,
+            ExportProfiles: catalog.ExportProfiles,
+            InterfaceProfiles: catalog.InterfaceProfiles);
     }
 
     private void SelectAisFile_Click(object sender, RoutedEventArgs e)
