@@ -219,4 +219,76 @@ public static class DefaultExportProfileDefinitions
                     "MEDISTAR lensmeter card text for TOPCON CL300 left eye. Prism/Additionswerte werden später ergänzt.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarTopconKr800Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-topcon-kr800-default",
+                Name: "MEDISTAR + TOPCON KR800 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON KR800 REF/KM/SBJ data. KM-Ausgabe, SBJ-Auswahl und JOIA-Namespace-Normalisierung werden später präzisiert.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON KR800",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-topcon-kr800-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6228",
+                    "RefResultRight",
+                    ExportRuleType.Template,
+                    null,
+                    "R.:S={Device.Ophthalmology/Measure[@type='REF']/REF/R/Median/Sphere:Diopter} Z={Device.Ophthalmology/Measure[@type='REF']/REF/R/Median/Cylinder:Diopter}*{Device.Ophthalmology/Measure[@type='REF']/REF/R/Median/Axis:Axis}                              PD={Device.Ophthalmology/Measure[@type='REF']/PD/Distance:Pd}",
+                    7,
+                    true,
+                    "MEDISTAR autorefractor card text for TOPCON KR800 REF right eye."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6228",
+                    "RefResultLeft",
+                    ExportRuleType.Template,
+                    null,
+                    "L.:S={Device.Ophthalmology/Measure[@type='REF']/REF/L/Median/Sphere:Diopter} Z={Device.Ophthalmology/Measure[@type='REF']/REF/L/Median/Cylinder:Diopter}*{Device.Ophthalmology/Measure[@type='REF']/REF/L/Median/Axis:Axis}                              PD={Device.Ophthalmology/Measure[@type='REF']/PD/Distance:Pd}",
+                    8,
+                    true,
+                    "MEDISTAR autorefractor card text for TOPCON KR800 REF left eye."),
+                new ExportRuleDefinition(
+                    "9",
+                    "6228",
+                    "KeratometryResultRight",
+                    ExportRuleType.Template,
+                    null,
+                    "KR: K1={Device.Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Power:Keratometry}*{Device.Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Axis:Axis} K2={Device.Ophthalmology/Measure[@type='KM']/KM/R/Median/R2/Power:Keratometry}*{Device.Ophthalmology/Measure[@type='KM']/KM/R/Median/R2/Axis:Axis}",
+                    9,
+                    true,
+                    "KM-Ausgabe noch zu validieren."),
+                new ExportRuleDefinition(
+                    "10",
+                    "6228",
+                    "KeratometryResultLeft",
+                    ExportRuleType.Template,
+                    null,
+                    "KL: K1={Device.Ophthalmology/Measure[@type='KM']/KM/L/Median/R1/Power:Keratometry}*{Device.Ophthalmology/Measure[@type='KM']/KM/L/Median/R1/Axis:Axis} K2={Device.Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Power:Keratometry}*{Device.Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Axis:Axis}",
+                    10,
+                    true,
+                    "KM-Ausgabe noch zu validieren.")
+            });
+    }
 }

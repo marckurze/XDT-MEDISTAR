@@ -317,6 +317,83 @@ public sealed class ExportProfileDefinitionTests
         Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("L.:S="));
     }
 
+    [Fact]
+    public void CreateMedistarTopconKr800Default_ShouldCreateProfile()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();
+
+        Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
+        Assert.Equal("device-topcon-kr800-default", profile.SourceDeviceProfileId);
+        Assert.Equal("Windows-1252", profile.OutputEncoding);
+        Assert.Equal(10, profile.Rules.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptMedistarTopconKr800DefaultProfile()
+    {
+        var issues = ExportProfileDefinitionValidator.Validate(DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void CreateMedistarTopconKr800Default_ShouldContainStaticValueRuleFor8000()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8000"
+            && rule.RuleType == ExportRuleType.StaticValue
+            && rule.SourcePath is null
+            && rule.OutputTemplate == "6310");
+    }
+
+    [Fact]
+    public void CreateMedistarTopconKr800Default_ShouldContainAisFieldRuleFor8402()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8402"
+            && rule.RuleType == ExportRuleType.AisField
+            && rule.SourcePath == "AIS.ExaminationType");
+    }
+
+    [Fact]
+    public void CreateMedistarTopconKr800Default_ShouldContainRefTemplateRulesFor6228()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();
+        var refRules = profile.Rules
+            .Where(rule =>
+                rule.TargetFieldCode == "6228"
+                && rule.RuleType == ExportRuleType.Template
+                && rule.TargetName.StartsWith("Ref", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.Equal(2, refRules.Count);
+        Assert.Contains(refRules, rule => rule.OutputTemplate.Contains("R.:S="));
+        Assert.Contains(refRules, rule => rule.OutputTemplate.Contains("L.:S="));
+        Assert.All(refRules, rule => Assert.Contains(":Diopter", rule.OutputTemplate));
+        Assert.All(refRules, rule => Assert.Contains(":Axis", rule.OutputTemplate));
+        Assert.All(refRules, rule => Assert.Contains(":Pd", rule.OutputTemplate));
+    }
+
+    [Fact]
+    public void CreateMedistarTopconKr800Default_ShouldPrepareProvisionalKmRules()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();
+        var kmRules = profile.Rules
+            .Where(rule =>
+                rule.TargetFieldCode == "6228"
+                && rule.RuleType == ExportRuleType.Template
+                && rule.TargetName.Contains("Keratometry", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        Assert.Equal(2, kmRules.Count);
+        Assert.All(kmRules, rule => Assert.Contains(":Keratometry", rule.OutputTemplate));
+        Assert.All(kmRules, rule => Assert.Contains("KM-Ausgabe noch zu validieren", rule.Description ?? string.Empty));
+    }
+
     private static ExportProfileDefinition WithModifiedRule(
         string id,
         Func<ExportRuleDefinition, ExportRuleDefinition> modify)

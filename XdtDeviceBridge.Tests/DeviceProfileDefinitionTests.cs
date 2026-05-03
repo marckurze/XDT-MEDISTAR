@@ -305,6 +305,79 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Empty(issues);
     }
 
+    [Fact]
+    public void CreateTopconKr800Default_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+
+        Assert.Equal("TOPCON", profile.Manufacturer);
+        Assert.Equal("KR800", profile.Model);
+        Assert.Contains("Autorefractor", profile.DeviceType);
+        Assert.Contains("Keratometer", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.True(profile.CanContainMultipleExaminationTypes);
+        Assert.Contains("REF", profile.SupportedExaminationTypes);
+        Assert.Contains("KM", profile.SupportedExaminationTypes);
+        Assert.Contains("SBJ", profile.SupportedExaminationTypes);
+        Assert.Contains("PD", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateTopconKr800Default_ShouldContainRequiredRefMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+
+        AssertRequiredMeasurement(profile, "kr800-ref-r-sphere", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Sphere");
+        AssertRequiredMeasurement(profile, "kr800-ref-r-cylinder", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Cylinder");
+        AssertRequiredMeasurement(profile, "kr800-ref-r-axis", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Axis");
+        AssertRequiredMeasurement(profile, "kr800-ref-l-sphere", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Sphere");
+        AssertRequiredMeasurement(profile, "kr800-ref-l-cylinder", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Cylinder");
+        AssertRequiredMeasurement(profile, "kr800-ref-l-axis", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Axis");
+    }
+
+    [Fact]
+    public void CreateTopconKr800Default_ShouldContainOptionalKmMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+
+        AssertOptionalMeasurement(profile, "kr800-km-r-k1-power", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Power");
+        AssertOptionalMeasurement(profile, "kr800-km-r-k2-power", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R2/Power");
+        AssertOptionalMeasurement(profile, "kr800-km-l-k1-power", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R1/Power");
+        AssertOptionalMeasurement(profile, "kr800-km-l-k2-power", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Power");
+        Assert.Contains(profile.Measurements, measurement =>
+            measurement.Group == "KM"
+            && !measurement.IsRequired
+            && (measurement.Description ?? string.Empty).Contains("KM-Ausgabe noch zu validieren", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void CreateTopconKr800Default_ShouldContainUnvalidatedSbjMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+
+        AssertUnvalidatedOptionalMeasurement(profile, "kr800-sbj-r-sphere", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph");
+        AssertUnvalidatedOptionalMeasurement(profile, "kr800-sbj-l-sphere", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Sph");
+        AssertUnvalidatedOptionalMeasurement(profile, "kr800-sbj-pd-b", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B");
+    }
+
+    [Fact]
+    public void CreateTopconKr800Default_ShouldDocumentNamespaceRequirement()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+
+        Assert.Contains("Namespace-Normalisierung", profile.Metadata.Description);
+        Assert.Contains(profile.Measurements, measurement =>
+            (measurement.Description ?? string.Empty).Contains("Namespace-Normalisierung", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptTopconKr800Profile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateTopconKr800Default());
+
+        Assert.Empty(issues);
+    }
+
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);

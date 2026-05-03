@@ -188,4 +188,66 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
             CanContainMultipleExaminationTypes: false);
     }
+
+    public static DeviceProfileDefinition CreateTopconKr800Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-topcon-kr800-default",
+                Name: "TOPCON KR800",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON KR800 JOIA/Ophthalmology XML multi-examination files. Namespace-Normalisierung ist später im Parser erforderlich.",
+                Vendor: "TOPCON",
+                Product: "KR800",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOPCON",
+            Model: "KR800",
+            DeviceType: "Autorefractor/Keratometer",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("kr800-company", "Company", "Ophthalmology/Common/Company", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common company field; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-model-name", "ModelName", "Ophthalmology/Common/ModelName", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common model field; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-ref-r-sphere", "REF R Sphere", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Sphere", "REF", "R", "dpt", true, "Right autorefractor sphere from TOPCON KR800 REF median values; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-ref-r-cylinder", "REF R Cylinder", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Cylinder", "REF", "R", "dpt", true, "Right autorefractor cylinder from TOPCON KR800 REF median values; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-ref-r-axis", "REF R Axis", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Axis", "REF", "R", "deg", true, "Right autorefractor axis from TOPCON KR800 REF median values; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-ref-r-se", "REF R SE", "Ophthalmology/Measure[@type='REF']/REF/R/Median/SE", "REF", "R", "dpt", false, "Right spherical equivalent from TOPCON KR800 REF median values; optional for output."),
+                new DeviceMeasurementDefinition("kr800-ref-l-sphere", "REF L Sphere", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Sphere", "REF", "L", "dpt", true, "Left autorefractor sphere from TOPCON KR800 REF median values; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-ref-l-cylinder", "REF L Cylinder", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Cylinder", "REF", "L", "dpt", true, "Left autorefractor cylinder from TOPCON KR800 REF median values; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-ref-l-axis", "REF L Axis", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Axis", "REF", "L", "deg", true, "Left autorefractor axis from TOPCON KR800 REF median values; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-ref-l-se", "REF L SE", "Ophthalmology/Measure[@type='REF']/REF/L/Median/SE", "REF", "L", "dpt", false, "Left spherical equivalent from TOPCON KR800 REF median values; optional for output."),
+                new DeviceMeasurementDefinition("kr800-ref-pd-distance", "REF PD Distance", "Ophthalmology/Measure[@type='REF']/PD/Distance", "REF", string.Empty, "mm", false, "Binocular PD distance from TOPCON KR800 REF block; optional because output selection is noch zu validieren."),
+                new DeviceMeasurementDefinition("kr800-ref-pd-near", "REF PD Near", "Ophthalmology/Measure[@type='REF']/PD/Near", "REF", string.Empty, "mm", false, "Near PD from TOPCON KR800 REF block; optional and noch zu validieren."),
+                new DeviceMeasurementDefinition("kr800-km-r-k1-radius", "KM R K1 Radius", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Radius", "KM", "R", "mm", false, "Right K1 radius; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-r-k1-power", "KM R K1 Power", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Power", "KM", "R", "dpt", false, "Right K1 power; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-r-k1-axis", "KM R K1 Axis", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Axis", "KM", "R", "deg", false, "Right K1 axis; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-r-k2-radius", "KM R K2 Radius", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R2/Radius", "KM", "R", "mm", false, "Right K2 radius; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-r-k2-power", "KM R K2 Power", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R2/Power", "KM", "R", "dpt", false, "Right K2 power; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-r-k2-axis", "KM R K2 Axis", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R2/Axis", "KM", "R", "deg", false, "Right K2 axis; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-l-k1-radius", "KM L K1 Radius", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R1/Radius", "KM", "L", "mm", false, "Left K1 radius; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-l-k1-power", "KM L K1 Power", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R1/Power", "KM", "L", "dpt", false, "Left K1 power; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-l-k1-axis", "KM L K1 Axis", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R1/Axis", "KM", "L", "deg", false, "Left K1 axis; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-l-k2-radius", "KM L K2 Radius", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Radius", "KM", "L", "mm", false, "Left K2 radius; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-l-k2-power", "KM L K2 Power", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Power", "KM", "L", "dpt", false, "Left K2 power; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-km-l-k2-axis", "KM L K2 Axis", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Axis", "KM", "L", "deg", false, "Left K2 axis; KM-Ausgabe noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-sbj-r-sphere", "SBJ R Sphere", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph", "SBJ", "R", "dpt", false, "Subjective right sphere; noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-sbj-r-cylinder", "SBJ R Cylinder", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Cyl", "SBJ", "R", "dpt", false, "Subjective right cylinder; noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-sbj-r-axis", "SBJ R Axis", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Axis", "SBJ", "R", "deg", false, "Subjective right axis; noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-sbj-l-sphere", "SBJ L Sphere", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Sph", "SBJ", "L", "dpt", false, "Subjective left sphere; noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-sbj-l-cylinder", "SBJ L Cylinder", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Cyl", "SBJ", "L", "dpt", false, "Subjective left cylinder; noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-sbj-l-axis", "SBJ L Axis", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Axis", "SBJ", "L", "deg", false, "Subjective left axis; noch zu validieren, Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("kr800-sbj-va-r", "SBJ VA R", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R", "SBJ", "R", string.Empty, false, "Subjective VA right; noch zu validieren."),
+                new DeviceMeasurementDefinition("kr800-sbj-va-l", "SBJ VA L", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L", "SBJ", "L", string.Empty, false, "Subjective VA left; noch zu validieren."),
+                new DeviceMeasurementDefinition("kr800-sbj-pd-b", "SBJ PD B", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B", "SBJ", string.Empty, "mm", false, "Subjective binocular PD; noch zu validieren.")
+            },
+            SupportedExaminationTypes: new[] { "REF", "KM", "SBJ", "PD" },
+            CanContainMultipleExaminationTypes: true);
+    }
 }
