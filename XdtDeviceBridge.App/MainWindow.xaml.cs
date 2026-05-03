@@ -15,6 +15,8 @@ public partial class MainWindow : Window
     private readonly AppDataPathProvider _appDataPathProvider = new();
     private readonly ProfileCatalogService _profileCatalogService = new();
     private readonly TemplatePackageExporter _templatePackageExporter = new();
+    private readonly TemplatePackageImporter _templatePackageImporter = new();
+    private readonly TemplatePackageImportValidator _templatePackageImportValidator = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -122,6 +124,81 @@ public partial class MainWindow : Window
             DeviceProfiles: catalog.DeviceProfiles,
             ExportProfiles: catalog.ExportProfiles,
             InterfaceProfiles: catalog.InterfaceProfiles);
+    }
+
+    private void ImportTemplatePackage_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var importResult = _templatePackageImporter.Import(dialog.FileName);
+            var validationResult = _templatePackageImportValidator.Validate(importResult);
+            ShowTemplatePackageImportResult(importResult, validationResult);
+        }
+        catch (Exception ex)
+        {
+            AppendMessage($"Templatepaket konnte nicht importiert oder geprüft werden: {ex.Message}");
+        }
+    }
+
+    private void ShowTemplatePackageImportResult(
+        TemplatePackageImportResult importResult,
+        TemplatePackageImportValidationResult validationResult)
+    {
+        var warningIssues = validationResult.Issues
+            .Where(issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Warning)
+            .ToList();
+        var errorIssues = validationResult.Issues
+            .Where(issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Error)
+            .ToList();
+
+        AppendMessage($"Templatepaket importiert: {importResult.Package.Metadata.Name}");
+        AppendMessage($"AIS-Profile: {importResult.AisProfiles.Count}");
+        AppendMessage($"Geräteprofile: {importResult.DeviceProfiles.Count}");
+        AppendMessage($"Exportprofile: {importResult.ExportProfiles.Count}");
+        AppendMessage($"Schnittstellenprofile: {importResult.InterfaceProfiles.Count}");
+        AppendMessage($"Warnings: {warningIssues.Count}");
+        AppendMessage($"Errors: {errorIssues.Count}");
+
+        if (errorIssues.Count > 0)
+        {
+            AppendMessage("Templatepaket enthält Fehler und wurde nicht übernommen.");
+            foreach (var issue in errorIssues)
+            {
+                AppendMessage($"[Templatepaket] Error: {FormatTemplatePackageImportIssue(issue)}");
+            }
+
+            return;
+        }
+
+        if (warningIssues.Count > 0)
+        {
+            AppendMessage("Templatepaket ist grundsätzlich gültig, enthält aber Hinweise.");
+            foreach (var issue in warningIssues)
+            {
+                AppendMessage($"[Templatepaket] Warning: {FormatTemplatePackageImportIssue(issue)}");
+            }
+        }
+
+        AppendMessage("Templatepaket erfolgreich geprüft. Produktive Übernahme ist noch nicht implementiert.");
+    }
+
+    private static string FormatTemplatePackageImportIssue(TemplatePackageImportValidationIssue issue)
+    {
+        var profileKind = issue.ProfileKind?.ToString() ?? "Unbekannt";
+        var profileId = string.IsNullOrWhiteSpace(issue.ProfileId) ? "ohne Profil-ID" : issue.ProfileId;
+
+        return $"{issue.Message} ({profileKind}, {profileId})";
     }
 
     private void SelectAisFile_Click(object sender, RoutedEventArgs e)
