@@ -51,6 +51,18 @@ dotnet test XdtDeviceBridge.sln
 dotnet run --project XdtDeviceBridge.App
 ```
 
+## Aktueller Lizenz-Prototyp
+
+- Die App erzeugt oder laedt lokale `InstallationInfo`-Daten.
+- Angezeigt werden Installation-ID, Computername, Benutzername und Lizenzstatus.
+- Eine Offline-Lizenzanfrage kann als JSON-Datei exportiert werden.
+- Eine Offline-Lizenzdatei kann als JSON-Datei importiert werden.
+- Die Lizenzdatei wird validiert und lokal gespeichert.
+- Die Lizenz wird aktuell nur angezeigt, aber noch nicht erzwungen.
+- Es gibt noch keine Signaturpruefung.
+- Es gibt noch keine Online-Lizenzierung.
+- Die MEDISTAR/NIDEK-Verarbeitung bleibt auch ohne Lizenz weiterhin nutzbar.
+
 ## Bekannte Einschraenkungen
 
 - Aktuell manueller Prototyp.
