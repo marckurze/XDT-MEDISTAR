@@ -46,8 +46,8 @@ public sealed class XmlDeviceParserTests
         var parser = new XmlDeviceParser();
         var result = parser.ParseFile(GetFilePath("nidek-ark1s-sample.xml"));
 
-        AssertMeasurement(result, "PD/PDList/FarPD", "62.0", null, "PDList");
-        AssertMeasurement(result, "PD/PDList/NearPD", "59.0", null, "PDList");
+        AssertMeasurement(result, "PD/PDList[@No='1']/FarPD", "62.0", null, "PDList");
+        AssertMeasurement(result, "PD/PDList[@No='1']/NearPD", "59.0", null, "PDList");
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public sealed class XmlDeviceParserTests
 
     private static void AssertMeasurement(DeviceParseResult result, string sourcePath, string expectedValue, string? eye, string? group)
     {
-        var measurement = Assert.Single(result.Measurements.Where(m => m.SourcePath == sourcePath));
+        var measurement = Assert.Single(result.Measurements, m => m.SourcePath == sourcePath);
         Assert.Equal(expectedValue, measurement.Value);
         Assert.Equal(eye, measurement.Eye);
         Assert.Equal(group, measurement.Group);

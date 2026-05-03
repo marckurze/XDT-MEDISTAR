@@ -18,10 +18,21 @@ public sealed class ProcessingPipelineServiceTests
         Assert.NotEmpty(result.ExportRecords);
         Assert.False(string.IsNullOrWhiteSpace(result.ExportContent));
 
+        Assert.Contains(result.ExportRecords, r => r.FieldCode == "8000" && r.Value == "6310");
+        Assert.Contains(result.ExportRecords, r => r.FieldCode == "8402" && r.Value == "ARK1S");
+
+        var resultLines = result.ExportRecords.Where(r => r.FieldCode == "6228").ToList();
+        Assert.Equal(2, resultLines.Count);
+        Assert.Contains(resultLines, r => r.Value?.Contains("R.:S=") == true);
+        Assert.Contains(resultLines, r => r.Value?.Contains("L.:S=") == true);
+        Assert.All(resultLines, r => Assert.Contains("PD=62.0", r.Value));
+
         Assert.Contains("3101Müller", result.ExportContent);
         Assert.Contains("3102Jörg", result.ExportContent);
-        Assert.Contains("9001-1.25", result.ExportContent);
-        Assert.Contains("9011-1.00", result.ExportContent);
+        Assert.Contains("8402ARK1S", result.ExportContent);
+        Assert.Contains("6228R.:S=", result.ExportContent);
+        Assert.Contains("6228L.:S=", result.ExportContent);
+        Assert.Contains("PD=62.0", result.ExportContent);
     }
 
     [Fact]

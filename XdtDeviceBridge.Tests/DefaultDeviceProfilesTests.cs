@@ -28,34 +28,31 @@ public sealed class DefaultDeviceProfilesTests
     }
 
     [Fact]
-    public void CreateNidekArk1sDefault_ShouldContainRightArMedianRules()
+    public void CreateNidekArk1sDefault_ShouldContainMedistarControlRules()
     {
         var rules = DefaultDeviceProfiles.CreateNidekArk1sDefault().MappingRules;
 
-        Assert.Contains(rules, r => r.SourcePath == "Device.R/AR/ARMedian/Sphere" && r.TargetFieldCode == "9001");
-        Assert.Contains(rules, r => r.SourcePath == "Device.R/AR/ARMedian/Cylinder" && r.TargetFieldCode == "9002");
-        Assert.Contains(rules, r => r.SourcePath == "Device.R/AR/ARMedian/Axis" && r.TargetFieldCode == "9003");
-        Assert.Contains(rules, r => r.SourcePath == "Device.R/AR/ARMedian/SE" && r.TargetFieldCode == "9004");
+        Assert.Contains(rules, r =>
+            r.TargetFieldCode == "8000"
+            && r.OutputTemplate == "6310"
+            && r.IsEnabled);
+
+        Assert.Contains(rules, r =>
+            r.TargetFieldCode == "8402"
+            && r.SourcePath == "AIS.ExaminationType"
+            && r.IsEnabled);
     }
 
     [Fact]
-    public void CreateNidekArk1sDefault_ShouldContainLeftArMedianRules()
+    public void CreateNidekArk1sDefault_ShouldContainTwoMedistarResultLines()
     {
         var rules = DefaultDeviceProfiles.CreateNidekArk1sDefault().MappingRules;
+        var resultLines = rules.Where(r => r.TargetFieldCode == "6228" && r.IsEnabled).ToList();
 
-        Assert.Contains(rules, r => r.SourcePath == "Device.L/AR/ARMedian/Sphere" && r.TargetFieldCode == "9011");
-        Assert.Contains(rules, r => r.SourcePath == "Device.L/AR/ARMedian/Cylinder" && r.TargetFieldCode == "9012");
-        Assert.Contains(rules, r => r.SourcePath == "Device.L/AR/ARMedian/Axis" && r.TargetFieldCode == "9013");
-        Assert.Contains(rules, r => r.SourcePath == "Device.L/AR/ARMedian/SE" && r.TargetFieldCode == "9014");
-    }
-
-    [Fact]
-    public void CreateNidekArk1sDefault_ShouldContainPdRules()
-    {
-        var rules = DefaultDeviceProfiles.CreateNidekArk1sDefault().MappingRules;
-
-        Assert.Contains(rules, r => r.SourcePath == "Device.PD/PDList/FarPD" && r.TargetFieldCode == "9021");
-        Assert.Contains(rules, r => r.SourcePath == "Device.PD/PDList/NearPD" && r.TargetFieldCode == "9022");
+        Assert.Equal(2, resultLines.Count);
+        Assert.Contains(resultLines, r => r.OutputTemplate.Contains("R.:S="));
+        Assert.Contains(resultLines, r => r.OutputTemplate.Contains("L.:S="));
+        Assert.All(resultLines, r => Assert.Contains("PD=", r.OutputTemplate));
     }
 
     [Fact]

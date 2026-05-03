@@ -45,7 +45,7 @@ public sealed class ExportFileNameBuilderTests
     {
         var builder = new ExportFileNameBuilder();
         var profile = DefaultDeviceProfiles.CreateNidekArk1sDefault() with { ExportFileNamePattern = "EXP_{LastName}_{FirstName}" };
-        var patient = new PatientData("1", "Mül:ler", "A/na", "01011980", null, null, null, null, null, null);
+        var patient = new PatientData("1", "Mül:ler", "A/na", "01011980", null, null, null, null, null, null, null);
 
         var fileName = builder.Build(profile, patient, new DateTime(2026, 1, 1));
 
@@ -68,7 +68,7 @@ public sealed class ExportFileNameBuilderTests
     {
         var builder = new ExportFileNameBuilder();
         var profile = DefaultDeviceProfiles.CreateNidekArk1sDefault() with { ExportFileNamePattern = "FILE {LastName} {FirstName}" };
-        var patient = new PatientData("1", "von Test", "Anna Maria", "01011980", null, null, null, null, null, null);
+        var patient = new PatientData("1", "von Test", "Anna Maria", "01011980", null, null, null, null, null, null, null);
 
         var fileName = builder.Build(profile, patient, new DateTime(2026, 1, 1));
 
@@ -88,5 +88,5 @@ public sealed class ExportFileNameBuilderTests
     }
 
     private static PatientData CreatePatient(string patientNumber)
-        => new(patientNumber, "Müller", "Jörg", "01011980", null, null, null, null, null, null);
+        => new(patientNumber, "Müller", "Jörg", "01011980", null, null, null, null, null, null, null);
 }

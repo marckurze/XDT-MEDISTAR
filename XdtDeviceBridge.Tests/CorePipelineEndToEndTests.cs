@@ -20,37 +20,41 @@ public sealed class CorePipelineEndToEndTests
         Assert.Equal("PAT-100", patientData.PatientNumber);
         Assert.Equal("Müller", patientData.LastName);
         Assert.Equal("Jörg", patientData.FirstName);
+        Assert.Equal("ARK1S", patientData.ExaminationType);
 
         var deviceResult = xmlParser.ParseFile(GetFilePath("nidek-ark1s-sample.xml"));
         Assert.False(deviceResult.HasErrors);
 
         Assert.Contains(deviceResult.Measurements, m => m.SourcePath == "R/AR/ARMedian/Sphere" && m.Value == "-1.25");
         Assert.Contains(deviceResult.Measurements, m => m.SourcePath == "L/AR/ARMedian/Sphere" && m.Value == "-1.00");
-        Assert.Contains(deviceResult.Measurements, m => m.SourcePath == "PD/PDList/FarPD" && m.Value == "62.0");
+        Assert.Contains(deviceResult.Measurements, m => m.SourcePath == "PD/PDList[@No='1']/FarPD" && m.Value == "62.0");
 
         var profile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
 
         var mappingResult = mappingEngine.Map(patientData, deviceResult.Measurements, profile.MappingRules);
         Assert.False(mappingResult.HasErrors);
+        Assert.Contains(mappingResult.Records, r => r.FieldCode == "8000" && r.Value == "6310");
+        Assert.Contains(mappingResult.Records, r => r.FieldCode == "8402" && r.Value == "ARK1S");
+
+        var resultLines = mappingResult.Records.Where(r => r.FieldCode == "6228").ToList();
+        Assert.Equal(2, resultLines.Count);
+        Assert.Contains(resultLines, r => r.Value?.Contains("R.:S=") == true);
+        Assert.Contains(resultLines, r => r.Value?.Contains("L.:S=") == true);
+        Assert.All(resultLines, r => Assert.Contains("PD=62.0", r.Value));
 
         var exportResult = exportBuilder.Build(mappingResult.Records);
         Assert.False(exportResult.HasErrors);
         Assert.False(string.IsNullOrWhiteSpace(exportResult.Content));
         Assert.Contains("\r\n", exportResult.Content);
 
+        Assert.Contains("80006310", exportResult.Content);
         Assert.Contains("3000PAT-100", exportResult.Content);
         Assert.Contains("3101Müller", exportResult.Content);
         Assert.Contains("3102Jörg", exportResult.Content);
-        Assert.Contains("9001-1.25", exportResult.Content);
-        Assert.Contains("9002-0.50", exportResult.Content);
-        Assert.Contains("9003090", exportResult.Content);
-        Assert.Contains("9004-1.50", exportResult.Content);
-        Assert.Contains("9011-1.00", exportResult.Content);
-        Assert.Contains("9012-0.25", exportResult.Content);
-        Assert.Contains("9013085", exportResult.Content);
-        Assert.Contains("9014-1.12", exportResult.Content);
-        Assert.Contains("902162.0", exportResult.Content);
-        Assert.Contains("902259.0", exportResult.Content);
+        Assert.Contains("8402ARK1S", exportResult.Content);
+        Assert.Contains("6228R.:S=", exportResult.Content);
+        Assert.Contains("6228L.:S=", exportResult.Content);
+        Assert.Contains("PD=62.0", exportResult.Content);
     }
 
     private static string GetFilePath(string fileName)

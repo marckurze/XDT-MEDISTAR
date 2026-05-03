@@ -16,16 +16,7 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "3000",
-                TargetName = "Patientennummer",
-                SourcePath = "AIS.PatientNumber",
-                OutputTemplate = "{value}",
-                SortOrder = 1,
-                IsEnabled = true
-            }
+            CreateRule("1", "3000", "Patientennummer", "AIS.PatientNumber", "{value}")
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -45,16 +36,7 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "9001",
-                TargetName = "Rechts Sphäre",
-                SourcePath = "Device.R/AR/ARMedian/Sphere",
-                OutputTemplate = "{value}",
-                SortOrder = 1,
-                IsEnabled = true
-            }
+            CreateRule("1", "9001", "Rechts Sphäre", "Device.R/AR/ARMedian/Sphere", "{value}")
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -74,16 +56,7 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "9001",
-                TargetName = "Rechts Sphäre",
-                SourcePath = "Device.R/AR/ARMedian/Sphere",
-                OutputTemplate = "",
-                SortOrder = 1,
-                IsEnabled = true
-            }
+            CreateRule("1", "9001", "Rechts Sphäre", "Device.R/AR/ARMedian/Sphere", "")
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -101,16 +74,12 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "9999",
-                TargetName = "Text",
-                SourcePath = "Device.R/AR/ARMedian/Sphere",
-                OutputTemplate = "Patient {patient.LastName}, R Sphäre {Device.R/AR/ARMedian/Sphere}, R Cyl {Device.R/AR/ARMedian/Cylinder}",
-                SortOrder = 1,
-                IsEnabled = true
-            }
+            CreateRule(
+                "1",
+                "9999",
+                "Text",
+                "Device.R/AR/ARMedian/Sphere",
+                "Patient {patient.LastName}, R Sphäre {Device.R/AR/ARMedian/Sphere}, R Cyl {Device.R/AR/ARMedian/Cylinder}")
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -128,16 +97,7 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "9001",
-                TargetName = "Rechts Sphäre",
-                SourcePath = "Device.R/AR/ARMedian/Sphere",
-                OutputTemplate = "{value}",
-                SortOrder = 1,
-                IsEnabled = false
-            }
+            CreateRule("1", "9001", "Rechts Sphäre", "Device.R/AR/ARMedian/Sphere", "{value}", isEnabled: false)
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -155,16 +115,7 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "9001",
-                TargetName = "Fehlender Wert",
-                SourcePath = "Device.R/AR/ARMedian/DoesNotExist",
-                OutputTemplate = "{value}",
-                SortOrder = 1,
-                IsEnabled = true
-            }
+            CreateRule("1", "9001", "Fehlender Wert", "Device.R/AR/ARMedian/DoesNotExist", "{value}")
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -183,16 +134,7 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "",
-                TargetName = "Rechts Sphäre",
-                SourcePath = "Device.R/AR/ARMedian/Sphere",
-                OutputTemplate = "{value}",
-                SortOrder = 1,
-                IsEnabled = true
-            }
+            CreateRule("1", "", "Rechts Sphäre", "Device.R/AR/ARMedian/Sphere", "{value}")
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -211,26 +153,8 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            new MappingRule
-            {
-                Id = "2",
-                TargetFieldCode = "3102",
-                TargetName = "Vorname",
-                SourcePath = "AIS.FirstName",
-                OutputTemplate = "{value}",
-                SortOrder = 2,
-                IsEnabled = true
-            },
-            new MappingRule
-            {
-                Id = "1",
-                TargetFieldCode = "3101",
-                TargetName = "Nachname",
-                SourcePath = "AIS.LastName",
-                OutputTemplate = "{value}",
-                SortOrder = 1,
-                IsEnabled = true
-            }
+            CreateRule("2", "3102", "Vorname", "AIS.FirstName", "{value}", sortOrder: 2),
+            CreateRule("1", "3101", "Nachname", "AIS.LastName", "{value}")
         };
 
         var result = engine.Map(patient, measurements, rules);
@@ -242,35 +166,46 @@ public sealed class MappingEngineTests
 
     private static PatientData CreatePatient()
     {
-        return new PatientData
-        {
-            PatientNumber = "4701-1",
-            LastName = "Testfrau",
-            FirstName = "Anna",
-            BirthDate = new DateOnly(1955, 6, 12),
-            Street = "Marktplatz 11",
-            PostalCodeCity = "91207 Lauf",
-            GenderCode = "2",
-            SourceSystem = "MEDISTAR Praxiscomputer GmbH Hannover",
-            TargetSystem = "Geräteanbindung GA_XDT",
-            GdtVersion = "02.10"
-        };
+        return new PatientData(
+            PatientNumber: "4701-1",
+            LastName: "Testfrau",
+            FirstName: "Anna",
+            BirthDate: "12061955",
+            PostalCodeCity: "91207 Lauf",
+            Street: "Marktplatz 11",
+            GenderCode: "2",
+            SourceSystem: "MEDISTAR Praxiscomputer GmbH Hannover",
+            TargetSystem: "Geräteanbindung GA_XDT",
+            GdtVersion: "02.10",
+            ExaminationType: null);
     }
 
     private static List<MeasurementValue> CreateMeasurements()
     {
         return new List<MeasurementValue>
         {
-            new MeasurementValue { SourcePath = "R/AR/ARMedian/Sphere", DisplayName = "Sphere", Value = "-0.25", Eye = "R", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "R/AR/ARMedian/Cylinder", DisplayName = "Cylinder", Value = "-0.50", Eye = "R", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "R/AR/ARMedian/Axis", DisplayName = "Axis", Value = "49", Eye = "R", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "R/AR/ARMedian/SE", DisplayName = "SE", Value = "-0.25", Eye = "R", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "L/AR/ARMedian/Sphere", DisplayName = "Sphere", Value = "+0.00", Eye = "L", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "L/AR/ARMedian/Cylinder", DisplayName = "Cylinder", Value = "-0.50", Eye = "L", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "L/AR/ARMedian/Axis", DisplayName = "Axis", Value = "63", Eye = "L", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "L/AR/ARMedian/SE", DisplayName = "SE", Value = "-0.25", Eye = "L", Group = "ARMedian" },
-            new MeasurementValue { SourcePath = "PD/PDList/FarPD", DisplayName = "FarPD", Value = "61", Group = "PDList" },
-            new MeasurementValue { SourcePath = "PD/PDList/NearPD", DisplayName = "NearPD", Value = "57", Group = "PDList" }
+            new("R/AR/ARMedian/Sphere", "Sphere", "-0.25", null, "R", "ARMedian"),
+            new("R/AR/ARMedian/Cylinder", "Cylinder", "-0.50", null, "R", "ARMedian"),
+            new("R/AR/ARMedian/Axis", "Axis", "49", null, "R", "ARMedian"),
+            new("R/AR/ARMedian/SE", "SE", "-0.25", null, "R", "ARMedian"),
+            new("L/AR/ARMedian/Sphere", "Sphere", "+0.00", null, "L", "ARMedian"),
+            new("L/AR/ARMedian/Cylinder", "Cylinder", "-0.50", null, "L", "ARMedian"),
+            new("L/AR/ARMedian/Axis", "Axis", "63", null, "L", "ARMedian"),
+            new("L/AR/ARMedian/SE", "SE", "-0.25", null, "L", "ARMedian"),
+            new("PD/PDList/FarPD", "FarPD", "61", null, null, "PDList"),
+            new("PD/PDList/NearPD", "NearPD", "57", null, null, "PDList")
         };
+    }
+
+    private static MappingRule CreateRule(
+        string id,
+        string targetFieldCode,
+        string targetName,
+        string sourcePath,
+        string outputTemplate,
+        int sortOrder = 1,
+        bool isEnabled = true)
+    {
+        return new MappingRule(id, targetFieldCode, targetName, sourcePath, outputTemplate, sortOrder, isEnabled);
     }
 }

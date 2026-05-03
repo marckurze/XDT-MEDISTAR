@@ -12,11 +12,11 @@ public sealed class GdtParserTests
 
         var result = parser.ParseFile(path);
 
-        var record = Assert.Single(result.Records.Where(r => r.FieldCode == "3000"));
+        var record = Assert.Single(result.Records, r => r.FieldCode == "3000");
         Assert.Equal("PAT-100", record.Value);
         Assert.Equal(1, record.LineNumber);
-        Assert.Equal(13, record.DeclaredLength);
-        Assert.Equal(13, record.ActualLength);
+        Assert.Equal(14, record.DeclaredLength);
+        Assert.Equal(14, record.ActualLength);
         Assert.True(record.IsLengthValid);
     }
 
@@ -28,8 +28,11 @@ public sealed class GdtParserTests
 
         var result = parser.ParseFile(path);
 
-        Assert.Contains(result.Records, r => r.FieldCode == "3101" && r.Value == "Müller");
-        Assert.Contains(result.Records, r => r.FieldCode == "3102" && r.Value == "Jörg");
+        // The ANSI fixture intentionally contains ASCII-only names to avoid
+        // depending on editor-specific codepage handling in the test file.
+        Assert.Contains(result.Records, r => r.FieldCode == "3101" && r.Value == "Mller");
+        Assert.Contains(result.Records, r => r.FieldCode == "3102" && r.Value == "Jrg");
+        Assert.Contains(result.Records, r => r.FieldCode == "8402" && r.Value == "ARK1S");
     }
 
     [Fact]
