@@ -24,7 +24,7 @@ public partial class MainWindow : Window
 
     private void SelectAisFile_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog
+        var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Filter = "GDT/XDT (*.gdt;*.xdt)|*.gdt;*.xdt|Alle Dateien (*.*)|*.*"
         };
@@ -38,7 +38,7 @@ public partial class MainWindow : Window
 
     private void SelectDeviceFile_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog
+        var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Filter = "XML (*.xml)|*.xml|Alle Dateien (*.*)|*.*"
         };
@@ -69,6 +69,7 @@ public partial class MainWindow : Window
         PlannedFileNameText.Text = $"Geplanter Dateiname: {_plannedFileName}";
 
         ShowIssues(_lastPipelineResult.Issues);
+
         if (_lastPipelineResult.HasErrors)
         {
             AppendMessage("Verarbeitung abgeschlossen mit Fehlern.");
@@ -121,8 +122,21 @@ public partial class MainWindow : Window
 
     private void ShowIssues(IEnumerable<ProcessingIssue> issues)
     {
+        var visibleIssues = issues
+            .Where(issue =>
+                issue.Severity != ProcessingIssueSeverity.Warning ||
+                !issue.Message.Contains("Declared length does not match actual line length", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (visibleIssues.Count == 0)
+        {
+            MessagesTextBox.Text = "Keine Fehler. Verarbeitung erfolgreich.";
+            return;
+        }
+
         var builder = new StringBuilder();
-        foreach (var issue in issues)
+
+        foreach (var issue in visibleIssues)
         {
             builder.AppendLine($"[{issue.Stage}] {issue.Severity}: {issue.Message}");
         }

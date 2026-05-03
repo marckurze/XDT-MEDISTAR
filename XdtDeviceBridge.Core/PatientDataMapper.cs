@@ -18,6 +18,7 @@ public sealed class PatientDataMapper
             GenderCode: Get("3110"),
             SourceSystem: Get("0102"),
             TargetSystem: Get("0103"),
-            GdtVersion: Get("9218"));
+            GdtVersion: Get("9218"),
+            ExaminationType: Get("8402"));
     }
 }

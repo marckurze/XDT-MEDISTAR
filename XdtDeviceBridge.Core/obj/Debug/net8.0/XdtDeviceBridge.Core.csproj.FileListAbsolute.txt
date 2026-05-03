@@ -1,0 +1,12 @@
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.AssemblyInfoInputs.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.AssemblyInfo.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.csproj.CoreCompileInputs.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.sourcelink.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\bin\Debug\net8.0\XdtDeviceBridge.Core.deps.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\bin\Debug\net8.0\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\bin\Debug\net8.0\XdtDeviceBridge.Core.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\refint\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\ref\XdtDeviceBridge.Core.dll

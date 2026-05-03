@@ -19,20 +19,38 @@ public static class DefaultDeviceProfiles
             AssignmentWindowMinutes: 10,
             MappingRules: new List<MappingRule>
             {
-                new("1", "3000", "PatientNumber", "AIS.PatientNumber", "{value}", 1, true),
-                new("2", "3101", "LastName", "AIS.LastName", "{value}", 2, true),
-                new("3", "3102", "FirstName", "AIS.FirstName", "{value}", 3, true),
-                new("4", "3103", "BirthDate", "AIS.BirthDate", "{value}", 4, true),
-                new("5", "9001", "SphereR", "Device.R/AR/ARMedian/Sphere", "{value}", 5, true),
-                new("6", "9002", "CylinderR", "Device.R/AR/ARMedian/Cylinder", "{value}", 6, true),
-                new("7", "9003", "AxisR", "Device.R/AR/ARMedian/Axis", "{value}", 7, true),
-                new("8", "9004", "SER", "Device.R/AR/ARMedian/SE", "{value}", 8, true),
-                new("9", "9011", "SphereL", "Device.L/AR/ARMedian/Sphere", "{value}", 9, true),
-                new("10", "9012", "CylinderL", "Device.L/AR/ARMedian/Cylinder", "{value}", 10, true),
-                new("11", "9013", "AxisL", "Device.L/AR/ARMedian/Axis", "{value}", 11, true),
-                new("12", "9014", "SEL", "Device.L/AR/ARMedian/SE", "{value}", 12, true),
-                new("13", "9021", "FarPD", "Device.PD/PDList/FarPD", "{value}", 13, true),
-                new("14", "9022", "NearPD", "Device.PD/PDList/NearPD", "{value}", 14, true)
+                // MEDISTAR-XDT-Server: Datei soll eingelesen werden.
+                new("1", "8000", "MessageType", "AIS.PatientNumber", "6310", 1, true),
+
+                // Patientendaten aus der AIS-GDT-Datei.
+                new("2", "3000", "PatientNumber", "AIS.PatientNumber", "{value}", 2, true),
+                new("3", "3101", "LastName", "AIS.LastName", "{value}", 3, true),
+                new("4", "3102", "FirstName", "AIS.FirstName", "{value}", 4, true),
+                new("5", "3103", "BirthDate", "AIS.BirthDate", "{value}", 5, true),
+
+                // Untersuchungsart kommt aus MEDISTAR, z. B. 8402 = ARK1S.
+                new("6", "8402", "ExaminationType", "AIS.ExaminationType", "{value}", 6, true),
+
+                // Ergebniszeilen für MEDISTAR-Karteikarte.
+                // MEDISTAR erzeugt daraus z. B.:
+                // V1 R.:S=- 0.25 Z=- 0.25* 49                              PD=61
+                new(
+                    "7",
+                    "6228",
+                    "ResultRight",
+                    "Device.R/AR/ARMedian/Sphere",
+                    "R.:S={Device.R/AR/ARMedian/Sphere} Z={Device.R/AR/ARMedian/Cylinder}*{Device.R/AR/ARMedian/Axis}                              PD={Device.PD/PDList[@No='1']/FarPD}",
+                    7,
+                    true),
+
+                new(
+                    "8",
+                    "6228",
+                    "ResultLeft",
+                    "Device.L/AR/ARMedian/Sphere",
+                    "L.:S={Device.L/AR/ARMedian/Sphere} Z={Device.L/AR/ARMedian/Cylinder}*{Device.L/AR/ARMedian/Axis}                              PD={Device.PD/PDList[@No='1']/FarPD}",
+                    8,
+                    true)
             });
     }
 }

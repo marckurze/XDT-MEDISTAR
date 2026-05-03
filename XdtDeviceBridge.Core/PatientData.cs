@@ -10,4 +10,5 @@ public sealed record PatientData(
     string? GenderCode,
     string? SourceSystem,
     string? TargetSystem,
-    string? GdtVersion);
+    string? GdtVersion,
+    string? ExaminationType);

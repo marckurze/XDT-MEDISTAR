@@ -1,0 +1,16 @@
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.AssemblyInfoInputs.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.AssemblyInfo.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.csproj.CoreCompileInputs.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.sourcelink.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.deps.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\bin\Debug\net8.0\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\bin\Debug\net8.0\XdtDeviceBridge.Core.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.csproj.AssemblyReference.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDevic.B87E80B2.Up2Date
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\refint\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\ref\XdtDeviceBridge.Infrastructure.dll

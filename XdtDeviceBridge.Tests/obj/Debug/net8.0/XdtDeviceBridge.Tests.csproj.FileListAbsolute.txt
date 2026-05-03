@@ -1,0 +1,8 @@
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\.msCoverageSourceRootsMapping_XdtDeviceBridge.Tests
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\CoverletSourceRootsMapping_XdtDeviceBridge.Tests
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.csproj.AssemblyReference.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.AssemblyInfoInputs.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.AssemblyInfo.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.csproj.CoreCompileInputs.cache
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.sourcelink.json

@@ -16,13 +16,23 @@ public sealed class MappingEngine
         {
             if (string.IsNullOrWhiteSpace(rule.TargetFieldCode))
             {
-                issues.Add(new MappingIssue(MappingIssueSeverity.Error, "TargetFieldCode is empty.", rule.SourcePath, rule.TargetFieldCode));
+                issues.Add(new MappingIssue(
+                    MappingIssueSeverity.Error,
+                    "TargetFieldCode is empty.",
+                    rule.SourcePath,
+                    rule.TargetFieldCode));
+
                 continue;
             }
 
             if (!TryResolveSource(rule.SourcePath, patientData, measurementMap, out var sourceValue))
             {
-                issues.Add(new MappingIssue(MappingIssueSeverity.Error, "Source value not found.", rule.SourcePath, rule.TargetFieldCode));
+                issues.Add(new MappingIssue(
+                    MappingIssueSeverity.Error,
+                    $"Source value not found: {rule.SourcePath} -> TargetFieldCode {rule.TargetFieldCode}",
+                    rule.SourcePath,
+                    rule.TargetFieldCode));
+
                 continue;
             }
 
@@ -35,7 +45,11 @@ public sealed class MappingEngine
         return new MappingResult(records, issues);
     }
 
-    private static bool TryResolveSource(string sourcePath, PatientData patientData, Dictionary<string, string> measurements, out string value)
+    private static bool TryResolveSource(
+        string sourcePath,
+        PatientData patientData,
+        Dictionary<string, string> measurements,
+        out string value)
     {
         if (TryResolvePatient(sourcePath, patientData, out value))
         {
@@ -55,11 +69,16 @@ public sealed class MappingEngine
         return false;
     }
 
-    private static string RenderTemplate(string template, string sourceValue, PatientData patientData, Dictionary<string, string> measurements)
+    private static string RenderTemplate(
+        string template,
+        string sourceValue,
+        PatientData patientData,
+        Dictionary<string, string> measurements)
     {
         return PlaceholderRegex.Replace(template, match =>
         {
             var token = match.Groups[1].Value;
+
             if (string.Equals(token, "value", StringComparison.OrdinalIgnoreCase))
             {
                 return sourceValue;
@@ -95,6 +114,7 @@ public sealed class MappingEngine
             "AIS.SourceSystem" => patientData.SourceSystem ?? string.Empty,
             "AIS.TargetSystem" => patientData.TargetSystem ?? string.Empty,
             "AIS.GdtVersion" => patientData.GdtVersion ?? string.Empty,
+            "AIS.ExaminationType" => patientData.ExaminationType ?? string.Empty,
             _ => string.Empty
         };
 

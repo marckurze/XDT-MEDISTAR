@@ -1,42 +1,66 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace XdtDeviceBridge.Core;
 
 public sealed class ExportFileNameBuilder
 {
-    private static readonly Regex InvalidCharsRegex = new("[<>:\\"/\\\\|?*]", RegexOptions.Compiled);
-    private static readonly Regex MultiUnderscoreRegex = new("_+", RegexOptions.Compiled);
-
     public string Build(DeviceProfile profile, PatientData? patient, DateTime timestamp)
     {
-        var pattern = string.IsNullOrWhiteSpace(profile.ExportFileNamePattern)
-            ? "EXPORT_{yyyyMMdd_HHmmss}.XDT"
-            : profile.ExportFileNamePattern;
+        var pattern = profile.ExportFileNamePattern;
+
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            pattern = "EXPORT_{yyyyMMdd_HHmmss}.XDT";
+        }
 
         var fileName = pattern
-            .Replace("{DeviceName}", profile.Name ?? string.Empty, StringComparison.Ordinal)
-            .Replace("{PatientNumber}", patient?.PatientNumber ?? string.Empty, StringComparison.Ordinal)
-            .Replace("{LastName}", patient?.LastName ?? string.Empty, StringComparison.Ordinal)
-            .Replace("{FirstName}", patient?.FirstName ?? string.Empty, StringComparison.Ordinal)
-            .Replace("{yyyyMMdd_HHmmss}", timestamp.ToString("yyyyMMdd_HHmmss"), StringComparison.Ordinal)
-            .Replace("{yyyyMMdd}", timestamp.ToString("yyyyMMdd"), StringComparison.Ordinal)
-            .Replace("{HHmmss}", timestamp.ToString("HHmmss"), StringComparison.Ordinal);
+            .Replace("{DeviceName}", profile.Name ?? string.Empty)
+            .Replace("{PatientNumber}", patient?.PatientNumber ?? string.Empty)
+            .Replace("{LastName}", patient?.LastName ?? string.Empty)
+            .Replace("{FirstName}", patient?.FirstName ?? string.Empty)
+            .Replace("{yyyyMMdd_HHmmss}", timestamp.ToString("yyyyMMdd_HHmmss"))
+            .Replace("{yyyyMMdd}", timestamp.ToString("yyyyMMdd"))
+            .Replace("{HHmmss}", timestamp.ToString("HHmmss"));
 
-        fileName = fileName.Replace(' ', '_');
-        fileName = InvalidCharsRegex.Replace(fileName, "_");
-        fileName = MultiUnderscoreRegex.Replace(fileName, "_");
-        fileName = fileName.Trim('_', '.');
+        fileName = SanitizeFileName(fileName);
 
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            fileName = $"EXPORT_{timestamp:yyyyMMdd_HHmmss}";
+            fileName = $"EXPORT_{timestamp:yyyyMMdd_HHmmss}.XDT";
         }
 
-        if (!fileName.EndsWith(".XDT", StringComparison.OrdinalIgnoreCase))
+        if (!Path.HasExtension(fileName))
         {
             fileName += ".XDT";
         }
 
         return fileName;
+    }
+
+    private static string SanitizeFileName(string fileName)
+    {
+        var invalidChars = Path.GetInvalidFileNameChars();
+
+        var builder = new StringBuilder(fileName.Length);
+
+        foreach (var character in fileName)
+        {
+            if (invalidChars.Contains(character) || char.IsWhiteSpace(character))
+            {
+                builder.Append('_');
+            }
+            else
+            {
+                builder.Append(character);
+            }
+        }
+
+        var sanitized = builder.ToString();
+
+        sanitized = Regex.Replace(sanitized, "_{2,}", "_");
+        sanitized = sanitized.Trim('_');
+
+        return sanitized;
     }
 }
