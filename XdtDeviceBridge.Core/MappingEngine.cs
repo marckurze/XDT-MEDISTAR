@@ -123,12 +123,22 @@ public sealed class MappingEngine
 
         return format.Trim() switch
         {
+            var currentFormat when currentFormat.Equals("Raw", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatRaw(value),
             var currentFormat when currentFormat.Equals("Diopter", StringComparison.OrdinalIgnoreCase)
                 => MedistarFormatter.FormatDiopter(value),
             var currentFormat when currentFormat.Equals("Axis", StringComparison.OrdinalIgnoreCase)
                 => MedistarFormatter.FormatAxis(value),
             var currentFormat when currentFormat.Equals("Pd", StringComparison.OrdinalIgnoreCase)
                 => MedistarFormatter.FormatPd(value),
+            var currentFormat when currentFormat.Equals("Iop", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatIop(value),
+            var currentFormat when currentFormat.Equals("Pachy", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatPachy(value),
+            var currentFormat when currentFormat.Equals("Prism", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatPrism(value),
+            var currentFormat when currentFormat.Equals("Keratometry", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatKeratometry(value),
             _ => value ?? string.Empty
         };
     }

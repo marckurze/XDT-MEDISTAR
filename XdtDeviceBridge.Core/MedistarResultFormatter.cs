@@ -2,6 +2,11 @@ namespace XdtDeviceBridge.Core;
 
 public sealed class MedistarResultFormatter
 {
+    public string FormatRaw(string? value)
+    {
+        return TrimOrEmpty(value);
+    }
+
     public string FormatDiopter(string? value)
     {
         var trimmed = value?.Trim();
@@ -35,6 +40,31 @@ public sealed class MedistarResultFormatter
     }
 
     public string FormatPd(string? value)
+    {
+        return TrimOrEmpty(value);
+    }
+
+    public string FormatIop(string? value)
+    {
+        return TrimOrEmpty(value);
+    }
+
+    public string FormatPachy(string? value)
+    {
+        return TrimOrEmpty(value);
+    }
+
+    public string FormatPrism(string? value)
+    {
+        return TrimOrEmpty(value);
+    }
+
+    public string FormatKeratometry(string? value)
+    {
+        return TrimOrEmpty(value);
+    }
+
+    private static string TrimOrEmpty(string? value)
     {
         return value?.Trim() ?? string.Empty;
     }

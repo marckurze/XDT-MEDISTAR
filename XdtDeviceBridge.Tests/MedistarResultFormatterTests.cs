@@ -61,4 +61,44 @@ public sealed class MedistarResultFormatterTests
     {
         Assert.Equal("61", _formatter.FormatPd(" 61 "));
     }
+
+    [Fact]
+    public void FormatRaw_ShouldTrimValue()
+    {
+        Assert.Equal("test", _formatter.FormatRaw("  test  "));
+    }
+
+    [Fact]
+    public void FormatIop_ShouldTrimValueWithoutRounding()
+    {
+        Assert.Equal("12.7", _formatter.FormatIop(" 12.7 "));
+    }
+
+    [Fact]
+    public void FormatPachy_ShouldKeepRawNumericValue()
+    {
+        Assert.Equal("559", _formatter.FormatPachy("559"));
+    }
+
+    [Fact]
+    public void FormatPrism_ShouldKeepRawNumericValue()
+    {
+        Assert.Equal("0.75", _formatter.FormatPrism("0.75"));
+    }
+
+    [Fact]
+    public void FormatKeratometry_ShouldKeepSignedRawValue()
+    {
+        Assert.Equal("+43.25", _formatter.FormatKeratometry("+43.25"));
+    }
+
+    [Fact]
+    public void AdditionalFormats_ShouldReturnEmptyForNull()
+    {
+        Assert.Equal(string.Empty, _formatter.FormatRaw(null));
+        Assert.Equal(string.Empty, _formatter.FormatIop(null));
+        Assert.Equal(string.Empty, _formatter.FormatPachy(null));
+        Assert.Equal(string.Empty, _formatter.FormatPrism(null));
+        Assert.Equal(string.Empty, _formatter.FormatKeratometry(null));
+    }
 }

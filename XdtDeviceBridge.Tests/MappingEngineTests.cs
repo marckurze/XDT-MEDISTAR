@@ -116,6 +116,51 @@ public sealed class MappingEngineTests
     }
 
     [Fact]
+    public void Map_FormatsRawPlaceholder()
+    {
+        var result = MapSingleTemplate("Raw={Device.Formatting/Raw:Raw}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Raw=test", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_FormatsIopPlaceholder()
+    {
+        var result = MapSingleTemplate("IOP={Device.NT/IOP/R:Iop}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("IOP=12.7", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_FormatsPachyPlaceholder()
+    {
+        var result = MapSingleTemplate("Pachy={Device.PACHY/R/Median:Pachy}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Pachy=559", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_FormatsPrismPlaceholder()
+    {
+        var result = MapSingleTemplate("Prism={Device.LM/R/Prism:Prism}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Prism=0.75", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_FormatsKeratometryPlaceholder()
+    {
+        var result = MapSingleTemplate("K={Device.KM/R/K1:Keratometry}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("K=+43.25", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
     public void Map_LeavesPlaceholderWithoutFormatUnchanged()
     {
         var result = MapSingleTemplate("S={Device.R/AR/ARMedian/Sphere}");
@@ -238,7 +283,12 @@ public sealed class MappingEngineTests
             new("L/AR/ARMedian/Axis", "Axis", "63", null, "L", "ARMedian"),
             new("L/AR/ARMedian/SE", "SE", "-0.25", null, "L", "ARMedian"),
             new("PD/PDList/FarPD", "FarPD", "61", null, null, "PDList"),
-            new("PD/PDList/NearPD", "NearPD", "57", null, null, "PDList")
+            new("PD/PDList/NearPD", "NearPD", "57", null, null, "PDList"),
+            new("Formatting/Raw", "Raw", "  test  ", null, null, "Formatting"),
+            new("NT/IOP/R", "IOP R", " 12.7 ", "mmHg", "R", "NT"),
+            new("PACHY/R/Median", "Pachy R", "559", "um", "R", "PACHY"),
+            new("LM/R/Prism", "Prism R", "0.75", null, "R", "LM"),
+            new("KM/R/K1", "K1 R", "+43.25", "D", "R", "KM")
         };
     }
 
