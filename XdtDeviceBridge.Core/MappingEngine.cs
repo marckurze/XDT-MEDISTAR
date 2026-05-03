@@ -59,8 +59,9 @@ public sealed class MappingEngine
         if (sourcePath.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
         {
             var key = sourcePath[7..];
-            if (measurements.TryGetValue(key, out value))
+            if (measurements.TryGetValue(key, out var measurementValue))
             {
+                value = measurementValue;
                 return true;
             }
         }

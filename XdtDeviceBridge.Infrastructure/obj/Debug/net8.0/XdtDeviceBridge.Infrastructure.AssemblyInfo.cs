@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("XdtDeviceBridge.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a618a1eff997c78427f4253cc0ee72a8f6810330")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+01f51f0b902de6da6033412e8c5aadb70c087c6b")]
 [assembly: System.Reflection.AssemblyProductAttribute("XdtDeviceBridge.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("XdtDeviceBridge.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
