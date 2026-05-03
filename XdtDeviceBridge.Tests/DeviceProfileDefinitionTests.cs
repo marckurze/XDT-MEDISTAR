@@ -185,9 +185,76 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Empty(issues);
     }
 
+    [Fact]
+    public void CreateNidekNt530PDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
+
+        Assert.Equal("NIDEK", profile.Manufacturer);
+        Assert.Equal("NT530P", profile.Model);
+        Assert.Contains("Tonometer", profile.DeviceType);
+        Assert.Contains("Pachymeter", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.True(profile.CanContainMultipleExaminationTypes);
+        Assert.Contains("Tonometrie", profile.SupportedExaminationTypes);
+        Assert.Contains("Pachymetrie", profile.SupportedExaminationTypes);
+        Assert.Contains("CorrectedIOP", profile.SupportedExaminationTypes);
+        Assert.Contains("Attachment", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateNidekNt530PDefault_ShouldContainTonometryMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
+
+        AssertRequiredMeasurement(profile, "nt530p-r-iop-1", "Data/R/NT/NTList[@No='1']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-r-iop-2", "Data/R/NT/NTList[@No='2']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-r-iop-3", "Data/R/NT/NTList[@No='3']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-r-iop-average", "Data/R/NT/NTAverage/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-l-iop-1", "Data/L/NT/NTList[@No='1']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-l-iop-2", "Data/L/NT/NTList[@No='2']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-l-iop-3", "Data/L/NT/NTList[@No='3']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-l-iop-average", "Data/L/NT/NTAverage/mmHg");
+    }
+
+    [Fact]
+    public void CreateNidekNt530PDefault_ShouldContainCorrectedIopAndPachyMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
+
+        AssertOptionalMeasurement(profile, "nt530p-r-corrected-iop-corrected", "Data/R/NT/CorrectedIOP/Corrected/mmHg");
+        AssertOptionalMeasurement(profile, "nt530p-l-corrected-iop-corrected", "Data/L/NT/CorrectedIOP/Corrected/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-r-pachy-average", "Data/R/PACHY/PACHYAverage/Thickness");
+        AssertRequiredMeasurement(profile, "nt530p-l-pachy-average", "Data/L/PACHY/PACHYAverage/Thickness");
+        AssertRequiredMeasurement(profile, "nt530p-measurement-date", "Data/Date");
+        AssertRequiredMeasurement(profile, "nt530p-measurement-time", "Data/Time");
+    }
+
+    [Fact]
+    public void CreateNidekNt530PDefault_ShouldContainOptionalPachyImageMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
+
+        AssertOptionalMeasurement(profile, "nt530p-r-pachy-image", "Data/R/PACHY/PACHYImage");
+        AssertOptionalMeasurement(profile, "nt530p-l-pachy-image", "Data/L/PACHY/PACHYImage");
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptNidekNt530PProfile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault());
+
+        Assert.Empty(issues);
+    }
+
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);
+    }
+
+    private static void AssertOptionalMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
+    {
+        Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && !m.IsRequired);
     }
 
     private static void AssertUnvalidatedOptionalMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)

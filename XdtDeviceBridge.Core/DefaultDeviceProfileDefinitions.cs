@@ -84,4 +84,59 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
             CanContainMultipleExaminationTypes: false);
     }
+
+    public static DeviceProfileDefinition CreateNidekNt530PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-nidek-nt530p-default",
+                Name: "NIDEK NT530P",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for NIDEK NT530P tonometry and pachymetry XML measurement files.",
+                Vendor: "NIDEK",
+                Product: "NT530P",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: "NT530P",
+            DeviceType: "Tonometer/Pachymeter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("nt530p-r-iop-1", "R IOP 1", "Data/R/NT/NTList[@No='1']/mmHg", "NT", "R", "mmHg", true, "Right eye tonometry value 1 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-r-iop-2", "R IOP 2", "Data/R/NT/NTList[@No='2']/mmHg", "NT", "R", "mmHg", true, "Right eye tonometry value 2 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-r-iop-3", "R IOP 3", "Data/R/NT/NTList[@No='3']/mmHg", "NT", "R", "mmHg", true, "Right eye tonometry value 3 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-r-iop-average", "R IOP Average", "Data/R/NT/NTAverage/mmHg", "NT", "R", "mmHg", true, "Right eye tonometry average from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-l-iop-1", "L IOP 1", "Data/L/NT/NTList[@No='1']/mmHg", "NT", "L", "mmHg", true, "Left eye tonometry value 1 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-l-iop-2", "L IOP 2", "Data/L/NT/NTList[@No='2']/mmHg", "NT", "L", "mmHg", true, "Left eye tonometry value 2 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-l-iop-3", "L IOP 3", "Data/L/NT/NTList[@No='3']/mmHg", "NT", "L", "mmHg", true, "Left eye tonometry value 3 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-l-iop-average", "L IOP Average", "Data/L/NT/NTAverage/mmHg", "NT", "L", "mmHg", true, "Left eye tonometry average from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-r-corrected-iop-measured", "R CorrectedIOP Measured", "Data/R/NT/CorrectedIOP/Measured/mmHg", "CorrectedIOP", "R", "mmHg", false, "Right measured IOP for corrected IOP block."),
+                new DeviceMeasurementDefinition("nt530p-r-corrected-iop-corrected", "R CorrectedIOP Corrected", "Data/R/NT/CorrectedIOP/Corrected/mmHg", "CorrectedIOP", "R", "mmHg", false, "Right corrected IOP value."),
+                new DeviceMeasurementDefinition("nt530p-r-corrected-iop-cct", "R CorrectedIOP CCT", "Data/R/NT/CorrectedIOP/CCT", "CorrectedIOP", "R", "um", false, "Right CCT value used for corrected IOP."),
+                new DeviceMeasurementDefinition("nt530p-l-corrected-iop-measured", "L CorrectedIOP Measured", "Data/L/NT/CorrectedIOP/Measured/mmHg", "CorrectedIOP", "L", "mmHg", false, "Left measured IOP for corrected IOP block."),
+                new DeviceMeasurementDefinition("nt530p-l-corrected-iop-corrected", "L CorrectedIOP Corrected", "Data/L/NT/CorrectedIOP/Corrected/mmHg", "CorrectedIOP", "L", "mmHg", false, "Left corrected IOP value."),
+                new DeviceMeasurementDefinition("nt530p-l-corrected-iop-cct", "L CorrectedIOP CCT", "Data/L/NT/CorrectedIOP/CCT", "CorrectedIOP", "L", "um", false, "Left CCT value used for corrected IOP."),
+                new DeviceMeasurementDefinition("nt530p-r-pachy-1", "R Pachy 1", "Data/R/PACHY/PACHYList[@No='1']/Thickness", "PACHY", "R", "um", true, "Right pachymetry value 1 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-r-pachy-2", "R Pachy 2", "Data/R/PACHY/PACHYList[@No='2']/Thickness", "PACHY", "R", "um", false, "Right pachymetry value 2; noch zu validieren for all sample variants."),
+                new DeviceMeasurementDefinition("nt530p-r-pachy-3", "R Pachy 3", "Data/R/PACHY/PACHYList[@No='3']/Thickness", "PACHY", "R", "um", false, "Right pachymetry value 3; noch zu validieren for all sample variants."),
+                new DeviceMeasurementDefinition("nt530p-r-pachy-average", "R Pachy Average", "Data/R/PACHY/PACHYAverage/Thickness", "PACHY", "R", "um", true, "Right pachymetry average from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-l-pachy-1", "L Pachy 1", "Data/L/PACHY/PACHYList[@No='1']/Thickness", "PACHY", "L", "um", true, "Left pachymetry value 1 from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-l-pachy-2", "L Pachy 2", "Data/L/PACHY/PACHYList[@No='2']/Thickness", "PACHY", "L", "um", false, "Left pachymetry value 2; noch zu validieren for all sample variants."),
+                new DeviceMeasurementDefinition("nt530p-l-pachy-3", "L Pachy 3", "Data/L/PACHY/PACHYList[@No='3']/Thickness", "PACHY", "L", "um", false, "Left pachymetry value 3; noch zu validieren for all sample variants."),
+                new DeviceMeasurementDefinition("nt530p-l-pachy-average", "L Pachy Average", "Data/L/PACHY/PACHYAverage/Thickness", "PACHY", "L", "um", true, "Left pachymetry average from validated NT530P sample XML."),
+                new DeviceMeasurementDefinition("nt530p-r-pachy-image", "R PACHYImage", "Data/R/PACHY/PACHYImage", "Attachment", "R", string.Empty, false, "Right pachymetry image reference for future attachment handling; optional because JPG files can be missing."),
+                new DeviceMeasurementDefinition("nt530p-l-pachy-image", "L PACHYImage", "Data/L/PACHY/PACHYImage", "Attachment", "L", string.Empty, false, "Left pachymetry image reference for future attachment handling; optional because JPG files can be missing."),
+                new DeviceMeasurementDefinition("nt530p-measurement-date", "MeasurementDate", "Data/Date", "Metadata", string.Empty, string.Empty, true, "Measurement date from NT530P XML."),
+                new DeviceMeasurementDefinition("nt530p-measurement-time", "MeasurementTime", "Data/Time", "Metadata", string.Empty, string.Empty, true, "Measurement time from NT530P XML.")
+            },
+            SupportedExaminationTypes: new[] { "Tonometrie", "Pachymetrie", "CorrectedIOP", "Attachment" },
+            CanContainMultipleExaminationTypes: true);
+    }
 }

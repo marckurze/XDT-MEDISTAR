@@ -198,6 +198,70 @@ public sealed class ExportProfileDefinitionTests
             && rule.SourcePath == "AIS.ExaminationType");
     }
 
+    [Fact]
+    public void CreateMedistarNidekNt530PDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
+
+        Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
+        Assert.Equal("device-nidek-nt530p-default", profile.SourceDeviceProfileId);
+        Assert.Equal("Windows-1252", profile.OutputEncoding);
+        Assert.Equal(9, profile.Rules.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptMedistarNidekNt530PDefaultProfile()
+    {
+        var issues = ExportProfileDefinitionValidator.Validate(DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void CreateMedistarNidekNt530PDefault_ShouldContainStaticValueRuleFor8000()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8000"
+            && rule.RuleType == ExportRuleType.StaticValue
+            && rule.SourcePath is null
+            && rule.OutputTemplate == "6310");
+    }
+
+    [Fact]
+    public void CreateMedistarNidekNt530PDefault_ShouldContainAisFieldRuleFor8402()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8402"
+            && rule.RuleType == ExportRuleType.AisField
+            && rule.SourcePath == "AIS.ExaminationType");
+    }
+
+    [Fact]
+    public void CreateMedistarNidekNt530PDefault_ShouldContainMultipleResultRulesFor6228()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
+        var resultRules = profile.Rules
+            .Where(rule => rule.TargetFieldCode == "6228" && rule.RuleType == ExportRuleType.Template)
+            .ToList();
+
+        Assert.Equal(3, resultRules.Count);
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("mmHg"));
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("µm"));
+    }
+
+    [Fact]
+    public void CreateMedistarNidekNt530PDefault_ShouldDescribeFutureEvAttachmentExtension()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
+
+        Assert.Contains("EV", profile.Metadata.Description);
+        Assert.Contains("Attachment", profile.Metadata.Description);
+    }
+
     private static ExportProfileDefinition WithModifiedRule(
         string id,
         Func<ExportRuleDefinition, ExportRuleDefinition> modify)

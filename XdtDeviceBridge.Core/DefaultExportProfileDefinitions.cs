@@ -105,4 +105,66 @@ public static class DefaultExportProfileDefinitions
                     "MEDISTAR lensmeter card text for left eye.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarNidekNt530PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-nidek-nt530p-default",
+                Name: "MEDISTAR + NIDEK NT530P Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and NIDEK NT530P. EV-/Attachment-Erweiterung wird später ergänzt.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK NT530P",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-nidek-nt530p-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6228",
+                    "PachymetryRight",
+                    ExportRuleType.Template,
+                    null,
+                    "PR: {Device.Data/R/PACHY/PACHYList[@No='1']/Thickness:Pachy} {Device.Data/R/PACHY/PACHYList[@No='2']/Thickness:Pachy} {Device.Data/R/PACHY/PACHYList[@No='3']/Thickness:Pachy} [{Device.Data/R/PACHY/PACHYAverage/Thickness:Pachy}] µm",
+                    7,
+                    true,
+                    "MEDISTAR pachymetry card text for right eye; EV/attachment image export is not implemented yet."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6228",
+                    "PachymetryLeft",
+                    ExportRuleType.Template,
+                    null,
+                    "PL: {Device.Data/L/PACHY/PACHYList[@No='1']/Thickness:Pachy} {Device.Data/L/PACHY/PACHYList[@No='2']/Thickness:Pachy} {Device.Data/L/PACHY/PACHYList[@No='3']/Thickness:Pachy} [{Device.Data/L/PACHY/PACHYAverage/Thickness:Pachy}] µm",
+                    8,
+                    true,
+                    "MEDISTAR pachymetry card text for left eye; EV/attachment image export is not implemented yet."),
+                new ExportRuleDefinition(
+                    "9",
+                    "6228",
+                    "TonometryBothEyes",
+                    ExportRuleType.Template,
+                    null,
+                    "R = {Device.Data/R/NT/NTList[@No='1']/mmHg:Iop} {Device.Data/R/NT/NTList[@No='2']/mmHg:Iop} {Device.Data/R/NT/NTList[@No='3']/mmHg:Iop} [{Device.Data/R/NT/NTAverage/mmHg:Iop}] // L = {Device.Data/L/NT/NTList[@No='1']/mmHg:Iop} {Device.Data/L/NT/NTList[@No='2']/mmHg:Iop} {Device.Data/L/NT/NTList[@No='3']/mmHg:Iop} [{Device.Data/L/NT/NTAverage/mmHg:Iop}] mmHg {Device.Data/Time:Raw}",
+                    9,
+                    true,
+                    "MEDISTAR tonometry card text; EV/attachment image export is not implemented yet.")
+            });
+    }
 }
