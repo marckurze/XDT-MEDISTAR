@@ -8,6 +8,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="2*"/>
             <RowDefinition Height="2*"/>
             <RowDefinition Height="*"/>
@@ -28,7 +29,34 @@
             <Button Content="Exportdatei schreiben" Width="180" Click="Export_Click" />
         </StackPanel>
 
-        <GroupBox Header="Patientendaten" Grid.Row="3" Margin="0,0,0,8">
+        <GroupBox Header="Profile" Grid.Row="3" Margin="0,0,0,8">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="AIS:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Column="1" x:Name="AisProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Column="2" Text="Geräte:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Column="3" x:Name="DeviceProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Column="4" Text="Export:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Column="5" x:Name="ExportProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Column="6" Text="Schnittstellen:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Column="7" x:Name="InterfaceProfileCountText" Margin="0,0,12,0"/>
+                <TextBlock Grid.Column="8" Text="BaseFolder:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock Grid.Column="9" x:Name="ProfileBaseFolderText" TextTrimming="CharacterEllipsis"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Patientendaten" Grid.Row="4" Margin="0,0,0,8">
             <UniformGrid Columns="2" Margin="8">
                 <TextBlock Text="PatientNumber:" FontWeight="Bold"/><TextBlock x:Name="PatientNumberText"/>
                 <TextBlock Text="LastName:" FontWeight="Bold"/><TextBlock x:Name="LastNameText"/>
@@ -39,7 +67,7 @@
             </UniformGrid>
         </GroupBox>
 
-        <GroupBox Header="Messwerte" Grid.Row="4" Margin="0,0,0,8">
+        <GroupBox Header="Messwerte" Grid.Row="5" Margin="0,0,0,8">
             <DataGrid x:Name="MeasurementsGrid" AutoGenerateColumns="False" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="*"/>
@@ -52,7 +80,7 @@
             </DataGrid>
         </GroupBox>
 
-        <GroupBox Header="Exportvorschau" Grid.Row="5" Margin="0,0,0,8">
+        <GroupBox Header="Exportvorschau" Grid.Row="6" Margin="0,0,0,8">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -63,7 +91,7 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Meldungen" Grid.Row="6">
+        <GroupBox Header="Meldungen" Grid.Row="7">
             <TextBox x:Name="MessagesTextBox" Margin="8" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
         </GroupBox>
     </Grid>

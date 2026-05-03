@@ -12,6 +12,8 @@ public partial class MainWindow : Window
     private readonly ProcessingPipelineService _pipelineService = new();
     private readonly ExportFileNameBuilder _fileNameBuilder = new();
     private readonly FileExportService _fileExportService = new();
+    private readonly AppDataPathProvider _appDataPathProvider = new();
+    private readonly ProfileCatalogService _profileCatalogService = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -20,6 +22,32 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeProfileOverview();
+    }
+
+    private void InitializeProfileOverview()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.EnsureDefaultProfiles(paths);
+            var catalog = _profileCatalogService.Load(paths);
+
+            AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
+            DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
+            ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
+            InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
+            ProfileBaseFolderText.Text = paths.BaseFolder;
+        }
+        catch (Exception ex)
+        {
+            AisProfileCountText.Text = "-";
+            DeviceProfileCountText.Text = "-";
+            ExportProfileCountText.Text = "-";
+            InterfaceProfileCountText.Text = "-";
+            ProfileBaseFolderText.Text = string.Empty;
+            AppendMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
+        }
     }
 
     private void SelectAisFile_Click(object sender, RoutedEventArgs e)
