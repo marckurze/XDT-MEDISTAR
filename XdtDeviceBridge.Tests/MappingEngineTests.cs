@@ -89,6 +89,51 @@ public sealed class MappingEngineTests
     }
 
     [Fact]
+    public void Map_FormatsDiopterPlaceholder()
+    {
+        var result = MapSingleTemplate("S={Device.R/AR/ARMedian/Sphere:Diopter}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("S=- 0.25", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_FormatsAxisPlaceholder()
+    {
+        var result = MapSingleTemplate("A={Device.R/AR/ARMedian/Axis:Axis}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("A= 49", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_FormatsPdPlaceholder()
+    {
+        var result = MapSingleTemplate("PD={Device.PD/PDList/FarPD:Pd}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("PD=61", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_LeavesPlaceholderWithoutFormatUnchanged()
+    {
+        var result = MapSingleTemplate("S={Device.R/AR/ARMedian/Sphere}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("S=-0.25", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_UnknownFormatReturnsRawValue()
+    {
+        var result = MapSingleTemplate("S={Device.R/AR/ARMedian/Sphere:Unknown}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("S=-0.25", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
     public void Map_IgnoresDisabledRule()
     {
         var engine = new MappingEngine();
@@ -195,6 +240,17 @@ public sealed class MappingEngineTests
             new("PD/PDList/FarPD", "FarPD", "61", null, null, "PDList"),
             new("PD/PDList/NearPD", "NearPD", "57", null, null, "PDList")
         };
+    }
+
+    private static MappingResult MapSingleTemplate(string outputTemplate)
+    {
+        var engine = new MappingEngine();
+        var rules = new[]
+        {
+            CreateRule("1", "6228", "Result", "Device.R/AR/ARMedian/Sphere", outputTemplate)
+        };
+
+        return engine.Map(CreatePatient(), CreateMeasurements(), rules);
     }
 
     private static MappingRule CreateRule(

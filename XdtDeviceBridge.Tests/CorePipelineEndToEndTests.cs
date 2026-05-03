@@ -38,8 +38,9 @@ public sealed class CorePipelineEndToEndTests
 
         var resultLines = mappingResult.Records.Where(r => r.FieldCode == "6228").ToList();
         Assert.Equal(2, resultLines.Count);
-        Assert.Contains(resultLines, r => r.Value?.Contains("R.:S=") == true);
-        Assert.Contains(resultLines, r => r.Value?.Contains("L.:S=") == true);
+        Assert.Contains(resultLines, r => r.Value?.Contains("R.:S=- 1.25") == true);
+        Assert.Contains(resultLines, r => r.Value?.Contains("Z=- 0.50*090") == true);
+        Assert.Contains(resultLines, r => r.Value?.Contains("L.:S=- 1.00") == true);
         Assert.All(resultLines, r => Assert.Contains("PD=62.0", r.Value));
 
         var exportResult = exportBuilder.Build(mappingResult.Records);
@@ -52,8 +53,9 @@ public sealed class CorePipelineEndToEndTests
         Assert.Contains("3101Müller", exportResult.Content);
         Assert.Contains("3102Jörg", exportResult.Content);
         Assert.Contains("8402ARK1S", exportResult.Content);
-        Assert.Contains("6228R.:S=", exportResult.Content);
-        Assert.Contains("6228L.:S=", exportResult.Content);
+        Assert.Contains("6228R.:S=- 1.25", exportResult.Content);
+        Assert.Contains("Z=- 0.50*090", exportResult.Content);
+        Assert.Contains("6228L.:S=- 1.00", exportResult.Content);
         Assert.Contains("PD=62.0", exportResult.Content);
     }
 

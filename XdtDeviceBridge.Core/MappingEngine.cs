@@ -5,6 +5,7 @@ namespace XdtDeviceBridge.Core;
 public sealed class MappingEngine
 {
     private static readonly Regex PlaceholderRegex = new("\\{([^{}]+)\\}", RegexOptions.Compiled);
+    private static readonly MedistarResultFormatter MedistarFormatter = new();
 
     public MappingResult Map(PatientData patientData, IEnumerable<MeasurementValue> measurements, IEnumerable<MappingRule> rules)
     {
@@ -79,26 +80,57 @@ public sealed class MappingEngine
         return PlaceholderRegex.Replace(template, match =>
         {
             var token = match.Groups[1].Value;
+            var (sourceToken, format) = SplitFormatToken(token);
 
-            if (string.Equals(token, "value", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(sourceToken, "value", StringComparison.OrdinalIgnoreCase))
             {
-                return sourceValue;
+                return ApplyFormat(sourceValue, format);
             }
 
-            if (token.StartsWith("patient.", StringComparison.OrdinalIgnoreCase)
-                && TryResolvePatient($"AIS.{token[8..]}", patientData, out var patientValue))
+            if (sourceToken.StartsWith("patient.", StringComparison.OrdinalIgnoreCase)
+                && TryResolvePatient($"AIS.{sourceToken[8..]}", patientData, out var patientValue))
             {
-                return patientValue ?? string.Empty;
+                return ApplyFormat(patientValue, format);
             }
 
-            if (token.StartsWith("Device.", StringComparison.OrdinalIgnoreCase)
-                && measurements.TryGetValue(token[7..], out var measurementValue))
+            if (sourceToken.StartsWith("Device.", StringComparison.OrdinalIgnoreCase)
+                && measurements.TryGetValue(sourceToken[7..], out var measurementValue))
             {
-                return measurementValue;
+                return ApplyFormat(measurementValue, format);
             }
 
             return string.Empty;
         });
+    }
+
+    private static (string SourceToken, string? Format) SplitFormatToken(string token)
+    {
+        var separatorIndex = token.LastIndexOf(':');
+        if (separatorIndex < 0)
+        {
+            return (token, null);
+        }
+
+        return (token[..separatorIndex], token[(separatorIndex + 1)..]);
+    }
+
+    private static string ApplyFormat(string? value, string? format)
+    {
+        if (string.IsNullOrWhiteSpace(format))
+        {
+            return value ?? string.Empty;
+        }
+
+        return format.Trim() switch
+        {
+            var currentFormat when currentFormat.Equals("Diopter", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatDiopter(value),
+            var currentFormat when currentFormat.Equals("Axis", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatAxis(value),
+            var currentFormat when currentFormat.Equals("Pd", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatPd(value),
+            _ => value ?? string.Empty
+        };
     }
 
     private static bool TryResolvePatient(string sourcePath, PatientData patientData, out string value)

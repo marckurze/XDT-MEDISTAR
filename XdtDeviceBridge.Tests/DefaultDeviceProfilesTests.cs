@@ -53,6 +53,9 @@ public sealed class DefaultDeviceProfilesTests
         Assert.Contains(resultLines, r => r.OutputTemplate.Contains("R.:S="));
         Assert.Contains(resultLines, r => r.OutputTemplate.Contains("L.:S="));
         Assert.All(resultLines, r => Assert.Contains("PD=", r.OutputTemplate));
+        Assert.All(resultLines, r => Assert.Contains(":Diopter", r.OutputTemplate));
+        Assert.All(resultLines, r => Assert.Contains(":Axis", r.OutputTemplate));
+        Assert.All(resultLines, r => Assert.Contains(":Pd", r.OutputTemplate));
     }
 
     [Fact]

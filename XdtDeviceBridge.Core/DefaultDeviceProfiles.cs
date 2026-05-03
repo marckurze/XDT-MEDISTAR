@@ -1,4 +1,4 @@
-namespace XdtDeviceBridge.Core;
+ï»¿namespace XdtDeviceBridge.Core;
 
 public static class DefaultDeviceProfiles
 {
@@ -31,7 +31,7 @@ public static class DefaultDeviceProfiles
                 // Untersuchungsart kommt aus MEDISTAR, z. B. 8402 = ARK1S.
                 new("6", "8402", "ExaminationType", "AIS.ExaminationType", "{value}", 6, true),
 
-                // Ergebniszeilen für MEDISTAR-Karteikarte.
+                // Ergebniszeilen fuer MEDISTAR-Karteikarte.
                 // MEDISTAR erzeugt daraus z. B.:
                 // V1 R.:S=- 0.25 Z=- 0.25* 49                              PD=61
                 new(
@@ -39,7 +39,7 @@ public static class DefaultDeviceProfiles
                     "6228",
                     "ResultRight",
                     "Device.R/AR/ARMedian/Sphere",
-                    "R.:S={Device.R/AR/ARMedian/Sphere} Z={Device.R/AR/ARMedian/Cylinder}*{Device.R/AR/ARMedian/Axis}                              PD={Device.PD/PDList[@No='1']/FarPD}",
+                    "R.:S={Device.R/AR/ARMedian/Sphere:Diopter} Z={Device.R/AR/ARMedian/Cylinder:Diopter}*{Device.R/AR/ARMedian/Axis:Axis}                              PD={Device.PD/PDList[@No='1']/FarPD:Pd}",
                     7,
                     true),
 
@@ -48,7 +48,7 @@ public static class DefaultDeviceProfiles
                     "6228",
                     "ResultLeft",
                     "Device.L/AR/ARMedian/Sphere",
-                    "L.:S={Device.L/AR/ARMedian/Sphere} Z={Device.L/AR/ARMedian/Cylinder}*{Device.L/AR/ARMedian/Axis}                              PD={Device.PD/PDList[@No='1']/FarPD}",
+                    "L.:S={Device.L/AR/ARMedian/Sphere:Diopter} Z={Device.L/AR/ARMedian/Cylinder:Diopter}*{Device.L/AR/ARMedian/Axis:Axis}                              PD={Device.PD/PDList[@No='1']/FarPD:Pd}",
                     8,
                     true)
             });
