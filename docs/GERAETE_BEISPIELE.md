@@ -443,6 +443,130 @@ Spätere Profilanforderung:
 - mehrere Ergebniszeilen
 - optionale Zusammenfassung oder getrennte Ausgabe
 
+## 7.1 TOPCON KR800 – erkannte SourcePaths und Mehruntersuchungsstruktur
+
+Analysierte lokale Beispieldatei:
+
+- `C:\Users\MarcK\Downloads\Geraeteanbindungen\TOPCON KR800\M-Serial0426_20241126_145500_TOPCON_KR-800S_4871341.xml`
+
+Die Datei ist ein JOIA-/Ophthalmology-XML mit `encoding="Shift-JIS"`. Der Root-Knoten `Ophthalmology` hat keinen Default-Namespace, die fachlichen Bereiche verwenden aber mehrere JOIA-Namespace-Präfixe:
+
+- `nsCommon = http://www.joia.or.jp/standardized/namespaces/Common`
+- `nsREF = http://www.joia.or.jp/standardized/namespaces/REF`
+- `nsKM = http://www.joia.or.jp/standardized/namespaces/KM`
+- `nsSBJ = http://www.joia.or.jp/standardized/namespaces/SBJ`
+- `xsi = http://www.w3.org/2001/XMLSchema-instance`
+
+Erkannte Untersuchungsarten in einer Datei:
+
+| Untersuchungsart | XML-Struktur | Bedeutung | Status / Hinweis |
+|---|---|---|---|
+| `REF` | `Ophthalmology/nsREF:Measure[@type='REF']` | Autorefraktion | erkannt |
+| `KM` | `Ophthalmology/nsKM:Measure[@type='KM']` | Keratometrie | erkannt |
+| `SBJ` | `Ophthalmology/nsSBJ:Measure[@type='SBJ']` | subjektive Refraktion / VA / PD | erkannt |
+
+Allgemeine Gerätedaten:
+
+| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| Company | `Ophthalmology/nsCommon:Common/nsCommon:Company` | `TOPCON` | erkannt |
+| ModelName | `Ophthalmology/nsCommon:Common/nsCommon:ModelName` | `KR-800S` | erkannt |
+| Messdatum | `Ophthalmology/nsCommon:Common/nsCommon:Date` | `2024-11-26` | erkannt |
+| Messzeit | `Ophthalmology/nsCommon:Common/nsCommon:Time` | `14:55:00` | erkannt |
+
+Erkannte REF-SourcePaths:
+
+| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| REF R Sphere | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:R/nsREF:Median/nsREF:Sphere` | `3.75` | erkannt |
+| REF R Cylinder | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:R/nsREF:Median/nsREF:Cylinder` | `-4.00` | erkannt |
+| REF R Axis | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:R/nsREF:Median/nsREF:Axis` | `13` | erkannt |
+| REF R SE | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:R/nsREF:Median/nsREF:SE` | `1.75` | erkannt |
+| REF L Sphere | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:L/nsREF:Median/nsREF:Sphere` | `3.75` | erkannt |
+| REF L Cylinder | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:L/nsREF:Median/nsREF:Cylinder` | `-2.50` | erkannt |
+| REF L Axis | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:L/nsREF:Median/nsREF:Axis` | `173` | erkannt |
+| REF L SE | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:REF/nsREF:L/nsREF:Median/nsREF:SE` | `2.50` | erkannt |
+| REF PD Distance | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:PD/nsREF:Distance` | `66.00` | erkannt |
+| REF PD Near | `Ophthalmology/nsREF:Measure[@type='REF']/nsREF:PD/nsREF:Near` | `66.00` | erkannt |
+
+Neben `Median` sind einzelne Messlisten vorhanden, z. B. `nsREF:List[@No='1']` bis `nsREF:List[@No='4']`. Im Beispiel enthält `R/List[@No='1']` einen Fehler `NO CENTER`; daher sollte ein späteres Profil für Standardausgaben bevorzugt die `Median`-Werte verwenden und Einzellisten optional auswerten.
+
+Erkannte KM-SourcePaths:
+
+| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| KM R K1 Radius | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:R1/nsKM:Radius` | `8.48` | erkannt |
+| KM R K1 Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:R1/nsKM:Power` | `39.75` | erkannt |
+| KM R K1 Axis | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:R1/nsKM:Axis` | `11` | erkannt |
+| KM R K2 Radius | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:R2/nsKM:Radius` | `7.79` | erkannt |
+| KM R K2 Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:R2/nsKM:Power` | `43.50` | erkannt |
+| KM R K2 Axis | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:R2/nsKM:Axis` | `101` | erkannt |
+| KM R Average Radius | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:Average/nsKM:Radius` | `8.14` | erkannt |
+| KM R Average Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:Average/nsKM:Power` | `41.75` | erkannt |
+| KM R Cylinder Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:Cylinder/nsKM:Power` | `-3.75` | erkannt |
+| KM R Cylinder Axis | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:R/nsKM:Median/nsKM:Cylinder/nsKM:Axis` | `11` | erkannt |
+| KM L K1 Radius | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:R1/nsKM:Radius` | `8.35` | erkannt |
+| KM L K1 Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:R1/nsKM:Power` | `40.50` | erkannt |
+| KM L K1 Axis | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:R1/nsKM:Axis` | `171` | erkannt |
+| KM L K2 Radius | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:R2/nsKM:Radius` | `7.87` | erkannt |
+| KM L K2 Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:R2/nsKM:Power` | `43.00` | erkannt |
+| KM L K2 Axis | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:R2/nsKM:Axis` | `81` | erkannt |
+| KM L Average Radius | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:Average/nsKM:Radius` | `8.11` | erkannt |
+| KM L Average Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:Average/nsKM:Power` | `41.75` | erkannt |
+| KM L Cylinder Power | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:Cylinder/nsKM:Power` | `-2.50` | erkannt |
+| KM L Cylinder Axis | `Ophthalmology/nsKM:Measure[@type='KM']/nsKM:KM/nsKM:L/nsKM:Median/nsKM:Cylinder/nsKM:Axis` | `171` | erkannt |
+
+Die Keratometrie nutzt in der JOIA-Struktur `R1` und `R2`. Diese entsprechen fachlich den K-Werten `K1` und `K2`; die Bezeichnung im späteren Profil sollte für Anwender vermutlich `K1`/`K2` verwenden, technisch aber auf `R1`/`R2` im XML abbilden.
+
+Erkannte SBJ-SourcePaths:
+
+| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| SBJ Type 1 Name | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:TypeName` | `Full Correction` | erkannt |
+| SBJ Type 2 Name | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='2']/nsSBJ:TypeName` | `Unaided Data` | erkannt |
+| SBJ ExamDistance 1 | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:Distance` | `500.000` | erkannt |
+| SBJ R Sphere | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:RefractionData/nsSBJ:R/nsSBJ:Sph` | `3.75` | erkannt |
+| SBJ R Cylinder | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:RefractionData/nsSBJ:R/nsSBJ:Cyl` | `-4.00` | erkannt |
+| SBJ R Axis | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:RefractionData/nsSBJ:R/nsSBJ:Axis` | `13` | erkannt |
+| SBJ L Sphere | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:RefractionData/nsSBJ:L/nsSBJ:Sph` | `3.75` | erkannt |
+| SBJ L Cylinder | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:RefractionData/nsSBJ:L/nsSBJ:Cyl` | `-2.50` | erkannt |
+| SBJ L Axis | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:RefractionData/nsSBJ:L/nsSBJ:Axis` | `173` | erkannt |
+| SBJ VA rechts | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:VA/nsSBJ:R` | `0.6` | erkannt |
+| SBJ VA links | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:VA/nsSBJ:L` | `1.0` | erkannt |
+| SBJ VA binokular | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:VA/nsSBJ:B` | leer | erkannt; Nutzung noch zu validieren |
+| SBJ PD rechts | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:PD/nsSBJ:R` | leer | erkannt; Nutzung noch zu validieren |
+| SBJ PD links | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:PD/nsSBJ:L` | leer | erkannt; Nutzung noch zu validieren |
+| SBJ PD binokular | `Ophthalmology/nsSBJ:Measure[@type='SBJ']/nsSBJ:RefractionTest/nsSBJ:Type[@No='1']/nsSBJ:ExamDistance[@No='1']/nsSBJ:PD/nsSBJ:B` | `66.00` | erkannt |
+
+Im Beispiel sind vier SBJ-ExamDistance-Kombinationen vorhanden:
+
+- `Type No="1"` / `Full Correction`, `ExamDistance No="1"` = `500.000 cm`, mit R/L subjektiven Werten, VA rechts/links und PD binokular.
+- `Type No="1"` / `Full Correction`, `ExamDistance No="2"` = `33.000 cm`, mit Nahwerten für R/L, aber ohne VA.
+- `Type No="2"` / `Unaided Data`, `ExamDistance No="1"` und `No="2"`, überwiegend leer, aber mit PD binokular.
+
+Für spätere anwendernahe Mapping-SourcePaths sollte analog zu CL300 eine normalisierte Darstellung verwendet werden, z. B.:
+
+```text
+Ophthalmology/Common/Company
+Ophthalmology/Common/ModelName
+Ophthalmology/Measure[@type='REF']/REF/R/Median/Sphere
+Ophthalmology/Measure[@type='REF']/REF/L/Median/Sphere
+Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Power
+Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Power
+Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R
+Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B
+```
+
+Wichtig für die spätere Parser- und Profil-Logik:
+
+- KR800 liefert mehrere Untersuchungsarten in einer einzigen Datei.
+- Exportprofile müssen pro Untersuchungsart entscheiden können, ob `REF`, `KM`, `SBJ` oder nur einzelne Gruppen übernommen werden.
+- `Measure[@type='...']` ist zwingend relevant, weil REF/KM/SBJ parallele Strukturen mit unterschiedlichen Namespaces nutzen.
+- `Median`-Werte sind für Standardausgaben vermutlich stabiler als Einzelmesslisten.
+- SBJ enthält mehrere `Type`- und `ExamDistance`-Varianten; die fachliche Auswahl ist noch zu validieren.
+- `Shift-JIS` muss als Eingabe-Encoding unterstützt oder zuverlässig erkannt werden.
+- Für KR800 wurden in der analysierten Datei keine JPG-/PDF-Attachments gefunden.
+
 ## 8. TOPCON TRK2P
 
 Gerätetyp: Tonometer / Refraktions-Keratometer je nach Dateninhalt
