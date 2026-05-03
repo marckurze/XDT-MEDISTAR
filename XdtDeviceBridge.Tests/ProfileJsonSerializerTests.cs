@@ -1,0 +1,120 @@
+using XdtDeviceBridge.Core;
+using XdtDeviceBridge.Infrastructure;
+
+namespace XdtDeviceBridge.Tests;
+
+public sealed class ProfileJsonSerializerTests
+{
+    private readonly ProfileJsonSerializer _serializer = new();
+
+    [Fact]
+    public void AisProfile_ShouldRoundTrip()
+    {
+        var profile = DefaultAisProfiles.CreateMedistarDefault();
+
+        var json = _serializer.SerializeAisProfile(profile);
+        var deserialized = _serializer.DeserializeAisProfile(json);
+
+        Assert.Contains("\"ProfileKind\": \"AisProfile\"", json);
+        Assert.Equal("MEDISTAR", deserialized.Name);
+        Assert.Equal("Windows-1252", deserialized.DefaultEncoding);
+        Assert.Equal("6310", deserialized.RequiredStaticFields["8000"]);
+    }
+
+    [Fact]
+    public void DeviceProfileDefinition_ShouldRoundTrip()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault();
+
+        var json = _serializer.SerializeDeviceProfileDefinition(profile);
+        var deserialized = _serializer.DeserializeDeviceProfileDefinition(json);
+
+        Assert.Equal("NIDEK", deserialized.Manufacturer);
+        Assert.Equal("ARK1S", deserialized.Model);
+        Assert.Equal(profile.Measurements.Count, deserialized.Measurements.Count);
+        Assert.Contains(deserialized.Measurements, measurement =>
+            measurement.Id == "far-pd"
+            && measurement.SourcePath == "PD/PDList[@No='1']/FarPD");
+    }
+
+    [Fact]
+    public void ExportProfileDefinition_ShouldRoundTrip()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();
+
+        var json = _serializer.SerializeExportProfileDefinition(profile);
+        var deserialized = _serializer.DeserializeExportProfileDefinition(json);
+
+        Assert.Contains("\"RuleType\": \"StaticValue\"", json);
+        Assert.Equal("Windows-1252", deserialized.OutputEncoding);
+        Assert.Equal(profile.Rules.Count, deserialized.Rules.Count);
+        Assert.Equal(2, deserialized.Rules.Count(rule => rule.TargetFieldCode == "6228"));
+    }
+
+    [Fact]
+    public void InterfaceProfileDefinition_ShouldRoundTrip()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
+
+        var json = _serializer.SerializeInterfaceProfileDefinition(profile);
+        var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
+
+        Assert.False(deserialized.IsActive);
+        Assert.True(deserialized.IsLicenseRequired);
+        Assert.Equal(profile.FolderOptions, deserialized.FolderOptions);
+    }
+
+    [Fact]
+    public void TemplatePackage_ShouldRoundTrip()
+    {
+        var package = CreateTemplatePackage();
+
+        var json = _serializer.SerializeTemplatePackage(package);
+        var deserialized = _serializer.DeserializeTemplatePackage(json);
+
+        Assert.Equal(package.Metadata.Id, deserialized.Metadata.Id);
+        Assert.Equal(package.Metadata.Name, deserialized.Metadata.Name);
+        Assert.Equal("1.0", deserialized.PackageFormatVersion);
+        Assert.Equal(package.IncludedProfiles.Count, deserialized.IncludedProfiles.Count);
+    }
+
+    private static TemplatePackage CreateTemplatePackage()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+        var createdAt = new DateTime(2026, 5, 3, 12, 0, 0, DateTimeKind.Utc);
+
+        return new TemplatePackage(
+            Metadata: CreateMetadata("package-medistar-nidek-ark1s", "MEDISTAR + NIDEK ARK1S Package", ProfileKind.TemplatePackage, timestamp),
+            IncludedProfiles: new[]
+            {
+                CreateMetadata("ais-medistar-default", "MEDISTAR", ProfileKind.AisProfile, timestamp),
+                CreateMetadata("device-nidek-ark1s-default", "NIDEK ARK1S", ProfileKind.DeviceProfile, timestamp),
+                CreateMetadata("export-medistar-nidek-ark1s-default", "MEDISTAR + NIDEK ARK1S Export", ProfileKind.ExportProfile, timestamp)
+            },
+            PackageFormatVersion: "1.0",
+            CreatedAt: createdAt,
+            CreatedBy: "XdtDeviceBridge",
+            Description: "Serializer roundtrip test package.");
+    }
+
+    private static ProfileMetadata CreateMetadata(
+        string id,
+        string name,
+        ProfileKind profileKind,
+        DateTimeOffset timestamp)
+    {
+        return new ProfileMetadata(
+            Id: id,
+            Name: name,
+            ProfileKind: profileKind,
+            Description: null,
+            Vendor: null,
+            Product: null,
+            Version: "1.0.0",
+            CreatedAt: timestamp,
+            UpdatedAt: timestamp,
+            CreatedBy: "XdtDeviceBridge",
+            IsBuiltIn: true,
+            IsUserDefined: false);
+    }
+}
