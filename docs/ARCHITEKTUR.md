@@ -367,7 +367,93 @@ Der Lizenzbereich soll mindestens anzeigen:
 
 ---
 
-## 8. Abgrenzung und Einführungsstrategie
+## 8. Implementierte V2-Bausteine
+
+Die folgenden Architekturbausteine sind inzwischen als Grundlage für Version 2 implementiert. Sie sind bewusst noch nicht vollständig in den produktiven Prototyp integriert, sondern bilden eine stabile Vorbereitungsstufe für Profile, Templates, lokale Konfiguration und Offline-Lizenzierung.
+
+### 8.1 Profilmodelle
+
+Im Core-Projekt sind die zentralen Profilmodelle vorbereitet:
+
+- `ProfileMetadata`
+- `AisProfile`
+- `DeviceProfileDefinition`
+- `ExportProfileDefinition`
+- `InterfaceProfileDefinition`
+- `TemplatePackage`
+
+Diese Modelle beschreiben künftig AIS-Systeme, medizinische Geräte, Export-/Mappingregeln, vollständige Schnittstellenprofile und wiederverwendbare Templatepakete. Der aktuelle MEDISTAR/NIDEK-ARK1S-Ablauf bleibt davon unabhängig funktionsfähig.
+
+### 8.2 Template- und Konfigurationsaustausch
+
+Im Infrastructure-Projekt sind Bausteine für JSON-Speicherung sowie Import und Export von Konfigurationspaketen vorbereitet:
+
+- `ProfileJsonSerializer`
+- `ProfileFileRepository`
+- `TemplatePackageExporter`
+- `TemplatePackageImporter`
+- `TemplatePackageImportValidator`
+
+Damit können V2-Profile und Templatepakete technisch serialisiert, als Dateien gespeichert, als ZIP-Paket exportiert, wieder importiert und vor einer späteren produktiven Übernahme validiert werden.
+
+### 8.3 Offline-Lizenzierung
+
+Für die spätere Offline-Lizenzierung sind folgende Modelle und Infrastrukturbausteine vorhanden:
+
+- `InstallationInfo`
+- `InstallationInfoProvider`
+- `LicenseInfo`
+- `LicenseFileRepository`
+- `LicenseEvaluator`
+- `LicenseRequest`
+- `LicenseRequestBuilder`
+- `LicenseRequestFileRepository`
+
+Diese Bausteine ermöglichen eine lokale Installationskennung, das Speichern und Laden einer Lizenzdatei, eine einfache lokale Lizenzbewertung sowie das Erzeugen und Speichern einer Offline-Lizenzanfrage. Eine echte Signaturprüfung und produktive Erzwingung der Lizenz sind weiterhin nicht implementiert.
+
+### 8.4 Lokale App-Daten
+
+Für benutzerbezogene lokale App-Daten ist `AppDataPathProvider` vorbereitet. Der Standardpfad liegt unter:
+
+```text
+%LocalAppData%\XdtDeviceBridge
+```
+
+Darunter sind Pfade für Profile, Templates, Lizenzen, Logs, Lizenzanfragen, Templatepakete und Installationsinformationen vorgesehen. Die Struktur ist für Workstations und Terminalserver-Benutzerprofile geeignet.
+
+### 8.5 Sicherheit
+
+Mit `FolderSafetyValidator` ist eine erste Sicherheitsprüfung für spätere Ordnerbereinigungen vorhanden. Der Validator erkennt gefährliche Cleanup-Pfade wie leere oder relative Pfade, Laufwerks- oder Share-Wurzeln, Windows-Systemordner, Program-Files-Ordner und Benutzerprofil-Wurzeln. Nicht vorhandene, aber ansonsten plausible Unterordner werden als Warnung gemeldet.
+
+Es wurde keine Löschlogik implementiert. Der Baustein dient nur der Vorbereitung sicherer Bereinigungsoptionen.
+
+### 8.6 Weiterhin aktueller Prototyp
+
+Der aktuelle funktionsfähige Prototyp bleibt unverändert:
+
+- manuelle WPF-App
+- MEDISTAR GDT/XDT als AIS-Eingabe
+- NIDEK ARK1S XML als Geräteeingabe
+- MEDISTAR-kompatibler XDT-Export
+- Steuerung über `8000 = 6310`
+- Untersuchungsart über `8402`
+- Ergebnistext über zwei `6228`-Zeilen
+
+---
+
+## 9. Nächste Integrationsschritte
+
+Die nächsten sinnvollen Integrationsschritte sollten klein bleiben und den stabilen Prototyp nicht gefährden:
+
+1. Profilkatalog aus lokalen JSON-Dateien laden.
+2. V2-Profile optional in die App-Oberfläche einbinden.
+3. Profil-/Template-Import und Export in der UI vorbereiten.
+4. Lizenzstatus zunächst nur anzeigen, noch nicht erzwingen.
+5. Ordnerüberwachung später separat implementieren.
+
+---
+
+## 10. Abgrenzung und Einführungsstrategie
 
 Der aktuelle Prototyp bleibt funktionsfähig. Die bestehende MEDISTAR/NIDEK-ARK1S-Verarbeitung darf durch die neue Architektur nicht gebrochen werden.
 
