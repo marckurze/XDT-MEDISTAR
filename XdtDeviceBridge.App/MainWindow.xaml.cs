@@ -52,6 +52,7 @@ public partial class MainWindow : Window
             InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
             ProfileBaseFolderText.Text = paths.BaseFolder;
             ProfileNamesTextBox.Text = FormatProfileNames(catalog);
+            ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
         }
         catch (Exception ex)
         {
@@ -62,7 +63,7 @@ public partial class MainWindow : Window
             _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
             ProfileNamesTextBox.Text = "Keine Profile geladen.";
-            AppendMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
+            AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
     }
 
@@ -126,6 +127,7 @@ public partial class MainWindow : Window
                     "Nicht lizenziert / Test- oder Lizenzaktivierung erforderlich",
                     activeLicensedDeviceCount,
                     licensedDeviceCount: 0);
+                LicenseMessagesTextBox.Text = "Keine lokale Lizenzdatei gefunden. Die bestehende Verarbeitung bleibt nutzbar.";
                 return;
             }
 
@@ -139,6 +141,7 @@ public partial class MainWindow : Window
                     FormatLicenseStatus(evaluation),
                     evaluation.ActiveLicensedDeviceCount,
                     evaluation.LicensedDeviceCount);
+                LicenseMessagesTextBox.Text = "Lizenzstatus geladen.";
             }
             catch (Exception ex)
             {
@@ -147,7 +150,7 @@ public partial class MainWindow : Window
                     "Lizenzdatei konnte nicht geladen werden",
                     activeLicensedDeviceCount,
                     licensedDeviceCount: 0);
-                AppendMessage($"Lizenzdatei konnte nicht geladen werden: {ex.Message}");
+                AppendLicenseMessage($"Lizenzdatei konnte nicht geladen werden: {ex.Message}");
             }
         }
         catch (Exception ex)
@@ -160,7 +163,7 @@ public partial class MainWindow : Window
             LicenseActiveDeviceCountText.Text = "0";
             LicenseLicensedDeviceCountText.Text = "0";
             _installationInfo = null;
-            AppendMessage($"Lizenzstatus konnte nicht initialisiert werden: {ex.Message}");
+            AppendLicenseMessage($"Lizenzstatus konnte nicht initialisiert werden: {ex.Message}");
         }
     }
 
@@ -202,13 +205,13 @@ public partial class MainWindow : Window
     {
         if (_installationInfo is null)
         {
-            AppendMessage("Lizenzanfrage kann nicht exportiert werden, weil keine Installationsinformationen geladen sind.");
+            AppendLicenseMessage("Lizenzanfrage kann nicht exportiert werden, weil keine Installationsinformationen geladen sind.");
             return;
         }
 
         if (_profileCatalog is null)
         {
-            AppendMessage("Lizenzanfrage kann nicht exportiert werden, weil keine V2-Profile geladen sind.");
+            AppendLicenseMessage("Lizenzanfrage kann nicht exportiert werden, weil keine V2-Profile geladen sind.");
             return;
         }
 
@@ -236,11 +239,11 @@ public partial class MainWindow : Window
                 DateTime.UtcNow);
 
             _licenseRequestFileRepository.Save(dialog.FileName, request);
-            AppendMessage($"Lizenzanfrage erfolgreich exportiert: {dialog.FileName}");
+            AppendLicenseMessage($"Lizenzanfrage erfolgreich exportiert: {dialog.FileName}");
         }
         catch (Exception ex)
         {
-            AppendMessage($"Lizenzanfrage konnte nicht exportiert werden: {ex.Message}");
+            AppendLicenseMessage($"Lizenzanfrage konnte nicht exportiert werden: {ex.Message}");
         }
     }
 
@@ -263,10 +266,10 @@ public partial class MainWindow : Window
             var validationIssues = LicenseInfoValidator.Validate(importedLicense);
             if (validationIssues.Count > 0)
             {
-                AppendMessage("Lizenzdatei ist ungültig und wurde nicht übernommen.");
+                AppendLicenseMessage("Lizenzdatei ist ungültig und wurde nicht übernommen.");
                 foreach (var issue in validationIssues)
                 {
-                    AppendMessage($"[Lizenz] {issue}");
+                    AppendLicenseMessage($"[Lizenz] {issue}");
                 }
 
                 return;
@@ -286,11 +289,11 @@ public partial class MainWindow : Window
                 evaluation.ActiveLicensedDeviceCount,
                 evaluation.LicensedDeviceCount);
 
-            AppendMessage($"Lizenzdatei erfolgreich importiert: {dialog.FileName}");
+            AppendLicenseMessage($"Lizenzdatei erfolgreich importiert: {dialog.FileName}");
         }
         catch (Exception ex)
         {
-            AppendMessage($"Lizenzdatei konnte nicht importiert werden: {ex.Message}");
+            AppendLicenseMessage($"Lizenzdatei konnte nicht importiert werden: {ex.Message}");
         }
     }
 
@@ -298,7 +301,7 @@ public partial class MainWindow : Window
     {
         if (_profileCatalog is null)
         {
-            AppendMessage("Templatepaket kann nicht exportiert werden, weil keine V2-Profile geladen sind.");
+            AppendProfileMessage("Templatepaket kann nicht exportiert werden, weil keine V2-Profile geladen sind.");
             return;
         }
 
@@ -320,11 +323,11 @@ public partial class MainWindow : Window
         {
             var request = CreateTemplatePackageExportRequest(_profileCatalog, DateTime.UtcNow);
             _templatePackageExporter.Export(dialog.FileName, request);
-            AppendMessage($"Templatepaket erfolgreich exportiert: {dialog.FileName}");
+            AppendProfileMessage($"Templatepaket erfolgreich exportiert: {dialog.FileName}");
         }
         catch (Exception ex)
         {
-            AppendMessage($"Templatepaket konnte nicht exportiert werden: {ex.Message}");
+            AppendProfileMessage($"Templatepaket konnte nicht exportiert werden: {ex.Message}");
         }
     }
 
@@ -385,7 +388,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            AppendMessage($"Templatepaket konnte nicht importiert oder geprüft werden: {ex.Message}");
+            AppendProfileMessage($"Templatepaket konnte nicht importiert oder geprüft werden: {ex.Message}");
         }
     }
 
@@ -400,20 +403,20 @@ public partial class MainWindow : Window
             .Where(issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Error)
             .ToList();
 
-        AppendMessage($"Templatepaket importiert: {importResult.Package.Metadata.Name}");
-        AppendMessage($"AIS-Profile: {importResult.AisProfiles.Count}");
-        AppendMessage($"Geräteprofile: {importResult.DeviceProfiles.Count}");
-        AppendMessage($"Exportprofile: {importResult.ExportProfiles.Count}");
-        AppendMessage($"Schnittstellenprofile: {importResult.InterfaceProfiles.Count}");
-        AppendMessage($"Warnings: {warningIssues.Count}");
-        AppendMessage($"Errors: {errorIssues.Count}");
+        AppendProfileMessage($"Templatepaket importiert: {importResult.Package.Metadata.Name}");
+        AppendProfileMessage($"AIS-Profile: {importResult.AisProfiles.Count}");
+        AppendProfileMessage($"Geräteprofile: {importResult.DeviceProfiles.Count}");
+        AppendProfileMessage($"Exportprofile: {importResult.ExportProfiles.Count}");
+        AppendProfileMessage($"Schnittstellenprofile: {importResult.InterfaceProfiles.Count}");
+        AppendProfileMessage($"Warnings: {warningIssues.Count}");
+        AppendProfileMessage($"Errors: {errorIssues.Count}");
 
         if (errorIssues.Count > 0)
         {
-            AppendMessage("Templatepaket enthält Fehler und wurde nicht übernommen.");
+            AppendProfileMessage("Templatepaket enthält Fehler und wurde nicht übernommen.");
             foreach (var issue in errorIssues)
             {
-                AppendMessage($"[Templatepaket] Error: {FormatTemplatePackageImportIssue(issue)}");
+                AppendProfileMessage($"[Templatepaket] Error: {FormatTemplatePackageImportIssue(issue)}");
             }
 
             return;
@@ -421,14 +424,14 @@ public partial class MainWindow : Window
 
         if (warningIssues.Count > 0)
         {
-            AppendMessage("Templatepaket ist grundsätzlich gültig, enthält aber Hinweise.");
+            AppendProfileMessage("Templatepaket ist grundsätzlich gültig, enthält aber Hinweise.");
             foreach (var issue in warningIssues)
             {
-                AppendMessage($"[Templatepaket] Warning: {FormatTemplatePackageImportIssue(issue)}");
+                AppendProfileMessage($"[Templatepaket] Warning: {FormatTemplatePackageImportIssue(issue)}");
             }
         }
 
-        AppendMessage("Templatepaket erfolgreich geprüft. Produktive Übernahme ist noch nicht implementiert.");
+        AppendProfileMessage("Templatepaket wurde geprüft. Es wurde noch nicht produktiv übernommen.");
     }
 
     private static string FormatTemplatePackageImportIssue(TemplatePackageImportValidationIssue issue)
@@ -563,11 +566,29 @@ public partial class MainWindow : Window
 
     private void AppendMessage(string message)
     {
-        if (!string.IsNullOrWhiteSpace(MessagesTextBox.Text))
+        AppendText(MessagesTextBox, message);
+    }
+
+    private void AppendProfileMessage(string message)
+    {
+        AppendText(ProfileMessagesTextBox, message);
+        AppendMessage(message);
+    }
+
+    private void AppendLicenseMessage(string message)
+    {
+        AppendText(LicenseMessagesTextBox, message);
+        AppendMessage(message);
+    }
+
+    private static void AppendText(System.Windows.Controls.TextBox textBox, string message)
+    {
+        if (!string.IsNullOrWhiteSpace(textBox.Text))
         {
-            MessagesTextBox.AppendText(Environment.NewLine);
+            textBox.AppendText(Environment.NewLine);
         }
 
-        MessagesTextBox.AppendText(message);
+        textBox.AppendText(message);
+        textBox.ScrollToEnd();
     }
 }

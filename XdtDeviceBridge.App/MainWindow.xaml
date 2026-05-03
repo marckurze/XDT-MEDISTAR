@@ -1,157 +1,250 @@
 <Window x:Class="XdtDeviceBridge.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="XdtDeviceBridge" Height="900" Width="1200">
+        Title="XdtDeviceBridge"
+        Height="900"
+        Width="1200"
+        MinHeight="800"
+        MinWidth="1200">
     <Grid Margin="12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="2*"/>
-            <RowDefinition Height="2*"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <TabControl>
+            <TabItem Header="Verarbeitung">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="8" MinHeight="700">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="3*"/>
+                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="2*"/>
+                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
-            <Button Content="AIS-GDT-Datei auswählen" Width="220" Margin="0,0,8,0" Click="SelectAisFile_Click" />
-            <TextBox x:Name="AisFilePathTextBox" IsReadOnly="True" MinWidth="900" />
-        </StackPanel>
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="AIS-GDT-Datei auswählen" Margin="0,0,8,0" Click="SelectAisFile_Click" />
+                            <TextBox Grid.Column="1" x:Name="AisFilePathTextBox" IsReadOnly="True" />
+                        </Grid>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,8">
-            <Button Content="NIDEK-XML-Datei auswählen" Width="220" Margin="0,0,8,0" Click="SelectDeviceFile_Click" />
-            <TextBox x:Name="DeviceFilePathTextBox" IsReadOnly="True" MinWidth="900" />
-        </StackPanel>
+                        <Grid Grid.Row="1" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="NIDEK-XML-Datei auswählen" Margin="0,0,8,0" Click="SelectDeviceFile_Click" />
+                            <TextBox Grid.Column="1" x:Name="DeviceFilePathTextBox" IsReadOnly="True" />
+                        </Grid>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,0,0,8">
-            <Button Content="Verarbeiten" Width="150" Margin="0,0,8,0" Click="Process_Click" />
-            <Button Content="Exportdatei schreiben" Width="180" Click="Export_Click" />
-        </StackPanel>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="Verarbeiten" Width="150" Margin="0,0,8,0" Click="Process_Click" />
+                            <Button Content="Exportdatei schreiben" Width="180" Click="Export_Click" />
+                        </StackPanel>
 
-        <GroupBox Header="Profile" Grid.Row="3" Margin="0,0,0,8">
-            <Grid Margin="8">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="AisProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Geräte:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="DeviceProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="4" Text="Export:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="5" x:Name="ExportProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="6" Text="Schnittstellen:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="7" x:Name="InterfaceProfileCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="8" Text="BaseFolder:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="0" Grid.Column="9" x:Name="ProfileBaseFolderText" TextTrimming="CharacterEllipsis"/>
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="10" Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,0" Click="ExportTemplatePackage_Click"/>
-                    <Button Content="Templatepaket importieren" Width="190" Click="ImportTemplatePackage_Click"/>
-                </StackPanel>
-                <TextBox Grid.Row="2"
-                         Grid.Column="0"
-                         Grid.ColumnSpan="10"
-                         x:Name="ProfileNamesTextBox"
-                         Margin="0,8,0,0"
-                         MinHeight="120"
-                         MaxHeight="180"
-                         IsReadOnly="True"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto"/>
-            </Grid>
-        </GroupBox>
+                        <GroupBox Header="Patientendaten" Grid.Row="3" Margin="0,0,0,8">
+                            <UniformGrid Columns="4" Margin="8">
+                                <TextBlock Text="PatientNumber:" FontWeight="Bold"/>
+                                <TextBlock x:Name="PatientNumberText" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="LastName:" FontWeight="Bold"/>
+                                <TextBlock x:Name="LastNameText" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="FirstName:" FontWeight="Bold"/>
+                                <TextBlock x:Name="FirstNameText" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="BirthDate:" FontWeight="Bold"/>
+                                <TextBlock x:Name="BirthDateText" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="Street:" FontWeight="Bold"/>
+                                <TextBlock x:Name="StreetText" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="PostalCodeCity:" FontWeight="Bold"/>
+                                <TextBlock x:Name="PostalCodeCityText" TextTrimming="CharacterEllipsis"/>
+                            </UniformGrid>
+                        </GroupBox>
 
-        <GroupBox Header="Lizenz" Grid.Row="4" Margin="0,0,0,8">
-            <Grid Margin="8">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Installation-ID:" FontWeight="Bold" Margin="0,0,4,4"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="LicenseInstallationIdText" TextTrimming="CharacterEllipsis" Margin="0,0,12,4"/>
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Computername:" FontWeight="Bold" Margin="0,0,4,4"/>
-                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="LicenseMachineNameText" TextTrimming="CharacterEllipsis" Margin="0,0,12,4"/>
-                <TextBlock Grid.Row="0" Grid.Column="4" Text="Benutzername:" FontWeight="Bold" Margin="0,0,4,4"/>
-                <TextBlock Grid.Row="0" Grid.Column="5" x:Name="LicenseUserNameText" TextTrimming="CharacterEllipsis" Margin="0,0,12,4"/>
-                <TextBlock Grid.Row="0" Grid.Column="6" Text="Terminalserver:" FontWeight="Bold" Margin="0,0,4,4"/>
-                <TextBlock Grid.Row="0" Grid.Column="7" x:Name="LicenseTerminalServerText" Margin="0,0,0,4"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Lizenzstatus:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseStatusText" TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="4" Text="Aktive Geräte:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="5" x:Name="LicenseActiveDeviceCountText" Margin="0,0,12,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="6" Text="Lizenzierte Geräte:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="7" x:Name="LicenseLicensedDeviceCountText"/>
-                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="8" Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
-                    <Button Content="Lizenzdatei importieren" Width="190" Click="ImportLicenseFile_Click"/>
-                </StackPanel>
-            </Grid>
-        </GroupBox>
+                        <GroupBox Header="Messwerte" Grid.Row="4" Margin="0,0,0,0">
+                            <DataGrid x:Name="MeasurementsGrid" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="260">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="*"/>
+                                    <DataGridTextColumn Header="Eye" Binding="{Binding Eye}" Width="80"/>
+                                    <DataGridTextColumn Header="Group" Binding="{Binding Group}" Width="120"/>
+                                    <DataGridTextColumn Header="DisplayName" Binding="{Binding DisplayName}" Width="140"/>
+                                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="100"/>
+                                    <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="80"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </GroupBox>
 
-        <GroupBox Header="Patientendaten" Grid.Row="5" Margin="0,0,0,8">
-            <UniformGrid Columns="2" Margin="8">
-                <TextBlock Text="PatientNumber:" FontWeight="Bold"/><TextBlock x:Name="PatientNumberText"/>
-                <TextBlock Text="LastName:" FontWeight="Bold"/><TextBlock x:Name="LastNameText"/>
-                <TextBlock Text="FirstName:" FontWeight="Bold"/><TextBlock x:Name="FirstNameText"/>
-                <TextBlock Text="BirthDate:" FontWeight="Bold"/><TextBlock x:Name="BirthDateText"/>
-                <TextBlock Text="Street:" FontWeight="Bold"/><TextBlock x:Name="StreetText"/>
-                <TextBlock Text="PostalCodeCity:" FontWeight="Bold"/><TextBlock x:Name="PostalCodeCityText"/>
-            </UniformGrid>
-        </GroupBox>
+                        <GridSplitter Grid.Row="5"
+                                      Height="6"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center"
+                                      ResizeDirection="Rows"
+                                      ShowsPreview="True"/>
 
-        <GroupBox Header="Messwerte" Grid.Row="6" Margin="0,0,0,8">
-            <DataGrid x:Name="MeasurementsGrid" AutoGenerateColumns="False" IsReadOnly="True">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="*"/>
-                    <DataGridTextColumn Header="Eye" Binding="{Binding Eye}" Width="80"/>
-                    <DataGridTextColumn Header="Group" Binding="{Binding Group}" Width="120"/>
-                    <DataGridTextColumn Header="DisplayName" Binding="{Binding DisplayName}" Width="120"/>
-                    <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="100"/>
-                    <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="80"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </GroupBox>
+                        <GroupBox Header="Exportvorschau" Grid.Row="6" Margin="0,0,0,0">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock x:Name="PlannedFileNameText" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBox x:Name="ExportPreviewTextBox"
+                                         Grid.Row="1"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Auto"
+                                         TextWrapping="NoWrap"
+                                         MinHeight="180"/>
+                            </Grid>
+                        </GroupBox>
 
-        <GroupBox Header="Exportvorschau" Grid.Row="7" Margin="0,0,0,8">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <TextBlock x:Name="PlannedFileNameText" FontWeight="Bold" Margin="8"/>
-                <TextBox x:Name="ExportPreviewTextBox" Grid.Row="1" Margin="8" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
-            </Grid>
-        </GroupBox>
+                        <GridSplitter Grid.Row="7"
+                                      Height="6"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center"
+                                      ResizeDirection="Rows"
+                                      ShowsPreview="True"/>
 
-        <GroupBox Header="Meldungen" Grid.Row="8">
-            <TextBox x:Name="MessagesTextBox" Margin="8" IsReadOnly="True" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
-        </GroupBox>
+                        <GroupBox Header="Meldungen" Grid.Row="8">
+                            <TextBox x:Name="MessagesTextBox"
+                                     Margin="8"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     TextWrapping="Wrap"
+                                     MinHeight="120"/>
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Profile &amp; Templates">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <GroupBox Header="Profilübersicht" Grid.Row="0" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="70"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS:" FontWeight="Bold" Margin="0,0,4,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="AisProfileCountText" Margin="0,0,12,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Geräte:" FontWeight="Bold" Margin="0,0,4,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="DeviceProfileCountText" Margin="0,0,12,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="4" Text="Export:" FontWeight="Bold" Margin="0,0,4,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="5" x:Name="ExportProfileCountText" Margin="0,0,12,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="6" Text="Schnittstellen:" FontWeight="Bold" Margin="0,0,4,4"/>
+                                <TextBlock Grid.Row="0" Grid.Column="7" x:Name="InterfaceProfileCountText" Margin="0,0,0,4"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="BaseFolder:" FontWeight="Bold" Margin="0,0,4,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="7" x:Name="ProfileBaseFolderText" TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+                        </GroupBox>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,0" Click="ExportTemplatePackage_Click"/>
+                            <Button Content="Templatepaket importieren" Width="190" Click="ImportTemplatePackage_Click"/>
+                        </StackPanel>
+
+                        <GroupBox Header="Profilnamen" Grid.Row="2" Margin="0,0,0,8">
+                            <TextBox x:Name="ProfileNamesTextBox"
+                                     Margin="8"
+                                     MinHeight="320"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+
+                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="3">
+                            <TextBox x:Name="ProfileMessagesTextBox"
+                                     Margin="8"
+                                     MinHeight="160"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Lizenz">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <GroupBox Header="Lizenzstatus" Grid.Row="0" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Installation-ID:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseInstallationIdText" TextTrimming="CharacterEllipsis" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Computername:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="LicenseMachineNameText" TextTrimming="CharacterEllipsis" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="Benutzername:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="1" Grid.Column="3" x:Name="LicenseUserNameText" TextTrimming="CharacterEllipsis" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Terminalserver:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LicenseTerminalServerText" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="Lizenzstatus:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="2" Grid.Column="3" x:Name="LicenseStatusText" TextTrimming="CharacterEllipsis" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Aktive Geräte:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="LicenseActiveDeviceCountText" Margin="0,0,16,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="2" Text="Lizenzierte Geräte:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="3" x:Name="LicenseLicensedDeviceCountText"/>
+                            </Grid>
+                        </GroupBox>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
+                            <Button Content="Lizenzdatei importieren" Width="190" Click="ImportLicenseFile_Click"/>
+                        </StackPanel>
+
+                        <GroupBox Header="Lizenzmeldungen" Grid.Row="2">
+                            <TextBox x:Name="LicenseMessagesTextBox"
+                                     Margin="8"
+                                     MinHeight="280"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
