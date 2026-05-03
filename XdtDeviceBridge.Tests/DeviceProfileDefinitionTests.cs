@@ -111,6 +111,52 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Contains(profile.Measurements, m => m.Id == "near-pd" && m.SourcePath == "PD/PDList[@No='1']/NearPD");
     }
 
+    [Fact]
+    public void CreateNidekLm7Default_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
+
+        Assert.Equal("NIDEK", profile.Manufacturer);
+        Assert.Equal("LM7", profile.Model);
+        Assert.Equal("Lensmeter", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.False(profile.CanContainMultipleExaminationTypes);
+        Assert.Contains("Lensmeter", profile.SupportedExaminationTypes);
+        Assert.Contains("PD", profile.SupportedExaminationTypes);
+        Assert.Contains("Prism", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateNidekLm7Default_ShouldContainPrismMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
+
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-horizontal");
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-horizontal-base");
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-vertical");
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-r-prism-vertical-base");
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-horizontal");
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-horizontal-base");
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-vertical");
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-vertical-base");
+    }
+
+    [Fact]
+    public void CreateNidekLm7Default_ShouldContainPdMeasurement()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
+
+        Assert.Contains(profile.Measurements, m => m.Id == "lm7-pd" && m.SourcePath == "PD/Distance");
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptNidekLm7Profile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateNidekLm7Default());
+
+        Assert.Empty(issues);
+    }
+
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);

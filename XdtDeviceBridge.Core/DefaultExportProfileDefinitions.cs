@@ -53,4 +53,56 @@ public static class DefaultExportProfileDefinitions
                     "MEDISTAR card text for left eye.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarNidekLm7Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-nidek-lm7-default",
+                Name: "MEDISTAR + NIDEK LM7 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and NIDEK LM7.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK LM7",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-nidek-lm7-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6228",
+                    "LensmeterResultRight",
+                    ExportRuleType.Template,
+                    null,
+                    "R.:S={Device.R/LM/Median/Sphere:Diopter} Z={Device.R/LM/Median/Cylinder:Diopter}*{Device.R/LM/Median/Axis:Axis} P={Device.R/LM/Median/PrismHorizontal:Prism} {Device.R/LM/Median/PrismHorizontalBase:Raw} {Device.R/LM/Median/PrismVertical:Prism} {Device.R/LM/Median/PrismVerticalBase:Raw}           PD={Device.PD/Distance:Pd}",
+                    7,
+                    true,
+                    "MEDISTAR lensmeter card text for right eye."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6228",
+                    "LensmeterResultLeft",
+                    ExportRuleType.Template,
+                    null,
+                    "L.:S={Device.L/LM/Median/Sphere:Diopter} Z={Device.L/LM/Median/Cylinder:Diopter}*{Device.L/LM/Median/Axis:Axis} P={Device.L/LM/Median/PrismHorizontal:Prism} {Device.L/LM/Median/PrismHorizontalBase:Raw} {Device.L/LM/Median/PrismVertical:Prism} {Device.L/LM/Median/PrismVerticalBase:Raw}",
+                    8,
+                    true,
+                    "MEDISTAR lensmeter card text for left eye.")
+            });
+    }
 }

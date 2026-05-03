@@ -133,6 +133,71 @@ public sealed class ExportProfileDefinitionTests
         Assert.All(resultRules, rule => Assert.Contains("PD=", rule.OutputTemplate));
     }
 
+    [Fact]
+    public void CreateMedistarNidekLm7Default_ShouldCreateProfile()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+
+        Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
+        Assert.Equal("device-nidek-lm7-default", profile.SourceDeviceProfileId);
+        Assert.Equal("Windows-1252", profile.OutputEncoding);
+        Assert.Equal(8, profile.Rules.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptMedistarNidekLm7DefaultProfile()
+    {
+        var issues = ExportProfileDefinitionValidator.Validate(DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void CreateMedistarNidekLm7Default_ShouldContainTwoTemplateRulesFor6228()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+        var resultRules = profile.Rules
+            .Where(rule => rule.TargetFieldCode == "6228" && rule.RuleType == ExportRuleType.Template)
+            .ToList();
+
+        Assert.Equal(2, resultRules.Count);
+    }
+
+    [Fact]
+    public void CreateMedistarNidekLm7Default_ShouldContainLensmeterTemplateParts()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+        var rightTemplate = profile.Rules.Single(rule => rule.TargetName == "LensmeterResultRight").OutputTemplate;
+        var leftTemplate = profile.Rules.Single(rule => rule.TargetName == "LensmeterResultLeft").OutputTemplate;
+
+        Assert.Contains("P=", rightTemplate);
+        Assert.Contains("PD=", rightTemplate);
+        Assert.Contains("P=", leftTemplate);
+    }
+
+    [Fact]
+    public void CreateMedistarNidekLm7Default_ShouldContainStaticValueRuleFor8000()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8000"
+            && rule.RuleType == ExportRuleType.StaticValue
+            && rule.SourcePath is null
+            && rule.OutputTemplate == "6310");
+    }
+
+    [Fact]
+    public void CreateMedistarNidekLm7Default_ShouldContainAisFieldRuleFor8402()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8402"
+            && rule.RuleType == ExportRuleType.AisField
+            && rule.SourcePath == "AIS.ExaminationType");
+    }
+
     private static ExportProfileDefinition WithModifiedRule(
         string id,
         Func<ExportRuleDefinition, ExportRuleDefinition> modify)

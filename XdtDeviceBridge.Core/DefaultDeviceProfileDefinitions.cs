@@ -40,4 +40,48 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "Refraktion", "PD" },
             CanContainMultipleExaminationTypes: false);
     }
+
+    public static DeviceProfileDefinition CreateNidekLm7Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-nidek-lm7-default",
+                Name: "NIDEK LM7",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for NIDEK LM7 lensmeter measurement files.",
+                Vendor: "NIDEK",
+                Product: "LM7",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: "LM7",
+            DeviceType: "Lensmeter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("lm7-r-sphere", "R Sphere", "R/LM/Median/Sphere", "LM", "R", "dpt", true, "Right lens sphere, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-r-cylinder", "R Cylinder", "R/LM/Median/Cylinder", "LM", "R", "dpt", true, "Right lens cylinder, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-r-axis", "R Axis", "R/LM/Median/Axis", "LM", "R", "deg", true, "Right lens axis, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-r-prism-horizontal", "R PrismHorizontal", "R/LM/Median/PrismHorizontal", "LM", "R", "prism dpt", false, "Right horizontal prism, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-r-prism-horizontal-base", "R PrismHorizontalBase", "R/LM/Median/PrismHorizontalBase", "LM", "R", string.Empty, false, "Right horizontal prism base direction, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-r-prism-vertical", "R PrismVertical", "R/LM/Median/PrismVertical", "LM", "R", "prism dpt", false, "Right vertical prism, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-r-prism-vertical-base", "R PrismVerticalBase", "R/LM/Median/PrismVerticalBase", "LM", "R", string.Empty, false, "Right vertical prism base direction, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-l-sphere", "L Sphere", "L/LM/Median/Sphere", "LM", "L", "dpt", true, "Left lens sphere, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-l-cylinder", "L Cylinder", "L/LM/Median/Cylinder", "LM", "L", "dpt", true, "Left lens cylinder, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-l-axis", "L Axis", "L/LM/Median/Axis", "LM", "L", "deg", true, "Left lens axis, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-l-prism-horizontal", "L PrismHorizontal", "L/LM/Median/PrismHorizontal", "LM", "L", "prism dpt", false, "Left horizontal prism, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-l-prism-horizontal-base", "L PrismHorizontalBase", "L/LM/Median/PrismHorizontalBase", "LM", "L", string.Empty, false, "Left horizontal prism base direction, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-l-prism-vertical", "L PrismVertical", "L/LM/Median/PrismVertical", "LM", "L", "prism dpt", false, "Left vertical prism, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-l-prism-vertical-base", "L PrismVerticalBase", "L/LM/Median/PrismVerticalBase", "LM", "L", string.Empty, false, "Left vertical prism base direction, provisional source path."),
+                new DeviceMeasurementDefinition("lm7-pd", "PD", "PD/Distance", "PD", string.Empty, "mm", false, "Lensmeter pupillary distance, provisional source path.")
+            },
+            SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
+            CanContainMultipleExaminationTypes: false);
+    }
 }
