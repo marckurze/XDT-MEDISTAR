@@ -587,6 +587,103 @@ Ableitung:
 - mögliche Kombination mit korrigiertem IOP
 - XML-Attribute und Namespaces beachten
 
+## 8.1 TOPCON TRK2P – erkannte SourcePaths für Tonometrie und CCT
+
+Analysierte lokale Beispieldatei:
+
+- `C:\Users\MarcK\Downloads\Geraeteanbindungen\TOPCON TRK2P\M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml`
+
+Die Datei ist ein JOIA-/Ophthalmology-XML mit `encoding="UTF-8"`. Der Root-Knoten `Ophthalmology` hat keinen Default-Namespace. Die Common-Daten und die Tonometrie-Hauptmesswerte verwenden Namespace-Präfixe, während zusätzliche Geräte-/CCT-Blöcke innerhalb von `nsTM:Measure` unqualifizierte Elemente verwenden.
+
+Namespaces:
+
+- `nsCommon = http://www.joia.or.jp/standardized/namespaces/Common`
+- `nsTM = http://www.joia.or.jp/standardized/namespaces/TM`
+- `xsi = http://www.w3.org/2001/XMLSchema-instance`
+
+Erkannte Untersuchungsarten in der analysierten Datei:
+
+| Untersuchungsart | XML-Struktur | Bedeutung | Status / Hinweis |
+|---|---|---|---|
+| `TM` | `Ophthalmology/nsTM:Measure[@type='TM']` | Tonometrie | erkannt |
+| `CCT` | `Ophthalmology/nsTM:Measure/CCT` | zentrale Hornhautdicke / Pachymetrie | erkannt; unqualifizierter Unterknoten innerhalb von `nsTM:Measure` |
+| `REF` | `Ophthalmology/nsREF:Measure[@type='REF']` | Refraktion | nicht vorhanden; noch zu validieren für andere TRK2P-Dateien |
+| `KM` | `Ophthalmology/nsKM:Measure[@type='KM']` | Keratometrie | nicht vorhanden; noch zu validieren für andere TRK2P-Dateien |
+
+Allgemeine Gerätedaten:
+
+| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| Company | `Ophthalmology/nsCommon:Common/nsCommon:Company` | `TOPCON` | erkannt |
+| ModelName | `Ophthalmology/nsCommon:Common/nsCommon:ModelName` | `TRK-2P` | erkannt |
+| Messdatum | `Ophthalmology/nsCommon:Common/nsCommon:Date` | `2024-11-26` | erkannt |
+| Messzeit | `Ophthalmology/nsCommon:Common/nsCommon:Time` | `22:55:12` | erkannt |
+
+Erkannte TM-SourcePaths:
+
+| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| TM R IOP Einzelwert 1 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='1']/nsTM:IOP_mmHg` | `15.0` | erkannt |
+| TM R IOP Einzelwert 2 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='2']/nsTM:IOP_mmHg` | `15.0` | erkannt |
+| TM R IOP Einzelwert 3 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='3']/nsTM:IOP_mmHg` | `15.0` | erkannt |
+| TM R IOP Mittelwert | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:Average/nsTM:IOP_mmHg` | `15.0` | erkannt |
+| TM L IOP Einzelwert 1 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='1']/nsTM:IOP_mmHg` | `13.0` | erkannt |
+| TM L IOP Einzelwert 2 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='2']/nsTM:IOP_mmHg` | `12.0` | erkannt |
+| TM L IOP Einzelwert 3 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='3']/nsTM:IOP_mmHg` | `14.0` | erkannt |
+| TM L IOP Mittelwert | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:Average/nsTM:IOP_mmHg` | `13.0` | erkannt |
+| TM R IOP hPa | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='1']/nsTM:IOP_Pa` | leer | erkannt; Nutzung noch zu validieren |
+| TM L IOP hPa | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='1']/nsTM:IOP_Pa` | leer | erkannt; Nutzung noch zu validieren |
+
+Zusätzliche unqualifizierte TM-Geräteparameter:
+
+| Messwert | SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| Messreihenfolge | `Ophthalmology/nsTM:Measure/TM/RL_Order` | `R` | erkannt |
+| R Pressure Range | `Ophthalmology/nsTM:Measure/TM/R/List[@No='1']/Pressure_Range` | `30` | erkannt; technischer Parameter |
+| L Pressure Range | `Ophthalmology/nsTM:Measure/TM/L/List[@No='1']/Pressure_Range` | `30` | erkannt; technischer Parameter |
+| Alignment Mode | `Ophthalmology/nsTM:Measure/TM/R/List[@No='1']/Alignment_Mode` | `Auto` | erkannt; technische Relevanz noch zu validieren |
+| IOL Mode | `Ophthalmology/nsTM:Measure/TM/R/List[@No='1']/IOL_Mode` | `Off` | erkannt; technische Relevanz noch zu validieren |
+
+Erkannte CCT-/Pachymetrie-SourcePaths:
+
+| Messwert | SourcePath | Beispielwert | Status / Hinweis |
+|---|---|---:|---|
+| CCT Messreihenfolge | `Ophthalmology/nsTM:Measure/CCT/RL_Order` | `R` | erkannt |
+| R CCT Liste 1 Fehler | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='1']/Error` | `ERROR` | erkannt |
+| R CCT Liste 2 Fehler | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='2']/Error` | `ERROR` | erkannt |
+| R CCT Liste 3 | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='3']/CCT_mm` | `0.511` | erkannt; Wert ist in mm |
+| R CCT Liste 4 | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='4']/CCT_mm` | `0.509` | erkannt; Wert ist in mm |
+| R CCT Mittelwert | noch nicht erkannt | - | noch zu validieren; kein expliziter Average-Knoten im analysierten CCT-Block |
+| L CCT Liste 1 | `Ophthalmology/nsTM:Measure/CCT/L/List[@No='1']/CCT_mm` | `0.516` | erkannt; Wert ist in mm |
+| L CCT Liste 2 | `Ophthalmology/nsTM:Measure/CCT/L/List[@No='2']/CCT_mm` | `0.518` | erkannt; Wert ist in mm |
+| L CCT Liste 3 | `Ophthalmology/nsTM:Measure/CCT/L/List[@No='3']/CCT_mm` | `0.518` | erkannt; Wert ist in mm |
+| L CCT Mittelwert | noch nicht erkannt | - | noch zu validieren; kein expliziter Average-Knoten im analysierten CCT-Block |
+| korrigierter IOP rechts | noch nicht erkannt | - | noch zu validieren; kein `CorrectedIOP`-Knoten in der analysierten Datei |
+| korrigierter IOP links | noch nicht erkannt | - | noch zu validieren; kein `CorrectedIOP`-Knoten in der analysierten Datei |
+
+Für spätere anwendernahe Mapping-SourcePaths sollte analog zu CL300/KR800 eine normalisierte Darstellung verwendet werden, z. B.:
+
+```text
+Ophthalmology/Common/Company
+Ophthalmology/Common/ModelName
+Ophthalmology/Measure[@type='TM']/TM/R/List[@No='1']/IOP_mmHg
+Ophthalmology/Measure[@type='TM']/TM/R/Average/IOP_mmHg
+Ophthalmology/Measure[@type='TM']/TM/L/List[@No='1']/IOP_mmHg
+Ophthalmology/Measure[@type='TM']/TM/L/Average/IOP_mmHg
+Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='3']/CCT_mm
+Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='1']/CCT_mm
+```
+
+Wichtig für die spätere Parser- und Profil-Logik:
+
+- `TM` ist der einzige JOIA-Measure-Typ in der analysierten Datei.
+- `CCT` ist kein eigener JOIA-`Measure`-Block, sondern ein unqualifizierter Unterknoten innerhalb von `nsTM:Measure`.
+- Parser müssen gemischte namespace-qualifizierte und unqualifizierte Elemente innerhalb einer Datei unterstützen.
+- CCT-Werte sind in `mm` angegeben, während MEDISTAR-Ausgaben üblicherweise Pachymetrie in `µm` darstellen können; eine spätere Formatfunktion/Umrechnung ist fachlich zu prüfen.
+- Rechte CCT-Messlisten können Fehler statt Werte enthalten; Ergebnislogik muss Fehlerlisten überspringen oder sichtbar machen können.
+- Ein expliziter korrigierter IOP wurde in der analysierten TRK2P-Datei nicht gefunden.
+- Für TRK2P wurden in der analysierten Datei keine JPG-/PDF-Attachments gefunden.
+
 ## 9. Allgemeine Erkenntnisse aus den Beispieldaten
 
 1. Jedes Gerät liefert andere Dateistrukturen.
