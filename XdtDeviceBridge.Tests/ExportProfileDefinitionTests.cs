@@ -262,6 +262,61 @@ public sealed class ExportProfileDefinitionTests
         Assert.Contains("Attachment", profile.Metadata.Description);
     }
 
+    [Fact]
+    public void CreateMedistarTopconCl300Default_ShouldCreateProfile()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default();
+
+        Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
+        Assert.Equal("device-topcon-cl300-default", profile.SourceDeviceProfileId);
+        Assert.Equal("Windows-1252", profile.OutputEncoding);
+        Assert.Equal(8, profile.Rules.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptMedistarTopconCl300DefaultProfile()
+    {
+        var issues = ExportProfileDefinitionValidator.Validate(DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void CreateMedistarTopconCl300Default_ShouldContainStaticValueRuleFor8000()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8000"
+            && rule.RuleType == ExportRuleType.StaticValue
+            && rule.SourcePath is null
+            && rule.OutputTemplate == "6310");
+    }
+
+    [Fact]
+    public void CreateMedistarTopconCl300Default_ShouldContainAisFieldRuleFor8402()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8402"
+            && rule.RuleType == ExportRuleType.AisField
+            && rule.SourcePath == "AIS.ExaminationType");
+    }
+
+    [Fact]
+    public void CreateMedistarTopconCl300Default_ShouldContainTwoTemplateRulesFor6228()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default();
+        var resultRules = profile.Rules
+            .Where(rule => rule.TargetFieldCode == "6228" && rule.RuleType == ExportRuleType.Template)
+            .ToList();
+
+        Assert.Equal(2, resultRules.Count);
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("R.:S="));
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("L.:S="));
+    }
+
     private static ExportProfileDefinition WithModifiedRule(
         string id,
         Func<ExportRuleDefinition, ExportRuleDefinition> modify)

@@ -139,4 +139,53 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "Tonometrie", "Pachymetrie", "CorrectedIOP", "Attachment" },
             CanContainMultipleExaminationTypes: true);
     }
+
+    public static DeviceProfileDefinition CreateTopconCl300Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-topcon-cl300-default",
+                Name: "TOPCON CL300",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON CL300 JOIA/Ophthalmology XML lensmeter files. Namespace-Normalisierung ist später im Parser erforderlich.",
+                Vendor: "TOPCON",
+                Product: "CL300",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOPCON",
+            Model: "CL300",
+            DeviceType: "Lensmeter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("cl300-company", "Company", "Ophthalmology/Common/Company", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common company field; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-model-name", "ModelName", "Ophthalmology/Common/ModelName", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common model field; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-r-sphere", "R Sphere", "Ophthalmology/Measure[@type='LM']/LM/R/Sphere", "LM", "R", "dpt", true, "Right lens sphere from TOPCON CL300 JOIA XML; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-r-cylinder", "R Cylinder", "Ophthalmology/Measure[@type='LM']/LM/R/Cylinder", "LM", "R", "dpt", true, "Right lens cylinder from TOPCON CL300 JOIA XML; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-r-axis", "R Axis", "Ophthalmology/Measure[@type='LM']/LM/R/Axis", "LM", "R", "deg", true, "Right lens axis from TOPCON CL300 JOIA XML; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-r-addition", "R Addition", "Ophthalmology/Measure[@type='LM']/LM/R/Add1", "LM", "R", "dpt", false, "Right lens addition from TOPCON CL300 JOIA XML; optional and Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-r-prism-horizontal", "R PrismHorizontal", "Ophthalmology/Measure[@type='LM']/LM/R/H", "LM", "R", "prism dpt", false, "Right horizontal prism from TOPCON CL300 JOIA XML; MEDISTAR basis notation noch zu validieren."),
+                new DeviceMeasurementDefinition("cl300-r-prism-vertical", "R PrismVertical", "Ophthalmology/Measure[@type='LM']/LM/R/V", "LM", "R", "prism dpt", false, "Right vertical prism from TOPCON CL300 JOIA XML; MEDISTAR basis notation noch zu validieren."),
+                new DeviceMeasurementDefinition("cl300-l-sphere", "L Sphere", "Ophthalmology/Measure[@type='LM']/LM/L/Sphere", "LM", "L", "dpt", true, "Left lens sphere from TOPCON CL300 JOIA XML; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-l-cylinder", "L Cylinder", "Ophthalmology/Measure[@type='LM']/LM/L/Cylinder", "LM", "L", "dpt", true, "Left lens cylinder from TOPCON CL300 JOIA XML; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-l-axis", "L Axis", "Ophthalmology/Measure[@type='LM']/LM/L/Axis", "LM", "L", "deg", true, "Left lens axis from TOPCON CL300 JOIA XML; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-l-addition", "L Addition", "Ophthalmology/Measure[@type='LM']/LM/L/Add1", "LM", "L", "dpt", false, "Left lens addition from TOPCON CL300 JOIA XML; optional and Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-l-prism-horizontal", "L PrismHorizontal", "Ophthalmology/Measure[@type='LM']/LM/L/H", "LM", "L", "prism dpt", false, "Left horizontal prism from TOPCON CL300 JOIA XML; MEDISTAR basis notation noch zu validieren."),
+                new DeviceMeasurementDefinition("cl300-l-prism-vertical", "L PrismVertical", "Ophthalmology/Measure[@type='LM']/LM/L/V", "LM", "L", "prism dpt", false, "Left vertical prism from TOPCON CL300 JOIA XML; MEDISTAR basis notation noch zu validieren."),
+                new DeviceMeasurementDefinition("cl300-pd-distance", "PD Distance", "Ophthalmology/Measure[@type='LM']/PD/B/Distance", "PD", string.Empty, "mm", false, "Binocular PD distance from TOPCON CL300 JOIA XML; optional and Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-pd-r-distance", "R PD Distance", "Ophthalmology/Measure[@type='LM']/PD/R/Distance", "PD", "R", "mm", false, "Right PD distance from TOPCON CL300 JOIA XML; optional and Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-pd-l-distance", "L PD Distance", "Ophthalmology/Measure[@type='LM']/PD/L/Distance", "PD", "L", "mm", false, "Left PD distance from TOPCON CL300 JOIA XML; optional and Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("cl300-diopter-step", "DiopterStep", "Ophthalmology/Measure[@type='LM']/DiopterStep", "LM", string.Empty, "dpt", false, "Diopter step from TOPCON CL300 JOIA XML."),
+                new DeviceMeasurementDefinition("cl300-axis-step", "AxisStep", "Ophthalmology/Measure[@type='LM']/AxisStep", "LM", string.Empty, "deg", false, "Axis step from TOPCON CL300 JOIA XML."),
+                new DeviceMeasurementDefinition("cl300-prism-step", "PrismStep", "Ophthalmology/Measure[@type='LM']/PrismStep", "LM", string.Empty, "prism dpt", false, "Prism step from TOPCON CL300 JOIA XML.")
+            },
+            SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
+            CanContainMultipleExaminationTypes: false);
+    }
 }

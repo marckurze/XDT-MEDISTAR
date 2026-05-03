@@ -247,6 +247,64 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Empty(issues);
     }
 
+    [Fact]
+    public void CreateTopconCl300Default_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
+
+        Assert.Equal("TOPCON", profile.Manufacturer);
+        Assert.Equal("CL300", profile.Model);
+        Assert.Equal("Lensmeter", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.False(profile.CanContainMultipleExaminationTypes);
+        Assert.Contains("Lensmeter", profile.SupportedExaminationTypes);
+        Assert.Contains("PD", profile.SupportedExaminationTypes);
+        Assert.Contains("Prism", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateTopconCl300Default_ShouldContainRequiredLensmeterMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
+
+        AssertRequiredMeasurement(profile, "cl300-r-sphere", "Ophthalmology/Measure[@type='LM']/LM/R/Sphere");
+        AssertRequiredMeasurement(profile, "cl300-r-cylinder", "Ophthalmology/Measure[@type='LM']/LM/R/Cylinder");
+        AssertRequiredMeasurement(profile, "cl300-r-axis", "Ophthalmology/Measure[@type='LM']/LM/R/Axis");
+        AssertRequiredMeasurement(profile, "cl300-l-sphere", "Ophthalmology/Measure[@type='LM']/LM/L/Sphere");
+        AssertRequiredMeasurement(profile, "cl300-l-cylinder", "Ophthalmology/Measure[@type='LM']/LM/L/Cylinder");
+        AssertRequiredMeasurement(profile, "cl300-l-axis", "Ophthalmology/Measure[@type='LM']/LM/L/Axis");
+    }
+
+    [Fact]
+    public void CreateTopconCl300Default_ShouldContainOptionalPdAndPrismMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
+
+        AssertOptionalMeasurement(profile, "cl300-pd-distance", "Ophthalmology/Measure[@type='LM']/PD/B/Distance");
+        AssertOptionalMeasurement(profile, "cl300-r-prism-horizontal", "Ophthalmology/Measure[@type='LM']/LM/R/H");
+        AssertOptionalMeasurement(profile, "cl300-r-prism-vertical", "Ophthalmology/Measure[@type='LM']/LM/R/V");
+        AssertOptionalMeasurement(profile, "cl300-l-prism-horizontal", "Ophthalmology/Measure[@type='LM']/LM/L/H");
+        AssertOptionalMeasurement(profile, "cl300-l-prism-vertical", "Ophthalmology/Measure[@type='LM']/LM/L/V");
+    }
+
+    [Fact]
+    public void CreateTopconCl300Default_ShouldDocumentNamespaceRequirement()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
+
+        Assert.Contains("Namespace-Normalisierung", profile.Metadata.Description);
+        Assert.Contains(profile.Measurements, measurement =>
+            (measurement.Description ?? string.Empty).Contains("Namespace-Normalisierung", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptTopconCl300Profile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateTopconCl300Default());
+
+        Assert.Empty(issues);
+    }
+
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);
