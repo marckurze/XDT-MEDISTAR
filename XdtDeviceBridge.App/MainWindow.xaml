@@ -133,6 +133,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <GroupBox Header="Profilübersicht" Grid.Row="0" Margin="0,0,0,8">
@@ -239,14 +240,23 @@
                                            FontWeight="Bold"
                                            Margin="0,0,8,8"
                                            ToolTip="Legt fest, wie AIS-Daten und Gerätewerte in eine Rückgabedatei geschrieben werden."/>
-                                <ComboBox Grid.Row="0"
-                                          Grid.Column="1"
-                                          x:Name="ExportProfileComboBox"
-                                          DisplayMemberPath="Metadata.Name"
-                                          MinWidth="360"
-                                          Margin="0,0,0,8"
-                                          ToolTip="Legt fest, wie AIS-Daten und Gerätewerte in eine Rückgabedatei geschrieben werden."
-                                          SelectionChanged="ExportProfileComboBox_SelectionChanged"/>
+                                <Grid Grid.Row="0" Grid.Column="1" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Grid.Column="0"
+                                              x:Name="ExportProfileComboBox"
+                                              DisplayMemberPath="Metadata.Name"
+                                              MinWidth="360"
+                                              Margin="0,0,8,0"
+                                              ToolTip="Legt fest, wie AIS-Daten und Gerätewerte in eine Rückgabedatei geschrieben werden."
+                                              SelectionChanged="ExportProfileComboBox_SelectionChanged"/>
+                                    <Button Grid.Column="1"
+                                            Content="Neue Exportregel"
+                                            Width="150"
+                                            Click="AddDraftExportRule_Click"/>
+                                </Grid>
                                 <TextBlock Grid.Row="1"
                                            Grid.Column="0"
                                            Grid.ColumnSpan="2"
@@ -310,25 +320,8 @@
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Exportregel-Arbeitsbereich" Grid.Row="4" Margin="0,0,0,8">
-                            <Grid Margin="8" MinHeight="720">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="3*"/>
-                                    <ColumnDefinition Width="6"/>
-                                    <ColumnDefinition Width="2*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <Grid Grid.Column="0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="8"/>
-                                        <RowDefinition Height="170"/>
-                                        <RowDefinition Height="6"/>
-                                        <RowDefinition Height="260"/>
-                                    </Grid.RowDefinitions>
-
-                                    <GroupBox Header="Exportregel-Entwurf" Grid.Row="0" Margin="0,0,0,0">
-                                        <Grid Margin="8">
+                        <GroupBox Header="Exportregel-Entwurf" Grid.Row="4" Margin="0,0,0,8">
+                            <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -346,9 +339,11 @@
                                 <TextBlock Grid.Row="0"
                                            Grid.Column="0"
                                            Grid.ColumnSpan="4"
-                                           Text="Entwurfsmodus: Änderungen werden noch nicht gespeichert."
+                                           x:Name="DraftModeStatusText"
+                                           Text="Entwurfsmodus: Änderungen und neue Regeln werden noch nicht gespeichert."
                                            FontWeight="Bold"
                                            Foreground="DarkRed"
+                                           TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="TargetFieldCode:" FontWeight="Bold" Margin="0,0,8,8" ToolTip="XDT/GDT-Feldkennung, in die der Wert geschrieben wird, z. B. 6228 für Ergebnistext."/>
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="DraftTargetFieldCodeTextBox" Margin="0,0,16,8" ToolTip="XDT/GDT-Feldkennung, in die der Wert geschrieben wird, z. B. 6228 für Ergebnistext."/>
@@ -381,135 +376,140 @@
                                     </StackPanel>
                                     <TextBox x:Name="DraftDescriptionTextBox" ToolTip="Beschreibung oder Hinweis zur Regel."/>
                                 </DockPanel>
-                                        </Grid>
-                                    </GroupBox>
-
-                                    <GroupBox Header="Regelvorschau" Grid.Row="2" Margin="0,0,0,0">
-                                        <TextBox x:Name="ExportRulePreviewTextBox"
-                                                 Margin="8"
-                                                 IsReadOnly="True"
-                                                 AcceptsReturn="True"
-                                                 TextWrapping="Wrap"
-                                                 VerticalScrollBarVisibility="Auto"/>
-                                    </GroupBox>
-
-                                    <GridSplitter Grid.Row="3"
-                                                  Height="6"
-                                                  HorizontalAlignment="Stretch"
-                                                  VerticalAlignment="Center"
-                                                  ResizeDirection="Rows"
-                                                  ShowsPreview="True"/>
-
-                                    <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="4" Margin="0,0,0,0">
-                                        <TextBox x:Name="FullExportPreviewTextBox"
-                                                 Margin="8"
-                                                 IsReadOnly="True"
-                                                 AcceptsReturn="True"
-                                                 TextWrapping="NoWrap"
-                                                 FontFamily="Consolas"
-                                                 HorizontalScrollBarVisibility="Auto"
-                                                 VerticalScrollBarVisibility="Auto"/>
-                                    </GroupBox>
-                                </Grid>
-
-                                <GridSplitter Grid.Column="1"
-                                              Width="6"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Stretch"
-                                              ResizeDirection="Columns"
-                                              ShowsPreview="True"/>
-
-                                <GroupBox Header="Verfügbare Platzhalter"
-                                          Grid.Column="2"
-                                          Margin="8,0,0,0"
-                                          ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
-                                    <Grid Margin="8">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                        </Grid.RowDefinitions>
-                                        <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,8">
-                                            Platzhalter müssen mit geschweiften Klammern geschrieben werden, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}. Runde Klammern wie (Device.Date) werden nicht ersetzt.
-                                            Über die Checkbox "Verwenden" kann ein Platzhalter in den aktuellen Entwurf eingefügt oder daraus entfernt werden. Der Ergebnistext bleibt weiterhin frei editierbar.
-                                        </TextBlock>
-                                        <TextBlock Grid.Row="1" Text="AIS-Platzhalter" FontWeight="Bold" Margin="0,0,0,4"/>
-                                        <DataGrid Grid.Row="2"
-                                                  x:Name="AisPlaceholdersGrid"
-                                                  AutoGenerateColumns="False"
-                                                  CanUserAddRows="False"
-                                                  CanUserDeleteRows="False"
-                                                  HeadersVisibility="Column"
-                                                  HorizontalScrollBarVisibility="Auto"
-                                                  VerticalScrollBarVisibility="Auto">
-                                            <DataGrid.RowStyle>
-                                                <Style TargetType="DataGridRow">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding HasValue}" Value="True">
-                                                            <Setter Property="Background" Value="#E8F5E9"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </DataGrid.RowStyle>
-                                            <DataGrid.Columns>
-                                                <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="190" IsReadOnly="True"/>
-                                                <DataGridTextColumn Header="Name Messwert" Binding="{Binding DisplayName}" Width="160" IsReadOnly="True"/>
-                                                <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
-                                                <DataGridTemplateColumn Header="Verwenden" Width="85">
-                                                    <DataGridTemplateColumn.CellTemplate>
-                                                        <DataTemplate>
-                                                            <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                      HorizontalAlignment="Center"
-                                                                      Checked="PlaceholderUseCheckBox_Changed"
-                                                                      Unchecked="PlaceholderUseCheckBox_Changed"/>
-                                                        </DataTemplate>
-                                                    </DataGridTemplateColumn.CellTemplate>
-                                                </DataGridTemplateColumn>
-                                            </DataGrid.Columns>
-                                        </DataGrid>
-
-                                        <TextBlock Grid.Row="3" x:Name="DevicePlaceholdersStatusText" Text="Device-Platzhalter" FontWeight="Bold" Margin="0,8,0,4"/>
-                                        <DataGrid Grid.Row="4"
-                                                  x:Name="DevicePlaceholdersGrid"
-                                                  AutoGenerateColumns="False"
-                                                  CanUserAddRows="False"
-                                                  CanUserDeleteRows="False"
-                                                  HeadersVisibility="Column"
-                                                  HorizontalScrollBarVisibility="Auto"
-                                                  VerticalScrollBarVisibility="Auto">
-                                            <DataGrid.RowStyle>
-                                                <Style TargetType="DataGridRow">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding HasValue}" Value="True">
-                                                            <Setter Property="Background" Value="#E8F5E9"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </DataGrid.RowStyle>
-                                            <DataGrid.Columns>
-                                                <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="230" IsReadOnly="True"/>
-                                                <DataGridTextColumn Header="Name Messwert" Binding="{Binding DisplayName}" Width="190" IsReadOnly="True"/>
-                                                <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
-                                                <DataGridTemplateColumn Header="Verwenden" Width="85">
-                                                    <DataGridTemplateColumn.CellTemplate>
-                                                        <DataTemplate>
-                                                            <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                      HorizontalAlignment="Center"
-                                                                      Checked="PlaceholderUseCheckBox_Changed"
-                                                                      Unchecked="PlaceholderUseCheckBox_Changed"/>
-                                                        </DataTemplate>
-                                                    </DataGridTemplateColumn.CellTemplate>
-                                                </DataGridTemplateColumn>
-                                            </DataGrid.Columns>
-                                        </DataGrid>
-                                    </Grid>
-                                </GroupBox>
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="7">
+                        <GroupBox Header="Regelvorschau" Grid.Row="5" Margin="0,0,0,8">
+                            <TextBox x:Name="ExportRulePreviewTextBox"
+                                     Margin="8"
+                                     MinHeight="150"
+                                     MaxHeight="220"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+
+                        <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="6" Margin="0,0,0,8">
+                            <TextBox x:Name="FullExportPreviewTextBox"
+                                     Margin="8"
+                                     MinHeight="220"
+                                     MaxHeight="320"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="NoWrap"
+                                     FontFamily="Consolas"
+                                     HorizontalScrollBarVisibility="Auto"
+                                     VerticalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+
+                        <GroupBox Header="Verfügbare Platzhalter"
+                                  Grid.Row="7"
+                                  Margin="0,0,0,8"
+                                  ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
+                            <Grid Margin="8" MaxHeight="460">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="150"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="190"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,8">
+                                    Platzhalter müssen mit geschweiften Klammern geschrieben werden, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}. Runde Klammern wie (Device.Date) werden nicht ersetzt.
+                                    Über die Checkbox "Verwenden" kann ein Platzhalter in den aktuellen Entwurf eingefügt oder daraus entfernt werden. Der Ergebnistext bleibt weiterhin frei editierbar.
+                                </TextBlock>
+                                <TextBlock Grid.Row="1" Text="AIS-Platzhalter" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <DataGrid Grid.Row="2"
+                                          x:Name="AisPlaceholdersGrid"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasValue}" Value="True">
+                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="230" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Name Messwert" Binding="{Binding DisplayName}" Width="180" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
+                                        <DataGridTemplateColumn Header="Ausgabeart" Width="110">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ComboBox ItemsSource="{Binding OutputModes}"
+                                                              SelectedItem="{Binding OutputMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                              SelectionChanged="PlaceholderOutputModeComboBox_SelectionChanged"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Verwenden" Width="90">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                              HorizontalAlignment="Center"
+                                                              Checked="PlaceholderUseCheckBox_Changed"
+                                                              Unchecked="PlaceholderUseCheckBox_Changed"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Grid.Row="3" x:Name="DevicePlaceholdersStatusText" Text="Device-Platzhalter" FontWeight="Bold" Margin="0,8,0,4"/>
+                                <DataGrid Grid.Row="4"
+                                          x:Name="DevicePlaceholdersGrid"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasValue}" Value="True">
+                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="260" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Name Messwert" Binding="{Binding DisplayName}" Width="230" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
+                                        <DataGridTemplateColumn Header="Ausgabeart" Width="110">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ComboBox ItemsSource="{Binding OutputModes}"
+                                                              SelectedItem="{Binding OutputMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                              SelectionChanged="PlaceholderOutputModeComboBox_SelectionChanged"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Verwenden" Width="90">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                              HorizontalAlignment="Center"
+                                                              Checked="PlaceholderUseCheckBox_Changed"
+                                                              Unchecked="PlaceholderUseCheckBox_Changed"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="8">
                             <TextBox x:Name="ProfileMessagesTextBox"
                                      Margin="8"
                                      MinHeight="160"

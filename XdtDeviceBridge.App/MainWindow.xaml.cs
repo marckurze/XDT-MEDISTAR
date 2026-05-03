@@ -30,6 +30,8 @@ public partial class MainWindow : Window
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
+    private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
+    private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -37,6 +39,7 @@ public partial class MainWindow : Window
     private InstallationInfo? _installationInfo;
     private string? _plannedFileName;
     private bool _updatingPlaceholderRows;
+    private int _draftRuleSequence;
 
     public MainWindow()
     {
@@ -44,6 +47,7 @@ public partial class MainWindow : Window
         DraftRuleTypeComboBox.ItemsSource = Enum.GetValues<ExportRuleType>();
         AisPlaceholdersGrid.ItemsSource = _aisPlaceholderRows;
         DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
+        ExportRulesGrid.ItemsSource = _visibleExportRules;
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -77,7 +81,8 @@ public partial class MainWindow : Window
             ProfileBaseFolderText.Text = string.Empty;
             ClearProfileNameColumns();
             ExportProfileComboBox.ItemsSource = null;
-            ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
+            _visibleExportRules.Clear();
+            _temporaryExportRules.Clear();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
@@ -92,7 +97,8 @@ public partial class MainWindow : Window
         if (catalog.ExportProfiles.Count == 0)
         {
             ExportProfileComboBox.ItemsSource = null;
-            ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
+            _visibleExportRules.Clear();
+            _temporaryExportRules.Clear();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
@@ -119,22 +125,42 @@ public partial class MainWindow : Window
     {
         if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
         {
-            ExportRulesGrid.ItemsSource = Array.Empty<ExportRuleDefinition>();
+            _visibleExportRules.Clear();
+            _temporaryExportRules.Clear();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             ClearDraftRuleEditor();
             return;
         }
 
-        var rules = exportProfile.Rules
-            .OrderBy(rule => rule.SortOrder)
-            .ToList();
-
-        ExportRulesGrid.ItemsSource = rules;
-        ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {rules.Count} Exportregeln";
-        ExportRulesGrid.SelectedIndex = rules.Count > 0 ? 0 : -1;
+        _temporaryExportRules.Clear();
+        RebuildExportRulesGrid(exportProfile);
+        ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
+        ExportRulesGrid.SelectedIndex = _visibleExportRules.Count > 0 ? 0 : -1;
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
+    }
+
+    private void RebuildExportRulesGrid(ExportProfileDefinition exportProfile, string? selectedRuleId = null)
+    {
+        _visibleExportRules.Clear();
+        foreach (var rule in exportProfile.Rules.Concat(_temporaryExportRules).OrderBy(rule => rule.SortOrder))
+        {
+            _visibleExportRules.Add(rule);
+        }
+
+        ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
+        if (!string.IsNullOrWhiteSpace(selectedRuleId))
+        {
+            var selectedRule = _visibleExportRules.FirstOrDefault(rule => rule.Id == selectedRuleId);
+            if (selectedRule is not null)
+            {
+                ExportRulesGrid.SelectedItem = selectedRule;
+                return;
+            }
+        }
+
+        ExportRulesGrid.SelectedIndex = _visibleExportRules.Count > 0 ? 0 : -1;
     }
 
     private void ExportRulesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -142,6 +168,35 @@ public partial class MainWindow : Window
         LoadDraftFromSelectedRule();
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
+    }
+
+    private void AddDraftExportRule_Click(object sender, RoutedEventArgs e)
+    {
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            AppendProfileMessage("Neue Exportregel kann nicht angelegt werden, weil kein Exportprofil ausgewählt ist.");
+            return;
+        }
+
+        var nextSortOrder = _visibleExportRules.Count == 0
+            ? 1
+            : _visibleExportRules.Max(rule => rule.SortOrder) + 1;
+        var draftRule = new ExportRuleDefinition(
+            Id: $"draft-rule-{++_draftRuleSequence}",
+            TargetFieldCode: "6228",
+            TargetName: "Neue Regel (Entwurf)",
+            RuleType: ExportRuleType.Template,
+            SourcePath: null,
+            OutputTemplate: string.Empty,
+            SortOrder: nextSortOrder,
+            IsEnabled: true,
+            Description: "Neue Entwurfsregel");
+
+        _temporaryExportRules.Add(draftRule);
+        RebuildExportRulesGrid(exportProfile, draftRule.Id);
+        LoadDraftFromSelectedRule();
+        UpdateDraftPreviewFromCurrentDraft();
+        AppendProfileMessage("Neue Entwurfsregel aktiv. Sie erscheint nur in der Vorschau.");
     }
 
     private void ShowExportRulePreviewForSelectedRule()
@@ -294,19 +349,32 @@ public partial class MainWindow : Window
         return builder.ToString().TrimEnd();
     }
 
-    private static IReadOnlyList<ExportRuleDefinition> GetEffectiveExportRules(
+    private IReadOnlyList<ExportRuleDefinition> GetEffectiveExportRules(
         ExportProfileDefinition exportProfile,
         ExportRuleDefinition? draftRule,
         string? replaceRuleId)
     {
+        var rules = exportProfile.Rules.Concat(_temporaryExportRules).ToList();
         if (draftRule is null || string.IsNullOrWhiteSpace(replaceRuleId))
         {
-            return exportProfile.Rules;
+            return rules;
         }
 
-        return exportProfile.Rules
+        return rules
             .Select(rule => rule.Id == replaceRuleId ? draftRule : rule)
             .ToList();
+    }
+
+    private bool IsTemporaryRule(ExportRuleDefinition? rule)
+    {
+        return rule is not null && _temporaryExportRules.Any(temporaryRule => temporaryRule.Id == rule.Id);
+    }
+
+    private void UpdateDraftModeStatus(ExportRuleDefinition? rule)
+    {
+        DraftModeStatusText.Text = IsTemporaryRule(rule)
+            ? "Entwurfsmodus: Änderungen und neue Regeln werden noch nicht gespeichert.\nNeue Entwurfsregel aktiv. Sie erscheint nur in der Vorschau."
+            : "Entwurfsmodus: Änderungen und neue Regeln werden noch nicht gespeichert.";
     }
 
     private void LoadDraftFromSelectedRule()
@@ -325,6 +393,7 @@ public partial class MainWindow : Window
         DraftSortOrderTextBox.Text = rule.SortOrder.ToString();
         DraftIsEnabledCheckBox.IsChecked = rule.IsEnabled;
         DraftDescriptionTextBox.Text = rule.Description ?? string.Empty;
+        UpdateDraftModeStatus(rule);
         RefreshPlaceholderUsageFromDraft();
     }
 
@@ -338,6 +407,7 @@ public partial class MainWindow : Window
         DraftSortOrderTextBox.Text = string.Empty;
         DraftIsEnabledCheckBox.IsChecked = false;
         DraftDescriptionTextBox.Text = string.Empty;
+        UpdateDraftModeStatus(null);
         RefreshPlaceholderUsageFromDraft();
     }
 
@@ -610,13 +680,31 @@ public partial class MainWindow : Window
 
         if (row.IsUsed)
         {
-            InsertPlaceholderIntoDraft(row.Placeholder);
+            InsertPlaceholderIntoDraft(row);
         }
         else
         {
-            RemovePlaceholderFromDraft(row.Placeholder);
+            RemovePlaceholderFromDraft(row);
         }
 
+        RefreshPlaceholderUsageFromDraft();
+        UpdateDraftPreviewFromCurrentDraft();
+    }
+
+    private void PlaceholderOutputModeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_updatingPlaceholderRows || sender is not System.Windows.Controls.ComboBox comboBox)
+        {
+            return;
+        }
+
+        if (comboBox.DataContext is not PlaceholderRow row || !row.IsUsed)
+        {
+            return;
+        }
+
+        RemovePlaceholderFromDraft(row);
+        InsertPlaceholderIntoDraft(row);
         RefreshPlaceholderUsageFromDraft();
         UpdateDraftPreviewFromCurrentDraft();
     }
@@ -729,7 +817,9 @@ public partial class MainWindow : Window
         {
             foreach (var row in _aisPlaceholderRows.Concat(_devicePlaceholderRows))
             {
-                row.IsUsed = TemplateContainsPlaceholder(template, row.Placeholder);
+                var outputMode = DetectOutputMode(template, row);
+                row.OutputMode = outputMode ?? PlaceholderRow.OutputModeAis;
+                row.IsUsed = outputMode is not null;
             }
         }
         finally
@@ -738,32 +828,37 @@ public partial class MainWindow : Window
         }
     }
 
-    private void InsertPlaceholderIntoDraft(string placeholder)
+    private void InsertPlaceholderIntoDraft(PlaceholderRow row)
     {
         var text = DraftOutputTemplateTextBox.Text ?? string.Empty;
-        if (TemplateContainsPlaceholder(text, placeholder))
+        if (TemplateContainsPlaceholder(text, row.Placeholder))
         {
             return;
         }
 
-        var token = BuildPlaceholderToken(placeholder);
+        var token = BuildPlaceholderToken(row.Placeholder);
+        var insertedText = string.Equals(row.OutputMode, PlaceholderRow.OutputModeHuman, StringComparison.OrdinalIgnoreCase)
+            ? $"{row.DisplayName}: {token}"
+            : token;
         var insertionIndex = DraftOutputTemplateTextBox.IsKeyboardFocusWithin
             ? Math.Clamp(DraftOutputTemplateTextBox.CaretIndex, 0, text.Length)
             : text.Length;
         var prefix = insertionIndex > 0 && !char.IsWhiteSpace(text[insertionIndex - 1]) ? " " : string.Empty;
         var suffix = insertionIndex < text.Length && !char.IsWhiteSpace(text[insertionIndex]) ? " " : string.Empty;
-        var insertion = $"{prefix}{token}{suffix}";
+        var insertion = $"{prefix}{insertedText}{suffix}";
 
         DraftOutputTemplateTextBox.Text = text.Insert(insertionIndex, insertion);
-        DraftOutputTemplateTextBox.CaretIndex = insertionIndex + prefix.Length + token.Length;
+        DraftOutputTemplateTextBox.CaretIndex = insertionIndex + prefix.Length + insertedText.Length;
         DraftOutputTemplateTextBox.Focus();
     }
 
-    private void RemovePlaceholderFromDraft(string placeholder)
+    private void RemovePlaceholderFromDraft(PlaceholderRow row)
     {
         var text = DraftOutputTemplateTextBox.Text ?? string.Empty;
-        var pattern = @"\{" + Regex.Escape(placeholder) + @"(?::[^{}]+)?\}";
-        var updatedText = Regex.Replace(text, pattern, string.Empty, RegexOptions.IgnoreCase);
+        var tokenPattern = CreatePlaceholderTokenPattern(row.Placeholder);
+        var humanPattern = Regex.Escape(row.DisplayName) + @"\s*:\s*" + tokenPattern;
+        var updatedText = Regex.Replace(text, humanPattern, string.Empty, RegexOptions.IgnoreCase);
+        updatedText = Regex.Replace(updatedText, tokenPattern, string.Empty, RegexOptions.IgnoreCase);
         updatedText = CleanupRemovedPlaceholderWhitespace(updatedText);
 
         DraftOutputTemplateTextBox.Text = updatedText;
@@ -786,6 +881,25 @@ public partial class MainWindow : Window
         return ExtractPlaceholderTokens(template)
             .Select(SplitPreviewFormatToken)
             .Any(token => string.Equals(token, placeholder, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string? DetectOutputMode(string template, PlaceholderRow row)
+    {
+        var tokenPattern = CreatePlaceholderTokenPattern(row.Placeholder);
+        var humanPattern = Regex.Escape(row.DisplayName) + @"\s*:\s*" + tokenPattern;
+        if (Regex.IsMatch(template, humanPattern, RegexOptions.IgnoreCase))
+        {
+            return PlaceholderRow.OutputModeHuman;
+        }
+
+        return Regex.IsMatch(template, tokenPattern, RegexOptions.IgnoreCase)
+            ? PlaceholderRow.OutputModeAis
+            : null;
+    }
+
+    private static string CreatePlaceholderTokenPattern(string placeholder)
+    {
+        return @"\{" + Regex.Escape(placeholder) + @"(?::[^{}]+)?\}";
     }
 
     private static string BuildPlaceholderToken(string placeholder)
@@ -1696,7 +1810,17 @@ public partial class MainWindow : Window
 
     private sealed class PlaceholderRow : INotifyPropertyChanged
     {
+        public const string OutputModeAis = "AIS";
+        public const string OutputModeHuman = "Mensch";
+
+        private static readonly IReadOnlyList<string> AvailableOutputModes =
+        [
+            OutputModeAis,
+            OutputModeHuman
+        ];
+
         private bool _isUsed;
+        private string _outputMode = OutputModeAis;
 
         public PlaceholderRow(string placeholder, string displayName, string value, int sortOrder)
         {
@@ -1717,6 +1841,27 @@ public partial class MainWindow : Window
         public int SortOrder { get; }
 
         public bool HasValue => !string.IsNullOrWhiteSpace(Value);
+
+        public IReadOnlyList<string> OutputModes => AvailableOutputModes;
+
+        public string OutputMode
+        {
+            get => _outputMode;
+            set
+            {
+                var nextValue = string.Equals(value, OutputModeHuman, StringComparison.OrdinalIgnoreCase)
+                    ? OutputModeHuman
+                    : OutputModeAis;
+
+                if (string.Equals(_outputMode, nextValue, StringComparison.Ordinal))
+                {
+                    return;
+                }
+
+                _outputMode = nextValue;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OutputMode)));
+            }
+        }
 
         public bool IsUsed
         {
