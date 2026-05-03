@@ -291,4 +291,66 @@ public static class DefaultExportProfileDefinitions
                     "KM-Ausgabe noch zu validieren.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarTopconTrk2PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-topcon-trk2p-default",
+                Name: "MEDISTAR + TOPCON TRK2P Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON TRK2P TM/CCT data. CCT-Umrechnung nach µm und JOIA-Namespace-Normalisierung werden später präzisiert.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON TRK2P",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-topcon-trk2p-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6228",
+                    "TonometryBothEyes",
+                    ExportRuleType.Template,
+                    null,
+                    "R = {Device.Ophthalmology/Measure[@type='TM']/TM/R/Average/IOP_mmHg:Iop} // L = {Device.Ophthalmology/Measure[@type='TM']/TM/L/Average/IOP_mmHg:Iop} mmHg",
+                    7,
+                    true,
+                    "MEDISTAR tonometry card text for TOPCON TRK2P right/left IOP averages."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6228",
+                    "PachymetryRight",
+                    ExportRuleType.Template,
+                    null,
+                    "PR: {Device.Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='3']/CCT_mm:Pachy} µm",
+                    8,
+                    true,
+                    "MEDISTAR pachymetry card text for TOPCON TRK2P right eye; CCT source is mm and µm conversion is noch zu validieren."),
+                new ExportRuleDefinition(
+                    "9",
+                    "6228",
+                    "PachymetryLeft",
+                    ExportRuleType.Template,
+                    null,
+                    "PL: {Device.Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='1']/CCT_mm:Pachy} µm",
+                    9,
+                    true,
+                    "MEDISTAR pachymetry card text for TOPCON TRK2P left eye; CCT source is mm and µm conversion is noch zu validieren.")
+            });
+    }
 }

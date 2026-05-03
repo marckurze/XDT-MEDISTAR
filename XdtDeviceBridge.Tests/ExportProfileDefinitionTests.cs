@@ -394,6 +394,63 @@ public sealed class ExportProfileDefinitionTests
         Assert.All(kmRules, rule => Assert.Contains("KM-Ausgabe noch zu validieren", rule.Description ?? string.Empty));
     }
 
+    [Fact]
+    public void CreateMedistarTopconTrk2PDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault();
+
+        Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
+        Assert.Equal("device-topcon-trk2p-default", profile.SourceDeviceProfileId);
+        Assert.Equal("Windows-1252", profile.OutputEncoding);
+        Assert.Equal(9, profile.Rules.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptMedistarTopconTrk2PDefaultProfile()
+    {
+        var issues = ExportProfileDefinitionValidator.Validate(DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void CreateMedistarTopconTrk2PDefault_ShouldContainStaticValueRuleFor8000()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8000"
+            && rule.RuleType == ExportRuleType.StaticValue
+            && rule.SourcePath is null
+            && rule.OutputTemplate == "6310");
+    }
+
+    [Fact]
+    public void CreateMedistarTopconTrk2PDefault_ShouldContainAisFieldRuleFor8402()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault();
+
+        Assert.Contains(profile.Rules, rule =>
+            rule.TargetFieldCode == "8402"
+            && rule.RuleType == ExportRuleType.AisField
+            && rule.SourcePath == "AIS.ExaminationType");
+    }
+
+    [Fact]
+    public void CreateMedistarTopconTrk2PDefault_ShouldContainMultipleResultRulesFor6228()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault();
+        var resultRules = profile.Rules
+            .Where(rule => rule.TargetFieldCode == "6228" && rule.RuleType == ExportRuleType.Template)
+            .ToList();
+
+        Assert.Equal(3, resultRules.Count);
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("mmHg"));
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("µm"));
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains(":Iop"));
+        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains(":Pachy"));
+    }
+
     private static ExportProfileDefinition WithModifiedRule(
         string id,
         Func<ExportRuleDefinition, ExportRuleDefinition> modify)

@@ -250,4 +250,50 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "REF", "KM", "SBJ", "PD" },
             CanContainMultipleExaminationTypes: true);
     }
+
+    public static DeviceProfileDefinition CreateTopconTrk2PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-topcon-trk2p-default",
+                Name: "TOPCON TRK2P",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON TRK2P JOIA/Ophthalmology XML tonometry and CCT files. Namespace-Normalisierung ist später im Parser erforderlich.",
+                Vendor: "TOPCON",
+                Product: "TRK2P",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOPCON",
+            Model: "TRK2P",
+            DeviceType: "Tonometer/Pachymeter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("trk2p-company", "Company", "Ophthalmology/Common/Company", "Common", string.Empty, string.Empty, false, "TOPCON JOIA common company field; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("trk2p-model-name", "ModelName", "Ophthalmology/Common/ModelName", "Common", string.Empty, string.Empty, false, "TOPCON JOIA common model field; Namespace-Normalisierung erforderlich."),
+                new DeviceMeasurementDefinition("trk2p-measurement-date", "MeasurementDate", "Ophthalmology/Common/Date", "Common", string.Empty, string.Empty, false, "Measurement date from TOPCON TRK2P common block; optional."),
+                new DeviceMeasurementDefinition("trk2p-measurement-time", "MeasurementTime", "Ophthalmology/Common/Time", "Common", string.Empty, string.Empty, false, "Measurement time from TOPCON TRK2P common block; optional."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-1", "TM R IOP 1", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='1']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 1; optional because productive output selection is noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-2", "TM R IOP 2", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='2']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 2; optional because productive output selection is noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-3", "TM R IOP 3", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='3']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 3; optional because productive output selection is noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-average", "TM R IOP Average", "Ophthalmology/Measure[@type='TM']/TM/R/Average/IOP_mmHg", "TM", "R", "mmHg", true, "Right IOP average from documented TOPCON TRK2P sample."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-1", "TM L IOP 1", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='1']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 1; optional because productive output selection is noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-2", "TM L IOP 2", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='2']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 2; optional because productive output selection is noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-3", "TM L IOP 3", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='3']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 3; optional because productive output selection is noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-average", "TM L IOP Average", "Ophthalmology/Measure[@type='TM']/TM/L/Average/IOP_mmHg", "TM", "L", "mmHg", true, "Left IOP average from documented TOPCON TRK2P sample."),
+                new DeviceMeasurementDefinition("trk2p-r-cct-3", "CCT R Pachy 3", "Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='3']/CCT_mm", "CCT", "R", "mm", false, "Right CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-r-cct-4", "CCT R Pachy 4", "Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='4']/CCT_mm", "CCT", "R", "mm", false, "Right CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-l-cct-1", "CCT L Pachy 1", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='1']/CCT_mm", "CCT", "L", "mm", false, "Left CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-l-cct-2", "CCT L Pachy 2", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='2']/CCT_mm", "CCT", "L", "mm", false, "Left CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
+                new DeviceMeasurementDefinition("trk2p-l-cct-3", "CCT L Pachy 3", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='3']/CCT_mm", "CCT", "L", "mm", false, "Left CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren.")
+            },
+            SupportedExaminationTypes: new[] { "TM", "CCT", "Tonometrie", "Pachymetrie" },
+            CanContainMultipleExaminationTypes: true);
+    }
 }

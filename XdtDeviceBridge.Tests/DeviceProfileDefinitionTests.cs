@@ -378,6 +378,65 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Empty(issues);
     }
 
+    [Fact]
+    public void CreateTopconTrk2PDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault();
+
+        Assert.Equal("TOPCON", profile.Manufacturer);
+        Assert.Equal("TRK2P", profile.Model);
+        Assert.Contains("Tonometer", profile.DeviceType);
+        Assert.Contains("Pachymeter", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.True(profile.CanContainMultipleExaminationTypes);
+        Assert.Contains("TM", profile.SupportedExaminationTypes);
+        Assert.Contains("CCT", profile.SupportedExaminationTypes);
+        Assert.Contains("Tonometrie", profile.SupportedExaminationTypes);
+        Assert.Contains("Pachymetrie", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateTopconTrk2PDefault_ShouldContainRequiredIopAverages()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault();
+
+        AssertRequiredMeasurement(profile, "trk2p-r-iop-average", "Ophthalmology/Measure[@type='TM']/TM/R/Average/IOP_mmHg");
+        AssertRequiredMeasurement(profile, "trk2p-l-iop-average", "Ophthalmology/Measure[@type='TM']/TM/L/Average/IOP_mmHg");
+    }
+
+    [Fact]
+    public void CreateTopconTrk2PDefault_ShouldContainOptionalIopSingleValues()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault();
+
+        AssertOptionalMeasurement(profile, "trk2p-r-iop-1", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='1']/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "trk2p-r-iop-2", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='2']/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "trk2p-r-iop-3", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='3']/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "trk2p-l-iop-1", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='1']/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "trk2p-l-iop-2", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='2']/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "trk2p-l-iop-3", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='3']/IOP_mmHg");
+    }
+
+    [Fact]
+    public void CreateTopconTrk2PDefault_ShouldContainOptionalCctPachyMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault();
+
+        AssertUnvalidatedOptionalMeasurement(profile, "trk2p-r-cct-3", "Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='3']/CCT_mm");
+        AssertUnvalidatedOptionalMeasurement(profile, "trk2p-r-cct-4", "Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='4']/CCT_mm");
+        AssertUnvalidatedOptionalMeasurement(profile, "trk2p-l-cct-1", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='1']/CCT_mm");
+        AssertUnvalidatedOptionalMeasurement(profile, "trk2p-l-cct-2", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='2']/CCT_mm");
+        AssertUnvalidatedOptionalMeasurement(profile, "trk2p-l-cct-3", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='3']/CCT_mm");
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptTopconTrk2PProfile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault());
+
+        Assert.Empty(issues);
+    }
+
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);
