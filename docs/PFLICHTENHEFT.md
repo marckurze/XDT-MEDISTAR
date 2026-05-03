@@ -1298,3 +1298,171 @@ Der aktuelle Prototyp erzeugt:
 - noch keine EV-Dokumentverknüpfung
 
 Die Dokumentenerzeugung wird als zukünftiger optionaler Baustein vorgesehen.
+
+---
+
+## 16. Geräte-Datei-Explorer und Profil-Assistent für unbekannte Geräte
+
+### 16.1 Ziel
+
+Die Anwendung soll perspektivisch nicht nur bekannte Geräteprofile verwenden, sondern auch unbekannte oder neue Gerätedateien explorativ analysieren können.
+
+Ziel ist, dass ein Systembetreuer eine Beispieldatei eines neuen Gerätes laden kann und die App daraus Vorschläge für ein neues Geräteprofil erzeugt.
+
+Der Geräte-Datei-Explorer soll dabei ausdrücklich als Hilfs- und Analysewerkzeug verstanden werden. Er ersetzt keine fachliche Validierung durch Systembetreuer, Praxis oder Herstellerinformationen.
+
+### 16.2 Unterstützte Eingangstypen
+
+Der Assistent soll perspektivisch verschiedene Dateitypen analysieren können:
+
+- XML
+- GDT/XDT
+- TXT
+- CSV
+- JSON
+- proprietäre Textformate
+- Dateien mit Begleitdateien, z. B. JPG/PDF
+
+Bei Dateien mit Begleitdateien soll der Assistent erkennen können, ob zusätzliche Dateien im gleichen Ordner, in Unterordnern oder über Dateiverweise in der Hauptdatei vorhanden sind.
+
+### 16.3 Automatische Erkennung
+
+Die App soll versuchen, technische Eigenschaften der Beispieldatei automatisch zu erkennen:
+
+- Dateityp
+- Zeichensatz
+- XML-Struktur
+- Namespaces
+- wiederholte Messgruppen
+- Attribute
+- Tabellenstrukturen
+- Key-Value-Strukturen
+- mögliche Messwertpfade
+- mögliche Begleitdateien
+- Datum/Uhrzeit
+- Hersteller/Modell, falls in der Datei enthalten
+
+Die automatische Erkennung soll transparent anzeigen, welche Annahmen sicher erkannt wurden und welche nur vermutet sind.
+
+### 16.4 Extraktion technischer Werte
+
+Die App soll aus einer Beispieldatei alle technisch erkennbaren Werte extrahieren und als Kandidaten anzeigen.
+
+Für jeden Kandidaten sollen mindestens angezeigt werden:
+
+- SourcePath
+- Rohwert
+- Datentyp-Vermutung
+- Gruppe
+- Auge rechts/links, falls erkennbar
+- mögliche Bedeutung
+- erkannte Einheit
+- Wiederholungsnummer, falls vorhanden
+- Beispielwert
+
+Die Kandidatenliste soll auch Werte anzeigen können, deren medizinische Bedeutung noch unklar ist. Solche Werte müssen entsprechend markiert werden, z. B. als "Bedeutung noch zu prüfen".
+
+### 16.5 Vorschlagslogik
+
+Die App darf aus technischen Namen und Beispielwerten Vorschläge für verständliche Messwertnamen erzeugen.
+
+Beispiele:
+
+- Sphere/Sph/Sphäre -> Sphäre
+- Cyl/Cylinder/Zylinder -> Zylinder
+- Axis/Axe/Achse -> Achse
+- PD/FarPD/NearPD -> Pupillendistanz
+- IOP/Tension/mmHg -> Augeninnendruck
+- Pachy/CCT/µm -> Pachymetrie
+- K1/K2/R1/R2/Keratometry -> Keratometrie
+- R/Right/OD -> rechts
+- L/Left/OS -> links
+
+Diese Vorschläge sind Hilfen und müssen vom Systembetreuer geprüft werden. Die App soll Vorschläge als solche kennzeichnen und nicht als gesicherte medizinische Interpretation darstellen.
+
+### 16.6 Keine blinde medizinische Interpretation
+
+Die App darf unbekannte Werte nicht ungeprüft als medizinisch korrekt interpretieren.
+
+Der Systembetreuer muss relevante Werte bestätigen, benennen und dem Exportprofil zuordnen.
+
+Besonders kritisch sind:
+
+- medizinische Einheiten
+- korrigierte oder berechnete Werte
+- Mittelwerte gegenüber Einzelmessungen
+- rechte/linke Zuordnung
+- subjektive gegenüber objektiver Refraktion
+- Messgruppen mit Wiederholungsnummern
+- herstellerspezifische Sonderfelder
+
+### 16.7 Profil-Assistent
+
+Die App soll perspektivisch einen Assistenten für neue Geräteprofile erhalten.
+
+Vorgesehener Ablauf:
+
+1. Gerätename, Hersteller und Gerätetyp eingeben.
+2. Beispieldatei laden.
+3. Datei analysieren und erkannte Werte anzeigen.
+4. Relevante Werte auswählen.
+5. Verständliche Namen vergeben oder Vorschläge übernehmen.
+6. Exportziel auswählen, z. B. MEDISTAR, ALBIS oder TURBOMED.
+7. Export-Template erstellen oder vorgeschlagenes Template übernehmen.
+8. Exportvorschau mit Beispieldaten prüfen.
+9. Profil speichern und optional als Template exportieren.
+
+Der Assistent soll das entstehende Geräteprofil, Exportprofil und optional ein vollständiges Schnittstellenprofil nachvollziehbar erzeugen. Vor einer produktiven Nutzung muss der Benutzer die vorgeschlagenen Zuordnungen bestätigen.
+
+### 16.8 Umgang mit mehreren Beispieldateien
+
+Für neue Geräte soll es möglich sein, mehrere Beispieldateien zu laden.
+
+Zweck:
+
+- unterschiedliche Patientenwerte prüfen
+- rechte/linke Werte validieren
+- optionale Werte erkennen
+- fehlende Werte identifizieren
+- Wiederholungsmessungen verstehen
+- Stabilität der SourcePaths prüfen
+
+Die App soll Unterschiede zwischen Beispieldateien sichtbar machen können, z. B. Felder, die nur in manchen Dateien vorkommen, unterschiedliche Wiederholungszahlen oder abweichende Einheiten.
+
+### 16.9 Validierung neuer Profile
+
+Bevor ein neues Profil produktiv verwendet werden kann, muss es validiert werden.
+
+Mindestens zu prüfen:
+
+- Pflichtwerte vorhanden
+- Exportvorschau plausibel
+- keine unbekannten Pflichtplatzhalter
+- Zielfeldkennungen gültig
+- Testexport erzeugbar
+- optional Testimport ins AIS
+
+Die Validierung soll verständlich anzeigen, welche Punkte erfüllt sind, welche Warnungen bestehen und welche Fehler eine produktive Nutzung verhindern.
+
+### 16.10 Grenzen der Automatik
+
+Die App soll klar kommunizieren:
+
+- Automatische Erkennung ist nur ein Vorschlag.
+- Medizinische Bedeutung muss durch Systembetreuer/Praxis validiert werden.
+- Herstellerformate können sich ändern.
+- Profile müssen nach Softwareupdates des Geräts erneut geprüft werden.
+
+Die App darf einen neuen Geräteanschluss nicht allein aufgrund automatisch erkannter Werte als produktionsbereit markieren.
+
+### 16.11 Abgrenzung Version 1
+
+Für die aktuelle Version wird dieser Assistent noch nicht implementiert.
+
+Die aktuelle App unterstützt:
+
+- bekannte Profile
+- Anzeige erkannter Werte
+- manuelle Entwurfsbearbeitung
+
+Der Geräte-Datei-Explorer und Profil-Assistent sind zukünftige Ausbaustufen. Sie sollen später auf den bestehenden V2-Profilmodellen, der Template-Logik und der Exportvorschau aufbauen, ohne die validierte MEDISTAR/NIDEK-ARK1S-Verarbeitung zu gefährden.

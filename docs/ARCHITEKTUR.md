@@ -790,7 +790,156 @@ V1 L.:S=+ 0.00 Z=- 0.50* 63                              PD=61
 
 ---
 
-## 9. Nächste Integrationsschritte
+## 9. Geräte-Datei-Explorer und Profil-Assistent für unbekannte Geräte
+
+### 9.1 Zielbild
+
+Die V2-Architektur soll perspektivisch einen Geräte-Datei-Explorer und einen Profil-Assistenten unterstützen. Damit soll ein Systembetreuer Beispieldateien unbekannter oder neuer Geräte laden, technisch analysieren und daraus Vorschläge für Geräteprofile, Exportprofile und optional vollständige Schnittstellenprofile ableiten können.
+
+Dieser Assistent ist als exploratives Werkzeug vorgesehen. Er darf die bestehende Verarbeitung bekannter Profile nicht beeinflussen und darf unbekannte medizinische Werte nicht ungeprüft als fachlich korrekt interpretieren.
+
+### 9.2 Unterstützte Eingangstypen
+
+Der Analysepfad soll später mehrere Eingangstypen verarbeiten können:
+
+- XML
+- GDT/XDT
+- TXT
+- CSV
+- JSON
+- proprietäre Textformate
+- Dateien mit Begleitdateien, z. B. JPG/PDF
+
+Die Analyse soll so gekapselt werden, dass bekannte produktive Parser weiterhin stabil bleiben. Neue explorative Parser dürfen nicht direkt in die produktive Pipeline eingreifen.
+
+### 9.3 Zukünftige Architekturbausteine
+
+Für diese Ausbaustufe sind folgende Bausteine vorgesehen:
+
+- `DeviceFileAnalyzer`
+- `FileTypeDetector`
+- `EncodingDetector`
+- `XmlStructureAnalyzer`
+- `TextStructureAnalyzer`
+- `MeasurementCandidate`
+- `DeviceProfileWizard`
+- `ProfileSuggestionEngine`
+
+Diese Bausteine sollen später aus unbekannten Dateien Profilvorschläge erzeugen, ohne die bestehende Verarbeitung bekannter Profile zu gefährden.
+
+### 9.4 Verantwortlichkeiten der Bausteine
+
+`FileTypeDetector` erkennt den wahrscheinlichen Dateityp und grenzt XML, GDT/XDT, Text, CSV, JSON und proprietäre Formate voneinander ab.
+
+`EncodingDetector` ermittelt oder vermutet den Zeichensatz, z. B. UTF-8 oder Windows-1252.
+
+`XmlStructureAnalyzer` analysiert XML-Dateien, Namespaces, Attribute, wiederholte Gruppen, Pfade und mögliche Messwertknoten.
+
+`TextStructureAnalyzer` untersucht Text-, CSV- und proprietäre Formate auf Tabellenstrukturen, Key-Value-Muster, Feldtrenner, Zeilenmuster und wiederkehrende Blöcke.
+
+`DeviceFileAnalyzer` koordiniert die Analyse einer oder mehrerer Beispieldateien und erzeugt normalisierte Kandidaten.
+
+`MeasurementCandidate` beschreibt einen technisch erkannten Wert, bevor daraus ein bestätigter Messwert im Geräteprofil wird.
+
+`ProfileSuggestionEngine` erzeugt Vorschläge für Messwertnamen, Augenbezug, Gruppen, Einheiten, Wiederholungsnummern und mögliche Exportverwendung.
+
+`DeviceProfileWizard` führt den Benutzer durch die Auswahl, Benennung, Validierung und spätere Speicherung eines neuen Profils.
+
+### 9.5 MeasurementCandidate
+
+Ein `MeasurementCandidate` soll mindestens folgende Informationen tragen können:
+
+- SourcePath
+- Rohwert
+- Datentyp-Vermutung
+- Gruppe
+- Auge rechts/links, falls erkennbar
+- mögliche Bedeutung
+- erkannte Einheit
+- Wiederholungsnummer, falls vorhanden
+- Beispielwert
+- Herkunftsdatei
+- Sicherheit der Erkennung, z. B. erkannt, vermutet oder unklar
+
+Aus `MeasurementCandidate`-Objekten können später bestätigte `DeviceMeasurementDefinition`-Einträge entstehen. Dieser Übergang muss bewusst durch den Benutzer erfolgen.
+
+### 9.6 Vorschlagslogik
+
+Die `ProfileSuggestionEngine` darf technische Namen auf mögliche fachliche Bedeutungen abbilden.
+
+Beispiele:
+
+- Sphere/Sph/Sphäre -> Sphäre
+- Cyl/Cylinder/Zylinder -> Zylinder
+- Axis/Axe/Achse -> Achse
+- PD/FarPD/NearPD -> Pupillendistanz
+- IOP/Tension/mmHg -> Augeninnendruck
+- Pachy/CCT/µm -> Pachymetrie
+- K1/K2/R1/R2/Keratometry -> Keratometrie
+- R/Right/OD -> rechts
+- L/Left/OS -> links
+
+Diese Vorschläge bleiben unverbindlich. Die Architektur muss abbilden können, ob ein Wert automatisch vorgeschlagen, manuell bestätigt oder bewusst ignoriert wurde.
+
+### 9.7 Ablauf im Profil-Assistenten
+
+Der spätere Assistent soll in kleinen, nachvollziehbaren Schritten arbeiten:
+
+1. Gerätename, Hersteller und Gerätetyp erfassen.
+2. Eine oder mehrere Beispieldateien laden.
+3. Dateityp, Zeichensatz und Struktur analysieren.
+4. Technische Werte als `MeasurementCandidate`-Liste anzeigen.
+5. Relevante Werte auswählen.
+6. Verständliche Namen vergeben oder Vorschläge übernehmen.
+7. Exportziel auswählen, z. B. MEDISTAR, ALBIS oder TURBOMED.
+8. Export-Template erstellen oder Vorschlag übernehmen.
+9. Exportvorschau mit Beispieldaten prüfen.
+10. Profil speichern und optional als Template exportieren.
+
+Die Speicherung eines Profils erfolgt erst nach expliziter Benutzerbestätigung.
+
+### 9.8 Mehrere Beispieldateien
+
+Die Analyse soll mehrere Beispieldateien pro Gerät unterstützen. Dadurch können optionale Werte, fehlende Werte, unterschiedliche Patientenfälle, Wiederholungsmessungen und stabile SourcePaths besser erkannt werden.
+
+Die Architektur soll Unterschiede zwischen Dateien sichtbar machen, z. B.:
+
+- Kandidat kommt in allen Dateien vor
+- Kandidat kommt nur in einzelnen Dateien vor
+- Wiederholungsnummern variieren
+- Einheit oder Datentyp weicht ab
+- rechte/linke Werte sind nicht in jeder Datei vollständig
+
+### 9.9 Validierung neuer Profile
+
+Bevor ein aus dem Assistenten erzeugtes Profil produktiv verwendet wird, muss es validiert werden.
+
+Zu prüfen sind mindestens:
+
+- Pflichtwerte vorhanden
+- Exportvorschau plausibel
+- keine unbekannten Pflichtplatzhalter
+- Zielfeldkennungen gültig
+- Testexport erzeugbar
+- optional Testimport ins AIS
+
+Die Validierung soll Fehler, Warnungen und Hinweise getrennt ausgeben.
+
+### 9.10 Grenzen und Abgrenzung
+
+Der Geräte-Datei-Explorer und Profil-Assistent werden in der aktuellen Version nicht implementiert.
+
+Die aktuelle App unterstützt:
+
+- bekannte Profile
+- Anzeige erkannter Werte
+- manuelle Entwurfsbearbeitung
+
+Die spätere Automatik darf keine blinde medizinische Interpretation vornehmen. Automatisch erkannte Werte sind Vorschläge und müssen fachlich bestätigt werden. Herstellerformate können sich ändern; Profile müssen nach Geräte- oder Softwareupdates erneut geprüft werden.
+
+---
+
+## 10. Nächste Integrationsschritte
 
 Die nächsten sinnvollen Integrationsschritte sollten klein bleiben und den stabilen Prototyp nicht gefährden:
 
@@ -802,7 +951,7 @@ Die nächsten sinnvollen Integrationsschritte sollten klein bleiben und den stab
 
 ---
 
-## 10. Abgrenzung und Einführungsstrategie
+## 11. Abgrenzung und Einführungsstrategie
 
 Der aktuelle Prototyp bleibt funktionsfähig. Die bestehende MEDISTAR/NIDEK-ARK1S-Verarbeitung darf durch die neue Architektur nicht gebrochen werden.
 

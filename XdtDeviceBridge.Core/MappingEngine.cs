@@ -93,6 +93,12 @@ public sealed class MappingEngine
                 return ApplyFormat(patientValue, format);
             }
 
+            if (sourceToken.StartsWith("AIS.", StringComparison.OrdinalIgnoreCase)
+                && TryResolvePatient(sourceToken, patientData, out var aisValue))
+            {
+                return ApplyFormat(aisValue, format);
+            }
+
             if (sourceToken.StartsWith("Device.", StringComparison.OrdinalIgnoreCase)
                 && measurements.TryGetValue(sourceToken[7..], out var measurementValue))
             {

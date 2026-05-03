@@ -497,6 +497,16 @@ public partial class MainWindow : Window
                 continue;
             }
 
+            if (sourceToken.StartsWith("AIS.", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(GetPatientPreviewValue(sourceToken, patient)))
+                {
+                    unresolved.Add(token);
+                }
+
+                continue;
+            }
+
             if (sourceToken.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
             {
                 if (!measurementPaths.Contains(sourceToken[7..]))
@@ -670,8 +680,7 @@ public partial class MainWindow : Window
         };
 
         return rows
-            .OrderByDescending(row => row.HasValue)
-            .ThenBy(row => row.SortOrder)
+            .OrderBy(row => row.SortOrder)
             .ToList();
     }
 
@@ -694,9 +703,10 @@ public partial class MainWindow : Window
                     placeholder,
                     GetFriendlyPlaceholderName(placeholder, measurement.DisplayName),
                     measurement.Value ?? string.Empty,
-                    sortOrder: 0);
+                    sortOrder: GetDevicePlaceholderSortOrder(group.Key));
             })
             .OrderByDescending(row => row.HasValue)
+            .ThenBy(row => row.SortOrder)
             .ThenBy(row => row.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(row => row.Placeholder, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -737,7 +747,9 @@ public partial class MainWindow : Window
         }
 
         var token = BuildPlaceholderToken(placeholder);
-        var insertionIndex = Math.Clamp(DraftOutputTemplateTextBox.CaretIndex, 0, text.Length);
+        var insertionIndex = DraftOutputTemplateTextBox.IsKeyboardFocusWithin
+            ? Math.Clamp(DraftOutputTemplateTextBox.CaretIndex, 0, text.Length)
+            : text.Length;
         var prefix = insertionIndex > 0 && !char.IsWhiteSpace(text[insertionIndex - 1]) ? " " : string.Empty;
         var suffix = insertionIndex < text.Length && !char.IsWhiteSpace(text[insertionIndex]) ? " " : string.Empty;
         var insertion = $"{prefix}{token}{suffix}";
@@ -764,7 +776,7 @@ public partial class MainWindow : Window
         var lines = text
             .Replace("\r\n", "\n", StringComparison.Ordinal)
             .Split('\n')
-            .Select(line => line.TrimEnd());
+            .Select(line => Regex.Replace(line, @" {2,}", " ").TrimEnd());
 
         return string.Join(Environment.NewLine, lines);
     }
@@ -851,6 +863,7 @@ public partial class MainWindow : Window
             ? placeholder[7..]
             : placeholder;
         var eye = GetFriendlyEyeName(sourcePath);
+        var context = GetFriendlyMeasurementContext(sourcePath);
 
         string name;
         if (ContainsAny(sourcePath, "FarPD"))
@@ -904,9 +917,166 @@ public partial class MainWindow : Window
                 : DeriveNameFromSourcePath(sourcePath);
         }
 
-        return string.IsNullOrWhiteSpace(eye) || name.Contains("Pupillendistanz", StringComparison.OrdinalIgnoreCase)
-            ? name
-            : $"{name} {eye}";
+        var parts = new List<string> { name };
+        if (!string.IsNullOrWhiteSpace(eye) && !name.Contains("Pupillendistanz", StringComparison.OrdinalIgnoreCase))
+        {
+            parts.Add(eye);
+        }
+
+        if (!string.IsNullOrWhiteSpace(context))
+        {
+            parts.Add(context);
+        }
+
+        return string.Join(" ", parts);
+    }
+
+    private static string GetFriendlyMeasurementContext(string sourcePath)
+    {
+        var measurementNumber = ExtractMeasurementNumber(sourcePath);
+        if (ContainsAny(sourcePath, "ARMedian"))
+        {
+            return "Berechnung / Median";
+        }
+
+        if (ContainsAny(sourcePath, "ARList"))
+        {
+            return string.IsNullOrWhiteSpace(measurementNumber) ? "Messung" : $"Messung {measurementNumber}";
+        }
+
+        if (ContainsAny(sourcePath, "PDList"))
+        {
+            return string.IsNullOrWhiteSpace(measurementNumber) ? "Messung" : $"Messung {measurementNumber}";
+        }
+
+        if (ContainsAny(sourcePath, "/SR/", ".SR.", "SR/"))
+        {
+            return "SR";
+        }
+
+        if (ContainsAny(sourcePath, "TrialLens"))
+        {
+            return "TrialLens";
+        }
+
+        if (ContainsAny(sourcePath, "ContactLens"))
+        {
+            return "ContactLens";
+        }
+
+        return string.Empty;
+    }
+
+    private static string ExtractMeasurementNumber(string sourcePath)
+    {
+        const string marker = "[@No=";
+        var markerIndex = sourcePath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex < 0)
+        {
+            return string.Empty;
+        }
+
+        var valueStart = markerIndex + marker.Length;
+        while (valueStart < sourcePath.Length && (sourcePath[valueStart] == '\'' || sourcePath[valueStart] == '"'))
+        {
+            valueStart++;
+        }
+
+        var valueEnd = valueStart;
+        while (valueEnd < sourcePath.Length && sourcePath[valueEnd] != '\'' && sourcePath[valueEnd] != '"' && sourcePath[valueEnd] != ']')
+        {
+            valueEnd++;
+        }
+
+        return valueEnd <= valueStart ? string.Empty : sourcePath[valueStart..valueEnd];
+    }
+
+    private static int GetDevicePlaceholderSortOrder(string sourcePath)
+    {
+        return (GetEyeSortOrder(sourcePath) * 10_000)
+            + (GetMeasurementGroupSortOrder(sourcePath) * 100)
+            + GetMeasurementTypeSortOrder(sourcePath);
+    }
+
+    private static int GetEyeSortOrder(string sourcePath)
+    {
+        var eye = GetFriendlyEyeName(sourcePath);
+        return eye switch
+        {
+            "rechts" => 0,
+            "links" => 1,
+            _ => 2
+        };
+    }
+
+    private static int GetMeasurementGroupSortOrder(string sourcePath)
+    {
+        if (ContainsAny(sourcePath, "ARMedian"))
+        {
+            return 0;
+        }
+
+        if (ContainsAny(sourcePath, "ARList"))
+        {
+            return 1;
+        }
+
+        if (ContainsAny(sourcePath, "/SR/", ".SR.", "SR/"))
+        {
+            return 2;
+        }
+
+        if (ContainsAny(sourcePath, "TrialLens"))
+        {
+            return 3;
+        }
+
+        if (ContainsAny(sourcePath, "ContactLens"))
+        {
+            return 4;
+        }
+
+        if (ContainsAny(sourcePath, "PDList"))
+        {
+            return 5;
+        }
+
+        return 50;
+    }
+
+    private static int GetMeasurementTypeSortOrder(string sourcePath)
+    {
+        if (ContainsAny(sourcePath, "Sphere", "Sphare"))
+        {
+            return 0;
+        }
+
+        if (ContainsAny(sourcePath, "Cylinder"))
+        {
+            return 1;
+        }
+
+        if (ContainsAny(sourcePath, "Axis"))
+        {
+            return 2;
+        }
+
+        if (ContainsAny(sourcePath, "SE"))
+        {
+            return 3;
+        }
+
+        if (ContainsAny(sourcePath, "FarPD"))
+        {
+            return 4;
+        }
+
+        if (ContainsAny(sourcePath, "NearPD"))
+        {
+            return 5;
+        }
+
+        return 50;
     }
 
     private static string GetFriendlyEyeName(string sourcePath)

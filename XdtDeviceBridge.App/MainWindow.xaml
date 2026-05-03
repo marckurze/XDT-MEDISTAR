@@ -307,20 +307,28 @@
                                         </DataGridTextColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <GroupBox Header="Regelvorschau" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
-                                    <TextBox x:Name="ExportRulePreviewTextBox"
-                                             Margin="8"
-                                             MinHeight="180"
-                                             IsReadOnly="True"
-                                             AcceptsReturn="True"
-                                             TextWrapping="Wrap"
-                                             VerticalScrollBarVisibility="Auto"/>
-                                </GroupBox>
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Exportregel-Entwurf" Grid.Row="4" Margin="0,0,0,8">
-                            <Grid Margin="8">
+                        <GroupBox Header="Exportregel-Arbeitsbereich" Grid.Row="4" Margin="0,0,0,8">
+                            <Grid Margin="8" MinHeight="720">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*"/>
+                                    <ColumnDefinition Width="6"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition Height="170"/>
+                                        <RowDefinition Height="6"/>
+                                        <RowDefinition Height="260"/>
+                                    </Grid.RowDefinitions>
+
+                                    <GroupBox Header="Exportregel-Entwurf" Grid.Row="0" Margin="0,0,0,0">
+                                        <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -373,106 +381,131 @@
                                     </StackPanel>
                                     <TextBox x:Name="DraftDescriptionTextBox" ToolTip="Beschreibung oder Hinweis zur Regel."/>
                                 </DockPanel>
-                            </Grid>
-                        </GroupBox>
+                                        </Grid>
+                                    </GroupBox>
 
-                        <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="5" Margin="0,0,0,8">
-                            <TextBox x:Name="FullExportPreviewTextBox"
-                                     Margin="8"
-                                     MinHeight="260"
-                                     IsReadOnly="True"
-                                     AcceptsReturn="True"
-                                     TextWrapping="NoWrap"
-                                     FontFamily="Consolas"
-                                     HorizontalScrollBarVisibility="Auto"
-                                     VerticalScrollBarVisibility="Auto"/>
-                        </GroupBox>
+                                    <GroupBox Header="Regelvorschau" Grid.Row="2" Margin="0,0,0,0">
+                                        <TextBox x:Name="ExportRulePreviewTextBox"
+                                                 Margin="8"
+                                                 IsReadOnly="True"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 VerticalScrollBarVisibility="Auto"/>
+                                    </GroupBox>
 
-                        <GroupBox Header="Verfügbare Platzhalter"
-                                  Grid.Row="6"
-                                  Margin="0,0,0,8"
-                                  ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
-                            <Grid Margin="8">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="220"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="220"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,8">
-                                    Platzhalter müssen mit geschweiften Klammern geschrieben werden, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}. Runde Klammern wie (Device.Date) werden nicht ersetzt.
-                                    Über die Checkbox "Verwenden" kann ein Platzhalter in den aktuellen Entwurf eingefügt oder daraus entfernt werden. Der Ergebnistext bleibt weiterhin frei editierbar.
-                                </TextBlock>
-                                <TextBlock Grid.Row="1" Text="AIS-Platzhalter" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <DataGrid Grid.Row="2"
-                                          x:Name="AisPlaceholdersGrid"
-                                          AutoGenerateColumns="False"
-                                          CanUserAddRows="False"
-                                          CanUserDeleteRows="False"
-                                          HeadersVisibility="Column"
-                                          HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto">
-                                    <DataGrid.RowStyle>
-                                        <Style TargetType="DataGridRow">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasValue}" Value="True">
-                                                    <Setter Property="Background" Value="#E8F5E9"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </DataGrid.RowStyle>
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="220" IsReadOnly="True"/>
-                                        <DataGridTextColumn Header="Verständlicher Name" Binding="{Binding DisplayName}" Width="180" IsReadOnly="True"/>
-                                        <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
-                                        <DataGridTemplateColumn Header="Verwenden" Width="90">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                              HorizontalAlignment="Center"
-                                                              Checked="PlaceholderUseCheckBox_Changed"
-                                                              Unchecked="PlaceholderUseCheckBox_Changed"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                    <GridSplitter Grid.Row="3"
+                                                  Height="6"
+                                                  HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Center"
+                                                  ResizeDirection="Rows"
+                                                  ShowsPreview="True"/>
 
-                                <TextBlock Grid.Row="3" x:Name="DevicePlaceholdersStatusText" Text="Device-Platzhalter" FontWeight="Bold" Margin="0,8,0,4"/>
-                                <DataGrid Grid.Row="4"
-                                          x:Name="DevicePlaceholdersGrid"
-                                          AutoGenerateColumns="False"
-                                          CanUserAddRows="False"
-                                          CanUserDeleteRows="False"
-                                          HeadersVisibility="Column"
-                                          HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto">
-                                    <DataGrid.RowStyle>
-                                        <Style TargetType="DataGridRow">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasValue}" Value="True">
-                                                    <Setter Property="Background" Value="#E8F5E9"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </DataGrid.RowStyle>
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="260" IsReadOnly="True"/>
-                                        <DataGridTextColumn Header="Verständlicher Name" Binding="{Binding DisplayName}" Width="210" IsReadOnly="True"/>
-                                        <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
-                                        <DataGridTemplateColumn Header="Verwenden" Width="90">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                              HorizontalAlignment="Center"
-                                                              Checked="PlaceholderUseCheckBox_Changed"
-                                                              Unchecked="PlaceholderUseCheckBox_Changed"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                    <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="4" Margin="0,0,0,0">
+                                        <TextBox x:Name="FullExportPreviewTextBox"
+                                                 Margin="8"
+                                                 IsReadOnly="True"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="NoWrap"
+                                                 FontFamily="Consolas"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 VerticalScrollBarVisibility="Auto"/>
+                                    </GroupBox>
+                                </Grid>
+
+                                <GridSplitter Grid.Column="1"
+                                              Width="6"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Stretch"
+                                              ResizeDirection="Columns"
+                                              ShowsPreview="True"/>
+
+                                <GroupBox Header="Verfügbare Platzhalter"
+                                          Grid.Column="2"
+                                          Margin="8,0,0,0"
+                                          ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,8">
+                                            Platzhalter müssen mit geschweiften Klammern geschrieben werden, z. B. {Device.R/AR/ARMedian/Sphere:Diopter}. Runde Klammern wie (Device.Date) werden nicht ersetzt.
+                                            Über die Checkbox "Verwenden" kann ein Platzhalter in den aktuellen Entwurf eingefügt oder daraus entfernt werden. Der Ergebnistext bleibt weiterhin frei editierbar.
+                                        </TextBlock>
+                                        <TextBlock Grid.Row="1" Text="AIS-Platzhalter" FontWeight="Bold" Margin="0,0,0,4"/>
+                                        <DataGrid Grid.Row="2"
+                                                  x:Name="AisPlaceholdersGrid"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  HeadersVisibility="Column"
+                                                  HorizontalScrollBarVisibility="Auto"
+                                                  VerticalScrollBarVisibility="Auto">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasValue}" Value="True">
+                                                            <Setter Property="Background" Value="#E8F5E9"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="190" IsReadOnly="True"/>
+                                                <DataGridTextColumn Header="Name Messwert" Binding="{Binding DisplayName}" Width="160" IsReadOnly="True"/>
+                                                <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
+                                                <DataGridTemplateColumn Header="Verwenden" Width="85">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                      HorizontalAlignment="Center"
+                                                                      Checked="PlaceholderUseCheckBox_Changed"
+                                                                      Unchecked="PlaceholderUseCheckBox_Changed"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                        <TextBlock Grid.Row="3" x:Name="DevicePlaceholdersStatusText" Text="Device-Platzhalter" FontWeight="Bold" Margin="0,8,0,4"/>
+                                        <DataGrid Grid.Row="4"
+                                                  x:Name="DevicePlaceholdersGrid"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  HeadersVisibility="Column"
+                                                  HorizontalScrollBarVisibility="Auto"
+                                                  VerticalScrollBarVisibility="Auto">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasValue}" Value="True">
+                                                            <Setter Property="Background" Value="#E8F5E9"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Platzhalter" Binding="{Binding Placeholder}" Width="230" IsReadOnly="True"/>
+                                                <DataGridTextColumn Header="Name Messwert" Binding="{Binding DisplayName}" Width="190" IsReadOnly="True"/>
+                                                <DataGridTextColumn Header="Ausgelesener Wert" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
+                                                <DataGridTemplateColumn Header="Verwenden" Width="85">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding IsUsed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                      HorizontalAlignment="Center"
+                                                                      Checked="PlaceholderUseCheckBox_Changed"
+                                                                      Unchecked="PlaceholderUseCheckBox_Changed"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </GroupBox>
                             </Grid>
                         </GroupBox>
 

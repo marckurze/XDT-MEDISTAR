@@ -89,6 +89,42 @@ public sealed class MappingEngineTests
     }
 
     [Fact]
+    public void Map_ReplacesAisLastNamePlaceholder()
+    {
+        var result = MapSingleTemplate("Nachname={AIS.LastName}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Nachname=Testfrau", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_ReplacesAisPatientNumberPlaceholder()
+    {
+        var result = MapSingleTemplate("Patient={AIS.PatientNumber}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Patient=4701-1", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_KeepsPatientPlaceholderSyntaxCompatible()
+    {
+        var result = MapSingleTemplate("Nachname={patient.LastName}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Nachname=Testfrau", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
+    public void Map_UnknownAisPlaceholderRendersEmptyWithoutCrash()
+    {
+        var result = MapSingleTemplate("Unbekannt={AIS.Unknown}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Unbekannt=", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
     public void Map_FormatsDiopterPlaceholder()
     {
         var result = MapSingleTemplate("S={Device.R/AR/ARMedian/Sphere:Diopter}");
