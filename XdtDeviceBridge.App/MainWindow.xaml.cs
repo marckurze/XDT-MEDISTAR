@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private readonly InstallationInfoProvider _installationInfoProvider = new();
     private readonly LicenseFileRepository _licenseFileRepository = new();
     private readonly LicenseEvaluator _licenseEvaluator = new();
+    private readonly LicensedDeviceStateEvaluator _licensedDeviceStateEvaluator = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -33,6 +34,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
+    private readonly ObservableCollection<LicensedDeviceState> _licensedDeviceStates = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
@@ -50,6 +52,7 @@ public partial class MainWindow : Window
         AisPlaceholdersGrid.ItemsSource = _aisPlaceholderRows;
         DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
         ExportRulesGrid.ItemsSource = _visibleExportRules;
+        LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStates;
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -763,6 +766,7 @@ public partial class MainWindow : Window
         ShowProfileNameColumns(catalog);
         InitializeExportRulesView(catalog, selectedExportProfileId);
         InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
+        RefreshLicensedDeviceStatesFromLocalLicense();
     }
 
     private bool TryCreateDraftRule(
@@ -1597,6 +1601,7 @@ public partial class MainWindow : Window
 
             if (!File.Exists(paths.LicenseFile))
             {
+                ShowLicensedDeviceStates(license: null);
                 ShowLicenseStatus(
                     installation,
                     "Nicht lizenziert / Test- oder Lizenzaktivierung erforderlich",
@@ -1611,6 +1616,7 @@ public partial class MainWindow : Window
                 var license = _licenseFileRepository.Load(paths.LicenseFile);
                 var evaluation = _licenseEvaluator.Evaluate(license, installation, activeLicensedDeviceCount, DateTime.UtcNow);
 
+                ShowLicensedDeviceStates(license);
                 ShowLicenseStatus(
                     installation,
                     FormatLicenseStatus(evaluation),
@@ -1620,6 +1626,7 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
+                ShowLicensedDeviceStates(license: null);
                 ShowLicenseStatus(
                     installation,
                     "Lizenzdatei konnte nicht geladen werden",
@@ -1637,6 +1644,7 @@ public partial class MainWindow : Window
             LicenseStatusText.Text = "Lizenzstatus konnte nicht initialisiert werden";
             LicenseActiveDeviceCountText.Text = "0";
             LicenseLicensedDeviceCountText.Text = "0";
+            ClearLicensedDeviceStates();
             _installationInfo = null;
             AppendLicenseMessage($"Lizenzstatus konnte nicht initialisiert werden: {ex.Message}");
         }
@@ -1660,6 +1668,92 @@ public partial class MainWindow : Window
         LicenseStatusText.Text = status;
         LicenseActiveDeviceCountText.Text = activeLicensedDeviceCount.ToString();
         LicenseLicensedDeviceCountText.Text = licensedDeviceCount.ToString();
+    }
+
+    private void RefreshLicensedDeviceStatesFromLocalLicense()
+    {
+        try
+        {
+            LicenseInfo? license = null;
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            if (File.Exists(paths.LicenseFile))
+            {
+                license = _licenseFileRepository.Load(paths.LicenseFile);
+            }
+
+            ShowLicensedDeviceStates(license);
+
+            if (_installationInfo is null)
+            {
+                return;
+            }
+
+            var activeLicensedDeviceCount = CountActiveLicensedDevices();
+            if (license is null)
+            {
+                ShowLicenseStatus(
+                    _installationInfo,
+                    "Nicht lizenziert / Test- oder Lizenzaktivierung erforderlich",
+                    activeLicensedDeviceCount,
+                    licensedDeviceCount: 0);
+                return;
+            }
+
+            var evaluation = _licenseEvaluator.Evaluate(license, _installationInfo, activeLicensedDeviceCount, DateTime.UtcNow);
+            ShowLicenseStatus(
+                _installationInfo,
+                FormatLicenseStatus(evaluation),
+                evaluation.ActiveLicensedDeviceCount,
+                evaluation.LicensedDeviceCount);
+        }
+        catch
+        {
+            ShowLicensedDeviceStates(license: null);
+        }
+    }
+
+    private void ShowLicensedDeviceStates(LicenseInfo? license)
+    {
+        var states = _licensedDeviceStateEvaluator.Evaluate(
+                _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>(),
+                license,
+                DateTime.UtcNow)
+            .ToList();
+
+        _licensedDeviceStates.Clear();
+        foreach (var state in states.OrderBy(state => state.DisplayName, StringComparer.CurrentCultureIgnoreCase))
+        {
+            _licensedDeviceStates.Add(state);
+        }
+
+        var activeLicenseRequiredStates = states
+            .Where(state => state.IsActive && state.IsLicenseRequired)
+            .ToList();
+        var coveredCount = activeLicenseRequiredStates.Count(state => state.IsCoveredByLicense);
+        var uncoveredCount = activeLicenseRequiredStates.Count - coveredCount;
+
+        LicensedDeviceActiveCountText.Text = activeLicenseRequiredStates.Count.ToString();
+        LicensedDeviceLicensedCountText.Text = (license?.LicensedDeviceCount ?? 0).ToString();
+        LicensedDeviceCoveredCountText.Text = coveredCount.ToString();
+        LicensedDeviceUncoveredCountText.Text = uncoveredCount.ToString();
+
+        LicensedDeviceStatusText.Text = activeLicenseRequiredStates.Count == 0
+            ? "Keine aktiven lizenzpflichtigen Anbindungen."
+            : license is null
+                ? "Keine Lizenzdatei vorhanden. Aktive lizenzpflichtige Anbindungen werden als nicht gedeckt angezeigt; die Verarbeitung bleibt weiterhin nutzbar."
+                : uncoveredCount == 0
+                    ? "Alle aktiven lizenzpflichtigen Anbindungen sind durch die aktuelle Lizenz gedeckt."
+                    : "Mindestens eine aktive lizenzpflichtige Anbindung ist nicht durch die aktuelle Lizenz gedeckt. Die Anzeige sperrt keine Verarbeitung.";
+    }
+
+    private void ClearLicensedDeviceStates()
+    {
+        _licensedDeviceStates.Clear();
+        LicensedDeviceActiveCountText.Text = "0";
+        LicensedDeviceLicensedCountText.Text = "0";
+        LicensedDeviceCoveredCountText.Text = "0";
+        LicensedDeviceUncoveredCountText.Text = "0";
+        LicensedDeviceStatusText.Text = "Lizenzierte Geräte / Anbindungen konnten nicht geladen werden.";
     }
 
     private static string FormatLicenseStatus(LicenseEvaluationResult evaluation)
@@ -1763,6 +1857,7 @@ public partial class MainWindow : Window
                 FormatLicenseStatus(evaluation),
                 evaluation.ActiveLicensedDeviceCount,
                 evaluation.LicensedDeviceCount);
+            ShowLicensedDeviceStates(importedLicense);
 
             AppendLicenseMessage($"Lizenzdatei erfolgreich importiert: {dialog.FileName}");
         }

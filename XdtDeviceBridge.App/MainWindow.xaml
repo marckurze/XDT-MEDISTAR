@@ -739,6 +739,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
@@ -778,7 +779,64 @@
                             <Button Content="Lizenzdatei importieren" Width="190" Click="ImportLicenseFile_Click"/>
                         </StackPanel>
 
-                        <GroupBox Header="Lizenzmeldungen" Grid.Row="2">
+                        <GroupBox Header="Lizenzierte Geräte / Anbindungen" Grid.Row="2" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="220"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Aktive lizenzpflichtige Anbindungen:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="LicensedDeviceActiveCountText" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Lizenzierte Geräteanzahl:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="LicensedDeviceLicensedCountText" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="4" Text="Gedeckt:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="5" x:Name="LicensedDeviceCoveredCountText" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="6" Text="Nicht gedeckt:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="7" x:Name="LicensedDeviceUncoveredCountText" Margin="0,0,0,6"/>
+
+                                <TextBlock Grid.Row="1"
+                                           Grid.Column="0"
+                                           Grid.ColumnSpan="8"
+                                           x:Name="LicensedDeviceStatusText"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+
+                                <DataGrid Grid.Row="2"
+                                          Grid.Column="0"
+                                          Grid.ColumnSpan="8"
+                                          x:Name="LicensedDeviceStatesGrid"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Name / Anzeige" Binding="{Binding DisplayName}" Width="220"/>
+                                        <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="70"/>
+                                        <DataGridCheckBoxColumn Header="Lizenzpflichtig" Binding="{Binding IsLicenseRequired}" Width="120"/>
+                                        <DataGridCheckBoxColumn Header="Durch Lizenz gedeckt" Binding="{Binding IsCoveredByLicense}" Width="150"/>
+                                        <DataGridCheckBoxColumn Header="In Karenzzeit" Binding="{Binding IsInGracePeriod}" Width="120"/>
+                                        <DataGridTextColumn Header="Karenzzeit bis" Binding="{Binding GracePeriodEndsAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="140"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding StatusMessage}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Header="Lizenzmeldungen" Grid.Row="3">
                             <TextBox x:Name="LicenseMessagesTextBox"
                                      Margin="8"
                                      MinHeight="280"
