@@ -753,3 +753,262 @@ Es implementiert keine neuen Geräteprofile.
 Es verändert nicht den bestehenden MEDISTAR/NIDEK-ARK1S-Prototyp.
 
 Neue Profile sollen später schrittweise und testgetrieben umgesetzt werden.
+
+---
+
+## 14. MEDISTAR Augenarzt - generische Zeilenbilder und Messwertbedeutung
+
+Dieser Abschnitt ergänzt die gerätespezifischen Beispiele um generische MEDISTAR-Zielbilder aus der fachlichen Auswertung `MEDISTAR Geräteanbindung Augenarzt - Erklärung der Werte`.
+
+Die Zeilentypen `V0`, `V1`, `V2`, `V3`, `V7`, `P` und `Y` sind MEDISTAR-interne Karteikarten-Zeilenbezeichnungen. Sie dienen hier als Referenz für spätere MEDISTAR-Templates und Exportprofilnamen. Sie sind nicht als harte XDT-Schnittstellenlogik zu verstehen und gelten nicht automatisch für andere AIS/PVS-Systeme.
+
+Die App muss zwischen drei Ebenen unterscheiden:
+
+1. technische XDT-/GDT-Ausgabe, z. B. Feldkennungen und Ergebnisfelder
+2. AIS-spezifische Darstellung, z. B. MEDISTAR-Zeilentypen
+3. fachliche Messwertbedeutung, z. B. Sphäre, Zylinder, IOP oder Pachymetrie
+
+### 14.1 V0 - Brillenwerte / Lensmeter
+
+Beschreibung:
+
+- Brillenwerte aus einem Lensmeter
+- typischer Kontext: Voruntersuchung durch MFA
+- Beispielgeräte: NIDEK LM-1800P, NIDEK LM7, TOPCON CL300
+
+Generisches MEDISTAR-Zielbild:
+
+```text
+V0 R.:S=+ 1.50 Z= 0.00*180
+V0 L.:S=+ 3.00 Z= 0.00*180
+```
+
+Fachliche Bedeutung:
+
+- `R.` = rechtes Auge
+- `L.` = linkes Auge
+- `S=` = Sphäre in Dioptrien
+- `Z=` = Zylinder in Dioptrien
+- `*` = Achse in Grad
+
+Template-Ableitung:
+
+```text
+R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis}
+L.:S={L_Sphere:Diopter} Z={L_Cylinder:Diopter}*{L_Axis:Axis}
+```
+
+Spätere Lensmeter-Profile müssen zusätzlich Prisma, Basisrichtung, Addition und PD abbilden können, sofern das Gerät diese Werte liefert.
+
+### 14.2 V1 - objektive Refraktion / Autorefraktor
+
+Beschreibung:
+
+- objektive Refraktionswerte aus einem Autorefraktor
+- typischer Kontext: Voruntersuchung durch MFA
+- Beispielgeräte: NIDEK ARK1S, TOPCON KR800, ggf. Kombigeräte wie TRK-2P
+
+Generisches MEDISTAR-Zielbild:
+
+```text
+V1 R.:S=+ 1.50 Z= 0.00*180
+V1 L.:S=+ 3.00 Z= 0.00*180
+```
+
+Fachliche Bedeutung:
+
+- `S=` = Sphäre
+- `Z=` = Zylinder
+- `*` = Achse
+- Werte werden getrennt nach rechtem und linkem Auge dargestellt
+
+Template-Ableitung:
+
+```text
+R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis}
+L.:S={L_Sphere:Diopter} Z={L_Cylinder:Diopter}*{L_Axis:Axis}
+```
+
+Autorefraktor-Profile müssen mindestens Sphäre, Zylinder und Achse rechts/links unterstützen. Optional relevant sind SE bzw. sphärisches Äquivalent und PD. Der validierte ARK1S-Prototyp erfüllt die Grundlogik über `6228`-Ergebniszeilen.
+
+### 14.3 V2 - Phoropter / subjektive Refraktion
+
+Beschreibung:
+
+- subjektive Refraktionswerte, z. B. aus einem Phoropter
+- typischer Kontext: Hauptuntersuchung durch Arzt
+- Beispielgerät: NIDEK RT-3100
+
+Generisches MEDISTAR-Zielbild:
+
+```text
+V2 F R.:S=+ 1.50 Z= 0.00*180 A=+2.00
+V2 F L.:S=+ 3.00 Z= 0.00*180 A=+1.50
+```
+
+Fachliche Bedeutung:
+
+- `F` = Fernwert, MEDISTAR-informativ
+- `A=` = Addition in Dioptrien
+- Fernwert plus Addition ergibt den Nahwert
+
+Template-Ableitung:
+
+```text
+F R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis} A={R_Add:Diopter}
+F L.:S={L_Sphere:Diopter} Z={L_Cylinder:Diopter}*{L_Axis:Axis} A={L_Add:Diopter}
+```
+
+Phoropter-Profile müssen Addition rechts/links, Fernwertkennzeichnung und optional Visus/VA unterstützen.
+
+### 14.4 V3 - Rezeptwerte
+
+`V3` beschreibt Werte, die in ein Rezept übernommen wurden. In MEDISTAR können diese Werte automatisch entstehen, wenn z. B. ein Brillenrezept mit `V2`-Werten befüllt und ausgedruckt wird.
+
+Für die XDT-Bridge ist `V3` zunächst nur informativ. Die App muss `V3` nicht aktiv erzeugen, solange dies MEDISTAR-intern durch Rezeptprozesse erfolgt. Später kann `V3` relevant werden, falls ein AIS Rezeptwerte extern importieren möchte.
+
+### 14.5 V7 - Hornhautradien / Keratometrie
+
+Beschreibung:
+
+- Hornhautradien und daraus abgeleitete Keratometriewerte
+- relevant u. a. für Anpassung torischer Kontaktlinsen
+- Beispielgerät: TOPCON KR800S
+
+Generisches MEDISTAR-Zielbild:
+
+```text
+V7 R: R1= 7.42*174 R2= 7.19* 84 //
+V7 R: AV= 7.31 //
+V7 R: ra=-1.50*174 //
+```
+
+Fachliche Bedeutung:
+
+- `R1=` = Hornhautradius 1
+- `R2=` = Hornhautradius 2, typischerweise 90 Grad versetzt
+- `AV=` = Durchschnittswert
+- `ra=` = errechneter Astigmatismus / errechneter Zylinder
+- `*` = Achse in Grad
+- `//` = Abschluss-/Trennzeichen der MEDISTAR-Darstellung
+
+Template-Ableitung:
+
+```text
+R: R1={R_R1:Keratometry}*{R_R1_Axis:Axis} R2={R_R2:Keratometry}*{R_R2_Axis:Axis} //
+R: AV={R_AV:Keratometry} //
+R: ra={R_RA:Diopter}*{R_RA_Axis:Axis} //
+```
+
+Die konkrete Ausgabe für das linke Auge muss analog möglich sein. Keratometrie-Profile müssen Radiuswerte in mm und optional Keratometerwerte in Dioptrien unterstützen.
+
+### 14.6 P - Augendruck / NCT / Tonometrie
+
+Beschreibung:
+
+- Augendruckwerte aus einem Non-Contact-Tonometer
+- typischer Kontext: Voruntersuchung durch MFA
+- Beispielgerät: TOPCON TRK-2P
+
+Generisches MEDISTAR-Zielbild:
+
+```text
+P R = 16 [16.0] mmHg 15:01
+```
+
+Fachliche Bedeutung:
+
+- `R = 16` = Einzelmesswert Augendruck rechts
+- `[16.0]` = Durchschnittswert
+- `mmHg` = Millimeter-Quecksilbersäule
+- `15:01` = Messzeit, fachlich relevant wegen tageszeitabhängiger IOP-Werte
+
+Template-Ableitung:
+
+```text
+R = {R_IOP_1:Iop} [{R_IOP_AVG:Iop}] mmHg {Device.Time}
+L = {L_IOP_1:Iop} [{L_IOP_AVG:Iop}] mmHg {Device.Time}
+```
+
+Tonometrie-Profile müssen Einzelmessungen, Mittelwerte, Einheit mmHg/Torr und Messzeit rechts/links unterstützen.
+
+### 14.7 Y - Pachymetrie / Hornhautdicke
+
+Beschreibung:
+
+- Pachymetrie misst die Hornhautdicke
+- Beispielgerät: TOPCON TRK-2P
+- `Y` kann in Praxen auch für andere Inhalte, z. B. Laborwerte, verwendet werden und darf deshalb nicht hart kodiert werden
+
+Generisches MEDISTAR-Zielbild:
+
+```text
+Y PR: 0.560 0.562 0.566 [0.562] mm
+```
+
+Fachliche Bedeutung:
+
+- `PR:` = Pachymetrie rechts
+- mehrere Zahlenwerte = Einzelmessungen
+- Wert in eckigen Klammern = Durchschnittswert
+- Einheit kann je Gerät `mm` oder `µm` sein
+
+Template-Ableitung:
+
+```text
+PR: {R_Pachy_1:Pachy} {R_Pachy_2:Pachy} {R_Pachy_3:Pachy} [{R_Pachy_Avg:Pachy}] mm
+PL: {L_Pachy_1:Pachy} {L_Pachy_2:Pachy} {L_Pachy_3:Pachy} [{L_Pachy_Avg:Pachy}] mm
+```
+
+Pachymetrie-Profile müssen Einzelmessungen, Mittelwerte und Einheit mm oder µm profilabhängig behandeln. Eine Umrechnung mm <-> µm ist nur als spätere, fachlich geprüfte Erweiterung vorzusehen.
+
+### 14.8 Y - korrigierter / errechneter Augendruck
+
+Das fachliche Dokument beschreibt zusätzlich einen aus Augendruck und Pachymetrie berechneten Wert, z. B. auf Basis der Dresdner Korrekturtabelle.
+
+Generisches MEDISTAR-Zielbild:
+
+```text
+Y CTR: 15 [15.0] mmHg
+```
+
+Die App muss unterscheiden können zwischen:
+
+- direkt gemessenem Augendruck
+- Pachymetrie / Hornhautdicke
+- korrigiertem bzw. errechnetem Augeninnendruck
+
+Für korrigierten IOP sind eigene Platzhalter vorzusehen, z. B. `R_CorrectedIOP`, `L_CorrectedIOP` und korrigierte Mittelwerte.
+
+Die App soll medizinische Korrekturen nicht eigenständig berechnen, solange dies nicht fachlich validiert und explizit spezifiziert wurde. Wenn das Gerät bereits korrigierte Werte liefert, dürfen diese übernommen werden.
+
+### 14.9 Messwertnamen und Formatfunktionen
+
+Für den Baukasten und spätere Exportregel-Entwürfe sind verständliche Namen wichtig, z. B.:
+
+- Sphäre rechts
+- Zylinder rechts
+- Achse rechts
+- Addition rechts
+- Augendruck rechts Einzelmessung 1
+- Augendruck rechts Mittelwert
+- Pachymetrie rechts Mittelwert
+- Hornhautradius R1 rechts
+- Hornhautradius R2 rechts
+- Keratometrie Durchschnitt rechts
+- errechneter Zylinder rechts
+
+Relevante Formatfunktionen:
+
+- `Raw`
+- `Diopter`
+- `Axis`
+- `Pd`
+- `Iop`
+- `Pachy`
+- `Prism`
+- `Keratometry`
+- `Addition`
+- `Time`
+
+Die Formatierung muss profilabhängig steuerbar bleiben, insbesondere bei Vorzeichen und Leerzeichen in Dioptrienwerten, Achsendarstellung, IOP-Rundung, Pachymetrie-Einheit und Zeitformat `HH:mm`.

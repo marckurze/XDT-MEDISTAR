@@ -1466,3 +1466,199 @@ Die aktuelle App unterstützt:
 - manuelle Entwurfsbearbeitung
 
 Der Geräte-Datei-Explorer und Profil-Assistent sind zukünftige Ausbaustufen. Sie sollen später auf den bestehenden V2-Profilmodellen, der Template-Logik und der Exportvorschau aufbauen, ohne die validierte MEDISTAR/NIDEK-ARK1S-Verarbeitung zu gefährden.
+
+---
+
+## 17. Augenärztliche Gerätewerte, MEDISTAR-Zeilenbilder und Messwertbedeutung
+
+### 17.1 Quelle und Zweck
+
+Diese Ergänzung basiert auf der Auswertung des Dokuments `MEDISTAR Geräteanbindung Augenarzt - Erklärung der Werte`.
+
+Ziel ist, aus den Beispielen der MEDISTAR-Karteikartendarstellung fachliche Anforderungen an die XDT-Bridge-App abzuleiten.
+
+Die im Dokument genannten MEDISTAR-Zeilentypen wie `V0`, `V1`, `V2`, `V3`, `V7`, `P` und `Y` sind MEDISTAR-interne Karteikarten-Zeilenbezeichnungen. Sie werden durch MEDISTAR nachgelagert erzeugt bzw. in der Karteikarte angezeigt.
+
+Für die App sind diese Zeilentypen:
+
+- informativ
+- als Empfehlung für MEDISTAR-Templates relevant
+- hilfreich zur Benennung von Exportprofilen
+- hilfreich zur Darstellung im Mapping-/Template-Editor
+
+Sie sind aber:
+
+- nicht zwingender Bestandteil des XDT-Exports
+- nicht allgemein gültig für andere AIS/PVS-Systeme
+- nicht als harte Schnittstellenlogik zu behandeln
+
+Andere AIS/PVS-Systeme können andere Zeilenarten verwenden oder vollständig ohne Zeilentypen arbeiten.
+
+Die App muss deshalb drei Ebenen klar unterscheiden:
+
+1. Technische XDT-/GDT-Ausgabe: Feldkennungen, Werte, Ergebnisfelder, Satzart, Zeichensatz.
+2. AIS-spezifische Darstellung: z. B. MEDISTAR-Zeilentypen `V0`, `V1`, `P`, `Y`.
+3. Fachliche Bedeutung der Messwerte: Sphäre, Zylinder, Achse, Addition, Augendruck, Pachymetrie, Hornhautradien usw.
+
+### 17.2 Informative MEDISTAR-Zeilentypen
+
+Die folgenden Zeilentypen dienen als Orientierung für MEDISTAR-Templates. Sie dürfen nicht als allgemeingültige XDT-Regel betrachtet werden.
+
+| Zeilentyp | Bedeutung in MEDISTAR | Typische Geräteklasse | Anforderung an die App |
+|---|---|---|---|
+| `V0` | Brillenwerte / Lensmeter | Lensmeter, z. B. NIDEK LM-1800P, NIDEK LM7, TOPCON CL300 | Templates für rechtes und linkes Auge mit Sphäre, Zylinder und Achse; perspektivisch Prisma, Basisrichtung, Addition und PD |
+| `V1` | objektive Refraktion | Autorefraktor, z. B. NIDEK ARK1S, Topcon TRK-2P/KR800 | Sphäre, Zylinder und Achse rechts/links; optional SE und PD |
+| `V2` | Phoropter / subjektive Refraktion | Phoropter, subjektive Refraktionsdaten | Fernwertkennzeichnung, Sphäre, Zylinder, Achse, Addition rechts/links; optional Visus/VA |
+| `V3` | Rezeptwerte | AIS-interner Rezeptprozess | zunächst informativ; keine primäre Exportanforderung der Geräteanbindung |
+| `V7` | Hornhautradien / Keratometrie | Keratometer, Kombigeräte | R1/K1, R2/K2, Achsen, Durchschnitt/AV, errechneter Astigmatismus/ra je Auge |
+| `P` | Augendruck / NCT / Tonometrie | Non-Contact-Tonometer | Einzelmessungen, Mittelwert, Einheit mmHg/Torr, Messzeit rechts/links |
+| `Y` | Pachymetrie oder korrigierter IOP | Pachymeter, Tonometer/Pachymeter-Kombigeräte | Hornhautdicke, Mittelwerte, Einheit mm oder µm; korrigierten IOP als eigenen Werttyp behandeln |
+
+Wichtig: `Y` kann in medizinischen Einrichtungen auch für andere Inhalte, z. B. Laborwerte, verwendet werden. `Y` darf daher nicht hart als universeller Pachymetrie-Exporttyp kodiert werden.
+
+### 17.3 Fachliche Messwertdefinitionen
+
+Die App muss erkannte technische Werte nicht nur als Rohpfade, sondern mit fachlicher Bedeutung anzeigen und für Templates nutzbar machen.
+
+| Messwert | Bedeutung | Einheit / Format | Anforderung |
+|---|---|---|---|
+| Sphäre | sphärische Korrektur; `+` = Weitsichtigkeit, `-` = Kurzsichtigkeit | Dioptrien | numerisch erkennen, benennen und mit `Diopter` formatieren |
+| Zylinder | astigmatische Korrektur | Dioptrien | numerisch erkennen, benennen und mit `Diopter` formatieren |
+| Achse | Lage der Zylinderwirkung | Grad | erkennen und profilabhängig mit `Axis` formatieren, z. B. `*180` oder `* 49` |
+| Addition | Nahzusatz bei Fern-/Nahwerten | Dioptrien, typischerweise positiv | als eigenen Messwerttyp unterstützen, z. B. `R_Add`, `L_Add` |
+| Fernwert | Werte für Fernsicht, in MEDISTAR oft `F` | Template-Textbestandteil | Fern-/Nahwert-Templates ermöglichen, ohne `F` als harte Schnittstellenlogik zu behandeln |
+| IOP / Augendruck | Augeninnendruck | mmHg oder Torr | Einzelmessungen, Mittelwert und Messzeit darstellen; Formatfunktion `Iop` |
+| Pachymetrie / Hornhautdicke | Hornhautdicke | mm oder µm | Einheit und Darstellung profilabhängig behandeln; Formatfunktion `Pachy` |
+| Keratometrie / Hornhautradien | R1/R2 bzw. K1/K2, AV und errechneter Astigmatismus | mm oder optional Dioptrien | als eigene Messgruppe unterstützen; Formatfunktionen `Keratometry`, `Axis`, `Diopter` |
+
+Die App darf medizinische Korrekturen, z. B. korrigierten IOP nach Dresdner Korrekturtabelle, nicht eigenständig berechnen, solange dies nicht fachlich validiert und explizit spezifiziert wurde. Wenn ein Gerät bereits korrigierte Werte liefert, dürfen diese übernommen werden. Eigene Berechnungslogik wäre ein gesondertes Medizinprodukt-/Haftungsthema und ist nicht Bestandteil der aktuellen Version.
+
+### 17.4 Anforderungen an Export-Templates
+
+Die Beispiele zeigen, dass die Ausgabe stark von Gerätetyp, AIS und gewünschter Karteikartendarstellung abhängt. Die App muss daher unterstützen:
+
+- mehrere Ergebniszeilen pro Untersuchung
+- denselben Ziel-Feldcode mehrfach verwenden, z. B. `6228`
+- Ergebniszeilen mit mehreren Platzhaltern aufbauen
+- Ausgabe in medizinisch lesbarer Syntax
+- Zeilentyp-Empfehlung informativ speichern
+- Export je AIS unterschiedlich konfigurieren
+- Formatfunktionen pro Platzhalter anwenden
+- manuelle Bearbeitung der Ergebniszeile erlauben
+- Platzhalter per Baukasten einfügen
+- Gesamtexport-Vorschau anzeigen
+
+Beispiele für MEDISTAR-orientierte, aber nicht MEDISTAR-hartkodierte Ergebniszeilen:
+
+```text
+R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis}
+L.:S={L_Sphere:Diopter} Z={L_Cylinder:Diopter}*{L_Axis:Axis}
+
+F R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis} A={R_Add:Diopter}
+F L.:S={L_Sphere:Diopter} Z={L_Cylinder:Diopter}*{L_Axis:Axis} A={L_Add:Diopter}
+
+R = {R_IOP_1:Iop} [{R_IOP_AVG:Iop}] mmHg {Device.Time}
+L = {L_IOP_1:Iop} [{L_IOP_AVG:Iop}] mmHg {Device.Time}
+
+PR: {R_Pachy_1:Pachy} {R_Pachy_2:Pachy} {R_Pachy_3:Pachy} [{R_Pachy_Avg:Pachy}] mm
+PL: {L_Pachy_1:Pachy} {L_Pachy_2:Pachy} {L_Pachy_3:Pachy} [{L_Pachy_Avg:Pachy}] mm
+
+R: R1={R_R1:Keratometry}*{R_R1_Axis:Axis} R2={R_R2:Keratometry}*{R_R2_Axis:Axis} //
+R: AV={R_AV:Keratometry} //
+R: ra={R_RA:Diopter}*{R_RA_Axis:Axis} //
+```
+
+### 17.5 Anforderungen an Formatfunktionen
+
+Die App muss folgende Formatfunktionen unterstützen oder perspektivisch unterstützen:
+
+- `Raw`
+- `Diopter`
+- `Axis`
+- `Pd`
+- `Iop`
+- `Pachy`
+- `Prism`
+- `Keratometry`
+- `Addition`
+- `Time`
+
+Bereits implementierte Formatfunktionen sollen weitergeführt werden. Neue Funktionen müssen rückwärtskompatibel ergänzt werden.
+
+Besonders wichtig:
+
+- Dioptrienwerte mit Vorzeichen und optionalem Leerzeichen
+- Achsenwerte rechtsbündig oder roh, je Template
+- IOP ohne ungewollte Rundung
+- Pachymetrie ohne ungewollte Umrechnung
+- Keratometrie ohne ungewollte Rundung
+- Zeitwerte im Format `HH:mm`, wenn aus der Gerätedatei verfügbar
+
+### 17.6 Anforderungen an Baukasten und Exportregel-Editor
+
+Der Baukasten muss die fachliche Bedeutung der Werte berücksichtigen.
+
+Pro erkanntem Wert soll angezeigt werden:
+
+- technischer Platzhalter
+- verständlicher Messwertname
+- ausgelesener Wert
+- Ausgabeart AIS/Mensch
+- Verwenden-Haken
+- vorgeschlagene Formatfunktion
+- Gruppe/Untersuchungsart
+- Auge rechts/links, falls erkennbar
+- Einzelmessung oder Mittelwert, falls erkennbar
+
+Beispiele für verständliche Namen:
+
+- Sphäre rechts
+- Zylinder rechts
+- Achse rechts
+- Sphäre links
+- Zylinder links
+- Achse links
+- Addition rechts
+- Augendruck rechts Einzelmessung 1
+- Augendruck rechts Mittelwert
+- Pachymetrie rechts Mittelwert
+- Hornhautradius R1 rechts
+- Hornhautradius R2 rechts
+- Keratometrie Durchschnitt rechts
+- errechneter Zylinder rechts
+
+Die App muss dem Anwender ermöglichen:
+
+- Werte per Haken in den Exportregel-Entwurf einzufügen
+- zwischen technischer AIS-Ausgabe und menschenlesbarer Ausgabe zu wählen
+- Ergebniszeile manuell nachzubearbeiten
+- neue Ergebniszeilen temporär zu erstellen
+- Gesamtexport-Vorschau zu prüfen
+- später Entwurf als neues Exportprofil zu speichern
+
+### 17.7 Anforderungen an weitere Geräteprofile
+
+Aus der fachlichen Auswertung ergeben sich folgende spätere Profilanforderungen:
+
+| Profiltyp | Muss unterstützen | Informative MEDISTAR-Empfehlung |
+|---|---|---|
+| Lensmeter-Profil | Sphäre, Zylinder, Achse, optional Prisma und PD | `V0` |
+| Autorefraktor-Profil | Sphäre, Zylinder, Achse, PD, optional SE | `V1` |
+| Phoropter-Profil | Fernwerte, Sphäre, Zylinder, Achse, Addition | `V2` |
+| Tonometer-Profil | IOP-Einzelwerte, IOP-Mittelwert, Messzeit, Einheit mmHg/Torr | `P` |
+| Pachymeter-Profil | Hornhautdicke-Einzelwerte, Mittelwert, Einheit mm oder µm | `Y`, nicht hart kodieren |
+| Keratometer-Profil | R1/R2, Achsen, Durchschnitt AV, errechneter Zylinder ra | `V7` |
+
+### 17.8 Abgrenzung
+
+Diese Ergänzung implementiert keine neuen Geräteprofile.
+
+Die Informationen dienen zur:
+
+- Verbesserung des Pflichtenhefts
+- Verbesserung des Baukasten-/Template-Editors
+- besseren Benennung von Messwerten
+- besseren Formatvorschlägen
+- Vorbereitung weiterer Profile
+
+Die MEDISTAR-Zeilentypen bleiben informativ und werden nicht als allgemeingültige XDT-Schnittstellenlogik festgelegt.
