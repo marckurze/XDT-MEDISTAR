@@ -912,63 +912,12 @@ public partial class MainWindow : Window
 
     private static string? GetSuggestedFormat(string placeholder)
     {
-        if (!placeholder.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        var normalized = placeholder[7..];
-        if (ContainsAny(normalized, "Sphere", "Sphare", "Cylinder", "SE"))
-        {
-            return "Diopter";
-        }
-
-        if (ContainsAny(normalized, "Axis"))
-        {
-            return "Axis";
-        }
-
-        if (ContainsAny(normalized, "FarPD", "NearPD", "PD"))
-        {
-            return "Pd";
-        }
-
-        if (ContainsAny(normalized, "IOP", "CorrectedIOP", "/NT", "NT/"))
-        {
-            return "Iop";
-        }
-
-        if (ContainsAny(normalized, "Pachy", "PACHY", "CCT"))
-        {
-            return "Pachy";
-        }
-
-        if (ContainsAny(normalized, "Prism"))
-        {
-            return "Prism";
-        }
-
-        if (ContainsAny(normalized, "Keratometry", "K1", "K2", "Power", "Radius"))
-        {
-            return "Keratometry";
-        }
-
-        return null;
+        return PlaceholderDisplayHelper.GetSuggestedFormat(placeholder);
     }
 
     private static string GetFriendlyPlaceholderName(string placeholder, string? displayName)
     {
-        return placeholder switch
-        {
-            "AIS.PatientNumber" => "Patientennummer",
-            "AIS.LastName" => "Nachname",
-            "AIS.FirstName" => "Vorname",
-            "AIS.BirthDate" => "Geburtsdatum",
-            "AIS.ExaminationType" => "Untersuchungsart",
-            "AIS.Street" => "Straße",
-            "AIS.PostalCodeCity" => "PLZ / Ort",
-            _ => GetFriendlyDevicePlaceholderName(placeholder, displayName)
-        };
+        return PlaceholderDisplayHelper.GetDisplayName(placeholder, displayName);
     }
 
     private static string GetFriendlyDevicePlaceholderName(string placeholder, string? displayName)
@@ -1107,9 +1056,7 @@ public partial class MainWindow : Window
 
     private static int GetDevicePlaceholderSortOrder(string sourcePath)
     {
-        return (GetEyeSortOrder(sourcePath) * 10_000)
-            + (GetMeasurementGroupSortOrder(sourcePath) * 100)
-            + GetMeasurementTypeSortOrder(sourcePath);
+        return PlaceholderDisplayHelper.GetDeviceSortOrder(sourcePath);
     }
 
     private static int GetEyeSortOrder(string sourcePath)

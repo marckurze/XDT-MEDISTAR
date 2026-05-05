@@ -197,6 +197,15 @@ public sealed class MappingEngineTests
     }
 
     [Fact]
+    public void Map_FormatsTimePlaceholder()
+    {
+        var result = MapSingleTemplate("Zeit={Device.Time:Time}");
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Zeit=15:01", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
     public void Map_LeavesPlaceholderWithoutFormatUnchanged()
     {
         var result = MapSingleTemplate("S={Device.R/AR/ARMedian/Sphere}");
@@ -324,7 +333,8 @@ public sealed class MappingEngineTests
             new("NT/IOP/R", "IOP R", " 12.7 ", "mmHg", "R", "NT"),
             new("PACHY/R/Median", "Pachy R", "559", "um", "R", "PACHY"),
             new("LM/R/Prism", "Prism R", "0.75", null, "R", "LM"),
-            new("KM/R/K1", "K1 R", "+43.25", "D", "R", "KM")
+            new("KM/R/K1", "K1 R", "+43.25", "D", "R", "KM"),
+            new("Time", "Time", "150100", null, null, "Meta")
         };
     }
 

@@ -145,6 +145,8 @@ public sealed class MappingEngine
                 => MedistarFormatter.FormatPrism(value),
             var currentFormat when currentFormat.Equals("Keratometry", StringComparison.OrdinalIgnoreCase)
                 => MedistarFormatter.FormatKeratometry(value),
+            var currentFormat when currentFormat.Equals("Time", StringComparison.OrdinalIgnoreCase)
+                => MedistarFormatter.FormatTime(value),
             _ => value ?? string.Empty
         };
     }

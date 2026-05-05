@@ -92,6 +92,28 @@ public sealed class MedistarResultFormatterTests
         Assert.Equal("+43.25", _formatter.FormatKeratometry("+43.25"));
     }
 
+    [Theory]
+    [InlineData("15:01", "15:01")]
+    [InlineData("1501", "15:01")]
+    [InlineData("150100", "15:01")]
+    [InlineData(" 15:01 ", "15:01")]
+    public void FormatTime_ShouldFormatRecognizedTimes(string value, string expected)
+    {
+        Assert.Equal(expected, _formatter.FormatTime(value));
+    }
+
+    [Fact]
+    public void FormatTime_ShouldReturnEmptyForNull()
+    {
+        Assert.Equal(string.Empty, _formatter.FormatTime(null));
+    }
+
+    [Fact]
+    public void FormatTime_ShouldReturnTrimmedRawValueForUnknownTime()
+    {
+        Assert.Equal("nachmittags", _formatter.FormatTime(" nachmittags "));
+    }
+
     [Fact]
     public void AdditionalFormats_ShouldReturnEmptyForNull()
     {
@@ -100,5 +122,6 @@ public sealed class MedistarResultFormatterTests
         Assert.Equal(string.Empty, _formatter.FormatPachy(null));
         Assert.Equal(string.Empty, _formatter.FormatPrism(null));
         Assert.Equal(string.Empty, _formatter.FormatKeratometry(null));
+        Assert.Equal(string.Empty, _formatter.FormatTime(null));
     }
 }
