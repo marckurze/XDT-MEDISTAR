@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
+    private readonly ExportProfileDraftService _exportProfileDraftService = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
@@ -92,7 +93,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void InitializeExportRulesView(ProfileCatalog catalog)
+    private void InitializeExportRulesView(ProfileCatalog catalog, string? selectedExportProfileId = null)
     {
         if (catalog.ExportProfiles.Count == 0)
         {
@@ -112,7 +113,10 @@ public partial class MainWindow : Window
             .ToList();
 
         ExportProfileComboBox.ItemsSource = exportProfiles;
-        ExportProfileComboBox.SelectedIndex = 0;
+        var selectedProfile = string.IsNullOrWhiteSpace(selectedExportProfileId)
+            ? null
+            : exportProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedExportProfileId, StringComparison.Ordinal));
+        ExportProfileComboBox.SelectedItem = selectedProfile ?? exportProfiles[0];
         ShowExportRulesForSelectedProfile();
     }
 
@@ -129,10 +133,12 @@ public partial class MainWindow : Window
             _temporaryExportRules.Clear();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
+            NewExportProfileNameTextBox.Text = string.Empty;
             ClearDraftRuleEditor();
             return;
         }
 
+        NewExportProfileNameTextBox.Text = $"{exportProfile.Metadata.Name} - Kopie";
         _temporaryExportRules.Clear();
         RebuildExportRulesGrid(exportProfile);
         ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
@@ -448,6 +454,75 @@ public partial class MainWindow : Window
         LoadDraftFromSelectedRule();
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
+    }
+
+    private void SaveDraftAsNewExportProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            AppendProfileMessage("Neues Exportprofil kann nicht gespeichert werden, weil kein Exportprofil ausgewählt ist.");
+            return;
+        }
+
+        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition selectedRule)
+        {
+            AppendProfileMessage("Neues Exportprofil kann nicht gespeichert werden, weil keine Exportregel ausgewählt ist.");
+            return;
+        }
+
+        if (!TryCreateDraftRule(selectedRule, out var draftRule, out var draftMessage))
+        {
+            AppendProfileMessage(draftMessage);
+            return;
+        }
+
+        var newProfileName = NewExportProfileNameTextBox.Text.Trim();
+        var draftResult = _exportProfileDraftService.CreateUserDefinedCopy(
+            exportProfile,
+            newProfileName,
+            draftRule,
+            selectedRule.Id,
+            _temporaryExportRules,
+            DateTimeOffset.UtcNow,
+            Environment.UserName);
+
+        if (!draftResult.Success || draftResult.Profile is null)
+        {
+            AppendProfileMessage("Neues Exportprofil wurde nicht gespeichert:");
+            foreach (var issue in draftResult.Issues)
+            {
+                AppendProfileMessage($"[Exportprofil-Entwurf] {issue}");
+            }
+
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.SaveNewExportProfile(paths, draftResult.Profile);
+
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(catalog, draftResult.Profile.Metadata.Id);
+
+            AppendProfileMessage($"Neues Exportprofil gespeichert: {draftResult.Profile.Metadata.Name}");
+            AppendProfileMessage("Profil wurde als neues Exportprofil gespeichert. Das Originalprofil wurde nicht verändert.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Neues Exportprofil konnte nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
+    private void RefreshProfileOverview(ProfileCatalog catalog, string? selectedExportProfileId = null)
+    {
+        AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
+        DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
+        ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
+        InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
+        ShowProfileNameColumns(catalog);
+        InitializeExportRulesView(catalog, selectedExportProfileId);
     }
 
     private bool TryCreateDraftRule(

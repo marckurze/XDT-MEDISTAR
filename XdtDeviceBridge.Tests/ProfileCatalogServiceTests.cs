@@ -168,6 +168,39 @@ public sealed class ProfileCatalogServiceTests
         Assert.True(Directory.Exists(Path.Combine(paths.ProfilesFolder, "interfaces")));
     }
 
+    [Fact]
+    public void SaveNewExportProfile_ShouldWriteExportProfileWithoutCatalogSave()
+    {
+        var paths = CreateAppDataPaths();
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserExportMetadata("export-user-copy")
+        };
+
+        _service.SaveNewExportProfile(paths, profile);
+
+        Assert.True(File.Exists(Path.Combine(paths.ProfilesFolder, "exports", "export-user-copy.json")));
+        var catalog = _service.Load(paths);
+        var loadedProfile = Assert.Single(catalog.ExportProfiles);
+        Assert.Equal("export-user-copy", loadedProfile.Metadata.Id);
+        Assert.True(loadedProfile.Metadata.IsUserDefined);
+    }
+
+    [Fact]
+    public void SaveNewExportProfile_ShouldNotOverwriteExistingExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        var profile = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserExportMetadata("export-user-copy")
+        };
+        _service.SaveNewExportProfile(paths, profile);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => _service.SaveNewExportProfile(paths, profile));
+
+        Assert.Contains("will not be overwritten", exception.Message);
+    }
+
     private static AppDataPaths CreateAppDataPaths()
     {
         var baseFolder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
@@ -205,5 +238,23 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("export-medistar-topcon-cl300-default", ids);
         Assert.Contains("export-medistar-topcon-kr800-default", ids);
         Assert.Contains("export-medistar-topcon-trk2p-default", ids);
+    }
+
+    private static ProfileMetadata CreateUserExportMetadata(string id)
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 5, 12, 0, 0, TimeSpan.Zero);
+        return new ProfileMetadata(
+            Id: id,
+            Name: "User Export",
+            ProfileKind: ProfileKind.ExportProfile,
+            Description: null,
+            Vendor: null,
+            Product: null,
+            Version: "1.0",
+            CreatedAt: timestamp,
+            UpdatedAt: timestamp,
+            CreatedBy: "TestUser",
+            IsBuiltIn: false,
+            IsUserDefined: true);
     }
 }

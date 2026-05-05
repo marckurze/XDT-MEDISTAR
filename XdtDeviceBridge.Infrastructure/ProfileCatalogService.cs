@@ -58,6 +58,20 @@ public sealed class ProfileCatalogService
         }
     }
 
+    public void SaveNewExportProfile(AppDataPaths paths, ExportProfileDefinition profile)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        ArgumentNullException.ThrowIfNull(profile);
+
+        var filePath = CreateProfilePath(GetExportsFolder(paths), profile.Metadata.Id);
+        if (File.Exists(filePath))
+        {
+            throw new InvalidOperationException($"Export profile already exists and will not be overwritten: {profile.Metadata.Id}");
+        }
+
+        _repository.SaveExportProfileDefinition(filePath, profile);
+    }
+
     public void EnsureDefaultProfiles(AppDataPaths paths)
     {
         ArgumentNullException.ThrowIfNull(paths);
