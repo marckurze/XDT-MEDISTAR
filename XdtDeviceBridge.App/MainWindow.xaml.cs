@@ -1867,6 +1867,13 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ProfileAssistantPlaceholder_Click(object sender, RoutedEventArgs e)
+    {
+        const string message = "Funktion noch nicht implementiert. Dieser Bereich ist für den späteren Profil-Assistenten vorgesehen.";
+        System.Windows.MessageBox.Show(message, "Profil-Assistent", MessageBoxButton.OK, MessageBoxImage.Information);
+        AppendProfileMessage(message);
+    }
+
     private void ShowTemplatePackageImportResult(
         TemplatePackageImportResult importResult,
         TemplatePackageImportValidationResult validationResult)

@@ -129,15 +129,18 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <GroupBox Header="Profilübersicht" Grid.Row="0" Margin="0,0,0,8">
+                        <Expander Header="Profilübersicht" IsExpanded="True" Grid.Row="0" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -164,14 +167,27 @@
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="BaseFolder:" FontWeight="Bold" Margin="0,0,4,0"/>
                                 <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="7" x:Name="ProfileBaseFolderText" TextTrimming="CharacterEllipsis"/>
                             </Grid>
-                        </GroupBox>
+                        </Expander>
 
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
-                            <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,0" Click="ExportTemplatePackage_Click"/>
-                            <Button Content="Templatepaket importieren" Width="190" Click="ImportTemplatePackage_Click"/>
-                        </StackPanel>
+                        <Grid Grid.Row="1" Margin="0,0,0,8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <WrapPanel Grid.Row="0">
+                                <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,8" Click="ExportTemplatePackage_Click"/>
+                                <Button Content="Templatepaket importieren" Width="190" Margin="0,0,16,8" Click="ImportTemplatePackage_Click"/>
+                                <Button Content="Neues AIS anlegen" Width="160" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
+                                <Button Content="Neues Gerät anlegen" Width="170" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
+                                <Button Content="Neues Exportprofil anlegen" Width="200" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
+                            </WrapPanel>
+                            <TextBlock Grid.Row="1"
+                                       Text="Neue Geräte- und AIS-Profile werden später über einen Profil-Assistenten erstellt."
+                                       Foreground="DimGray"
+                                       TextWrapping="Wrap"/>
+                        </Grid>
 
-                        <GroupBox Header="Profilnamen" Grid.Row="2" Margin="0,0,0,8">
+                        <Expander Header="Profilnamen" IsExpanded="True" Grid.Row="2" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -221,106 +237,15 @@
                                          TextWrapping="Wrap"
                                          VerticalScrollBarVisibility="Auto"/>
                             </Grid>
-                        </GroupBox>
+                        </Expander>
 
-                        <GroupBox Header="Schnittstellenprofil / Automatische Verarbeitung" Grid.Row="3" Margin="0,0,0,8">
+                        <Expander Header="Exportregeln" IsExpanded="True" Grid.Row="3" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Schnittstellenprofil:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <ComboBox Grid.Row="0"
-                                          Grid.Column="1"
-                                          x:Name="InterfaceProfileComboBox"
-                                          DisplayMemberPath="Metadata.Name"
-                                          MinWidth="320"
-                                          Margin="0,0,16,8"
-                                          SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
-                                <Button Grid.Row="0"
-                                        Grid.Column="2"
-                                        Grid.ColumnSpan="3"
-                                        Content="Schnittstellenprofil für ausgewähltes Exportprofil erstellen"
-                                        Width="360"
-                                        Margin="0,0,0,8"
-                                        Click="CreateInterfaceProfileForSelectedExport_Click"/>
-
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="InterfaceAisProfileText" Margin="0,0,16,8" TextWrapping="Wrap"/>
-                                <TextBlock Grid.Row="1" Grid.Column="2" Text="Geräteprofil:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBlock Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2" x:Name="InterfaceDeviceProfileText" Margin="0,0,0,8" TextWrapping="Wrap"/>
-
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportProfileText" Margin="0,0,16,8" TextWrapping="Wrap"/>
-                                <CheckBox Grid.Row="2" Grid.Column="2" x:Name="InterfaceIsActiveCheckBox" Content="Für automatische Verarbeitung aktiv" Margin="0,0,16,8"/>
-                                <CheckBox Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="2" x:Name="InterfaceIsLicenseRequiredCheckBox" Content="Lizenzpflichtig" Margin="0,0,0,8"/>
-
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="AIS-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" x:Name="InterfaceAisImportFolderTextBox" Margin="0,0,8,8" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                <Button Grid.Row="3" Grid.Column="4" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AisImport" Click="SelectInterfaceFolder_Click"/>
-
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Geräte-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" x:Name="InterfaceDeviceImportFolderTextBox" Margin="0,0,8,8" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                <Button Grid.Row="4" Grid.Column="4" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
-
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Exportordner ans AIS:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="InterfaceExportFolderTextBox" Margin="0,0,8,8" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                <Button Grid.Row="5" Grid.Column="4" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Export" Click="SelectInterfaceFolder_Click"/>
-
-                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Archivordner:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <TextBox Grid.Row="6" Grid.Column="1" x:Name="InterfaceArchiveFolderTextBox" Margin="0,0,16,8" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                <Button Grid.Row="6" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,16,8" Tag="Archive" Click="SelectInterfaceFolder_Click"/>
-                                <TextBlock Grid.Row="6" Grid.Column="3" Text="Fehlerordner:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <DockPanel Grid.Row="6" Grid.Column="4" Margin="0,0,0,8">
-                                    <Button DockPanel.Dock="Right" Content="Auswählen" Width="90" Margin="8,0,0,0" Tag="Error" Click="SelectInterfaceFolder_Click"/>
-                                    <TextBox x:Name="InterfaceErrorFolderTextBox" MinWidth="220" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                </DockPanel>
-
-                                <TextBlock Grid.Row="7"
-                                           Grid.Column="0"
-                                           Grid.ColumnSpan="5"
-                                           Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
-                                           Foreground="DarkRed"
-                                           FontWeight="Bold"
-                                           TextWrapping="Wrap"
-                                           Margin="0,0,0,8"/>
-
-                                <WrapPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="5" Margin="0,0,0,8">
-                                    <CheckBox x:Name="InterfaceClearAisImportFolderCheckBox" Content="AIS-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceClearDeviceImportFolderCheckBox" Content="Geräte-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceClearExportFolderCheckBox" Content="Exportordner nach erfolgreicher Übertragung leeren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceArchiveProcessedFilesCheckBox" Content="verarbeitete Dateien archivieren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceMoveFailedFilesToErrorFolderCheckBox" Content="fehlerhafte Dateien in Fehlerordner verschieben" Margin="0,0,16,8"/>
-                                </WrapPanel>
-
-                                <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="5" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="Schnittstellenprofil speichern" Width="220" Click="SaveInterfaceProfile_Click"/>
-                                </StackPanel>
-                            </Grid>
-                        </GroupBox>
-
-                        <GroupBox Header="Exportregeln" Grid.Row="4" Margin="0,0,0,8">
-                            <Grid Margin="8">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="260"/>
+                                    <RowDefinition Height="6"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
@@ -410,7 +335,15 @@
                                         </DataGridTextColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <DockPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                <GridSplitter Grid.Row="3"
+                                              Grid.Column="0"
+                                              Grid.ColumnSpan="2"
+                                              Height="6"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Center"
+                                              ResizeDirection="Rows"
+                                              ShowsPreview="True"/>
+                                <DockPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
                                     <Button DockPanel.Dock="Right"
                                             Content="Entwurf als neues Exportprofil speichern"
                                             Width="260"
@@ -427,9 +360,16 @@
                                              ToolTip="Name für das neue Exportprofil. Das Originalprofil bleibt unverändert."/>
                                 </DockPanel>
                             </Grid>
-                        </GroupBox>
+                        </Expander>
 
-                        <GroupBox Header="Exportregel-Entwurf" Grid.Row="5" Margin="0,0,0,8">
+                        <GridSplitter Grid.Row="4"
+                                      Height="6"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center"
+                                      ResizeDirection="Rows"
+                                      ShowsPreview="True"/>
+
+                        <Expander Header="Exportregel-Entwurf" IsExpanded="True" Grid.Row="5" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -486,34 +426,54 @@
                                     <TextBox x:Name="DraftDescriptionTextBox" ToolTip="Beschreibung oder Hinweis zur Regel."/>
                                 </DockPanel>
                             </Grid>
-                        </GroupBox>
+                        </Expander>
 
-                        <GroupBox Header="Regelvorschau" Grid.Row="6" Margin="0,0,0,8">
+                        <GridSplitter Grid.Row="6"
+                                      Height="6"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center"
+                                      ResizeDirection="Rows"
+                                      ShowsPreview="True"/>
+
+                        <Expander Header="Regelvorschau" IsExpanded="True" Grid.Row="7" Margin="0,0,0,8">
                             <TextBox x:Name="ExportRulePreviewTextBox"
                                      Margin="8"
                                      MinHeight="150"
-                                     MaxHeight="220"
                                      IsReadOnly="True"
                                      AcceptsReturn="True"
                                      TextWrapping="Wrap"
                                      VerticalScrollBarVisibility="Auto"/>
-                        </GroupBox>
+                        </Expander>
 
-                        <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="7" Margin="0,0,0,8">
+                        <GridSplitter Grid.Row="8"
+                                      Height="6"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center"
+                                      ResizeDirection="Rows"
+                                      ShowsPreview="True"/>
+
+                        <Expander Header="Gesamtexport-Vorschau" IsExpanded="True" Grid.Row="9" Margin="0,0,0,8">
                             <TextBox x:Name="FullExportPreviewTextBox"
                                      Margin="8"
                                      MinHeight="220"
-                                     MaxHeight="320"
                                      IsReadOnly="True"
                                      AcceptsReturn="True"
                                      TextWrapping="NoWrap"
                                      FontFamily="Consolas"
                                      HorizontalScrollBarVisibility="Auto"
                                      VerticalScrollBarVisibility="Auto"/>
-                        </GroupBox>
+                        </Expander>
 
-                        <GroupBox Header="Verfügbare Platzhalter"
-                                  Grid.Row="8"
+                        <GridSplitter Grid.Row="10"
+                                      Height="6"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center"
+                                      ResizeDirection="Rows"
+                                      ShowsPreview="True"/>
+
+                        <Expander Header="Verfügbare Platzhalter"
+                                  IsExpanded="True"
+                                  Grid.Row="11"
                                   Margin="0,0,0,8"
                                   ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
                             <Grid Margin="8" MaxHeight="460">
@@ -521,6 +481,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="150"/>
+                                    <RowDefinition Height="6"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="190"/>
                                 </Grid.RowDefinitions>
@@ -572,8 +533,15 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
 
-                                <TextBlock Grid.Row="3" x:Name="DevicePlaceholdersStatusText" Text="Device-Platzhalter" FontWeight="Bold" Margin="0,8,0,4"/>
-                                <DataGrid Grid.Row="4"
+                                <GridSplitter Grid.Row="3"
+                                              Height="6"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Center"
+                                              ResizeDirection="Rows"
+                                              ShowsPreview="True"/>
+
+                                <TextBlock Grid.Row="4" x:Name="DevicePlaceholdersStatusText" Text="Device-Platzhalter" FontWeight="Bold" Margin="0,8,0,4"/>
+                                <DataGrid Grid.Row="5"
                                           x:Name="DevicePlaceholdersGrid"
                                           AutoGenerateColumns="False"
                                           CanUserAddRows="False"
@@ -616,9 +584,9 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
-                        </GroupBox>
+                        </Expander>
 
-                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="9">
+                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="12">
                             <TextBox x:Name="ProfileMessagesTextBox"
                                      Margin="8"
                                      MinHeight="160"
@@ -626,6 +594,140 @@
                                      AcceptsReturn="True"
                                      TextWrapping="Wrap"
                                      VerticalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Schnittstellenprofile">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <Grid Margin="8" MinWidth="1080">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="Hier wird später gesteuert, welche Schnittstelle automatisch über Ordner verarbeitet wird. In diesem Schritt werden nur Einstellungen gespeichert. Es findet noch keine automatische Ordnerüberwachung statt."
+                                   Foreground="DimGray"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
+
+                        <GroupBox Header="Schnittstellenprofil / Automatische Verarbeitung" Grid.Row="1">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Schnittstellenprofil:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                <ComboBox Grid.Row="0"
+                                          Grid.Column="1"
+                                          x:Name="InterfaceProfileComboBox"
+                                          DisplayMemberPath="Metadata.Name"
+                                          MinWidth="520"
+                                          Margin="0,0,16,8"
+                                          SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
+                                <WrapPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,8">
+                                    <Button Content="Neues Schnittstellenprofil anlegen"
+                                            Width="230"
+                                            Margin="0,0,8,0"
+                                            Click="ProfileAssistantPlaceholder_Click"/>
+                                    <Button Content="Schnittstellenprofil für ausgewähltes Exportprofil erstellen"
+                                            Width="380"
+                                            Click="CreateInterfaceProfileForSelectedExport_Click"/>
+                                </WrapPanel>
+
+                                <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="1" x:Name="InterfaceAisProfileText" Margin="0,0,16,0" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="2" Text="Geräteprofil:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="3" x:Name="InterfaceDeviceProfileText" Margin="0,0,16,0" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="4" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="5" x:Name="InterfaceExportProfileText" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <WrapPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                    <CheckBox x:Name="InterfaceIsActiveCheckBox" Content="Für automatische Verarbeitung aktiv" Margin="0,0,24,8"/>
+                                    <CheckBox x:Name="InterfaceIsLicenseRequiredCheckBox" Content="Lizenzpflichtig" Margin="0,0,24,8"/>
+                                </WrapPanel>
+
+                                <GroupBox Header="Ordner" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="100"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="InterfaceAisImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="0" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AisImport" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Geräte-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="InterfaceDeviceImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="1" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportordner ans AIS:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="2" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Export" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Archivordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="3" Grid.Column="1" x:Name="InterfaceArchiveFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="3" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Archive" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Fehlerordner:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="InterfaceErrorFolderTextBox" Margin="0,0,8,0" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="4" Grid.Column="2" Content="Auswählen" Width="90" Tag="Error" Click="SelectInterfaceFolder_Click"/>
+                                    </Grid>
+                                </GroupBox>
+
+                                <TextBlock Grid.Row="4"
+                                           Grid.Column="0"
+                                           Grid.ColumnSpan="3"
+                                           Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
+                                           Foreground="DarkRed"
+                                           FontWeight="Bold"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+
+                                <WrapPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                    <CheckBox x:Name="InterfaceClearAisImportFolderCheckBox" Content="AIS-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
+                                    <CheckBox x:Name="InterfaceClearDeviceImportFolderCheckBox" Content="Geräte-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
+                                    <CheckBox x:Name="InterfaceClearExportFolderCheckBox" Content="Exportordner nach erfolgreicher Übertragung leeren" Margin="0,0,16,8"/>
+                                    <CheckBox x:Name="InterfaceArchiveProcessedFilesCheckBox" Content="verarbeitete Dateien archivieren" Margin="0,0,16,8"/>
+                                    <CheckBox x:Name="InterfaceMoveFailedFilesToErrorFolderCheckBox" Content="fehlerhafte Dateien in Fehlerordner verschieben" Margin="0,0,16,8"/>
+                                </WrapPanel>
+
+                                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="Schnittstellenprofil speichern" Width="220" Click="SaveInterfaceProfile_Click"/>
+                                </StackPanel>
+                            </Grid>
                         </GroupBox>
                     </Grid>
                 </ScrollViewer>
