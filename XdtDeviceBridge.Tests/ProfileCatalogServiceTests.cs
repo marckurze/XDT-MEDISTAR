@@ -201,6 +201,41 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("will not be overwritten", exception.Message);
     }
 
+    [Fact]
+    public void SaveInterfaceProfileDefinition_ShouldWriteUserDefinedProfile()
+    {
+        var paths = CreateAppDataPaths();
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserInterfaceMetadata("interface-user")
+        };
+
+        _service.SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
+
+        Assert.True(File.Exists(Path.Combine(paths.ProfilesFolder, "interfaces", "interface-user.json")));
+        var catalog = _service.Load(paths);
+        var loadedProfile = Assert.Single(catalog.InterfaceProfiles);
+        Assert.Equal("interface-user", loadedProfile.Metadata.Id);
+        Assert.True(loadedProfile.Metadata.IsUserDefined);
+    }
+
+    [Fact]
+    public void SaveInterfaceProfileDefinition_ShouldAllowOverwriteWhenRequested()
+    {
+        var paths = CreateAppDataPaths();
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserInterfaceMetadata("interface-user")
+        };
+        _service.SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
+
+        var updatedProfile = profile with { IsActive = true };
+        _service.SaveInterfaceProfileDefinition(paths, updatedProfile, overwriteExisting: true);
+
+        var loadedProfile = Assert.Single(_service.Load(paths).InterfaceProfiles);
+        Assert.True(loadedProfile.IsActive);
+    }
+
     private static AppDataPaths CreateAppDataPaths()
     {
         var baseFolder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
@@ -247,6 +282,24 @@ public sealed class ProfileCatalogServiceTests
             Id: id,
             Name: "User Export",
             ProfileKind: ProfileKind.ExportProfile,
+            Description: null,
+            Vendor: null,
+            Product: null,
+            Version: "1.0",
+            CreatedAt: timestamp,
+            UpdatedAt: timestamp,
+            CreatedBy: "TestUser",
+            IsBuiltIn: false,
+            IsUserDefined: true);
+    }
+
+    private static ProfileMetadata CreateUserInterfaceMetadata(string id)
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 5, 12, 0, 0, TimeSpan.Zero);
+        return new ProfileMetadata(
+            Id: id,
+            Name: "User Interface",
+            ProfileKind: ProfileKind.InterfaceProfile,
             Description: null,
             Vendor: null,
             Product: null,

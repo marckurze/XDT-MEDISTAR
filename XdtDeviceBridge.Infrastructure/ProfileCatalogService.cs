@@ -72,6 +72,20 @@ public sealed class ProfileCatalogService
         _repository.SaveExportProfileDefinition(filePath, profile);
     }
 
+    public void SaveInterfaceProfileDefinition(AppDataPaths paths, InterfaceProfileDefinition profile, bool overwriteExisting)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        ArgumentNullException.ThrowIfNull(profile);
+
+        var filePath = CreateProfilePath(GetInterfacesFolder(paths), profile.Metadata.Id);
+        if (!overwriteExisting && File.Exists(filePath))
+        {
+            throw new InvalidOperationException($"Interface profile already exists and will not be overwritten: {profile.Metadata.Id}");
+        }
+
+        _repository.SaveInterfaceProfileDefinition(filePath, profile);
+    }
+
     public void EnsureDefaultProfiles(AppDataPaths paths)
     {
         ArgumentNullException.ThrowIfNull(paths);

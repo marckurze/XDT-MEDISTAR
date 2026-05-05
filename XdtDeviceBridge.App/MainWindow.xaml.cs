@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
+    private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
@@ -69,6 +70,7 @@ public partial class MainWindow : Window
             ProfileBaseFolderText.Text = paths.BaseFolder;
             ShowProfileNameColumns(catalog);
             InitializeExportRulesView(catalog);
+            InitializeInterfaceProfileConfiguration(catalog);
             UpdatePlaceholderTables();
             ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
         }
@@ -82,6 +84,7 @@ public partial class MainWindow : Window
             ProfileBaseFolderText.Text = string.Empty;
             ClearProfileNameColumns();
             ExportProfileComboBox.ItemsSource = null;
+            InterfaceProfileComboBox.ItemsSource = null;
             _visibleExportRules.Clear();
             _temporaryExportRules.Clear();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
@@ -89,6 +92,7 @@ public partial class MainWindow : Window
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             ClearDraftRuleEditor();
             ClearPlaceholderTables();
+            ClearInterfaceProfileEditor();
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
     }
@@ -456,6 +460,238 @@ public partial class MainWindow : Window
         ShowFullExportPreviewForSelectedProfile();
     }
 
+    private void InitializeInterfaceProfileConfiguration(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
+    {
+        var interfaceProfiles = catalog.InterfaceProfiles
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        InterfaceProfileComboBox.ItemsSource = interfaceProfiles;
+        if (interfaceProfiles.Count == 0)
+        {
+            InterfaceProfileComboBox.SelectedIndex = -1;
+            ClearInterfaceProfileEditor();
+            return;
+        }
+
+        var selectedProfile = string.IsNullOrWhiteSpace(selectedInterfaceProfileId)
+            ? null
+            : interfaceProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedInterfaceProfileId, StringComparison.Ordinal));
+
+        InterfaceProfileComboBox.SelectedItem = selectedProfile ?? interfaceProfiles[0];
+        ShowInterfaceProfileForSelectedProfile();
+    }
+
+    private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        ShowInterfaceProfileForSelectedProfile();
+    }
+
+    private void ShowInterfaceProfileForSelectedProfile()
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
+        {
+            ClearInterfaceProfileEditor();
+            return;
+        }
+
+        InterfaceAisProfileText.Text = GetAisProfileDisplayName(profile.AisProfileId);
+        InterfaceDeviceProfileText.Text = GetDeviceProfileDisplayName(profile.DeviceProfileId);
+        InterfaceExportProfileText.Text = GetExportProfileDisplayName(profile.ExportProfileId);
+        InterfaceIsActiveCheckBox.IsChecked = profile.IsActive;
+        InterfaceIsLicenseRequiredCheckBox.IsChecked = profile.IsLicenseRequired;
+
+        InterfaceAisImportFolderTextBox.Text = profile.FolderOptions.AisImportFolder;
+        InterfaceDeviceImportFolderTextBox.Text = profile.FolderOptions.DeviceImportFolder;
+        InterfaceExportFolderTextBox.Text = profile.FolderOptions.ExportFolder;
+        InterfaceArchiveFolderTextBox.Text = profile.FolderOptions.ArchiveFolder;
+        InterfaceErrorFolderTextBox.Text = profile.FolderOptions.ErrorFolder;
+
+        InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
+        InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
+        InterfaceClearExportFolderCheckBox.IsChecked = profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer;
+        InterfaceArchiveProcessedFilesCheckBox.IsChecked = profile.FolderOptions.ArchiveProcessedFiles;
+        InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = profile.FolderOptions.MoveFailedFilesToErrorFolder;
+    }
+
+    private void ClearInterfaceProfileEditor()
+    {
+        InterfaceAisProfileText.Text = string.Empty;
+        InterfaceDeviceProfileText.Text = string.Empty;
+        InterfaceExportProfileText.Text = string.Empty;
+        InterfaceIsActiveCheckBox.IsChecked = false;
+        InterfaceIsLicenseRequiredCheckBox.IsChecked = false;
+        InterfaceAisImportFolderTextBox.Text = string.Empty;
+        InterfaceDeviceImportFolderTextBox.Text = string.Empty;
+        InterfaceExportFolderTextBox.Text = string.Empty;
+        InterfaceArchiveFolderTextBox.Text = string.Empty;
+        InterfaceErrorFolderTextBox.Text = string.Empty;
+        InterfaceClearAisImportFolderCheckBox.IsChecked = false;
+        InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
+        InterfaceClearExportFolderCheckBox.IsChecked = false;
+        InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
+        InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = false;
+    }
+
+    private void CreateInterfaceProfileForSelectedExport_Click(object sender, RoutedEventArgs e)
+    {
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            AppendProfileMessage("Schnittstellenprofil kann nicht erstellt werden, weil kein Exportprofil ausgewählt ist.");
+            return;
+        }
+
+        try
+        {
+            var profile = _interfaceProfileConfigurationService.CreateForExportProfile(
+                exportProfile,
+                DateTimeOffset.UtcNow,
+                Environment.UserName);
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
+
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(
+                catalog,
+                selectedExportProfileId: exportProfile.Metadata.Id,
+                selectedInterfaceProfileId: profile.Metadata.Id);
+            AppendProfileMessage($"Schnittstellenprofil erstellt: {profile.Metadata.Name}");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Schnittstellenprofil konnte nicht erstellt werden: {ex.Message}");
+        }
+    }
+
+    private void SaveInterfaceProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedProfile)
+        {
+            AppendProfileMessage("Schnittstellenprofil kann nicht gespeichert werden, weil kein Schnittstellenprofil ausgewählt ist.");
+            return;
+        }
+
+        var selectedExportProfileId = (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id;
+        var folderOptions = CreateInterfaceFolderOptionsFromEditor();
+        var result = _interfaceProfileConfigurationService.CreateConfiguredProfile(
+            selectedProfile,
+            folderOptions,
+            InterfaceIsActiveCheckBox.IsChecked == true,
+            InterfaceIsLicenseRequiredCheckBox.IsChecked == true,
+            DateTimeOffset.UtcNow,
+            Environment.UserName);
+
+        if (!result.Success || result.Profile is null)
+        {
+            AppendProfileMessage("Schnittstellenprofil wurde nicht gespeichert:");
+            AppendInterfaceConfigurationIssues(result.Issues);
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var overwriteExisting = selectedProfile.Metadata.IsUserDefined && !selectedProfile.Metadata.IsBuiltIn;
+            _profileCatalogService.SaveInterfaceProfileDefinition(paths, result.Profile, overwriteExisting);
+
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(
+                catalog,
+                selectedExportProfileId: selectedExportProfileId,
+                selectedInterfaceProfileId: result.Profile.Metadata.Id);
+
+            AppendInterfaceConfigurationIssues(result.Issues);
+            AppendProfileMessage("Schnittstellenprofil gespeichert.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Schnittstellenprofil konnte nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
+    private InterfaceFolderOptions CreateInterfaceFolderOptionsFromEditor()
+    {
+        return new InterfaceFolderOptions(
+            AisImportFolder: InterfaceAisImportFolderTextBox.Text.Trim(),
+            DeviceImportFolder: InterfaceDeviceImportFolderTextBox.Text.Trim(),
+            ExportFolder: InterfaceExportFolderTextBox.Text.Trim(),
+            ArchiveFolder: InterfaceArchiveFolderTextBox.Text.Trim(),
+            ErrorFolder: InterfaceErrorFolderTextBox.Text.Trim(),
+            ClearAisImportFolderBeforeProcessing: InterfaceClearAisImportFolderCheckBox.IsChecked == true,
+            ClearDeviceImportFolderBeforeProcessing: InterfaceClearDeviceImportFolderCheckBox.IsChecked == true,
+            ClearExportFolderAfterSuccessfulTransfer: InterfaceClearExportFolderCheckBox.IsChecked == true,
+            ArchiveProcessedFiles: InterfaceArchiveProcessedFilesCheckBox.IsChecked == true,
+            MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true);
+    }
+
+    private void SelectInterfaceFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button button || button.Tag is not string tag)
+        {
+            return;
+        }
+
+        var targetTextBox = tag switch
+        {
+            "AisImport" => InterfaceAisImportFolderTextBox,
+            "DeviceImport" => InterfaceDeviceImportFolderTextBox,
+            "Export" => InterfaceExportFolderTextBox,
+            "Archive" => InterfaceArchiveFolderTextBox,
+            "Error" => InterfaceErrorFolderTextBox,
+            _ => null
+        };
+
+        if (targetTextBox is null)
+        {
+            return;
+        }
+
+        using var dialog = new WinForms.FolderBrowserDialog
+        {
+            Description = "Ordner auswählen. UNC-Pfade können direkt im Textfeld eingetragen werden."
+        };
+
+        var currentPath = targetTextBox.Text.Trim();
+        if (Directory.Exists(currentPath))
+        {
+            dialog.SelectedPath = currentPath;
+        }
+
+        if (dialog.ShowDialog() == WinForms.DialogResult.OK)
+        {
+            targetTextBox.Text = dialog.SelectedPath;
+        }
+    }
+
+    private void AppendInterfaceConfigurationIssues(IReadOnlyList<InterfaceProfileConfigurationIssue> issues)
+    {
+        foreach (var issue in issues)
+        {
+            var pathPart = string.IsNullOrWhiteSpace(issue.Path) ? string.Empty : $" ({issue.Path})";
+            AppendProfileMessage($"[Schnittstellenprofil] {issue.Severity}: {issue.Message}{pathPart}");
+        }
+    }
+
+    private string GetAisProfileDisplayName(string profileId)
+    {
+        var profile = _profileCatalog?.AisProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, profileId, StringComparison.Ordinal));
+        return profile is null ? profileId : $"{profile.Name} ({profileId})";
+    }
+
+    private string GetDeviceProfileDisplayName(string profileId)
+    {
+        var profile = _profileCatalog?.DeviceProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, profileId, StringComparison.Ordinal));
+        return profile is null ? profileId : $"{profile.Metadata.Name} ({profileId})";
+    }
+
+    private string GetExportProfileDisplayName(string profileId)
+    {
+        var profile = _profileCatalog?.ExportProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, profileId, StringComparison.Ordinal));
+        return profile is null ? profileId : $"{profile.Metadata.Name} ({profileId})";
+    }
+
     private void SaveDraftAsNewExportProfile_Click(object sender, RoutedEventArgs e)
     {
         if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
@@ -504,7 +740,7 @@ public partial class MainWindow : Window
 
             var catalog = _profileCatalogService.Load(paths);
             _profileCatalog = catalog;
-            RefreshProfileOverview(catalog, draftResult.Profile.Metadata.Id);
+            RefreshProfileOverview(catalog, selectedExportProfileId: draftResult.Profile.Metadata.Id);
 
             AppendProfileMessage($"Neues Exportprofil gespeichert: {draftResult.Profile.Metadata.Name}");
             AppendProfileMessage("Profil wurde als neues Exportprofil gespeichert. Das Originalprofil wurde nicht verändert.");
@@ -515,7 +751,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RefreshProfileOverview(ProfileCatalog catalog, string? selectedExportProfileId = null)
+    private void RefreshProfileOverview(
+        ProfileCatalog catalog,
+        string? selectedExportProfileId = null,
+        string? selectedInterfaceProfileId = null)
     {
         AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
         DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
@@ -523,6 +762,7 @@ public partial class MainWindow : Window
         InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
         ShowProfileNameColumns(catalog);
         InitializeExportRulesView(catalog, selectedExportProfileId);
+        InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
     }
 
     private bool TryCreateDraftRule(
