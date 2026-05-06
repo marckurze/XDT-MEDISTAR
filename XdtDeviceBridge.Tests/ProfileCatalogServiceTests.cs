@@ -236,6 +236,72 @@ public sealed class ProfileCatalogServiceTests
         Assert.True(loadedProfile.IsActive);
     }
 
+    [Fact]
+    public void DeleteInterfaceProfile_ShouldDeleteUserDefinedInterfaceProfile()
+    {
+        var paths = CreateAppDataPaths();
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserInterfaceMetadata("interface-user")
+        };
+        _service.SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
+
+        var deleted = _service.DeleteInterfaceProfile(paths, "interface-user");
+
+        Assert.True(deleted);
+        Assert.Empty(_service.Load(paths).InterfaceProfiles);
+        Assert.False(File.Exists(Path.Combine(paths.ProfilesFolder, "interfaces", "interface-user.json")));
+    }
+
+    [Fact]
+    public void DeleteInterfaceProfile_ShouldNotDeleteAisDeviceOrExportProfiles()
+    {
+        var paths = CreateAppDataPaths();
+        var userInterfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserInterfaceMetadata("interface-user")
+        };
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            DeviceProfiles: new[] { DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() },
+            ExportProfiles: new[] { DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() },
+            InterfaceProfiles: new[] { userInterfaceProfile }));
+
+        _service.DeleteInterfaceProfile(paths, "interface-user");
+
+        Assert.True(File.Exists(Path.Combine(paths.ProfilesFolder, "ais", "ais-medistar-default.json")));
+        Assert.True(File.Exists(Path.Combine(paths.ProfilesFolder, "devices", "device-nidek-ark1s-default.json")));
+        Assert.True(File.Exists(Path.Combine(paths.ProfilesFolder, "exports", "export-medistar-nidek-ark1s-default.json")));
+        var catalog = _service.Load(paths);
+        Assert.Single(catalog.AisProfiles);
+        Assert.Single(catalog.DeviceProfiles);
+        Assert.Single(catalog.ExportProfiles);
+        Assert.Empty(catalog.InterfaceProfiles);
+    }
+
+    [Fact]
+    public void DeleteInterfaceProfile_ShouldReturnFalseForUnknownId()
+    {
+        var paths = CreateAppDataPaths();
+
+        var deleted = _service.DeleteInterfaceProfile(paths, "interface-missing");
+
+        Assert.False(deleted);
+    }
+
+    [Fact]
+    public void DeleteInterfaceProfile_ShouldRejectBuiltInProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, CreateDefaultCatalog());
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            _service.DeleteInterfaceProfile(paths, "interface-medistar-nidek-ark1s-default"));
+
+        Assert.Contains("Built-in interface profiles cannot be deleted.", exception.Message);
+        Assert.True(File.Exists(Path.Combine(paths.ProfilesFolder, "interfaces", "interface-medistar-nidek-ark1s-default.json")));
+    }
+
     private static AppDataPaths CreateAppDataPaths()
     {
         var baseFolder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));

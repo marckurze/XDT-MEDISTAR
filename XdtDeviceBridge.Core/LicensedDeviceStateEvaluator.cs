@@ -36,13 +36,13 @@ public sealed class LicensedDeviceStateEvaluator
             DateTime? gracePeriodEndsAt = null;
             string statusMessage;
 
-            if (!profile.IsActive)
+            if (!profile.IsLicenseRequired)
             {
-                statusMessage = "Nicht aktiv - zaehlt nicht als lizenzpflichtige Anbindung.";
+                statusMessage = "Nicht lizenzpflichtig.";
             }
-            else if (!profile.IsLicenseRequired)
+            else if (!profile.IsActive)
             {
-                statusMessage = "Nicht lizenzpflichtig - zaehlt nicht als lizenzpflichtige Anbindung.";
+                statusMessage = "Lizenzpflichtig, aber nicht aktiv - zaehlt aktuell nicht.";
             }
             else if (license is null)
             {

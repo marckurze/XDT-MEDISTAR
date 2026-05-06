@@ -19,7 +19,7 @@ public sealed class LicensedDeviceStateEvaluatorTests
         Assert.DoesNotContain(states, state => IsCountedLicensedInterface(state));
         var state = Assert.Single(states);
         Assert.False(state.IsCoveredByLicense);
-        Assert.Contains("Nicht aktiv", state.StatusMessage);
+        Assert.Equal("Lizenzpflichtig, aber nicht aktiv - zaehlt aktuell nicht.", state.StatusMessage);
     }
 
     [Fact]
@@ -113,8 +113,53 @@ public sealed class LicensedDeviceStateEvaluatorTests
             NowUtc);
 
         Assert.Contains(states, state => state.StatusMessage.Contains("Durch Lizenz gedeckt.", StringComparison.Ordinal));
-        Assert.Contains(states, state => state.StatusMessage.Contains("Nicht aktiv", StringComparison.Ordinal));
+        Assert.Contains(states, state => state.StatusMessage.Contains("Lizenzpflichtig, aber nicht aktiv", StringComparison.Ordinal));
         Assert.Contains(states, state => state.StatusMessage.Contains("Nicht lizenzpflichtig", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Evaluate_ShouldKeepInactiveLicenseRequiredProfilesVisibleButNotCounted()
+    {
+        var states = _evaluator.Evaluate(
+            new[] { CreateInterfaceProfile("interface-1", "Inactive Licensed Interface", isActive: false, isLicenseRequired: true) },
+            CreateLicenseInfo(licensedDeviceCount: 1),
+            NowUtc);
+
+        var state = Assert.Single(states);
+        Assert.True(state.IsLicenseRequired);
+        Assert.False(state.IsActive);
+        Assert.False(IsCountedLicensedInterface(state));
+        Assert.Equal("Lizenzpflichtig, aber nicht aktiv - zaehlt aktuell nicht.", state.StatusMessage);
+    }
+
+    [Fact]
+    public void Evaluate_ShouldShowProfileThatIsNotLicenseRequiredAsNotLicenseRequired()
+    {
+        var states = _evaluator.Evaluate(
+            new[] { CreateInterfaceProfile("interface-1", "Free Interface", isActive: false, isLicenseRequired: false) },
+            CreateLicenseInfo(licensedDeviceCount: 1),
+            NowUtc);
+
+        var state = Assert.Single(states);
+        Assert.False(state.IsLicenseRequired);
+        Assert.Equal("Nicht lizenzpflichtig.", state.StatusMessage);
+    }
+
+    [Fact]
+    public void Evaluate_ShouldSupportTotalAndActiveLicenseRequiredCounts()
+    {
+        var states = _evaluator.Evaluate(
+            new[]
+            {
+                CreateInterfaceProfile("interface-active", "Active Interface", isActive: true, isLicenseRequired: true),
+                CreateInterfaceProfile("interface-inactive", "Inactive Interface", isActive: false, isLicenseRequired: true),
+                CreateInterfaceProfile("interface-free", "Free Interface", isActive: true, isLicenseRequired: false)
+            },
+            CreateLicenseInfo(licensedDeviceCount: 1),
+            NowUtc);
+
+        Assert.Equal(2, states.Count(state => state.IsLicenseRequired));
+        Assert.Single(states, IsCountedLicensedInterface);
     }
 
     [Fact]

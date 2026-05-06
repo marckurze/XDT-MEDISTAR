@@ -616,6 +616,62 @@ public partial class MainWindow : Window
         }
     }
 
+    private void RemoveInterfaceProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedProfile)
+        {
+            AppendProfileMessage("Schnittstellenprofil kann nicht entfernt werden, weil kein Schnittstellenprofil ausgewählt ist.");
+            return;
+        }
+
+        if (selectedProfile.Metadata.IsBuiltIn)
+        {
+            AppendProfileMessage("Standard-Schnittstellenprofile können nicht gelöscht werden.");
+            return;
+        }
+
+        if (!selectedProfile.Metadata.IsUserDefined)
+        {
+            AppendProfileMessage("Nur benutzerdefinierte Schnittstellenprofile können entfernt werden.");
+            return;
+        }
+
+        var confirmation = System.Windows.MessageBox.Show(
+            "Möchten Sie dieses Schnittstellenprofil wirklich entfernen? Es werden keine Import-/Exportordner geleert.",
+            "Schnittstellenprofil entfernen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            var selectedExportProfileId = (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id;
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var deleted = _profileCatalogService.DeleteInterfaceProfile(paths, selectedProfile.Metadata.Id);
+            if (!deleted)
+            {
+                AppendProfileMessage($"Schnittstellenprofil wurde nicht gefunden: {selectedProfile.Metadata.Name}");
+                return;
+            }
+
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(catalog, selectedExportProfileId: selectedExportProfileId);
+            AppendProfileMessage($"Schnittstellenprofil entfernt: {selectedProfile.Metadata.Name}");
+        }
+        catch (FileNotFoundException ex)
+        {
+            AppendProfileMessage($"Schnittstellenprofil-Datei wurde nicht gefunden: {ex.FileName ?? ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Schnittstellenprofil konnte nicht entfernt werden: {ex.Message}");
+        }
+    }
+
     private InterfaceFolderOptions CreateInterfaceFolderOptionsFromEditor()
     {
         return new InterfaceFolderOptions(
@@ -1734,24 +1790,54 @@ public partial class MainWindow : Window
             _licensedDeviceStateRows.Add(LicensedDeviceStateRow.FromState(state));
         }
 
-        var activeLicenseRequiredStates = states
-            .Where(state => state.IsActive && state.IsLicenseRequired)
+        var licenseRequiredStates = states
+            .Where(state => state.IsLicenseRequired)
+            .ToList();
+        var activeLicenseRequiredStates = licenseRequiredStates
+            .Where(state => state.IsActive)
             .ToList();
         var coveredCount = activeLicenseRequiredStates.Count(state => state.IsCoveredByLicense);
         var uncoveredCount = activeLicenseRequiredStates.Count - coveredCount;
+        var gracePeriodCount = activeLicenseRequiredStates.Count(state => state.IsInGracePeriod);
 
+        LicensedDeviceTotalCountText.Text = licenseRequiredStates.Count.ToString();
         LicensedDeviceActiveCountText.Text = activeLicenseRequiredStates.Count.ToString();
         LicensedDeviceLicensedCountText.Text = (license?.LicensedDeviceCount ?? 0).ToString();
         LicensedDeviceCoveredCountText.Text = coveredCount.ToString();
         LicensedDeviceUncoveredCountText.Text = uncoveredCount.ToString();
+        LicensedDeviceGraceCountText.Text = gracePeriodCount.ToString();
 
-        LicensedDeviceStatusText.Text = activeLicenseRequiredStates.Count == 0
-            ? "Keine aktiven lizenzpflichtigen Anbindungen."
-            : license is null
-                ? "Keine Lizenzdatei vorhanden. Aktive lizenzpflichtige Anbindungen werden als nicht gedeckt angezeigt; die Verarbeitung bleibt weiterhin nutzbar."
-                : uncoveredCount == 0
-                    ? "Alle aktiven lizenzpflichtigen Anbindungen sind durch die aktuelle Lizenz gedeckt."
-                    : "Mindestens eine aktive lizenzpflichtige Anbindung ist nicht durch die aktuelle Lizenz gedeckt. Die Anzeige sperrt keine Verarbeitung.";
+        LicensedDeviceStatusText.Text = CreateLicensedDeviceStatusText(
+            license is not null,
+            licenseRequiredStates.Count,
+            activeLicenseRequiredStates.Count,
+            uncoveredCount);
+    }
+
+    private static string CreateLicensedDeviceStatusText(
+        bool hasLicense,
+        int licenseRequiredCount,
+        int activeLicenseRequiredCount,
+        int uncoveredCount)
+    {
+        if (activeLicenseRequiredCount == 0 && licenseRequiredCount > 0)
+        {
+            return "Es gibt lizenzpflichtige Anbindungen, aber keine davon ist aktiv.";
+        }
+
+        if (activeLicenseRequiredCount == 0)
+        {
+            return "Keine aktiven lizenzpflichtigen Anbindungen.";
+        }
+
+        if (!hasLicense)
+        {
+            return "Keine Lizenzdatei vorhanden. Aktive lizenzpflichtige Anbindungen werden als nicht gedeckt angezeigt; die Verarbeitung bleibt weiterhin nutzbar.";
+        }
+
+        return uncoveredCount == 0
+            ? "Alle aktiven lizenzpflichtigen Anbindungen sind durch die aktuelle Lizenz gedeckt."
+            : "Mindestens eine aktive lizenzpflichtige Anbindung ist nicht durch die aktuelle Lizenz gedeckt. Die Anzeige sperrt keine Verarbeitung.";
     }
 
     private LicensedDeviceGracePeriodStore LoadGracePeriodStoreOrEmpty()
@@ -1771,10 +1857,12 @@ public partial class MainWindow : Window
     private void ClearLicensedDeviceStates()
     {
         _licensedDeviceStateRows.Clear();
+        LicensedDeviceTotalCountText.Text = "0";
         LicensedDeviceActiveCountText.Text = "0";
         LicensedDeviceLicensedCountText.Text = "0";
         LicensedDeviceCoveredCountText.Text = "0";
         LicensedDeviceUncoveredCountText.Text = "0";
+        LicensedDeviceGraceCountText.Text = "0";
         LicensedDeviceStatusText.Text = "Lizenzierte Geräte / Anbindungen konnten nicht geladen werden.";
     }
 

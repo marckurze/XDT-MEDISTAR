@@ -86,6 +86,30 @@ public sealed class ProfileCatalogService
         _repository.SaveInterfaceProfileDefinition(filePath, profile);
     }
 
+    public bool DeleteInterfaceProfile(AppDataPaths paths, string interfaceProfileId)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        EnsureProfileId(interfaceProfileId);
+
+        var interfacesFolder = GetInterfacesFolder(paths);
+        var filePath = CreateProfilePath(interfacesFolder, interfaceProfileId);
+        EnsurePathStaysInFolder(interfacesFolder, filePath);
+
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+
+        var profile = _repository.LoadInterfaceProfileDefinition(filePath);
+        if (profile.Metadata.IsBuiltIn)
+        {
+            throw new InvalidOperationException("Built-in interface profiles cannot be deleted.");
+        }
+
+        File.Delete(filePath);
+        return true;
+    }
+
     public void EnsureDefaultProfiles(AppDataPaths paths)
     {
         ArgumentNullException.ThrowIfNull(paths);
@@ -209,6 +233,35 @@ public sealed class ProfileCatalogService
     private static string CreateProfilePath(string folder, string id)
     {
         return Path.Combine(folder, $"{id}.json");
+    }
+
+    private static void EnsureProfileId(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("Interface profile id must not be empty.", nameof(id));
+        }
+
+        var fileName = $"{id}.json";
+        if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
+            || !string.Equals(Path.GetFileName(fileName), fileName, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Interface profile id must be a safe file name.", nameof(id));
+        }
+    }
+
+    private static void EnsurePathStaysInFolder(string folder, string filePath)
+    {
+        var fullFolder = Path.GetFullPath(folder);
+        var fullFilePath = Path.GetFullPath(filePath);
+        var folderWithSeparator = fullFolder.EndsWith(Path.DirectorySeparatorChar)
+            ? fullFolder
+            : fullFolder + Path.DirectorySeparatorChar;
+
+        if (!fullFilePath.StartsWith(folderWithSeparator, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Interface profile path must stay inside the interfaces profile folder.");
+        }
     }
 
     private static string GetAisFolder(AppDataPaths paths)
