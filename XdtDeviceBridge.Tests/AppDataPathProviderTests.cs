@@ -47,6 +47,15 @@ public sealed class AppDataPathProviderTests
     }
 
     [Fact]
+    public void DeviceGracePeriodsFile_ShouldEndWithLicensesDeviceGracePeriodsJson()
+    {
+        var paths = _provider.GetPaths(CreateBaseFolderPath());
+        var expectedSuffix = Path.Combine("licenses", "device-grace-periods.json");
+
+        Assert.EndsWith(expectedSuffix, paths.DeviceGracePeriodsFile);
+    }
+
+    [Fact]
     public void GetDefaultUserPaths_ShouldReturnNonEmptyBaseFolder()
     {
         var paths = _provider.GetDefaultUserPaths();

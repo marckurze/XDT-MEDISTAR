@@ -131,6 +131,58 @@ public sealed class LicensedDeviceStateEvaluatorTests
         Assert.Null(state.GracePeriodEndsAt);
     }
 
+    [Fact]
+    public void Evaluate_ShouldMarkUncoveredProfileWithValidGracePeriodAsInGracePeriod()
+    {
+        var gracePeriod = CreateGracePeriod("interface-1", NowUtc.AddDays(-1), NowUtc.AddDays(29));
+
+        var states = _evaluator.Evaluate(
+            new[] { CreateInterfaceProfile("interface-1", "Licensed Interface", isActive: true, isLicenseRequired: true) },
+            CreateLicenseInfo(licensedDeviceCount: 0),
+            new[] { gracePeriod },
+            NowUtc);
+
+        var state = Assert.Single(states);
+        Assert.False(state.IsCoveredByLicense);
+        Assert.True(state.IsInGracePeriod);
+        Assert.Equal(gracePeriod.StartedAtUtc, state.GracePeriodStartedAt);
+        Assert.Equal(gracePeriod.EndsAtUtc, state.GracePeriodEndsAt);
+        Assert.Contains("in Karenzzeit bis", state.StatusMessage);
+    }
+
+    [Fact]
+    public void Evaluate_ShouldNotMarkExpiredGracePeriodAsActive()
+    {
+        var states = _evaluator.Evaluate(
+            new[] { CreateInterfaceProfile("interface-1", "Licensed Interface", isActive: true, isLicenseRequired: true) },
+            CreateLicenseInfo(licensedDeviceCount: 0),
+            new[] { CreateGracePeriod("interface-1", NowUtc.AddDays(-31), NowUtc.AddDays(-1)) },
+            NowUtc);
+
+        var state = Assert.Single(states);
+        Assert.False(state.IsCoveredByLicense);
+        Assert.False(state.IsInGracePeriod);
+        Assert.NotNull(state.GracePeriodEndsAt);
+        Assert.Contains("Karenzzeit abgelaufen", state.StatusMessage);
+    }
+
+    [Fact]
+    public void Evaluate_ShouldIgnoreGracePeriodForCoveredProfile()
+    {
+        var states = _evaluator.Evaluate(
+            new[] { CreateInterfaceProfile("interface-1", "Licensed Interface", isActive: true, isLicenseRequired: true) },
+            CreateLicenseInfo(licensedDeviceCount: 1),
+            new[] { CreateGracePeriod("interface-1", NowUtc.AddDays(-1), NowUtc.AddDays(29)) },
+            NowUtc);
+
+        var state = Assert.Single(states);
+        Assert.True(state.IsCoveredByLicense);
+        Assert.False(state.IsInGracePeriod);
+        Assert.Null(state.GracePeriodStartedAt);
+        Assert.Null(state.GracePeriodEndsAt);
+        Assert.Equal("Durch Lizenz gedeckt.", state.StatusMessage);
+    }
+
     private static bool IsCountedLicensedInterface(LicensedDeviceState state)
     {
         return state.IsActive && state.IsLicenseRequired;
@@ -184,5 +236,17 @@ public sealed class LicensedDeviceStateEvaluatorTests
             MinimumAppVersion: "1.0.0",
             IssuedAt: NowUtc.AddDays(-31),
             Signature: "signed-license");
+    }
+
+    private static LicensedDeviceGracePeriod CreateGracePeriod(
+        string interfaceProfileId,
+        DateTime startedAtUtc,
+        DateTime endsAtUtc)
+    {
+        return new LicensedDeviceGracePeriod(
+            InterfaceProfileId: interfaceProfileId,
+            StartedAtUtc: startedAtUtc,
+            EndsAtUtc: endsAtUtc,
+            Reason: "Test");
     }
 }

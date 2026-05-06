@@ -33,6 +33,7 @@ public sealed class AppDataPathProvider
             LogsFolder: logsFolder,
             InstallationInfoFile: Path.Combine(normalizedBaseFolder, "installation.json"),
             LicenseFile: Path.Combine(licensesFolder, "license.json"),
+            DeviceGracePeriodsFile: Path.Combine(licensesFolder, "device-grace-periods.json"),
             LicenseRequestsFolder: licenseRequestsFolder,
             TemplatePackagesFolder: templatePackagesFolder);
     }

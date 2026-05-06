@@ -23,8 +23,10 @@ public partial class MainWindow : Window
     private readonly TemplatePackageImportValidator _templatePackageImportValidator = new();
     private readonly InstallationInfoProvider _installationInfoProvider = new();
     private readonly LicenseFileRepository _licenseFileRepository = new();
+    private readonly LicensedDeviceGracePeriodRepository _licensedDeviceGracePeriodRepository = new();
     private readonly LicenseEvaluator _licenseEvaluator = new();
     private readonly LicensedDeviceStateEvaluator _licensedDeviceStateEvaluator = new();
+    private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -34,7 +36,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
-    private readonly ObservableCollection<LicensedDeviceState> _licensedDeviceStates = new();
+    private readonly ObservableCollection<LicensedDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
@@ -52,7 +54,7 @@ public partial class MainWindow : Window
         AisPlaceholdersGrid.ItemsSource = _aisPlaceholderRows;
         DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
         ExportRulesGrid.ItemsSource = _visibleExportRules;
-        LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStates;
+        LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -1714,16 +1716,22 @@ public partial class MainWindow : Window
 
     private void ShowLicensedDeviceStates(LicenseInfo? license)
     {
+        ShowLicensedDeviceStates(license, LoadGracePeriodStoreOrEmpty());
+    }
+
+    private void ShowLicensedDeviceStates(LicenseInfo? license, LicensedDeviceGracePeriodStore gracePeriodStore)
+    {
         var states = _licensedDeviceStateEvaluator.Evaluate(
                 _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>(),
                 license,
+                gracePeriodStore.GracePeriods,
                 DateTime.UtcNow)
             .ToList();
 
-        _licensedDeviceStates.Clear();
+        _licensedDeviceStateRows.Clear();
         foreach (var state in states.OrderBy(state => state.DisplayName, StringComparer.CurrentCultureIgnoreCase))
         {
-            _licensedDeviceStates.Add(state);
+            _licensedDeviceStateRows.Add(LicensedDeviceStateRow.FromState(state));
         }
 
         var activeLicenseRequiredStates = states
@@ -1746,9 +1754,23 @@ public partial class MainWindow : Window
                     : "Mindestens eine aktive lizenzpflichtige Anbindung ist nicht durch die aktuelle Lizenz gedeckt. Die Anzeige sperrt keine Verarbeitung.";
     }
 
+    private LicensedDeviceGracePeriodStore LoadGracePeriodStoreOrEmpty()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            return _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
+        }
+        catch (Exception ex)
+        {
+            AppendLicenseMessage($"Karenzzeiten konnten nicht geladen werden: {ex.Message}");
+            return LicensedDeviceGracePeriodStore.Empty;
+        }
+    }
+
     private void ClearLicensedDeviceStates()
     {
-        _licensedDeviceStates.Clear();
+        _licensedDeviceStateRows.Clear();
         LicensedDeviceActiveCountText.Text = "0";
         LicensedDeviceLicensedCountText.Text = "0";
         LicensedDeviceCoveredCountText.Text = "0";
@@ -1864,6 +1886,49 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             AppendLicenseMessage($"Lizenzdatei konnte nicht importiert werden: {ex.Message}");
+        }
+    }
+
+    private void UpdateGracePeriods_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var nowUtc = DateTime.UtcNow;
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var license = File.Exists(paths.LicenseFile)
+                ? _licenseFileRepository.Load(paths.LicenseFile)
+                : null;
+            var existingStore = _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
+            var states = _licensedDeviceStateEvaluator.Evaluate(
+                _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>(),
+                license,
+                existingStore.GracePeriods,
+                nowUtc);
+            var updatedStore = _licensedDeviceGracePeriodService.EnsureGracePeriodsForUncoveredDevices(
+                states,
+                existingStore,
+                nowUtc,
+                graceDays: 30);
+
+            var validationIssues = updatedStore.Validate();
+            if (validationIssues.Count > 0)
+            {
+                AppendLicenseMessage("Karenzzeiten wurden nicht gespeichert, weil die Daten ungueltig sind.");
+                foreach (var issue in validationIssues)
+                {
+                    AppendLicenseMessage($"[Karenzzeit] {issue}");
+                }
+
+                return;
+            }
+
+            _licensedDeviceGracePeriodRepository.Save(paths.DeviceGracePeriodsFile, updatedStore);
+            ShowLicensedDeviceStates(license, updatedStore);
+            AppendLicenseMessage("Karenzzeiten aktualisiert. Neue nicht gedeckte aktive lizenzpflichtige Anbindungen erhalten 30 Tage Karenzzeit.");
+        }
+        catch (Exception ex)
+        {
+            AppendLicenseMessage($"Karenzzeiten konnten nicht aktualisiert werden: {ex.Message}");
         }
     }
 
@@ -2170,6 +2235,33 @@ public partial class MainWindow : Window
 
         textBox.AppendText(message);
         textBox.ScrollToEnd();
+    }
+
+    private sealed record LicensedDeviceStateRow(
+        string DisplayName,
+        string IsActiveText,
+        string IsLicenseRequiredText,
+        string IsCoveredByLicenseText,
+        string IsInGracePeriodText,
+        string GracePeriodEndsAtText,
+        string StatusMessage)
+    {
+        public static LicensedDeviceStateRow FromState(LicensedDeviceState state)
+        {
+            return new LicensedDeviceStateRow(
+                DisplayName: state.DisplayName,
+                IsActiveText: FormatBoolean(state.IsActive),
+                IsLicenseRequiredText: FormatBoolean(state.IsLicenseRequired),
+                IsCoveredByLicenseText: FormatBoolean(state.IsCoveredByLicense),
+                IsInGracePeriodText: FormatBoolean(state.IsInGracePeriod),
+                GracePeriodEndsAtText: state.GracePeriodEndsAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? string.Empty,
+                StatusMessage: state.StatusMessage);
+        }
+
+        private static string FormatBoolean(bool value)
+        {
+            return value ? "Ja" : "Nein";
+        }
     }
 
     private sealed class PlaceholderRow : INotifyPropertyChanged

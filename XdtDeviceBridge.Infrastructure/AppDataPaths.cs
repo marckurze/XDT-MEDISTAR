@@ -8,5 +8,6 @@ public sealed record AppDataPaths(
     string LogsFolder,
     string InstallationInfoFile,
     string LicenseFile,
+    string DeviceGracePeriodsFile,
     string LicenseRequestsFolder,
     string TemplatePackagesFolder);

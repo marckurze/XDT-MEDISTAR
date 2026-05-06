@@ -776,7 +776,8 @@
 
                         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
-                            <Button Content="Lizenzdatei importieren" Width="190" Click="ImportLicenseFile_Click"/>
+                            <Button Content="Lizenzdatei importieren" Width="190" Margin="0,0,8,0" Click="ImportLicenseFile_Click"/>
+                            <Button Content="Karenzzeiten aktualisieren" Width="210" Click="UpdateGracePeriods_Click"/>
                         </StackPanel>
 
                         <GroupBox Header="Lizenzierte Geräte / Anbindungen" Grid.Row="2" Margin="0,0,0,8">
@@ -825,11 +826,11 @@
                                           VerticalScrollBarVisibility="Auto">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Name / Anzeige" Binding="{Binding DisplayName}" Width="220"/>
-                                        <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="70"/>
-                                        <DataGridCheckBoxColumn Header="Lizenzpflichtig" Binding="{Binding IsLicenseRequired}" Width="120"/>
-                                        <DataGridCheckBoxColumn Header="Durch Lizenz gedeckt" Binding="{Binding IsCoveredByLicense}" Width="150"/>
-                                        <DataGridCheckBoxColumn Header="In Karenzzeit" Binding="{Binding IsInGracePeriod}" Width="120"/>
-                                        <DataGridTextColumn Header="Karenzzeit bis" Binding="{Binding GracePeriodEndsAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="140"/>
+                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding IsActiveText}" Width="70"/>
+                                        <DataGridTextColumn Header="Lizenzpflichtig" Binding="{Binding IsLicenseRequiredText}" Width="120"/>
+                                        <DataGridTextColumn Header="Durch Lizenz gedeckt" Binding="{Binding IsCoveredByLicenseText}" Width="150"/>
+                                        <DataGridTextColumn Header="In Karenzzeit" Binding="{Binding IsInGracePeriodText}" Width="120"/>
+                                        <DataGridTextColumn Header="Karenzzeit bis" Binding="{Binding GracePeriodEndsAtText}" Width="140"/>
                                         <DataGridTextColumn Header="Status" Binding="{Binding StatusMessage}" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
