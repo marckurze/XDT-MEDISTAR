@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
     private readonly AutoImportScannerService _autoImportScannerService = new();
+    private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -40,6 +41,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
+    private readonly ObservableCollection<ScannedImportPairRow> _scannedImportPairRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
@@ -59,6 +61,7 @@ public partial class MainWindow : Window
         ExportRulesGrid.ItemsSource = _visibleExportRules;
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         ActiveInterfaceProfilesGrid.ItemsSource = _activeInterfaceProfileStatusRows;
+        ScannedImportPairsGrid.ItemsSource = _scannedImportPairRows;
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -1871,10 +1874,14 @@ public partial class MainWindow : Window
 
         if (activeProfiles.Count == 0)
         {
+            _scannedImportPairRows.Clear();
+            ProcessSelectedImportPairButton.IsEnabled = false;
             ActiveProfileScanResultTextBox.Text = "Keine aktiven Schnittstellenprofile vorhanden.";
             return;
         }
 
+        _scannedImportPairRows.Clear();
+        ProcessSelectedImportPairButton.IsEnabled = false;
         ActiveProfileScanButton.IsEnabled = false;
         ActiveProfileScanResultTextBox.Text = "Scan läuft. Es wird nichts verarbeitet, gelöscht oder exportiert.";
 
@@ -1912,11 +1919,31 @@ public partial class MainWindow : Window
                             builder.AppendLine($"- {message}");
                         }
                     }
+
+                    var exportProfileName = GetExportProfileDisplayName(profile.ExportProfileId);
+                    foreach (var pair in result.Queue.FindReadyPairs())
+                    {
+                        _scannedImportPairRows.Add(new ScannedImportPairRow(
+                            InterfaceProfileId: profile.Metadata.Id,
+                            InterfaceProfileName: profile.Metadata.Name,
+                            ExportProfileId: profile.ExportProfileId,
+                            ExportProfileName: exportProfileName,
+                            AisFilePath: pair.AisFile.FilePath,
+                            DeviceFilePath: pair.DeviceFile.FilePath,
+                            ExportFolder: profile.FolderOptions.ExportFolder,
+                            Status: "Bereit"));
+                    }
                 }
                 catch (Exception ex)
                 {
                     builder.AppendLine($"Scan-Fehler: {ex.Message}");
                 }
+            }
+
+            if (_scannedImportPairRows.Count == 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine("Keine verarbeitbaren Dateipaare gefunden.");
             }
 
             ActiveProfileScanResultTextBox.Text = builder.ToString().TrimEnd();
@@ -1926,6 +1953,94 @@ public partial class MainWindow : Window
         {
             ActiveProfileScanButton.IsEnabled = true;
         }
+    }
+
+    private void ScannedImportPairsGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        ProcessSelectedImportPairButton.IsEnabled = ScannedImportPairsGrid.SelectedItem is ScannedImportPairRow;
+    }
+
+    private void ProcessSelectedImportPair_Click(object sender, RoutedEventArgs e)
+    {
+        if (ScannedImportPairsGrid.SelectedItem is not ScannedImportPairRow selectedPair)
+        {
+            AppendMessage("Kein Dateipaar ausgewählt.");
+            return;
+        }
+
+        if (_profileCatalog is null)
+        {
+            SetScannedPairStatus(selectedPair, "Fehler");
+            AppendMessage("Dateipaar kann nicht verarbeitet werden, weil keine Profile geladen sind.");
+            return;
+        }
+
+        var interfaceProfile = _profileCatalog.InterfaceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, selectedPair.InterfaceProfileId, StringComparison.Ordinal));
+        if (interfaceProfile is null)
+        {
+            SetScannedPairStatus(selectedPair, "Fehler");
+            AppendMessage("Zugehöriges Schnittstellenprofil wurde nicht gefunden.");
+            return;
+        }
+
+        var exportProfile = _profileCatalog.ExportProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, selectedPair.ExportProfileId, StringComparison.Ordinal));
+        if (exportProfile is null)
+        {
+            SetScannedPairStatus(selectedPair, "Fehler");
+            AppendMessage("Zugehöriges Exportprofil wurde nicht gefunden.");
+            return;
+        }
+
+        try
+        {
+            SetScannedPairStatus(selectedPair, "Wird verarbeitet");
+            var result = _interfaceProfileManualProcessor.Process(
+                interfaceProfile,
+                exportProfile,
+                selectedPair.AisFilePath,
+                selectedPair.DeviceFilePath,
+                DateTime.Now);
+
+            if (!result.Success)
+            {
+                SetScannedPairStatus(selectedPair, "Fehler");
+                foreach (var message in result.Messages)
+                {
+                    AppendMessage(message);
+                }
+
+                return;
+            }
+
+            SetScannedPairStatus(selectedPair, "Verarbeitet");
+            if (result.PipelineResult is not null)
+            {
+                _lastPipelineResult = result.PipelineResult;
+                ShowPatient(result.PipelineResult.Patient);
+                MeasurementsGrid.ItemsSource = result.PipelineResult.Measurements;
+                ShowIssues(result.PipelineResult.Issues);
+                UpdatePlaceholderTables();
+                ShowExportRulePreviewForSelectedRule();
+                ShowFullExportPreviewForSelectedProfile();
+            }
+
+            ExportPreviewTextBox.Text = result.ExportContent ?? string.Empty;
+            PlannedFileNameText.Text = $"Exportdatei: {result.ExportFilePath}";
+            AppendMessage($"Dateipaar erfolgreich verarbeitet. Exportdatei: {result.ExportFilePath}");
+        }
+        catch (Exception ex)
+        {
+            SetScannedPairStatus(selectedPair, "Fehler");
+            AppendMessage($"Dateipaar konnte nicht verarbeitet werden: {ex.Message}");
+        }
+    }
+
+    private void SetScannedPairStatus(ScannedImportPairRow row, string status)
+    {
+        row.Status = status;
+        ScannedImportPairsGrid.Items.Refresh();
     }
 
     private static string CreateLicensedDeviceStatusText(
@@ -2459,6 +2574,45 @@ public partial class MainWindow : Window
 
         textBox.AppendText(message);
         textBox.ScrollToEnd();
+    }
+
+    private sealed class ScannedImportPairRow
+    {
+        public ScannedImportPairRow(
+            string InterfaceProfileId,
+            string InterfaceProfileName,
+            string ExportProfileId,
+            string ExportProfileName,
+            string AisFilePath,
+            string DeviceFilePath,
+            string ExportFolder,
+            string Status)
+        {
+            this.InterfaceProfileId = InterfaceProfileId;
+            this.InterfaceProfileName = InterfaceProfileName;
+            this.ExportProfileId = ExportProfileId;
+            this.ExportProfileName = ExportProfileName;
+            this.AisFilePath = AisFilePath;
+            this.DeviceFilePath = DeviceFilePath;
+            this.ExportFolder = ExportFolder;
+            this.Status = Status;
+        }
+
+        public string InterfaceProfileId { get; }
+
+        public string InterfaceProfileName { get; }
+
+        public string ExportProfileId { get; }
+
+        public string ExportProfileName { get; }
+
+        public string AisFilePath { get; }
+
+        public string DeviceFilePath { get; }
+
+        public string ExportFolder { get; }
+
+        public string Status { get; set; }
     }
 
     private sealed class PlaceholderRow : INotifyPropertyChanged

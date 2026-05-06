@@ -7,15 +7,18 @@ public sealed class ExportFileNameBuilder
 {
     public string Build(DeviceProfile profile, PatientData? patient, DateTime timestamp)
     {
-        var pattern = profile.ExportFileNamePattern;
+        return Build(profile.ExportFileNamePattern, patient, timestamp, profile.Name);
+    }
 
+    public string Build(string pattern, PatientData? patient, DateTime timestamp, string? deviceName = null)
+    {
         if (string.IsNullOrWhiteSpace(pattern))
         {
             pattern = "EXPORT_{yyyyMMdd_HHmmss}.XDT";
         }
 
         var fileName = pattern
-            .Replace("{DeviceName}", profile.Name ?? string.Empty)
+            .Replace("{DeviceName}", deviceName ?? string.Empty)
             .Replace("{PatientNumber}", patient?.PatientNumber ?? string.Empty)
             .Replace("{LastName}", patient?.LastName ?? string.Empty)
             .Replace("{FirstName}", patient?.FirstName ?? string.Empty)

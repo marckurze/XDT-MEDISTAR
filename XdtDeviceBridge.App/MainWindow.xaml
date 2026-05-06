@@ -33,6 +33,9 @@
                                     <RowDefinition Height="220"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="150"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="170"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
                                            Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
@@ -127,6 +130,36 @@
                                          TextWrapping="NoWrap"
                                          MinHeight="120"
                                          Text="Noch kein Scan ausgeführt."/>
+                                <TextBlock Grid.Row="6"
+                                           Text="Gefundene Dateipaare"
+                                           FontWeight="Bold"
+                                           Margin="0,8,0,4"/>
+                                <DataGrid Grid.Row="7"
+                                          x:Name="ScannedImportPairsGrid"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto"
+                                          MinHeight="140"
+                                          SelectionChanged="ScannedImportPairsGrid_SelectionChanged">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Schnittstellenprofil" Binding="{Binding InterfaceProfileName}" MinWidth="220" Width="220"/>
+                                        <DataGridTextColumn Header="AIS-Datei" Binding="{Binding AisFilePath}" MinWidth="260" Width="260"/>
+                                        <DataGridTextColumn Header="Gerätedatei" Binding="{Binding DeviceFilePath}" MinWidth="260" Width="260"/>
+                                        <DataGridTextColumn Header="Exportordner" Binding="{Binding ExportFolder}" MinWidth="240" Width="240"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="160" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Button Grid.Row="8"
+                                        x:Name="ProcessSelectedImportPairButton"
+                                        Content="Ausgewähltes Paar verarbeiten"
+                                        Width="240"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,8,0,0"
+                                        IsEnabled="False"
+                                        Click="ProcessSelectedImportPair_Click"/>
                             </Grid>
                         </GroupBox>
 
