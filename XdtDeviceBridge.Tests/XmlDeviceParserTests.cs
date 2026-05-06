@@ -60,6 +60,55 @@ public sealed class XmlDeviceParserTests
     }
 
     [Fact]
+    public void ParseFile_ShouldParseLm7LanXmlAttributesAndPdValues()
+    {
+        var parser = new XmlDeviceParser();
+        var path = WriteTempXml("""
+            <Ophthalmology>
+              <Common>
+                <Date>20260506</Date>
+                <Time>150100</Time>
+              </Common>
+              <Measure Type="LM">
+                <LM>
+                  <R>
+                    <Sphere unit="D">1.50</Sphere>
+                    <Cylinder unit="D">-0.50</Cylinder>
+                    <Axis unit="deg">128</Axis>
+                    <PrismX unit="pri" base="out">0.75</PrismX>
+                    <PrismY unit="pri" base="up">1.00</PrismY>
+                    <ConfidenceIndex>9</ConfidenceIndex>
+                  </R>
+                  <L>
+                    <Error>measurement failed</Error>
+                  </L>
+                </LM>
+                <PD>
+                  <Distance unit="mm">59.0</Distance>
+                  <DistanceR unit="mm">29.5</DistanceR>
+                  <DistanceL unit="mm">29.5</DistanceL>
+                </PD>
+              </Measure>
+            </Ophthalmology>
+            """);
+
+        var result = parser.ParseFile(path);
+
+        Assert.False(result.HasErrors);
+        AssertMeasurement(result, "Common/Date", "20260506", null, null);
+        AssertMeasurement(result, "Common/Time", "150100", null, null);
+        AssertMeasurement(result, "Measure[@Type='LM']/@Type", "LM", null, null);
+        AssertMeasurement(result, "Measure[@Type='LM']/LM/R/Sphere", "1.50", "R", "LM", "D");
+        AssertMeasurement(result, "Measure[@Type='LM']/LM/R/Sphere/@unit", "D", "R", "LM");
+        AssertMeasurement(result, "Measure[@Type='LM']/LM/R/PrismX/@base", "out", "R", "LM");
+        AssertMeasurement(result, "Measure[@Type='LM']/LM/R/PrismY/@base", "up", "R", "LM");
+        AssertMeasurement(result, "Measure[@Type='LM']/PD/Distance", "59.0", null, "PD", "mm");
+        AssertMeasurement(result, "Measure[@Type='LM']/PD/DistanceR", "29.5", null, "PD", "mm");
+        AssertMeasurement(result, "Measure[@Type='LM']/PD/DistanceL", "29.5", null, "PD", "mm");
+        AssertMeasurement(result, "Measure[@Type='LM']/LM/L/Error", "measurement failed", "L", "LM");
+    }
+
+    [Fact]
     public void ParseFile_InvalidXml_ShouldCreateError()
     {
         var parser = new XmlDeviceParser();
@@ -71,12 +120,22 @@ public sealed class XmlDeviceParserTests
         Assert.Contains(result.Issues, i => i.Severity == DeviceParseIssueSeverity.Error);
     }
 
-    private static void AssertMeasurement(DeviceParseResult result, string sourcePath, string expectedValue, string? eye, string? group)
+    private static void AssertMeasurement(
+        DeviceParseResult result,
+        string sourcePath,
+        string expectedValue,
+        string? eye,
+        string? group,
+        string? unit = null)
     {
         var measurement = Assert.Single(result.Measurements, m => m.SourcePath == sourcePath);
         Assert.Equal(expectedValue, measurement.Value);
         Assert.Equal(eye, measurement.Eye);
         Assert.Equal(group, measurement.Group);
+        if (unit is not null)
+        {
+            Assert.Equal(unit, measurement.Unit);
+        }
     }
 
     private static string GetFilePath(string fileName)

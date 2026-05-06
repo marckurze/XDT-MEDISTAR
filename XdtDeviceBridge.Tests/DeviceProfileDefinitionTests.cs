@@ -164,6 +164,29 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateNidekLm7Default_ShouldContainLanXmlSourcePathsFromInterfaceManual()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
+
+        AssertRequiredMeasurement(profile, "lm7-lan-r-sphere", "Measure[@Type='LM']/LM/R/Sphere");
+        AssertRequiredMeasurement(profile, "lm7-lan-r-cylinder", "Measure[@Type='LM']/LM/R/Cylinder");
+        AssertRequiredMeasurement(profile, "lm7-lan-r-axis", "Measure[@Type='LM']/LM/R/Axis");
+        AssertRequiredMeasurement(profile, "lm7-lan-l-sphere", "Measure[@Type='LM']/LM/L/Sphere");
+        AssertRequiredMeasurement(profile, "lm7-lan-l-cylinder", "Measure[@Type='LM']/LM/L/Cylinder");
+        AssertRequiredMeasurement(profile, "lm7-lan-l-axis", "Measure[@Type='LM']/LM/L/Axis");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-add2", "Measure[@Type='LM']/LM/R/ADD2");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-near-sphere", "Measure[@Type='LM']/LM/R/NearSphere");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-prism-x-base", "Measure[@Type='LM']/LM/R/PrismX/@base");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-uv-transmittance", "Measure[@Type='LM']/LM/R/UVTransmittance");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-confidence-index", "Measure[@Type='LM']/LM/R/ConfidenceIndex");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-error", "Measure[@Type='LM']/LM/R/Error");
+        AssertOptionalMeasurement(profile, "lm7-lan-pd-distance", "Measure[@Type='LM']/PD/Distance");
+        AssertOptionalMeasurement(profile, "lm7-lan-pd-distance-r", "Measure[@Type='LM']/PD/DistanceR");
+        AssertOptionalMeasurement(profile, "lm7-lan-pd-distance-l", "Measure[@Type='LM']/PD/DistanceL");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "R/Sphare");
+    }
+
+    [Fact]
     public void CreateNidekLm7Default_ShouldMarkLeftValuesAsUnvalidatedAndOptional()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();

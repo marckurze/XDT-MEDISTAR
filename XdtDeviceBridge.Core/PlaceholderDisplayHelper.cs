@@ -55,6 +55,11 @@ public static class PlaceholderDisplayHelper
             return "Pachy";
         }
 
+        if (IsLastSegment(sourcePath, "PrismBase"))
+        {
+            return "Axis";
+        }
+
         if (ContainsAny(sourcePath, "Prism", "PrismX", "PrismY"))
         {
             return "Prism";
@@ -157,9 +162,24 @@ public static class PlaceholderDisplayHelper
             return "Pachymetrie-Bild";
         }
 
+        if (IsLastSegment(sourcePath, "UVTransmittance"))
+        {
+            return "UV-Transmission";
+        }
+
+        if (IsLastSegment(sourcePath, "ConfidenceIndex"))
+        {
+            return "Confidence Index";
+        }
+
         if (ContainsAny(sourcePath, "CorrectedIOP"))
         {
             return "korrigierter Augendruck";
+        }
+
+        if (IsLastSegment(sourcePath, "PrismBase"))
+        {
+            return "Prismabasis";
         }
 
         if (IsPrismBase(sourcePath))
@@ -244,6 +264,11 @@ public static class PlaceholderDisplayHelper
             return "Visus";
         }
 
+        if (IsLastSegment(sourcePath, "ADD2") || IsLastSegment(sourcePath, "Addition2"))
+        {
+            return "zweite Addition";
+        }
+
         if (ContainsAny(sourcePath, "Add", "Addition"))
         {
             return "Addition";
@@ -252,6 +277,16 @@ public static class PlaceholderDisplayHelper
         if (HasToken(sourcePath, "SE"))
         {
             return "Sphärisches Äquivalent";
+        }
+
+        if (IsLastSegment(sourcePath, "NearSphere2") || IsLastSegment(sourcePath, "NearSphare2"))
+        {
+            return "zweite Nahsphäre";
+        }
+
+        if (IsLastSegment(sourcePath, "NearSphere") || IsLastSegment(sourcePath, "NearSphare"))
+        {
+            return "Nahsphäre";
         }
 
         if (ContainsAny(sourcePath, "Sphere", "Sphare") || HasToken(sourcePath, "Sph"))
@@ -364,7 +399,7 @@ public static class PlaceholderDisplayHelper
             return IsKeratometry(sourcePath) ? "Durchschnitt" : "Mittelwert";
         }
 
-        if (ContainsAny(sourcePath, "Near"))
+        if (ContainsAny(sourcePath, "Near") && !NameContainsAny(name, "Nahsphäre"))
         {
             return "Nähe";
         }
@@ -399,6 +434,8 @@ public static class PlaceholderDisplayHelper
             || HasToken(sourcePath, "Cyl")
             || HasToken(sourcePath, "SE")
             || HasToken(sourcePath, "Add")
+            || IsLastSegment(sourcePath, "ADD")
+            || IsLastSegment(sourcePath, "ADD2")
             || (HasToken(sourcePath, "ra") && IsKeratometry(sourcePath));
     }
 
@@ -426,6 +463,8 @@ public static class PlaceholderDisplayHelper
             || IsLastSegment(sourcePath, "Model")
             || IsLastSegment(sourcePath, "ModelName")
             || IsLastSegment(sourcePath, "Comment")
+            || IsLastSegment(sourcePath, "UVTransmittance")
+            || IsLastSegment(sourcePath, "ConfidenceIndex")
             || IsLastSegment(sourcePath, "CylinderMode")
             || IsPrismBase(sourcePath);
     }

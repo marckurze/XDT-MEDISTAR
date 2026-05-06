@@ -89,7 +89,7 @@ public static class DefaultExportProfileDefinitions
                     "LensmeterResultRight",
                     ExportRuleType.Template,
                     null,
-                    "R.:S={Device.R/LM/Median/Sphere:Diopter} Z={Device.R/LM/Median/Cylinder:Diopter}*{Device.R/LM/Median/Axis:Axis} P={Device.R/LM/Median/PrismHorizontal:Prism} {Device.R/LM/Median/PrismHorizontalBase:Raw} {Device.R/LM/Median/PrismVertical:Prism} {Device.R/LM/Median/PrismVerticalBase:Raw}           PD={Device.PD/Distance:Pd}",
+                    "R.:S={Device.Measure[@Type='LM']/LM/R/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/R/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/R/Axis:Axis} P={Device.Measure[@Type='LM']/LM/R/PrismX:Prism} {Device.Measure[@Type='LM']/LM/R/PrismX/@base:Raw} {Device.Measure[@Type='LM']/LM/R/PrismY:Prism} {Device.Measure[@Type='LM']/LM/R/PrismY/@base:Raw}           PD={Device.Measure[@Type='LM']/PD/Distance:Pd}",
                     7,
                     true,
                     "MEDISTAR lensmeter card text for right eye."),
@@ -99,7 +99,7 @@ public static class DefaultExportProfileDefinitions
                     "LensmeterResultLeft",
                     ExportRuleType.Template,
                     null,
-                    "L.:S={Device.L/LM/Median/Sphere:Diopter} Z={Device.L/LM/Median/Cylinder:Diopter}*{Device.L/LM/Median/Axis:Axis} P={Device.L/LM/Median/PrismHorizontal:Prism} {Device.L/LM/Median/PrismHorizontalBase:Raw} {Device.L/LM/Median/PrismVertical:Prism} {Device.L/LM/Median/PrismVerticalBase:Raw}",
+                    "L.:S={Device.Measure[@Type='LM']/LM/L/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/L/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/L/Axis:Axis} P={Device.Measure[@Type='LM']/LM/L/PrismX:Prism} {Device.Measure[@Type='LM']/LM/L/PrismX/@base:Raw} {Device.Measure[@Type='LM']/LM/L/PrismY:Prism} {Device.Measure[@Type='LM']/LM/L/PrismY/@base:Raw}",
                     8,
                     true,
                     "MEDISTAR lensmeter card text for left eye.")

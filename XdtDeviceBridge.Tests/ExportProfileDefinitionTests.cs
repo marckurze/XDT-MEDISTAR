@@ -173,6 +173,12 @@ public sealed class ExportProfileDefinitionTests
         Assert.Contains("P=", rightTemplate);
         Assert.Contains("PD=", rightTemplate);
         Assert.Contains("P=", leftTemplate);
+        Assert.Contains("Device.Measure[@Type='LM']/LM/R/Sphere:Diopter", rightTemplate);
+        Assert.Contains("Device.Measure[@Type='LM']/LM/R/PrismX/@base:Raw", rightTemplate);
+        Assert.Contains("Device.Measure[@Type='LM']/PD/Distance:Pd", rightTemplate);
+        Assert.Contains("Device.Measure[@Type='LM']/LM/L/Sphere:Diopter", leftTemplate);
+        Assert.DoesNotContain("Device.R/LM/Median", rightTemplate);
+        Assert.DoesNotContain("Device.L/LM/Median", leftTemplate);
     }
 
     [Fact]

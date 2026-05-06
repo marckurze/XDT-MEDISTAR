@@ -152,6 +152,225 @@ Zusätzlich beobachtete Felder:
 
 Die Beziehung zwischen `Prism`/`PrismBase` und den getrennten Komponenten `PrismX`/`PrismY` muss fachlich noch validiert werden. Für das spätere LM7-Profil sind `PrismX` und `PrismY` besonders relevant, weil sie der MEDISTAR-Beispielausgabe mit horizontaler und vertikaler Prisma-Komponente nahekommen.
 
+## 4.2 NIDEK LM-7/LM-7P – LAN/XML-Schnittstelle laut Interface Manual
+
+Grundlage dieser Ergänzung ist die fachlich-technische Auswertung des NIDEK-Interface-Manuals für LM-7/LM-7P, Kapitel 6 `LAN COMMUNICATION`, insbesondere Abschnitt 6.4 `Data Format` mit den XML-Definitionen für `NIDEK_V1.00` und `NIDEK_V1.01`.
+
+### Kommunikationsart LAN / SMB
+
+Die LM-7/LM-7P können Messdaten per LAN bzw. WLAN in einen freigegebenen Ordner eines Empfangscomputers schreiben. Technisch nutzt das Gerät SMB bzw. Common Internet File System. Es gibt keine direkte API, die unsere App aufrufen müsste. Stattdessen schreibt das Gerät XML-Dateien in einen Windows-Shared-Folder.
+
+In der XdtDeviceBridge entspricht dieser Shared Folder dem Geräte-Importordner:
+
+```text
+NIDEK LM-7/LM-7P -> SMB-Share/Geräte-Importordner -> XdtDeviceBridge scannt/verarbeitet -> Importdatei wird archiviert/verschoben
+```
+
+Der Empfänger bzw. die Auswertesoftware liest die Datei und löscht oder benennt sie üblicherweise um. Das Gerät kann einen Network Timeout melden, wenn die XML-Datei nach einer konfigurierten Zeit noch im Shared Folder vorhanden ist. Für den produktiven Betrieb ist deshalb `ArchiveProcessedFiles=true` mit Archivierungsmodus `Move` besonders sinnvoll: Nach erfolgreicher Verarbeitung wird die Gerätedatei ins Archiv verschoben und der Geräte-Importordner wird wieder frei.
+
+### Dateiformat und Dateinamen
+
+Das Gerät erzeugt normalerweise eine XML-Datei pro Messung. Der Dateiname folgt laut Manual diesem Muster:
+
+```text
+LM_<ID>_<YYYYMMDDHHMMSS>_<MAC-Lower-Bytes>.xml
+```
+
+Bestandteile:
+
+- `LM` als Header
+- ID mit bis zu 16 Zeichen
+- Datum/Uhrzeit mit 14 Zeichen im Format `YYYYMMDDHHMMSS`
+- sechs Zeichen aus den drei niederwertigen Bytes der MAC-Adresse
+- Extension `.xml`
+
+Ungültige Zeichen aus der ID werden vom Gerät durch eine Tilde ersetzt. Zusätzlich kann eine Style-Sheet-Datei `NIDEK_LM_Stylesheet.xsl` erzeugt werden. Diese XSL-Datei ist keine Messdatei und darf nicht als Gerätedatei verarbeitet werden. Die Importklassifizierung bzw. Scanner-Logik soll `.xsl` ignorieren oder als nicht relevante Datei behandeln.
+
+### XML-Grundstruktur
+
+Die XML-Datei ist als Ophthalmology-Dokument aufgebaut:
+
+```text
+Ophthalmology
+- Common
+- Measure Type="LM"
+  - MeasureMode
+  - DiopterStep
+  - AxisStep
+  - CylinderMode
+  - PrismDiopterStep
+  - PrismBaseStep
+  - PrismMode
+  - AddMode
+  - LM
+    - S
+    - R
+    - L
+  - PD
+```
+
+Wichtige Common-Felder:
+
+- `Common/Company`
+- `Common/ModelName`
+- `Common/MachineNo`
+- `Common/ROMVersion`
+- `Common/Version`
+- `Common/Date`
+- `Common/Time`
+- `Common/Patient/No.`
+- `Common/Patient/ID`
+- `Common/Patient/FirstName`
+- `Common/Patient/MiddleName`
+- `Common/Patient/LastName`
+- `Common/Patient/Sex`
+- `Common/Patient/Age`
+- `Common/Patient/DOB`
+- `Common/Operator/No.`
+- `Common/Operator/ID`
+
+Messbedingungen:
+
+- `Measure[@Type='LM']/MeasureMode`
+- `Measure[@Type='LM']/DiopterStep`
+- `Measure[@Type='LM']/AxisStep`
+- `Measure[@Type='LM']/CylinderMode`
+- `Measure[@Type='LM']/PrismDiopterStep`
+- `Measure[@Type='LM']/PrismBaseStep`
+- `Measure[@Type='LM']/PrismMode`
+- `Measure[@Type='LM']/AddMode`
+
+Messdaten:
+
+- `Measure[@Type='LM']/LM/S` = Single state measurement
+- `Measure[@Type='LM']/LM/R` = Right-eye lens measurement
+- `Measure[@Type='LM']/LM/L` = Left-eye lens measurement
+
+Nicht gemessene Werte können fehlen oder als leere Tags vorkommen. Der Parser darf fehlende optionale S-/R-/L-Knoten und leere Tags nicht als harten Fehler werten.
+
+### Messwerte je S/R/L
+
+Für `S`, `R` und `L` können folgende Werte vorkommen:
+
+| Wert | Bedeutung | Formatvorschlag |
+|---|---|---|
+| `Sphere unit="D"` | Sphäre | `Diopter` |
+| `Cylinder unit="D"` | Zylinder | `Diopter` |
+| `Axis unit="deg"` | Achse | `Axis` |
+| `SE unit="D"` | sphärisches Äquivalent | `Diopter` |
+| `ADD unit="D"` | 1. Addition | `Diopter` |
+| `ADD2 unit="D"` | 2. Addition | `Diopter` |
+| `NearSphere unit="D"` | 1. Nahsphäre | `Diopter` |
+| `NearSphere2 unit="D"` | 2. Nahsphäre | `Diopter` |
+| `Prism unit="pri"` | Prisma polar | `Prism` |
+| `PrismBase unit="deg"` | Prismabasis polar | `Axis` oder `Raw`, templateabhängig |
+| `PrismX unit="pri" base="in/out"` | horizontales Prisma | `Prism`, `@base` als `Raw` |
+| `PrismY unit="pri" base="up/down"` | vertikales Prisma | `Prism`, `@base` als `Raw` |
+| `UVTransmittance unit="%"` | UV-Transmission | zunächst `Raw`, perspektivisch `Percent` |
+| `ConfidenceIndex` | Vertrauens-/Qualitätsindex, nur `NIDEK_V1.01` | `Raw` |
+| `Error` | Fehlerinformation bei Messfehlern, nur `NIDEK_V1.01` | Warnung/Messwert |
+
+### PD-Daten
+
+PD ist optional. Bei serieller Ausgabe wird PD nur ausgegeben, wenn PD für beide Seiten gemessen wurde; bei XML ist PD ebenfalls optional.
+
+Relevante SourcePaths:
+
+- `Measure[@Type='LM']/PD/Distance` = Pupillendistanz Ferne gesamt
+- `Measure[@Type='LM']/PD/DistanceR` = Pupillendistanz Ferne rechts
+- `Measure[@Type='LM']/PD/DistanceL` = Pupillendistanz Ferne links
+- `Measure[@Type='LM']/PD/Near` = Pupillendistanz Nähe gesamt
+- `Measure[@Type='LM']/PD/NearR` = Pupillendistanz Nähe rechts
+- `Measure[@Type='LM']/PD/NearL` = Pupillendistanz Nähe links
+
+### NIDEK_V1.00 und NIDEK_V1.01
+
+Beide Formate sind ähnlich. `NIDEK_V1.00` enthält Common, LM-Werte und PD. `NIDEK_V1.01` ergänzt `ConfidenceIndex` je `S`/`R`/`L` sowie `Error`-Elemente bei Messfehlern. `Common/Version` enthält die XML-Version, z. B. `NIDEK_V1.01`.
+
+Das Geräteprofil LM7/LM7P muss beide XML-Versionen unterstützen. `ConfidenceIndex` und `Error` sind optional. Error-Tags sollen als Gerätewarnung bzw. `DeviceParseIssue` oder als sichtbarer Messwert verfügbar werden, damit ein fehlerhaftes Auge nicht blind exportiert wird.
+
+### Empfohlene standardisierte SourcePaths
+
+Common:
+
+```text
+Common/Company
+Common/ModelName
+Common/MachineNo
+Common/ROMVersion
+Common/Version
+Common/Date
+Common/Time
+Common/Patient/No.
+Common/Patient/ID
+Common/Operator/ID
+```
+
+Rechts:
+
+```text
+Measure[@Type='LM']/LM/R/Sphere
+Measure[@Type='LM']/LM/R/Cylinder
+Measure[@Type='LM']/LM/R/Axis
+Measure[@Type='LM']/LM/R/SE
+Measure[@Type='LM']/LM/R/ADD
+Measure[@Type='LM']/LM/R/ADD2
+Measure[@Type='LM']/LM/R/NearSphere
+Measure[@Type='LM']/LM/R/NearSphere2
+Measure[@Type='LM']/LM/R/Prism
+Measure[@Type='LM']/LM/R/PrismBase
+Measure[@Type='LM']/LM/R/PrismX
+Measure[@Type='LM']/LM/R/PrismX/@base
+Measure[@Type='LM']/LM/R/PrismY
+Measure[@Type='LM']/LM/R/PrismY/@base
+Measure[@Type='LM']/LM/R/UVTransmittance
+Measure[@Type='LM']/LM/R/ConfidenceIndex
+Measure[@Type='LM']/LM/R/Error
+```
+
+Links und Single sind analog mit `/L/` bzw. `/S/` zu führen. PD:
+
+```text
+Measure[@Type='LM']/PD/Distance
+Measure[@Type='LM']/PD/DistanceR
+Measure[@Type='LM']/PD/DistanceL
+Measure[@Type='LM']/PD/Near
+Measure[@Type='LM']/PD/NearR
+Measure[@Type='LM']/PD/NearL
+```
+
+### Sphare vs. Sphere
+
+Das bisher analysierte lokale Praxisfragment enthält die Schreibweise `Sphare` und `NearSphare`. Das Interface Manual beschreibt für die standardisierte LAN-XML-Ausgabe jedoch `Sphere` und `NearSphere`. Beide Varianten sollen vorerst berücksichtigt werden:
+
+- `Sphare`/`NearSphare`: Praxisbeispiel, nicht blind entfernen.
+- `Sphere`/`NearSphere`: bevorzugte standardisierte LAN-XML-Tags laut Manual.
+
+### MEDISTAR-Templates
+
+Basis:
+
+```text
+R.:S={Device.Measure[@Type='LM']/LM/R/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/R/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/R/Axis:Axis}
+L.:S={Device.Measure[@Type='LM']/LM/L/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/L/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/L/Axis:Axis}
+```
+
+Mit Addition:
+
+```text
+R.:S={Device.Measure[@Type='LM']/LM/R/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/R/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/R/Axis:Axis} A={Device.Measure[@Type='LM']/LM/R/ADD:Diopter}
+L.:S={Device.Measure[@Type='LM']/LM/L/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/L/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/L/Axis:Axis} A={Device.Measure[@Type='LM']/LM/L/ADD:Diopter}
+```
+
+Mit Prisma XY und PD:
+
+```text
+R.:S={Device.Measure[@Type='LM']/LM/R/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/R/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/R/Axis:Axis} P={Device.Measure[@Type='LM']/LM/R/PrismX:Prism} {Device.Measure[@Type='LM']/LM/R/PrismX/@base:Raw} {Device.Measure[@Type='LM']/LM/R/PrismY:Prism} {Device.Measure[@Type='LM']/LM/R/PrismY/@base:Raw} PD={Device.Measure[@Type='LM']/PD/Distance:Pd}
+L.:S={Device.Measure[@Type='LM']/LM/L/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/L/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/L/Axis:Axis} P={Device.Measure[@Type='LM']/LM/L/PrismX:Prism} {Device.Measure[@Type='LM']/LM/L/PrismX/@base:Raw} {Device.Measure[@Type='LM']/LM/L/PrismY:Prism} {Device.Measure[@Type='LM']/LM/L/PrismY/@base:Raw}
+```
+
+Die MEDISTAR-Zeilenbezeichnung `V0` bleibt informativ. Sie wird durch MEDISTAR bzw. dortige Karteikartenkonfiguration sichtbar und ist nicht Teil unserer allgemeinen XDT-Schnittstellenlogik.
+
 ## 5. NIDEK NT530P
 
 Gerätetyp: Non-Contact-Tonometer / Pachymeter

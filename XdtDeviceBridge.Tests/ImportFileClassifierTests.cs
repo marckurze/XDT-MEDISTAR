@@ -23,6 +23,7 @@ public sealed class ImportFileClassifierTests
     [InlineData("image.jpeg", ImportFileKind.AttachmentImage)]
     [InlineData("image.png", ImportFileKind.AttachmentImage)]
     [InlineData("document.pdf", ImportFileKind.AttachmentPdf)]
+    [InlineData("NIDEK_LM_Stylesheet.xsl", ImportFileKind.Unknown)]
     [InlineData("unknown.dat", ImportFileKind.Unknown)]
     public void Classify_ShouldMapExtensionToExpectedKind(string fileName, ImportFileKind expectedKind)
     {

@@ -972,6 +972,81 @@ Beispiele aus den Beispieldaten:
 
 Daraus folgt, dass Geräteprofile künftig nicht nur Messwertpfade, sondern auch Untersuchungsarten, Messwertgruppen, Ausgabearten und gerätespezifische Besonderheiten beschreiben müssen.
 
+### 14.1.1 NIDEK LM7/LM7P LAN-XML als Lensmeter-Profil
+
+Die NIDEK LM-7/LM-7P-LAN-Schnittstelle passt zum Zielbild der XdtDeviceBridge: Das Gerät schreibt Messdateien per LAN/WLAN über SMB/Common Internet File System in einen freigegebenen Windows-Ordner. Dieser Shared Folder entspricht in der App dem Geräte-Importordner. Eine direkte Geräte-API ist nicht erforderlich.
+
+Anforderung:
+
+- Die App muss LM7/LM7P-Messdateien aus einem Geräte-Importordner per Scan/Überwachung aufnehmen können.
+- Das Geräteprofil muss LAN-XML-Dateien nach `NIDEK_V1.00` und `NIDEK_V1.01` unterstützen.
+- Das Dateinamenmuster `LM_<ID>_<YYYYMMDDHHMMSS>_<MAC-Lower-Bytes>.xml` ist als typische Geräteausgabe zu dokumentieren.
+- `NIDEK_LM_Stylesheet.xsl` ist keine Messdatei und darf nicht als Gerätedatei verarbeitet werden.
+- Für produktiven Betrieb ist Archivmodus `Move` besonders sinnvoll, weil das Gerät einen Network Timeout melden kann, wenn die XML-Datei nach Ablauf der konfigurierten Zeit noch im Shared Folder liegt.
+- Die App darf hierbei keine unbekannten Dateien löschen; verarbeitete Gerätedateien dürfen gemäß Schnittstellenprofil ins Archiv verschoben werden.
+
+XML-Struktur:
+
+```text
+Ophthalmology
+- Common
+- Measure Type="LM"
+  - MeasureMode
+  - DiopterStep
+  - AxisStep
+  - CylinderMode
+  - PrismDiopterStep
+  - PrismBaseStep
+  - PrismMode
+  - AddMode
+  - LM/S
+  - LM/R
+  - LM/L
+  - PD
+```
+
+Relevante Common-Felder:
+
+- `Common/Company`
+- `Common/ModelName`
+- `Common/MachineNo`
+- `Common/ROMVersion`
+- `Common/Version`
+- `Common/Date`
+- `Common/Time`
+- `Common/Patient/No.`
+- `Common/Patient/ID`
+- `Common/Operator/ID`
+
+Relevante Messwerte je `S`, `R` und `L`:
+
+- `Sphere`, `Cylinder`, `Axis`
+- optional `SE`, `ADD`, `ADD2`, `NearSphere`, `NearSphere2`
+- optional `Prism`, `PrismBase`, `PrismX`, `PrismX/@base`, `PrismY`, `PrismY/@base`
+- optional `UVTransmittance`
+- optional `ConfidenceIndex` und `Error` bei `NIDEK_V1.01`
+
+PD-Werte:
+
+- `Measure[@Type='LM']/PD/Distance`
+- `Measure[@Type='LM']/PD/DistanceR`
+- `Measure[@Type='LM']/PD/DistanceL`
+- `Measure[@Type='LM']/PD/Near`
+- `Measure[@Type='LM']/PD/NearR`
+- `Measure[@Type='LM']/PD/NearL`
+
+Parser-Anforderungen:
+
+- Fehlende optionale Tags und fehlende S-/R-/L-Knoten dürfen nicht als harte Parserfehler gelten.
+- Leere Tags müssen toleriert werden.
+- XML-Attribute müssen als Platzhalter verfügbar sein, z. B. `Measure[@Type='LM']/@Type`, `PrismX/@base`, `PrismY/@base`, `Sphere/@unit`, `Distance/@unit`.
+- Attribute wie `unit="D"` oder `base="out"` sollen nicht verloren gehen.
+- Error-Tags aus `NIDEK_V1.01` sollen als Messwerte und perspektivisch als `DeviceParseIssue` bzw. Gerätewarnung sichtbar gemacht werden.
+
+Hinweis zu Tagvarianten:
+
+Das bisherige lokale LM7-Praxisfragment enthält die Schreibweise `Sphare` und `NearSphare`. Das Interface Manual beschreibt für die standardisierte LAN-XML-Ausgabe `Sphere` und `NearSphere`. Das Geräteprofil soll beide Varianten berücksichtigen, wobei `Sphere`/`NearSphere` die bevorzugten LAN-XML-Tags sind. Vorhandene Praxispfade dürfen nicht blind entfernt werden.
+
 ### 14.2 Mehrere Untersuchungsarten pro Gerätedatei
 
 Ein Gerät kann mehrere Untersuchungsarten in einer Datei liefern.
@@ -1642,7 +1717,7 @@ Aus der fachlichen Auswertung ergeben sich folgende spätere Profilanforderungen
 
 | Profiltyp | Muss unterstützen | Informative MEDISTAR-Empfehlung |
 |---|---|---|
-| Lensmeter-Profil | Sphäre, Zylinder, Achse, optional Prisma und PD | `V0` |
+| Lensmeter-Profil | Sphäre, Zylinder, Achse, optional Addition, zweite Addition, Nahsphäre, Prisma/Basisrichtung, UV-Transmission, ConfidenceIndex/Error und PD; für NIDEK LM7/LM7P LAN-XML `NIDEK_V1.00` und `NIDEK_V1.01` | `V0` |
 | Autorefraktor-Profil | Sphäre, Zylinder, Achse, PD, optional SE | `V1` |
 | Phoropter-Profil | Fernwerte, Sphäre, Zylinder, Achse, Addition | `V2` |
 | Tonometer-Profil | IOP-Einzelwerte, IOP-Mittelwert, Messzeit, Einheit mmHg/Torr | `P` |
