@@ -27,6 +27,222 @@ Der aktuelle Fokus liegt auf dem Workflow MEDISTAR mit einem NIDEK ARK1S / AR-1s
    - Pupillendistanz mit `PD=...`
 7. XDT-Inhalt als Exportdatei schreiben.
 
+## Aktueller Automatik-Prototyp
+
+Der Automatik-Prototyp bereitet die spaetere produktive Ordnerverarbeitung vor und kann bereits manuell gestartet werden. Er ersetzt den manuellen Testmodus nicht, sondern ergaenzt ihn.
+
+### 1. Manuelle Verarbeitung
+
+Die App unterstuetzt weiterhin einen manuellen Testmodus:
+
+- AIS-GDT/XDT-Datei auswaehlen.
+- Geraetedatei auswaehlen, aktuell XML fuer NIDEK ARK1S validiert.
+- Verarbeitung starten.
+- Exportvorschau anzeigen.
+- XDT-Datei in Exportordner schreiben.
+
+Dieser manuelle Modus bleibt als Test- und Diagnosemodus erhalten.
+
+### 2. Schnittstellenprofile
+
+Die App unterstuetzt Schnittstellenprofile fuer spaetere bzw. aktuelle Ordnerverarbeitung.
+
+Ein Schnittstellenprofil enthaelt:
+
+- AIS-Profil
+- Geraeteprofil
+- Exportprofil
+- AIS-Importordner
+- Geraete-Importordner
+- Exportordner ans AIS
+- Archivordner
+- Fehlerordner
+- Aktiv-Haken fuer automatische Verarbeitung
+- Lizenzpflicht-Haken
+- Archivierungsoptionen
+- Fehlerablageoptionen
+
+### 3. Manuell startbare Ueberwachung
+
+Die Ueberwachung startet nicht automatisch beim App-Start. Der Benutzer muss sie im Tab `Verarbeitung` manuell starten.
+
+Funktionen:
+
+- aktive Schnittstellenprofile werden regelmaessig gescannt
+- AIS-Importordner und Geraete-Importordner werden geprueft
+- Dateien werden erst verarbeitet, wenn sie stabil und lesbar sind
+- fertige AIS-/Geraete-Dateipaare werden angezeigt
+- Ueberwachung kann manuell gestoppt werden
+
+Wichtig: Es gibt keinen Windows-Dienst, keinen Autostart und aktuell keinen FileSystemWatcher. Die Ueberwachung basiert auf periodischem Scan.
+
+### 4. Optionale automatische Verarbeitung
+
+Im Tab `Verarbeitung` gibt es den Haken `Gefundene Dateipaare automatisch verarbeiten`.
+
+Standard:
+
+- deaktiviert
+
+Wenn aktiviert:
+
+- gefundene stabile Dateipaare werden automatisch verarbeitet
+- eine XDT-Datei wird im konfigurierten Exportordner erzeugt
+- Importdateien werden je nach Profiloption archiviert
+- Fehler werden im Fehlerordner abgelegt, sofern konfiguriert
+
+Wenn deaktiviert:
+
+- Dateipaare werden nur angezeigt
+- Verarbeitung erfolgt nur ueber den Button zur manuellen Paarverarbeitung
+
+### 5. Archivierungsmodus
+
+Fuer verarbeitete Importdateien kann pro Schnittstellenprofil eingestellt werden:
+
+- Kopieren
+- Verschieben
+
+Kopieren:
+
+- AIS- und Geraetedateien bleiben im Importordner
+- Kopien werden im Archivordner abgelegt
+
+Verschieben:
+
+- AIS- und Geraetedateien werden aus den Importordnern entfernt
+- Dateien werden im Archivordner abgelegt
+
+Empfehlung fuer produktiven Betrieb:
+
+- Archivierung aktivieren
+- Archivierungsmodus `Verschieben` verwenden
+
+Grund: Dadurch bleiben die Importordner sauber und dieselben Dateien werden nicht erneut verarbeitet.
+
+### 6. Archivstruktur
+
+Archivierte Dateien werden in einer Tagesstruktur abgelegt.
+
+Beispiel:
+
+```text
+Archivordner/
+`-- yyyy/
+    `-- MM/
+        `-- dd/
+            `-- Schnittstellenprofil/
+                |-- AIS/
+                |   `-- urspruengliche AIS-Datei
+                `-- Device/
+                    `-- urspruengliche Geraetedatei
+```
+
+Beispiel:
+
+```text
+C:\GitHub\Archiv\2026\05\03\MEDISTAR_NIDEK_ARK1S\AIS\TestPatient.gdt
+C:\GitHub\Archiv\2026\05\03\MEDISTAR_NIDEK_ARK1S\Device\ARK1S.xml
+```
+
+### 7. Duplikatvermeidung
+
+Die App verhindert waehrend der Automatik, dass dasselbe Dateipaar mehrfach exportiert wird.
+
+Wenn ein bereits verarbeitetes Paar erneut in den Importordnern auftaucht:
+
+- es wird nicht erneut exportiert
+- es wird als bereits verarbeitet erkannt
+- je nach Profiloption wird es ins Archiv kopiert oder verschoben
+- unbekannte Dateien werden nicht angeruehrt
+
+Wichtig: Duplikate werden nicht anhand medizinischer Messwerte erkannt, sondern anhand der technischen Dateipaar-Verarbeitung.
+
+### 8. Fehlerablage
+
+Wenn eine manuelle oder automatische Paarverarbeitung fehlschlaegt und Fehlerablage aktiviert ist:
+
+- AIS-Datei wird in den Fehlerordner kopiert
+- Geraetedatei wird in den Fehlerordner kopiert
+- `error.txt` wird erzeugt
+- Originaldateien bleiben erhalten, sofern nicht anders vorgesehen
+- es erfolgt keine endgueltige Loeschung
+
+Fehlerordner-Struktur entspricht sinngemaess der Archivstruktur:
+
+```text
+Fehlerordner/
+`-- yyyy/
+    `-- MM/
+        `-- dd/
+            `-- Schnittstellenprofil/
+                |-- AIS/
+                |-- Device/
+                `-- error.txt
+```
+
+### 9. Keine Exportordner-Bereinigung
+
+Die fruehere Option `Exportordner nach erfolgreicher Uebertragung leeren` wurde aus der UI entfernt.
+
+Begruendung: Nachdem die App eine XDT-Datei in den Exportordner geschrieben hat, ist das AIS fuer den Abruf zustaendig. Ein automatisches Loeschen direkt nach dem Export waere riskant, weil das AIS die Datei eventuell noch nicht verarbeitet hat.
+
+Die App bereinigt daher den Exportordner nicht.
+
+### 10. Sicherheit
+
+Aktueller Sicherheitsstand:
+
+- keine automatische Verarbeitung beim App-Start
+- Ueberwachung nur nach manuellem Start
+- automatische Verarbeitung nur mit bewusst gesetztem Haken
+- keine unbekannten Dateien werden geloescht
+- keine Ordner werden pauschal geleert
+- Importdateien werden nur gemaess Profiloption archiviert
+- Exportordner wird nicht bereinigt
+- Fehler werden nachvollziehbar dokumentiert
+- Archivloeschung ist nur vorbereitet, aber nicht automatisch aktiv
+
+### 11. Aktuell validierter Workflow
+
+Der praktisch validierte Workflow ist:
+
+1. Schnittstellenprofil MEDISTAR + NIDEK ARK1S konfigurieren.
+2. AIS-Importordner setzen.
+3. Geraete-Importordner setzen.
+4. Exportordner setzen.
+5. Archivordner setzen.
+6. Schnittstellenprofil aktivieren.
+7. Automatische Verarbeitung im Verarbeitung-Tab starten.
+8. GDT-Datei und XML-Datei in die Importordner legen.
+9. App erzeugt XDT-Datei.
+10. MEDISTAR kann die XDT-Datei einlesen.
+11. Importdateien werden ins Archiv verschoben, wenn so konfiguriert.
+
+### 12. Noch nicht produktiv umgesetzt
+
+Noch nicht final umgesetzt bzw. bewusst noch nicht aktiviert:
+
+- Windows-Dienst
+- Autostart
+- echter FileSystemWatcher
+- dauerhafte Hintergrundverarbeitung ohne Benutzerstart
+- automatische Archivloeschung im laufenden Betrieb
+- Online-Lizenzierung
+- digitale Signaturpruefung fuer Lizenzdateien
+- produktive Lizenzsperre
+- vollstaendiger Profil-Assistent fuer unbekannte Geraete
+- PDF-/EV-Dokumentenerzeugung
+
+### 13. Build und Test
+
+Nach README-Aenderungen sollten weiterhin Build und Tests laufen:
+
+```powershell
+dotnet build XdtDeviceBridge.sln
+dotnet test XdtDeviceBridge.sln
+```
+
 ## Voraussetzungen
 
 - Windows 10 oder Windows 11
