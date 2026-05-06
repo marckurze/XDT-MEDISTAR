@@ -13,6 +13,7 @@ public sealed class InterfaceProfileManualProcessor
     private readonly ExportFileNameBuilder _fileNameBuilder = new();
     private readonly FileExportService _fileExportService = new();
     private readonly ProcessedFileArchiveService _processedFileArchiveService = new();
+    private readonly FailedFileCopyService _failedFileCopyService = new();
 
     public InterfaceProfileManualProcessingResult Process(
         InterfaceProfileDefinition interfaceProfile,
@@ -29,12 +30,26 @@ public sealed class InterfaceProfileManualProcessor
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ExportFolder))
         {
-            return CreateErrorResult("Exportordner fehlt.", issues);
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                new[] { "Exportordner fehlt." },
+                pipelineResult: null,
+                exportContent: null);
         }
 
         if (!string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {
-            return CreateErrorResult("Dieser Dateityp wird für die manuelle Paarverarbeitung noch nicht unterstützt.", issues);
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                new[] { "Dieser Dateityp wird für die manuelle Paarverarbeitung noch nicht unterstützt." },
+                pipelineResult: null,
+                exportContent: null);
         }
 
         var gdtResult = _gdtParser.ParseFile(aisFilePath);
@@ -44,7 +59,14 @@ public sealed class InterfaceProfileManualProcessor
             issue.Message)));
         if (gdtResult.HasErrors)
         {
-            return CreateErrorResult("AIS-Datei konnte nicht fehlerfrei gelesen werden.", issues);
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                new[] { "AIS-Datei konnte nicht fehlerfrei gelesen werden." },
+                new ProcessingPipelineResult(null, [], [], string.Empty, issues),
+                exportContent: null);
         }
 
         var patient = _patientDataMapper.Map(gdtResult.Records);
@@ -56,13 +78,14 @@ public sealed class InterfaceProfileManualProcessor
             issue.Message)));
         if (deviceResult.HasErrors)
         {
-            return new InterfaceProfileManualProcessingResult(
-                Success: false,
-                ExportFilePath: null,
-                ExportContent: null,
-                PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, [], string.Empty, issues),
-                ArchiveResult: null,
-                Messages: new[] { "Gerätedatei konnte nicht fehlerfrei gelesen werden." });
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                new[] { "Gerätedatei konnte nicht fehlerfrei gelesen werden." },
+                new ProcessingPipelineResult(patient, deviceResult.Measurements, [], string.Empty, issues),
+                exportContent: null);
         }
 
         var mappingRules = _mappingAdapter.Adapt(exportProfile);
@@ -73,13 +96,14 @@ public sealed class InterfaceProfileManualProcessor
             issue.Message)));
         if (mappingResult.HasErrors)
         {
-            return new InterfaceProfileManualProcessingResult(
-                Success: false,
-                ExportFilePath: null,
-                ExportContent: null,
-                PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, string.Empty, issues),
-                ArchiveResult: null,
-                Messages: new[] { "Mapping konnte nicht fehlerfrei ausgeführt werden." });
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                new[] { "Mapping konnte nicht fehlerfrei ausgeführt werden." },
+                new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, string.Empty, issues),
+                exportContent: null);
         }
 
         var exportResult = _xdtExportBuilder.Build(mappingResult.Records);
@@ -89,13 +113,14 @@ public sealed class InterfaceProfileManualProcessor
             issue.Message)));
         if (exportResult.HasErrors)
         {
-            return new InterfaceProfileManualProcessingResult(
-                Success: false,
-                ExportFilePath: null,
-                ExportContent: exportResult.Content,
-                PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
-                ArchiveResult: null,
-                Messages: new[] { "XDT-Export konnte nicht fehlerfrei erzeugt werden." });
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                new[] { "XDT-Export konnte nicht fehlerfrei erzeugt werden." },
+                new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+                exportResult.Content);
         }
 
         var fileName = _fileNameBuilder.Build(
@@ -110,14 +135,14 @@ public sealed class InterfaceProfileManualProcessor
             exportProfile.OutputEncoding);
         if (fileExportResult.HasErrors)
         {
-            messages.AddRange(fileExportResult.Issues.Select(issue => issue.Message));
-            return new InterfaceProfileManualProcessingResult(
-                Success: false,
-                ExportFilePath: null,
-                ExportContent: exportResult.Content,
-                PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
-                ArchiveResult: null,
-                Messages: messages);
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                fileExportResult.Issues.Select(issue => issue.Message).ToList(),
+                new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+                exportResult.Content);
         }
 
         messages.Add("Dateipaar erfolgreich verarbeitet.");
@@ -134,6 +159,35 @@ public sealed class InterfaceProfileManualProcessor
             ExportContent: exportResult.Content,
             PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
             ArchiveResult: archiveResult,
+            FailedFileCopyResult: null,
+            Messages: messages);
+    }
+
+    private InterfaceProfileManualProcessingResult CreateFailureResult(
+        InterfaceProfileDefinition interfaceProfile,
+        string aisFilePath,
+        string deviceFilePath,
+        DateTime failedAt,
+        IReadOnlyList<string> failureMessages,
+        ProcessingPipelineResult? pipelineResult,
+        string? exportContent)
+    {
+        var messages = failureMessages.ToList();
+        var failedFileCopyResult = CopyFailedFilesIfEnabled(
+            interfaceProfile,
+            aisFilePath,
+            deviceFilePath,
+            failedAt.ToUniversalTime(),
+            string.Join(Environment.NewLine, failureMessages),
+            messages);
+
+        return new InterfaceProfileManualProcessingResult(
+            Success: false,
+            ExportFilePath: null,
+            ExportContent: exportContent,
+            PipelineResult: pipelineResult,
+            ArchiveResult: null,
+            FailedFileCopyResult: failedFileCopyResult,
             Messages: messages);
     }
 
@@ -192,16 +246,58 @@ public sealed class InterfaceProfileManualProcessor
         }
     }
 
-    private static InterfaceProfileManualProcessingResult CreateErrorResult(
-        string message,
-        IReadOnlyList<ProcessingIssue> issues)
+    private FailedFileCopyResult? CopyFailedFilesIfEnabled(
+        InterfaceProfileDefinition interfaceProfile,
+        string aisFilePath,
+        string deviceFilePath,
+        DateTime failedAtUtc,
+        string failureReason,
+        List<string> messages)
     {
-        return new InterfaceProfileManualProcessingResult(
-            Success: false,
-            ExportFilePath: null,
-            ExportContent: null,
-            PipelineResult: null,
-            ArchiveResult: null,
-            Messages: new[] { message });
+        if (!interfaceProfile.FolderOptions.MoveFailedFilesToErrorFolder)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ErrorFolder))
+        {
+            var failedFileCopyResult = new FailedFileCopyResult(
+                CopiedFiles: Array.Empty<string>(),
+                Issues: new[] { "Fehlerordner ist nicht konfiguriert." },
+                HasErrors: true);
+            messages.Add("Fehlerordner ist nicht konfiguriert.");
+            return failedFileCopyResult;
+        }
+
+        try
+        {
+            var failedFileCopyResult = _failedFileCopyService.CopyFailedFiles(
+                interfaceProfile.FolderOptions.ErrorFolder,
+                interfaceProfile.Metadata.Name,
+                aisFilePath,
+                deviceFilePath,
+                failedAtUtc,
+                failureReason);
+
+            if (failedFileCopyResult.HasErrors)
+            {
+                messages.Add("Fehlerablage fehlgeschlagen.");
+                messages.AddRange(failedFileCopyResult.Issues);
+                return failedFileCopyResult;
+            }
+
+            messages.Add("Fehlerhafte Importdateien wurden in den Fehlerordner kopiert; Originale bleiben erhalten:");
+            messages.AddRange(failedFileCopyResult.CopiedFiles);
+            return failedFileCopyResult;
+        }
+        catch (Exception ex)
+        {
+            var failedFileCopyResult = new FailedFileCopyResult(
+                CopiedFiles: Array.Empty<string>(),
+                Issues: new[] { ex.Message },
+                HasErrors: true);
+            messages.Add($"Fehlerablage fehlgeschlagen: {ex.Message}");
+            return failedFileCopyResult;
+        }
     }
 }

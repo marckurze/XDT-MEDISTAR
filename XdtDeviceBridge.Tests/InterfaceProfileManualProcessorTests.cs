@@ -36,7 +36,10 @@ public sealed class InterfaceProfileManualProcessorTests
     [Fact]
     public void Process_ShouldReturnErrorForNonXmlDeviceFile()
     {
-        var interfaceProfile = CreateInterfaceProfile(CreateTempFolder());
+        var interfaceProfile = CreateInterfaceProfile(
+            CreateTempFolder(),
+            errorFolder: CreateTempFolder(),
+            moveFailedFilesToErrorFolder: false);
         var deviceFilePath = Path.Combine(CreateTempFolder(), "device.txt");
         File.WriteAllText(deviceFilePath, "device");
 
@@ -49,6 +52,7 @@ public sealed class InterfaceProfileManualProcessorTests
 
         Assert.False(result.Success);
         Assert.Contains("Dieser Dateityp wird für die manuelle Paarverarbeitung noch nicht unterstützt.", result.Messages);
+        Assert.Null(result.FailedFileCopyResult);
     }
 
     [Fact]
@@ -122,10 +126,88 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.Contains("Archivierung fehlgeschlagen: Archivordner fehlt.", result.Messages);
     }
 
+    [Fact]
+    public void Process_ShouldCopyFailedFilesWhenErrorCopyIsEnabled()
+    {
+        var errorFolder = CreateTempFolder();
+        var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
+        var deviceFilePath = Path.Combine(CreateTempFolder(), "device.txt");
+        File.WriteAllText(deviceFilePath, "device");
+        var interfaceProfile = CreateInterfaceProfile(
+            CreateTempFolder(),
+            errorFolder: errorFolder,
+            moveFailedFilesToErrorFolder: true);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 6, 1, 12, 0, 0));
+
+        Assert.False(result.Success);
+        Assert.Contains("Dieser Dateityp wird für die manuelle Paarverarbeitung noch nicht unterstützt.", result.Messages);
+        Assert.NotNull(result.FailedFileCopyResult);
+        Assert.False(result.FailedFileCopyResult.HasErrors);
+        Assert.Equal(3, result.FailedFileCopyResult.CopiedFiles.Count);
+        Assert.True(File.Exists(aisFilePath));
+        Assert.True(File.Exists(deviceFilePath));
+        Assert.Contains("Fehlerhafte Importdateien wurden in den Fehlerordner kopiert; Originale bleiben erhalten:", result.Messages);
+    }
+
+    [Fact]
+    public void Process_ShouldReportMissingErrorFolderWhenErrorCopyIsEnabled()
+    {
+        var deviceFilePath = Path.Combine(CreateTempFolder(), "device.txt");
+        File.WriteAllText(deviceFilePath, "device");
+        var interfaceProfile = CreateInterfaceProfile(
+            CreateTempFolder(),
+            errorFolder: string.Empty,
+            moveFailedFilesToErrorFolder: true);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            deviceFilePath,
+            DateTime.UtcNow);
+
+        Assert.False(result.Success);
+        Assert.Contains("Dieser Dateityp wird für die manuelle Paarverarbeitung noch nicht unterstützt.", result.Messages);
+        Assert.NotNull(result.FailedFileCopyResult);
+        Assert.True(result.FailedFileCopyResult.HasErrors);
+        Assert.Contains("Fehlerordner ist nicht konfiguriert.", result.Messages);
+    }
+
+    [Fact]
+    public void Process_ShouldKeepOriginalFilesWhenErrorCopyIsEnabled()
+    {
+        var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
+        var deviceFilePath = Path.Combine(CreateTempFolder(), "device.txt");
+        File.WriteAllText(deviceFilePath, "device");
+        var interfaceProfile = CreateInterfaceProfile(
+            CreateTempFolder(),
+            errorFolder: CreateTempFolder(),
+            moveFailedFilesToErrorFolder: true);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            aisFilePath,
+            deviceFilePath,
+            DateTime.UtcNow);
+
+        Assert.False(result.Success);
+        Assert.True(File.Exists(aisFilePath));
+        Assert.True(File.Exists(deviceFilePath));
+    }
+
     private static InterfaceProfileDefinition CreateInterfaceProfile(
         string exportFolder,
         string archiveFolder = "",
-        bool archiveProcessedFiles = false)
+        bool archiveProcessedFiles = false,
+        string errorFolder = "",
+        bool moveFailedFilesToErrorFolder = true)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
         {
@@ -140,7 +222,9 @@ public sealed class InterfaceProfileManualProcessorTests
             {
                 ExportFolder = exportFolder,
                 ArchiveFolder = archiveFolder,
-                ArchiveProcessedFiles = archiveProcessedFiles
+                ArchiveProcessedFiles = archiveProcessedFiles,
+                ErrorFolder = errorFolder,
+                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder
             },
             IsActive = true
         };

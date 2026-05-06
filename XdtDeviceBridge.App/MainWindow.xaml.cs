@@ -2005,7 +2005,7 @@ public partial class MainWindow : Window
 
             if (!result.Success)
             {
-                SetScannedPairStatus(selectedPair, "Fehler");
+                SetScannedPairStatus(selectedPair, CreateFailedPairStatus(result));
                 foreach (var message in result.Messages)
                 {
                     AppendMessage(message);
@@ -2051,6 +2051,18 @@ public partial class MainWindow : Window
         return result.ArchiveResult.HasErrors
             ? "Verarbeitet, Archivierung mit Fehlern"
             : "Verarbeitet und archiviert";
+    }
+
+    private static string CreateFailedPairStatus(InterfaceProfileManualProcessingResult result)
+    {
+        if (result.FailedFileCopyResult is null)
+        {
+            return "Fehler";
+        }
+
+        return result.FailedFileCopyResult.HasErrors
+            ? "Fehler, Fehlerablage fehlgeschlagen"
+            : "Fehler, Dateien kopiert";
     }
 
     private void SetScannedPairStatus(ScannedImportPairRow row, string status)

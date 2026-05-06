@@ -8,4 +8,5 @@ public sealed record InterfaceProfileManualProcessingResult(
     string? ExportContent,
     ProcessingPipelineResult? PipelineResult,
     ProcessedFileArchiveResult? ArchiveResult,
+    FailedFileCopyResult? FailedFileCopyResult,
     IReadOnlyList<string> Messages);
