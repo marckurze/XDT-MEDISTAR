@@ -65,6 +65,52 @@ public sealed class ProfileJsonSerializerTests
     }
 
     [Fact]
+    public void InterfaceProfileDefinition_ShouldDeserializeOlderFolderOptionsWithoutArchiveMode()
+    {
+        var json = """
+        {
+          "Metadata": {
+            "Id": "interface-old",
+            "Name": "Old Interface",
+            "ProfileKind": "InterfaceProfile",
+            "Description": null,
+            "Vendor": null,
+            "Product": null,
+            "Version": "1.0",
+            "CreatedAt": "2026-05-03T12:00:00+00:00",
+            "UpdatedAt": "2026-05-03T12:00:00+00:00",
+            "CreatedBy": "Test",
+            "IsBuiltIn": false,
+            "IsUserDefined": true
+          },
+          "AisProfileId": "ais",
+          "DeviceProfileId": "device",
+          "ExportProfileId": "export",
+          "FolderOptions": {
+            "AisImportFolder": "",
+            "DeviceImportFolder": "",
+            "ExportFolder": "",
+            "ArchiveFolder": "",
+            "ErrorFolder": "",
+            "ClearAisImportFolderBeforeProcessing": false,
+            "ClearDeviceImportFolderBeforeProcessing": false,
+            "ClearExportFolderAfterSuccessfulTransfer": false,
+            "ArchiveProcessedFiles": false,
+            "MoveFailedFilesToErrorFolder": true
+          },
+          "IsActive": false,
+          "IsLicenseRequired": true,
+          "Description": null
+        }
+        """;
+
+        var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
+
+        Assert.Equal(ArchiveProcessedFileMode.Copy, deserialized.FolderOptions.ArchiveProcessedFileMode);
+        Assert.Null(deserialized.FolderOptions.ArchiveRetentionDays);
+    }
+
+    [Fact]
     public void TemplatePackage_ShouldRoundTrip()
     {
         var package = CreateTemplatePackage();

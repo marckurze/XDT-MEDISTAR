@@ -80,6 +80,29 @@ public static class InterfaceProfileDefinitionValidator
             issues.Add("ArchiveFolder must be set when ArchiveProcessedFiles is true.");
         }
 
+        if (!Enum.IsDefined(profile.FolderOptions.ArchiveProcessedFileMode))
+        {
+            issues.Add("ArchiveProcessedFileMode must be a valid value.");
+        }
+
+        if (profile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move
+            && !profile.FolderOptions.ArchiveProcessedFiles)
+        {
+            issues.Add("ArchiveProcessedFiles must be true when ArchiveProcessedFileMode is Move.");
+        }
+
+        if (profile.FolderOptions.ArchiveRetentionDays < 0)
+        {
+            issues.Add("ArchiveRetentionDays must not be negative.");
+        }
+
+        if (profile.FolderOptions.ArchiveProcessedFiles
+            && profile.FolderOptions.ArchiveRetentionDays > 0
+            && string.IsNullOrWhiteSpace(profile.FolderOptions.ArchiveFolder))
+        {
+            issues.Add("ArchiveFolder must be set when ArchiveRetentionDays is configured for archived files.");
+        }
+
         if (profile.IsActive
             && profile.FolderOptions.MoveFailedFilesToErrorFolder
             && string.IsNullOrWhiteSpace(profile.FolderOptions.ErrorFolder))

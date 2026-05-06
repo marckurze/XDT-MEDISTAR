@@ -535,6 +535,8 @@ public partial class MainWindow : Window
         InterfaceClearExportFolderCheckBox.IsChecked = profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = profile.FolderOptions.ArchiveProcessedFiles;
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = profile.FolderOptions.MoveFailedFilesToErrorFolder;
+        InterfaceArchiveModeComboBox.SelectedValue = profile.FolderOptions.ArchiveProcessedFileMode.ToString();
+        InterfaceArchiveRetentionDaysTextBox.Text = profile.FolderOptions.ArchiveRetentionDays?.ToString() ?? string.Empty;
     }
 
     private void ClearInterfaceProfileEditor()
@@ -554,6 +556,8 @@ public partial class MainWindow : Window
         InterfaceClearExportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = false;
+        InterfaceArchiveModeComboBox.SelectedValue = ArchiveProcessedFileMode.Copy.ToString();
+        InterfaceArchiveRetentionDaysTextBox.Text = string.Empty;
     }
 
     private void CreateInterfaceProfileForSelectedExport_Click(object sender, RoutedEventArgs e)
@@ -596,7 +600,17 @@ public partial class MainWindow : Window
         }
 
         var selectedExportProfileId = (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id;
-        var folderOptions = CreateInterfaceFolderOptionsFromEditor();
+        InterfaceFolderOptions folderOptions;
+        try
+        {
+            folderOptions = CreateInterfaceFolderOptionsFromEditor();
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            AppendProfileMessage($"Schnittstellenprofil wurde nicht gespeichert: {ex.Message}");
+            return;
+        }
+
         var result = _interfaceProfileConfigurationService.CreateConfiguredProfile(
             selectedProfile,
             folderOptions,
@@ -702,7 +716,32 @@ public partial class MainWindow : Window
             ClearDeviceImportFolderBeforeProcessing: InterfaceClearDeviceImportFolderCheckBox.IsChecked == true,
             ClearExportFolderAfterSuccessfulTransfer: InterfaceClearExportFolderCheckBox.IsChecked == true,
             ArchiveProcessedFiles: InterfaceArchiveProcessedFilesCheckBox.IsChecked == true,
-            MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true);
+            MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true,
+            ArchiveProcessedFileMode: ReadArchiveProcessedFileModeFromEditor(),
+            ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor());
+    }
+
+    private ArchiveProcessedFileMode ReadArchiveProcessedFileModeFromEditor()
+    {
+        return string.Equals(InterfaceArchiveModeComboBox.SelectedValue as string, ArchiveProcessedFileMode.Move.ToString(), StringComparison.Ordinal)
+            ? ArchiveProcessedFileMode.Move
+            : ArchiveProcessedFileMode.Copy;
+    }
+
+    private int? ReadArchiveRetentionDaysFromEditor()
+    {
+        var rawValue = InterfaceArchiveRetentionDaysTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
+
+        if (!int.TryParse(rawValue, out var retentionDays))
+        {
+            throw new FormatException("Archiv-Aufbewahrungsfrist muss leer, 0 oder eine ganze Zahl sein.");
+        }
+
+        return retentionDays == 0 ? null : retentionDays;
     }
 
     private void SelectInterfaceFolder_Click(object sender, RoutedEventArgs e)
@@ -2259,7 +2298,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            SetScannedPairStatus(selectedPair, CreateProcessedPairStatus(result));
+            SetScannedPairStatus(selectedPair, CreateProcessedPairStatus(interfaceProfile, result));
             if (result.PipelineResult is not null)
             {
                 _lastPipelineResult = result.PipelineResult;
@@ -2286,15 +2325,22 @@ public partial class MainWindow : Window
         }
     }
 
-    private static string CreateProcessedPairStatus(InterfaceProfileManualProcessingResult result)
+    private static string CreateProcessedPairStatus(
+        InterfaceProfileDefinition interfaceProfile,
+        InterfaceProfileManualProcessingResult result)
     {
         if (result.ArchiveResult is null)
         {
             return "Verarbeitet";
         }
 
-        return result.ArchiveResult.HasErrors
-            ? "Verarbeitet, Archivierung mit Fehlern"
+        if (result.ArchiveResult.HasErrors)
+        {
+            return "Verarbeitet, Archivierung mit Fehlern";
+        }
+
+        return interfaceProfile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move
+            ? "Verarbeitet und ins Archiv verschoben"
             : "Verarbeitet und archiviert";
     }
 

@@ -68,7 +68,7 @@ public sealed class AutoImportPairProcessingCoordinator
                     pair.DeviceFile.FilePath,
                     timestamp);
                 _processedPairKeys.Add(pairKey);
-                results.Add(CreateProcessedResult(pairKey, pair, processingResult));
+                results.Add(CreateProcessedResult(interfaceProfile, pairKey, pair, processingResult));
             }
             catch (Exception ex)
             {
@@ -99,6 +99,7 @@ public sealed class AutoImportPairProcessingCoordinator
     }
 
     private static AutoImportPairProcessingResult CreateProcessedResult(
+        InterfaceProfileDefinition interfaceProfile,
         string pairKey,
         PendingImportPair pair,
         InterfaceProfileManualProcessingResult processingResult)
@@ -110,13 +111,15 @@ public sealed class AutoImportPairProcessingCoordinator
             WasProcessed: true,
             WasSkipped: false,
             Success: processingResult.Success,
-            Status: CreateStatus(processingResult),
+            Status: CreateStatus(interfaceProfile, processingResult),
             ExportFilePath: processingResult.ExportFilePath,
             ManualProcessingResult: processingResult,
             Messages: processingResult.Messages);
     }
 
-    private static string CreateStatus(InterfaceProfileManualProcessingResult processingResult)
+    private static string CreateStatus(
+        InterfaceProfileDefinition interfaceProfile,
+        InterfaceProfileManualProcessingResult processingResult)
     {
         if (processingResult.Success)
         {
@@ -125,8 +128,13 @@ public sealed class AutoImportPairProcessingCoordinator
                 return "Automatisch verarbeitet";
             }
 
-            return processingResult.ArchiveResult.HasErrors
-                ? "Automatisch verarbeitet, Archivierung mit Fehlern"
+            if (processingResult.ArchiveResult.HasErrors)
+            {
+                return "Automatisch verarbeitet, Archivierung mit Fehlern";
+            }
+
+            return interfaceProfile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move
+                ? "Automatisch verarbeitet und ins Archiv verschoben"
                 : "Automatisch verarbeitet und archiviert";
         }
 

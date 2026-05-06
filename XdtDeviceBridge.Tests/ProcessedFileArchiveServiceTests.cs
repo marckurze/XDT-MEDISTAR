@@ -129,6 +129,36 @@ public sealed class ProcessedFileArchiveServiceTests
     }
 
     [Fact]
+    public void ArchiveProcessedFiles_MoveModeShouldUseSuffixWhenTargetFileExists()
+    {
+        var archiveFolder = CreateTempFolder();
+        var firstFiles = CreateSourceFiles("TestPatient.gdt", "ARK1S.xml");
+        var secondFiles = CreateSourceFiles("TestPatient.gdt", "ARK1S.xml");
+
+        var first = _service.ArchiveProcessedFiles(
+            archiveFolder,
+            "Profil",
+            firstFiles.AisFilePath,
+            firstFiles.DeviceFilePath,
+            ProcessedAtUtc,
+            moveFiles: true);
+        var second = _service.ArchiveProcessedFiles(
+            archiveFolder,
+            "Profil",
+            secondFiles.AisFilePath,
+            secondFiles.DeviceFilePath,
+            ProcessedAtUtc,
+            moveFiles: true);
+
+        Assert.False(first.HasErrors);
+        Assert.False(second.HasErrors);
+        Assert.Contains(second.ArchivedFiles, filePath => filePath.EndsWith("TestPatient_1.gdt", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(second.ArchivedFiles, filePath => filePath.EndsWith("ARK1S_1.xml", StringComparison.OrdinalIgnoreCase));
+        Assert.False(File.Exists(secondFiles.AisFilePath));
+        Assert.False(File.Exists(secondFiles.DeviceFilePath));
+    }
+
+    [Fact]
     public void ArchiveProcessedFiles_ShouldReturnErrorForMissingSourceFile()
     {
         var archiveFolder = CreateTempFolder();
@@ -148,11 +178,11 @@ public sealed class ProcessedFileArchiveServiceTests
         Assert.Single(result.ArchivedFiles);
     }
 
-    private static SourceFiles CreateSourceFiles()
+    private static SourceFiles CreateSourceFiles(string aisFileName = "TestPatient.gdt", string deviceFileName = "ARK1S.xml")
     {
         var folder = CreateTempFolder();
-        var aisFilePath = Path.Combine(folder, "TestPatient.gdt");
-        var deviceFilePath = Path.Combine(folder, "ARK1S.xml");
+        var aisFilePath = Path.Combine(folder, aisFileName);
+        var deviceFilePath = Path.Combine(folder, deviceFileName);
         File.WriteAllText(aisFilePath, "gdt");
         File.WriteAllText(deviceFilePath, "xml");
         return new SourceFiles(aisFilePath, deviceFilePath);

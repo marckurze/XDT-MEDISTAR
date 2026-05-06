@@ -97,7 +97,35 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.Equal(2, result.ArchiveResult.ArchivedFiles.Count);
         Assert.True(File.Exists(aisFilePath));
         Assert.True(File.Exists(deviceFilePath));
-        Assert.Contains("Importdateien wurden archiviert:", result.Messages);
+        Assert.Contains("Importdateien wurden ins Archiv kopiert. Originale bleiben erhalten:", result.Messages);
+    }
+
+    [Fact]
+    public void Process_ShouldMoveFilesWhenArchiveModeIsMove()
+    {
+        var exportFolder = CreateTempFolder();
+        var archiveFolder = CreateTempFolder();
+        var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
+        var deviceFilePath = CopyTestDataToTemp("nidek-ark1s-sample.xml", "device.xml");
+        var interfaceProfile = CreateInterfaceProfile(
+            exportFolder,
+            archiveFolder: archiveFolder,
+            archiveProcessedFiles: true,
+            archiveProcessedFileMode: ArchiveProcessedFileMode.Move);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 6, 1, 12, 0, 0));
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.ArchiveResult);
+        Assert.False(result.ArchiveResult.HasErrors);
+        Assert.False(File.Exists(aisFilePath));
+        Assert.False(File.Exists(deviceFilePath));
+        Assert.Contains("Importdateien wurden ins Archiv verschoben:", result.Messages);
     }
 
     [Fact]
@@ -206,6 +234,7 @@ public sealed class InterfaceProfileManualProcessorTests
         string exportFolder,
         string archiveFolder = "",
         bool archiveProcessedFiles = false,
+        ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
         string errorFolder = "",
         bool moveFailedFilesToErrorFolder = true)
     {
@@ -223,6 +252,7 @@ public sealed class InterfaceProfileManualProcessorTests
                 ExportFolder = exportFolder,
                 ArchiveFolder = archiveFolder,
                 ArchiveProcessedFiles = archiveProcessedFiles,
+                ArchiveProcessedFileMode = archiveProcessedFileMode,
                 ErrorFolder = errorFolder,
                 MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder
             },

@@ -10,4 +10,6 @@ public sealed record InterfaceFolderOptions(
     bool ClearDeviceImportFolderBeforeProcessing,
     bool ClearExportFolderAfterSuccessfulTransfer,
     bool ArchiveProcessedFiles,
-    bool MoveFailedFilesToErrorFolder);
+    bool MoveFailedFilesToErrorFolder,
+    ArchiveProcessedFileMode ArchiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
+    int? ArchiveRetentionDays = null);

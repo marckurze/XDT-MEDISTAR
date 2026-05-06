@@ -151,6 +151,42 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.False(options.ClearExportFolderAfterSuccessfulTransfer);
         Assert.False(options.ArchiveProcessedFiles);
         Assert.True(options.MoveFailedFilesToErrorFolder);
+        Assert.Equal(ArchiveProcessedFileMode.Copy, options.ArchiveProcessedFileMode);
+        Assert.Null(options.ArchiveRetentionDays);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportNegativeArchiveRetentionDays()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(archiveRetentionDays: -1));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("ArchiveRetentionDays must not be negative.", issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportArchiveRetentionWithoutArchiveFolderWhenArchiveIsEnabled()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            archiveProcessedFiles: true,
+            archiveRetentionDays: 30));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("ArchiveFolder must be set when ArchiveRetentionDays is configured for archived files.", issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportMoveModeWithoutArchiveProcessedFiles()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            archiveProcessedFileMode: ArchiveProcessedFileMode.Move,
+            archiveProcessedFiles: false));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("ArchiveProcessedFiles must be true when ArchiveProcessedFileMode is Move.", issues);
     }
 
     private static InterfaceProfileDefinition WithFolderOptions(InterfaceFolderOptions options)
@@ -171,7 +207,9 @@ public sealed class InterfaceProfileDefinitionTests
         bool clearDeviceImportFolderBeforeProcessing = false,
         bool clearExportFolderAfterSuccessfulTransfer = false,
         bool archiveProcessedFiles = false,
-        bool moveFailedFilesToErrorFolder = false)
+        bool moveFailedFilesToErrorFolder = false,
+        ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
+        int? archiveRetentionDays = null)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -183,7 +221,9 @@ public sealed class InterfaceProfileDefinitionTests
             ClearDeviceImportFolderBeforeProcessing: clearDeviceImportFolderBeforeProcessing,
             ClearExportFolderAfterSuccessfulTransfer: clearExportFolderAfterSuccessfulTransfer,
             ArchiveProcessedFiles: archiveProcessedFiles,
-            MoveFailedFilesToErrorFolder: moveFailedFilesToErrorFolder);
+            MoveFailedFilesToErrorFolder: moveFailedFilesToErrorFolder,
+            ArchiveProcessedFileMode: archiveProcessedFileMode,
+            ArchiveRetentionDays: archiveRetentionDays);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

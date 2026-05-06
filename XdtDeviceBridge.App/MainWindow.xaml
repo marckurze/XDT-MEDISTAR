@@ -541,11 +541,13 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                                     <RowDefinition Height="Auto"/>
+                                     <RowDefinition Height="Auto"/>
+                                     <RowDefinition Height="Auto"/>
+                                     <RowDefinition Height="Auto"/>
+                                     <RowDefinition Height="Auto"/>
+                                     <RowDefinition Height="Auto"/>
+                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
@@ -895,15 +897,58 @@
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
 
-                                <WrapPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
-                                    <CheckBox x:Name="InterfaceClearAisImportFolderCheckBox" Content="AIS-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceClearDeviceImportFolderCheckBox" Content="Geräte-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceClearExportFolderCheckBox" Content="Exportordner nach erfolgreicher Übertragung leeren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceArchiveProcessedFilesCheckBox" Content="verarbeitete Dateien archivieren" Margin="0,0,16,8"/>
-                                    <CheckBox x:Name="InterfaceMoveFailedFilesToErrorFolderCheckBox" Content="fehlerhafte Dateien in Fehlerordner verschieben" Margin="0,0,16,8"/>
-                                </WrapPanel>
-                            </Grid>
-                        </GroupBox>
+                                 <WrapPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                     <CheckBox x:Name="InterfaceClearAisImportFolderCheckBox" Content="AIS-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
+                                     <CheckBox x:Name="InterfaceClearDeviceImportFolderCheckBox" Content="Geräte-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
+                                     <CheckBox x:Name="InterfaceClearExportFolderCheckBox" Content="Exportordner nach erfolgreicher Übertragung leeren" Margin="0,0,16,8"/>
+                                     <CheckBox x:Name="InterfaceArchiveProcessedFilesCheckBox" Content="verarbeitete Dateien archivieren" Margin="0,0,16,8"/>
+                                     <CheckBox x:Name="InterfaceMoveFailedFilesToErrorFolderCheckBox" Content="fehlerhafte Dateien in Fehlerordner verschieben" Margin="0,0,16,8"/>
+                                 </WrapPanel>
+
+                                 <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                     <Grid.RowDefinitions>
+                                         <RowDefinition Height="Auto"/>
+                                         <RowDefinition Height="Auto"/>
+                                         <RowDefinition Height="Auto"/>
+                                     </Grid.RowDefinitions>
+                                     <Grid.ColumnDefinitions>
+                                         <ColumnDefinition Width="220"/>
+                                         <ColumnDefinition Width="*"/>
+                                     </Grid.ColumnDefinitions>
+
+                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Archivierungsmodus:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                     <ComboBox Grid.Row="0"
+                                               Grid.Column="1"
+                                               x:Name="InterfaceArchiveModeComboBox"
+                                               SelectedValuePath="Tag"
+                                               SelectedValue="Copy"
+                                               Width="220"
+                                               HorizontalAlignment="Left"
+                                               Margin="0,0,0,8"
+                                               ToolTip="Beim Modus 'Verschieben' werden verarbeitete Importdateien nach erfolgreicher Verarbeitung aus den Importordnern entfernt und ins Archiv verschoben. Dadurch wird eine erneute Verarbeitung derselben Dateien vermieden.">
+                                         <ComboBoxItem Content="Kopieren" Tag="Copy"/>
+                                         <ComboBoxItem Content="Verschieben" Tag="Move"/>
+                                     </ComboBox>
+
+                                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Archiv löschen nach Tagen:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                     <TextBox Grid.Row="1"
+                                              Grid.Column="1"
+                                              x:Name="InterfaceArchiveRetentionDaysTextBox"
+                                              Width="120"
+                                              HorizontalAlignment="Left"
+                                              Margin="0,0,0,8"
+                                              ToolTip="Leer oder 0 bedeutet: keine automatische Löschung. Positive Zahlen konfigurieren die Aufbewahrungsfrist in Tagen."/>
+
+                                     <TextBlock Grid.Row="2"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="2"
+                                                Text="Automatische Löschung betrifft nur den Archivordner und wird erst nach Ablauf der konfigurierten Aufbewahrungsfrist vorgesehen. Import-, Export- und Fehlerordner werden dadurch nicht bereinigt."
+                                                Foreground="DarkOrange"
+                                                FontWeight="Bold"
+                                                TextWrapping="Wrap"/>
+                                 </Grid>
+                             </Grid>
+                         </GroupBox>
                     </Grid>
                 </ScrollViewer>
             </TabItem>

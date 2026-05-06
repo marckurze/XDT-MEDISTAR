@@ -34,6 +34,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.False(profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer);
         Assert.False(profile.FolderOptions.ArchiveProcessedFiles);
         Assert.True(profile.FolderOptions.MoveFailedFilesToErrorFolder);
+        Assert.Equal(ArchiveProcessedFileMode.Copy, profile.FolderOptions.ArchiveProcessedFileMode);
+        Assert.Null(profile.FolderOptions.ArchiveRetentionDays);
     }
 
     [Fact]
@@ -160,6 +162,52 @@ public sealed class InterfaceProfileConfigurationServiceTests
             && issue.Message == "AIS-Importordner existiert aktuell nicht.");
     }
 
+    [Fact]
+    public void CreateConfiguredProfile_ShouldReportInvalidArchiveRetentionDays()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(archiveRetentionDays: -1);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Issues, issue =>
+            issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error
+            && issue.Message == "ArchiveRetentionDays must not be negative.");
+    }
+
+    [Fact]
+    public void CreateConfiguredProfile_ShouldReportMoveModeWithoutArchiveProcessing()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(archiveProcessedFileMode: ArchiveProcessedFileMode.Move);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Issues, issue =>
+            issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error
+            && issue.Message == "ArchiveProcessedFiles must be true when ArchiveProcessedFileMode is Move.");
+    }
+
     private static InterfaceFolderOptions CreateFolderOptions(
         string aisImportFolder = "",
         string deviceImportFolder = "",
@@ -170,7 +218,9 @@ public sealed class InterfaceProfileConfigurationServiceTests
         bool clearDeviceImportFolderBeforeProcessing = false,
         bool clearExportFolderAfterSuccessfulTransfer = false,
         bool archiveProcessedFiles = false,
-        bool moveFailedFilesToErrorFolder = true)
+        bool moveFailedFilesToErrorFolder = true,
+        ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
+        int? archiveRetentionDays = null)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -182,7 +232,9 @@ public sealed class InterfaceProfileConfigurationServiceTests
             ClearDeviceImportFolderBeforeProcessing: clearDeviceImportFolderBeforeProcessing,
             ClearExportFolderAfterSuccessfulTransfer: clearExportFolderAfterSuccessfulTransfer,
             ArchiveProcessedFiles: archiveProcessedFiles,
-            MoveFailedFilesToErrorFolder: moveFailedFilesToErrorFolder);
+            MoveFailedFilesToErrorFolder: moveFailedFilesToErrorFolder,
+            ArchiveProcessedFileMode: archiveProcessedFileMode,
+            ArchiveRetentionDays: archiveRetentionDays);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

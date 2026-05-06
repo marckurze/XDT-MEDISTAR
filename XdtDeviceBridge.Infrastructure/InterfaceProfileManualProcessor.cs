@@ -216,13 +216,14 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 
         try
         {
+            var moveFiles = interfaceProfile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move;
             var archiveResult = _processedFileArchiveService.ArchiveProcessedFiles(
                 interfaceProfile.FolderOptions.ArchiveFolder,
                 interfaceProfile.Metadata.Name,
                 aisFilePath,
                 deviceFilePath,
                 processedAtUtc,
-                moveFiles: false);
+                moveFiles);
 
             if (archiveResult.HasErrors)
             {
@@ -231,7 +232,9 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 return archiveResult;
             }
 
-            messages.Add("Importdateien wurden archiviert:");
+            messages.Add(moveFiles
+                ? "Importdateien wurden ins Archiv verschoben:"
+                : "Importdateien wurden ins Archiv kopiert. Originale bleiben erhalten:");
             messages.AddRange(archiveResult.ArchivedFiles);
             return archiveResult;
         }
