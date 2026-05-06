@@ -27,6 +27,7 @@ public partial class MainWindow : Window
     private readonly LicenseEvaluator _licenseEvaluator = new();
     private readonly LicensedDeviceStateEvaluator _licensedDeviceStateEvaluator = new();
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
+    private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -37,6 +38,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
+    private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
@@ -55,6 +57,7 @@ public partial class MainWindow : Window
         DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
         ExportRulesGrid.ItemsSource = _visibleExportRules;
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
+        ActiveInterfaceProfilesGrid.ItemsSource = _activeInterfaceProfileStatusRows;
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -98,6 +101,7 @@ public partial class MainWindow : Window
             ClearDraftRuleEditor();
             ClearPlaceholderTables();
             ClearInterfaceProfileEditor();
+            ClearActiveInterfaceProfilesOverview("Aktive Schnittstellenprofile konnten nicht geladen werden.");
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
     }
@@ -1812,6 +1816,43 @@ public partial class MainWindow : Window
             licenseRequiredStates.Count,
             activeLicenseRequiredStates.Count,
             uncoveredCount);
+
+        ShowActiveInterfaceProfilesOverview(states);
+    }
+
+    private void ShowActiveInterfaceProfilesOverview(IReadOnlyList<LicensedDeviceState> licenseStates)
+    {
+        _activeInterfaceProfileStatusRows.Clear();
+
+        if (_profileCatalog is null)
+        {
+            ActiveInterfaceProfilesStatusText.Text = "Keine Profile geladen.";
+            return;
+        }
+
+        var rows = _activeInterfaceProfileStatusService.BuildRows(
+                _profileCatalog.InterfaceProfiles,
+                _profileCatalog.AisProfiles,
+                _profileCatalog.DeviceProfiles,
+                _profileCatalog.ExportProfiles,
+                licenseStates)
+            .OrderBy(row => row.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        foreach (var row in rows)
+        {
+            _activeInterfaceProfileStatusRows.Add(row);
+        }
+
+        ActiveInterfaceProfilesStatusText.Text = rows.Count == 0
+            ? "Keine aktiven Schnittstellenprofile konfiguriert."
+            : $"{rows.Count} aktive Schnittstellenprofil(e) für die spätere automatische Verarbeitung konfiguriert.";
+    }
+
+    private void ClearActiveInterfaceProfilesOverview(string message)
+    {
+        _activeInterfaceProfileStatusRows.Clear();
+        ActiveInterfaceProfilesStatusText.Text = message;
     }
 
     private static string CreateLicensedDeviceStatusText(
@@ -1864,6 +1905,7 @@ public partial class MainWindow : Window
         LicensedDeviceUncoveredCountText.Text = "0";
         LicensedDeviceGraceCountText.Text = "0";
         LicensedDeviceStatusText.Text = "Lizenzierte Geräte / Anbindungen konnten nicht geladen werden.";
+        ShowActiveInterfaceProfilesOverview(Array.Empty<LicensedDeviceState>());
     }
 
     private static string FormatLicenseStatus(LicenseEvaluationResult evaluation)

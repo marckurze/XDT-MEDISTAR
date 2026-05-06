@@ -16,6 +16,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="3*"/>
                             <RowDefinition Height="6"/>
                             <RowDefinition Height="2*"/>
@@ -23,7 +24,90 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <GroupBox Header="Aktive Schnittstellenprofile" Grid.Row="0" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="220"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
+                                           Foreground="DimGray"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock Grid.Row="1"
+                                           x:Name="ActiveInterfaceProfilesStatusText"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+                                <DataGrid Grid.Row="2"
+                                          x:Name="ActiveInterfaceProfilesGrid"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto"
+                                          MinHeight="180">
+                                    <DataGrid.Resources>
+                                        <Style x:Key="TrimmedCellTextStyle" TargetType="TextBlock">
+                                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGrid.Resources>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" MinWidth="220" Width="220">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding Name}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="AIS" Binding="{Binding AisName}" MinWidth="140" Width="140"/>
+                                        <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceName}" MinWidth="160" Width="160"/>
+                                        <DataGridTextColumn Header="Exportprofil" Binding="{Binding ExportProfileName}" MinWidth="220" Width="220">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding ExportProfileName}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="AIS-Importordner" Binding="{Binding AisImportFolder}" MinWidth="240" Width="240">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding AisImportFolder}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Geräte-Importordner" Binding="{Binding DeviceImportFolder}" MinWidth="240" Width="240">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding DeviceImportFolder}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Exportordner" Binding="{Binding ExportFolder}" MinWidth="240" Width="240">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding ExportFolder}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Lizenz" Binding="{Binding LicenseStatus}" MinWidth="160" Width="160"/>
+                                        <DataGridTextColumn Header="Ordnerstatus" Binding="{Binding FolderStatus}" MinWidth="220" Width="220">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding FolderStatus}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding ProcessingStatus}" MinWidth="220" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </GroupBox>
+
+                        <Grid Grid.Row="1" Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="*"/>
@@ -32,7 +116,7 @@
                             <TextBox Grid.Column="1" x:Name="AisFilePathTextBox" IsReadOnly="True" />
                         </Grid>
 
-                        <Grid Grid.Row="1" Margin="0,0,0,8">
+                        <Grid Grid.Row="2" Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="*"/>
@@ -41,12 +125,12 @@
                             <TextBox Grid.Column="1" x:Name="DeviceFilePathTextBox" IsReadOnly="True" />
                         </Grid>
 
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="Verarbeiten" Width="150" Margin="0,0,8,0" Click="Process_Click" />
                             <Button Content="Exportdatei schreiben" Width="180" Click="Export_Click" />
                         </StackPanel>
 
-                        <GroupBox Header="Patientendaten" Grid.Row="3" Margin="0,0,0,8">
+                        <GroupBox Header="Patientendaten" Grid.Row="4" Margin="0,0,0,8">
                             <UniformGrid Columns="4" Margin="8">
                                 <TextBlock Text="PatientNumber:" FontWeight="Bold"/>
                                 <TextBlock x:Name="PatientNumberText" TextTrimming="CharacterEllipsis"/>
@@ -63,7 +147,7 @@
                             </UniformGrid>
                         </GroupBox>
 
-                        <GroupBox Header="Messwerte" Grid.Row="4" Margin="0,0,0,0">
+                        <GroupBox Header="Messwerte" Grid.Row="5" Margin="0,0,0,0">
                             <DataGrid x:Name="MeasurementsGrid" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="260">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="*"/>
@@ -76,14 +160,14 @@
                             </DataGrid>
                         </GroupBox>
 
-                        <GridSplitter Grid.Row="5"
+                        <GridSplitter Grid.Row="6"
                                       Height="6"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Center"
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <GroupBox Header="Exportvorschau" Grid.Row="6" Margin="0,0,0,0">
+                        <GroupBox Header="Exportvorschau" Grid.Row="7" Margin="0,0,0,0">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -101,14 +185,14 @@
                             </Grid>
                         </GroupBox>
 
-                        <GridSplitter Grid.Row="7"
+                        <GridSplitter Grid.Row="8"
                                       Height="6"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Center"
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <GroupBox Header="Meldungen" Grid.Row="8">
+                        <GroupBox Header="Meldungen" Grid.Row="9">
                             <TextBox x:Name="MessagesTextBox"
                                      Margin="8"
                                      IsReadOnly="True"
