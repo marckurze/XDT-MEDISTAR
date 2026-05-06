@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private readonly AutoImportScannerService _autoImportScannerService = new();
     private readonly PeriodicAutoImportScanService _periodicAutoImportScanService = new();
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
+    private readonly AutoImportPairProcessingCoordinator _autoImportPairProcessingCoordinator = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -1991,6 +1992,88 @@ public partial class MainWindow : Window
         {
             AddReadyPairsFromScanResult(profile, result);
         }
+
+        var automaticProcessingResult = TryProcessReadyPairsAutomatically(profile, result);
+        if (automaticProcessingResult is null)
+        {
+            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+            ActiveProfileScanResultTextBox.AppendText("Automatische Verarbeitung: deaktiviert.");
+        }
+        else
+        {
+            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+            ActiveProfileScanResultTextBox.AppendText($"Automatisch verarbeitet: {automaticProcessingResult.ProcessedCount}");
+            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+            ActiveProfileScanResultTextBox.AppendText($"Bereits verarbeitet übersprungen: {automaticProcessingResult.SkippedAlreadyProcessedCount}");
+            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+            ActiveProfileScanResultTextBox.AppendText($"Automatische Fehler: {automaticProcessingResult.ErrorCount}");
+        }
+
+        ActiveProfileScanResultTextBox.ScrollToEnd();
+    }
+
+    private AutoImportPairProcessingBatchResult? TryProcessReadyPairsAutomatically(
+        InterfaceProfileDefinition? interfaceProfile,
+        AutoImportScanResult scanResult)
+    {
+        if (EnableAutomaticPairProcessingCheckBox.IsChecked != true || _periodicScanCancellationTokenSource is null)
+        {
+            return null;
+        }
+
+        if (interfaceProfile is null)
+        {
+            AppendMessage("Automatische Verarbeitung nicht möglich: Schnittstellenprofil wurde nicht gefunden.");
+            return new AutoImportPairProcessingBatchResult(0, 0, 1, Array.Empty<AutoImportPairProcessingResult>());
+        }
+
+        var exportProfile = _profileCatalog?.ExportProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfile.ExportProfileId, StringComparison.Ordinal));
+        if (exportProfile is null)
+        {
+            AppendMessage($"Automatische Verarbeitung nicht möglich: Exportprofil fehlt für {interfaceProfile.Metadata.Name}.");
+            return new AutoImportPairProcessingBatchResult(0, 0, 1, Array.Empty<AutoImportPairProcessingResult>());
+        }
+
+        var readyPairs = scanResult.Queue.FindReadyPairs();
+        var batchResult = _autoImportPairProcessingCoordinator.ProcessReadyPairs(
+            interfaceProfile,
+            exportProfile,
+            readyPairs,
+            automaticProcessingEnabled: true,
+            DateTime.Now);
+
+        foreach (var result in batchResult.Results)
+        {
+            UpdateScannedPairStatus(
+                interfaceProfile.Metadata.Id,
+                result.AisFilePath,
+                result.DeviceFilePath,
+                result.Status);
+
+            if (result.WasSkipped)
+            {
+                AppendMessage($"{interfaceProfile.Metadata.Name}: Paar bereits verarbeitet.");
+                continue;
+            }
+
+            if (result.Success)
+            {
+                AppendMessage($"{interfaceProfile.Metadata.Name}: automatisch verarbeitet. Exportdatei: {result.ExportFilePath}");
+            }
+            else
+            {
+                AppendMessage($"{interfaceProfile.Metadata.Name}: automatische Verarbeitung fehlgeschlagen.");
+            }
+
+            foreach (var message in result.Messages)
+            {
+                AppendMessage(message);
+            }
+        }
+
+        ScannedImportPairsGrid.Items.Refresh();
+        return batchResult;
     }
 
     private void AddReadyPairsFromScanResult(InterfaceProfileDefinition profile, AutoImportScanResult result)
@@ -2017,6 +2100,19 @@ public partial class MainWindow : Window
                 DeviceFilePath: pair.DeviceFile.FilePath,
                 ExportFolder: profile.FolderOptions.ExportFolder,
                 Status: "Bereit"));
+        }
+    }
+
+    private void UpdateScannedPairStatus(string interfaceProfileId, string aisFilePath, string deviceFilePath, string status)
+    {
+        var row = _scannedImportPairRows.FirstOrDefault(currentRow =>
+            string.Equals(currentRow.InterfaceProfileId, interfaceProfileId, StringComparison.Ordinal)
+            && string.Equals(currentRow.AisFilePath, aisFilePath, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(currentRow.DeviceFilePath, deviceFilePath, StringComparison.OrdinalIgnoreCase));
+
+        if (row is not null)
+        {
+            row.Status = status;
         }
     }
 

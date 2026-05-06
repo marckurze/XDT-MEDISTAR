@@ -2,7 +2,7 @@ using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Infrastructure;
 
-public sealed class InterfaceProfileManualProcessor
+public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualProcessor
 {
     private readonly GdtParser _gdtParser = new();
     private readonly PatientDataMapper _patientDataMapper = new();

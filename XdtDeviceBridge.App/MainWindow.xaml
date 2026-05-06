@@ -71,6 +71,14 @@
                                     <TextBlock x:Name="PeriodicScanLastRunText" Text="-" MinWidth="130" Margin="0,3,16,8"/>
                                     <TextBlock Text="Fertige Paare letzter Scan:" FontWeight="Bold" Margin="0,3,4,8"/>
                                     <TextBlock x:Name="PeriodicScanReadyPairsText" Text="0" MinWidth="40" Margin="0,3,0,8"/>
+                                    <CheckBox x:Name="EnableAutomaticPairProcessingCheckBox"
+                                              Content="Gefundene Dateipaare automatisch verarbeiten"
+                                              Margin="0,3,16,8"/>
+                                    <TextBlock Text="Automatische Verarbeitung erfolgt nur während der manuell gestarteten Überwachung. Importdateien werden nicht gelöscht oder verschoben."
+                                               Foreground="DarkRed"
+                                               FontWeight="Bold"
+                                               TextWrapping="Wrap"
+                                               Margin="0,3,0,8"/>
                                 </WrapPanel>
                                 <DataGrid Grid.Row="3"
                                           x:Name="ActiveInterfaceProfilesGrid"
