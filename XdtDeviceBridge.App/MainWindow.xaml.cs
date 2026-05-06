@@ -2014,7 +2014,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            SetScannedPairStatus(selectedPair, "Verarbeitet");
+            SetScannedPairStatus(selectedPair, CreateProcessedPairStatus(result));
             if (result.PipelineResult is not null)
             {
                 _lastPipelineResult = result.PipelineResult;
@@ -2029,12 +2029,28 @@ public partial class MainWindow : Window
             ExportPreviewTextBox.Text = result.ExportContent ?? string.Empty;
             PlannedFileNameText.Text = $"Exportdatei: {result.ExportFilePath}";
             AppendMessage($"Dateipaar erfolgreich verarbeitet. Exportdatei: {result.ExportFilePath}");
+            foreach (var message in result.Messages.Where(message => !string.Equals(message, "Dateipaar erfolgreich verarbeitet.", StringComparison.Ordinal)))
+            {
+                AppendMessage(message);
+            }
         }
         catch (Exception ex)
         {
             SetScannedPairStatus(selectedPair, "Fehler");
             AppendMessage($"Dateipaar konnte nicht verarbeitet werden: {ex.Message}");
         }
+    }
+
+    private static string CreateProcessedPairStatus(InterfaceProfileManualProcessingResult result)
+    {
+        if (result.ArchiveResult is null)
+        {
+            return "Verarbeitet";
+        }
+
+        return result.ArchiveResult.HasErrors
+            ? "Verarbeitet, Archivierung mit Fehlern"
+            : "Verarbeitet und archiviert";
     }
 
     private void SetScannedPairStatus(ScannedImportPairRow row, string status)

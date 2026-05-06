@@ -7,4 +7,5 @@ public sealed record InterfaceProfileManualProcessingResult(
     string? ExportFilePath,
     string? ExportContent,
     ProcessingPipelineResult? PipelineResult,
+    ProcessedFileArchiveResult? ArchiveResult,
     IReadOnlyList<string> Messages);

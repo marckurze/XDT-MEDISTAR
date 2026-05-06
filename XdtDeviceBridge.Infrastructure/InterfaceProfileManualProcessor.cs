@@ -12,6 +12,7 @@ public sealed class InterfaceProfileManualProcessor
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ExportFileNameBuilder _fileNameBuilder = new();
     private readonly FileExportService _fileExportService = new();
+    private readonly ProcessedFileArchiveService _processedFileArchiveService = new();
 
     public InterfaceProfileManualProcessingResult Process(
         InterfaceProfileDefinition interfaceProfile,
@@ -60,6 +61,7 @@ public sealed class InterfaceProfileManualProcessor
                 ExportFilePath: null,
                 ExportContent: null,
                 PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, [], string.Empty, issues),
+                ArchiveResult: null,
                 Messages: new[] { "Gerätedatei konnte nicht fehlerfrei gelesen werden." });
         }
 
@@ -76,6 +78,7 @@ public sealed class InterfaceProfileManualProcessor
                 ExportFilePath: null,
                 ExportContent: null,
                 PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, string.Empty, issues),
+                ArchiveResult: null,
                 Messages: new[] { "Mapping konnte nicht fehlerfrei ausgeführt werden." });
         }
 
@@ -91,6 +94,7 @@ public sealed class InterfaceProfileManualProcessor
                 ExportFilePath: null,
                 ExportContent: exportResult.Content,
                 PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+                ArchiveResult: null,
                 Messages: new[] { "XDT-Export konnte nicht fehlerfrei erzeugt werden." });
         }
 
@@ -112,16 +116,80 @@ public sealed class InterfaceProfileManualProcessor
                 ExportFilePath: null,
                 ExportContent: exportResult.Content,
                 PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+                ArchiveResult: null,
                 Messages: messages);
         }
 
         messages.Add("Dateipaar erfolgreich verarbeitet.");
+        var archiveResult = ArchiveProcessedFilesIfEnabled(
+            interfaceProfile,
+            aisFilePath,
+            deviceFilePath,
+            timestamp.ToUniversalTime(),
+            messages);
+
         return new InterfaceProfileManualProcessingResult(
             Success: true,
             ExportFilePath: fileExportResult.FilePath,
             ExportContent: exportResult.Content,
             PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+            ArchiveResult: archiveResult,
             Messages: messages);
+    }
+
+    private ProcessedFileArchiveResult? ArchiveProcessedFilesIfEnabled(
+        InterfaceProfileDefinition interfaceProfile,
+        string aisFilePath,
+        string deviceFilePath,
+        DateTime processedAtUtc,
+        List<string> messages)
+    {
+        if (!interfaceProfile.FolderOptions.ArchiveProcessedFiles)
+        {
+            messages.Add("Archivierung ist für dieses Schnittstellenprofil deaktiviert.");
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ArchiveFolder))
+        {
+            var archiveResult = new ProcessedFileArchiveResult(
+                ArchivedFiles: Array.Empty<string>(),
+                Issues: new[] { "Archivordner fehlt." },
+                HasErrors: true);
+            messages.Add("Archivierung fehlgeschlagen: Archivordner fehlt.");
+            return archiveResult;
+        }
+
+        try
+        {
+            var archiveResult = _processedFileArchiveService.ArchiveProcessedFiles(
+                interfaceProfile.FolderOptions.ArchiveFolder,
+                interfaceProfile.Metadata.Name,
+                aisFilePath,
+                deviceFilePath,
+                processedAtUtc,
+                moveFiles: false);
+
+            if (archiveResult.HasErrors)
+            {
+                messages.Add("Archivierung mit Fehlern abgeschlossen.");
+                messages.AddRange(archiveResult.Issues);
+                return archiveResult;
+            }
+
+            messages.Add("Importdateien wurden archiviert:");
+            messages.AddRange(archiveResult.ArchivedFiles);
+            return archiveResult;
+        }
+        catch (Exception ex)
+        {
+            var archiveResult = new ProcessedFileArchiveResult(
+                ArchivedFiles: Array.Empty<string>(),
+                Issues: new[] { ex.Message },
+                HasErrors: true);
+            messages.Add($"Archivierung fehlgeschlagen: {ex.Message}");
+            return archiveResult;
+        }
     }
 
     private static InterfaceProfileManualProcessingResult CreateErrorResult(
@@ -133,6 +201,7 @@ public sealed class InterfaceProfileManualProcessor
             ExportFilePath: null,
             ExportContent: null,
             PipelineResult: null,
+            ArchiveResult: null,
             Messages: new[] { message });
     }
 }

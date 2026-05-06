@@ -29,6 +29,8 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.Contains("PAT-100", result.ExportContent);
         Assert.Contains("R.:S=-1.25", result.ExportContent);
         Assert.StartsWith(exportFolder, result.ExportFilePath, StringComparison.OrdinalIgnoreCase);
+        Assert.Null(result.ArchiveResult);
+        Assert.Contains("Archivierung ist für dieses Schnittstellenprofil deaktiviert.", result.Messages);
     }
 
     [Fact]
@@ -65,7 +67,65 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.Contains("Exportordner fehlt.", result.Messages);
     }
 
-    private static InterfaceProfileDefinition CreateInterfaceProfile(string exportFolder)
+    [Fact]
+    public void Process_ShouldArchiveFilesWhenArchiveProcessedFilesIsEnabled()
+    {
+        var exportFolder = CreateTempFolder();
+        var archiveFolder = CreateTempFolder();
+        var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
+        var deviceFilePath = CopyTestDataToTemp("nidek-ark1s-sample.xml", "device.xml");
+        var interfaceProfile = CreateInterfaceProfile(
+            exportFolder,
+            archiveFolder: archiveFolder,
+            archiveProcessedFiles: true);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 6, 1, 12, 0, 0));
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.ExportFilePath);
+        Assert.NotNull(result.ArchiveResult);
+        Assert.False(result.ArchiveResult.HasErrors);
+        Assert.Equal(2, result.ArchiveResult.ArchivedFiles.Count);
+        Assert.True(File.Exists(aisFilePath));
+        Assert.True(File.Exists(deviceFilePath));
+        Assert.Contains("Importdateien wurden archiviert:", result.Messages);
+    }
+
+    [Fact]
+    public void Process_ShouldKeepExportFileWhenArchivingFails()
+    {
+        var exportFolder = CreateTempFolder();
+        var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
+        var deviceFilePath = CopyTestDataToTemp("nidek-ark1s-sample.xml", "device.xml");
+        var interfaceProfile = CreateInterfaceProfile(
+            exportFolder,
+            archiveFolder: string.Empty,
+            archiveProcessedFiles: true);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 6, 1, 12, 0, 0));
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.ExportFilePath);
+        Assert.True(File.Exists(result.ExportFilePath));
+        Assert.NotNull(result.ArchiveResult);
+        Assert.True(result.ArchiveResult.HasErrors);
+        Assert.Contains("Archivierung fehlgeschlagen: Archivordner fehlt.", result.Messages);
+    }
+
+    private static InterfaceProfileDefinition CreateInterfaceProfile(
+        string exportFolder,
+        string archiveFolder = "",
+        bool archiveProcessedFiles = false)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
         {
@@ -78,7 +138,9 @@ public sealed class InterfaceProfileManualProcessorTests
             },
             FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
             {
-                ExportFolder = exportFolder
+                ExportFolder = exportFolder,
+                ArchiveFolder = archiveFolder,
+                ArchiveProcessedFiles = archiveProcessedFiles
             },
             IsActive = true
         };
@@ -94,5 +156,13 @@ public sealed class InterfaceProfileManualProcessorTests
     private static string GetTestDataPath(string fileName)
     {
         return Path.Combine(AppContext.BaseDirectory, "TestData", fileName);
+    }
+
+    private static string CopyTestDataToTemp(string testDataFileName, string targetFileName)
+    {
+        var folder = CreateTempFolder();
+        var targetFilePath = Path.Combine(folder, targetFileName);
+        File.Copy(GetTestDataPath(testDataFileName), targetFilePath);
+        return targetFilePath;
     }
 }
