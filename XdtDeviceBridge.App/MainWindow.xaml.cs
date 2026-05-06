@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
     private readonly AutoImportScannerService _autoImportScannerService = new();
+    private readonly PeriodicAutoImportScanService _periodicAutoImportScanService = new();
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
@@ -51,6 +52,8 @@ public partial class MainWindow : Window
     private string? _plannedFileName;
     private bool _updatingPlaceholderRows;
     private int _draftRuleSequence;
+    private CancellationTokenSource? _periodicScanCancellationTokenSource;
+    private Task? _periodicScanTask;
 
     public MainWindow()
     {
@@ -64,6 +67,12 @@ public partial class MainWindow : Window
         ScannedImportPairsGrid.ItemsSource = _scannedImportPairRows;
         InitializeProfileOverview();
         InitializeLicenseOverview();
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        StopPeriodicScan(updateUi: false);
+        base.OnClosing(e);
     }
 
     private void InitializeProfileOverview()
@@ -1859,6 +1868,158 @@ public partial class MainWindow : Window
         ActiveInterfaceProfilesStatusText.Text = message;
     }
 
+    private void StartPeriodicScan_Click(object sender, RoutedEventArgs e)
+    {
+        if (_periodicScanCancellationTokenSource is not null)
+        {
+            AppendMessage("Überwachung läuft bereits.");
+            return;
+        }
+
+        if (_profileCatalog is null)
+        {
+            ActiveProfileScanResultTextBox.Text = "Keine Profile geladen.";
+            return;
+        }
+
+        var activeProfiles = _profileCatalog.InterfaceProfiles
+            .Where(profile => profile.IsActive)
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        if (activeProfiles.Count == 0)
+        {
+            ActiveProfileScanResultTextBox.Text = "Keine aktiven Schnittstellenprofile vorhanden.";
+            return;
+        }
+
+        _periodicScanCancellationTokenSource = new CancellationTokenSource();
+        var token = _periodicScanCancellationTokenSource.Token;
+        StartPeriodicScanButton.IsEnabled = false;
+        StopPeriodicScanButton.IsEnabled = true;
+        ActiveProfileScanButton.IsEnabled = false;
+        PeriodicScanStatusText.Text = "Läuft";
+        PeriodicScanLastRunText.Text = "-";
+        PeriodicScanReadyPairsText.Text = "0";
+        ActiveProfileScanResultTextBox.Text = "Überwachung läuft. Es wird nichts automatisch verarbeitet, gelöscht, verschoben oder archiviert.";
+
+        _periodicScanTask = Task.Run(() => _periodicAutoImportScanService.StartAsync(
+            activeProfiles,
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromMilliseconds(200),
+            result => Dispatcher.Invoke(() => ShowPeriodicScanResult(result)),
+            token), token);
+
+        _periodicScanTask.ContinueWith(task =>
+        {
+            if (task.Exception is null)
+            {
+                return;
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                PeriodicScanStatusText.Text = "Gestoppt";
+                ActiveProfileScanResultTextBox.Text = $"Überwachung wurde mit Fehler beendet: {task.Exception.GetBaseException().Message}";
+                StopPeriodicScan(updateUi: true);
+            });
+        }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+    }
+
+    private void StopPeriodicScan_Click(object sender, RoutedEventArgs e)
+    {
+        StopPeriodicScan(updateUi: true);
+    }
+
+    private void StopPeriodicScan(bool updateUi)
+    {
+        _periodicScanCancellationTokenSource?.Cancel();
+        _periodicScanCancellationTokenSource?.Dispose();
+        _periodicScanCancellationTokenSource = null;
+        _periodicScanTask = null;
+
+        if (!updateUi)
+        {
+            return;
+        }
+
+        PeriodicScanStatusText.Text = "Gestoppt";
+        StartPeriodicScanButton.IsEnabled = true;
+        StopPeriodicScanButton.IsEnabled = false;
+        ActiveProfileScanButton.IsEnabled = true;
+    }
+
+    private void ShowPeriodicScanResult(AutoImportScanResult result)
+    {
+        var profile = _profileCatalog?.InterfaceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, result.InterfaceProfileId, StringComparison.Ordinal));
+        var profileName = profile?.Metadata.Name ?? result.InterfaceProfileId;
+        PeriodicScanLastRunText.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
+        PeriodicScanReadyPairsText.Text = result.ReadyPairs.ToString();
+
+        var builder = new StringBuilder();
+        builder.AppendLine($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} - {profileName}");
+        builder.AppendLine($"AIS-Dateien erkannt: {result.AisFilesDetected}");
+        builder.AppendLine($"Geräte-Dateien erkannt: {result.DeviceFilesDetected}");
+        builder.AppendLine($"Dateien in Warteliste: {result.FilesQueued}");
+        builder.AppendLine($"Fertige Paare: {result.ReadyPairs}");
+        if (result.Messages.Count == 0)
+        {
+            builder.AppendLine("Meldungen: keine.");
+        }
+        else
+        {
+            builder.AppendLine("Meldungen:");
+            foreach (var message in result.Messages)
+            {
+                builder.AppendLine($"- {message}");
+            }
+        }
+
+        builder.AppendLine("Hinweis: Die Überwachung scannt nur. Es wird nichts automatisch verarbeitet.");
+
+        if (!string.IsNullOrWhiteSpace(ActiveProfileScanResultTextBox.Text))
+        {
+            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+        }
+
+        ActiveProfileScanResultTextBox.AppendText(builder.ToString().TrimEnd());
+        ActiveProfileScanResultTextBox.ScrollToEnd();
+
+        if (profile is not null)
+        {
+            AddReadyPairsFromScanResult(profile, result);
+        }
+    }
+
+    private void AddReadyPairsFromScanResult(InterfaceProfileDefinition profile, AutoImportScanResult result)
+    {
+        var exportProfileName = GetExportProfileDisplayName(profile.ExportProfileId);
+        foreach (var pair in result.Queue.FindReadyPairs())
+        {
+            var existingRow = _scannedImportPairRows.FirstOrDefault(row =>
+                string.Equals(row.InterfaceProfileId, profile.Metadata.Id, StringComparison.Ordinal)
+                && string.Equals(row.AisFilePath, pair.AisFile.FilePath, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(row.DeviceFilePath, pair.DeviceFile.FilePath, StringComparison.OrdinalIgnoreCase));
+
+            if (existingRow is not null)
+            {
+                continue;
+            }
+
+            _scannedImportPairRows.Add(new ScannedImportPairRow(
+                InterfaceProfileId: profile.Metadata.Id,
+                InterfaceProfileName: profile.Metadata.Name,
+                ExportProfileId: profile.ExportProfileId,
+                ExportProfileName: exportProfileName,
+                AisFilePath: pair.AisFile.FilePath,
+                DeviceFilePath: pair.DeviceFile.FilePath,
+                ExportFolder: profile.FolderOptions.ExportFolder,
+                Status: "Bereit"));
+        }
+    }
+
     private async void ScanActiveProfilesOnce_Click(object sender, RoutedEventArgs e)
     {
         if (_profileCatalog is null)
@@ -1920,19 +2081,7 @@ public partial class MainWindow : Window
                         }
                     }
 
-                    var exportProfileName = GetExportProfileDisplayName(profile.ExportProfileId);
-                    foreach (var pair in result.Queue.FindReadyPairs())
-                    {
-                        _scannedImportPairRows.Add(new ScannedImportPairRow(
-                            InterfaceProfileId: profile.Metadata.Id,
-                            InterfaceProfileName: profile.Metadata.Name,
-                            ExportProfileId: profile.ExportProfileId,
-                            ExportProfileName: exportProfileName,
-                            AisFilePath: pair.AisFile.FilePath,
-                            DeviceFilePath: pair.DeviceFile.FilePath,
-                            ExportFolder: profile.FolderOptions.ExportFolder,
-                            Status: "Bereit"));
-                    }
+                    AddReadyPairsFromScanResult(profile, result);
                 }
                 catch (Exception ex)
                 {

@@ -2,7 +2,7 @@ using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Infrastructure;
 
-public sealed class AutoImportScannerService
+public sealed class AutoImportScannerService : IAutoImportScanner
 {
     private readonly DirectorySnapshotService _directorySnapshotService;
     private readonly FileStabilityService _fileStabilityService;

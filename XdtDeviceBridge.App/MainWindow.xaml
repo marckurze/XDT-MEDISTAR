@@ -46,13 +46,32 @@
                                            x:Name="ActiveInterfaceProfilesStatusText"
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
-                                <Button Grid.Row="2"
-                                        x:Name="ActiveProfileScanButton"
-                                        Content="Aktive Profile einmalig scannen"
-                                        Width="240"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,0,0,8"
-                                        Click="ScanActiveProfilesOnce_Click"/>
+                                <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+                                    <Button x:Name="ActiveProfileScanButton"
+                                            Content="Aktive Profile einmalig scannen"
+                                            Width="240"
+                                            Margin="0,0,8,8"
+                                            Click="ScanActiveProfilesOnce_Click"/>
+                                    <Button x:Name="StartPeriodicScanButton"
+                                            Content="Überwachung starten"
+                                            Width="170"
+                                            Margin="0,0,8,8"
+                                            Click="StartPeriodicScan_Click"/>
+                                    <Button x:Name="StopPeriodicScanButton"
+                                            Content="Überwachung stoppen"
+                                            Width="170"
+                                            IsEnabled="False"
+                                            Margin="0,0,16,8"
+                                            Click="StopPeriodicScan_Click"/>
+                                    <TextBlock Text="Status:" FontWeight="Bold" Margin="0,3,4,8"/>
+                                    <TextBlock x:Name="PeriodicScanStatusText" Text="Gestoppt" MinWidth="80" Margin="0,3,16,8"/>
+                                    <TextBlock Text="Intervall:" FontWeight="Bold" Margin="0,3,4,8"/>
+                                    <TextBlock Text="5 Sekunden" MinWidth="80" Margin="0,3,16,8"/>
+                                    <TextBlock Text="Letzter Scan:" FontWeight="Bold" Margin="0,3,4,8"/>
+                                    <TextBlock x:Name="PeriodicScanLastRunText" Text="-" MinWidth="130" Margin="0,3,16,8"/>
+                                    <TextBlock Text="Fertige Paare letzter Scan:" FontWeight="Bold" Margin="0,3,4,8"/>
+                                    <TextBlock x:Name="PeriodicScanReadyPairsText" Text="0" MinWidth="40" Margin="0,3,0,8"/>
+                                </WrapPanel>
                                 <DataGrid Grid.Row="3"
                                           x:Name="ActiveInterfaceProfilesGrid"
                                           AutoGenerateColumns="False"
