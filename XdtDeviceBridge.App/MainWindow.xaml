@@ -29,7 +29,10 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="220"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="150"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
                                            Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
@@ -40,7 +43,14 @@
                                            x:Name="ActiveInterfaceProfilesStatusText"
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
-                                <DataGrid Grid.Row="2"
+                                <Button Grid.Row="2"
+                                        x:Name="ActiveProfileScanButton"
+                                        Content="Aktive Profile einmalig scannen"
+                                        Width="240"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,0,8"
+                                        Click="ScanActiveProfilesOnce_Click"/>
+                                <DataGrid Grid.Row="3"
                                           x:Name="ActiveInterfaceProfilesGrid"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
@@ -104,6 +114,19 @@
                                         <DataGridTextColumn Header="Status" Binding="{Binding ProcessingStatus}" MinWidth="220" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
+                                <TextBlock Grid.Row="4"
+                                           Text="Scan-Ergebnis"
+                                           FontWeight="Bold"
+                                           Margin="0,8,0,4"/>
+                                <TextBox Grid.Row="5"
+                                         x:Name="ActiveProfileScanResultTextBox"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Auto"
+                                         TextWrapping="NoWrap"
+                                         MinHeight="120"
+                                         Text="Noch kein Scan ausgeführt."/>
                             </Grid>
                         </GroupBox>
 

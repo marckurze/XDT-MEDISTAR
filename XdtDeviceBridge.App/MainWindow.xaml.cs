@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     private readonly LicensedDeviceStateEvaluator _licensedDeviceStateEvaluator = new();
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
+    private readonly AutoImportScannerService _autoImportScannerService = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -1853,6 +1854,78 @@ public partial class MainWindow : Window
     {
         _activeInterfaceProfileStatusRows.Clear();
         ActiveInterfaceProfilesStatusText.Text = message;
+    }
+
+    private async void ScanActiveProfilesOnce_Click(object sender, RoutedEventArgs e)
+    {
+        if (_profileCatalog is null)
+        {
+            ActiveProfileScanResultTextBox.Text = "Keine Profile geladen.";
+            return;
+        }
+
+        var activeProfiles = _profileCatalog.InterfaceProfiles
+            .Where(profile => profile.IsActive)
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        if (activeProfiles.Count == 0)
+        {
+            ActiveProfileScanResultTextBox.Text = "Keine aktiven Schnittstellenprofile vorhanden.";
+            return;
+        }
+
+        ActiveProfileScanButton.IsEnabled = false;
+        ActiveProfileScanResultTextBox.Text = "Scan läuft. Es wird nichts verarbeitet, gelöscht oder exportiert.";
+
+        try
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine($"Einmaliger Scan: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
+            builder.AppendLine("Hinweis: Es wird nichts verarbeitet, gelöscht oder exportiert.");
+
+            foreach (var profile in activeProfiles)
+            {
+                builder.AppendLine();
+                builder.AppendLine(profile.Metadata.Name);
+
+                try
+                {
+                    var result = await _autoImportScannerService
+                        .ScanOnceAsync(profile, TimeSpan.FromMilliseconds(200))
+                        .ConfigureAwait(true);
+
+                    builder.AppendLine($"AIS-Dateien erkannt: {result.AisFilesDetected}");
+                    builder.AppendLine($"Geräte-Dateien erkannt: {result.DeviceFilesDetected}");
+                    builder.AppendLine($"Dateien in Warteliste: {result.FilesQueued}");
+                    builder.AppendLine($"Fertige Paare: {result.ReadyPairs}");
+
+                    if (result.Messages.Count == 0)
+                    {
+                        builder.AppendLine("Meldungen: keine.");
+                    }
+                    else
+                    {
+                        builder.AppendLine("Meldungen:");
+                        foreach (var message in result.Messages)
+                        {
+                            builder.AppendLine($"- {message}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    builder.AppendLine($"Scan-Fehler: {ex.Message}");
+                }
+            }
+
+            ActiveProfileScanResultTextBox.Text = builder.ToString().TrimEnd();
+            ActiveProfileScanResultTextBox.ScrollToHome();
+        }
+        finally
+        {
+            ActiveProfileScanButton.IsEnabled = true;
+        }
     }
 
     private static string CreateLicensedDeviceStatusText(
