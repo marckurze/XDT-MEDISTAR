@@ -896,9 +896,14 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,8"/>
                                         <WrapPanel>
-                                            <CheckBox x:Name="InterfaceClearAisImportFolderCheckBox" Content="AIS-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
-                                            <CheckBox x:Name="InterfaceClearDeviceImportFolderCheckBox" Content="Geräte-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
-                                            <CheckBox x:Name="InterfaceClearExportFolderCheckBox" Content="Exportordner nach erfolgreicher Übertragung leeren" Margin="0,0,16,8"/>
+                                            <CheckBox x:Name="InterfaceClearAisImportFolderCheckBox"
+                                                      Content="Bereits verarbeitete AIS-Dateien aus Importordner entfernen"
+                                                      Margin="0,0,16,8"
+                                                      ToolTip="Entfernen bedeutet: Dateien werden sicher ins Archiv verschoben, wenn sie bereits verarbeitet oder als Duplikat erkannt wurden. Es werden keine unbekannten neuen Dateien gelöscht."/>
+                                            <CheckBox x:Name="InterfaceClearDeviceImportFolderCheckBox"
+                                                      Content="Bereits verarbeitete Gerätedateien aus Importordner entfernen"
+                                                      Margin="0,0,16,8"
+                                                      ToolTip="Entfernen bedeutet: Dateien werden sicher ins Archiv verschoben, wenn sie bereits verarbeitet oder als Duplikat erkannt wurden. Es werden keine unbekannten neuen Dateien gelöscht."/>
                                             <CheckBox x:Name="InterfaceArchiveProcessedFilesCheckBox" Content="verarbeitete Dateien archivieren" Margin="0,0,16,8"/>
                                             <CheckBox x:Name="InterfaceMoveFailedFilesToErrorFolderCheckBox" Content="fehlerhafte Dateien in Fehlerordner verschieben" Margin="0,0,16,8"/>
                                         </WrapPanel>

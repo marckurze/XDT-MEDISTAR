@@ -5,6 +5,9 @@ namespace XdtDeviceBridge.Infrastructure;
 
 public sealed class ProcessedFileArchiveService
 {
+    private const string AisCategory = "AIS";
+    private const string DeviceCategory = "Device";
+
     public ProcessedFileArchiveResult ArchiveProcessedFiles(
         string archiveFolder,
         string interfaceProfileName,
@@ -38,8 +41,50 @@ public sealed class ProcessedFileArchiveService
             processedAtUtc.ToString("dd"),
             profileFolderName);
 
-        ArchiveSingleFile(aisFilePath, Path.Combine(dayFolder, "AIS"), moveFiles, archivedFiles, issues);
-        ArchiveSingleFile(deviceFilePath, Path.Combine(dayFolder, "Device"), moveFiles, archivedFiles, issues);
+        ArchiveSingleFile(aisFilePath, Path.Combine(dayFolder, AisCategory), moveFiles, archivedFiles, issues);
+        ArchiveSingleFile(deviceFilePath, Path.Combine(dayFolder, DeviceCategory), moveFiles, archivedFiles, issues);
+
+        return new ProcessedFileArchiveResult(
+            ArchivedFiles: archivedFiles,
+            Issues: issues,
+            HasErrors: issues.Count > 0);
+    }
+
+    public ProcessedFileArchiveResult ArchiveProcessedFile(
+        string archiveFolder,
+        string interfaceProfileName,
+        string sourceFilePath,
+        string category,
+        DateTime processedAtUtc,
+        bool moveFile)
+    {
+        if (string.IsNullOrWhiteSpace(archiveFolder))
+        {
+            throw new ArgumentException("Archive folder must not be empty.", nameof(archiveFolder));
+        }
+
+        if (string.IsNullOrWhiteSpace(sourceFilePath))
+        {
+            throw new ArgumentException("Source file path must not be empty.", nameof(sourceFilePath));
+        }
+
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            throw new ArgumentException("Archive category must not be empty.", nameof(category));
+        }
+
+        var archivedFiles = new List<string>();
+        var issues = new List<string>();
+        var profileFolderName = SanitizePathSegment(interfaceProfileName);
+        var categoryFolderName = SanitizePathSegment(category);
+        var dayFolder = Path.Combine(
+            archiveFolder,
+            processedAtUtc.ToString("yyyy"),
+            processedAtUtc.ToString("MM"),
+            processedAtUtc.ToString("dd"),
+            profileFolderName);
+
+        ArchiveSingleFile(sourceFilePath, Path.Combine(dayFolder, categoryFolderName), moveFile, archivedFiles, issues);
 
         return new ProcessedFileArchiveResult(
             ArchivedFiles: archivedFiles,

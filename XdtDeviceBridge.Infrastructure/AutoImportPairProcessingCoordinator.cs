@@ -5,17 +5,26 @@ namespace XdtDeviceBridge.Infrastructure;
 public sealed class AutoImportPairProcessingCoordinator
 {
     private readonly IInterfaceProfileManualProcessor _manualProcessor;
+    private readonly DuplicateImportFileHandler _duplicateImportFileHandler;
     private readonly HashSet<string> _processedPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _processingPairKeys = new(StringComparer.OrdinalIgnoreCase);
 
     public AutoImportPairProcessingCoordinator()
-        : this(new InterfaceProfileManualProcessor())
+        : this(new InterfaceProfileManualProcessor(), new DuplicateImportFileHandler())
     {
     }
 
     public AutoImportPairProcessingCoordinator(IInterfaceProfileManualProcessor manualProcessor)
+        : this(manualProcessor, new DuplicateImportFileHandler())
+    {
+    }
+
+    public AutoImportPairProcessingCoordinator(
+        IInterfaceProfileManualProcessor manualProcessor,
+        DuplicateImportFileHandler duplicateImportFileHandler)
     {
         _manualProcessor = manualProcessor ?? throw new ArgumentNullException(nameof(manualProcessor));
+        _duplicateImportFileHandler = duplicateImportFileHandler ?? throw new ArgumentNullException(nameof(duplicateImportFileHandler));
     }
 
     public AutoImportPairProcessingBatchResult ProcessReadyPairs(
@@ -42,7 +51,27 @@ public sealed class AutoImportPairProcessingCoordinator
         foreach (var pair in readyPairs.Where(pair => pair.IsReady))
         {
             var pairKey = CreatePairKey(interfaceProfile.Metadata.Id, pair.AisFile.FilePath, pair.DeviceFile.FilePath);
-            if (_processedPairKeys.Contains(pairKey) || _processingPairKeys.Contains(pairKey))
+            if (_processedPairKeys.Contains(pairKey))
+            {
+                var duplicateResult = _duplicateImportFileHandler.HandleAlreadyProcessedPair(
+                    interfaceProfile,
+                    pair,
+                    timestamp);
+                results.Add(new AutoImportPairProcessingResult(
+                    PairKey: pairKey,
+                    AisFilePath: pair.AisFile.FilePath,
+                    DeviceFilePath: pair.DeviceFile.FilePath,
+                    WasProcessed: false,
+                    WasSkipped: true,
+                    Success: false,
+                    Status: duplicateResult.Status,
+                    ExportFilePath: null,
+                    ManualProcessingResult: null,
+                    Messages: duplicateResult.Messages));
+                continue;
+            }
+
+            if (_processingPairKeys.Contains(pairKey))
             {
                 results.Add(new AutoImportPairProcessingResult(
                     PairKey: pairKey,
@@ -51,10 +80,10 @@ public sealed class AutoImportPairProcessingCoordinator
                     WasProcessed: false,
                     WasSkipped: true,
                     Success: false,
-                    Status: "Bereits verarbeitet",
+                    Status: "Bereits in Verarbeitung",
                     ExportFilePath: null,
                     ManualProcessingResult: null,
-                    Messages: new[] { "Paar bereits verarbeitet." }));
+                    Messages: new[] { "Paar wird bereits verarbeitet." }));
                 continue;
             }
 

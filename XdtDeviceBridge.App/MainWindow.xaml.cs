@@ -532,7 +532,6 @@ public partial class MainWindow : Window
 
         InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
-        InterfaceClearExportFolderCheckBox.IsChecked = profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = profile.FolderOptions.ArchiveProcessedFiles;
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = profile.FolderOptions.MoveFailedFilesToErrorFolder;
         InterfaceArchiveModeComboBox.SelectedValue = profile.FolderOptions.ArchiveProcessedFileMode.ToString();
@@ -553,7 +552,6 @@ public partial class MainWindow : Window
         InterfaceErrorFolderTextBox.Text = string.Empty;
         InterfaceClearAisImportFolderCheckBox.IsChecked = false;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
-        InterfaceClearExportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = false;
         InterfaceArchiveModeComboBox.SelectedValue = ArchiveProcessedFileMode.Copy.ToString();
@@ -714,7 +712,7 @@ public partial class MainWindow : Window
             ErrorFolder: InterfaceErrorFolderTextBox.Text.Trim(),
             ClearAisImportFolderBeforeProcessing: InterfaceClearAisImportFolderCheckBox.IsChecked == true,
             ClearDeviceImportFolderBeforeProcessing: InterfaceClearDeviceImportFolderCheckBox.IsChecked == true,
-            ClearExportFolderAfterSuccessfulTransfer: InterfaceClearExportFolderCheckBox.IsChecked == true,
+            ClearExportFolderAfterSuccessfulTransfer: false,
             ArchiveProcessedFiles: InterfaceArchiveProcessedFilesCheckBox.IsChecked == true,
             MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true,
             ArchiveProcessedFileMode: ReadArchiveProcessedFileModeFromEditor(),
@@ -2092,7 +2090,12 @@ public partial class MainWindow : Window
 
             if (result.WasSkipped)
             {
-                AppendMessage($"{interfaceProfile.Metadata.Name}: Paar bereits verarbeitet.");
+                AppendMessage($"{interfaceProfile.Metadata.Name}: {result.Status}");
+                foreach (var message in result.Messages)
+                {
+                    AppendMessage(message);
+                }
+
                 continue;
             }
 
