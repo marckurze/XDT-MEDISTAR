@@ -4,6 +4,12 @@ XdtDeviceBridge ist ein lokaler Windows-Prototyp fuer die dateibasierte Anbindun
 
 Der aktuelle Fokus liegt auf dem Workflow MEDISTAR mit einem NIDEK ARK1S / AR-1s Autorefraktometer.
 
+Aktuelle Version:
+
+`0.1.0-prototype`
+
+Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfolgreich validiert. Die automatische Verarbeitung ist manuell startbar und bewusst nicht als Windows-Dienst oder Autostart umgesetzt.
+
 ## Aktueller Funktionsumfang
 
 - Einlesen einer AIS-GDT-Datei mit Patientendaten.

@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj": {
-      "version": "1.0.0",
+      "version": "0.1.0-prototype",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj",
         "projectName": "XdtDeviceBridge.Core",

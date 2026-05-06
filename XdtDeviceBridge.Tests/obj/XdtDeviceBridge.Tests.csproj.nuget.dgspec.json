@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj": {
-      "version": "1.0.0",
+      "version": "0.1.0-prototype",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj",
         "projectName": "XdtDeviceBridge.Core",
@@ -66,7 +66,7 @@
       }
     },
     "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Infrastructure\\XdtDeviceBridge.Infrastructure.csproj": {
-      "version": "1.0.0",
+      "version": "0.1.0-prototype",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Infrastructure\\XdtDeviceBridge.Infrastructure.csproj",
         "projectName": "XdtDeviceBridge.Infrastructure",
@@ -131,7 +131,7 @@
       }
     },
     "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Tests\\XdtDeviceBridge.Tests.csproj": {
-      "version": "1.0.0",
+      "version": "0.1.0-prototype",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Tests\\XdtDeviceBridge.Tests.csproj",
         "projectName": "XdtDeviceBridge.Tests",
