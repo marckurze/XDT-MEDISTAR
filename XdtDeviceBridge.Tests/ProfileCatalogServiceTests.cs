@@ -237,6 +237,24 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void SaveInterfaceProfileDefinition_ShouldReloadActiveLicenseRequiredUserDefinedProfile()
+    {
+        var paths = CreateAppDataPaths();
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserInterfaceMetadata("interface-active-license-required"),
+            IsActive = true,
+            IsLicenseRequired = true
+        };
+
+        _service.SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
+
+        var loadedProfile = Assert.Single(_service.Load(paths).InterfaceProfiles);
+        Assert.True(loadedProfile.IsActive);
+        Assert.True(loadedProfile.IsLicenseRequired);
+    }
+
+    [Fact]
     public void DeleteInterfaceProfile_ShouldDeleteUserDefinedInterfaceProfile()
     {
         var paths = CreateAppDataPaths();

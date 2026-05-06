@@ -600,8 +600,8 @@
             </TabItem>
 
             <TabItem Header="Schnittstellenprofile">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                    <Grid Margin="8" MinWidth="1080">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -625,9 +625,8 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="160"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Schnittstellenprofil:" FontWeight="Bold" Margin="0,0,8,8"/>
@@ -635,46 +634,55 @@
                                           Grid.Column="1"
                                           x:Name="InterfaceProfileComboBox"
                                           DisplayMemberPath="Metadata.Name"
-                                          MinWidth="520"
-                                          Margin="0,0,16,8"
+                                          MinWidth="260"
+                                          MaxWidth="560"
+                                          HorizontalAlignment="Stretch"
+                                          Margin="0,0,0,8"
+                                          ToolTip="{Binding SelectedItem.Metadata.Name, RelativeSource={RelativeSource Self}}"
                                           SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
-                                <WrapPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,8">
-                                    <Button Content="Neues Schnittstellenprofil anlegen"
-                                            Width="230"
-                                            Margin="0,0,8,0"
+                                <WrapPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="0,0,0,8">
+                                    <Button Content="Neues Schnittstellenprofil anlegen (später)"
+                                            Width="260"
+                                            Margin="0,0,8,8"
                                             Click="ProfileAssistantPlaceholder_Click"/>
                                     <Button Content="Schnittstellenprofil für ausgewähltes Exportprofil erstellen"
-                                            Width="380"
-                                            Margin="0,0,8,0"
+                                            Width="360"
+                                            Margin="0,0,8,8"
                                             Click="CreateInterfaceProfileForSelectedExport_Click"/>
                                     <Button Content="Schnittstellenprofil entfernen"
                                             Width="210"
+                                            Margin="0,0,8,8"
                                             Click="RemoveInterfaceProfile_Click"/>
+                                    <Button Content="Schnittstellenprofil speichern"
+                                            Width="220"
+                                            Margin="0,0,0,8"
+                                            Click="SaveInterfaceProfile_Click"/>
                                 </WrapPanel>
 
-                                <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="180"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="160"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="1" x:Name="InterfaceAisProfileText" Margin="0,0,16,0" TextWrapping="Wrap"/>
-                                    <TextBlock Grid.Column="2" Text="Geräteprofil:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="3" x:Name="InterfaceDeviceProfileText" Margin="0,0,16,0" TextWrapping="Wrap"/>
-                                    <TextBlock Grid.Column="4" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="5" x:Name="InterfaceExportProfileText" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InterfaceAisProfileText" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Geräteprofil:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="InterfaceDeviceProfileText" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportProfileText" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                                 </Grid>
 
-                                <WrapPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                <WrapPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <CheckBox x:Name="InterfaceIsActiveCheckBox" Content="Für automatische Verarbeitung aktiv" Margin="0,0,24,8"/>
                                     <CheckBox x:Name="InterfaceIsLicenseRequiredCheckBox" Content="Lizenzpflichtig" Margin="0,0,24,8"/>
                                 </WrapPanel>
 
-                                <GroupBox Header="Ordner" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                <GroupBox Header="Ordner" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -684,9 +692,9 @@
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="160"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="96"/>
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
@@ -711,26 +719,22 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <TextBlock Grid.Row="4"
+                                <TextBlock Grid.Row="5"
                                            Grid.Column="0"
-                                           Grid.ColumnSpan="3"
+                                           Grid.ColumnSpan="2"
                                            Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
                                            Foreground="DarkRed"
                                            FontWeight="Bold"
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
 
-                                <WrapPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                <WrapPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <CheckBox x:Name="InterfaceClearAisImportFolderCheckBox" Content="AIS-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
                                     <CheckBox x:Name="InterfaceClearDeviceImportFolderCheckBox" Content="Geräte-Importordner vor Verarbeitung leeren" Margin="0,0,16,8"/>
                                     <CheckBox x:Name="InterfaceClearExportFolderCheckBox" Content="Exportordner nach erfolgreicher Übertragung leeren" Margin="0,0,16,8"/>
                                     <CheckBox x:Name="InterfaceArchiveProcessedFilesCheckBox" Content="verarbeitete Dateien archivieren" Margin="0,0,16,8"/>
                                     <CheckBox x:Name="InterfaceMoveFailedFilesToErrorFolderCheckBox" Content="fehlerhafte Dateien in Fehlerordner verschieben" Margin="0,0,16,8"/>
                                 </WrapPanel>
-
-                                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="Schnittstellenprofil speichern" Width="220" Click="SaveInterfaceProfile_Click"/>
-                                </StackPanel>
                             </Grid>
                         </GroupBox>
                     </Grid>
@@ -738,7 +742,7 @@
             </TabItem>
 
             <TabItem Header="Lizenz">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -791,44 +795,27 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="340"/>
                                 </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="70"/>
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Lizenzpflichtige Anbindungen gesamt:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="LicensedDeviceTotalCountText" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Aktive lizenzpflichtige Anbindungen:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="LicensedDeviceActiveCountText" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="4" Text="Lizenzierte Geräteanzahl:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="5" x:Name="LicensedDeviceLicensedCountText" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="6" Text="Gedeckt:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="7" x:Name="LicensedDeviceCoveredCountText" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="8" Text="Nicht gedeckt:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="9" x:Name="LicensedDeviceUncoveredCountText" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="10" Text="In Karenzzeit:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBlock Grid.Row="0" Grid.Column="11" x:Name="LicensedDeviceGraceCountText" Margin="0,0,0,6"/>
+                                <WrapPanel Grid.Row="0" Margin="0,0,0,6">
+                                    <TextBlock Text="Lizenzpflichtige Anbindungen gesamt:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock x:Name="LicensedDeviceTotalCountText" MinWidth="36" Margin="0,0,18,6"/>
+                                    <TextBlock Text="Aktive lizenzpflichtige Anbindungen:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock x:Name="LicensedDeviceActiveCountText" MinWidth="36" Margin="0,0,18,6"/>
+                                    <TextBlock Text="Lizenzierte Geräteanzahl:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock x:Name="LicensedDeviceLicensedCountText" MinWidth="36" Margin="0,0,18,6"/>
+                                    <TextBlock Text="Gedeckt:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock x:Name="LicensedDeviceCoveredCountText" MinWidth="36" Margin="0,0,18,6"/>
+                                    <TextBlock Text="Nicht gedeckt:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock x:Name="LicensedDeviceUncoveredCountText" MinWidth="36" Margin="0,0,18,6"/>
+                                    <TextBlock Text="In Karenzzeit:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                    <TextBlock x:Name="LicensedDeviceGraceCountText" MinWidth="36" Margin="0,0,0,6"/>
+                                </WrapPanel>
 
                                 <TextBlock Grid.Row="1"
-                                           Grid.Column="0"
-                                           Grid.ColumnSpan="12"
                                            x:Name="LicensedDeviceStatusText"
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
 
                                 <DataGrid Grid.Row="2"
-                                          Grid.Column="0"
-                                          Grid.ColumnSpan="12"
                                           x:Name="LicensedDeviceStatesGrid"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
@@ -836,16 +823,15 @@
                                           CanUserDeleteRows="False"
                                           HorizontalScrollBarVisibility="Auto"
                                           VerticalScrollBarVisibility="Auto"
-                                          MinHeight="340"
-                                          MinWidth="1100">
+                                          MinHeight="250">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" MinWidth="250" Width="250"/>
-                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding IsActiveText}" Width="75"/>
-                                        <DataGridTextColumn Header="Lizenzpflichtig" Binding="{Binding IsLicenseRequiredText}" Width="120"/>
-                                        <DataGridTextColumn Header="Gedeckt" Binding="{Binding IsCoveredByLicenseText}" Width="85"/>
-                                        <DataGridTextColumn Header="Karenz" Binding="{Binding IsInGracePeriodText}" Width="85"/>
-                                        <DataGridTextColumn Header="Karenz bis" Binding="{Binding GracePeriodEndsAtText}" MinWidth="120" Width="140"/>
-                                        <DataGridTextColumn Header="Status" Binding="{Binding StatusMessage}" MinWidth="350" Width="*"/>
+                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" MinWidth="320" Width="*"/>
+                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding AktivText}" MinWidth="70" Width="70"/>
+                                        <DataGridTextColumn Header="Lizenzpflichtig" Binding="{Binding LizenzpflichtigText}" MinWidth="110" Width="110"/>
+                                        <DataGridTextColumn Header="Gedeckt" Binding="{Binding GedecktText}" MinWidth="90" Width="90"/>
+                                        <DataGridTextColumn Header="Karenz" Binding="{Binding KarenzText}" MinWidth="90" Width="90"/>
+                                        <DataGridTextColumn Header="Karenz bis" Binding="{Binding KarenzBisText}" MinWidth="140" Width="140"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="420" Width="2*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>

@@ -36,7 +36,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
-    private readonly ObservableCollection<LicensedDeviceStateRow> _licensedDeviceStateRows = new();
+    private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
@@ -1787,7 +1787,7 @@ public partial class MainWindow : Window
         _licensedDeviceStateRows.Clear();
         foreach (var state in states.OrderBy(state => state.DisplayName, StringComparer.CurrentCultureIgnoreCase))
         {
-            _licensedDeviceStateRows.Add(LicensedDeviceStateRow.FromState(state));
+            _licensedDeviceStateRows.Add(LicenseDeviceStateRow.FromState(state));
         }
 
         var licenseRequiredStates = states
@@ -1987,6 +1987,9 @@ public partial class MainWindow : Window
                 ? _licenseFileRepository.Load(paths.LicenseFile)
                 : null;
             var existingStore = _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
+            var existingGracePeriodIds = existingStore.GracePeriods
+                .Select(gracePeriod => gracePeriod.InterfaceProfileId)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
             var states = _licensedDeviceStateEvaluator.Evaluate(
                 _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>(),
                 license,
@@ -1997,6 +2000,7 @@ public partial class MainWindow : Window
                 existingStore,
                 nowUtc,
                 graceDays: 30);
+            var newGracePeriodCount = updatedStore.GracePeriods.Count(gracePeriod => !existingGracePeriodIds.Contains(gracePeriod.InterfaceProfileId));
 
             var validationIssues = updatedStore.Validate();
             if (validationIssues.Count > 0)
@@ -2012,7 +2016,13 @@ public partial class MainWindow : Window
 
             _licensedDeviceGracePeriodRepository.Save(paths.DeviceGracePeriodsFile, updatedStore);
             ShowLicensedDeviceStates(license, updatedStore);
-            AppendLicenseMessage("Karenzzeiten aktualisiert. Neue nicht gedeckte aktive lizenzpflichtige Anbindungen erhalten 30 Tage Karenzzeit.");
+            if (newGracePeriodCount == 0)
+            {
+                AppendLicenseMessageOnce("Keine neuen Karenzzeiten erforderlich.");
+                return;
+            }
+
+            AppendLicenseMessage($"Karenzzeiten aktualisiert: {newGracePeriodCount} neue Karenzzeit(en) angelegt.");
         }
         catch (Exception ex)
         {
@@ -2314,6 +2324,17 @@ public partial class MainWindow : Window
         AppendMessage(message);
     }
 
+    private void AppendLicenseMessageOnce(string message)
+    {
+        var currentText = LicenseMessagesTextBox.Text.TrimEnd();
+        if (currentText.EndsWith(message, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        AppendLicenseMessage(message);
+    }
+
     private static void AppendText(System.Windows.Controls.TextBox textBox, string message)
     {
         if (!string.IsNullOrWhiteSpace(textBox.Text))
@@ -2323,33 +2344,6 @@ public partial class MainWindow : Window
 
         textBox.AppendText(message);
         textBox.ScrollToEnd();
-    }
-
-    private sealed record LicensedDeviceStateRow(
-        string DisplayName,
-        string IsActiveText,
-        string IsLicenseRequiredText,
-        string IsCoveredByLicenseText,
-        string IsInGracePeriodText,
-        string GracePeriodEndsAtText,
-        string StatusMessage)
-    {
-        public static LicensedDeviceStateRow FromState(LicensedDeviceState state)
-        {
-            return new LicensedDeviceStateRow(
-                DisplayName: state.DisplayName,
-                IsActiveText: FormatBoolean(state.IsActive),
-                IsLicenseRequiredText: FormatBoolean(state.IsLicenseRequired),
-                IsCoveredByLicenseText: FormatBoolean(state.IsCoveredByLicense),
-                IsInGracePeriodText: FormatBoolean(state.IsInGracePeriod),
-                GracePeriodEndsAtText: state.GracePeriodEndsAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? string.Empty,
-                StatusMessage: state.StatusMessage);
-        }
-
-        private static string FormatBoolean(bool value)
-        {
-            return value ? "Ja" : "Nein";
-        }
     }
 
     private sealed class PlaceholderRow : INotifyPropertyChanged

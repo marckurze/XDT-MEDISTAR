@@ -49,6 +49,27 @@ public sealed class LicensedDeviceGracePeriodServiceTests
     }
 
     [Fact]
+    public void EnsureGracePeriodsForUncoveredDevices_ShouldNotCreateDuplicateGracePeriodOnRepeatedCall()
+    {
+        var states = new[] { CreateState("interface-1", isCoveredByLicense: false) };
+        var firstStore = _service.EnsureGracePeriodsForUncoveredDevices(
+            states,
+            LicensedDeviceGracePeriodStore.Empty,
+            NowUtc,
+            graceDays: 30);
+
+        var secondStore = _service.EnsureGracePeriodsForUncoveredDevices(
+            states,
+            firstStore,
+            NowUtc.AddDays(1),
+            graceDays: 30);
+
+        var gracePeriod = Assert.Single(secondStore.GracePeriods);
+        Assert.Equal(NowUtc, gracePeriod.StartedAtUtc);
+        Assert.Equal(NowUtc.AddDays(30), gracePeriod.EndsAtUtc);
+    }
+
+    [Fact]
     public void EnsureGracePeriodsForUncoveredDevices_ShouldNotCreateGracePeriodForCoveredProfile()
     {
         var store = _service.EnsureGracePeriodsForUncoveredDevices(

@@ -19,7 +19,7 @@ public sealed class LicensedDeviceStateEvaluatorTests
         Assert.DoesNotContain(states, state => IsCountedLicensedInterface(state));
         var state = Assert.Single(states);
         Assert.False(state.IsCoveredByLicense);
-        Assert.Equal("Lizenzpflichtig, aber nicht aktiv - zaehlt aktuell nicht.", state.StatusMessage);
+        Assert.Equal("Lizenzpflichtig, aber nicht aktiv - zählt aktuell nicht.", state.StatusMessage);
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public sealed class LicensedDeviceStateEvaluatorTests
         Assert.True(state.IsLicenseRequired);
         Assert.False(state.IsActive);
         Assert.False(IsCountedLicensedInterface(state));
-        Assert.Equal("Lizenzpflichtig, aber nicht aktiv - zaehlt aktuell nicht.", state.StatusMessage);
+        Assert.Equal("Lizenzpflichtig, aber nicht aktiv - zählt aktuell nicht.", state.StatusMessage);
     }
 
     [Fact]

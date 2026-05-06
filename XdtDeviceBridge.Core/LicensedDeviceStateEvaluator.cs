@@ -42,7 +42,7 @@ public sealed class LicensedDeviceStateEvaluator
             }
             else if (!profile.IsActive)
             {
-                statusMessage = "Lizenzpflichtig, aber nicht aktiv - zaehlt aktuell nicht.";
+                statusMessage = "Lizenzpflichtig, aber nicht aktiv - zählt aktuell nicht.";
             }
             else if (license is null)
             {
