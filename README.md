@@ -10,6 +10,8 @@ Aktuelle Version:
 
 Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfolgreich validiert. Die automatische Verarbeitung ist manuell startbar und bewusst nicht als Windows-Dienst oder Autostart umgesetzt.
 
+Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt bzw. konfiguriert werden, gelten aber noch nicht als produktiv validiert.
+
 ## Aktueller Funktionsumfang
 
 - Einlesen einer AIS-GDT-Datei mit Patientendaten.
@@ -18,6 +20,7 @@ Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfol
 - Mapping der Patientendaten und Messwerte in MEDISTAR-kompatible XDT-Felder.
 - Erzeugen einer XDT-Exportvorschau.
 - Manuelles Schreiben einer Exportdatei in einen ausgewaehlten Ordner.
+- Vorbereitete V2-Geraeteprofile fuer NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
 - Unit-Tests fuer Parser, Mapping, Export und Datei-Export.
 
 ## MEDISTAR/NIDEK-Workflow
@@ -238,7 +241,9 @@ Noch nicht final umgesetzt bzw. bewusst noch nicht aktiviert:
 - digitale Signaturpruefung fuer Lizenzdateien
 - produktive Lizenzsperre
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
+- produktive Uebernahme importierter Templatepakete mit Konfliktloesung
 - PDF-/EV-Dokumentenerzeugung
+- Installer / Deployment
 
 ### 13. Build und Test
 
@@ -287,8 +292,7 @@ dotnet run --project XdtDeviceBridge.App
 
 ## Bekannte Einschraenkungen
 
-- Aktuell manueller Prototyp.
-- Keine Ordnerueberwachung.
-- Keine Geraeteprofilverwaltung.
+- Automatik nur nach manuellem Start, kein Windows-Dienst, kein Autostart und kein FileSystemWatcher.
+- Kein vollstaendiger Profil-Assistent fuer unbekannte Geraete; vorbereitete Profile koennen angezeigt und konfiguriert werden.
 - Keine SQLite-Speicherung.
-- Ergebnisformat aktuell fuer MEDISTAR/NIDEK ARK1S validiert.
+- Ergebnisformat aktuell nur fuer MEDISTAR/NIDEK ARK1S praktisch validiert.

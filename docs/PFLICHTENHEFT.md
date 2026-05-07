@@ -5,8 +5,8 @@
 **Projektname:** XdtDeviceBridge  
 **Arbeitstitel:** PraxisBridge XDT  
 **Zielplattform:** Windows-PC in Arztpraxis / Augenarztpraxis  
-**Technologieempfehlung:** .NET 8 oder höher, C#, WPF, SQLite, xUnit  
-**Betriebsart:** Lokale Desktop-Anwendung mit Ordnerüberwachung
+**Technologieempfehlung:** .NET 8 oder höher, C#, WPF, xUnit; SQLite als spätere Persistenzoption  
+**Betriebsart:** Lokale Desktop-Anwendung; Iststand `0.1.0-prototype`: manuelle Verarbeitung und manuell startbarer periodischer Scan; Zielbild: sichere Ordnerüberwachung
 
 ---
 
@@ -32,7 +32,7 @@ Die erste konkret zu unterstützende Gerätekonfiguration ist:
 
 ## 3. Grundprinzip der Anwendung
 
-Die Anwendung arbeitet nach folgendem Ablauf:
+Das fachliche Zielbild der Anwendung arbeitet nach folgendem Ablauf:
 
 1. Die App überwacht einen AIS-Importordner.
 2. Das AIS legt dort eine `.GDT`- oder `.XDT`-Datei mit Patientendaten ab.
@@ -45,6 +45,16 @@ Die Anwendung arbeitet nach folgendem Ablauf:
 9. Die App erzeugt eine XDT-konforme Ausgabedatei.
 10. Die App schreibt die Ausgabedatei in den Exportordner des AIS.
 11. Die App protokolliert jeden Verarbeitungsschritt.
+
+Aktueller Iststand `0.1.0-prototype`:
+
+- Manuelle Verarbeitung über Dateiauswahl ist vorhanden.
+- Eine manuell startbare periodische Überwachung ist vorhanden.
+- Es gibt keinen Windows-Dienst.
+- Es gibt keinen Autostart.
+- Es gibt keinen `FileSystemWatcher`.
+- Automatische Verarbeitung erfolgt nur während der manuell gestarteten Überwachung und nur, wenn der Benutzer den entsprechenden Haken setzt.
+- Die dauerhafte Ordnerüberwachung bleibt Zielbild für eine spätere Ausbaustufe.
 
 ---
 
@@ -94,7 +104,8 @@ Die Anwendung benötigt Schreib- und Leserechte auf:
 - Archivordner
 - Fehlerordner
 - lokales Konfigurationsverzeichnis
-- lokale SQLite-Datenbank
+- aktuell JSON-basierter Profilkatalog unter `%LocalAppData%\XdtDeviceBridge\profiles`
+- perspektivisch ggf. lokale SQLite-Datenbank
 
 ---
 
@@ -123,9 +134,15 @@ Begründung:
 
 ### 6.4 Persistenz
 
-SQLite
+Aktueller Iststand `0.1.0-prototype`:
 
-Zu speichern sind:
+- Profile und lokale Konfigurationen werden JSON-basiert im lokalen AppData-Profilkatalog gespeichert.
+- Standardpfad: `%LocalAppData%\XdtDeviceBridge\profiles`
+- Unterordner u. a. `ais`, `devices`, `exports`, `interfaces`.
+
+SQLite bleibt eine spätere Ziel-/Option, ist aber im aktuellen Prototyp nicht implementiert.
+
+Zu speichern sind perspektivisch:
 
 - Geräteprofile
 - Ordnerpfade
@@ -290,40 +307,45 @@ Das Präfix in der Karteikarte, z. B. `V1` oder `X`, wird in MEDISTAR konfigurie
 
 ## 9. Ordnerbereinigung und Dateiaufräumung
 
-Die Anwendung muss pro Profil konfigurierbare Optionen für Import- und Exportordner erhalten. Diese Optionen dienen dazu, alte Patientendateien, Gerätedateien oder Rückgabedateien kontrolliert aus Arbeitsordnern zu entfernen, ohne den Praxisbetrieb zu gefährden.
+Die Anwendung muss pro Schnittstellenprofil sichere Optionen erhalten, um bekannte verarbeitete Importdateien kontrolliert aus Arbeitsordnern zu entfernen, ohne den Praxisbetrieb zu gefährden.
+
+Wichtige Sicherheitsentscheidung im aktuellen Stand `0.1.0-prototype`:
+
+- Es gibt keine pauschale Ordnerleerung.
+- Es werden keine unbekannten Dateien gelöscht, verschoben oder archiviert.
+- Importdateien werden nur behandelt, wenn sie zu einem bekannten verarbeiteten Dateipaar gehören.
+- Der Exportordner zum AIS wird nicht pauschal bereinigt.
+- Eine frühere Option `Exportordner nach erfolgreicher Übertragung leeren` gilt als überholt und ist in der UI nicht mehr aktiv.
 
 ### 9.1 AIS-Importordner
 
-Vor dem Warten auf eine neue AIS-Datei darf optional der AIS-Importordner geleert werden.
+Der AIS-Importordner darf nicht blind geleert werden. Stattdessen kann pro Schnittstellenprofil vorgesehen werden, bereits verarbeitete AIS-Dateien aus dem Importordner zu entfernen.
 
-- Option: `AIS-Importordner vor neuer Verarbeitung leeren`
-- Zweck: alte Patientendateien aus vorherigen Untersuchungen entfernen
-- Sicherheitsanforderung: Löschen nur im konfigurierten Ordner, niemals rekursiv außerhalb des Profilordners
+- Aktuelle UI-Bedeutung: `Bereits verarbeitete AIS-Dateien aus Importordner entfernen`
+- Entfernen bedeutet: bekannte verarbeitete Dateien werden gemäß Profiloption ins Archiv kopiert oder verschoben.
+- Es werden keine unbekannten neuen AIS-Dateien gelöscht.
 
 ### 9.2 Geräte-Importordner
 
-Vor dem Warten auf eine neue Gerätedatei darf optional der Geräte-Importordner geleert werden.
+Der Geräte-Importordner darf nicht blind geleert werden. Stattdessen kann pro Schnittstellenprofil vorgesehen werden, bereits verarbeitete Gerätedateien aus dem Importordner zu entfernen.
 
-- Option: `Geräte-Importordner vor neuer Untersuchung leeren`
-- Zweck: alte Messdateien vorheriger Untersuchungen entfernen
-- Sicherheitsanforderung: Löschen nur im konfigurierten Ordner, niemals rekursiv außerhalb des Profilordners
+- Aktuelle UI-Bedeutung: `Bereits verarbeitete Gerätedateien aus Importordner entfernen`
+- Entfernen bedeutet: bekannte verarbeitete Dateien werden gemäß Profiloption ins Archiv kopiert oder verschoben.
+- Es werden keine unbekannten neuen Gerätedateien gelöscht.
 
 ### 9.3 Exportordner zum AIS
 
-Nach erfolgreicher Übertragung oder Verarbeitung darf optional der Exportordner bereinigt werden.
+Der Exportordner wird nicht pauschal bereinigt.
 
-- Option: `Exportordner nach erfolgreicher Übertragung leeren`
-- Zweck: verhindern, dass alte Rückgabedateien erneut vom AIS verarbeitet werden oder den Betrieb stören
-- Diese Option muss getrennt von den Importordner-Optionen konfigurierbar sein
+Begründung: Nachdem die App eine XDT-Datei in den Exportordner geschrieben hat, ist das AIS für den Abruf zuständig. Ein automatisches Löschen direkt nach dem Export wäre riskant, weil das AIS die Datei eventuell noch nicht verarbeitet hat.
 
-### 9.4 Sicherheitsanforderungen für Löschoptionen
+### 9.4 Sicherheitsanforderungen für Dateioperationen
 
-- Die Löschoptionen müssen pro Geräte-/Exportprofil konfigurierbar sein.
-- Löschen darf nur nach klarer Benutzerkonfiguration erfolgen.
-- Standardmäßig müssen Löschoptionen deaktiviert sein.
-- Optional soll statt endgültigem Löschen auch `Verschieben in Archivordner` möglich sein.
-- Fehler beim Löschen müssen protokolliert und sichtbar gemacht werden.
-- Dateien, die gerade gesperrt oder in Verarbeitung sind, dürfen nicht gelöscht werden.
+- Dateioperationen müssen pro Schnittstellenprofil konfigurierbar sein.
+- Standardmäßig dürfen gefährliche Bereinigungsoptionen nicht aktiv sein.
+- Importdateien dürfen höchstens gemäß Profiloption ins Archiv kopiert oder verschoben werden.
+- Fehler beim Kopieren/Verschieben müssen protokolliert und sichtbar gemacht werden.
+- Dateien, die gerade gesperrt oder in Verarbeitung sind, dürfen nicht gelöscht oder verschoben werden.
 - Es muss verhindert werden, dass versehentlich falsche Verzeichnisse wie `C:\`, Benutzerordner oder Netzlaufwerk-Wurzeln geleert werden.
 - Für den Produktivbetrieb muss eine Sicherheitsprüfung vorgesehen werden. Der Ordner muss explizit im Profil gespeichert sein und darf nicht leer, Root-Verzeichnis oder Systemordner sein.
 
@@ -341,10 +363,10 @@ Der spätere Einstellungsbereich der Anwendung muss die Profil- und Ordneroption
 - Exportordner definieren
 - Archivordner definieren
 - Fehlerordner definieren
-- Option: AIS-Importordner vor Verarbeitung leeren
-- Option: Geräte-Importordner vor Verarbeitung leeren
-- Option: Exportordner nach erfolgreicher Übertragung leeren
-- Option: Dateien nach Verarbeitung archivieren statt löschen
+- Option: bereits verarbeitete AIS-Dateien aus Importordner entfernen
+- Option: bereits verarbeitete Gerätedateien aus Importordner entfernen
+- Option: Dateien nach Verarbeitung archivieren
+- Option: Archivierungsmodus Kopieren oder Verschieben
 - Mapping-Regeln und Ergebnis-Syntax bearbeiten
 - pro Untersuchungsart eigene Ausgabe-Syntax definieren
 
@@ -489,7 +511,7 @@ Besonders kritisch:
 
 - automatische Löschoptionen
 - Ordnerbereinigung
-- Exportordner nach Übertragung leeren
+- historische/überholte Exportordner-Bereinigungsoptionen
 - Pfade zu Root-Verzeichnissen oder Systemordnern
 - unbekannte oder fehlerhafte Mapping-Regeln
 
@@ -885,6 +907,8 @@ Die Online-Lizenzierung darf die Offline-Fähigkeit der App nicht grundsätzlich
 
 Auch bei späterer Online-Lizenzierung muss die App mit eingeschränkter Erreichbarkeit umgehen können.
 
+Die folgenden Punkte beschreiben das Zielbild einer späteren produktiven Lizenzdurchsetzung. Im aktuellen Stand `0.1.0-prototype` wird der Lizenzstatus angezeigt und für aktive lizenzpflichtige Schnittstellenprofile bewertet; die produktive Verarbeitung wird aber noch nicht hart gesperrt.
+
 Beispiele:
 
 - Lizenzserver kurzzeitig nicht erreichbar
@@ -1041,7 +1065,7 @@ Parser-Anforderungen:
 - Leere Tags müssen toleriert werden.
 - XML-Attribute müssen als Platzhalter verfügbar sein, z. B. `Measure[@Type='LM']/@Type`, `PrismX/@base`, `PrismY/@base`, `Sphere/@unit`, `Distance/@unit`.
 - Attribute wie `unit="D"` oder `base="out"` sollen nicht verloren gehen.
-- Error-Tags aus `NIDEK_V1.01` sollen als Messwerte und perspektivisch als `DeviceParseIssue` bzw. Gerätewarnung sichtbar gemacht werden.
+- Error-Tags aus `NIDEK_V1.01` sind als SourcePaths/Messwerte vorzusehen bzw. vorbereitet. Eine automatische Einordnung als `DeviceParseIssue` oder Gerätewarnung ist noch offen und muss vor produktiver Nutzung fachlich spezifiziert werden.
 
 Hinweis zu Tagvarianten:
 

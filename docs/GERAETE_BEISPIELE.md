@@ -2,9 +2,9 @@
 
 ## 1. Zweck des Dokuments
 
-Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für spätere Geräteprofile, Export-/Mapping-Profile, PDF-Dokumentenerzeugung und MEDISTAR-EV-Verknüpfungen.
+Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, PDF-Dokumentenerzeugung und MEDISTAR-EV-Verknüpfungen.
 
-Hinweis: Die aktuelle App implementiert diese Profile noch nicht vollständig. Das Dokument dient der fachlichen Vorbereitung.
+Hinweis zum Stand `0.1.0-prototype`: V2-Geräteprofile für die hier beschriebenen Geräte sind teilweise vorbereitet bzw. als BuiltIn-Profile vorhanden. Produktiv/praktisch validiert ist weiterhin nur der Workflow MEDISTAR + NIDEK ARK1S. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und müssen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
 
 ## 2. Übersicht erkannter Geräte
 

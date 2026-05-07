@@ -41,3 +41,5 @@ Erster stabiler Prototyp der XdtDeviceBridge.
 - PDF-/EV-Dokumentenerzeugung
 - produktive Archivloeschung im Hintergrund
 - SQLite-Speicherung
+- produktive Templatepaket-Uebernahme mit Konfliktloesung
+- Installer / Deployment

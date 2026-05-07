@@ -4,9 +4,13 @@ Dieses Dokument beschreibt die geplante Zielarchitektur für XdtDeviceBridge Ver
 
 ---
 
-## 1. Aktueller Stand des Prototyps
+## 1. Aktueller Stand 0.1.0-prototype
 
-Der aktuelle Prototyp ist eine lokale WPF-Anwendung für Windows. Er verarbeitet Dateien manuell über die Oberfläche:
+Der aktuelle Prototyp ist eine lokale WPF-Anwendung für Windows. Produktiv/praktisch validiert ist nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere V2-Profile und Automatikbausteine sind vorbereitet bzw. im Prototyp bedienbar, aber nicht im gleichen Umfang produktiv validiert.
+
+### 1.1 Manuelle Verarbeitung
+
+Der manuelle Test- und Diagnosemodus verarbeitet Dateien über die Oberfläche:
 
 1. AIS-GDT-Datei auswählen
 2. NIDEK ARK1S XML-Datei auswählen
@@ -26,7 +30,78 @@ Der fachlich validierte Ablauf ist aktuell:
 - Untersuchungsart: `8402` aus AIS/GDT
 - Ergebnis: zwei `6228`-Textzeilen für rechts und links
 
-Die zentrale Logik liegt derzeit im Core-Projekt:
+### 1.2 Manuell startbare periodische Überwachung
+
+Zusätzlich zum manuellen Testmodus besitzt der Prototyp eine manuell startbare Überwachung im Tab `Verarbeitung`.
+
+Aktueller Stand:
+
+- Die Überwachung startet nicht beim App-Start.
+- Es gibt keinen Windows-Dienst.
+- Es gibt keinen Autostart.
+- Es gibt keinen `FileSystemWatcher`.
+- Die Überwachung basiert auf periodischem Scan aktiver Schnittstellenprofile.
+- Gefundene AIS-/Geräte-Dateipaare werden angezeigt.
+- Dateien werden nur berücksichtigt, wenn sie stabil und lesbar sind.
+- Es wird keine unbekannte Datei gelöscht oder verschoben.
+
+### 1.3 Optionale automatische Verarbeitung
+
+Während die manuell gestartete Überwachung läuft, kann der Benutzer die Option `Gefundene Dateipaare automatisch verarbeiten` aktivieren.
+
+Wenn diese Option deaktiviert ist, werden Dateipaare nur angezeigt und müssen manuell verarbeitet werden.
+
+Wenn diese Option aktiviert ist:
+
+- stabile gefundene Dateipaare werden nacheinander verarbeitet
+- XDT-Dateien werden in den konfigurierten Exportordner geschrieben
+- bereits verarbeitete Dateipaare werden nicht erneut exportiert
+- Importdateien werden nur gemäß Schnittstellenprofil archiviert
+- Fehlerdateien werden nur gemäß Schnittstellenprofil in den Fehlerordner kopiert
+
+### 1.4 Archivierung, Duplikate und Fehlerablage
+
+Der Prototyp unterstützt:
+
+- Archivierung verarbeiteter Importdateien per Kopie oder Verschieben
+- Duplikatbehandlung für bereits verarbeitete AIS-/Geräte-Dateipaare
+- optionale Fehlerablage mit Kopie der beteiligten Importdateien
+- `error.txt` im Fehlerordner
+- vorbereitete Archiv-Aufbewahrungslogik ohne automatische Ausführung
+
+Sicherheitsgrenzen:
+
+- keine pauschale Ordnerleerung
+- keine Exportordner-Bereinigung
+- keine unbekannten Dateien anfassen
+- keine endgültige Löschung von Importdateien
+
+### 1.5 Lizenzanzeige
+
+Der Lizenzbereich zeigt den lokalen Lizenzstatus, Lizenzanfragen, importierte Lizenzdateien, lizenzierte Geräte/Anbindungen und Karenzzeiten für neue Anbindungen.
+
+Aktueller Stand:
+
+- aktive lizenzpflichtige Schnittstellenprofile werden bewertet
+- Karenzzeiten sind modelliert und können aktualisiert werden
+- keine Online-Lizenzierung
+- keine digitale Signaturprüfung
+- keine harte produktive Lizenzsperre
+
+### 1.6 NIDEK LM7/LM7P architektonisch
+
+NIDEK LM7/LM7P ist als vorbereitetes Lensmeter-Profil eingeordnet.
+
+Architekturannahme:
+
+- Das Gerät schreibt per LAN/WLAN über SMB/Common Internet File System XML-Dateien in einen Shared Folder.
+- Dieser Shared Folder entspricht dem Geräte-Importordner eines Schnittstellenprofils.
+- Die App liest diese Dateien über periodischen Scan bzw. eine spätere sichere Ordnerüberwachung.
+- Nach erfolgreicher Verarbeitung ist Archivmodus `Move` fachlich sinnvoll, damit der Shared Folder wieder frei wird.
+- Unterstützt werden sollen LAN-XML-Dateien nach `NIDEK_V1.00` und `NIDEK_V1.01`.
+- XML-Attribute wie `@base`, `@unit` und `Measure[@Type='LM']` müssen als SourcePaths verfügbar bleiben.
+
+Die zentrale Logik liegt derzeit in Core- und Infrastructure-Bausteinen:
 
 - `GdtParser`
 - `PatientDataMapper`
@@ -35,8 +110,15 @@ Die zentrale Logik liegt derzeit im Core-Projekt:
 - `XdtExportBuilder`
 - `DefaultDeviceProfiles`
 - `ProcessingPipelineService`
+- `AutoImportScannerService`
+- `PeriodicAutoImportScanService`
+- `InterfaceProfileManualProcessor`
+- `ProcessedFileArchiveService`
+- `FailedFileCopyService`
+- `AutoImportPairProcessingCoordinator`
+- `DuplicateImportFileHandler`
 
-Diese Struktur ist für den Prototyp ausreichend, aber noch nicht flexibel genug für mehrere AIS-Systeme, Geräteklassen, Exportprofile, Template-Bibliotheken und Lizenzierung.
+Diese Struktur ist für den Prototyp ausreichend und bildet die Grundlage für weitere Profile. Für produktive Nutzung weiterer AIS-Systeme, Geräteklassen, Templatepakete und Lizenzdurchsetzung sind noch Validierung und Ausbauschritte erforderlich.
 
 ---
 
@@ -645,6 +727,8 @@ Nach einem Import müssen lokale Pfade geprüft werden. Das betrifft besonders:
 
 Die erste marktfähige Lizenzversion soll offline funktionieren.
 
+Iststand `0.1.0-prototype`: Die App kann Installationsinformationen anzeigen, eine Lizenzanfrage exportieren, eine Lizenzdatei importieren und aktive lizenzpflichtige Schnittstellenprofile bewerten. Die Lizenz wird noch nicht digital signiert geprüft und die produktive Verarbeitung wird noch nicht hart gesperrt.
+
 Grundprinzip:
 
 - Die App erzeugt eine Installations-ID.
@@ -665,7 +749,7 @@ Die Lizenzprüfung muss folgende Zustände abbilden können:
 - zu wenige lizenzierte Geräte
 - Lizenz fehlt
 
-Bei ungültiger oder abgelaufener Lizenz darf keine produktive Verarbeitung erfolgen. Konfiguration, Import/Export und Lizenzaktivierung müssen weiterhin möglich bleiben.
+Zielbild für eine spätere produktive Lizenzdurchsetzung: Bei ungültiger oder abgelaufener Lizenz darf keine produktive Verarbeitung erfolgen. Konfiguration, Import/Export und Lizenzaktivierung müssen weiterhin möglich bleiben.
 
 ---
 
@@ -700,7 +784,7 @@ Der Lizenzbereich soll mindestens anzeigen:
 
 ## 8. Implementierte V2-Bausteine
 
-Die folgenden Architekturbausteine sind inzwischen als Grundlage für Version 2 implementiert. Sie sind bewusst noch nicht vollständig in den produktiven Prototyp integriert, sondern bilden eine stabile Vorbereitungsstufe für Profile, Templates, lokale Konfiguration und Offline-Lizenzierung.
+Die folgenden Architekturbausteine sind inzwischen als Grundlage für Version 2 implementiert. Einige davon sind bereits in der Oberfläche des Prototyps nutzbar, andere bleiben vorbereitende Bausteine. Produktiv/praktisch validiert bleibt nur MEDISTAR + NIDEK ARK1S.
 
 ### 8.1 Profilmodelle
 
@@ -736,11 +820,13 @@ Für die spätere Offline-Lizenzierung sind folgende Modelle und Infrastrukturba
 - `LicenseInfo`
 - `LicenseFileRepository`
 - `LicenseEvaluator`
+- `LicensedDeviceStateEvaluator`
+- `LicensedDeviceGracePeriodService`
 - `LicenseRequest`
 - `LicenseRequestBuilder`
 - `LicenseRequestFileRepository`
 
-Diese Bausteine ermöglichen eine lokale Installationskennung, das Speichern und Laden einer Lizenzdatei, eine einfache lokale Lizenzbewertung sowie das Erzeugen und Speichern einer Offline-Lizenzanfrage. Eine echte Signaturprüfung und produktive Erzwingung der Lizenz sind weiterhin nicht implementiert.
+Diese Bausteine ermöglichen eine lokale Installationskennung, das Speichern und Laden einer Lizenzdatei, eine lokale Lizenzbewertung aktiver lizenzpflichtiger Schnittstellenprofile, Karenzzeiten sowie das Erzeugen und Speichern einer Offline-Lizenzanfrage. Eine echte Signaturprüfung und produktive Erzwingung der Lizenz sind weiterhin nicht implementiert.
 
 ### 8.4 Lokale App-Daten
 
@@ -754,13 +840,13 @@ Darunter sind Pfade für Profile, Templates, Lizenzen, Logs, Lizenzanfragen, Tem
 
 ### 8.5 Sicherheit
 
-Mit `FolderSafetyValidator` ist eine erste Sicherheitsprüfung für spätere Ordnerbereinigungen vorhanden. Der Validator erkennt gefährliche Cleanup-Pfade wie leere oder relative Pfade, Laufwerks- oder Share-Wurzeln, Windows-Systemordner, Program-Files-Ordner und Benutzerprofil-Wurzeln. Nicht vorhandene, aber ansonsten plausible Unterordner werden als Warnung gemeldet.
+Mit `FolderSafetyValidator` ist eine Sicherheitsprüfung für spätere bzw. explizite Ordnerbereinigungen vorhanden. Der Validator erkennt gefährliche Cleanup-Pfade wie leere oder relative Pfade, Laufwerks- oder Share-Wurzeln, Windows-Systemordner, Program-Files-Ordner und Benutzerprofil-Wurzeln. Nicht vorhandene, aber ansonsten plausible Unterordner werden als Warnung gemeldet.
 
-Es wurde keine Löschlogik implementiert. Der Baustein dient nur der Vorbereitung sicherer Bereinigungsoptionen.
+Es wurde keine pauschale Ordnerleerung implementiert. Dateioperationen beschränken sich im aktuellen Prototyp auf bekannte verarbeitete Dateipaare, Archivierung Copy/Move, Fehlerablage Copy-only und vorbereitete Archiv-Retention-Logik.
 
 ### 8.6 Weiterhin aktueller Prototyp
 
-Der aktuelle funktionsfähige Prototyp bleibt unverändert:
+Der aktuelle funktionsfähige Prototyp umfasst:
 
 - manuelle WPF-App
 - MEDISTAR GDT/XDT als AIS-Eingabe
@@ -769,6 +855,13 @@ Der aktuelle funktionsfähige Prototyp bleibt unverändert:
 - Steuerung über `8000 = 6310`
 - Untersuchungsart über `8402`
 - Ergebnistext über zwei `6228`-Zeilen
+- Schnittstellenprofile mit Ordnerkonfiguration
+- manuell startbare periodische Überwachung
+- optionale automatische Verarbeitung per bewusst gesetztem Haken
+- Archivierung per Kopie oder Verschieben
+- Duplikatbehandlung für bereits verarbeitete Dateipaare
+- Fehlerablage mit `error.txt`
+- Lizenzanzeige ohne harte Sperre
 
 ### 8.7 Erkenntnisse aus weiteren Beispieldaten
 
@@ -943,11 +1036,13 @@ Die spätere Automatik darf keine blinde medizinische Interpretation vornehmen. 
 
 Die nächsten sinnvollen Integrationsschritte sollten klein bleiben und den stabilen Prototyp nicht gefährden:
 
-1. Profilkatalog aus lokalen JSON-Dateien laden.
-2. V2-Profile optional in die App-Oberfläche einbinden.
-3. Profil-/Template-Import und Export in der UI vorbereiten.
-4. Lizenzstatus zunächst nur anzeigen, noch nicht erzwingen.
-5. Ordnerüberwachung später separat implementieren.
+1. Dokumentation von Iststand und Zielbild weiter konsistent halten.
+2. Produktive Übernahme importierter Templatepakete mit Konfliktlösung planen.
+3. Vollständigen Profil-Assistenten für unbekannte Geräte konzipieren.
+4. Vorbereitete V2-Geräteprofile mit echten Praxisdateien validieren.
+5. LM7/LM7P-Error-Tags als Gerätewarnung bzw. `DeviceParseIssue` fachlich spezifizieren.
+6. Installer-/Deployment-Konzept erstellen.
+7. Echte Ordnerüberwachung bzw. Windows-Dienst erst nach gesonderter Sicherheitsentscheidung planen.
 
 ---
 
