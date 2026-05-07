@@ -103,6 +103,8 @@ Die Anwendung benötigt Schreib- und Leserechte auf:
 - Exportordner
 - Archivordner
 - Fehlerordner
+- optional GA-Dateianhang Import
+- optional GA-Dateianhang Export
 - lokales Konfigurationsverzeichnis
 - aktuell JSON-basierter Profilkatalog unter `%LocalAppData%\XdtDeviceBridge\profiles`
 - perspektivisch ggf. lokale SQLite-Datenbank
@@ -363,6 +365,8 @@ Der spätere Einstellungsbereich der Anwendung muss die Profil- und Ordneroption
 - Exportordner definieren
 - Archivordner definieren
 - Fehlerordner definieren
+- optional GA-Dateianhang Import definieren
+- optional GA-Dateianhang Export definieren
 - Option: bereits verarbeitete AIS-Dateien aus Importordner entfernen
 - Option: bereits verarbeitete Gerätedateien aus Importordner entfernen
 - Option: Dateien nach Verarbeitung archivieren
@@ -406,6 +410,7 @@ Die Anwendung soll perspektivisch folgende Template-Arten unterstützen:
 - AIS-Templates
 - Geräte-Templates
 - Export-/Mapping-Templates
+- Dokument-/Dateianhang-Templates
 - vollständige Schnittstellenprofile als Kombi-Template
 
 Definitionen:
@@ -413,6 +418,7 @@ Definitionen:
 - AIS-Template: beschreibt generelle Anforderungen eines Arztinformationssystems, z. B. MEDISTAR, ALBIS oder TURBOMED.
 - Geräte-Template: beschreibt generelle Parser- und Messwertlogik eines Gerätes oder Gerätetyps, z. B. NIDEK ARK1S, Zeiss Humphrey oder ein Topcon-Gerät.
 - Export-/Mapping-Template: beschreibt, wie ausgelesene Werte in XDT/GDT-Ausgabefelder, Ergebniszeilen oder Ergebnisblöcke geschrieben werden.
+- Dokument-/Dateianhang-Template: beschreibt, wie ein bereits vom Gerät erzeugter Geräte-Dateianhang übernommen, eindeutig benannt, in den AIS-erreichbaren Zielordner übertragen und als externer AIS-Link exportiert werden soll.
 - Kombi-Template: enthält eine vollständige, bereits funktionierende Kombination aus AIS-Profil, Geräteprofil, Export-/Mapping-Regeln, Ordnerlogik und Ausgabesyntax.
 
 ### 12.3 Template-Verwendung
@@ -497,6 +503,7 @@ Besonders zu beachten:
 - Laufwerksbuchstaben können unterschiedlich sein
 - Netzwerkpfade können unterschiedlich sein
 - Geräteordner können je Workstation anders sein
+- GA-Dateianhang Import und GA-Dateianhang Export können je Workstation oder AIS-Arbeitsplatz unterschiedlich sein
 - Pfade dürfen beim Import nicht blind übernommen werden, ohne dass der Benutzer sie prüfen kann
 
 Anforderung:
@@ -513,6 +520,8 @@ Besonders kritisch:
 - Ordnerbereinigung
 - historische/überholte Exportordner-Bereinigungsoptionen
 - Pfade zu Root-Verzeichnissen oder Systemordnern
+- importierte Pfade für GA-Dateianhang Import und GA-Dateianhang Export
+- echte Patientendokumente oder Geräte-Dateianhänge in Templatepaketen
 - unbekannte oder fehlerhafte Mapping-Regeln
 
 Anforderungen:
@@ -522,6 +531,8 @@ Anforderungen:
 - Importierte Profile müssen validiert werden.
 - Fehlerhafte oder unvollständige Profile dürfen nicht produktiv aktiviert werden.
 - Die App muss verständlich anzeigen, welche Punkte nach dem Import geprüft werden müssen.
+- Templatepakete dürfen keine echten Patientendokumente oder Geräte-Dateianhänge enthalten.
+- Importierte GA-Ordnerpfade müssen geprüft und bei Bedarf lokal neu gesetzt werden.
 
 ### 12.8 Template-Bibliothek
 
@@ -979,7 +990,7 @@ Das Pflichtenheft hält aber fest:
 
 Die bisher validierte MEDISTAR/NIDEK-ARK1S-Verarbeitung bildet nur das erste Standardprofil. Die weiteren Beispieldaten zeigen, dass die Anwendung perspektivisch mehrere Geräteklassen, mehrere Untersuchungsarten pro Datei und begleitende Dokumente unterstützen muss.
 
-Für die aktuelle Version wird noch keine Umsetzung von EV-Verweisen, PDF-/JPG-Ablage oder Mehruntersuchungs-Profilen implementiert. Die Beispieldaten dienen zunächst zur Erweiterung des Pflichtenhefts und der Architektur. Die funktionsfähige MEDISTAR/NIDEK-ARK1S-Verarbeitung bleibt unverändert.
+Für den aktuellen Stand `0.1.0-prototype` ist noch keine produktive Umsetzung von Geräte-Dateianhang-Import, MEDISTAR externem Link über XDT, selbst erzeugter PDF-Protokollerzeugung oder Mehruntersuchungs-Profilen enthalten. Diese Punkte sind Zielanforderungen bzw. spätere Ausbaustufen. Die Beispieldaten dienen zunächst zur Erweiterung des Pflichtenhefts und der Architektur. Die funktionsfähige MEDISTAR/NIDEK-ARK1S-Verarbeitung bleibt unverändert.
 
 ### 14.1 Weitere Gerätetypen und Untersuchungsarten
 
@@ -1105,7 +1116,7 @@ Beispiele:
   - Pachymetrie rechts
   - Pachymetrie links
   - Tonometrie/korrigierter IOP rechts/links
-  - EV-Verweis auf Messprotokoll
+  - perspektivisch externer AIS-Link auf Messprotokoll
 - KR800:
   - Refraktion rechts/links
   - Keratometrie rechts/links
@@ -1113,57 +1124,104 @@ Beispiele:
 
 Das Export-/Mapping-Profil muss dafür mehrere Ausgabezeilen, mehrere Ziel-Feldkennungen und denselben Ziel-Feldcode mehrfach unterstützen.
 
-### 14.4 Zusatzdateien, Attachments und Dokumentenverweise
+### 14.4 Geräte-Dateianhänge und externe AIS-Links
 
-Die App muss perspektivisch Begleitdateien unterstützen.
+Geräte-Dateianhang-Import und externe AIS-Link-Übergabe sind verbindliche zukünftige Anforderungen an den Geräteanbindungs-Baukasten. Im aktuellen Stand `0.1.0-prototype` sind diese Funktionen noch nicht produktiv umgesetzt.
 
-Beispiele:
+Viele Untersuchungsgeräte können zusätzlich zur Messwertdatei Geräte-Dateianhänge erzeugen, z. B.:
 
-- NIDEK NT530P erzeugt zusätzlich JPG-Dateien.
-- Andere Geräte können PDF-Protokolle erzeugen.
-- Die XML-Datei kann auf Zusatzdateien verweisen, z. B. `PACHYImage`.
+- PDF
+- JPG/JPEG
+- PNG
+- TIF/TIFF
+- DCM
+- TXT
+
+Diese Dateien sollen künftig über die App ins AIS übernommen werden können. Die App soll dafür:
+
+- einen Geräte-Dateianhang aus einem definierten Importordner übernehmen
+- die Datei eindeutig umbenennen
+- die umbenannte Datei in einen definierten Exportordner verschieben oder kopieren
+- erst nach erfolgreicher Ablage einen externen AIS-Link in der XDT-Rückgabedatei erzeugen
+- fehlende oder fehlerhafte Anhänge nachvollziehbar melden
+
+Für MEDISTAR ist die Übergabe eines externen Links über XDT als Zielstruktur mit folgenden Feldkennungen zu dokumentieren:
+
+| Feldkennung | Bedeutung |
+| --- | --- |
+| `6302` | Dokumentname / Anzeige in der Karteikarte |
+| `6303` | Dateiformat, z. B. `PDF`, `JPG`, `DCM`, `TXT` |
+| `6304` | optionale Beschreibung, z. B. `Messprotokoll Autorefraktor` |
+| `6305` | vollständiger absoluter Dateipfad zur abgelegten Datei |
 
 Anforderungen:
 
-- zugehörige Begleitdateien zur Messung erkennen
-- Begleitdateien anhand Dateinamen, Zeitstempel oder XML-Verweis zuordnen
-- Begleitdateien in eine definierte Zielordnerstruktur kopieren
-- Zielordnerstruktur pro AIS/Profil konfigurierbar machen
-- optional vorhandene Dateien nicht überschreiben
-- Dateinamen eindeutig erzeugen
-- Fehler bei fehlenden Begleitdateien protokollieren
-- Begleitdateien dürfen keine Verarbeitung blockieren, wenn sie als optional markiert sind
-- Begleitdateien müssen Verarbeitung blockieren, wenn sie als erforderlich markiert sind
+- `6304` ist ein optionales Beschreibungsfeld.
+- `6305` muss einen vollständigen Pfad enthalten, z. B. einen lokalen Pfad oder UNC-/Netzwerkpfad.
+- Die genaue AIS-Wirkung ist je AIS zu validieren.
+- Die Beispieldatei `XDT Übergabe externer Link.txt` bestätigt diese Feldlogik für MEDISTAR und zeigt sowohl UNC-Pfade als auch lokale absolute Pfade.
+- Die in MEDISTAR sichtbare Karteikartenanzeige mit `EV:{...}` wird durch MEDISTAR aus der XDT-Übergabe erzeugt. Unsere App soll nicht manuell eine `EV:{...}`-Textzeile pflegen, sondern die fachlichen XDT-Felder korrekt exportieren.
+- Die bestehenden MEDISTAR-Zeilentypen für Messwerte bleiben davon getrennt. Der externe AIS-Link ist ein zusätzlicher Exportbaustein.
 
-### 14.5 MEDISTAR EV-Verweise
+Schematische, anonymisierte XDT-Übergabe:
 
-Für MEDISTAR muss perspektivisch ein Mechanismus für externe Verweise unterstützt werden.
+```text
+<Len>6302PDF-Befund
+<Len>6303PDF
+<Len>6304Messwerte Autorefraktor
+<Len>6305\\SERVER\Freigabe\Befunde\Patient_123.pdf
+```
+
+`<Len>` steht für das XDT-Längenpräfix. Es muss vom Exportgenerator berechnet werden und darf nicht manuell im Template gepflegt werden.
+
+### 14.5 GA-Dateianhang Import und GA-Dateianhang Export
+
+Schnittstellenprofile sollen für Geräte-Dateianhänge zwei optionale Ordner erhalten:
+
+- `GA-Dateianhang Import`: Ordner, aus dem vom Untersuchungsgerät erzeugte Zusatzdateien übernommen werden.
+- `GA-Dateianhang Export`: Ordner, in den die App umbenannte Zusatzdateien ablegt, damit das AIS sie über einen externen Link öffnen kann.
+
+Diese Ordner sind optional und nur erforderlich, wenn ein Schnittstellenprofil Geräteanhänge ins AIS übernehmen soll. Ohne konfigurierte GA-Dateianhang-Ordner läuft die normale AIS-/Gerätedatei-Verarbeitung unverändert weiter. Die bestehende MEDISTAR/NIDEK-ARK1S-Verarbeitung bleibt unverändert.
+
+### 14.6 Eindeutige Dateibenennung für Geräte-Dateianhänge
+
+Für abgelegte Geräte-Dateianhänge muss ein eindeutiger Dateiname erzeugt werden. Standardvorschlag:
+
+```text
+{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}
+```
 
 Beispiel:
 
 ```text
-EV:{000000003B} NT-530P Messung
+11253_07052026_221723.PDF
 ```
 
-Durch Doppelklick in MEDISTAR kann ein hinterlegtes Dokument oder Messprotokoll geöffnet werden.
+Regeln:
 
-Anforderungen:
+- Die Patientennummer kommt aus AIS-Feld `3000`.
+- Datum und Uhrzeit können zunächst aus dem Verarbeitungszeitpunkt kommen.
+- Später kann profilabhängig auch Geräte-Untersuchungsdatum/-zeit verwendet werden.
+- Der Dateinamenaufbau muss vorschlagbar, aber editierbar sein.
+- Wenn eine Zieldatei bereits existiert, darf sie nicht überschrieben werden.
+- Stattdessen muss ein eindeutiger Suffix ergänzt werden, z. B. `_001`, `_002`.
 
-- EV-Verweise müssen pro Exportprofil konfigurierbar sein
-- EV-Kennung/Schlüssel muss erzeugt oder übernommen werden können
-- Ablagepfad für Dokumente muss konfigurierbar sein
-- Windows-Ordnerstruktur muss pro AIS-Profil definierbar sein
-- Exportregel muss Ergebnistext und EV-Verweis kombinieren können
+### 14.7 Sicherheitsanforderungen für Geräte-Dateianhänge
 
-Beispielausgabe:
+Für Geräte-Dateianhänge und externe AIS-Links gelten zusätzliche Sicherheitsanforderungen:
 
-```text
-P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
-```
+- Keine echten Patientendokumente in Templatepaketen.
+- Keine Anhänge blind löschen.
+- Keine Zieldateien überschreiben.
+- Zielordner müssen sicher validiert werden.
+- Root-, System- und unsichere Ordner dürfen nicht automatisch aktiv werden.
+- Importierte GA-Ordnerpfade aus Templates müssen geprüft werden.
+- Externe AIS-Links dürfen nur erzeugt werden, wenn die Datei erfolgreich im Zielordner abgelegt wurde.
+- Bei Fehlern darf kein ungültiger Link erzeugt werden.
+- Optionaler Anhang: Die Verarbeitung darf weiterlaufen, wenn das Profil dies so konfiguriert.
+- Pflicht-Anhang: Die Verarbeitung muss abbrechen oder als Fehler markiert werden, wenn die Datei fehlt oder nicht abgelegt werden kann.
 
-Hinweis: Die exakte MEDISTAR-EV-Struktur muss später anhand funktionierender Praxisbeispiele validiert werden.
-
-### 14.6 XML-Parser und Namespaces
+### 14.8 XML-Parser und Namespaces
 
 Die App muss verschiedene XML-Varianten unterstützen.
 
@@ -1183,7 +1241,7 @@ Anforderungen:
   - bekannte Namespace-Präfixe verwenden
   - XPath-/Pfadmodus
 
-### 14.7 MEDISTAR-Beispielausgaben aus Beispieldaten
+### 14.9 MEDISTAR-Beispielausgaben aus Beispieldaten
 
 NIDEK LM7:
 
@@ -1197,7 +1255,7 @@ NIDEK NT530P:
 ```text
 Y  PR: 559 560 558 [559] µm
 Y  PL: 559 560 [560] µm
-P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
+P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51
 ```
 
 NIDEK ARK1S:
@@ -1209,87 +1267,59 @@ V1 L.:S=+ 0.00 Z=- 0.50* 63                              PD=61
 
 ---
 
-## 15. Optionale Dokumentenerzeugung und EV-Verknüpfung
+## 15. Dokument-/Dateianhang-Template und spätere PDF-Erzeugung
 
 ### 15.1 Ziel
 
-Die Anwendung soll perspektivisch optional aus den eingelesenen AIS- und Gerätedaten ein lesbares Messprotokoll erzeugen können.
+Das Dokument-/Dateianhang-Template ist künftig verbindlicher Bestandteil des Geräteanbindungs-Baukastens. Es beschreibt, wie bereits vom Gerät erzeugte Geräte-Dateianhänge erkannt, übernommen, eindeutig benannt, in einen AIS-erreichbaren Ordner übertragen und per externem AIS-Link referenziert werden.
 
-Hintergrund: Viele Gerätedateien sind maschinenlesbar, aber für Ärzte nicht angenehm lesbar. Ein automatisch erzeugtes PDF-Messprotokoll kann die gemessenen Werte übersichtlich darstellen und bei Bedarf ausgedruckt oder über einen MEDISTAR-EV-Verweis geöffnet werden.
+Im aktuellen Stand `0.1.0-prototype` ist diese Funktion noch nicht produktiv umgesetzt. Der Prototyp erzeugt weiterhin MEDISTAR-kompatible XDT-Ergebniszeilen für Messwerte, aber noch keine produktiven externen AIS-Links.
 
-### 15.2 Dokumenttyp
+Eine PDF-Erzeugung durch die App selbst bleibt ein separater späterer Fall. Dieser Schritt beschreibt vorrangig Geräteanhänge, die bereits als Datei vorliegen.
 
-Die bevorzugte Ausgabeform für selbst erzeugte Protokolle ist PDF.
+### 15.2 Dokument- und Dateitypen
 
-Begründung:
+Zu unterstützen sind perspektivisch vor allem vom Gerät erzeugte Zusatzdateien:
 
-- gut lesbar
-- druckbar
-- archivierbar
-- mehrseitig möglich
-- geeignet für Messprotokolle
-- optional mit Praxislogo oder Layout erweiterbar
+- PDF-Messprotokolle
+- JPG/JPEG- oder PNG-Bilder
+- TIF/TIFF-Bilder
+- DICOM-Dateien (`DCM`)
+- TXT- oder andere technische Begleitdateien
 
-JPEG oder andere Bildformate sollen nur verwendet werden, wenn das Gerät selbst solche Dateien liefert oder ein AIS dies ausdrücklich benötigt.
+Selbst erzeugte PDF-Messprotokolle können später zusätzlich entstehen, wenn ein Gerät nur maschinenlesbare Werte liefert.
 
-### 15.3 Optionale Aktivierung
+### 15.3 Konfigurierbare Aktivierung
 
-Die PDF-/Dokumentenerzeugung muss pro Schnittstellenprofil optional aktivierbar sein.
+Pro Schnittstellenprofil soll konfigurierbar sein:
 
-Konfigurierbare Optionen:
+- Geräte-Dateianhang-Verarbeitung aus: keine Anhangsuche und kein externer AIS-Link
+- optionaler Anhang: Verarbeitung läuft weiter, wenn der Anhang fehlt
+- Pflicht-Anhang: Verarbeitung wird als Fehler markiert, wenn der Anhang fehlt oder nicht abgelegt werden kann
+- Übertragungsmodus: kopieren oder verschieben
+- Dateinamen-Template
+- GA-Dateianhang Import
+- GA-Dateianhang Export
+- Link-Export über AIS-spezifische Feldkennungen
 
-- Dokument erzeugen: ja/nein
-- Dokumenttyp, zunächst PDF
-- Dokument zusätzlich zum XDT-Export erzeugen
-- Dokument nur erzeugen, wenn Verarbeitung erfolgreich war
-- Dokumenterzeugung als Pflicht oder optional
-- Verhalten bei Fehlern der Dokumenterzeugung
+### 15.4 Dokumentinhalt und Templatebezug
 
-### 15.4 Dokumentinhalt
+Ein Dokument-/Dateianhang-Template soll keine medizinischen Inhalte blind interpretieren. Es beschreibt technische und fachliche Metadaten für den Link:
 
-Das erzeugte PDF soll aus AIS-Daten und Gerätewerten aufgebaut werden können.
+- Dokumentname für die Karteikarte
+- Dateiformat
+- optionale Beschreibung
+- finaler Dateipfad
+- Zuordnung zu AIS-/Geräte-/Exportprofil
+- Pflicht- oder Optionalstatus
+- erlaubte Dateiendungen
+- Dateinamenaufbau
 
-Mögliche Inhalte:
+Echte Patientendokumente dürfen nicht Bestandteil eines Templatepakets sein.
 
-- Praxis-/Systemhinweis
-- Patientennummer
-- Patientenname
-- Geburtsdatum
-- Untersuchungsart
-- Gerät/Hersteller/Modell
-- Untersuchungsdatum/Uhrzeit
-- Messwerte rechts/links
-- PD-Werte
-- Tonometrie
-- Pachymetrie
-- Keratometrie
-- Einzelmessungen optional
-- technische Zusatzwerte optional
-- Hinweis auf Quelle/Gerätedatei optional
+### 15.5 Ablage und Ordnerstruktur
 
-### 15.5 Layout und Templates
-
-Die Dokumenterzeugung soll perspektivisch templatebasiert erfolgen.
-
-Konfigurierbar sein sollen:
-
-- Titel
-- Abschnitte
-- Tabellen
-- Reihenfolge der Werte
-- sichtbare Messwertgruppen
-- Beschriftungen
-- Einheiten
-- optional Logo/Briefkopf
-- optional Fußzeile
-- Dateiname
-- Ablagepfad
-
-Die PDF-Templates sollen je Geräte-/Exportprofil unterschiedlich sein können.
-
-### 15.6 Dokumentablage
-
-Der Ablageort für erzeugte Dokumente muss frei konfigurierbar sein.
+Der Ablageort für Geräte-Dateianhänge muss frei konfigurierbar sein.
 
 Erlaubt sein sollen:
 
@@ -1299,104 +1329,87 @@ Erlaubt sein sollen:
 
 Anforderungen:
 
-- Ablagepfad pro Interface-/Exportprofil definierbar
-- Schreibrechte müssen geprüft werden
-- Ordner muss existieren oder optional erstellt werden können
+- `GA-Dateianhang Import` pro Schnittstellenprofil konfigurierbar
+- `GA-Dateianhang Export` pro Schnittstellenprofil konfigurierbar
+- Schreibrechte prüfen
+- Zielordner muss existieren oder bewusst erstellt werden können
 - Dateinamen müssen eindeutig erzeugt werden
-- vorhandene Dateien dürfen nicht unbeabsichtigt überschrieben werden
+- vorhandene Dateien dürfen nicht überschrieben werden
 - Pfade müssen durch `FolderSafetyValidator` oder vergleichbare Logik geprüft werden
 - keine Ablage in Systemordnern oder unsicheren Root-Pfaden
 
-### 15.7 Ordnerstruktur
+Eine konfigurierbare Ordnerstruktur kann später ergänzt werden, z. B. nach Jahr/Monat, Gerät, Patientennummer oder Untersuchungsdatum.
 
-Die App soll eine konfigurierbare Ordnerstruktur für Dokumente unterstützen.
+### 15.6 MEDISTAR externer Link über XDT
 
-Beispiele:
+Für MEDISTAR soll die externe Link-Übergabe über XDT-Feldkennungen erfolgen. Zielstruktur:
 
-- pro Jahr/Monat
-- pro Praxis/Standort
-- pro Gerät
-- pro Patientennummer
-- pro Untersuchungsdatum
+| Feldkennung | Bedeutung |
+| --- | --- |
+| `6302` | Dokumentname / Anzeige in der Karteikarte |
+| `6303` | Dateiformat, z. B. `PDF`, `JPG`, `DCM`, `TXT` |
+| `6304` | optionale Beschreibung |
+| `6305` | vollständiger absoluter Dateipfad zur abgelegten Datei |
 
-Beispiel:
+Die XDT-Zeilen müssen wie alle anderen XDT-Zeilen korrekt durch den Exportgenerator mit Längenpräfix erzeugt werden. Die Benutzeroberfläche darf keine manuelle Pflege der XDT-Zeilenlängen verlangen.
 
-```text
-\\SERVER\Medistar\EV\ARK1S\2026\05\4701-1\ARK1S_4701-1_20260502_150533.pdf
-```
+Ein externer AIS-Link darf nur erzeugt werden, wenn die referenzierte Datei erfolgreich im Zielordner abgelegt wurde.
 
-### 15.8 EV-Verknüpfung in MEDISTAR
+Die ausgewertete MEDISTAR-Beispieldatei zeigt, dass `6304` in einer echten Übergabe genutzt werden kann, aber für einfache Fälle auch eine Übergabe mit `6302`, `6303` und `6305` möglich ist. `6304` bleibt deshalb als optionales Beschreibungsfeld definiert.
 
-Für MEDISTAR soll perspektivisch optional ein EV-Verweis erzeugt werden können, der auf das erzeugte PDF oder eine vom Gerät gelieferte Zusatzdatei verweist.
-
-Anforderungen:
-
-- EV-Verweis erzeugen: ja/nein
-- EV-Texttemplate konfigurierbar
-- EV-Kennung/Referenz muss erzeugt oder aus AIS-/Gerätekontext abgeleitet werden können
-- EV-Zeile muss mit XDT-Ergebniszeilen kombinierbar sein
-- Doppelklick in MEDISTAR soll später das abgelegte Dokument öffnen können
-- genaue MEDISTAR-EV-Struktur muss anhand funktionierender Praxisbeispiele validiert werden
-
-Beispiel:
-
-```text
-EV:{000000003B} NT-530P Messung
-```
-
-### 15.9 Zusammenspiel mit bestehenden Gerätedateien
+### 15.7 Zusammenspiel mit bestehenden Gerätedateien
 
 Die App muss zwei Fälle unterscheiden können:
 
 Fall A:
 
-Das Gerät liefert selbst eine Zusatzdatei, z. B. JPG oder PDF. Die App ordnet diese Datei der Messung zu, kopiert sie in den Zielordner und erzeugt optional einen EV-Verweis.
+Das Gerät liefert selbst eine Zusatzdatei, z. B. JPG, PDF oder DICOM. Die App ordnet diese Datei der Messung zu, kopiert oder verschiebt sie in den GA-Dateianhang Export und erzeugt einen externen AIS-Link.
 
 Fall B:
 
-Das Gerät liefert nur maschinenlesbare Werte. Die App erzeugt selbst ein PDF-Messprotokoll aus den gelesenen Werten und erzeugt optional einen EV-Verweis.
+Das Gerät liefert nur maschinenlesbare Werte. Die App kann später selbst ein PDF-Messprotokoll aus den gelesenen Werten erzeugen und dieses ebenfalls über einen externen AIS-Link referenzieren. Dieser Fall ist eine separate spätere Erweiterung.
 
-Beide Fälle sollen pro Profil konfigurierbar sein.
+### 15.8 Verhalten bei Fehlern
 
-### 15.10 Verhalten bei Fehlern
+Wenn die Geräte-Dateianhang-Verarbeitung fehlschlägt:
 
-Wenn die Dokumenterzeugung fehlschlägt:
+- Fehler muss protokolliert werden.
+- Benutzer muss eine verständliche Meldung erhalten.
+- Bei optionalem Anhang darf die Messwertverarbeitung weiterlaufen.
+- Bei Pflicht-Anhang muss die Verarbeitung abbrechen oder als Fehler markiert werden.
 
-- Fehler muss protokolliert werden
-- Benutzer muss verständliche Meldung erhalten
-- Verhalten muss konfigurierbar sein:
-  - Verarbeitung abbrechen, wenn Dokument Pflicht ist
-  - Verarbeitung fortsetzen, wenn Dokument optional ist
+Wenn ein externer AIS-Link erzeugt werden soll, aber die Datei nicht geschrieben werden konnte:
 
-Wenn ein EV-Verweis erzeugt werden soll, aber das Dokument nicht geschrieben werden konnte:
+- Es darf kein ungültiger Link erzeugt werden.
+- Der Fehler muss sichtbar sein.
+- Die fehlerhafte Anhangverarbeitung darf keine unbekannten Dateien löschen oder überschreiben.
 
-- EV-Verweis darf nicht blind erzeugt werden
-- Fehler muss sichtbar sein
+### 15.9 Datenschutz und Sicherheit
 
-### 15.11 Datenschutz und Sicherheit
-
-Erzeugte Dokumente enthalten potenziell Patientendaten und medizinische Messwerte.
+Geräte-Dateianhänge können Patientendaten und medizinische Messwerte enthalten.
 
 Anforderungen:
 
-- Ablage nur in konfigurierten Ordnern
-- keine automatische Ablage in unsicheren temporären Ordnern
-- Zugriffsschutz liegt beim Praxis-/Windows-/Netzwerkrechtekonzept
-- Pfade und Dateinamen dürfen keine unnötigen Patientendaten enthalten, sofern vermeidbar
-- Protokollierung soll keine vollständigen medizinischen Inhalte unnötig duplizieren
-- Dokumentexport muss im AVV/Datenschutzkonzept berücksichtigt werden
+- Ablage nur in konfigurierten Ordnern.
+- Keine automatische Ablage in unsicheren temporären Ordnern.
+- Keine echten Patientendokumente in Templatepaketen.
+- Keine Anhänge blind löschen.
+- Keine Zieldateien überschreiben.
+- Zugriffsschutz liegt beim Praxis-/Windows-/Netzwerkrechtekonzept.
+- Pfade und Dateinamen dürfen keine unnötigen Patientendaten enthalten, sofern vermeidbar.
+- Protokollierung soll keine vollständigen medizinischen Inhalte unnötig duplizieren.
+- Dokument-/Dateianhang-Export muss im AVV/Datenschutzkonzept berücksichtigt werden.
 
-### 15.12 Abgrenzung Version 1
+### 15.10 Abgrenzung `0.1.0-prototype`
 
-Für die aktuelle Version wird noch keine PDF-Erzeugung und kein produktiver EV-Verweis implementiert.
+Für den aktuellen Prototyp gilt:
 
-Der aktuelle Prototyp erzeugt:
+- MEDISTAR-kompatible XDT-Ergebniszeilen sind produktiv/praktisch für MEDISTAR + NIDEK ARK1S validiert.
+- Geräte-Dateianhang-Import ist noch nicht produktiv umgesetzt.
+- MEDISTAR externer Link über XDT ist noch nicht produktiv umgesetzt.
+- Selbst erzeugte PDF-Protokolle sind noch nicht umgesetzt.
 
-- MEDISTAR-kompatible XDT-Ergebniszeilen
-- noch keine PDF-Protokolle
-- noch keine EV-Dokumentverknüpfung
-
-Die Dokumentenerzeugung wird als zukünftiger optionaler Baustein vorgesehen.
+Die Geräte-Dateianhang-Verarbeitung und externe AIS-Link-Übergabe sind keine optionalen Ideen mehr, sondern verbindliche zukünftige Anforderungen. Sie bleiben aber klar vom aktuellen Iststand getrennt.
 
 ---
 

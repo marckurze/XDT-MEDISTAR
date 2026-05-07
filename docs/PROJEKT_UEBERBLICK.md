@@ -30,6 +30,8 @@ Ziel ist eine sichere, konfigurierbare XDT-Bridge zwischen:
 
 Die App soll perspektivisch verschiedene AIS-, Geraete- und Exportprofile unterstuetzen. Der Anwender soll Profile, Exportregeln und Schnittstellen konfigurieren koennen, ohne die validierte MEDISTAR/NIDEK-ARK1S-Verarbeitung zu beschaedigen.
 
+Geräte-Dateianhang-Import und externe AIS-Link-Übergabe sind verbindliche zukünftige Anforderungen. Die App soll dafür optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export`, ein Dokument-/Dateianhang-Template und für MEDISTAR einen externen Link über XDT-Felder `6302`, `6303`, `6304` und `6305` unterstützen. Diese Funktion ist Zielanforderung, nicht aktueller Iststand.
+
 ## 3. Aktueller validierter Workflow
 
 Der praktisch validierte Workflow ist:
@@ -117,6 +119,8 @@ Ein Schnittstellenprofil verknuepft:
 - Exportordner ans AIS
 - Archivordner
 - Fehlerordner
+- künftig optional GA-Dateianhang Import
+- künftig optional GA-Dateianhang Export
 - Aktiv-Haken fuer spaetere/aktuelle automatische Verarbeitung
 - Lizenzpflicht-Haken
 - Archivierungsmodus Copy/Move
@@ -540,6 +544,27 @@ Diese Entscheidungen sind fuer weitere Planung wichtig:
 - Originaldateien bleiben im Fehlerfall erhalten
 - Duplikaterkennung verhindert erneuten Export gleicher Dateipaare
 - Archivloeschung ist nur vorbereitet, nicht automatisch aktiv
+- Geräte-Dateianhänge dürfen nicht blind gelöscht oder überschrieben werden
+- externe AIS-Links dürfen nur entstehen, wenn die Zieldatei erfolgreich abgelegt wurde
+
+## 19.1 Geräte-Dateianhänge und externe AIS-Links
+
+Dokument-/Dateianhang-Templates sind künftig nicht mehr nur optionales Zukunftsthema. Der Geräteanbindungs-Baukasten soll verbindlich Geräte-Dateianhänge übernehmen und als externe AIS-Links exportieren können.
+
+Zielbild:
+
+- Geräte-Dateianhänge werden aus `GA-Dateianhang Import` übernommen.
+- Die App benennt die Datei eindeutig, z. B. mit Patientennummer, Datum, Uhrzeit und Originalendung.
+- Die Datei wird in `GA-Dateianhang Export` kopiert oder verschoben.
+- Für MEDISTAR wird ein externer Link über XDT-Felder `6302`, `6303`, `6304` und `6305` erzeugt.
+- `6302` beschreibt den Dokumentnamen, `6303` das Dateiformat, `6304` optional die Beschreibung und `6305` den vollständigen absoluten Dateipfad.
+- Die Datei `XDT Übergabe externer Link.txt` bestätigt diese MEDISTAR-Feldlogik. Die sichtbare `EV:{...}`-Zeile entsteht in MEDISTAR nach dem Import und ist keine von der App direkt zu schreibende Textzeile.
+
+Abgrenzung:
+
+- Im Stand `0.1.0-prototype` ist diese Funktion noch nicht produktiv umgesetzt.
+- PDF-Erzeugung durch die App ist ein weiterer späterer Fall.
+- Hier geht es zuerst um Geräteanhänge, die bereits als Datei vorliegen.
 
 ## 20. Wichtige vorhandene Services/Bausteine
 
@@ -585,8 +610,9 @@ Noch nicht final umgesetzt oder bewusst noch nicht aktiviert:
 - Online-Lizenzierung
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
 - produktive Uebernahme importierter Templatepakete mit Konfliktloesung
-- PDF-/EV-Dokumentenerzeugung
-- MEDISTAR EV-Verknuepfung
+- Geräte-Dateianhang-Import und MEDISTAR externer Link über XDT
+- Dokument-/Dateianhang-Template
+- selbst erzeugte PDF-Protokolle
 - automatische Archivloeschung im laufenden Betrieb
 - SQLite-Speicherung
 - vollstaendige AIS-Unterstuetzung ausserhalb MEDISTAR
@@ -655,6 +681,8 @@ Schnittstellenprofile verknuepfen AIS-Profil, Geraeteprofil, Exportprofil und Or
 
 Archivierung Copy/Move, Duplikatbehandlung, Fehlerablage mit error.txt, Lizenzanzeige, lizenzierte Anbindungen und Karenzzeitmodell sind vorbereitet. Es gibt keine harte Lizenzsperre.
 
+Geräte-Dateianhang-Import und externe AIS-Link-Übergabe sind verbindliche zukünftige Anforderungen, aber noch nicht produktiv umgesetzt. Vorgesehen sind optionale Ordner GA-Dateianhang Import/Export und MEDISTAR-Linkfelder 6302, 6303, 6304, 6305.
+
 Vorbereitete V2-Geraeteprofile existieren fuer NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P. Nur MEDISTAR + NIDEK ARK1S ist praktisch validiert.
 
 Wichtige Sicherheitsregeln: keine Verarbeitung beim App-Start, keine pauschale Ordnerleerung, keine unbekannten Dateien anfassen, Exportordner nicht bereinigen, Importdateien nur gemaess Profiloption archivieren.
@@ -663,4 +691,3 @@ Zentrale Dokumente: README.md, CHANGELOG.md, docs/PFLICHTENHEFT.md, docs/ARCHITE
 
 Naechste sinnvolle Planungsfelder: Dokumentationskorrekturen aus ISTSTAND_ABGLEICH_BERICHT, Profil-Assistent, produktive Templatepaket-Uebernahme, LM7/LM7P-Validierung, Installer/Deployment.
 ```
-

@@ -38,8 +38,17 @@ Erster stabiler Prototyp der XdtDeviceBridge.
 - digitale Signaturpruefung fuer Lizenzdateien
 - Online-Lizenzierung
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
-- PDF-/EV-Dokumentenerzeugung
+- Geräte-Dateianhang-Import und MEDISTAR externer Link über XDT
+- Dokument-/Dateianhang-Template
+- selbst erzeugte PDF-Protokolle
 - produktive Archivloeschung im Hintergrund
 - SQLite-Speicherung
 - produktive Templatepaket-Uebernahme mit Konfliktloesung
 - Installer / Deployment
+
+### Dokumentationsstand nach 0.1.0-prototype
+
+- Geräte-Dateianhänge und externe AIS-Link-Übergabe sind als verbindliche Zielanforderung dokumentiert.
+- Für MEDISTAR ist die Link-Übergabe über XDT-Felder `6302`, `6303`, `6304` und `6305` beschrieben.
+- Die Beispieldatei `XDT Übergabe externer Link.txt` wurde fachlich ausgewertet; die MEDISTAR-interne `EV:{...}`-Anzeige wird klar von der XDT-Feldübergabe getrennt.
+- Keine Implementierung dieser Funktion in `0.1.0-prototype`.

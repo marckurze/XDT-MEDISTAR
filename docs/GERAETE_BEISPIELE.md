@@ -2,7 +2,7 @@
 
 ## 1. Zweck des Dokuments
 
-Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, PDF-Dokumentenerzeugung und MEDISTAR-EV-Verknüpfungen.
+Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
 Hinweis zum Stand `0.1.0-prototype`: V2-Geräteprofile für die hier beschriebenen Geräte sind teilweise vorbereitet bzw. als BuiltIn-Profile vorhanden. Produktiv/praktisch validiert ist weiterhin nur der Workflow MEDISTAR + NIDEK ARK1S. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und müssen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
 
@@ -12,7 +12,7 @@ Hinweis zum Stand `0.1.0-prototype`: V2-Geräteprofile für die hier beschrieben
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | NIDEK | AR1S | Autorefraktometer | XML | Refraktion, PD | keine im aktuellen Standardfall | zwei `6228`-Ergebniszeilen rechts/links, `8000=6310`, `8402` aus AIS | erstes validiertes Standardprofil, Referenz für Refraktionsformatierung |
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | XML oder gerätespezifisches Format aus Beispieldaten | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Prisma/PD | zweites naheliegendes Geräteprofil wegen ähnlicher refraktiver Ergebniszeilen |
-| NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | Pachymetrie- und Tonometriezeilen, optional EV-Verweis | wichtig für Attachments, PDF-Protokolle und EV-Verknüpfung |
+| NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | Pachymetrie- und Tonometriezeilen, perspektivisch externer AIS-Link | wichtig für Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Protokolle |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erstes TOPCON-/JOIA-Profil mit Namespace- und Attributanforderungen |
 | TOPCON | KR800 | Autorefraktometer / Keratometer | Ophthalmology-/JOIA-XML | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | getrennte Ergebniszeilen für Refraktion, Keratometrie und optional subjektive Daten | relevant für Mehruntersuchungsdateien und Measure-Type-Selektion |
 | TOPCON | TRK2P | Tonometer / Refraktions-Keratometer je nach Dateninhalt | Ophthalmology-/JOIA-XML | `TM`, `CCT` | keine zwingend erkennbar | Tonometrie- und Pachymetrieausgabe | relevant für Tonometrie/CCT-Kombination und JOIA-Parserlogik |
@@ -393,7 +393,7 @@ Beispielausgabe MEDISTAR:
 Y  PR: 559 560 558 [559] µm
 Y  PL: 559 560 [560] µm
 Y  PR: Gemessen = 12.7 mmHg; Korrigiert = 12.3 mmHg; ...
-P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{000000003B} NT-530P Messung
+P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51
 ```
 
 Zusatzdateien:
@@ -407,7 +407,7 @@ Ableitung:
 - Pachymetrie-Template
 - Tonometrie-Template
 - korrigierter IOP optional
-- Attachment-/EV-Verknüpfung relevant
+- Geräte-Dateianhang-/externe-AIS-Link-Verknüpfung relevant
 - optionale PDF-Erzeugung sinnvoll
 
 Spätere Profilanforderung:
@@ -415,7 +415,7 @@ Spätere Profilanforderung:
 - `DeviceProfileDefinition` mit mehreren Untersuchungsarten
 - `ExportProfileDefinition` mit mehreren `6228`-Regeln oder MEDISTAR-spezifischen Zielzeilen
 - `AttachmentDefinition` / `DocumentExportRule`
-- EV-Verweis als optionales Exporttemplate
+- externer AIS-Link als künftiges Exporttemplate
 
 ## 5.1 NIDEK NT530P – erkannte SourcePaths und Attachments
 
@@ -510,7 +510,7 @@ Bei einer lokalen Stichprobe wurden 65 XML-Dateien und 84 JPG-Dateien gefunden. 
 - Fehlende JPG-Dateien müssen protokolliert werden.
 - Ob fehlende Bilder die Verarbeitung blockieren, muss pro Profil konfigurierbar sein.
 - `PACHYImage` sollte als Attachment-SourcePath in einem späteren `AttachmentDefinition`- oder `DocumentExportRule`-Modell abbildbar sein.
-- Die genaue MEDISTAR-EV-Verknüpfung bleibt weiterhin noch zu validieren.
+- Die genaue MEDISTAR-Übergabe als externer AIS-Link über XDT-Felder `6302`, `6303`, `6304` und `6305` bleibt weiterhin zu validieren.
 
 ## 6. TOPCON CL300
 
@@ -913,9 +913,9 @@ Wichtig für die spätere Parser- und Profil-Logik:
 6. Feld `6228` ist für Ergebnistext besonders relevant.
 7. Feld `8402` Untersuchungsart kommt aus dem AIS und muss durchgereicht werden.
 8. Feld `8000=6310` ist für den MEDISTAR-XDT-Import relevant.
-9. Zusatzdateien wie JPG/PDF müssen optional unterstützt werden.
-10. EV-Verweise sind ein eigener Exportmechanismus.
-11. Optional selbst erzeugte PDF-Protokolle können einen deutlichen Mehrwert bieten.
+9. Geräte-Dateianhänge wie JPG/PDF/DCM/TXT müssen künftig verbindlich als Baukastenfunktion unterstützt werden.
+10. Externe AIS-Links sind ein eigener Exportmechanismus und für MEDISTAR über XDT-Felder `6302`, `6303`, `6304` und `6305` vorzusehen.
+11. Optional selbst erzeugte PDF-Protokolle können einen deutlichen Mehrwert bieten, sind aber ein separater späterer Fall.
 
 ## 10. Anforderungen an spätere Parser
 
@@ -938,8 +938,8 @@ Wichtig für die spätere Parser- und Profil-Logik:
 - mehrere Ergebniszeilen möglich
 - gleicher Zielfeldcode mehrfach möglich, z. B. `6228`
 - mehrere Untersuchungsarten pro Datei
-- Ausgabe als Ergebnistext, Einzelwerte, Kategorie/Wert-Paar oder Dokumentverweis
-- EV-Zeile optional
+- Ausgabe als Ergebnistext, Einzelwerte, Kategorie/Wert-Paar oder externer AIS-Link
+- Dokument-/Dateianhang-Template für Geräte-Dateianhänge
 - PDF-Dokument optional
 - Ausgabe-Syntax frei editierbar
 - Formatfunktionen je Platzhalter nutzbar:
@@ -958,10 +958,63 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 
 1. ARK1S stabil halten.
 2. LM7 als zweites Geräteprofil vorbereiten, weil es ähnliche refraktive Ergebniszeilen nutzt.
-3. NT530P untersuchen, weil dort Tonometrie, Pachymetrie und Attachments/EV relevant werden.
+3. NT530P untersuchen, weil dort Tonometrie, Pachymetrie und Geräte-Dateianhänge/externe AIS-Links relevant werden.
 4. TOPCON CL300 als erstes JOIA-/Namespace-XML-Profil vorbereiten.
 5. TOPCON KR800 wegen Mehruntersuchungsdateien.
 6. TOPCON TRK2P wegen Tonometrie/CCT.
+
+## 12.1 Geräteanhänge / externe Dokumente
+
+Geräte können neben Messwertdateien auch PDF, JPG, DCM, TXT oder andere Geräte-Dateianhänge erzeugen. Diese Dateien sollen künftig als verbindlicher Bestandteil des Geräteanbindungs-Baukastens erkannt, eindeutig umbenannt, in einen AIS-erreichbaren Exportordner übertragen und per externem AIS-Link übergeben werden.
+
+Beispiele:
+
+- NIDEK NT530P kann Bild-/Protokollverweise liefern, z. B. `PACHYImage` mit zugehörigen JPG-Dateien.
+- Andere Geräte können PDF-Protokolle oder DICOM-Dateien erzeugen.
+- TOPCON- und NIDEK-XML-Dateien können perspektivisch Verweise auf externe Bild- oder Protokolldateien enthalten.
+
+Vorgesehener Ablauf:
+
+```text
+Gerätedatei + Geräte-Dateianhang
+  -> GA-Dateianhang Import
+  -> XdtDeviceBridge benennt Datei eindeutig
+  -> GA-Dateianhang Export
+  -> XDT-Rückgabe mit externem AIS-Link
+```
+
+Für MEDISTAR ist folgende Beispielstruktur über XDT-Feldkennungen zu dokumentieren:
+
+| Feldkennung | Bedeutung |
+| --- | --- |
+| `6302` | Dokumentname / Anzeige in der Karteikarte |
+| `6303` | Dateiformat, z. B. `PDF`, `JPG`, `DCM`, `TXT` |
+| `6304` | optionale Beschreibung |
+| `6305` | vollständiger absoluter Dateipfad zur abgelegten Datei |
+
+Die ausgewertete Datei `XDT Übergabe externer Link.txt` zeigt zwei relevante MEDISTAR-Fälle:
+
+- einfache Link-Übergabe mit Dokumentname, Format und Dateipfad
+- vollständigerer Link mit zusätzlicher Beschreibung über `6304`
+
+Anonymisierte schematische Übergabe:
+
+```text
+<Len>6302PDF-Befund
+<Len>6303PDF
+<Len>6304Messwerte Autorefraktor
+<Len>6305\\SERVER\Freigabe\Befunde\Patient_123.pdf
+```
+
+Nach dem Import kann MEDISTAR daraus eine Karteikartenanzeige mit `EV:{...}` erzeugen. Diese `EV:{...}`-Anzeige ist MEDISTAR-interne Darstellung und soll nicht als harte XDT-Template-Zeile der App verstanden werden.
+
+Wichtig:
+
+- Diese Funktion ist Zielanforderung, aber noch nicht produktiv im Stand `0.1.0-prototype` umgesetzt.
+- Ohne konfigurierte GA-Dateianhang-Ordner bleibt die normale AIS-/Gerätedatei-Verarbeitung unverändert.
+- Externe Links dürfen nur erzeugt werden, wenn der Geräte-Dateianhang erfolgreich in den Zielordner übertragen wurde.
+- Unbekannte Dateien dürfen nicht blind gelöscht oder verschoben werden.
+- Selbst erzeugte PDF-Protokolle sind ein weiterer späterer Fall; dieser Abschnitt beschreibt primär bereits vorhandene Geräteanhänge.
 
 ## 13. Abgrenzung
 

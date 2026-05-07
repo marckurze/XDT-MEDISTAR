@@ -12,6 +12,8 @@ Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfol
 
 Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt bzw. konfiguriert werden, gelten aber noch nicht als produktiv validiert.
 
+Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp sind sie noch nicht produktiv umgesetzt; vorgesehen sind optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export` sowie ein Dokument-/Dateianhang-Template.
+
 ## Aktueller Funktionsumfang
 
 - Einlesen einer AIS-GDT-Datei mit Patientendaten.
@@ -242,7 +244,10 @@ Noch nicht final umgesetzt bzw. bewusst noch nicht aktiviert:
 - produktive Lizenzsperre
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
 - produktive Uebernahme importierter Templatepakete mit Konfliktloesung
-- PDF-/EV-Dokumentenerzeugung
+- Geräte-Dateianhang-Import und MEDISTAR externer Link über XDT
+- optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export`
+- Dokument-/Dateianhang-Template für vorhandene Geräteanhänge
+- selbst erzeugte PDF-Protokolle
 - Installer / Deployment
 
 ### 13. Build und Test

@@ -75,6 +75,7 @@ Sicherheitsgrenzen:
 - keine Exportordner-Bereinigung
 - keine unbekannten Dateien anfassen
 - keine endgültige Löschung von Importdateien
+- keine produktive Geräte-Dateianhang-Verarbeitung und keine produktive externe AIS-Link-Übergabe
 
 ### 1.5 Lizenzanzeige
 
@@ -292,7 +293,7 @@ Beispiele:
   - Pachymetrie rechts
   - Pachymetrie links
   - Tonometrie/korrigierter IOP rechts/links
-  - EV-Verweis auf Messprotokoll
+  - perspektivisch externer AIS-Link auf Messprotokoll
 - KR800:
   - Refraktion rechts/links
   - Keratometrie rechts/links
@@ -300,84 +301,62 @@ Beispiele:
 
 Die Ausgabe-Syntax muss pro Untersuchungsart und pro Ergebniszeile konfigurierbar sein.
 
-### 2.9 Attachment- und Dokumentenmodell
+### 2.9 Geräte-Dateianhang-Verarbeitung und externe Link-Übergabe
 
-Die V2-Architektur soll perspektivisch ein Attachment-/Dokumentenmodell erhalten.
+Die V2-Architektur soll verbindlich eine Geräte-Dateianhang-Verarbeitung mit externer AIS-Link-Übergabe erhalten. Dieser Baustein ist Zielarchitektur und im Stand `0.1.0-prototype` noch nicht produktiv implementiert.
 
-Mögliche Modelle:
+Ziel ist, bereits vom Untersuchungsgerät erzeugte Dateien, z. B. PDF, JPG, PNG, TIF, DCM oder TXT, aus einem definierten Importordner zu übernehmen, eindeutig zu benennen, in einen AIS-erreichbaren Zielordner zu übertragen und in der XDT-Rückgabe als externer AIS-Link zu referenzieren.
 
-- `AttachmentDefinition`
-- `AttachmentExportRule`
-- `DocumentExportProfile`
-- `ExternalViewerReference`
+Vorgesehene Konzepte:
 
-Diese Modelle sollen beschreiben:
+- `AttachmentImportFolder`: GA-Dateianhang Import
+- `AttachmentExportFolder`: GA-Dateianhang Export
+- `AttachmentFileNameTemplate`
+- `AttachmentHandlingMode`: `None`, `Optional`, `Required`
+- `AttachmentTransferMode`: `Copy`, `Move`
+- `AttachmentLinkExport` über XDT-Felder
+- `AttachmentFileNameBuilder`
+- `AttachmentTransferService`
+- `ExternalLinkExportRule` oder vergleichbare Exportregel
+- Validierung über `FolderSafetyValidator`
+- Kollisionsschutz bei Dateinamen
 
-- welche Zusatzdateien erwartet werden
-- wie Zusatzdateien gefunden werden
-- wohin Zusatzdateien kopiert werden
-- wie ein AIS-Verweis erzeugt wird
-- ob eine Datei Pflicht oder optional ist
-- welche Dateitypen erlaubt sind, z. B. JPG, PDF, XML, HTML
-- welche Zielordnerstruktur pro AIS oder Profil verwendet wird
-- wie Dateinamen eindeutig erzeugt werden
-- ob vorhandene Dateien überschrieben werden dürfen
+Die Modelle müssen beschreiben:
 
-Beispiele:
+- welche Geräte-Dateianhänge erwartet werden
+- wie Anhänge gefunden werden, z. B. über Dateinamen, Zeitstempel oder XML-Verweise wie `PACHYImage`
+- welche Dateiendungen erlaubt sind
+- ob ein Anhang optional oder Pflicht ist
+- ob die Datei kopiert oder verschoben wird
+- wie der Zielname gebildet wird
+- wie vorhandene Zieldateien ohne Überschreiben mit Suffix behandelt werden
+- welcher externe AIS-Link daraus entsteht
 
-- NIDEK NT530P erzeugt zusätzlich JPG-Dateien.
-- Andere Geräte können PDF-Protokolle erzeugen.
-- Eine XML-Datei kann auf Zusatzdateien verweisen, z. B. `PACHYImage`.
+### 2.10 MEDISTAR externer Link über XDT
 
-### 2.10 MEDISTAR EV-Verweise
+Für MEDISTAR soll die externe Link-Übergabe über XDT-Feldkennungen modelliert werden. Die genaue AIS-Wirkung ist mit MEDISTAR zu validieren; fachlich vorgesehen sind:
 
-Für MEDISTAR muss perspektivisch ein Mechanismus für externe Verweise unterstützt werden. Ein solcher Verweis kann in einer Karteikartenzeile erscheinen und auf ein hinterlegtes Dokument oder Messprotokoll zeigen.
+| Feldkennung | Bedeutung |
+| --- | --- |
+| `6302` | Dokumentname / Anzeige in der Karteikarte |
+| `6303` | Dateiformat, z. B. `PDF`, `JPG`, `DCM`, `TXT` |
+| `6304` | optionale Beschreibung |
+| `6305` | vollständiger absoluter Dateipfad zur abgelegten Datei |
 
-Beispiel:
+Diese Exportzeilen müssen wie alle XDT-Zeilen mit korrektem Längenpräfix erzeugt werden. Die App soll die Zeilenlänge nicht manuell im UI pflegen lassen. Der `XdtExportBuilder` oder ein vergleichbarer Baustein soll die finalen XDT-Zeilen erzeugen.
 
-```text
-EV:{000000003B} NT-530P Messung
-```
+Ein externes Link-Template darf keine echte Patientenakte als Beispiel enthalten. Beispiele in Dokumentation und Templatepaketen müssen synthetisch sein.
 
-Ein Exportprofil muss dafür konfigurieren können:
+Aus der ausgewerteten Datei `XDT Übergabe externer Link.txt` ergibt sich für MEDISTAR außerdem: Die XDT-Datei enthält die Felder `6302` bis `6305`; die spätere sichtbare Karteikartenzeile mit `EV:{...}` wird von MEDISTAR nach dem Import erzeugt. Die App soll daher den Link über strukturierte XDT-Felder exportieren und keine MEDISTAR-interne `EV:{...}`-Anzeigezeile konstruieren.
 
-- ob ein EV-Verweis erzeugt werden soll
-- ob EV-Kennung/Schlüssel erzeugt oder übernommen werden
-- wohin Dokumente abgelegt werden
-- wie Ergebnistext und EV-Verweis kombiniert werden
-- welche Dokumente Pflicht oder optional sind
+### 2.11 Selbst erzeugte PDF-Messprotokolle
 
-Beispielausgabe:
+Die spätere PDF-Erzeugung durch die App bleibt ein eigener Erweiterungsfall. Sie ist von der Geräte-Dateianhang-Verarbeitung zu unterscheiden:
 
-```text
-P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
-```
+- Geräte-Dateianhang: Das Gerät liefert bereits eine Datei, die die App übernimmt und verlinkt.
+- PDF-Erzeugung: Die App erzeugt selbst aus AIS- und Gerätedaten ein lesbares Messprotokoll.
 
-Die exakte MEDISTAR-EV-Struktur muss später anhand funktionierender Praxisbeispiele validiert werden.
-
-### 2.11 Optionale Dokumentenerzeugung und EV-Verknüpfung
-
-Die V2-Architektur soll perspektivisch optional aus AIS- und Gerätedaten ein lesbares Messprotokoll erzeugen können. Dieser Baustein ist zusätzlich zum XDT-Export zu verstehen und darf den validierten MEDISTAR/NIDEK-ARK1S-Prototyp nicht ersetzen.
-
-Ziel ist ein automatisch erzeugtes Protokoll, das maschinenlesbare Gerätedaten für Ärzte und Praxispersonal übersichtlich darstellt. Das Dokument kann gedruckt, archiviert oder über einen MEDISTAR-EV-Verweis geöffnet werden.
-
-#### Dokumenttyp
-
-Die bevorzugte Ausgabeform für selbst erzeugte Protokolle ist PDF.
-
-PDF ist geeignet, weil es:
-
-- gut lesbar ist
-- druckbar ist
-- archivierbar ist
-- mehrseitige Messprotokolle unterstützt
-- optional Praxislogo, Briefkopf, Fußzeile und Layout aufnehmen kann
-
-JPEG oder andere Bildformate sollen nur verwendet werden, wenn das Gerät solche Dateien selbst liefert oder ein AIS dies ausdrücklich benötigt.
-
-#### Mögliche Architekturmodelle
-
-Zusätzlich zu `AttachmentDefinition`, `AttachmentExportRule`, `DocumentExportProfile` und `ExternalViewerReference` sind perspektivisch folgende Konzepte sinnvoll:
+Für selbst erzeugte Protokolle sind perspektivisch folgende Konzepte sinnvoll:
 
 - `GeneratedDocumentDefinition`
 - `DocumentTemplate`
@@ -386,142 +365,9 @@ Zusätzlich zu `AttachmentDefinition`, `AttachmentExportRule`, `DocumentExportPr
 - `DocumentGenerationResult`
 - `DocumentGenerationIssue`
 
-Diese Modelle sollen beschreiben:
+Ein erzeugtes PDF soll aus `PatientData`, AIS-Kontext, Geräteprofil und `MeasurementValues` aufgebaut werden können. Die Dokumenterzeugung darf nur dann die Verarbeitung blockieren, wenn sie im Profil ausdrücklich als Pflicht markiert ist.
 
-- ob ein Dokument erzeugt werden soll
-- welcher Dokumenttyp verwendet wird, zunächst PDF
-- ob das Dokument zusätzlich zum XDT-Export entsteht
-- ob die Dokumenterzeugung Pflicht oder optional ist
-- ob ein Dokument nur bei erfolgreicher Verarbeitung erzeugt wird
-- welche AIS-Daten und Messwerte enthalten sind
-- welches Layout und welche Abschnitte verwendet werden
-- wohin das Dokument abgelegt wird
-- wie der Dateiname erzeugt wird
-- ob ein EV-Verweis erzeugt wird
-- wie Fehler bewertet werden
-
-#### Dokumentinhalt
-
-Ein erzeugtes PDF soll aus `PatientData`, AIS-Kontext, Geräteprofil und `MeasurementValues` aufgebaut werden können.
-
-Mögliche Inhalte:
-
-- Praxis-/Systemhinweis
-- Patientennummer
-- Patientenname
-- Geburtsdatum
-- Untersuchungsart
-- Gerät/Hersteller/Modell
-- Untersuchungsdatum/Uhrzeit
-- Messwerte rechts/links
-- PD-Werte
-- Tonometrie
-- Pachymetrie
-- Keratometrie
-- Einzelmessungen optional
-- technische Zusatzwerte optional
-- Hinweis auf Quelle/Gerätedatei optional
-
-#### Templatebasierter Aufbau
-
-Die Dokumenterzeugung soll templatebasiert erfolgen. PDF-Templates sollen je Geräte-/Exportprofil unterschiedlich sein können.
-
-Konfigurierbar sein sollen:
-
-- Titel
-- Abschnitte
-- Tabellen
-- Reihenfolge der Werte
-- sichtbare Messwertgruppen
-- Beschriftungen
-- Einheiten
-- optional Logo/Briefkopf
-- optional Fußzeile
-- Dateiname
-- Ablagepfad
-
-#### Dokumentablage
-
-Der Ablageort für erzeugte Dokumente muss frei konfigurierbar sein.
-
-Erlaubt sein sollen:
-
-- lokale Ordner
-- Netzwerkpfade
-- UNC-Pfade, z. B. `\\SERVER\Freigabe\XdtBridge\Dokumente`
-
-Anforderungen an die Ablage:
-
-- Ablagepfad pro Interface-/Exportprofil definierbar
-- Schreibrechte prüfen
-- Ordner muss existieren oder optional erstellt werden können
-- Dateinamen eindeutig erzeugen
-- vorhandene Dateien nicht unbeabsichtigt überschreiben
-- Pfade mit `FolderSafetyValidator` oder vergleichbarer Logik prüfen
-- keine Ablage in Systemordnern oder unsicheren Root-Pfaden
-
-Eine konfigurierbare Ordnerstruktur soll unterstützt werden, z. B. nach Jahr/Monat, Praxis/Standort, Gerät, Patientennummer oder Untersuchungsdatum.
-
-Beispiel:
-
-```text
-\\SERVER\Medistar\EV\ARK1S\2026\05\4701-1\ARK1S_4701-1_20260502_150533.pdf
-```
-
-#### EV-Verknüpfung
-
-Für MEDISTAR soll optional ein EV-Verweis erzeugt werden können, der auf ein erzeugtes PDF oder eine vom Gerät gelieferte Zusatzdatei verweist.
-
-Anforderungen:
-
-- EV-Verweis erzeugen: ja/nein
-- EV-Texttemplate konfigurierbar
-- EV-Kennung/Referenz erzeugen oder aus AIS-/Gerätekontext ableiten
-- EV-Zeile mit XDT-Ergebniszeilen kombinieren
-- Doppelklick in MEDISTAR soll später das abgelegte Dokument öffnen können
-- genaue MEDISTAR-EV-Struktur anhand funktionierender Praxisbeispiele validieren
-
-Beispiel:
-
-```text
-EV:{000000003B} NT-530P Messung
-```
-
-#### Zusammenspiel mit bestehenden Gerätedateien
-
-Die Architektur muss zwei Fälle unterscheiden:
-
-Fall A: Das Gerät liefert selbst eine Zusatzdatei, z. B. JPG oder PDF. Die App ordnet diese Datei der Messung zu, kopiert sie in den Zielordner und erzeugt optional einen EV-Verweis.
-
-Fall B: Das Gerät liefert nur maschinenlesbare Werte. Die App erzeugt selbst ein PDF-Messprotokoll aus den gelesenen Werten und erzeugt optional einen EV-Verweis.
-
-Beide Fälle sollen pro Profil konfigurierbar sein.
-
-#### Fehlerverhalten
-
-Wenn die Dokumenterzeugung fehlschlägt, muss ein `DocumentGenerationIssue` oder vergleichbarer Fehler entstehen. Der Benutzer muss eine verständliche Meldung erhalten.
-
-Das Verhalten muss pro Profil konfigurierbar sein:
-
-- Verarbeitung abbrechen, wenn Dokument Pflicht ist
-- Verarbeitung fortsetzen, wenn Dokument optional ist
-
-Wenn ein EV-Verweis erzeugt werden soll, aber das Dokument nicht geschrieben werden konnte, darf kein blinder EV-Verweis erzeugt werden.
-
-#### Datenschutz und Sicherheit
-
-Erzeugte Dokumente enthalten potenziell Patientendaten und medizinische Messwerte.
-
-Anforderungen:
-
-- Ablage nur in konfigurierten Ordnern
-- keine automatische Ablage in unsicheren temporären Ordnern
-- Zugriffsschutz über Praxis-/Windows-/Netzwerkrechtekonzept
-- Pfade und Dateinamen sollen keine unnötigen Patientendaten enthalten, sofern vermeidbar
-- Protokollierung soll keine vollständigen medizinischen Inhalte unnötig duplizieren
-- Dokumentexport muss im AVV/Datenschutzkonzept berücksichtigt werden
-
-Für die aktuelle Version wird noch keine PDF-Erzeugung und kein produktiver EV-Verweis implementiert.
+Für die aktuelle Version gilt: keine produktive Geräte-Dateianhang-Verarbeitung, keine produktive externe AIS-Link-Übergabe und keine PDF-Erzeugung durch die App.
 
 ### 2.12 XML-Parser und Namespaces
 
@@ -561,14 +407,14 @@ AISProfile + DeviceProfile + ExportProfile
 ExportRecords
   -> XDT-Datei
 
-optionale Zusatzdateien
-  -> AttachmentRecords / ExternalViewerReference
-  -> Dokumentablage / AIS-Verweis
+zukünftige Geräte-Dateianhänge
+  -> AttachmentLinkExport / ExternalLinkExportRule
+  -> GA-Dateianhang Export / externer AIS-Link
 
 optional erzeugtes Messprotokoll
   -> DocumentTemplate + MeasurementValues + PatientData
   -> PDF-Dokument
-  -> Dokumentablage / optionaler EV-Verweis
+  -> Dokumentablage / optionaler externer AIS-Link
 ```
 
 ### 3.1 AIS-GDT zu PatientData/AisContext
@@ -616,21 +462,37 @@ Der Exportgenerator schreibt aus den ExportRecords eine XDT-konforme Datei:
 - definierter Zeichensatz
 - definierte Zeilenreihenfolge
 - Zielordner aus dem InterfaceProfile
-- optional Archivierung oder Bereinigung nach erfolgreicher Verarbeitung
+- optional Archivierung nach erfolgreicher Verarbeitung
+- keine pauschale Exportordner-Bereinigung
 
-### 3.5 Zusatzdateien zu Dokumentablage und AIS-Verweis
+XDT-Zeilen für externe Links müssen denselben Exportweg nutzen. Auch Felder wie `6302`, `6303`, `6304` und `6305` dürfen nicht als manuell vorformatierte Zeilen mit händisch gepflegtem Längenpräfix in der UI landen.
 
-Für spätere Geräteprofile mit Bild- oder Protokolldateien muss der Datenfluss um Zusatzdateien erweitert werden.
+Schematische Ausgabe:
 
-Die App soll zugehörige Begleitdateien anhand von Dateinamen, Zeitstempel oder XML-Verweisen erkennen können. Ein Attachment-/Dokumentenmodell erzeugt daraus strukturierte `AttachmentRecords` oder `ExternalViewerReference`-Informationen.
+```text
+<Len>6302PDF-Befund
+<Len>6303PDF
+<Len>6304Messwerte Autorefraktor
+<Len>6305\\SERVER\Freigabe\Befunde\Patient_123.pdf
+```
+
+`<Len>` ist bewusst symbolisch dargestellt, weil die konkrete Länge vom `XdtExportBuilder` berechnet werden muss.
+
+### 3.5 Geräte-Dateianhänge zu Dokumentablage und externem AIS-Link
+
+Für spätere Geräteprofile mit Bild- oder Protokolldateien muss der Datenfluss um Geräte-Dateianhänge erweitert werden.
+
+Die App soll zugehörige Dateien anhand von Dateinamen, Zeitstempel oder XML-Verweisen erkennen können. Ein Dokument-/Dateianhang-Template erzeugt daraus strukturierte Link-Exportinformationen.
 
 Diese Informationen können anschließend:
 
-- Dateien in eine definierte Zielordnerstruktur kopieren
+- Dateien aus `GA-Dateianhang Import` übernehmen
+- Dateien in `GA-Dateianhang Export` kopieren oder verschieben
 - eindeutige Dateinamen erzeugen
 - fehlende Pflichtdateien als Fehler melden
 - fehlende optionale Dateien als Warnung protokollieren
-- MEDISTAR-EV-Verweise oder andere AIS-Dokumentverweise erzeugen
+- MEDISTAR externe Links über XDT-Felder `6302`, `6303`, `6304` und `6305` oder andere AIS-Dokumentverweise erzeugen
+- keine externen Links erzeugen, wenn die Datei nicht erfolgreich abgelegt wurde
 
 ### 3.6 Selbst erzeugte PDF-Messprotokolle
 
@@ -644,7 +506,7 @@ Der Datenfluss besteht dann aus:
 4. Messwerte und Patientenkontext in Abschnitte, Tabellen und Beschriftungen übertragen
 5. PDF-Datei erzeugen
 6. PDF in den konfigurierten Dokumentordner schreiben
-7. optional einen MEDISTAR-EV-Verweis in den XDT-Export aufnehmen
+7. optional einen externen AIS-Link in den XDT-Export aufnehmen
 
 Die Dokumenterzeugung ist optional und darf nur dann die Verarbeitung blockieren, wenn sie im Profil ausdrücklich als Pflicht markiert ist.
 
@@ -875,7 +737,7 @@ V0   L.:S=+ 6.00 Z=- 2.25*  2 P=0.50 OUT 1.50 UP
 
 Y  PR: 559 560 558 [559] µm
 Y  PL: 559 560 [560] µm
-P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51 / EV:{...} NT-530P Messung
+P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51
 
 V1 R.:S=- 0.25 Z=- 0.25* 49                              PD=61
 V1 L.:S=+ 0.00 Z=- 0.50* 63                              PD=61
@@ -1041,8 +903,9 @@ Die nächsten sinnvollen Integrationsschritte sollten klein bleiben und den stab
 3. Vollständigen Profil-Assistenten für unbekannte Geräte konzipieren.
 4. Vorbereitete V2-Geräteprofile mit echten Praxisdateien validieren.
 5. LM7/LM7P-Error-Tags als Gerätewarnung bzw. `DeviceParseIssue` fachlich spezifizieren.
-6. Installer-/Deployment-Konzept erstellen.
-7. Echte Ordnerüberwachung bzw. Windows-Dienst erst nach gesonderter Sicherheitsentscheidung planen.
+6. Geräte-Dateianhang-Verarbeitung und MEDISTAR externen Link über XDT als nächsten Baukastenbaustein planen.
+7. Installer-/Deployment-Konzept erstellen.
+8. Echte Ordnerüberwachung bzw. Windows-Dienst erst nach gesonderter Sicherheitsentscheidung planen.
 
 ---
 
@@ -1068,13 +931,14 @@ Nicht Ziel des ersten Schritts:
 - Herstellerdatenbank
 - automatische Synchronisation
 - vollständige Profilverwaltung für alle Geräteklassen
-- Umsetzung von MEDISTAR-EV-Verweisen
-- PDF-/JPG-Ablage und Dokumentenverwaltung
+- produktive Umsetzung von Geräte-Dateianhang-Verarbeitung und MEDISTAR externem Link über XDT
 - selbst erzeugte PDF-Messprotokolle
 - Mehruntersuchungs-Profile für KR800, TRK2P, NT530P oder vergleichbare Geräte
+
+Die Geräte-Dateianhang-Verarbeitung ist kein optionaler Gedanke mehr, sondern verbindliches Zielbild einer späteren Ausbaustufe. Sie gehört aber nicht zum produktiven Funktionsumfang des aktuellen `0.1.0-prototype`.
 
 Die Architektur soll so vorbereitet werden, dass diese Erweiterungen später möglich sind, ohne den validierten Prototypen neu schreiben zu müssen.
 
 Die aktuellen Beispieldaten dienen zunächst zur Erweiterung des Pflichtenhefts und der Architektur. Die funktionsfähige MEDISTAR/NIDEK-ARK1S-Verarbeitung bleibt unverändert.
 
-Der aktuelle Prototyp erzeugt weiterhin nur MEDISTAR-kompatible XDT-Ergebniszeilen. PDF-Protokolle und produktive EV-Dokumentverknüpfungen sind zukünftige optionale Bausteine.
+Der aktuelle Prototyp erzeugt weiterhin nur MEDISTAR-kompatible XDT-Ergebniszeilen. Produktive Geräte-Dateianhang-Verarbeitung, MEDISTAR externe Links über XDT und selbst erzeugte PDF-Protokolle sind zukünftige Bausteine.
