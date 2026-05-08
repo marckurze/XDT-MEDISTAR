@@ -532,6 +532,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
+        InterfaceAttachmentTransferModeComboBox.SelectedValue = profile.FolderOptions.AttachmentTransferMode.ToString();
 
         InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
@@ -556,6 +557,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
+        InterfaceAttachmentTransferModeComboBox.SelectedValue = AttachmentTransferMode.Copy.ToString();
         InterfaceClearAisImportFolderCheckBox.IsChecked = false;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
@@ -725,7 +727,15 @@ public partial class MainWindow : Window
             ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor(),
             AttachmentImportFolder: InterfaceAttachmentImportFolderTextBox.Text.Trim(),
             AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
-            AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim());
+            AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim(),
+            AttachmentTransferMode: ReadAttachmentTransferModeFromEditor());
+    }
+
+    private AttachmentTransferMode ReadAttachmentTransferModeFromEditor()
+    {
+        return string.Equals(InterfaceAttachmentTransferModeComboBox.SelectedValue as string, AttachmentTransferMode.Move.ToString(), StringComparison.Ordinal)
+            ? AttachmentTransferMode.Move
+            : AttachmentTransferMode.Copy;
     }
 
     private ArchiveProcessedFileMode ReadArchiveProcessedFileModeFromEditor()

@@ -68,7 +68,7 @@ Der Prototyp unterstützt:
 - optionale Fehlerablage mit Kopie der beteiligten Importdateien
 - `error.txt` im Fehlerordner
 - vorbereitete Archiv-Aufbewahrungslogik ohne automatische Ausführung
-- optionale GA-Dateianhang-Import-/Exportordner und `AttachmentFileNameTemplate` im Schnittstellenprofilmodell und in der UI, noch ohne Dateianhang-Verarbeitung
+- optionale GA-Dateianhang-Import-/Exportordner, `AttachmentFileNameTemplate` und vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, noch ohne produktive Dateianhang-Zuordnung
 
 Sicherheitsgrenzen:
 
@@ -317,7 +317,7 @@ Vorgesehene Konzepte:
 - `AttachmentTransferMode`: `Copy`, `Move`
 - `AttachmentLinkExport` über XDT-Felder
 - `AttachmentFileNameBuilder`
-- `AttachmentTransferService`
+- `AttachmentTransferService`, isoliert vorbereitet für sichere Übertragung einzelner explizit übergebener Anhangdateien ohne Überschreiben
 - `ExternalLinkExportRule` oder vergleichbare Exportregel
 - Validierung über `FolderSafetyValidator`
 - Kollisionsschutz bei Dateinamen

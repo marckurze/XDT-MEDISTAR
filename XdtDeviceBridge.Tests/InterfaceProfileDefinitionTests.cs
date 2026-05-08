@@ -156,6 +156,7 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Equal(string.Empty, options.AttachmentImportFolder);
         Assert.Equal(string.Empty, options.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, options.AttachmentFileNameTemplate);
+        Assert.Equal(AttachmentTransferMode.Copy, options.AttachmentTransferMode);
     }
 
     [Fact]
@@ -204,6 +205,17 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Contains("ArchiveProcessedFiles must be true when ArchiveProcessedFileMode is Move.", issues);
     }
 
+    [Fact]
+    public void Validate_ShouldReportInvalidAttachmentTransferMode()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            attachmentTransferMode: (AttachmentTransferMode)999));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("AttachmentTransferMode must be a valid value.", issues);
+    }
+
     private static InterfaceProfileDefinition WithFolderOptions(InterfaceFolderOptions options)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
@@ -227,7 +239,8 @@ public sealed class InterfaceProfileDefinitionTests
         int? archiveRetentionDays = null,
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
-        string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate)
+        string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
+        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Copy)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -244,7 +257,8 @@ public sealed class InterfaceProfileDefinitionTests
             ArchiveRetentionDays: archiveRetentionDays,
             AttachmentImportFolder: attachmentImportFolder,
             AttachmentExportFolder: attachmentExportFolder,
-            AttachmentFileNameTemplate: attachmentFileNameTemplate);
+            AttachmentFileNameTemplate: attachmentFileNameTemplate,
+            AttachmentTransferMode: attachmentTransferMode);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

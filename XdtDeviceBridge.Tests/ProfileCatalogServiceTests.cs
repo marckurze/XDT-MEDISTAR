@@ -265,7 +265,8 @@ public sealed class ProfileCatalogServiceTests
             {
                 AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
                 AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport",
-                AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}"
+                AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}",
+                AttachmentTransferMode = AttachmentTransferMode.Move
             }
         };
 
@@ -275,6 +276,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Equal(@"C:\XdtDeviceBridge\GAImport", loadedProfile.FolderOptions.AttachmentImportFolder);
         Assert.Equal(@"C:\XdtDeviceBridge\GAExport", loadedProfile.FolderOptions.AttachmentExportFolder);
         Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", loadedProfile.FolderOptions.AttachmentFileNameTemplate);
+        Assert.Equal(AttachmentTransferMode.Move, loadedProfile.FolderOptions.AttachmentTransferMode);
     }
 
     [Fact]

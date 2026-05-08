@@ -12,7 +12,7 @@ Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfol
 
 Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt bzw. konfiguriert werden, gelten aber noch nicht als produktiv validiert.
 
-Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp sind optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export` sowie `AttachmentFileNameTemplate` im Schnittstellenprofilmodell und in der UI vorbereitet; produktive Dateianhang-Verarbeitung, XDT-Linkerzeugung und Dokument-/Dateianhang-Templates sind weiterhin offen.
+Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp sind optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export`, `AttachmentFileNameTemplate` sowie der vorbereitete `AttachmentTransferService` mit Copy/Move-Modus im Schnittstellenprofilmodell und in der UI vorbereitet; produktive Dateianhang-Zuordnung, XDT-Linkerzeugung und Dokument-/Dateianhang-Templates sind weiterhin offen.
 
 ## Aktueller Funktionsumfang
 
@@ -71,6 +71,7 @@ Ein Schnittstellenprofil enthaelt:
 - GA-Dateianhang Import (optional)
 - GA-Dateianhang Export (optional)
 - GA-Dateianhang Dateiname, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
+- GA-Dateianhang Übertragung: Kopieren oder Verschieben, vorbereitet für spätere Dateianhang-Verarbeitung
 - Aktiv-Haken fuer automatische Verarbeitung
 - Lizenzpflicht-Haken
 - Archivierungsoptionen

@@ -39,6 +39,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentImportFolder);
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, profile.FolderOptions.AttachmentFileNameTemplate);
+        Assert.Equal(AttachmentTransferMode.Copy, profile.FolderOptions.AttachmentTransferMode);
     }
 
     [Fact]
@@ -101,7 +102,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         var options = CreateFolderOptions(
             attachmentImportFolder: @"\\SERVER\Freigabe\XDT\GAImport",
             attachmentExportFolder: @"\\SERVER\Freigabe\XDT\GAExport",
-            attachmentFileNameTemplate: "GA_{Ais.PatientNumber}{ExtensionUpper}");
+            attachmentFileNameTemplate: "GA_{Ais.PatientNumber}{ExtensionUpper}",
+            attachmentTransferMode: AttachmentTransferMode.Move);
 
         var result = _service.CreateConfiguredProfile(
             userProfile,
@@ -115,6 +117,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(@"\\SERVER\Freigabe\XDT\GAImport", result.Profile!.FolderOptions.AttachmentImportFolder);
         Assert.Equal(@"\\SERVER\Freigabe\XDT\GAExport", result.Profile.FolderOptions.AttachmentExportFolder);
         Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", result.Profile.FolderOptions.AttachmentFileNameTemplate);
+        Assert.Equal(AttachmentTransferMode.Move, result.Profile.FolderOptions.AttachmentTransferMode);
     }
 
     [Fact]
@@ -276,7 +279,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         int? archiveRetentionDays = null,
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
-        string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate)
+        string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
+        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Copy)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -293,7 +297,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
             ArchiveRetentionDays: archiveRetentionDays,
             AttachmentImportFolder: attachmentImportFolder,
             AttachmentExportFolder: attachmentExportFolder,
-            AttachmentFileNameTemplate: attachmentFileNameTemplate);
+            AttachmentFileNameTemplate: attachmentFileNameTemplate,
+            AttachmentTransferMode: attachmentTransferMode);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

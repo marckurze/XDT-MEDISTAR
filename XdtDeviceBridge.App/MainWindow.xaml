@@ -862,6 +862,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
@@ -907,13 +908,27 @@
                                                  ToolTip="Optionaler Zielordner für umbenannte Geräte-Dateianhänge und spätere externe AIS-Links. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="6" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="GA-Dateianhang Dateiname:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="GA-Dateianhang Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="7"
                                                  Grid.Column="1"
                                                  Grid.ColumnSpan="2"
                                                  x:Name="InterfaceAttachmentFileNameTemplateTextBox"
+                                                 Margin="0,0,0,8"
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Dateinamen-Template für spätere Geräte-Dateianhänge, z. B. {Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}. Leer bedeutet: sicherer Standard."/>
+
+                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="GA-Dateianhang Übertragung:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <ComboBox Grid.Row="8"
+                                                  Grid.Column="1"
+                                                  x:Name="InterfaceAttachmentTransferModeComboBox"
+                                                  SelectedValuePath="Tag"
+                                                  SelectedValue="Copy"
+                                                  Width="220"
+                                                  HorizontalAlignment="Left"
+                                                  ToolTip="Vorbereiteter Übertragungsmodus für spätere Geräte-Dateianhänge. In diesem Schritt wird noch keine Attachment-Verarbeitung gestartet.">
+                                            <ComboBoxItem Content="Kopieren" Tag="Copy"/>
+                                            <ComboBoxItem Content="Verschieben" Tag="Move"/>
+                                        </ComboBox>
                                     </Grid>
                                 </GroupBox>
 

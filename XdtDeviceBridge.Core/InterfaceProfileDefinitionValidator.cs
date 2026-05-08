@@ -85,6 +85,11 @@ public static class InterfaceProfileDefinitionValidator
             issues.Add("ArchiveProcessedFileMode must be a valid value.");
         }
 
+        if (!Enum.IsDefined(profile.FolderOptions.AttachmentTransferMode))
+        {
+            issues.Add("AttachmentTransferMode must be a valid value.");
+        }
+
         if (profile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move
             && !profile.FolderOptions.ArchiveProcessedFiles)
         {
