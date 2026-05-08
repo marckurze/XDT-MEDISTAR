@@ -90,6 +90,11 @@ public static class InterfaceProfileDefinitionValidator
             issues.Add("AttachmentTransferMode must be a valid value.");
         }
 
+        if (!Enum.IsDefined(profile.FolderOptions.AttachmentRequirementMode))
+        {
+            issues.Add("AttachmentRequirementMode must be a valid value.");
+        }
+
         if (profile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move
             && !profile.FolderOptions.ArchiveProcessedFiles)
         {
@@ -99,6 +104,21 @@ public static class InterfaceProfileDefinitionValidator
         if (profile.FolderOptions.ArchiveRetentionDays < 0)
         {
             issues.Add("ArchiveRetentionDays must not be negative.");
+        }
+
+        if (profile.FolderOptions.AttachmentWaitTimeoutSeconds < 0)
+        {
+            issues.Add("AttachmentWaitTimeoutSeconds must not be negative.");
+        }
+
+        if (profile.FolderOptions.AttachmentFileStabilityWaitSeconds < 0)
+        {
+            issues.Add("AttachmentFileStabilityWaitSeconds must not be negative.");
+        }
+
+        if (profile.FolderOptions.AutoImportScanIntervalSeconds < 1)
+        {
+            issues.Add("AutoImportScanIntervalSeconds must be at least 1.");
         }
 
         if (profile.FolderOptions.ArchiveProcessedFiles

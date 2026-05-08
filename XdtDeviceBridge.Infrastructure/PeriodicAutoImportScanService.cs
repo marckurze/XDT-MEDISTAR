@@ -4,6 +4,9 @@ namespace XdtDeviceBridge.Infrastructure;
 
 public sealed class PeriodicAutoImportScanService
 {
+    public const int DefaultScanIntervalSeconds = 5;
+    public const int MinimumScanIntervalSeconds = 1;
+
     private readonly IAutoImportScanner _scanner;
 
     public PeriodicAutoImportScanService()
@@ -76,5 +79,30 @@ public sealed class PeriodicAutoImportScanService
                 return;
             }
         }
+    }
+
+    public static TimeSpan GetEffectiveInterval(InterfaceProfileDefinition profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        return TimeSpan.FromSeconds(Math.Max(
+            MinimumScanIntervalSeconds,
+            profile.FolderOptions.AutoImportScanIntervalSeconds));
+    }
+
+    public static TimeSpan GetEffectiveInterval(IReadOnlyList<InterfaceProfileDefinition> activeProfiles)
+    {
+        ArgumentNullException.ThrowIfNull(activeProfiles);
+
+        if (activeProfiles.Count == 0)
+        {
+            return TimeSpan.FromSeconds(DefaultScanIntervalSeconds);
+        }
+
+        var minSeconds = activeProfiles
+            .Select(profile => Math.Max(MinimumScanIntervalSeconds, profile.FolderOptions.AutoImportScanIntervalSeconds))
+            .Min();
+
+        return TimeSpan.FromSeconds(minSeconds);
     }
 }

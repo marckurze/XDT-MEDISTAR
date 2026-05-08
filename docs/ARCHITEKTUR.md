@@ -80,6 +80,10 @@ Sicherheitsgrenzen:
 
 Konservativ integriert ist außerdem eine automatische XDT-Anhang-Vorbereitung im bestehenden Automatiklauf: Sie wird nur geprüft, wenn die Überwachung manuell läuft, globale automatische Verarbeitung aktiv ist, das Schnittstellenprofil XDT-Anhänge aktiviert hat, eine AIS-Patientennummer vorhanden ist und genau ein unterstützter Anhangkandidat gefunden wird. Die Vorbereitung kann den explizit ausgewählten Kandidaten über den vorbereiteten Transfer-/Linkfeldpfad bearbeiten. Bei erfolgreicher Vorbereitung werden die semantischen Felder `6302`, `6303`, optional `6304` und `6305` transient an die Exportfeldliste angehängt und über den zentralen XDT-Exportmechanismus mit korrektem Längenpräfix in die erzeugte XDT-Datei geschrieben. Bei deaktivierter Funktion, mehreren unterstützten Anhängen, fehlender Eindeutigkeit oder Fehlern bleibt der bestehende Export unverändert.
 
+Für das Warten auf vollständige Verarbeitungspakete ist ein Modell vorbereitet. Ein Paket kann aus AIS-Datei, Gerätedatei und optionalem oder verpflichtendem XDT-Anhang bestehen. Standard ist `optional`, die Standard-Wartezeit beträgt 30 Sekunden. Optional bedeutet: Nach Ablauf der Wartezeit darf die Messwertverarbeitung ohne Anhang fortgesetzt werden. Pflicht bedeutet: Ohne eindeutigen Anhang soll die spätere Verarbeitung blockieren oder als Fehler gelten. Mehrere unterstützte Anhänge bleiben immer unsicher und werden nicht automatisch zugeordnet. In diesem Stand ist dafür nur Modell- und Entscheidungslogik vorbereitet, keine neue Timer-/Pending-Queue.
+
+Für langsam schreibende Geräte ist eine Stabilitätsprüfung vorbereitet. Der XDT-Anhang-Scanner kann unterstützte Kandidaten mit Stabilitätsstatus markieren; instabile Kandidaten werden nicht automatisch ausgewählt und vom Vorbereitungspfad nicht verschoben oder kopiert, wenn der Instabilitätsstatus bekannt ist. Die Stabilitätswartezeit ist pro Schnittstellenprofil konfigurierbar, Standard `2` Sekunden. Das periodische Ordnerabfrage-Intervall ist ebenfalls pro Schnittstellenprofil vorbereitet, Standard `5` Sekunden; die manuell gestartete Überwachung nutzt weiterhin periodischen Scan und keinen `FileSystemWatcher`.
+
 ### 1.5 Lizenzanzeige
 
 Der Lizenzbereich zeigt den lokalen Lizenzstatus, Lizenzanfragen, importierte Lizenzdateien, lizenzierte Geräte/Anbindungen und Karenzzeiten für neue Anbindungen.
@@ -318,6 +322,10 @@ Vorgesehene Konzepte:
 - `IsAttachmentProcessingEnabled`: vorbereitete Einschaltfunktion pro Schnittstellenprofil, Standard `false`; spätere Nutzung nur bei manuell gestarteter Überwachung, aktivierter automatischer Verarbeitung und vorhandener AIS-Patientennummer
 - `AttachmentHandlingMode`: `None`, `Optional`, `Required`
 - `AttachmentTransferMode`: `Copy`, `Move`; Standard ist `Move`, damit der GA-Dateianhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann
+- `AttachmentRequirementMode`: `Optional`, `Required`; Standard ist `Optional`
+- `AttachmentWaitTimeoutSeconds`: Wartezeit auf einen erwarteten XDT-Anhang, Standard `30`, `0` bedeutet sofort prüfen
+- `AttachmentFileStabilityWaitSeconds`: Zeitraum, über den ein XDT-Anhang unverändert und lesbar bleiben muss, Standard `2`
+- `AutoImportScanIntervalSeconds`: Intervall der periodischen Ordnerabfrage, Standard `5`, Minimum `1`
 - `AttachmentLinkExport` über XDT-Felder
 - `AttachmentExternalLinkDocumentName`: Vorlage für 6302 Dokumentenname
 - `AttachmentExternalLinkFileFormat`: Vorlage für 6303 Dateiformat
@@ -329,9 +337,10 @@ Vorgesehene Konzepte:
 - `ExternalAisLinkXdtFieldAdapter`, isoliert vorbereitet für die Überführung dieser semantischen Werte in XDT-Feldcode/Wert-Paare `6302` bis `6305`, weiterhin ohne Längenpräfix
 - `AttachmentExternalLinkPreparationService`, isoliert vorbereitet für die explizite Orchestrierung aus Ziel-Dateiname, Copy/Move-Transfer, externen AIS-Linkfeldwerten und XDT-Feldcode/Wert-Paaren; in der automatischen Paarverarbeitung nur konservativ bei eindeutig genau einem unterstützten Anhang eingebunden
 - `AttachmentAutoProcessingEligibilityService`, isoliert vorbereitet für die sichere Vorprüfung, ob eine spätere automatische XDT-Anhang-Verarbeitung grundsätzlich erlaubt wäre; der Service führt keine Dateioperationen aus
-- `AttachmentImportFolderScannerService`, isoliert vorbereitet für das reine Auflisten unterstützter Dateien im XDT-Anhang Importordner; der Service scannt nur die oberste Ordnerebene und verändert, verschiebt oder löscht keine Dateien
+- `AttachmentImportFolderScannerService`, isoliert vorbereitet für das reine Auflisten unterstützter Dateien im XDT-Anhang Importordner; der Service scannt nur die oberste Ordnerebene, markiert unterstützte Dateien optional mit Stabilitätsstatus und verändert, verschiebt oder löscht keine Dateien
 - `AttachmentImportFolderDiagnosticService`, isoliert vorbereitet für den manuellen Diagnosebereich; er ruft den Scanner mit dem konfigurierten Importordner auf, erzeugt anzeigbare Kandidatenzeilen und startet keine Verarbeitung
-- `AttachmentAutoCandidateSelectionService`, isoliert vorbereitet für die sichere automatische Kandidatenentscheidung; automatisch eindeutig ist nur genau eine unterstützte Anhangdatei, mehrere unterstützte Dateien blockieren die automatische Auswahl wegen unsicherem Patientenbezug
+- `AttachmentAutoCandidateSelectionService`, isoliert vorbereitet für die sichere automatische Kandidatenentscheidung; automatisch eindeutig ist nur genau eine stabile unterstützte Anhangdatei, mehrere unterstützte oder instabile Dateien blockieren die automatische Auswahl wegen unsicherem Patientenbezug bzw. unvollständigem Schreibvorgang
+- `AttachmentPackageDecisionService`, isoliert vorbereitet für die Entscheidung, ob auf einen optionalen oder verpflichtenden XDT-Anhang gewartet, ohne Anhang fortgesetzt, mit eindeutigem Anhang verarbeitet oder wegen fehlender Eindeutigkeit blockiert werden soll
 - manueller Diagnosepfad im Tab `Verarbeitung`, der eine explizit ausgewählte Anhangdatei testweise vorbereitet und Ziel-Dateiname, Zielpfad sowie Feldcode/Wert-Paare `6302` bis `6305` anzeigt; er ist nicht Teil des periodischen Scans und nicht in die produktive Exportdatei eingebunden
 - `ExternalLinkExportRule` oder vergleichbare Exportregel
 - Validierung über `FolderSafetyValidator`

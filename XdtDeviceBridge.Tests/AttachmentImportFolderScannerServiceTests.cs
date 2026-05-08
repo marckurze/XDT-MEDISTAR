@@ -81,6 +81,7 @@ public sealed class AttachmentImportFolderScannerServiceTests
         Assert.Equal(filePath, candidate.FullPath);
         Assert.Equal(10, candidate.SizeBytes);
         Assert.Equal("Nicht geprüft.", candidate.StableStatus);
+        Assert.False(candidate.IsStable);
         Assert.True(candidate.LastWriteTimeUtc <= DateTime.UtcNow);
         Assert.Equal(1, result.SupportedCount);
         Assert.Equal(0, result.UnsupportedCount);
@@ -172,24 +173,34 @@ public sealed class AttachmentImportFolderScannerServiceTests
     {
         var folder = CreateTempFolder();
         File.WriteAllText(Path.Combine(folder, "report.txt"), "text");
-        var options = new InterfaceFolderOptions(
-            AisImportFolder: string.Empty,
-            DeviceImportFolder: string.Empty,
-            ExportFolder: string.Empty,
-            ArchiveFolder: string.Empty,
-            ErrorFolder: string.Empty,
-            ClearAisImportFolderBeforeProcessing: false,
-            ClearDeviceImportFolderBeforeProcessing: false,
-            ClearExportFolderAfterSuccessfulTransfer: false,
-            ArchiveProcessedFiles: false,
-            MoveFailedFilesToErrorFolder: false,
-            AttachmentImportFolder: folder);
+        var options = CreateOptions(folder, attachmentFileStabilityWaitSeconds: 0);
 
         var result = _service.Scan(options);
 
         Assert.True(result.Success);
         Assert.Equal(folder, result.ScannedFolder);
-        Assert.Single(result.Candidates);
+        var candidate = Assert.Single(result.Candidates);
+        Assert.True(candidate.IsStable);
+        Assert.Equal("Stabil.", candidate.StableStatus);
+        Assert.Equal(1, result.StableSupportedCount);
+    }
+
+    [Fact]
+    public void Scan_WithOptionsShouldMarkLockedSupportedFileAsNotStable()
+    {
+        var folder = CreateTempFolder();
+        var filePath = Path.Combine(folder, "locked.pdf");
+        File.WriteAllText(filePath, "locked");
+        using var stream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var options = CreateOptions(folder, attachmentFileStabilityWaitSeconds: 0);
+
+        var result = _service.Scan(options);
+
+        var candidate = Assert.Single(result.Candidates);
+        Assert.True(candidate.IsSupported);
+        Assert.False(candidate.IsStable);
+        Assert.Contains("nicht lesbar", candidate.StableStatus);
+        Assert.Equal(0, result.StableSupportedCount);
     }
 
     private static string CreateTempFolder()
@@ -205,5 +216,24 @@ public sealed class AttachmentImportFolderScannerServiceTests
             Path.GetTempPath(),
             "XdtDeviceBridgeTests",
             Guid.NewGuid().ToString("N"));
+    }
+
+    private static InterfaceFolderOptions CreateOptions(
+        string attachmentImportFolder,
+        int attachmentFileStabilityWaitSeconds = 0)
+    {
+        return new InterfaceFolderOptions(
+            AisImportFolder: string.Empty,
+            DeviceImportFolder: string.Empty,
+            ExportFolder: string.Empty,
+            ArchiveFolder: string.Empty,
+            ErrorFolder: string.Empty,
+            ClearAisImportFolderBeforeProcessing: false,
+            ClearDeviceImportFolderBeforeProcessing: false,
+            ClearExportFolderAfterSuccessfulTransfer: false,
+            ArchiveProcessedFiles: false,
+            MoveFailedFilesToErrorFolder: false,
+            AttachmentImportFolder: attachmentImportFolder,
+            AttachmentFileStabilityWaitSeconds: attachmentFileStabilityWaitSeconds);
     }
 }

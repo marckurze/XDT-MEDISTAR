@@ -21,4 +21,8 @@ public sealed record InterfaceFolderOptions(
     string AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
     string AttachmentExternalLinkDescription = "",
     string AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
-    bool IsAttachmentProcessingEnabled = false);
+    bool IsAttachmentProcessingEnabled = false,
+    AttachmentRequirementMode AttachmentRequirementMode = AttachmentRequirementMode.Optional,
+    int AttachmentWaitTimeoutSeconds = 30,
+    int AttachmentFileStabilityWaitSeconds = 2,
+    int AutoImportScanIntervalSeconds = 5);

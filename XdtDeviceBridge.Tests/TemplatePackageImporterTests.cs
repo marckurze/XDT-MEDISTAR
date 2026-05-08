@@ -101,6 +101,8 @@ public sealed class TemplatePackageImporterTests
         Assert.Equal("Messprotokoll Autorefraktor", profile.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", profile.FolderOptions.AttachmentExternalLinkPathTemplate);
         Assert.True(profile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Equal(AttachmentRequirementMode.Required, profile.FolderOptions.AttachmentRequirementMode);
+        Assert.Equal(45, profile.FolderOptions.AttachmentWaitTimeoutSeconds);
     }
 
     [Fact]
@@ -222,7 +224,9 @@ public sealed class TemplatePackageImporterTests
                 AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
                 AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
                 AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
-                IsAttachmentProcessingEnabled = true
+                IsAttachmentProcessingEnabled = true,
+                AttachmentRequirementMode = AttachmentRequirementMode.Required,
+                AttachmentWaitTimeoutSeconds = 45
             }
         };
     }

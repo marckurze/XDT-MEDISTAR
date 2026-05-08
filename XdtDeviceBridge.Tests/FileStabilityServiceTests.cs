@@ -61,6 +61,27 @@ public sealed class FileStabilityServiceTests
     }
 
     [Fact]
+    public async Task CheckAsync_ShouldDetectLastWriteChangeDuringStabilityDuration()
+    {
+        var filePath = CreateTempFilePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        await File.WriteAllTextAsync(filePath, "same-size");
+        File.SetLastWriteTimeUtc(filePath, new DateTime(2026, 5, 8, 12, 0, 0, DateTimeKind.Utc));
+
+        var checkTask = _service.CheckAsync(filePath, TimeSpan.FromMilliseconds(100));
+        await Task.Delay(TimeSpan.FromMilliseconds(25));
+        File.SetLastWriteTimeUtc(filePath, new DateTime(2026, 5, 8, 12, 0, 5, DateTimeKind.Utc));
+
+        var result = await checkTask;
+
+        Assert.True(result.Exists);
+        Assert.True(result.IsReadable);
+        Assert.False(result.IsStable);
+        Assert.Equal("Änderungszeitpunkt hat sich während der Prüfung geändert.", result.Message);
+    }
+
+
+    [Fact]
     public async Task WaitUntilStableAsync_ShouldWaitUntilFileIsStable()
     {
         var filePath = CreateTempFilePath();

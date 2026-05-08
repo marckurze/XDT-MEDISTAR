@@ -97,6 +97,8 @@ public sealed class TemplatePackageExporterTests
         Assert.Contains("\"AttachmentExternalLinkDescription\": \"Messprotokoll Autorefraktor\"", json);
         Assert.Contains("\"AttachmentExternalLinkPathTemplate\": \"{Attachment.TargetFullPath}\"", json);
         Assert.Contains("\"IsAttachmentProcessingEnabled\": true", json);
+        Assert.Contains("\"AttachmentRequirementMode\": \"Required\"", json);
+        Assert.Contains("\"AttachmentWaitTimeoutSeconds\": 45", json);
     }
 
     [Fact]
@@ -187,7 +189,9 @@ public sealed class TemplatePackageExporterTests
                 AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
                 AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
                 AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
-                IsAttachmentProcessingEnabled = true
+                IsAttachmentProcessingEnabled = true,
+                AttachmentRequirementMode = AttachmentRequirementMode.Required,
+                AttachmentWaitTimeoutSeconds = 45
             }
         };
     }

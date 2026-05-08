@@ -58,6 +58,21 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
     }
 
     [Fact]
+    public void SelectCandidate_ShouldBlockWhenOnlySupportedCandidateIsNotStable()
+    {
+        var candidate = CreateCandidate("report.pdf", isSupported: true, isStable: false);
+        var scanResult = CreateScanResult(success: true, candidates: new[] { candidate });
+
+        var result = _service.SelectCandidate(scanResult);
+
+        Assert.True(result.Success);
+        Assert.False(result.CanProcessAutomatically);
+        Assert.Null(result.SelectedCandidate);
+        Assert.Equal(AttachmentAutoCandidateSelectionReason.NoStableAttachment, result.Reason);
+        Assert.Contains("noch nicht stabil", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void SelectCandidate_ShouldBlockWhenMultipleSupportedCandidatesExist()
     {
         var scanResult = CreateScanResult(
@@ -74,7 +89,7 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
         Assert.False(result.CanProcessAutomatically);
         Assert.Null(result.SelectedCandidate);
         Assert.Equal(2, result.SupportedCandidates.Count);
-        Assert.Equal(AttachmentAutoCandidateSelectionReason.MultipleSupportedAttachments, result.Reason);
+        Assert.Equal(AttachmentAutoCandidateSelectionReason.MultipleStableAttachments, result.Reason);
         Assert.Contains("nicht eindeutig", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -131,7 +146,7 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
         Assert.Null(result.SelectedCandidate);
         Assert.Equal(2, result.SupportedCandidates.Count);
         Assert.Single(result.UnsupportedCandidates);
-        Assert.Equal(AttachmentAutoCandidateSelectionReason.MultipleSupportedAttachments, result.Reason);
+        Assert.Equal(AttachmentAutoCandidateSelectionReason.MultipleStableAttachments, result.Reason);
     }
 
     [Fact]
@@ -199,6 +214,11 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
 
     private static AttachmentImportFileCandidate CreateCandidate(string fileName, bool isSupported)
     {
+        return CreateCandidate(fileName, isSupported, isStable: isSupported);
+    }
+
+    private static AttachmentImportFileCandidate CreateCandidate(string fileName, bool isSupported, bool isStable)
+    {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
         return new AttachmentImportFileCandidate(
             FileName: fileName,
@@ -207,8 +227,9 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
             SizeBytes: 123,
             LastWriteTimeUtc: new DateTime(2026, 5, 8, 12, 0, 0, DateTimeKind.Utc),
             IsSupported: isSupported,
-            StableStatus: "Nicht geprüft.",
-            ErrorMessage: isSupported ? null : "Dateityp wird für XDT-Anhänge nicht unterstützt.");
+            StableStatus: isStable ? "Stabil." : "Noch nicht stabil.",
+            ErrorMessage: isSupported ? null : "Dateityp wird für XDT-Anhänge nicht unterstützt.",
+            IsStable: isStable);
     }
 
     private static string CreateTempFolder()

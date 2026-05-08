@@ -45,6 +45,10 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", profile.FolderOptions.AttachmentExternalLinkPathTemplate);
         Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Equal(AttachmentRequirementMode.Optional, profile.FolderOptions.AttachmentRequirementMode);
+        Assert.Equal(30, profile.FolderOptions.AttachmentWaitTimeoutSeconds);
+        Assert.Equal(2, profile.FolderOptions.AttachmentFileStabilityWaitSeconds);
+        Assert.Equal(5, profile.FolderOptions.AutoImportScanIntervalSeconds);
     }
 
     [Fact]
@@ -113,7 +117,11 @@ public sealed class InterfaceProfileConfigurationServiceTests
             attachmentExternalLinkFileFormat: "{ExtensionUpperWithoutDot}",
             attachmentExternalLinkDescription: "Messprotokoll Autorefraktor",
             attachmentExternalLinkPathTemplate: "{Attachment.TargetFullPath}",
-            isAttachmentProcessingEnabled: true);
+            isAttachmentProcessingEnabled: true,
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            attachmentWaitTimeoutSeconds: 45,
+            attachmentFileStabilityWaitSeconds: 3,
+            autoImportScanIntervalSeconds: 7);
 
         var result = _service.CreateConfiguredProfile(
             userProfile,
@@ -133,6 +141,10 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal("Messprotokoll Autorefraktor", result.Profile.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", result.Profile.FolderOptions.AttachmentExternalLinkPathTemplate);
         Assert.True(result.Profile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Equal(AttachmentRequirementMode.Required, result.Profile.FolderOptions.AttachmentRequirementMode);
+        Assert.Equal(45, result.Profile.FolderOptions.AttachmentWaitTimeoutSeconds);
+        Assert.Equal(3, result.Profile.FolderOptions.AttachmentFileStabilityWaitSeconds);
+        Assert.Equal(7, result.Profile.FolderOptions.AutoImportScanIntervalSeconds);
     }
 
     [Fact]
@@ -278,6 +290,75 @@ public sealed class InterfaceProfileConfigurationServiceTests
     }
 
     [Fact]
+    public void CreateConfiguredProfile_ShouldReportInvalidAttachmentWaitTimeout()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(attachmentWaitTimeoutSeconds: -1);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Issues, issue =>
+            issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error
+            && issue.Message == "AttachmentWaitTimeoutSeconds must not be negative.");
+    }
+
+    [Fact]
+    public void CreateConfiguredProfile_ShouldReportInvalidAttachmentFileStabilityWait()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(attachmentFileStabilityWaitSeconds: -1);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Issues, issue =>
+            issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error
+            && issue.Message == "AttachmentFileStabilityWaitSeconds must not be negative.");
+    }
+
+    [Fact]
+    public void CreateConfiguredProfile_ShouldReportInvalidAutoImportScanInterval()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(autoImportScanIntervalSeconds: 0);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Issues, issue =>
+            issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error
+            && issue.Message == "AutoImportScanIntervalSeconds must be at least 1.");
+    }
+
+    [Fact]
     public void CreateConfiguredProfile_ShouldReportMoveModeWithoutArchiveProcessing()
     {
         var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
@@ -321,7 +402,11 @@ public sealed class InterfaceProfileConfigurationServiceTests
         string attachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
         string attachmentExternalLinkDescription = "",
         string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
-        bool isAttachmentProcessingEnabled = false)
+        bool isAttachmentProcessingEnabled = false,
+        AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
+        int attachmentWaitTimeoutSeconds = 30,
+        int attachmentFileStabilityWaitSeconds = 2,
+        int autoImportScanIntervalSeconds = 5)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -344,7 +429,11 @@ public sealed class InterfaceProfileConfigurationServiceTests
             AttachmentExternalLinkFileFormat: attachmentExternalLinkFileFormat,
             AttachmentExternalLinkDescription: attachmentExternalLinkDescription,
             AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate,
-            IsAttachmentProcessingEnabled: isAttachmentProcessingEnabled);
+            IsAttachmentProcessingEnabled: isAttachmentProcessingEnabled,
+            AttachmentRequirementMode: attachmentRequirementMode,
+            AttachmentWaitTimeoutSeconds: attachmentWaitTimeoutSeconds,
+            AttachmentFileStabilityWaitSeconds: attachmentFileStabilityWaitSeconds,
+            AutoImportScanIntervalSeconds: autoImportScanIntervalSeconds);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

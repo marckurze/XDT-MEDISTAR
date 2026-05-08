@@ -596,11 +596,15 @@ public partial class MainWindow : Window
         InterfaceExportFolderTextBox.Text = profile.FolderOptions.ExportFolder;
         InterfaceArchiveFolderTextBox.Text = profile.FolderOptions.ArchiveFolder;
         InterfaceErrorFolderTextBox.Text = profile.FolderOptions.ErrorFolder;
+        InterfaceAutoImportScanIntervalSecondsTextBox.Text = profile.FolderOptions.AutoImportScanIntervalSeconds.ToString();
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
         InterfaceAttachmentTransferModeComboBox.SelectedValue = profile.FolderOptions.AttachmentTransferMode.ToString();
         InterfaceAttachmentProcessingEnabledCheckBox.IsChecked = profile.FolderOptions.IsAttachmentProcessingEnabled;
+        InterfaceAttachmentRequirementModeComboBox.SelectedValue = profile.FolderOptions.AttachmentRequirementMode.ToString();
+        InterfaceAttachmentWaitTimeoutSecondsTextBox.Text = profile.FolderOptions.AttachmentWaitTimeoutSeconds.ToString();
+        InterfaceAttachmentFileStabilityWaitSecondsTextBox.Text = profile.FolderOptions.AttachmentFileStabilityWaitSeconds.ToString();
         InterfaceAttachmentLinkDocumentNameTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDocumentName;
         InterfaceAttachmentLinkFileFormatTextBox.Text = profile.FolderOptions.AttachmentExternalLinkFileFormat;
         InterfaceAttachmentLinkDescriptionTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDescription;
@@ -626,11 +630,15 @@ public partial class MainWindow : Window
         InterfaceExportFolderTextBox.Text = string.Empty;
         InterfaceArchiveFolderTextBox.Text = string.Empty;
         InterfaceErrorFolderTextBox.Text = string.Empty;
+        InterfaceAutoImportScanIntervalSecondsTextBox.Text = "5";
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
         InterfaceAttachmentTransferModeComboBox.SelectedValue = AttachmentTransferMode.Move.ToString();
         InterfaceAttachmentProcessingEnabledCheckBox.IsChecked = false;
+        InterfaceAttachmentRequirementModeComboBox.SelectedValue = AttachmentRequirementMode.Optional.ToString();
+        InterfaceAttachmentWaitTimeoutSecondsTextBox.Text = "30";
+        InterfaceAttachmentFileStabilityWaitSecondsTextBox.Text = "2";
         InterfaceAttachmentLinkDocumentNameTextBox.Text = string.Empty;
         InterfaceAttachmentLinkFileFormatTextBox.Text = string.Empty;
         InterfaceAttachmentLinkDescriptionTextBox.Text = string.Empty;
@@ -802,6 +810,7 @@ public partial class MainWindow : Window
             MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true,
             ArchiveProcessedFileMode: ReadArchiveProcessedFileModeFromEditor(),
             ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor(),
+            AutoImportScanIntervalSeconds: ReadAutoImportScanIntervalSecondsFromEditor(),
             AttachmentImportFolder: InterfaceAttachmentImportFolderTextBox.Text.Trim(),
             AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
             AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim(),
@@ -810,7 +819,10 @@ public partial class MainWindow : Window
             AttachmentExternalLinkFileFormat: InterfaceAttachmentLinkFileFormatTextBox.Text.Trim(),
             AttachmentExternalLinkDescription: InterfaceAttachmentLinkDescriptionTextBox.Text.Trim(),
             AttachmentExternalLinkPathTemplate: InterfaceAttachmentLinkPathTemplateTextBox.Text.Trim(),
-            IsAttachmentProcessingEnabled: InterfaceAttachmentProcessingEnabledCheckBox.IsChecked == true);
+            IsAttachmentProcessingEnabled: InterfaceAttachmentProcessingEnabledCheckBox.IsChecked == true,
+            AttachmentRequirementMode: ReadAttachmentRequirementModeFromEditor(),
+            AttachmentWaitTimeoutSeconds: ReadAttachmentWaitTimeoutSecondsFromEditor(),
+            AttachmentFileStabilityWaitSeconds: ReadAttachmentFileStabilityWaitSecondsFromEditor());
     }
 
     private AttachmentTransferMode ReadAttachmentTransferModeFromEditor()
@@ -818,6 +830,76 @@ public partial class MainWindow : Window
         return string.Equals(InterfaceAttachmentTransferModeComboBox.SelectedValue as string, AttachmentTransferMode.Move.ToString(), StringComparison.Ordinal)
             ? AttachmentTransferMode.Move
             : AttachmentTransferMode.Copy;
+    }
+
+    private AttachmentRequirementMode ReadAttachmentRequirementModeFromEditor()
+    {
+        return string.Equals(InterfaceAttachmentRequirementModeComboBox.SelectedValue as string, AttachmentRequirementMode.Required.ToString(), StringComparison.Ordinal)
+            ? AttachmentRequirementMode.Required
+            : AttachmentRequirementMode.Optional;
+    }
+
+    private int ReadAttachmentWaitTimeoutSecondsFromEditor()
+    {
+        var rawValue = InterfaceAttachmentWaitTimeoutSecondsTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return 30;
+        }
+
+        if (!int.TryParse(rawValue, out var timeoutSeconds))
+        {
+            throw new FormatException("Wartezeit auf XDT-Anhang muss eine ganze Zahl in Sekunden sein.");
+        }
+
+        if (timeoutSeconds < 0)
+        {
+            throw new ArgumentException("Wartezeit auf XDT-Anhang darf nicht negativ sein.");
+        }
+
+        return timeoutSeconds;
+    }
+
+    private int ReadAttachmentFileStabilityWaitSecondsFromEditor()
+    {
+        var rawValue = InterfaceAttachmentFileStabilityWaitSecondsTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return 2;
+        }
+
+        if (!int.TryParse(rawValue, out var stabilitySeconds))
+        {
+            throw new FormatException("Dateistabilität für XDT-Anhänge muss eine ganze Zahl in Sekunden sein.");
+        }
+
+        if (stabilitySeconds < 0)
+        {
+            throw new ArgumentException("Dateistabilität für XDT-Anhänge darf nicht negativ sein.");
+        }
+
+        return stabilitySeconds;
+    }
+
+    private int ReadAutoImportScanIntervalSecondsFromEditor()
+    {
+        var rawValue = InterfaceAutoImportScanIntervalSecondsTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return PeriodicAutoImportScanService.DefaultScanIntervalSeconds;
+        }
+
+        if (!int.TryParse(rawValue, out var intervalSeconds))
+        {
+            throw new FormatException("Ordnerabfrage-Intervall muss eine ganze Zahl in Sekunden sein.");
+        }
+
+        if (intervalSeconds < PeriodicAutoImportScanService.MinimumScanIntervalSeconds)
+        {
+            throw new ArgumentException("Ordnerabfrage-Intervall muss mindestens 1 Sekunde betragen.");
+        }
+
+        return intervalSeconds;
     }
 
     private ArchiveProcessedFileMode ReadArchiveProcessedFileModeFromEditor()
@@ -2043,11 +2125,13 @@ public partial class MainWindow : Window
         PeriodicScanStatusText.Text = "Läuft";
         PeriodicScanLastRunText.Text = "-";
         PeriodicScanReadyPairsText.Text = "0";
-        ActiveProfileScanResultTextBox.Text = "Überwachung läuft. Es wird nichts automatisch verarbeitet, gelöscht, verschoben oder archiviert.";
+        var scanInterval = PeriodicAutoImportScanService.GetEffectiveInterval(activeProfiles);
+        PeriodicScanIntervalText.Text = $"{scanInterval.TotalSeconds:0} Sekunden";
+        ActiveProfileScanResultTextBox.Text = $"Überwachung läuft mit {scanInterval.TotalSeconds:0} Sekunden Intervall. Es wird nichts gelöscht oder bereinigt.";
 
         _periodicScanTask = Task.Run(() => _periodicAutoImportScanService.StartAsync(
             activeProfiles,
-            TimeSpan.FromSeconds(5),
+            scanInterval,
             TimeSpan.FromMilliseconds(200),
             result => Dispatcher.Invoke(() => ShowPeriodicScanResult(result)),
             token), token);
@@ -2904,6 +2988,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (!row.IsStable)
+        {
+            AttachmentDiagnosticFilePathTextBox.Text = string.Empty;
+            AppendMessage($"XDT-Anhang-Kandidat ist noch nicht stabil und wurde nicht ausgewählt: {row.FileName}");
+            return;
+        }
+
         AttachmentDiagnosticFilePathTextBox.Text = row.FullPath;
         AppendMessage($"XDT-Anhang-Kandidat ausgewählt: {row.FullPath}");
     }
@@ -3006,6 +3097,7 @@ public partial class MainWindow : Window
         builder.AppendLine($"XDT-Anhang Exportordner: {DisplayOrDash(result.ExportFolder)}");
         builder.AppendLine($"Gefundene Kandidaten: {result.Candidates.Count}");
         builder.AppendLine($"Unterstützt: {result.Candidates.Count(row => row.IsSupported)}");
+        builder.AppendLine($"Stabil unterstützt: {result.Candidates.Count(row => row.IsSupported && row.IsStable)}");
         builder.AppendLine($"Nicht unterstützt: {result.Candidates.Count(row => !row.IsSupported)}");
 
         AttachmentDiagnosticResultTextBox.Text = builder.ToString().TrimEnd();

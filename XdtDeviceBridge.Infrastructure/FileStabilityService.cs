@@ -21,29 +21,40 @@ public sealed class FileStabilityService
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var initialRead = TryReadFileSize(filePath);
-        if (!initialRead.Exists || !initialRead.IsReadable)
+        var initialRead = TryReadFileMetadata(filePath);
+        if (!initialRead.Result.Exists || !initialRead.Result.IsReadable)
         {
-            return initialRead;
+            return initialRead.Result;
         }
 
         await Task.Delay(stabilityDuration, cancellationToken).ConfigureAwait(false);
 
-        var secondRead = TryReadFileSize(filePath);
-        if (!secondRead.Exists || !secondRead.IsReadable)
+        var secondRead = TryReadFileMetadata(filePath);
+        if (!secondRead.Result.Exists || !secondRead.Result.IsReadable)
         {
-            return secondRead;
+            return secondRead.Result;
         }
 
-        if (initialRead.FileSizeBytes != secondRead.FileSizeBytes)
+        if (initialRead.Result.FileSizeBytes != secondRead.Result.FileSizeBytes)
         {
             return new FileStabilityResult(
                 FilePath: filePath,
                 Exists: true,
                 IsReadable: true,
                 IsStable: false,
-                FileSizeBytes: secondRead.FileSizeBytes,
+                FileSizeBytes: secondRead.Result.FileSizeBytes,
                 Message: "Dateigröße hat sich während der Prüfung geändert.");
+        }
+
+        if (initialRead.LastWriteTimeUtc != secondRead.LastWriteTimeUtc)
+        {
+            return new FileStabilityResult(
+                FilePath: filePath,
+                Exists: true,
+                IsReadable: true,
+                IsStable: false,
+                FileSizeBytes: secondRead.Result.FileSizeBytes,
+                Message: "Änderungszeitpunkt hat sich während der Prüfung geändert.");
         }
 
         return new FileStabilityResult(
@@ -51,7 +62,7 @@ public sealed class FileStabilityService
             Exists: true,
             IsReadable: true,
             IsStable: true,
-            FileSizeBytes: secondRead.FileSizeBytes,
+            FileSizeBytes: secondRead.Result.FileSizeBytes,
             Message: "Datei ist stabil und lesbar.");
     }
 
@@ -117,21 +128,22 @@ public sealed class FileStabilityService
             Message: "Timeout erreicht, bevor die Datei stabil wurde.");
     }
 
-    private static FileStabilityResult TryReadFileSize(string filePath)
+    private static FileMetadataRead TryReadFileMetadata(string filePath)
     {
         if (!File.Exists(filePath))
         {
-            return new FileStabilityResult(
+            return new FileMetadataRead(new FileStabilityResult(
                 FilePath: filePath,
                 Exists: false,
                 IsReadable: false,
                 IsStable: false,
                 FileSizeBytes: null,
-                Message: "Datei existiert nicht.");
+                Message: "Datei existiert nicht."), LastWriteTimeUtc: null);
         }
 
         try
         {
+            var fileInfo = new FileInfo(filePath);
             using var stream = new FileStream(
                 filePath,
                 FileMode.Open,
@@ -140,21 +152,22 @@ public sealed class FileStabilityService
                 bufferSize: 4096,
                 FileOptions.Asynchronous);
 
-            return new FileStabilityResult(
+            fileInfo.Refresh();
+            return new FileMetadataRead(new FileStabilityResult(
                 FilePath: filePath,
                 Exists: true,
                 IsReadable: true,
                 IsStable: false,
                 FileSizeBytes: stream.Length,
-                Message: "Datei ist lesbar.");
+                Message: "Datei ist lesbar."), fileInfo.LastWriteTimeUtc);
         }
         catch (UnauthorizedAccessException ex)
         {
-            return CreateUnreadableResult(filePath, ex);
+            return new FileMetadataRead(CreateUnreadableResult(filePath, ex), LastWriteTimeUtc: null);
         }
         catch (IOException ex)
         {
-            return CreateUnreadableResult(filePath, ex);
+            return new FileMetadataRead(CreateUnreadableResult(filePath, ex), LastWriteTimeUtc: null);
         }
     }
 
@@ -168,4 +181,6 @@ public sealed class FileStabilityService
             FileSizeBytes: null,
             Message: $"Datei ist nicht lesbar: {exception.Message}");
     }
+
+    private sealed record FileMetadataRead(FileStabilityResult Result, DateTime? LastWriteTimeUtc);
 }

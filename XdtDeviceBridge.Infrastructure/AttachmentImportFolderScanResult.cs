@@ -9,4 +9,6 @@ public sealed record AttachmentImportFolderScanResult(
     public int SupportedCount => Candidates.Count(candidate => candidate.IsSupported);
 
     public int UnsupportedCount => Candidates.Count(candidate => !candidate.IsSupported);
+
+    public int StableSupportedCount => Candidates.Count(candidate => candidate.IsSupported && candidate.IsStable);
 }

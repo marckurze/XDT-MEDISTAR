@@ -5,6 +5,8 @@ public enum AttachmentAutoCandidateSelectionReason
     None,
     ScanError,
     NoSupportedAttachment,
+    NoStableAttachment,
     SingleSupportedAttachment,
-    MultipleSupportedAttachments
+    MultipleSupportedAttachments,
+    MultipleStableAttachments
 }

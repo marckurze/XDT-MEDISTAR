@@ -7,4 +7,5 @@ public sealed record AttachmentExternalLinkPreparationRequest(
     string SourceAttachmentPath,
     PatientData? Patient,
     DateTime ProcessingTimestamp,
-    string? OriginalExtension = null);
+    string? OriginalExtension = null,
+    bool? IsSourceStable = null);

@@ -67,7 +67,7 @@
                                     <TextBlock Text="Status:" FontWeight="Bold" Margin="0,3,4,8"/>
                                     <TextBlock x:Name="PeriodicScanStatusText" Text="Gestoppt" MinWidth="80" Margin="0,3,16,8"/>
                                     <TextBlock Text="Intervall:" FontWeight="Bold" Margin="0,3,4,8"/>
-                                    <TextBlock Text="5 Sekunden" MinWidth="80" Margin="0,3,16,8"/>
+                                    <TextBlock x:Name="PeriodicScanIntervalText" Text="5 Sekunden" MinWidth="80" Margin="0,3,16,8"/>
                                     <TextBlock Text="Letzter Scan:" FontWeight="Bold" Margin="0,3,4,8"/>
                                     <TextBlock x:Name="PeriodicScanLastRunText" Text="-" MinWidth="130" Margin="0,3,16,8"/>
                                     <TextBlock Text="Fertige Paare letzter Scan:" FontWeight="Bold" Margin="0,3,4,8"/>
@@ -992,6 +992,10 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
@@ -1018,12 +1022,25 @@
                                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Fehlerordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="4" Grid.Column="1" x:Name="InterfaceErrorFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="4" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Error" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Ordnerabfrage-Intervall:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBox x:Name="InterfaceAutoImportScanIntervalSecondsTextBox"
+                                                     Width="120"
+                                                     Text="5"
+                                                     ToolTip="Intervall der manuell gestarteten periodischen Ordnerabfrage in Sekunden. Minimum: 1 Sekunde."/>
+                                            <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                        </StackPanel>
                                     </Grid>
                                 </GroupBox>
 
                                 <GroupBox Header="XDT-Anhänge für AIS" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
@@ -1085,23 +1102,63 @@
                                             <CheckBox x:Name="InterfaceAttachmentProcessingEnabledCheckBox"
                                                       Content="XDT-Anhänge für AIS automatisch verarbeiten"
                                                       Margin="0,0,0,4"
-                                                      ToolTip="Vorbereitete Einschaltfunktion. Es findet noch keine produktive automatische XDT-Anhang-Verarbeitung statt."/>
+                                                      ToolTip="Einschaltfunktion für XDT-Anhänge. Automatische Verarbeitung nur bei manuell gestarteter Überwachung, aktivierter Automatik und eindeutiger Zuordnung."/>
                                             <TextBlock Text="Nur bei manuell gestarteter Überwachung und aktiver automatischer Verarbeitung. Keine Verarbeitung ohne AIS-Patientennummer."
                                                        Foreground="DarkOrange"
                                                        TextWrapping="Wrap"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="XDT-Anhang ist:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="5"
+                                                  Grid.Column="1"
+                                                  x:Name="InterfaceAttachmentRequirementModeComboBox"
+                                                  SelectedValuePath="Tag"
+                                                  SelectedValue="Optional"
+                                                  Width="220"
+                                                  HorizontalAlignment="Left"
+                                                  Margin="0,0,0,8"
+                                                  ToolTip="Optional: nach Wartezeit ohne Anhang fortsetzen. Pflicht: ohne eindeutigen Anhang später blockieren oder Fehler melden.">
+                                            <ComboBoxItem Content="optional" Tag="Optional"/>
+                                            <ComboBoxItem Content="Pflicht" Tag="Required"/>
+                                        </ComboBox>
 
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Wartezeit auf XDT-Anhang:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBox x:Name="InterfaceAttachmentWaitTimeoutSecondsTextBox"
+                                                     Width="120"
+                                                     Text="30"
+                                                     ToolTip="Wartezeit in Sekunden. 0 bedeutet: nicht warten, sofort prüfen."/>
+                                            <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                        </StackPanel>
 
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
+                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Dateistabilität abwarten:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <StackPanel Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBox x:Name="InterfaceAttachmentFileStabilityWaitSecondsTextBox"
+                                                     Width="120"
+                                                     Text="2"
+                                                     ToolTip="XDT-Anhänge müssen über diese Zeit unverändert und lesbar bleiben, bevor sie verarbeitet werden dürfen."/>
+                                            <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                        </StackPanel>
 
-                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
+                                        <TextBlock Grid.Row="8"
+                                                   Grid.Column="0"
+                                                   Grid.ColumnSpan="3"
+                                                   Text="Optional: Nach Ablauf der Wartezeit werden Messwerte auch ohne Anhang übertragen. Pflicht: Ohne eindeutigen Anhang wird die Verarbeitung später als Fehler/Blockade behandelt. Gerätedateien und Anhänge werden erst verarbeitet, wenn sie vollständig geschrieben und stabil sind."
+                                                   Foreground="DarkOrange"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,8"/>
+
+                                        <TextBlock Grid.Row="9" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
+
+                                        <TextBlock Grid.Row="10" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
+
+                                        <TextBlock Grid.Row="11" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
+
+                                        <TextBlock Grid.Row="12" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
                                     </Grid>
                                 </GroupBox>
 

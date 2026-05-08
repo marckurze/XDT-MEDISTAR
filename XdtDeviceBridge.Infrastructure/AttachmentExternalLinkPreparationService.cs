@@ -53,6 +53,11 @@ public sealed class AttachmentExternalLinkPreparationService : IAttachmentExtern
             return Fail(request.SourceAttachmentPath, transferMode, "XDT attachment export folder must not be empty.");
         }
 
+        if (request.IsSourceStable == false)
+        {
+            return Fail(request.SourceAttachmentPath, transferMode, "XDT attachment source file is not stable yet.");
+        }
+
         var originalExtension = string.IsNullOrWhiteSpace(request.OriginalExtension)
             ? Path.GetExtension(request.SourceAttachmentPath)
             : request.OriginalExtension;

@@ -80,7 +80,8 @@ public sealed class AttachmentImportFolderDiagnosticServiceTests
             row.FileName == "report.pdf"
             && row.Extension == ".pdf"
             && row.IsSupported
-            && row.Status == "Unterstützt");
+            && row.IsStable
+            && row.Status == "Unterstützt, stabil");
         Assert.Contains(result.Candidates, row =>
             row.FileName == "tool.exe"
             && row.Extension == ".exe"
@@ -150,8 +151,9 @@ public sealed class AttachmentImportFolderDiagnosticServiceTests
             SizeBytes: 123,
             LastWriteTimeUtc: new DateTime(2026, 5, 8, 12, 0, 0, DateTimeKind.Utc),
             IsSupported: isSupported,
-            StableStatus: "Nicht geprüft.",
-            ErrorMessage: isSupported ? null : "Dateityp wird für XDT-Anhänge nicht unterstützt.");
+            StableStatus: isSupported ? "Stabil." : "Nicht geprüft.",
+            ErrorMessage: isSupported ? null : "Dateityp wird für XDT-Anhänge nicht unterstützt.",
+            IsStable: isSupported);
     }
 
     private sealed class RecordingScanner : IAttachmentImportFolderScannerService

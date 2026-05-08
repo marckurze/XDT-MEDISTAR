@@ -411,6 +411,40 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_AttachmentShouldSkipUnstableSupportedCandidate()
+    {
+        var candidate = CreateAttachmentCandidate(@"C:\Import\Attachments\report.pdf", isSupported: true, isStable: false);
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[] { candidate }));
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var coordinator = CreateCoordinator(
+            new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253")),
+            scanner,
+            preparationService);
+
+        var result = coordinator.ProcessReadyPairs(
+            CreateInterfaceProfile(
+                isAttachmentProcessingEnabled: true,
+                attachmentImportFolder: @"C:\Import\Attachments",
+                attachmentExportFolder: @"C:\Export\Attachments"),
+            CreateExportProfile(),
+            new[] { CreatePair("patient.gdt", "device.xml") },
+            automaticProcessingEnabled: true,
+            Timestamp);
+
+        var processed = Assert.Single(result.Results);
+        Assert.True(processed.Success);
+        Assert.Equal(1, scanner.CallCount);
+        Assert.Equal(0, preparationService.CallCount);
+        Assert.Equal(AttachmentProcessingStatusReason.NoStableAttachment, processed.AttachmentStatus!.Reason);
+        Assert.Contains("noch nicht stabil", processed.AttachmentStatus.Message);
+        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
+        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
+    }
+
+
+    [Fact]
     public void ProcessReadyPairs_AttachmentShouldSkipMultipleSupportedCandidates()
     {
         var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
@@ -438,8 +472,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.True(processed.Success);
         Assert.Equal(1, scanner.CallCount);
         Assert.Equal(0, preparationService.CallCount);
-        Assert.Equal(AttachmentProcessingStatusReason.MultipleSupportedAttachments, processed.AttachmentStatus!.Reason);
-        Assert.Contains("mehrere unterstützte Anhänge", processed.AttachmentStatus.Message);
+        Assert.Equal(AttachmentProcessingStatusReason.MultipleStableAttachments, processed.AttachmentStatus!.Reason);
+        Assert.Contains("mehrere stabile unterstützte Anhänge", processed.AttachmentStatus.Message);
         Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
         Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
@@ -825,6 +859,11 @@ public sealed class AutoImportPairProcessingCoordinatorTests
 
     private static AttachmentImportFileCandidate CreateAttachmentCandidate(string pathOrFileName, bool isSupported)
     {
+        return CreateAttachmentCandidate(pathOrFileName, isSupported, isStable: isSupported);
+    }
+
+    private static AttachmentImportFileCandidate CreateAttachmentCandidate(string pathOrFileName, bool isSupported, bool isStable)
+    {
         var fullPath = Path.IsPathFullyQualified(pathOrFileName)
             ? pathOrFileName
             : Path.Combine(@"C:\Import\Attachments", pathOrFileName);
@@ -836,8 +875,9 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             SizeBytes: 123,
             LastWriteTimeUtc: Timestamp,
             IsSupported: isSupported,
-            StableStatus: "Nicht geprüft.",
-            ErrorMessage: isSupported ? null : "Dateityp wird für XDT-Anhänge nicht unterstützt.");
+            StableStatus: isStable ? "Stabil." : "Noch nicht stabil.",
+            ErrorMessage: isSupported ? null : "Dateityp wird für XDT-Anhänge nicht unterstützt.",
+            IsStable: isStable);
     }
 
     private static AttachmentExternalLinkPreparationResult CreateAttachmentPreparationResult(bool success = true)

@@ -162,6 +162,10 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Equal(string.Empty, options.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", options.AttachmentExternalLinkPathTemplate);
         Assert.False(options.IsAttachmentProcessingEnabled);
+        Assert.Equal(AttachmentRequirementMode.Optional, options.AttachmentRequirementMode);
+        Assert.Equal(30, options.AttachmentWaitTimeoutSeconds);
+        Assert.Equal(2, options.AttachmentFileStabilityWaitSeconds);
+        Assert.Equal(5, options.AutoImportScanIntervalSeconds);
     }
 
     [Fact]
@@ -235,6 +239,52 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Contains("AttachmentTransferMode must be a valid value.", issues);
     }
 
+    [Fact]
+    public void Validate_ShouldReportInvalidAttachmentRequirementMode()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            attachmentRequirementMode: (AttachmentRequirementMode)999));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("AttachmentRequirementMode must be a valid value.", issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportNegativeAttachmentWaitTimeout()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            attachmentWaitTimeoutSeconds: -1));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("AttachmentWaitTimeoutSeconds must not be negative.", issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportNegativeAttachmentFileStabilityWait()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            attachmentFileStabilityWaitSeconds: -1));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("AttachmentFileStabilityWaitSeconds must not be negative.", issues);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Validate_ShouldReportTooSmallAutoImportScanInterval(int intervalSeconds)
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            autoImportScanIntervalSeconds: intervalSeconds));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("AutoImportScanIntervalSeconds must be at least 1.", issues);
+    }
+
     private static InterfaceProfileDefinition WithFolderOptions(InterfaceFolderOptions options)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
@@ -264,7 +314,11 @@ public sealed class InterfaceProfileDefinitionTests
         string attachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
         string attachmentExternalLinkDescription = "",
         string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
-        bool isAttachmentProcessingEnabled = false)
+        bool isAttachmentProcessingEnabled = false,
+        AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
+        int attachmentWaitTimeoutSeconds = 30,
+        int attachmentFileStabilityWaitSeconds = 2,
+        int autoImportScanIntervalSeconds = 5)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -287,7 +341,11 @@ public sealed class InterfaceProfileDefinitionTests
             AttachmentExternalLinkFileFormat: attachmentExternalLinkFileFormat,
             AttachmentExternalLinkDescription: attachmentExternalLinkDescription,
             AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate,
-            IsAttachmentProcessingEnabled: isAttachmentProcessingEnabled);
+            IsAttachmentProcessingEnabled: isAttachmentProcessingEnabled,
+            AttachmentRequirementMode: attachmentRequirementMode,
+            AttachmentWaitTimeoutSeconds: attachmentWaitTimeoutSeconds,
+            AttachmentFileStabilityWaitSeconds: attachmentFileStabilityWaitSeconds,
+            AutoImportScanIntervalSeconds: autoImportScanIntervalSeconds);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

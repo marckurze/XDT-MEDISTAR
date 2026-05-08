@@ -212,9 +212,15 @@ public sealed class AutoImportPairProcessingCoordinator
                 AttachmentAutoCandidateSelectionReason.NoSupportedAttachment => SkippedStatus(
                     AttachmentProcessingStatusReason.NoSupportedAttachment,
                     "XDT-Anhang übersprungen: keine unterstützte Anhangdatei gefunden."),
+                AttachmentAutoCandidateSelectionReason.NoStableAttachment => SkippedStatus(
+                    AttachmentProcessingStatusReason.NoStableAttachment,
+                    "XDT-Anhang noch nicht stabil / wird später erneut geprüft."),
                 AttachmentAutoCandidateSelectionReason.MultipleSupportedAttachments => SkippedStatus(
                     AttachmentProcessingStatusReason.MultipleSupportedAttachments,
                     "XDT-Anhang übersprungen: mehrere unterstützte Anhänge gefunden, keine eindeutige Zuordnung."),
+                AttachmentAutoCandidateSelectionReason.MultipleStableAttachments => SkippedStatus(
+                    AttachmentProcessingStatusReason.MultipleStableAttachments,
+                    "XDT-Anhang übersprungen: mehrere stabile unterstützte Anhänge gefunden, keine eindeutige Zuordnung."),
                 _ => SkippedStatus(
                     AttachmentProcessingStatusReason.ScanError,
                     $"XDT-Anhang übersprungen: {selectionResult.ErrorMessage ?? "keine eindeutige Auswahl möglich."}")
@@ -225,7 +231,8 @@ public sealed class AutoImportPairProcessingCoordinator
             FolderOptions: interfaceProfile.FolderOptions,
             SourceAttachmentPath: selectionResult.SelectedCandidate.FullPath,
             Patient: patient!,
-            ProcessingTimestamp: timestamp);
+            ProcessingTimestamp: timestamp,
+            IsSourceStable: selectionResult.SelectedCandidate.IsStable);
 
         var preparationResult = _attachmentPreparationService.Prepare(request);
         if (!preparationResult.Success)

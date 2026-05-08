@@ -66,7 +66,11 @@ public sealed class ProfileJsonSerializerTests
                 AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
                 AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
                 AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
-                IsAttachmentProcessingEnabled = true
+                IsAttachmentProcessingEnabled = true,
+                AttachmentRequirementMode = AttachmentRequirementMode.Required,
+                AttachmentWaitTimeoutSeconds = 45,
+                AttachmentFileStabilityWaitSeconds = 3,
+                AutoImportScanIntervalSeconds = 7
             }
         };
 
@@ -85,6 +89,10 @@ public sealed class ProfileJsonSerializerTests
         Assert.Contains("\"AttachmentExternalLinkDescription\":", json);
         Assert.Contains("\"AttachmentExternalLinkPathTemplate\":", json);
         Assert.Contains("\"IsAttachmentProcessingEnabled\": true", json);
+        Assert.Contains("\"AttachmentRequirementMode\": \"Required\"", json);
+        Assert.Contains("\"AttachmentWaitTimeoutSeconds\": 45", json);
+        Assert.Contains("\"AttachmentFileStabilityWaitSeconds\": 3", json);
+        Assert.Contains("\"AutoImportScanIntervalSeconds\": 7", json);
     }
 
     [Fact]
@@ -140,6 +148,10 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", deserialized.FolderOptions.AttachmentExternalLinkPathTemplate);
         Assert.False(deserialized.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Equal(AttachmentRequirementMode.Optional, deserialized.FolderOptions.AttachmentRequirementMode);
+        Assert.Equal(30, deserialized.FolderOptions.AttachmentWaitTimeoutSeconds);
+        Assert.Equal(2, deserialized.FolderOptions.AttachmentFileStabilityWaitSeconds);
+        Assert.Equal(5, deserialized.FolderOptions.AutoImportScanIntervalSeconds);
     }
 
     [Fact]
@@ -185,7 +197,11 @@ public sealed class ProfileJsonSerializerTests
             "AttachmentExternalLinkFileFormat": "{ExtensionUpperWithoutDot}",
             "AttachmentExternalLinkDescription": "Messprotokoll Autorefraktor",
             "AttachmentExternalLinkPathTemplate": "{Attachment.TargetFullPath}",
-            "IsAttachmentProcessingEnabled": true
+            "IsAttachmentProcessingEnabled": true,
+            "AttachmentRequirementMode": "Required",
+            "AttachmentWaitTimeoutSeconds": 45,
+            "AttachmentFileStabilityWaitSeconds": 3,
+            "AutoImportScanIntervalSeconds": 7
           },
           "IsActive": false,
           "IsLicenseRequired": true,
@@ -204,6 +220,10 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal("Messprotokoll Autorefraktor", deserialized.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", deserialized.FolderOptions.AttachmentExternalLinkPathTemplate);
         Assert.True(deserialized.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Equal(AttachmentRequirementMode.Required, deserialized.FolderOptions.AttachmentRequirementMode);
+        Assert.Equal(45, deserialized.FolderOptions.AttachmentWaitTimeoutSeconds);
+        Assert.Equal(3, deserialized.FolderOptions.AttachmentFileStabilityWaitSeconds);
+        Assert.Equal(7, deserialized.FolderOptions.AutoImportScanIntervalSeconds);
     }
 
     [Fact]

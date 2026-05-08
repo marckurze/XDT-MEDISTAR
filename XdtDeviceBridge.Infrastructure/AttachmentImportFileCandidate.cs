@@ -8,4 +8,5 @@ public sealed record AttachmentImportFileCandidate(
     DateTime LastWriteTimeUtc,
     bool IsSupported,
     string StableStatus,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    bool IsStable = false);

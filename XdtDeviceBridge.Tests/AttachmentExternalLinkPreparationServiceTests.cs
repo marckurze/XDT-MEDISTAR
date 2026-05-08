@@ -115,6 +115,27 @@ public sealed class AttachmentExternalLinkPreparationServiceTests
     }
 
     [Fact]
+    public void Prepare_ShouldReturnErrorWhenSourceIsKnownUnstable()
+    {
+        var sourceFile = CreateSourceFile("report.pdf", "attachment");
+        var targetFolder = CreateTempFolder();
+        var service = new AttachmentExternalLinkPreparationService();
+        var request = CreateRequest(sourceFile, targetFolder, AttachmentTransferMode.Copy) with
+        {
+            IsSourceStable = false
+        };
+
+        var result = service.Prepare(request);
+
+        Assert.False(result.Success);
+        Assert.Empty(result.ExportFields);
+        Assert.True(File.Exists(sourceFile));
+        Assert.Empty(Directory.EnumerateFiles(targetFolder));
+        Assert.Contains("not stable", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    [Fact]
     public void Prepare_ShouldReturnErrorWhenSourceIsFolder()
     {
         var sourceFolder = CreateTempFolder();

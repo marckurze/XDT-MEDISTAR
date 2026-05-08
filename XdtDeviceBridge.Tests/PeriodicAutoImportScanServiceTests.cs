@@ -108,6 +108,56 @@ public sealed class PeriodicAutoImportScanServiceTests
         Assert.Contains(receivedResult.Messages, message => message.Contains("kaputt", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void GetEffectiveInterval_ShouldUseDefaultFromFolderOptions()
+    {
+        var profile = CreateProfile();
+
+        var interval = PeriodicAutoImportScanService.GetEffectiveInterval(profile);
+
+        Assert.Equal(TimeSpan.FromSeconds(5), interval);
+    }
+
+    [Fact]
+    public void GetEffectiveInterval_ShouldUseConfiguredProfileInterval()
+    {
+        var profile = CreateProfile() with
+        {
+            FolderOptions = CreateProfile().FolderOptions with { AutoImportScanIntervalSeconds = 7 }
+        };
+
+        var interval = PeriodicAutoImportScanService.GetEffectiveInterval(profile);
+
+        Assert.Equal(TimeSpan.FromSeconds(7), interval);
+    }
+
+    [Fact]
+    public void GetEffectiveInterval_ShouldClampTooSmallProfileInterval()
+    {
+        var profile = CreateProfile() with
+        {
+            FolderOptions = CreateProfile().FolderOptions with { AutoImportScanIntervalSeconds = -3 }
+        };
+
+        var interval = PeriodicAutoImportScanService.GetEffectiveInterval(profile);
+
+        Assert.Equal(TimeSpan.FromSeconds(1), interval);
+    }
+
+    [Fact]
+    public void GetEffectiveInterval_ShouldUseSmallestActiveProfileInterval()
+    {
+        var profiles = new[]
+        {
+            CreateProfile() with { FolderOptions = CreateProfile().FolderOptions with { AutoImportScanIntervalSeconds = 9 } },
+            CreateProfile() with { FolderOptions = CreateProfile().FolderOptions with { AutoImportScanIntervalSeconds = 3 } }
+        };
+
+        var interval = PeriodicAutoImportScanService.GetEffectiveInterval(profiles);
+
+        Assert.Equal(TimeSpan.FromSeconds(3), interval);
+    }
+
     private static InterfaceProfileDefinition CreateProfile()
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with

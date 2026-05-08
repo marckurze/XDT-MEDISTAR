@@ -6,7 +6,9 @@ public enum AttachmentProcessingStatusReason
     EligibilityNotMet,
     ScanError,
     NoSupportedAttachment,
+    NoStableAttachment,
     MultipleSupportedAttachments,
+    MultipleStableAttachments,
     PreparationSucceeded,
     PreparationFailed
 }

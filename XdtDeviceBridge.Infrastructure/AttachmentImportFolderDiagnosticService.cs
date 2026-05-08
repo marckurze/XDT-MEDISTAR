@@ -62,7 +62,9 @@ public sealed class AttachmentImportFolderDiagnosticService
     private static AttachmentImportCandidateDisplayRow CreateDisplayRow(AttachmentImportFileCandidate candidate)
     {
         var status = candidate.IsSupported
-            ? "Unterstützt"
+            ? candidate.IsStable
+                ? "Unterstützt, stabil"
+                : $"Unterstützt, {candidate.StableStatus}"
             : $"Nicht unterstützt: {candidate.ErrorMessage ?? "Dateityp nicht unterstützt."}";
 
         return new AttachmentImportCandidateDisplayRow(
@@ -72,6 +74,7 @@ public sealed class AttachmentImportFolderDiagnosticService
             SizeBytes: candidate.SizeBytes,
             LastWriteTimeUtc: candidate.LastWriteTimeUtc,
             IsSupported: candidate.IsSupported,
+            IsStable: candidate.IsStable,
             Status: status);
     }
 

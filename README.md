@@ -14,11 +14,15 @@ Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere
 
 Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp ist der Konfigurationsbereich `XDT-Anhänge für AIS` im Schnittstellenprofil vorbereitet: optionale Import-/Exportordner, `AttachmentFileNameTemplate`, vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, `ExternalAisLinkFieldBuilder` für semantische Feldwerte, `ExternalAisLinkXdtFieldAdapter` für XDT-Feldcode/Wert-Paare, isolierter `AttachmentExternalLinkPreparationService` zur Orchestrierung auf explizite Eingabe und XDT-Linkfeld-Vorlagen für 6302, 6303, 6304 und 6305. Im Tab `Verarbeitung` ist zusätzlich ein manueller Diagnosepfad `XDT-Anhang Test / externer AIS-Link` vorbereitet; er arbeitet nur mit einer explizit ausgewählten Anhangdatei und zeigt Ziel-Dateiname, Zielpfad sowie vorbereitete XDT-Felder an. Standard für Geräte-Dateianhänge ist `Move`, damit der XDT-Anhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann; vollständige automatische Dateianhang-Zuordnung, Mehrfachanhang-Heuristiken und Dokument-/Dateianhang-Templates sind weiterhin offen. XDT-Längenpräfixe werden nicht in der Konfiguration gepflegt, sondern zentral durch den Exportmechanismus erzeugt.
 
-Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet unterstützte XDT-Anhang-Dateitypen im konfigurierten XDT-Anhang Importordner auf und verändert keine Dateien. Der manuelle Diagnosebereich kann diesen Importordner einlesen und gefundene XDT-Anhänge anzeigen; automatische Zuordnung und produktive XDT-Linkausgabe bleiben offen.
+Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet unterstützte XDT-Anhang-Dateitypen im konfigurierten XDT-Anhang Importordner auf und verändert keine Dateien. Der manuelle Diagnosebereich kann diesen Importordner einlesen und gefundene XDT-Anhänge anzeigen; vollständige automatische Zuordnung und Mehrfachanhang-Heuristiken bleiben offen.
 
 Eine isolierte automatische Kandidatenauswahl ist ebenfalls vorbereitet: Automatisch eindeutig ist zunächst nur der Fall, dass genau eine unterstützte Anhangdatei im XDT-Anhang Importordner gefunden wurde. Bei mehreren unterstützten Dateien wird nicht automatisch ausgewählt, weil der Patientenbezug unsicher wäre.
 
 Die konservative automatische XDT-Anhang-Vorbereitung ist vorbereitet: Sie greift nur während der manuell gestarteten Überwachung, bei aktivierter globaler automatischer Verarbeitung, aktivierter XDT-Anhang-Funktion im Schnittstellenprofil und genau einem unterstützten Anhangkandidaten. Bei erfolgreicher Vorbereitung werden die XDT-Feldcode/Wert-Paare 6302, 6303, optional 6304 und 6305 transient an die erzeugte XDT-Exportdatei angehängt. Bei deaktivierter Funktion, fehlender Eindeutigkeit, mehreren unterstützten Anhängen oder Fehlern bleibt der bestehende Export unverändert. Die XDT-Längenpräfixe werden weiterhin zentral durch den Exportmechanismus erzeugt.
+
+Für vollständige Verarbeitungspakete ist ein Wartemodell vorbereitet: XDT-Anhänge können pro Schnittstellenprofil `optional` oder als `Pflicht` erwartet werden. Standard ist `optional`, die Standard-Wartezeit beträgt 30 Sekunden. Optional bedeutet: Nach Timeout dürfen Messwerte ohne Anhang übertragen werden. Pflicht bedeutet: Ohne eindeutigen Anhang soll die spätere Verarbeitung blockieren oder als Fehler gelten. Mehrere unterstützte Anhänge bleiben unsicher und werden nicht automatisch zugeordnet.
+
+Für langsam schreibende Geräte ist zusätzlich eine Stabilitätsprüfung vorbereitet: XDT-Anhänge werden erst automatisch ausgewählt oder übertragen, wenn sie über die konfigurierte Stabilitätswartezeit unverändert und lesbar bleiben. Standard ist 2 Sekunden. Das periodische Ordnerabfrage-Intervall ist pro Schnittstellenprofil konfigurierbar; der Standard bleibt 5 Sekunden. Es wird weiterhin kein FileSystemWatcher verwendet.
 
 ## Aktueller Funktionsumfang
 
@@ -79,7 +83,11 @@ Ein Schnittstellenprofil enthaelt:
 - XDT-Anhang Dateiname, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
 - XDT-Anhang Übertragung: Kopieren oder Verschieben, Standard `Verschieben`, vorbereitet für spätere Dateianhang-Verarbeitung
 - Einschaltfunktion `XDT-Anhänge für AIS automatisch verarbeiten`, Standard aus; spätere Verarbeitung nur bei manuell gestarteter Überwachung, aktivierter automatischer Verarbeitung und vorhandener AIS-Patientennummer
+- XDT-Anhang-Erwartung: optional oder Pflicht, Standard optional
+- Wartezeit auf XDT-Anhang, Standard 30 Sekunden
+- Dateistabilität für XDT-Anhänge, Standard 2 Sekunden
 - vorbereitete XDT-Linkfeld-Vorlagen 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung und 6305 vollständiger Dateipfad
+- Ordnerabfrage-Intervall für den periodischen Scan, Standard 5 Sekunden
 - Aktiv-Haken fuer automatische Verarbeitung
 - Lizenzpflicht-Haken
 - Archivierungsoptionen

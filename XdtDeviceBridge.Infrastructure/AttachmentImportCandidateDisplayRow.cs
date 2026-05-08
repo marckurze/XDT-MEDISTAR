@@ -7,4 +7,5 @@ public sealed record AttachmentImportCandidateDisplayRow(
     long SizeBytes,
     DateTime LastWriteTimeUtc,
     bool IsSupported,
+    bool IsStable,
     string Status);
