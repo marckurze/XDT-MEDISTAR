@@ -1,368 +1,335 @@
 # Projektueberblick XdtDeviceBridge / XDT Verwaltung
 
-Stand: 2026-05-06  
-Version: `0.1.0-prototype`
+Stand: 2026-05-08
 
-Diese Datei dient als Uebergabe an einen neuen Chat oder eine neue Planungssitzung. Sie fasst Ziel, Iststand, Architekturidee, Sicherheitsentscheidungen, validierte Funktionen und offene naechste Schritte zusammen.
+Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Sessions und Projektplanung. Sie trennt aktuellen Iststand, validierten Kernworkflow, vorbereitete Bausteine und Zielbild.
 
 ## 1. Kurzbeschreibung
 
-XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die Anbindung augenaerztlicher Messgeraete an ein Arztinformationssystem, aktuell mit Fokus auf MEDISTAR.
+XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die dateibasierte Bridge zwischen Arztinformationssystemen und augenaerztlichen Untersuchungsgeraeten.
 
-Der erste stabile Prototyp verarbeitet validiert:
+Der Fokus liegt aktuell auf:
 
-- MEDISTAR-GDT/XDT-Eingang
-- NIDEK ARK1S XML-Geraetedaten
-- MEDISTAR-kompatiblen XDT-Export
-- Ergebniszeilen fuer die Karteikarte, insbesondere ueber Feld `6228`
-- Steuerfeld `8000=6310`
-- Untersuchungsart aus dem AIS-Feld `8402`
+- MEDISTAR als AIS/PVS-Ziel
+- GDT/XDT-Dateien als Austauschformat
+- augenaerztlichen Messgeraeten
+- lokalem, offlinefaehigem Betrieb
 
-Die App ist bewusst lokal, dateibasiert und offline gedacht. Sie arbeitet aktuell mit JSON-basierten Profilen im lokalen AppData-Profilkatalog. Eine SQLite-Speicherung ist noch nicht umgesetzt.
+Es gibt bewusst:
 
-## 2. Hauptziel
+- keine Cloud-Anbindung
+- keinen Windows-Dienst
+- keinen Autostart
+- keinen `FileSystemWatcher`
+- keine Verarbeitung beim App-Start
 
-Ziel ist eine sichere, konfigurierbare XDT-Bridge zwischen:
+## 2. Aktuelle Version
 
-1. AIS/PVS-Dateien, z. B. MEDISTAR-GDT/XDT
-2. Geraetedateien, z. B. XML von augenaerztlichen Messgeraeten
-3. XDT-Exportdateien, die vom AIS wieder eingelesen werden koennen
-
-Die App soll perspektivisch verschiedene AIS-, Geraete- und Exportprofile unterstuetzen. Der Anwender soll Profile, Exportregeln und Schnittstellen konfigurieren koennen, ohne die validierte MEDISTAR/NIDEK-ARK1S-Verarbeitung zu beschaedigen.
-
-Geräte-Dateianhang-Import und externe AIS-Link-Übergabe sind verbindliche zukünftige Anforderungen. Die App soll dafür optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export`, ein Dokument-/Dateianhang-Template und für MEDISTAR einen externen Link über XDT-Felder `6302`, `6303`, `6304` und `6305` unterstützen. Diese Funktion ist Zielanforderung, nicht aktueller Iststand.
-
-## 3. Aktueller validierter Workflow
-
-Der praktisch validierte Workflow ist:
-
-1. MEDISTAR erzeugt oder liefert eine AIS-GDT/XDT-Datei.
-2. NIDEK ARK1S erzeugt eine XML-Geraetedatei.
-3. Die App liest beide Dateien ein.
-4. Patientendaten werden aus der AIS-Datei gemappt.
-5. Geraetemesswerte werden aus XML ausgelesen.
-6. Exportregeln erzeugen XDT-Felder und Ergebniszeilen.
-7. Die App schreibt eine XDT-Datei in den Exportordner.
-8. MEDISTAR kann die erzeugte XDT-Datei einlesen.
-
-Dieser Workflow funktioniert manuell und inzwischen auch ueber manuell gestartete Ueberwachung mit optionaler automatischer Verarbeitung.
-
-## 4. Aktuelle Version
-
-Die aktuelle stabile Prototypversion ist:
+Aktuelle Version laut `VERSION` und `Directory.Build.props`:
 
 ```text
 0.1.0-prototype
 ```
 
-Konsistente Stellen:
-
-- `VERSION`
-- `Directory.Build.props`
-- `README.md`
-- `CHANGELOG.md`
-
-Assembly-Werte:
+Assembly-/Dateiversionen:
 
 - `Version`: `0.1.0-prototype`
 - `AssemblyVersion`: `0.1.0.0`
 - `FileVersion`: `0.1.0.0`
 - `InformationalVersion`: `0.1.0-prototype`
 
-## 5. Zentrale Tabs der App
+Keine neue Version wurde fuer diesen Dokumentationsstand erfunden.
 
-Die App besitzt aktuell diese Hauptbereiche:
+## 3. Praktisch validierter Kernworkflow
+
+Praktisch validiert ist weiterhin der Workflow:
+
+- MEDISTAR + NIDEK ARK1S
+- AIS-GDT/XDT einlesen
+- NIDEK ARK1S XML einlesen
+- Patientendaten uebernehmen
+- Messwerte aus XML mappen
+- MEDISTAR-kompatible XDT-Datei erzeugen
+
+Wichtige XDT-Felder im validierten Kernworkflow:
+
+- `8000 = 6310`
+- Patientendaten, insbesondere `3000`, `3101`, `3102`, `3103`
+- `8402` Untersuchungsart
+- `6228` Ergebniszeilen fuer rechte/linke Messwerte
+
+Dieser Kernworkflow ist der stabile Prototyp-Kern und muss bei allen naechsten Schritten unveraendert funktionsfaehig bleiben.
+
+## 4. Aktuelle Haupt-Tabs
+
+Die App besitzt aktuell diese Haupt-Tabs:
 
 - `Verarbeitung`
 - `Profile & Templates`
 - `Schnittstellenprofile`
 - `Lizenz`
 
-### 5.1 Verarbeitung
+## 5. Tab Verarbeitung
 
-Der Tab `Verarbeitung` enthaelt zwei Betriebsarten:
+Der Tab `Verarbeitung` ist inzwischen staerker als Betriebs- und Automatikbereich gedacht.
 
-1. Manueller Testmodus
-2. Manuell startbare Ueberwachung mit optionaler automatischer Verarbeitung
+Er enthaelt bzw. fokussiert:
 
-Der manuelle Testmodus bleibt als Diagnose- und Validierungsmodus erhalten.
+- aktive Schnittstellenprofile
+- Ueberwachung manuell starten/stoppen
+- automatische Verarbeitung per Haken
+- gefundene Dateipaare bzw. Verarbeitungspakete
+- Status- und Logmeldungen
 
-Der Ueberwachungsbereich zeigt aktive Schnittstellenprofile, scannt periodisch Importordner und zeigt gefundene AIS-/Geraete-Dateipaare an. Die Ueberwachung startet nicht beim App-Start, sondern nur nach Button-Klick.
+Die automatische Verarbeitung startet nur, wenn:
 
-### 5.2 Profile & Templates
+- die Ueberwachung manuell gestartet wurde
+- die globale automatische Verarbeitung aktiv ist
+- ein aktives Schnittstellenprofil vorhanden ist
+- die beteiligten Dateien stabil sind
 
-Dieser Tab enthaelt:
+Der alte manuelle Testbereich ist nicht entfernt. Er bleibt als eingeklappter Bereich `Diagnose / manueller Alt-Test` erhalten und dient als Rueckfallfunktion.
+
+## 6. Tab Profile & Templates
+
+Der Tab `Profile & Templates` ist der Baukastenbereich.
+
+Er enthaelt:
 
 - Profiluebersicht
+- AIS-Profile
+- Geraeteprofile
+- Exportprofile
+- Exportregeln
+- Platzhalter
 - Templatepaket-Export
 - Templatepaket-Import mit Validierung
-- Exportprofil-Auswahl
-- Exportregeln
-- Exportregel-Entwurf
-- Regelvorschau
-- Gesamtexport-Vorschau
-- Platzhalter-Baukasten
+- Baukastenbereich `Test & Vorschau`
 
-Der Baukasten zeigt AIS- und Device-Platzhalter mit fachlichen Namen, ausgelesenen Werten, Formatvorschlaegen und Ausgabeart AIS/Mensch.
+Der Bereich `Test & Vorschau` erlaubt:
 
-### 5.3 Schnittstellenprofile
+- AIS-Datei laden
+- Geraetedatei laden
+- XDT-Anhang einlesen
+- Messwerte pruefen
+- Gesamtexport-Vorschau XDT pruefen
+- Testexport erstellen
 
-Dieser Tab dient zur Konfiguration produktionsnaher Anbindungen.
+## 7. Baukasten `Test & Vorschau`
 
-Ein Schnittstellenprofil verknuepft:
+Der Baukasten dient dem manuellen Testen von Profilen, Exportregeln und XDT-Anhang-Konfigurationen.
 
-- AIS-Profil
-- Geraeteprofil
-- Exportprofil
+Wichtige Rollen:
+
+- Das Schnittstellenprofil dient als Testkontext.
+- Das Exportprofil steuert die normalen XDT-Ergebnisfelder.
+- Das Schnittstellenprofil verbindet AIS-Profil, Geraeteprofil, Exportprofil, Ordner und XDT-Anhang-Einstellungen.
+- XDT-Anhang-Linkfelder `6302` bis `6305` werden im Baukasten transient ergaenzt und veraendern kein Exportprofil.
+
+Aktueller Stand:
+
+- Ein XDT-Anhang kann im Baukasten aus einem beliebigen Speicherort ausgewaehlt werden.
+- Die Vorschau simuliert trotzdem den Zielpfad aus dem Schnittstellenprofil.
+- `6305` zeigt in Vorschau und Test-XDT auf den simulierten Schnittstellenprofil-Zielpfad.
+- Der simulierte Zielpfad besteht aus `XDT-Anhang Exportordner` plus erzeugtem Dateinamen.
+- Der Quellpfad der ausgewaehlten Datei wird nicht als `6305` verwendet.
+- Der Testexport schreibt physisch eine Test-XDT-Datei und, falls vorhanden, den umbenannten Anhang in einen frei gewaehlten Testordner.
+- Der produktive XDT-Anhang Exportordner aus dem Schnittstellenprofil wird im Baukasten-Test nicht beschrieben.
+- Exportprofil und BuiltIn-Profile werden nicht veraendert.
+- `Messwerte pruefen` ist standardmaessig eingeklappt.
+- `Verfuegbare Platzhalter` ist standardmaessig ausgeklappt.
+
+## 8. Tab Schnittstellenprofile
+
+Ein Schnittstellenprofil verknuepft AIS-Profil, Geraeteprofil, Exportprofil, Ordner, Archivierung, Fehlerablage, Automatik- und XDT-Anhang-Einstellungen.
+
+Aktuell dokumentierte Felder:
+
 - AIS-Importordner
 - Geraete-Importordner
 - Exportordner ans AIS
 - Archivordner
 - Fehlerordner
-- künftig optional GA-Dateianhang Import
-- künftig optional GA-Dateianhang Export
-- Aktiv-Haken fuer spaetere/aktuelle automatische Verarbeitung
+- Ordnerabfrage-Intervall, Default `5` Sekunden
+- Wartezeit auf Geraetedatei, Default `10` Minuten
+- XDT-Anhang Importordner
+- XDT-Anhang Exportordner
+- XDT-Anhang Dateiname
+- XDT-Anhang Uebertragung `Copy`/`Move`, Standard `Move`
+- `XDT-Anhaenge fuer AIS automatisch verarbeiten`, Standard aus
+- XDT-Anhang ist `optional` oder `Pflicht`, Standard `optional`
+- Wartezeit auf XDT-Anhang, Default `30` Sekunden
+- Dateistabilitaet abwarten, Default `2` Sekunden
+- XDT-Feld `6302` Dokumentenname
+- XDT-Feld `6303` Dateiformat
+- XDT-Feld `6304` Beschreibung
+- XDT-Feld `6305` vollstaendiger Dateipfad bzw. Pfadtemplate
+- Archivierungsmodus `Copy`/`Move`
+- Archivoptionen
+- Fehleroptionen
+- Aktiv-Haken
 - Lizenzpflicht-Haken
-- Archivierungsmodus Copy/Move
-- Fehlerablageoption
 
-BuiltIn-Profile duerfen nicht ueberschrieben werden. Beim Speichern eines BuiltIn-Schnittstellenprofils wird eine UserDefined-Kopie erzeugt.
+BuiltIn-Schnittstellenprofile werden nicht ueberschrieben. Beim Speichern auf Basis eines BuiltIn-Profils wird eine UserDefined-Kopie erzeugt.
 
-### 5.4 Lizenz
+## 9. XDT-Anhaenge fuer AIS
 
-Der Tab `Lizenz` zeigt:
+XDT-Anhaenge fuer AIS sind nicht mehr nur optionales Zukunftsthema. Der Baukasten und die Schnittstellenprofile enthalten vorbereitete Konfiguration und Testpfade fuer externe AIS-Links.
 
-- Installationsinformationen
-- Lizenzstatus
-- Export einer Lizenzanfrage
-- Import einer Lizenzdatei
-- lizenzierte Geraete/Anbindungen
-- Bewertung aktiver lizenzpflichtiger Schnittstellenprofile
-- Karenzzeiten fuer neue nicht gedeckte Anbindungen
+Unterstuetzte Anhangtypen im aktuellen Vorbereitungsstand:
 
-Wichtig: Es gibt aktuell keine harte produktive Lizenzsperre. Die Lizenzlogik ist Anzeige-, Bewertungs- und Vorbereitungslogik.
+- PDF
+- JPG
+- JPEG
+- PNG
+- TIF
+- TIFF
+- DCM
+- TXT
 
-## 6. Automatik-Prototyp
+Externe AIS-Linkfelder:
 
-Die automatische Verarbeitung ist bewusst vorsichtig umgesetzt.
+- `6302`: Dokumentenname / Anzeige in Karteikarte
+- `6303`: Dateiformat, z. B. `PDF`, `JPG`, `DCM`, `TXT`
+- `6304`: Beschreibung, optional
+- `6305`: vollstaendiger absoluter Dateipfad
 
-Aktuell gilt:
+Technische Grundsaetze:
+
+- Der `XdtExportBuilder` erzeugt XDT-Längenpraefixe zentral.
+- In UI und Konfiguration werden keine manuellen Längenpraefixe gepflegt.
+- Automatische XDT-Anhang-Verarbeitung ist nur unter Sicherheitsbedingungen erlaubt.
+- Mehrere unterstuetzte Anhaenge werden nicht automatisch zugeordnet.
+- Instabile Anhaenge werden nicht verarbeitet, nicht verschoben und nicht verlinkt.
+- Exportprofile werden durch XDT-Anhang-Test und Testexport nicht dauerhaft veraendert.
+
+## 10. Paket-Wartelogik
+
+Die automatische Verarbeitung arbeitet fachlich als Verarbeitungspaket:
+
+```text
+AIS-Datei -> Geraetedatei -> optionaler oder verpflichtender XDT-Anhang
+```
+
+### Phase 1: AIS-Datei wartet auf Geraetedatei
+
+- Eine stabile AIS-Datei allein erzeugt noch keinen Export.
+- Die App wartet bis zu `DeviceFileWaitTimeoutMinutes` auf eine passende stabile Geraetedatei.
+- Default: `10` Minuten.
+- Eine neuere AIS-Datei ersetzt eine aeltere wartende AIS-Datei.
+- Eine abgelaufene AIS-Datei erzeugt keinen Export.
+
+### Phase 2: XDT-Anhang-Wartezeit nach vollstaendigem Paar
+
+- Erst wenn AIS-Datei und Geraetedatei als stabiles Paar vorhanden sind, beginnt die XDT-Anhang-Wartezeit.
+- Die Wartezeit auf XDT-Anhang ist pro Schnittstellenprofil konfigurierbar.
+- Default: `30` Sekunden.
+
+Optionaler XDT-Anhang:
+
+- Wenn genau ein stabiler Anhang innerhalb Timeout kommt: Export mit `6302`, `6303`, optional `6304`, `6305`.
+- Wenn kein Anhang kommt: Export ohne Anhang nach Timeout.
+- Wenn mehrere unterstuetzte Anhaenge vorhanden sind: keine automatische Zuordnung, Warn-/Skip-Verhalten.
+
+Pflicht-XDT-Anhang:
+
+- Wenn genau ein stabiler Anhang kommt: Export mit `6302`, `6303`, optional `6304`, `6305`.
+- Wenn kein Anhang kommt: Blockade/Fehler.
+- Wenn mehrere unterstuetzte Anhaenge vorhanden sind: Blockade/Fehler wegen unsicherer Zuordnung.
+
+## 11. Dateistabilitaet
+
+Dateien duerfen erst verarbeitet werden, wenn sie stabil sind:
+
+- AIS-Dateien
+- Geraetedateien
+- XDT-Anhaenge
+
+Der `FileStabilityService` prueft Groesse und Aenderungszeitpunkt ueber einen konfigurierten Zeitraum.
+
+Fuer XDT-Anhaenge gilt:
+
+- Stabilitaetswartezeit: Default `2` Sekunden.
+- Instabile Dateien werden nicht verschoben.
+- Instabile Dateien werden nicht verlinkt.
+- Instabile Dateien werden nicht exportiert.
+- Instabile Dateien werden spaeter erneut bewertet.
+
+## 12. Automatik-Prototyp
+
+Der Automatik-Prototyp ist bewusst konservativ.
+
+Aktuelle Sicherheitsregeln:
 
 - keine Verarbeitung beim App-Start
 - kein Windows-Dienst
 - kein Autostart
-- kein FileSystemWatcher
-- Ueberwachung nur manuell per Button
-- periodischer Scan statt Dauer-Watcher
-- automatische Verarbeitung nur bei gesetztem Haken
-- keine unbekannten Dateien werden geloescht
-- keine Ordner werden pauschal geleert
+- kein `FileSystemWatcher`
+- periodischer Scan
+- Scan-Intervall konfigurierbar, Default `5` Sekunden
+- automatische Verarbeitung nur bei manuell gestarteter Ueberwachung
+- automatische Verarbeitung nur mit gesetztem Haken
+- keine unbekannten Dateien anfassen
+- keine pauschale Ordnerleerung
 - Exportordner wird nicht bereinigt
 
-Wenn die Ueberwachung laeuft, scannt die App aktive Schnittstellenprofile regelmaessig. Gefundene Dateien werden nur verarbeitet, wenn sie stabil und lesbar sind und ein AIS-/Geraete-Dateipaar bilden.
+## 13. Archivierung und Fehlerablage
 
-## 7. Optionale automatische Verarbeitung
-
-Im Tab `Verarbeitung` gibt es den Haken:
-
-```text
-Gefundene Dateipaare automatisch verarbeiten
-```
-
-Standard:
-
-- aus
-
-Wenn aus:
-
-- Dateipaare werden nur angezeigt.
-- Verarbeitung erfolgt nur ueber den Button zur manuellen Paarverarbeitung.
-
-Wenn an:
-
-- gefundene stabile Dateipaare werden waehrend der manuell gestarteten Ueberwachung automatisch verarbeitet.
-- die gleiche Verarbeitungslogik wie bei manueller Paarverarbeitung wird verwendet.
-- erzeugte XDT-Dateien werden im konfigurierten Exportordner abgelegt.
-- Importdateien werden je nach Schnittstellenprofil archiviert.
-- Fehler werden je nach Konfiguration in den Fehlerordner kopiert.
-
-Die App merkt sich waehrend der Laufzeit bereits verarbeitete Dateipaare und exportiert dasselbe Paar nicht erneut.
-
-## 8. Archivierung und Duplikate
-
-Verarbeitete Importdateien koennen pro Schnittstellenprofil archiviert werden.
+Archivierung kann pro Schnittstellenprofil konfiguriert werden.
 
 Archivierungsmodi:
 
-- `Copy`: Dateien werden ins Archiv kopiert, Originale bleiben im Importordner.
-- `Move`: Dateien werden ins Archiv verschoben, Originale verschwinden aus dem Importordner.
+- `Copy`
+- `Move`
 
-Empfehlung fuer produktionsnahe Nutzung:
+Fuer produktionsnahe Nutzung ist `Move` oft sinnvoll, damit Importordner nach erfolgreicher Verarbeitung sauber bleiben.
 
-- Archivierung aktivieren
-- Archivierungsmodus `Move`
-- bereits verarbeitete AIS-Dateien aus Importordner entfernen
-- bereits verarbeitete Geraetedateien aus Importordner entfernen
+Aktuelle Grundsaetze:
 
-Grund: Wenn Geraetedateien im Importordner liegen bleiben, koennen sie bei jedem Scan erneut gefunden werden. Die Duplikaterkennung verhindert zwar erneuten Export, aber der Ordner bleibt unaufgeraeumt. Mit `Move` werden bekannte verarbeitete Dateien sicher ins Archiv verschoben.
+- Nur bekannte verarbeitete AIS-/Geraetedateien werden gemaess Profiloption archiviert.
+- Keine unbekannten Dateien werden geloescht.
+- Keine Ordner werden pauschal geleert.
+- Der Exportordner wird nicht bereinigt.
+- Fehlerablage erzeugt eine Kopie der beteiligten Dateien und eine `error.txt`.
+- Originaldateien bleiben im Fehlerfall erhalten, soweit die aktuelle Sicherheitslogik dies vorsieht.
 
-Wichtig:
+## 14. Profil- und Template-System
 
-- keine unbekannten Dateien werden bewegt
-- keine Datei wird endgueltig geloescht
-- es werden nur bekannte verarbeitete Paare behandelt
-- der Exportordner wird nicht geleert
-
-## 9. Fehlerablage
-
-Wenn eine manuelle oder automatische Paarverarbeitung fehlschlaegt und Fehlerablage aktiviert ist:
-
-- AIS-Datei wird in den Fehlerordner kopiert
-- Geraetedatei wird in den Fehlerordner kopiert
-- `error.txt` wird erzeugt
-- Originaldateien bleiben erhalten
-- keine Datei wird geloescht
-- keine Datei wird verschoben
-
-Der Optionsname `MoveFailedFilesToErrorFolder` existiert aus Kompatibilitaetsgruenden, das aktuelle Verhalten ist aus Sicherheitsgruenden Copy-only.
-
-## 10. Archivstruktur und Fehlerstruktur
-
-Archivierte Dateien werden tagesbezogen abgelegt:
-
-```text
-Archivordner/
-└── yyyy/
-    └── MM/
-        └── dd/
-            └── Schnittstellenprofil/
-                ├── AIS/
-                │   └── urspruengliche AIS-Datei
-                └── Device/
-                    └── urspruengliche Geraetedatei
-```
-
-Fehlerdateien werden sinngemaess abgelegt:
-
-```text
-Fehlerordner/
-└── yyyy/
-    └── MM/
-        └── dd/
-            └── Schnittstellenprofil/
-                ├── AIS/
-                ├── Device/
-                └── error.txt
-```
-
-## 11. Profil- und Template-System
-
-Die App unterscheidet mehrere Profilarten:
+Profilarten:
 
 - AIS-Profile
-- Device-/Geraeteprofile
+- Geraeteprofile
 - Exportprofile
 - Schnittstellenprofile
 
 BuiltIn-Profile:
 
 - werden mit der App geliefert
+- sind schreibgeschuetzt
 - duerfen nicht ueberschrieben werden
-- koennen als Grundlage fuer UserDefined-Kopien dienen
+- koennen als Vorlage fuer UserDefined-Kopien dienen
 
 UserDefined-Profile:
 
-- werden lokal gespeichert
-- liegen im AppData-Profilkatalog
-- koennen aus Entwuerfen oder Konfigurationen entstehen
-
-Lokaler Profilkatalog:
-
-```text
-%LocalAppData%\XdtDeviceBridge\profiles\
-```
-
-Unterordner:
-
-- `ais`
-- `devices`
-- `exports`
-- `interfaces`
-
-Exportprofile werden unter anderem hier gespeichert:
-
-```text
-%LocalAppData%\XdtDeviceBridge\profiles\exports\
-```
+- werden separat gespeichert
+- liegen unter `%LocalAppData%\XdtDeviceBridge\profiles`
+- werden JSON-basiert verwaltet
 
 Templatepakete:
 
-- Export ist vorhanden.
-- Import ist vorhanden.
+- Templatepaket-Export ist vorhanden.
+- Templatepaket-Import ist vorhanden.
 - Importvalidierung ist vorhanden.
-- Produktive Uebernahme importierter Templatepakete mit Konfliktloesung ist noch offen.
+- Produktive Uebernahme importierter Templatepakete mit Konfliktloesung ist weiterhin offen.
 
-## 12. Exportregel-Baukasten
+## 15. Vorbereitete Geraeteprofile
 
-Der Exportregel-Baukasten ist vorbereitet, um Anwendern technische Platzhalter fachlich verstaendlich anzuzeigen.
-
-Er zeigt unter anderem:
-
-- Platzhalter
-- Name Messwert
-- ausgelesener Wert
-- Ausgabeart AIS/Mensch
-- Verwenden-Haken
-- Formatvorschlaege
-
-Wichtige Formatfunktionen:
-
-- `Raw`
-- `Diopter`
-- `Axis`
-- `Pd`
-- `Iop`
-- `Pachy`
-- `Prism`
-- `Keratometry`
-- `Addition`
-- `Time`
-
-Der Baukasten kennt inzwischen viele ophthalmologische Begriffe, z. B.:
-
-- Sphaere
-- Zylinder
-- Achse
-- Addition
-- Sphaerisches Aequivalent
-- Augendruck
-- Pachymetrie
-- Hornhautradius
-- Keratometrie
-- Prisma horizontal/vertikal
-- Basisrichtung
-- Uhrzeit
-
-## 13. RuleType im Exportprofil
-
-Exportregeln koennen verschiedene Typen haben:
-
-- `StaticValue`: fester Wert, z. B. Steuerfeld `8000=6310`
-- `AisField`: Wert kommt aus der AIS-Datei
-- `DeviceField`: Wert kommt aus der Geraetedatei
-- `Template`: Ergebniszeile mit mehreren Platzhaltern
-
-Die produktive Paarverarbeitung kann ExportProfileDefinition-Regeln ueber einen Adapter in die vorhandene MappingEngine-Struktur ueberfuehren.
-
-## 14. Validierter Geraete-/AIS-Stand
-
-Produktiv bzw. praktisch validiert:
+Praktisch validiert:
 
 - MEDISTAR
-- NIDEK ARK1S XML
-- MEDISTAR-kompatibler XDT-Export
+- NIDEK ARK1S
 
-Vorbereitete BuiltIn-/V2-Profile:
+Vorbereitet, aber noch nicht produktiv validiert:
 
 - NIDEK LM7/LM7P
 - NIDEK NT530P
@@ -370,324 +337,109 @@ Vorbereitete BuiltIn-/V2-Profile:
 - TOPCON KR800
 - TOPCON TRK2P
 
-Wichtig: Diese vorbereiteten Profile sind fachlich und technisch angelegt, aber nicht im gleichen Sinne produktiv validiert wie MEDISTAR + NIDEK ARK1S.
+Wichtig: Diese V2-/BuiltIn-Profile sind vorbereitet und konfigurierbar, aber nicht im gleichen Sinne praktisch validiert wie MEDISTAR + NIDEK ARK1S.
 
-## 15. MEDISTAR
-
-MEDISTAR ist aktuell das zentrale AIS-Ziel.
-
-Relevant:
-
-- GDT/XDT-Eingang
-- Patientendaten
-- Untersuchungsart aus `8402`
-- XDT-Ausgang
-- `8000=6310`
-- Ergebniszeilen in `6228`
-
-MEDISTAR-Zeilentypen wie `V0`, `V1`, `V2`, `V7`, `P`, `Y` sind informativ. Sie sind hilfreich fuer Templates und Zielbilder, aber keine harte XDT-Schnittstellenlogik der App.
-
-## 16. NIDEK ARK1S
-
-NIDEK ARK1S ist das aktuell validierte Geraeteprofil.
-
-Unterstuetzt sind im Prototyp vor allem:
-
-- XML-Geraetedatei
-- Autorefraktor-/ARK-Werte
-- rechte/linke Messwerte
-- Sphaere
-- Zylinder
-- Achse
-- Ergebniszeilen fuer MEDISTAR
-
-Diese Verarbeitung darf bei weiteren Schritten nicht beschaedigt werden.
-
-## 17. NIDEK LM7/LM7P
-
-Die NIDEK LM7/LM7P LAN/XML-Schnittstelle ist fachlich ausgewertet und dokumentiert.
-
-Wichtige Punkte:
-
-- LAN/WLAN ueber SMB / Common Internet File System
-- Geraet schreibt XML-Datei in Windows-Shared-Folder
-- dieser Shared Folder entspricht dem Geraete-Importordner
-- App scannt/verarbeitet den Ordner
-- nach erfolgreicher Verarbeitung ist Archivmodus `Move` sinnvoll, damit der Shared Folder wieder frei wird
-- das Geraet kann Network Timeout melden, wenn die XML-Datei zu lange im Shared Folder liegt
-
-Dateiname laut Interface Manual:
-
-```text
-LM_<ID>_<YYYYMMDDHHMMSS>_<MAC-Lower-Bytes>.xml
-```
-
-Zusatzdatei:
-
-```text
-NIDEK_LM_Stylesheet.xsl
-```
-
-Die XSL-Datei ist keine Messdatei und darf nicht als Geraetedatei verarbeitet werden. Im aktuellen Klassifizierer ist `.xsl` nicht relevant und wird nicht als DeviceXml behandelt.
-
-XML-Struktur:
-
-```text
-Ophthalmology
-├── Common
-└── Measure Type="LM"
-    ├── MeasureMode
-    ├── DiopterStep
-    ├── AxisStep
-    ├── CylinderMode
-    ├── PrismDiopterStep
-    ├── PrismBaseStep
-    ├── PrismMode
-    ├── AddMode
-    ├── LM
-    │   ├── S
-    │   ├── R
-    │   └── L
-    └── PD
-```
-
-LM7/LM7P muss perspektivisch NIDEK_V1.00 und NIDEK_V1.01 unterstuetzen.
-
-Wichtige Messwerte:
-
-- `Sphere`
-- `Cylinder`
-- `Axis`
-- `SE`
-- `ADD`
-- `ADD2`
-- `NearSphere`
-- `NearSphere2`
-- `Prism`
-- `PrismBase`
-- `PrismX`
-- `PrismX/@base`
-- `PrismY`
-- `PrismY/@base`
-- `UVTransmittance`
-- `ConfidenceIndex`
-- `Error`
-- PD-Werte wie `Distance`, `DistanceR`, `DistanceL`, `Near`, `NearR`, `NearL`
-
-Der Parser stellt XML-Attribute als SourcePaths bereit, z. B.:
-
-- `Measure/@Type`
-- `PrismX/@base`
-- `PrismY/@base`
-- `Sphere/@unit`
-- `Distance/@unit`
-
-Offen bzw. noch genauer zu planen:
-
-- DeviceParseIssue-/Warnlogik fuer LM7/LM7P-Error-Tags
-- produktive Validierung mit echten LM7/LM7P-Dateien
-- ggf. FormatPercent fuer UVTransmittance
-- ggf. FormatDate fuer Common/Date
-
-## 18. Lizenzsystem
+## 16. Lizenzsystem
 
 Das Lizenzsystem ist vorbereitet, aber nicht hart durchgesetzt.
 
 Vorhanden:
 
-- InstallationInfo
+- `InstallationInfo`
 - Lizenzanfrage exportieren
 - Lizenzdatei importieren
-- LicenseInfo
-- lizenzierte Geraeteanzahl
-- Bewertung aktiver lizenzpflichtiger Schnittstellenprofile
+- Lizenzstatus anzeigen
+- aktive lizenzpflichtige Schnittstellenprofile bewerten
+- lizenzierte Geraete/Anbindungen darstellen
 - Karenzzeitmodell
 - Karenzzeiten speichern/laden
-- Karenzzeiten aktualisieren
-- Anzeige im Lizenz-Tab
 
-Zaehlregel:
+Aktueller Stand:
 
-Ein Schnittstellenprofil zaehlt als lizenzpflichtige Anbindung, wenn:
-
-- `IsActive = true`
-- `IsLicenseRequired = true`
-
-Nicht gezaehlt werden:
-
-- inaktive Profile
-- nicht lizenzpflichtige Profile
-- reine Exportprofile ohne Schnittstellenprofil
-
-Keine Sperrlogik:
-
-- Verarbeitung bleibt nutzbar
-- Lizenzstatus ist Anzeige/Vorbereitung
+- keine harte produktive Lizenzsperre
 - keine Online-Lizenzierung
-- keine Signaturpruefung
+- keine produktive digitale Signaturpruefung fuer Lizenzdateien
+- Lizenzlogik ist Anzeige-, Bewertungs- und Vorbereitungslogik
 
-## 19. Sicherheitliche Entscheidungen
+## 17. Sicherheitsentscheidungen
 
-Diese Entscheidungen sind fuer weitere Planung wichtig:
+Diese Entscheidungen gelten fuer weitere Entwicklung:
 
-- keine automatische Verarbeitung beim App-Start
-- kein Windows-Dienst
-- kein Autostart
-- kein FileSystemWatcher
-- Ueberwachung nur manuell startbar
-- automatische Verarbeitung nur mit bewusst gesetztem Haken
-- keine pauschale Ordnerleerung
-- keine unbekannten Dateien anfassen
-- keine Exportordner-Bereinigung
-- Importdateien nur gemaess Profiloption archivieren
-- Fehlerfall kopiert Dateien in Fehlerordner
-- Originaldateien bleiben im Fehlerfall erhalten
-- Duplikaterkennung verhindert erneuten Export gleicher Dateipaare
-- Archivloeschung ist nur vorbereitet, nicht automatisch aktiv
-- Geräte-Dateianhänge dürfen nicht blind gelöscht oder überschrieben werden
-- externe AIS-Links dürfen nur entstehen, wenn die Zieldatei erfolgreich abgelegt wurde
-
-## 19.1 Geräte-Dateianhänge und externe AIS-Links
-
-Dokument-/Dateianhang-Templates sind künftig nicht mehr nur optionales Zukunftsthema. Der Geräteanbindungs-Baukasten soll verbindlich Geräte-Dateianhänge übernehmen und als externe AIS-Links exportieren können.
-
-Zielbild:
-
-- Geräte-Dateianhänge werden aus `GA-Dateianhang Import` übernommen.
-- Die App benennt die Datei eindeutig, z. B. mit Patientennummer, Datum, Uhrzeit und Originalendung.
-- Die Datei wird in `GA-Dateianhang Export` kopiert oder verschoben.
-- Für MEDISTAR wird ein externer Link über XDT-Felder `6302`, `6303`, `6304` und `6305` erzeugt.
-- `6302` beschreibt den Dokumentnamen, `6303` das Dateiformat, `6304` optional die Beschreibung und `6305` den vollständigen absoluten Dateipfad.
-- Die Datei `XDT Übergabe externer Link.txt` bestätigt diese MEDISTAR-Feldlogik. Die sichtbare `EV:{...}`-Zeile entsteht in MEDISTAR nach dem Import und ist keine von der App direkt zu schreibende Textzeile.
-
-Abgrenzung:
-
-- Im Stand `0.1.0-prototype` ist diese Funktion noch nicht produktiv umgesetzt.
-- PDF-Erzeugung durch die App ist ein weiterer späterer Fall.
-- Hier geht es zuerst um Geräteanhänge, die bereits als Datei vorliegen.
-
-## 20. Wichtige vorhandene Services/Bausteine
-
-Wichtige Core-/Infrastructure-Bausteine:
-
-- `GdtParser`
-- `XmlDeviceParser`
-- `PatientDataMapper`
-- `MappingEngine`
-- `XdtExportBuilder`
-- `ExportFileNameBuilder`
-- `FileExportService`
-- `ProfileCatalogService`
-- `ProfileFileRepository`
-- `ExportProfileDraftService`
-- `InterfaceProfileConfigurationService`
-- `FolderSafetyValidator`
-- `LicensedDeviceStateEvaluator`
-- `LicensedDeviceGracePeriodService`
-- `FileStabilityService`
-- `DirectorySnapshotService`
-- `ImportFileClassifier`
-- `PendingImportQueue`
-- `AutoImportScannerService`
-- `PeriodicAutoImportScanService`
-- `InterfaceProfileManualProcessor`
-- `ProcessedFileArchiveService`
-- `FailedFileCopyService`
-- `ArchiveRetentionCleanupService`
-- `AutoImportPairProcessingCoordinator`
-- `DuplicateImportFileHandler`
-
-## 21. Wichtige offene Themen
-
-Noch nicht final umgesetzt oder bewusst noch nicht aktiviert:
-
-- Windows-Dienst
-- Autostart
-- echter FileSystemWatcher
-- dauerhafte Hintergrundverarbeitung ohne Benutzerstart
-- produktive Lizenzsperre
-- digitale Signaturpruefung fuer Lizenzdateien
-- Online-Lizenzierung
-- vollstaendiger Profil-Assistent fuer unbekannte Geraete
-- produktive Uebernahme importierter Templatepakete mit Konfliktloesung
-- Geräte-Dateianhang-Import und MEDISTAR externer Link über XDT
-- Dokument-/Dateianhang-Template
-- selbst erzeugte PDF-Protokolle
-- automatische Archivloeschung im laufenden Betrieb
-- SQLite-Speicherung
-- vollstaendige AIS-Unterstuetzung ausserhalb MEDISTAR
-- Installer / Deployment
-- produktive Validierung der vorbereiteten V2-Geraeteprofile
-
-## 22. Dokumentationsstand
-
-Zentrale Dokumente:
-
-- `README.md`: Einstieg, aktueller Automatik-Prototyp, validierter Stand
-- `CHANGELOG.md`: Version `0.1.0-prototype`
-- `VERSION`: aktuelle Version
-- `Directory.Build.props`: Assembly-/Package-Version
-- `docs/PFLICHTENHEFT.md`: fachliche und technische Anforderungen, teilweise Zielbild und Iststand gemischt
-- `docs/ARCHITEKTUR.md`: Architekturidee, teilweise nicht ganz auf dem neuesten Automatik-Iststand
-- `docs/GERAETE_BEISPIELE.md`: Geraetebeispiele, SourcePaths, MEDISTAR-Zielbilder, LM7/LM7P-Manual-Auswertung
-- `docs/ISTSTAND_ABGLEICH_BERICHT.md`: Abgleich Dokumentation vs. Code mit offenen Korrekturen
-
-Wichtig fuer neue Planung:
-
-`docs/ISTSTAND_ABGLEICH_BERICHT.md` zeigt, wo Dokumentation und Code noch unscharf auseinanderlaufen. Vor groesseren neuen Features sollten diese Punkte beachtet werden.
-
-## 23. Empfohlene naechste Schritte
-
-Sinnvolle naechste kleine Schritte waeren:
-
-1. README-Korrektur: "Keine Geraeteprofilverwaltung" praezisieren zu "kein vollstaendiger Profil-Assistent".
-2. Pflichtenheft bereinigen: SQLite, Ordnerueberwachung und Exportordner-Bereinigung klar als offen/ueberholt markieren.
-3. Architektur um aktuellen Stand `0.1.0-prototype` erweitern.
-4. Templatepaket-Import produktiv uebernehmen mit Konfliktloesung planen.
-5. Profil-Assistent fuer neue Geraete konzipieren.
-6. LM7/LM7P mit echten Dateien produktiv testen.
-7. DeviceParseIssue-/Warnlogik fuer Geraete-Error-Tags planen.
-8. Installer-/Deployment-Konzept erstellen.
-
-## 24. Arbeitsregeln fuer kuenftige Chats
-
-Bei weiteren Implementierungen unbedingt beachten:
-
-- bestehende MEDISTAR/NIDEK-ARK1S-Verarbeitung nicht beschaedigen
-- kleine, testbare Schritte
-- keine automatische Verarbeitung beim App-Start
-- keine unkontrollierte Loeschlogik
-- keine pauschale Ordnerbereinigung
-- keine Lizenzsperre ohne ausdrueckliche Spezifikation
 - BuiltIn-Profile nicht ueberschreiben
 - UserDefined-Profile separat speichern
-- Tests nach Aenderungen ausfuehren
-- bei UI-Aenderungen Lesbarkeit und Bedienbarkeit in WPF beachten
+- keine Verarbeitung beim App-Start
+- kein Windows-Dienst
+- kein Autostart
+- kein `FileSystemWatcher`
+- keine unbekannten Dateien anfassen
+- keine pauschale Ordnerleerung
+- Exportordner nicht bereinigen
+- instabile Dateien nicht verarbeiten
+- mehrere XDT-Anhaenge nicht automatisch zuordnen
+- keine medizinische Bewertung
+- keine harte Lizenzsperre ohne gesonderte Spezifikation
+- keine dauerhafte Aenderung von Exportprofilen durch Baukasten-Test
+- XDT-Längenpraefixe zentral erzeugen, nicht manuell konfigurieren
 
-## 25. Kompakter Starttext fuer einen neuen Chat
+## 18. Zentrale Dokumente
 
-Der folgende Text kann in einen neuen Chat kopiert werden:
+- `README.md`: Einstieg und kompakter aktueller Stand.
+- `CHANGELOG.md`: Versions- und Dokumentationshistorie.
+- `VERSION`: aktuelle Versionskennung.
+- `Directory.Build.props`: Assembly-/Package-Versionen.
+- `docs/ROADMAP.md`: Roadmap, Phasen, Risiken und naechste Schritte.
+- `docs/ARCHITEKTUR.md`: Architektur und Bausteine.
+- `docs/PFLICHTENHEFT.md`: Anforderungen und Zielbild.
+- `docs/GERAETE_BEISPIELE.md`: Geraetebeispiele, SourcePaths und Interface-Manual-Auswertungen.
+- `docs/END_TO_END_TESTPLAN.md`: manueller und automatisierter Testplan fuer AIS-/Geraete-/XDT-Anhang-Verarbeitung.
+- `docs/PROJEKT_UEBERBLICK.md`: diese kompakte Uebergabedatei.
+
+## 19. Empfohlene naechste Schritte
+
+An `docs/ROADMAP.md` orientierte naechste Schritte:
+
+1. E2E-Testplan praktisch ausfuehren und protokollieren.
+2. Templatepaket-Import mit Konfliktmodell planen.
+3. Templatepaket produktiv als UserDefined uebernehmen.
+4. Geraete-Datei-Explorer / Profil-Assistent vorbereiten.
+5. V2-Geraeteprofile produktiv validieren.
+6. Lizenzsignatur und spaetere Lizenzdurchsetzung planen.
+7. Installer / Deployment vorbereiten.
+
+## 20. Kompakter Starttext fuer neuen Chat
+
+Der folgende Block kann in einen neuen Chat kopiert werden:
 
 ```text
 Wir arbeiten an XdtDeviceBridge / XDT Verwaltung, Version 0.1.0-prototype.
 
-Die App ist eine lokale WPF-Desktop-Bridge fuer augenaerztliche Geraetedaten zu MEDISTAR/XDT. Produktiv validiert ist MEDISTAR + NIDEK ARK1S XML: AIS-GDT/XDT einlesen, NIDEK-XML einlesen, Mapping ausfuehren, MEDISTAR-kompatible XDT-Datei mit 8000=6310, 8402 und 6228-Ergebniszeilen erzeugen.
+XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer eine dateibasierte AIS-/Geraete-Bridge im augenaerztlichen Umfeld. Fokus ist MEDISTAR mit XDT/GDT und NIDEK ARK1S XML. Es gibt keine Cloud, keinen Windows-Dienst, keinen Autostart, keinen FileSystemWatcher und keine Verarbeitung beim App-Start.
 
-Es gibt Tabs Verarbeitung, Profile & Templates, Schnittstellenprofile und Lizenz.
+Praktisch validiert ist MEDISTAR + NIDEK ARK1S: AIS-GDT/XDT einlesen, NIDEK ARK1S XML einlesen, Patientendaten und Messwerte mappen und eine MEDISTAR-kompatible XDT-Datei erzeugen. Wichtige Felder sind 8000=6310, Patientendaten 3000/3101/3102/3103, 8402 Untersuchungsart und 6228 Ergebniszeilen rechts/links.
 
-Die App hat einen manuellen Testmodus und eine manuell startbare periodische Ueberwachung. Es gibt keinen Windows-Dienst, keinen Autostart und keinen FileSystemWatcher. Automatische Verarbeitung laeuft nur, wenn die Ueberwachung manuell gestartet wurde und der Haken "Gefundene Dateipaare automatisch verarbeiten" gesetzt ist.
+Die Haupt-Tabs sind Verarbeitung, Profile & Templates, Schnittstellenprofile und Lizenz. Verarbeitung ist der Betriebsbereich mit aktiven Schnittstellenprofilen, manuell startbarer Ueberwachung, automatischer Verarbeitung per Haken, Paketstatus und Meldungen. Der alte manuelle Diagnosebereich bleibt eingeklappt als Rueckfallfunktion erhalten.
 
-Schnittstellenprofile verknuepfen AIS-Profil, Geraeteprofil, Exportprofil und Ordner. UserDefined-Profile werden lokal unter %LocalAppData%\XdtDeviceBridge\profiles gespeichert. BuiltIn-Profile duerfen nicht ueberschrieben werden.
+Profile & Templates ist der Baukastenbereich. Dort gibt es Test & Vorschau: AIS-Datei laden, Geraetedatei laden, XDT-Anhang einlesen, Messwerte pruefen, Gesamtexport-Vorschau XDT und Testexport erstellen. Das Schnittstellenprofil dient als Testkontext, das Exportprofil steuert normale Ergebnisfelder.
 
-Archivierung Copy/Move, Duplikatbehandlung, Fehlerablage mit error.txt, Lizenzanzeige, lizenzierte Anbindungen und Karenzzeitmodell sind vorbereitet. Es gibt keine harte Lizenzsperre.
+XDT-Anhaenge fuer AIS sind vorbereitet. Unterstuetzt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT. Externe Linkfelder sind 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung optional und 6305 vollstaendiger Dateipfad. XDT-Längenpraefixe erzeugt der XdtExportBuilder zentral, nicht die UI.
 
-Geräte-Dateianhang-Import und externe AIS-Link-Übergabe sind verbindliche zukünftige Anforderungen, aber noch nicht produktiv umgesetzt. Vorgesehen sind optionale Ordner GA-Dateianhang Import/Export und MEDISTAR-Linkfelder 6302, 6303, 6304, 6305.
+Im Baukasten kann ein XDT-Anhang aus beliebigem Speicherort gewaehlt werden. Vorschau und Test-XDT simulieren aber den Schnittstellenprofil-Zielpfad: 6305 zeigt auf XDT-Anhang Exportordner plus erzeugten Dateinamen. Der Testexport schreibt XDT-Datei und umbenannten Anhang physisch in einen frei gewaehlten Testordner, ohne Exportprofile oder BuiltIns zu veraendern.
 
-Vorbereitete V2-Geraeteprofile existieren fuer NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P. Nur MEDISTAR + NIDEK ARK1S ist praktisch validiert.
+Die automatische Paketlogik ist zweistufig: Phase 1 AIS-Datei wartet auf stabile Geraetedatei, Default 10 Minuten. Eine neue AIS-Datei ersetzt eine aeltere wartende AIS-Datei. Phase 2 startet erst nach vollstaendigem AIS-/Geraete-Paar: optionaler oder verpflichtender XDT-Anhang wartet bis Default 30 Sekunden.
 
-Wichtige Sicherheitsregeln: keine Verarbeitung beim App-Start, keine pauschale Ordnerleerung, keine unbekannten Dateien anfassen, Exportordner nicht bereinigen, Importdateien nur gemaess Profiloption archivieren.
+Optionaler XDT-Anhang bedeutet: Wenn genau ein stabiler Anhang rechtzeitig kommt, Export mit 6302-6305; wenn keiner kommt, Export ohne Anhang nach Timeout; mehrere Anhaenge werden nicht automatisch zugeordnet. Pflicht bedeutet: ohne eindeutigen Anhang blockiert die Verarbeitung oder geht in Fehlerstatus.
 
-Zentrale Dokumente: README.md, CHANGELOG.md, docs/PFLICHTENHEFT.md, docs/ARCHITEKTUR.md, docs/GERAETE_BEISPIELE.md, docs/ISTSTAND_ABGLEICH_BERICHT.md und docs/PROJEKT_UEBERBLICK.md.
+Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden.
 
-Naechste sinnvolle Planungsfelder: Dokumentationskorrekturen aus ISTSTAND_ABGLEICH_BERICHT, Profil-Assistent, produktive Templatepaket-Uebernahme, LM7/LM7P-Validierung, Installer/Deployment.
+Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben werden, UserDefined-Profile werden separat gespeichert. Templatepaket-Export/Import und Validierung sind vorhanden; produktive Uebernahme mit Konfliktloesung ist offen.
+
+Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P.
+
+Lizenzsystem: InstallationInfo, Lizenzanfrage, Lizenzimport, Statusanzeige, Bewertung lizenzpflichtiger aktiver Schnittstellenprofile und Karenzzeitmodell sind vorbereitet. Es gibt noch keine harte Lizenzsperre, keine Online-Lizenzierung und keine produktive Signaturpruefung.
+
+Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale Ordnerleerung, Exportordner nicht bereinigen, instabile Dateien nicht verarbeiten, mehrere XDT-Anhaenge nicht automatisch zuordnen, keine medizinische Bewertung, BuiltIns nicht ueberschreiben.
+
+Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
+
+Naechste sinnvolle Schritte: E2E-Testplan praktisch ausfuehren, Templatepaket-Konfliktmodell planen, produktive Templatepaket-Uebernahme als UserDefined implementieren, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
 ```
