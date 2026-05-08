@@ -56,6 +56,7 @@ public partial class MainWindow : Window
     private InstallationInfo? _installationInfo;
     private string? _plannedFileName;
     private bool _updatingPlaceholderRows;
+    private bool _updatingAttachmentDiagnosticProfileSelection;
     private int _draftRuleSequence;
     private CancellationTokenSource? _periodicScanCancellationTokenSource;
     private Task? _periodicScanTask;
@@ -71,6 +72,8 @@ public partial class MainWindow : Window
         ActiveInterfaceProfilesGrid.ItemsSource = _activeInterfaceProfileStatusRows;
         ScannedImportPairsGrid.ItemsSource = _scannedImportPairRows;
         AttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
+        BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
+        SyncBuilderTestPreviewArea();
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -114,7 +117,8 @@ public partial class MainWindow : Window
             ExportProfileComboBox.ItemsSource = null;
             InterfaceProfileComboBox.ItemsSource = null;
             AttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
-            AttachmentDiagnosticResultTextBox.Text = "Keine Profile geladen.";
+            BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
+            SetAttachmentDiagnosticResultText("Keine Profile geladen.");
             _visibleExportRules.Clear();
             _temporaryExportRules.Clear();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
@@ -521,12 +525,14 @@ public partial class MainWindow : Window
             .ToList();
 
         AttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = activeProfiles;
+        BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = activeProfiles;
         if (activeProfiles.Count == 0)
         {
             AttachmentDiagnosticInterfaceProfileComboBox.SelectedIndex = -1;
+            BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedIndex = -1;
             _attachmentImportCandidateRows.Clear();
             UpdateAttachmentDiagnosticProfileDisplay();
-            AttachmentDiagnosticResultTextBox.Text = "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.";
+            SetAttachmentDiagnosticResultText("Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.");
             return;
         }
 
@@ -534,43 +540,84 @@ public partial class MainWindow : Window
             ? null
             : activeProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedInterfaceProfileId, StringComparison.Ordinal));
 
-        AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = selectedProfile ?? activeProfiles[0];
+        SetAttachmentDiagnosticSelectedProfile(selectedProfile ?? activeProfiles[0]);
         UpdateAttachmentDiagnosticProfileDisplay();
         if (AttachmentDiagnosticResultTextBox.Text == "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.")
         {
-            AttachmentDiagnosticResultTextBox.Text = "Noch kein XDT-Anhang vorbereitet.";
+            SetAttachmentDiagnosticResultText("Noch kein XDT-Anhang vorbereitet.");
         }
     }
 
     private void AttachmentDiagnosticInterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
+        if (_updatingAttachmentDiagnosticProfileSelection)
+        {
+            return;
+        }
+
+        SyncAttachmentDiagnosticProfileSelection(sender as System.Windows.Controls.ComboBox);
         _attachmentImportCandidateRows.Clear();
         UpdateAttachmentDiagnosticProfileDisplay();
     }
 
     private void UpdateAttachmentDiagnosticProfileDisplay()
     {
-        if (AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
+        if (GetSelectedAttachmentDiagnosticProfile() is not InterfaceProfileDefinition profile)
         {
-            AttachmentDiagnosticProfileText.Text = "-";
-            AttachmentDiagnosticProfileText.ToolTip = null;
-            AttachmentDiagnosticImportFolderText.Text = "-";
-            AttachmentDiagnosticImportFolderText.ToolTip = null;
-            AttachmentDiagnosticExportFolderText.Text = "-";
-            AttachmentDiagnosticExportFolderText.ToolTip = null;
+            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, BuilderAttachmentDiagnosticProfileText, "-");
+            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, BuilderAttachmentDiagnosticImportFolderText, "-");
+            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, BuilderAttachmentDiagnosticExportFolderText, "-");
             return;
         }
 
-        AttachmentDiagnosticProfileText.Text = profile.Metadata.Name;
-        AttachmentDiagnosticProfileText.ToolTip = profile.Metadata.Name;
-        AttachmentDiagnosticImportFolderText.Text = string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentImportFolder)
+        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, BuilderAttachmentDiagnosticProfileText, profile.Metadata.Name);
+        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, BuilderAttachmentDiagnosticImportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentImportFolder)
             ? "-"
-            : profile.FolderOptions.AttachmentImportFolder;
-        AttachmentDiagnosticImportFolderText.ToolTip = AttachmentDiagnosticImportFolderText.Text;
-        AttachmentDiagnosticExportFolderText.Text = string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentExportFolder)
+            : profile.FolderOptions.AttachmentImportFolder);
+        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, BuilderAttachmentDiagnosticExportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentExportFolder)
             ? "-"
-            : profile.FolderOptions.AttachmentExportFolder;
-        AttachmentDiagnosticExportFolderText.ToolTip = AttachmentDiagnosticExportFolderText.Text;
+            : profile.FolderOptions.AttachmentExportFolder);
+    }
+
+    private InterfaceProfileDefinition? GetSelectedAttachmentDiagnosticProfile()
+    {
+        return BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition
+            ?? AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
+    }
+
+    private void SetAttachmentDiagnosticSelectedProfile(InterfaceProfileDefinition profile)
+    {
+        _updatingAttachmentDiagnosticProfileSelection = true;
+        try
+        {
+            AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = profile;
+            BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = profile;
+        }
+        finally
+        {
+            _updatingAttachmentDiagnosticProfileSelection = false;
+        }
+    }
+
+    private void SyncAttachmentDiagnosticProfileSelection(System.Windows.Controls.ComboBox? source)
+    {
+        if (source?.SelectedItem is not InterfaceProfileDefinition profile)
+        {
+            return;
+        }
+
+        SetAttachmentDiagnosticSelectedProfile(profile);
+    }
+
+    private static void SetAttachmentDiagnosticProfileDisplayValue(
+        System.Windows.Controls.TextBlock primary,
+        System.Windows.Controls.TextBlock secondary,
+        string value)
+    {
+        primary.Text = value;
+        primary.ToolTip = value == "-" ? null : value;
+        secondary.Text = value;
+        secondary.ToolTip = value == "-" ? null : value;
     }
 
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -2531,6 +2578,7 @@ public partial class MainWindow : Window
                 _lastPipelineResult = result.PipelineResult;
                 ShowPatient(result.PipelineResult.Patient);
                 MeasurementsGrid.ItemsSource = result.PipelineResult.Measurements;
+                BuilderMeasurementsGrid.ItemsSource = result.PipelineResult.Measurements;
                 ShowIssues(result.PipelineResult.Issues);
                 UpdatePlaceholderTables();
                 ShowExportRulePreviewForSelectedRule();
@@ -2539,6 +2587,7 @@ public partial class MainWindow : Window
 
             ExportPreviewTextBox.Text = result.ExportContent ?? string.Empty;
             PlannedFileNameText.Text = $"Exportdatei: {result.ExportFilePath}";
+            SyncBuilderTestPreviewArea();
             AppendMessage($"Dateipaar erfolgreich verarbeitet. Exportdatei: {result.ExportFilePath}");
             foreach (var message in result.Messages.Where(message => !string.Equals(message, "Dateipaar erfolgreich verarbeitet.", StringComparison.Ordinal)))
             {
@@ -2968,6 +3017,8 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog() == true)
         {
             AisFilePathTextBox.Text = dialog.FileName;
+            BuilderAisFilePathTextBox.Text = dialog.FileName;
+            SyncBuilderTestPreviewArea();
             AppendMessage($"AIS-Datei ausgewählt: {dialog.FileName}");
         }
     }
@@ -2982,6 +3033,8 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog() == true)
         {
             DeviceFilePathTextBox.Text = dialog.FileName;
+            BuilderDeviceFilePathTextBox.Text = dialog.FileName;
+            SyncBuilderTestPreviewArea();
             AppendMessage($"Geräte-Datei ausgewählt: {dialog.FileName}");
         }
     }
@@ -2995,14 +3048,14 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() == true)
         {
-            AttachmentDiagnosticFilePathTextBox.Text = dialog.FileName;
+            SetAttachmentDiagnosticFilePath(dialog.FileName);
             AppendMessage($"XDT-Anhang ausgewählt: {dialog.FileName}");
         }
     }
 
     private void ScanXdtAttachmentImportFolder_Click(object sender, RoutedEventArgs e)
     {
-        var selectedProfile = AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
+        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
         var result = _attachmentImportFolderDiagnosticService.Scan(selectedProfile);
 
         ShowAttachmentImportFolderDiagnosticResult(result);
@@ -3011,37 +3064,37 @@ public partial class MainWindow : Window
 
     private void AttachmentDiagnosticCandidatesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        if (AttachmentDiagnosticCandidatesGrid.SelectedItem is not AttachmentImportCandidateDisplayRow row)
+        if ((sender as System.Windows.Controls.DataGrid)?.SelectedItem is not AttachmentImportCandidateDisplayRow row)
         {
             return;
         }
 
         if (!row.IsSupported)
         {
-            AttachmentDiagnosticFilePathTextBox.Text = string.Empty;
+            SetAttachmentDiagnosticFilePath(string.Empty);
             AppendMessage($"XDT-Anhang-Kandidat ist nicht unterstützt und wurde nicht ausgewählt: {row.FileName}");
             return;
         }
 
         if (!row.IsStable)
         {
-            AttachmentDiagnosticFilePathTextBox.Text = string.Empty;
+            SetAttachmentDiagnosticFilePath(string.Empty);
             AppendMessage($"XDT-Anhang-Kandidat ist noch nicht stabil und wurde nicht ausgewählt: {row.FileName}");
             return;
         }
 
-        AttachmentDiagnosticFilePathTextBox.Text = row.FullPath;
+        SetAttachmentDiagnosticFilePath(row.FullPath);
         AppendMessage($"XDT-Anhang-Kandidat ausgewählt: {row.FullPath}");
     }
 
     private void PrepareXdtAttachment_Click(object sender, RoutedEventArgs e)
     {
-        var selectedProfile = AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
+        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
         var patient = GetPatientForAttachmentDiagnostic();
         var result = _attachmentExternalLinkDiagnosticService.Prepare(
             selectedProfile,
             patient,
-            AttachmentDiagnosticFilePathTextBox.Text,
+            GetAttachmentDiagnosticFilePath(),
             DateTime.Now);
 
         ShowAttachmentDiagnosticResult(result);
@@ -3111,8 +3164,7 @@ public partial class MainWindow : Window
             }
         }
 
-        AttachmentDiagnosticResultTextBox.Text = builder.ToString().TrimEnd();
-        AttachmentDiagnosticResultTextBox.ScrollToHome();
+        SetAttachmentDiagnosticResultText(builder.ToString().TrimEnd());
     }
 
     private void ShowAttachmentImportFolderDiagnosticResult(AttachmentImportFolderDiagnosticResult result)
@@ -3135,13 +3187,33 @@ public partial class MainWindow : Window
         builder.AppendLine($"Stabil unterstützt: {result.Candidates.Count(row => row.IsSupported && row.IsStable)}");
         builder.AppendLine($"Nicht unterstützt: {result.Candidates.Count(row => !row.IsSupported)}");
 
-        AttachmentDiagnosticResultTextBox.Text = builder.ToString().TrimEnd();
-        AttachmentDiagnosticResultTextBox.ScrollToHome();
+        SetAttachmentDiagnosticResultText(builder.ToString().TrimEnd());
     }
 
     private static string DisplayOrDash(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? "-" : value;
+    }
+
+    private void SetAttachmentDiagnosticFilePath(string value)
+    {
+        AttachmentDiagnosticFilePathTextBox.Text = value;
+        BuilderAttachmentDiagnosticFilePathTextBox.Text = value;
+    }
+
+    private string GetAttachmentDiagnosticFilePath()
+    {
+        return !string.IsNullOrWhiteSpace(BuilderAttachmentDiagnosticFilePathTextBox.Text)
+            ? BuilderAttachmentDiagnosticFilePathTextBox.Text
+            : AttachmentDiagnosticFilePathTextBox.Text;
+    }
+
+    private void SetAttachmentDiagnosticResultText(string value)
+    {
+        AttachmentDiagnosticResultTextBox.Text = value;
+        BuilderAttachmentDiagnosticResultTextBox.Text = value;
+        AttachmentDiagnosticResultTextBox.ScrollToHome();
+        BuilderAttachmentDiagnosticResultTextBox.ScrollToHome();
     }
 
     private void Process_Click(object sender, RoutedEventArgs e)
@@ -3157,6 +3229,7 @@ public partial class MainWindow : Window
 
         ShowPatient(_lastPipelineResult.Patient);
         MeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
+        BuilderMeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
         ExportPreviewTextBox.Text = _lastPipelineResult.ExportContent;
         UpdatePlaceholderTables();
         ShowExportRulePreviewForSelectedRule();
@@ -3166,6 +3239,7 @@ public partial class MainWindow : Window
         PlannedFileNameText.Text = $"Geplanter Dateiname: {_plannedFileName}";
 
         ShowIssues(_lastPipelineResult.Issues);
+        SyncBuilderTestPreviewArea();
 
         if (_lastPipelineResult.HasErrors)
         {
@@ -3215,6 +3289,84 @@ public partial class MainWindow : Window
         BirthDateText.Text = patient?.BirthDate ?? string.Empty;
         StreetText.Text = patient?.Street ?? string.Empty;
         PostalCodeCityText.Text = patient?.PostalCodeCity ?? string.Empty;
+        UpdateBuilderPatientSummary(patient);
+    }
+
+    private void SyncBuilderTestPreviewArea()
+    {
+        BuilderAisFilePathTextBox.Text = AisFilePathTextBox.Text;
+        BuilderDeviceFilePathTextBox.Text = DeviceFilePathTextBox.Text;
+
+        if (_lastPipelineResult is not null)
+        {
+            BuilderMeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
+        }
+
+        UpdateBuilderPatientSummary(_lastPipelineResult?.Patient);
+        UpdateBuilderDeviceSummary();
+    }
+
+    private void UpdateBuilderPatientSummary(PatientData? patient)
+    {
+        if (patient is null && string.IsNullOrWhiteSpace(AisFilePathTextBox.Text))
+        {
+            BuilderPatientSummaryTextBox.Text = "Noch keine AIS-Testdaten geladen.";
+            return;
+        }
+
+        var builder = new StringBuilder();
+        AppendSummaryLine(builder, "PatientNumber", patient?.PatientNumber);
+        AppendSummaryLine(builder, "FirstName", patient?.FirstName);
+        AppendSummaryLine(builder, "LastName", patient?.LastName);
+        AppendSummaryLine(builder, "BirthDate", patient?.BirthDate);
+        AppendSummaryLine(builder, "Street", patient?.Street);
+        AppendSummaryLine(builder, "PostalCodeCity", patient?.PostalCodeCity);
+        AppendSummaryLine(builder, "ExaminationType", patient?.ExaminationType);
+
+        if (patient is null)
+        {
+            builder.AppendLine();
+            builder.Append("AIS-Datei ausgewählt, Patientendaten noch nicht eingelesen.");
+        }
+
+        BuilderPatientSummaryTextBox.Text = builder.ToString().TrimEnd();
+    }
+
+    private void UpdateBuilderDeviceSummary()
+    {
+        var deviceFilePath = DeviceFilePathTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(deviceFilePath) && _lastPipelineResult is null)
+        {
+            BuilderDeviceSummaryTextBox.Text = "Noch keine Gerätedatei geladen.";
+            return;
+        }
+
+        var builder = new StringBuilder();
+        AppendSummaryLine(builder, "verwendetes Geräteprofil", _currentProfile.Name);
+        AppendSummaryLine(builder, "Dateiname", string.IsNullOrWhiteSpace(deviceFilePath) ? null : Path.GetFileName(deviceFilePath));
+        AppendSummaryLine(builder, "erkannte Messwerte Anzahl", _lastPipelineResult?.Measurements.Count.ToString());
+        AppendSummaryLine(builder, "Status", CreateBuilderDeviceStatusText(deviceFilePath));
+        AppendSummaryLine(builder, "Dateiformat/Endung", string.IsNullOrWhiteSpace(deviceFilePath) ? null : Path.GetExtension(deviceFilePath));
+        BuilderDeviceSummaryTextBox.Text = builder.ToString().TrimEnd();
+    }
+
+    private string CreateBuilderDeviceStatusText(string deviceFilePath)
+    {
+        if (_lastPipelineResult is null)
+        {
+            return string.IsNullOrWhiteSpace(deviceFilePath)
+                ? "Noch nicht geladen"
+                : "Ausgewählt, noch nicht verarbeitet";
+        }
+
+        return _lastPipelineResult.HasErrors
+            ? "Verarbeitet mit Fehlern"
+            : "Verarbeitet";
+    }
+
+    private static void AppendSummaryLine(StringBuilder builder, string label, string? value)
+    {
+        builder.AppendLine($"{label}: {DisplayOrDash(value)}");
     }
 
     private void ShowIssues(IEnumerable<ProcessingIssue> issues)

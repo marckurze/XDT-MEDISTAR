@@ -753,16 +753,241 @@
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <Expander Header="Gesamtexport-Vorschau" IsExpanded="True" Grid.Row="9" Margin="0,0,0,8">
-                            <TextBox x:Name="FullExportPreviewTextBox"
-                                     Margin="8"
-                                     MinHeight="220"
-                                     IsReadOnly="True"
-                                     AcceptsReturn="True"
-                                     TextWrapping="NoWrap"
-                                     FontFamily="Consolas"
-                                     HorizontalScrollBarVisibility="Auto"
-                                     VerticalScrollBarVisibility="Auto"/>
+                        <Expander Header="Test &amp; Vorschau" IsExpanded="True" Grid.Row="9" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Text="Baukasten-Testbereich für AIS-Testdatei, Gerätedatei, XDT-Anhang-Diagnose, Messwerte und Gesamtexport-Vorschau. Der bisherige manuelle Testbereich im Tab Verarbeitung bleibt in diesem Schritt erhalten."
+                                           Foreground="DimGray"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+
+                                <Grid Grid.Row="1" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <GroupBox Header="AIS-GDT/XDT-Testdatei" Grid.Column="0">
+                                        <Grid Margin="8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Button Grid.Row="0"
+                                                    Content="AIS-GDT/XDT-Datei auswählen"
+                                                    HorizontalAlignment="Left"
+                                                    Width="220"
+                                                    Margin="0,0,0,8"
+                                                    Click="SelectAisFile_Click"/>
+                                            <TextBox Grid.Row="1"
+                                                     x:Name="BuilderAisFilePathTextBox"
+                                                     IsReadOnly="True"
+                                                     Margin="0,0,0,8"
+                                                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                            <TextBox Grid.Row="2"
+                                                     x:Name="BuilderPatientSummaryTextBox"
+                                                     IsReadOnly="True"
+                                                     AcceptsReturn="True"
+                                                     TextWrapping="Wrap"
+                                                     VerticalScrollBarVisibility="Auto"
+                                                     MinHeight="120"
+                                                     Text="Noch keine AIS-Testdaten geladen."/>
+                                        </Grid>
+                                    </GroupBox>
+
+                                    <GroupBox Header="Geräte-Testdatei" Grid.Column="2">
+                                        <Grid Margin="8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Button Grid.Row="0"
+                                                    Content="Gerätedatei auswählen"
+                                                    HorizontalAlignment="Left"
+                                                    Width="220"
+                                                    Margin="0,0,0,8"
+                                                    Click="SelectDeviceFile_Click"/>
+                                            <TextBox Grid.Row="1"
+                                                     x:Name="BuilderDeviceFilePathTextBox"
+                                                     IsReadOnly="True"
+                                                     Margin="0,0,0,8"
+                                                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                            <TextBox Grid.Row="2"
+                                                     x:Name="BuilderDeviceSummaryTextBox"
+                                                     IsReadOnly="True"
+                                                     AcceptsReturn="True"
+                                                     TextWrapping="Wrap"
+                                                     VerticalScrollBarVisibility="Auto"
+                                                     MinHeight="120"
+                                                     Text="Noch keine Gerätedatei geladen."/>
+                                        </Grid>
+                                    </GroupBox>
+                                </Grid>
+
+                                <GroupBox Header="XDT-Anhang / externer AIS-Link" Grid.Row="2" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="180"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="220"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Row="0"
+                                                   Grid.Column="0"
+                                                   Grid.ColumnSpan="2"
+                                                   Text="Manueller Diagnosepfad: Der Importordner wird nur gelesen. Vorbereitung erfolgt nur für eine explizit ausgewählte Anhangdatei."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,8"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Schnittstellenprofil:" FontWeight="Bold" Margin="0,3,8,8"/>
+                                        <ComboBox Grid.Row="1"
+                                                  Grid.Column="1"
+                                                  x:Name="BuilderAttachmentDiagnosticInterfaceProfileComboBox"
+                                                  DisplayMemberPath="Metadata.Name"
+                                                  MinWidth="320"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,0,0,8"
+                                                  SelectionChanged="AttachmentDiagnosticInterfaceProfileComboBox_SelectionChanged"
+                                                  ToolTip="Aktives Schnittstellenprofil mit XDT-Anhang-Konfiguration für diesen manuellen Testpfad."/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Verwendetes Profil:" FontWeight="Bold" Margin="0,3,8,8"/>
+                                        <TextBlock Grid.Row="2"
+                                                   Grid.Column="1"
+                                                   x:Name="BuilderAttachmentDiagnosticProfileText"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,3,0,8"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="XDT-Anhang Importordner:" FontWeight="Bold" Margin="0,3,8,8"/>
+                                        <TextBlock Grid.Row="3"
+                                                   Grid.Column="1"
+                                                   x:Name="BuilderAttachmentDiagnosticImportFolderText"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,3,0,8"/>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="XDT-Anhang Exportordner:" FontWeight="Bold" Margin="0,3,8,8"/>
+                                        <DockPanel Grid.Row="4" Grid.Column="1" Margin="0,0,0,8">
+                                            <Button DockPanel.Dock="Right"
+                                                    Content="XDT-Anhang Importordner einlesen"
+                                                    Width="240"
+                                                    Margin="8,0,0,0"
+                                                    Click="ScanXdtAttachmentImportFolder_Click"/>
+                                            <TextBlock x:Name="BuilderAttachmentDiagnosticExportFolderText"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Margin="0,3,0,0"/>
+                                        </DockPanel>
+
+                                        <DataGrid Grid.Row="5"
+                                                  Grid.Column="0"
+                                                  Grid.ColumnSpan="2"
+                                                  x:Name="BuilderAttachmentDiagnosticCandidatesGrid"
+                                                  AutoGenerateColumns="False"
+                                                  IsReadOnly="True"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  HorizontalScrollBarVisibility="Auto"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  MinHeight="160"
+                                                  Margin="0,0,0,8"
+                                                  SelectionChanged="AttachmentDiagnosticCandidatesGrid_SelectionChanged">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Dateiname" Binding="{Binding FileName}" MinWidth="180" Width="180"/>
+                                                <DataGridTextColumn Header="Endung" Binding="{Binding Extension}" MinWidth="80" Width="80"/>
+                                                <DataGridTextColumn Header="Größe" Binding="{Binding SizeBytes}" MinWidth="90" Width="90"/>
+                                                <DataGridTextColumn Header="Änderungsdatum" Binding="{Binding LastWriteTimeUtc, StringFormat={}{0:dd.MM.yyyy HH:mm:ss}}" MinWidth="150" Width="150"/>
+                                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="180" Width="180"/>
+                                                <DataGridTextColumn Header="Vollständiger Pfad" Binding="{Binding FullPath}" MinWidth="320" Width="*"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                        <Button Grid.Row="6"
+                                                Grid.Column="0"
+                                                Content="XDT-Anhang auswählen"
+                                                Margin="0,0,8,8"
+                                                Click="SelectXdtAttachmentFile_Click"/>
+                                        <TextBox Grid.Row="6"
+                                                 Grid.Column="1"
+                                                 x:Name="BuilderAttachmentDiagnosticFilePathTextBox"
+                                                 IsReadOnly="True"
+                                                 Margin="0,0,0,8"/>
+
+                                        <Button Grid.Row="7"
+                                                Grid.Column="0"
+                                                Content="XDT-Anhang vorbereiten"
+                                                Margin="0,0,8,8"
+                                                Click="PrepareXdtAttachment_Click"/>
+                                        <TextBlock Grid.Row="7"
+                                                   Grid.Column="1"
+                                                   Text="Der Test überträgt nur diese eine Datei gemäß Profiloption. Es wird keine automatische Verarbeitung gestartet."
+                                                   Foreground="DarkRed"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,3,0,8"/>
+
+                                        <TextBox Grid.Row="8"
+                                                 Grid.Column="0"
+                                                 Grid.ColumnSpan="2"
+                                                 x:Name="BuilderAttachmentDiagnosticResultTextBox"
+                                                 IsReadOnly="True"
+                                                 AcceptsReturn="True"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 TextWrapping="NoWrap"
+                                                 MinHeight="120"
+                                                 Text="Noch kein XDT-Anhang vorbereitet."/>
+                                    </Grid>
+                                </GroupBox>
+
+                                <GroupBox Header="Messwerte" Grid.Row="3" Margin="0,0,0,8">
+                                    <DataGrid x:Name="BuilderMeasurementsGrid"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              MinHeight="220"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="*"/>
+                                            <DataGridTextColumn Header="Eye" Binding="{Binding Eye}" Width="80"/>
+                                            <DataGridTextColumn Header="Group" Binding="{Binding Group}" Width="120"/>
+                                            <DataGridTextColumn Header="DisplayName" Binding="{Binding DisplayName}" Width="140"/>
+                                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="100"/>
+                                            <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="80"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </GroupBox>
+
+                                 <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="4">
+                                     <TextBox x:Name="FullExportPreviewTextBox"
+                                              Margin="8"
+                                              MinHeight="260"
+                                              IsReadOnly="True"
+                                             AcceptsReturn="True"
+                                             TextWrapping="NoWrap"
+                                             FontFamily="Consolas"
+                                             HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto"/>
+                                 </GroupBox>
+                            </Grid>
                         </Expander>
 
                         <GridSplitter Grid.Row="10"
