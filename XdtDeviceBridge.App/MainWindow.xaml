@@ -17,6 +17,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="3*"/>
                             <RowDefinition Height="6"/>
                             <RowDefinition Height="2*"/>
@@ -230,7 +231,76 @@
                             </UniformGrid>
                         </GroupBox>
 
-                        <GroupBox Header="Messwerte" Grid.Row="5" Margin="0,0,0,0">
+                        <GroupBox Header="XDT-Anhang Test / externer AIS-Link" Grid.Row="5" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Grid.ColumnSpan="2"
+                                           Text="Manueller Diagnosepfad: Es wird nur die explizit ausgewählte Anhangdatei vorbereitet. Keine automatische Suche, keine Paarung und keine produktive XDT-Linkausgabe."
+                                           Foreground="DimGray"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Schnittstellenprofil:" FontWeight="Bold" Margin="0,3,8,8"/>
+                                <ComboBox Grid.Row="1"
+                                          Grid.Column="1"
+                                          x:Name="AttachmentDiagnosticInterfaceProfileComboBox"
+                                          DisplayMemberPath="Metadata.Name"
+                                          MinWidth="320"
+                                          HorizontalAlignment="Stretch"
+                                          Margin="0,0,0,8"
+                                          ToolTip="Aktives Schnittstellenprofil mit XDT-Anhang-Konfiguration für diesen manuellen Testpfad."/>
+
+                                <Button Grid.Row="2"
+                                        Grid.Column="0"
+                                        Content="XDT-Anhang auswählen"
+                                        Margin="0,0,8,8"
+                                        Click="SelectXdtAttachmentFile_Click"/>
+                                <TextBox Grid.Row="2"
+                                         Grid.Column="1"
+                                         x:Name="AttachmentDiagnosticFilePathTextBox"
+                                         IsReadOnly="True"
+                                         Margin="0,0,0,8"/>
+
+                                <Button Grid.Row="3"
+                                        Grid.Column="0"
+                                        Content="XDT-Anhang vorbereiten"
+                                        Margin="0,0,8,8"
+                                        Click="PrepareXdtAttachment_Click"/>
+                                <TextBlock Grid.Row="3"
+                                           Grid.Column="1"
+                                           Text="Hinweis: Der Test überträgt diese eine Datei gemäß Profiloption Kopieren/Verschieben. Es wird keine XDT-Exportdatei geschrieben."
+                                           Foreground="DarkRed"
+                                           TextWrapping="Wrap"
+                                           Margin="0,3,0,8"/>
+
+                                <TextBox Grid.Row="4"
+                                         Grid.Column="0"
+                                         Grid.ColumnSpan="2"
+                                         x:Name="AttachmentDiagnosticResultTextBox"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Auto"
+                                         TextWrapping="NoWrap"
+                                         MinHeight="130"
+                                         Text="Noch kein XDT-Anhang vorbereitet."/>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Header="Messwerte" Grid.Row="6" Margin="0,0,0,0">
                             <DataGrid x:Name="MeasurementsGrid" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="260">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="*"/>
@@ -243,14 +313,14 @@
                             </DataGrid>
                         </GroupBox>
 
-                        <GridSplitter Grid.Row="6"
+                        <GridSplitter Grid.Row="7"
                                       Height="6"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Center"
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <GroupBox Header="Exportvorschau" Grid.Row="7" Margin="0,0,0,0">
+                        <GroupBox Header="Exportvorschau" Grid.Row="8" Margin="0,0,0,0">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -268,14 +338,14 @@
                             </Grid>
                         </GroupBox>
 
-                        <GridSplitter Grid.Row="8"
+                        <GridSplitter Grid.Row="9"
                                       Height="6"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Center"
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <GroupBox Header="Meldungen" Grid.Row="9">
+                        <GroupBox Header="Meldungen" Grid.Row="10">
                             <TextBox x:Name="MessagesTextBox"
                                      Margin="8"
                                      IsReadOnly="True"

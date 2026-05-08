@@ -2,7 +2,7 @@ using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Infrastructure;
 
-public sealed class AttachmentExternalLinkPreparationService
+public sealed class AttachmentExternalLinkPreparationService : IAttachmentExternalLinkPreparationService
 {
     private readonly AttachmentFileNameBuilder _fileNameBuilder;
     private readonly IAttachmentTransferService _transferService;

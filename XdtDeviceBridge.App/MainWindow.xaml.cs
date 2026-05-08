@@ -32,6 +32,7 @@ public partial class MainWindow : Window
     private readonly PeriodicAutoImportScanService _periodicAutoImportScanService = new();
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
     private readonly AutoImportPairProcessingCoordinator _autoImportPairProcessingCoordinator = new();
+    private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -93,6 +94,7 @@ public partial class MainWindow : Window
             ShowProfileNameColumns(catalog);
             InitializeExportRulesView(catalog);
             InitializeInterfaceProfileConfiguration(catalog);
+            InitializeAttachmentDiagnosticProfiles(catalog);
             UpdatePlaceholderTables();
             ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
         }
@@ -107,6 +109,8 @@ public partial class MainWindow : Window
             ClearProfileNameColumns();
             ExportProfileComboBox.ItemsSource = null;
             InterfaceProfileComboBox.ItemsSource = null;
+            AttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
+            AttachmentDiagnosticResultTextBox.Text = "Keine Profile geladen.";
             _visibleExportRules.Clear();
             _temporaryExportRules.Clear();
             ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
@@ -503,6 +507,32 @@ public partial class MainWindow : Window
 
         InterfaceProfileComboBox.SelectedItem = selectedProfile ?? interfaceProfiles[0];
         ShowInterfaceProfileForSelectedProfile();
+    }
+
+    private void InitializeAttachmentDiagnosticProfiles(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
+    {
+        var activeProfiles = catalog.InterfaceProfiles
+            .Where(profile => profile.IsActive)
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        AttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = activeProfiles;
+        if (activeProfiles.Count == 0)
+        {
+            AttachmentDiagnosticInterfaceProfileComboBox.SelectedIndex = -1;
+            AttachmentDiagnosticResultTextBox.Text = "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.";
+            return;
+        }
+
+        var selectedProfile = string.IsNullOrWhiteSpace(selectedInterfaceProfileId)
+            ? null
+            : activeProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedInterfaceProfileId, StringComparison.Ordinal));
+
+        AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = selectedProfile ?? activeProfiles[0];
+        if (AttachmentDiagnosticResultTextBox.Text == "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.")
+        {
+            AttachmentDiagnosticResultTextBox.Text = "Noch kein XDT-Anhang vorbereitet.";
+        }
     }
 
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -912,6 +942,7 @@ public partial class MainWindow : Window
         ShowProfileNameColumns(catalog);
         InitializeExportRulesView(catalog, selectedExportProfileId);
         InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
+        InitializeAttachmentDiagnosticProfiles(catalog, selectedInterfaceProfileId);
         RefreshLicensedDeviceStatesFromLocalLicense();
     }
 
@@ -2793,6 +2824,101 @@ public partial class MainWindow : Window
             DeviceFilePathTextBox.Text = dialog.FileName;
             AppendMessage($"Geräte-Datei ausgewählt: {dialog.FileName}");
         }
+    }
+
+    private void SelectXdtAttachmentFile_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "XDT-Anhänge (*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt)|*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt|Alle Dateien (*.*)|*.*"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            AttachmentDiagnosticFilePathTextBox.Text = dialog.FileName;
+            AppendMessage($"XDT-Anhang ausgewählt: {dialog.FileName}");
+        }
+    }
+
+    private void PrepareXdtAttachment_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedProfile = AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
+        var patient = GetPatientForAttachmentDiagnostic();
+        var result = _attachmentExternalLinkDiagnosticService.Prepare(
+            selectedProfile,
+            patient,
+            AttachmentDiagnosticFilePathTextBox.Text,
+            DateTime.Now);
+
+        ShowAttachmentDiagnosticResult(result);
+        AppendMessage(result.Message);
+    }
+
+    private PatientData? GetPatientForAttachmentDiagnostic()
+    {
+        if (!string.IsNullOrWhiteSpace(_lastPipelineResult?.Patient?.PatientNumber))
+        {
+            return _lastPipelineResult.Patient;
+        }
+
+        var aisFilePath = AisFilePathTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(aisFilePath))
+        {
+            return _lastPipelineResult?.Patient;
+        }
+
+        try
+        {
+            var gdtResult = new GdtParser().ParseFile(aisFilePath);
+            var patient = new PatientDataMapper().Map(gdtResult.Records);
+            if (!string.IsNullOrWhiteSpace(patient.PatientNumber))
+            {
+                ShowPatient(patient);
+            }
+            else
+            {
+                AppendMessage("AIS-Datei für XDT-Anhang-Test gelesen, aber keine Patientennummer gefunden.");
+            }
+
+            return patient;
+        }
+        catch (Exception ex) when (ex is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException
+            or PathTooLongException)
+        {
+            AppendMessage($"AIS-Datei konnte für den XDT-Anhang-Test nicht gelesen werden: {ex.Message}");
+            return _lastPipelineResult?.Patient;
+        }
+    }
+
+    private void ShowAttachmentDiagnosticResult(AttachmentExternalLinkDiagnosticResult result)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Status: {(result.Success ? "Erfolgreich vorbereitet" : "Fehler")}");
+        builder.AppendLine(result.Message);
+
+        if (result.PreparationResult is not null)
+        {
+            builder.AppendLine();
+            builder.AppendLine($"Ziel-Dateiname: {result.PreparationResult.TargetFileName ?? "-"}");
+            builder.AppendLine($"Zielpfad: {result.PreparationResult.TargetPath ?? "-"}");
+            builder.AppendLine($"Transfer: {result.PreparationResult.TransferMode}");
+
+            if (result.PreparationResult.ExportFields.Count > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine("Vorbereitete XDT-Felder:");
+                foreach (var field in result.PreparationResult.ExportFields.OrderBy(field => field.SortOrder))
+                {
+                    builder.AppendLine($"{field.FieldCode} = {field.Value}");
+                }
+            }
+        }
+
+        AttachmentDiagnosticResultTextBox.Text = builder.ToString().TrimEnd();
+        AttachmentDiagnosticResultTextBox.ScrollToHome();
     }
 
     private void Process_Click(object sender, RoutedEventArgs e)
