@@ -189,6 +189,8 @@ public sealed class InterfaceProfileConfigurationService
         AddMissingFolderWarning(options.ExportFolder, "Exportordner existiert aktuell nicht.", issues);
         AddMissingFolderWarning(options.ArchiveFolder, "Archivordner existiert aktuell nicht.", issues);
         AddMissingFolderWarning(options.ErrorFolder, "Fehlerordner existiert aktuell nicht.", issues);
+        AddMissingFolderWarning(options.AttachmentImportFolder, "GA-Dateianhang Import existiert aktuell nicht.", issues);
+        AddMissingFolderWarning(options.AttachmentExportFolder, "GA-Dateianhang Export existiert aktuell nicht.", issues);
     }
 
     private static void AddMissingFolderWarning(

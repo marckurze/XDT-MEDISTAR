@@ -125,6 +125,32 @@ public sealed class FolderSafetyValidatorTests
         Assert.Empty(result.Issues);
     }
 
+    [Fact]
+    public void ValidateInterfaceFolderOptions_ShouldAcceptEmptyAttachmentFolders()
+    {
+        var options = CreateFolderOptions(
+            attachmentImportFolder: string.Empty,
+            attachmentExportFolder: string.Empty);
+
+        var result = _validator.ValidateInterfaceFolderOptions(options);
+
+        Assert.False(result.HasErrors);
+        Assert.False(result.HasWarnings);
+        Assert.Empty(result.Issues);
+    }
+
+    [Fact]
+    public void ValidateInterfaceFolderOptions_ShouldValidateConfiguredAttachmentFolders()
+    {
+        var options = CreateFolderOptions(
+            attachmentImportFolder: Path.GetPathRoot(Path.GetTempPath())!,
+            attachmentExportFolder: CreateExistingFolder());
+
+        var result = _validator.ValidateInterfaceFolderOptions(options);
+
+        AssertError(result, "Folder path must not be a drive or share root.");
+    }
+
     private static string CreateExistingFolder()
     {
         var folder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"), "cleanup");
@@ -136,6 +162,8 @@ public sealed class FolderSafetyValidatorTests
         string aisImportFolder = "",
         string deviceImportFolder = "",
         string exportFolder = "",
+        string attachmentImportFolder = "",
+        string attachmentExportFolder = "",
         bool clearAisImportFolderBeforeProcessing = false,
         bool clearDeviceImportFolderBeforeProcessing = false,
         bool clearExportFolderAfterSuccessfulTransfer = false)
@@ -150,7 +178,9 @@ public sealed class FolderSafetyValidatorTests
             ClearDeviceImportFolderBeforeProcessing: clearDeviceImportFolderBeforeProcessing,
             ClearExportFolderAfterSuccessfulTransfer: clearExportFolderAfterSuccessfulTransfer,
             ArchiveProcessedFiles: false,
-            MoveFailedFilesToErrorFolder: false);
+            MoveFailedFilesToErrorFolder: false,
+            AttachmentImportFolder: attachmentImportFolder,
+            AttachmentExportFolder: attachmentExportFolder);
     }
 
     private static void AssertError(FolderSafetyValidationResult result, string message)

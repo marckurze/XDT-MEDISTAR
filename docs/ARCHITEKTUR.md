@@ -68,6 +68,7 @@ Der Prototyp unterstützt:
 - optionale Fehlerablage mit Kopie der beteiligten Importdateien
 - `error.txt` im Fehlerordner
 - vorbereitete Archiv-Aufbewahrungslogik ohne automatische Ausführung
+- optionale GA-Dateianhang-Import-/Exportordner im Schnittstellenprofilmodell und in der UI, noch ohne Dateianhang-Verarbeitung
 
 Sicherheitsgrenzen:
 

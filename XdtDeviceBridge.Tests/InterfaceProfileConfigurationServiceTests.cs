@@ -36,6 +36,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.True(profile.FolderOptions.MoveFailedFilesToErrorFolder);
         Assert.Equal(ArchiveProcessedFileMode.Copy, profile.FolderOptions.ArchiveProcessedFileMode);
         Assert.Null(profile.FolderOptions.ArchiveRetentionDays);
+        Assert.Equal(string.Empty, profile.FolderOptions.AttachmentImportFolder);
+        Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExportFolder);
     }
 
     [Fact]
@@ -86,6 +88,54 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.False(result.Profile.IsLicenseRequired);
         Assert.Equal(_timestamp, result.Profile.Metadata.UpdatedAt);
         Assert.Equal(@"\\SERVER\Freigabe\XDT\Export", result.Profile.FolderOptions.ExportFolder);
+    }
+
+    [Fact]
+    public void CreateConfiguredProfile_ShouldPreserveAttachmentFolders()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(
+            attachmentImportFolder: @"\\SERVER\Freigabe\XDT\GAImport",
+            attachmentExportFolder: @"\\SERVER\Freigabe\XDT\GAExport");
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.True(result.Success);
+        Assert.Equal(@"\\SERVER\Freigabe\XDT\GAImport", result.Profile!.FolderOptions.AttachmentImportFolder);
+        Assert.Equal(@"\\SERVER\Freigabe\XDT\GAExport", result.Profile.FolderOptions.AttachmentExportFolder);
+    }
+
+    [Fact]
+    public void CreateConfiguredProfile_ShouldReportDangerousAttachmentFolder()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(
+            attachmentImportFolder: Path.GetPathRoot(Path.GetTempPath())!);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Issues, issue =>
+            issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error
+            && issue.Message == "Folder path must not be a drive or share root.");
     }
 
     [Fact]
@@ -220,7 +270,9 @@ public sealed class InterfaceProfileConfigurationServiceTests
         bool archiveProcessedFiles = false,
         bool moveFailedFilesToErrorFolder = true,
         ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
-        int? archiveRetentionDays = null)
+        int? archiveRetentionDays = null,
+        string attachmentImportFolder = "",
+        string attachmentExportFolder = "")
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -234,7 +286,9 @@ public sealed class InterfaceProfileConfigurationServiceTests
             ArchiveProcessedFiles: archiveProcessedFiles,
             MoveFailedFilesToErrorFolder: moveFailedFilesToErrorFolder,
             ArchiveProcessedFileMode: archiveProcessedFileMode,
-            ArchiveRetentionDays: archiveRetentionDays);
+            ArchiveRetentionDays: archiveRetentionDays,
+            AttachmentImportFolder: attachmentImportFolder,
+            AttachmentExportFolder: attachmentExportFolder);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

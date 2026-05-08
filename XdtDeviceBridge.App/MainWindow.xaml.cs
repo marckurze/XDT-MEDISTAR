@@ -529,6 +529,8 @@ public partial class MainWindow : Window
         InterfaceExportFolderTextBox.Text = profile.FolderOptions.ExportFolder;
         InterfaceArchiveFolderTextBox.Text = profile.FolderOptions.ArchiveFolder;
         InterfaceErrorFolderTextBox.Text = profile.FolderOptions.ErrorFolder;
+        InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
+        InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
 
         InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
@@ -550,6 +552,8 @@ public partial class MainWindow : Window
         InterfaceExportFolderTextBox.Text = string.Empty;
         InterfaceArchiveFolderTextBox.Text = string.Empty;
         InterfaceErrorFolderTextBox.Text = string.Empty;
+        InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
+        InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceClearAisImportFolderCheckBox.IsChecked = false;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
@@ -716,7 +720,9 @@ public partial class MainWindow : Window
             ArchiveProcessedFiles: InterfaceArchiveProcessedFilesCheckBox.IsChecked == true,
             MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true,
             ArchiveProcessedFileMode: ReadArchiveProcessedFileModeFromEditor(),
-            ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor());
+            ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor(),
+            AttachmentImportFolder: InterfaceAttachmentImportFolderTextBox.Text.Trim(),
+            AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim());
     }
 
     private ArchiveProcessedFileMode ReadArchiveProcessedFileModeFromEditor()
@@ -756,6 +762,8 @@ public partial class MainWindow : Window
             "Export" => InterfaceExportFolderTextBox,
             "Archive" => InterfaceArchiveFolderTextBox,
             "Error" => InterfaceErrorFolderTextBox,
+            "AttachmentImport" => InterfaceAttachmentImportFolderTextBox,
+            "AttachmentExport" => InterfaceAttachmentExportFolderTextBox,
             _ => null
         };
 

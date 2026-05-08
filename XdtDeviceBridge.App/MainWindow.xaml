@@ -859,9 +859,11 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="230"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="96"/>
                                         </Grid.ColumnDefinitions>
@@ -882,9 +884,27 @@
                                         <TextBox Grid.Row="3" Grid.Column="1" x:Name="InterfaceArchiveFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="3" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Archive" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Fehlerordner:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="InterfaceErrorFolderTextBox" Margin="0,0,8,0" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="4" Grid.Column="2" Content="Auswählen" Width="90" Tag="Error" Click="SelectInterfaceFolder_Click"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Fehlerordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="InterfaceErrorFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="4" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Error" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="GA-Dateianhang Import (optional):" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="5"
+                                                 Grid.Column="1"
+                                                 x:Name="InterfaceAttachmentImportFolderTextBox"
+                                                 Margin="0,0,8,8"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 ToolTip="Optionaler Ordner für Geräte-Dateianhänge. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="5" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="GA-Dateianhang Export (optional):" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="6"
+                                                 Grid.Column="1"
+                                                 x:Name="InterfaceAttachmentExportFolderTextBox"
+                                                 Margin="0,0,8,0"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 ToolTip="Optionaler Zielordner für umbenannte Geräte-Dateianhänge und spätere externe AIS-Links. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="6" Grid.Column="2" Content="Auswählen" Width="90" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
                                     </Grid>
                                 </GroupBox>
 

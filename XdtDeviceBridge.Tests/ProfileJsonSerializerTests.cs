@@ -54,7 +54,14 @@ public sealed class ProfileJsonSerializerTests
     [Fact]
     public void InterfaceProfileDefinition_ShouldRoundTrip()
     {
-        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
+            {
+                AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
+                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport"
+            }
+        };
 
         var json = _serializer.SerializeInterfaceProfileDefinition(profile);
         var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
@@ -62,6 +69,8 @@ public sealed class ProfileJsonSerializerTests
         Assert.False(deserialized.IsActive);
         Assert.True(deserialized.IsLicenseRequired);
         Assert.Equal(profile.FolderOptions, deserialized.FolderOptions);
+        Assert.Contains("\"AttachmentImportFolder\":", json);
+        Assert.Contains("\"AttachmentExportFolder\":", json);
     }
 
     [Fact]
@@ -108,6 +117,58 @@ public sealed class ProfileJsonSerializerTests
 
         Assert.Equal(ArchiveProcessedFileMode.Copy, deserialized.FolderOptions.ArchiveProcessedFileMode);
         Assert.Null(deserialized.FolderOptions.ArchiveRetentionDays);
+        Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentImportFolder);
+        Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentExportFolder);
+    }
+
+    [Fact]
+    public void InterfaceProfileDefinition_ShouldDeserializeFolderOptionsWithAttachmentFolders()
+    {
+        var json = """
+        {
+          "Metadata": {
+            "Id": "interface-attachments",
+            "Name": "Interface Attachments",
+            "ProfileKind": "InterfaceProfile",
+            "Description": null,
+            "Vendor": null,
+            "Product": null,
+            "Version": "1.0",
+            "CreatedAt": "2026-05-03T12:00:00+00:00",
+            "UpdatedAt": "2026-05-03T12:00:00+00:00",
+            "CreatedBy": "Test",
+            "IsBuiltIn": false,
+            "IsUserDefined": true
+          },
+          "AisProfileId": "ais",
+          "DeviceProfileId": "device",
+          "ExportProfileId": "export",
+          "FolderOptions": {
+            "AisImportFolder": "",
+            "DeviceImportFolder": "",
+            "ExportFolder": "",
+            "ArchiveFolder": "",
+            "ErrorFolder": "",
+            "ClearAisImportFolderBeforeProcessing": false,
+            "ClearDeviceImportFolderBeforeProcessing": false,
+            "ClearExportFolderAfterSuccessfulTransfer": false,
+            "ArchiveProcessedFiles": false,
+            "MoveFailedFilesToErrorFolder": true,
+            "ArchiveProcessedFileMode": "Copy",
+            "ArchiveRetentionDays": null,
+            "AttachmentImportFolder": "C:\\XdtDeviceBridge\\GAImport",
+            "AttachmentExportFolder": "C:\\XdtDeviceBridge\\GAExport"
+          },
+          "IsActive": false,
+          "IsLicenseRequired": true,
+          "Description": null
+        }
+        """;
+
+        var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
+
+        Assert.Equal(@"C:\XdtDeviceBridge\GAImport", deserialized.FolderOptions.AttachmentImportFolder);
+        Assert.Equal(@"C:\XdtDeviceBridge\GAExport", deserialized.FolderOptions.AttachmentExportFolder);
     }
 
     [Fact]

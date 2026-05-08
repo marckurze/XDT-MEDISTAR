@@ -83,6 +83,18 @@ public sealed class FolderSafetyValidator
             issues.AddRange(ValidateFolderForCleanup(options.ExportFolder).Issues);
         }
 
+        if (!string.IsNullOrWhiteSpace(options.AttachmentImportFolder))
+        {
+            issues.AddRange(ValidateFolderForCleanup(options.AttachmentImportFolder).Issues
+                .Where(issue => issue.Severity == FolderSafetyValidationIssueSeverity.Error));
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.AttachmentExportFolder))
+        {
+            issues.AddRange(ValidateFolderForCleanup(options.AttachmentExportFolder).Issues
+                .Where(issue => issue.Severity == FolderSafetyValidationIssueSeverity.Error));
+        }
+
         return new FolderSafetyValidationResult(issues);
     }
 

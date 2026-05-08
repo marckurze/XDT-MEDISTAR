@@ -255,6 +255,27 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void SaveInterfaceProfileDefinition_ShouldPreserveAttachmentFolders()
+    {
+        var paths = CreateAppDataPaths();
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserInterfaceMetadata("interface-attachments"),
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
+            {
+                AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
+                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport"
+            }
+        };
+
+        _service.SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
+
+        var loadedProfile = Assert.Single(_service.Load(paths).InterfaceProfiles);
+        Assert.Equal(@"C:\XdtDeviceBridge\GAImport", loadedProfile.FolderOptions.AttachmentImportFolder);
+        Assert.Equal(@"C:\XdtDeviceBridge\GAExport", loadedProfile.FolderOptions.AttachmentExportFolder);
+    }
+
+    [Fact]
     public void DeleteInterfaceProfile_ShouldDeleteUserDefinedInterfaceProfile()
     {
         var paths = CreateAppDataPaths();

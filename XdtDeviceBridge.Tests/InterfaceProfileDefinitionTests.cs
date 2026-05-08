@@ -153,6 +153,20 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.True(options.MoveFailedFilesToErrorFolder);
         Assert.Equal(ArchiveProcessedFileMode.Copy, options.ArchiveProcessedFileMode);
         Assert.Null(options.ArchiveRetentionDays);
+        Assert.Equal(string.Empty, options.AttachmentImportFolder);
+        Assert.Equal(string.Empty, options.AttachmentExportFolder);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptEmptyAttachmentFolders()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            attachmentImportFolder: string.Empty,
+            attachmentExportFolder: string.Empty));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Empty(issues);
     }
 
     [Fact]
@@ -209,7 +223,9 @@ public sealed class InterfaceProfileDefinitionTests
         bool archiveProcessedFiles = false,
         bool moveFailedFilesToErrorFolder = false,
         ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
-        int? archiveRetentionDays = null)
+        int? archiveRetentionDays = null,
+        string attachmentImportFolder = "",
+        string attachmentExportFolder = "")
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -223,7 +239,9 @@ public sealed class InterfaceProfileDefinitionTests
             ArchiveProcessedFiles: archiveProcessedFiles,
             MoveFailedFilesToErrorFolder: moveFailedFilesToErrorFolder,
             ArchiveProcessedFileMode: archiveProcessedFileMode,
-            ArchiveRetentionDays: archiveRetentionDays);
+            ArchiveRetentionDays: archiveRetentionDays,
+            AttachmentImportFolder: attachmentImportFolder,
+            AttachmentExportFolder: attachmentExportFolder);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

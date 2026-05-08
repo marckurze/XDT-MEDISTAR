@@ -12,4 +12,6 @@ public sealed record InterfaceFolderOptions(
     bool ArchiveProcessedFiles,
     bool MoveFailedFilesToErrorFolder,
     ArchiveProcessedFileMode ArchiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
-    int? ArchiveRetentionDays = null);
+    int? ArchiveRetentionDays = null,
+    string AttachmentImportFolder = "",
+    string AttachmentExportFolder = "");
