@@ -9,5 +9,6 @@ public interface IInterfaceProfileManualProcessor
         ExportProfileDefinition exportProfile,
         string aisFilePath,
         string deviceFilePath,
-        DateTime timestamp);
+        DateTime timestamp,
+        Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null);
 }

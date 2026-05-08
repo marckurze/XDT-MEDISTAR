@@ -121,17 +121,15 @@ public sealed class AutoImportPairProcessingCoordinator
                     exportProfile,
                     pair.AisFile.FilePath,
                     pair.DeviceFile.FilePath,
-                    timestamp);
-                var attachmentStatus = processingResult.Success
-                    ? PrepareAttachmentIfAllowed(
+                    timestamp,
+                    patient => PrepareAttachmentIfAllowed(
                         interfaceProfile,
-                        processingResult.PipelineResult?.Patient,
+                        patient,
                         automaticProcessingEnabled,
                         isMonitoringRunning,
-                        timestamp)
-                    : null;
+                        timestamp));
                 _processedPairKeys.Add(pairKey);
-                results.Add(CreateProcessedResult(interfaceProfile, pairKey, pair, processingResult, attachmentStatus));
+                results.Add(CreateProcessedResult(interfaceProfile, pairKey, pair, processingResult, processingResult.AttachmentStatus));
             }
             catch (Exception ex)
             {
@@ -277,6 +275,11 @@ public sealed class AutoImportPairProcessingCoordinator
         AttachmentProcessingStatus? attachmentStatus)
     {
         if (attachmentStatus is null)
+        {
+            return messages;
+        }
+
+        if (messages.Contains(attachmentStatus.Message))
         {
             return messages;
         }

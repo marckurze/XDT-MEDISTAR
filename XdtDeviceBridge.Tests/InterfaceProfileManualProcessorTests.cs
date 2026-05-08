@@ -28,9 +28,110 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.Contains("6310", result.ExportContent);
         Assert.Contains("PAT-100", result.ExportContent);
         Assert.Contains("R.:S=-1.25", result.ExportContent);
+        Assert.DoesNotContain("6302", result.ExportContent);
+        Assert.DoesNotContain("6303", result.ExportContent);
+        Assert.DoesNotContain("6304", result.ExportContent);
+        Assert.DoesNotContain("6305", result.ExportContent);
         Assert.StartsWith(exportFolder, result.ExportFilePath, StringComparison.OrdinalIgnoreCase);
         Assert.Null(result.ArchiveResult);
         Assert.Contains("Archivierung ist für dieses Schnittstellenprofil deaktiviert.", result.Messages);
+    }
+
+    [Fact]
+    public void Process_ShouldAppendAttachmentLinkFieldsAtEndWhenAttachmentPreparationSucceeds()
+    {
+        var baseline = _processor.Process(
+            CreateInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            GetTestDataPath("nidek-ark1s-sample.xml"),
+            new DateTime(2026, 6, 1, 12, 0, 0));
+        var targetPath = @"C:\GitHub\AnhangExp\4701-1_08052026_135231.PDF";
+        var fields = new[]
+        {
+            new ExportFieldRecord("6302", "Datei", 1),
+            new ExportFieldRecord("6303", "PDF", 2),
+            new ExportFieldRecord("6304", "Messprotokoll", 3),
+            new ExportFieldRecord("6305", targetPath, 4)
+        };
+
+        var result = _processor.Process(
+            CreateInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            GetTestDataPath("nidek-ark1s-sample.xml"),
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ => CreateAttachmentStatus(fields));
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.ExportContent);
+        Assert.StartsWith(baseline.ExportContent!, result.ExportContent);
+        var lines = SplitXdtLines(result.ExportContent!);
+        Assert.Equal(ExpectedXdtLineWithoutCrLf("6302", "Datei"), lines[^4]);
+        Assert.Equal(ExpectedXdtLineWithoutCrLf("6303", "PDF"), lines[^3]);
+        Assert.Equal(ExpectedXdtLineWithoutCrLf("6304", "Messprotokoll"), lines[^2]);
+        Assert.Equal(ExpectedXdtLineWithoutCrLf("6305", targetPath), lines[^1]);
+        Assert.Contains("XDT-Anhang-Linkfelder wurden in die Exportdatei übernommen.", result.Messages);
+        Assert.Contains("6305" + targetPath, File.ReadAllText(result.ExportFilePath!));
+    }
+
+    [Fact]
+    public void Process_ShouldNotAppendOptional6304WhenDescriptionFieldIsMissing()
+    {
+        var targetPath = @"C:\GitHub\AnhangExp\4701-1_08052026_135231.PDF";
+        var fields = new[]
+        {
+            new ExportFieldRecord("6302", "Datei", 1),
+            new ExportFieldRecord("6303", "PDF", 2),
+            new ExportFieldRecord("6305", targetPath, 3)
+        };
+
+        var result = _processor.Process(
+            CreateInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            GetTestDataPath("nidek-ark1s-sample.xml"),
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ => CreateAttachmentStatus(fields));
+
+        Assert.True(result.Success);
+        Assert.Contains("6302Datei", result.ExportContent);
+        Assert.Contains("6303PDF", result.ExportContent);
+        Assert.Contains("6305" + targetPath, result.ExportContent);
+        Assert.DoesNotContain("6304", result.ExportContent);
+    }
+
+    [Fact]
+    public void Process_ShouldKeepExportContentUnchangedWhenAttachmentIsSkippedOrFails()
+    {
+        var timestamp = new DateTime(2026, 6, 1, 12, 0, 0);
+        var baseline = _processor.Process(
+            CreateInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            GetTestDataPath("nidek-ark1s-sample.xml"),
+            timestamp);
+
+        var skipped = _processor.Process(
+            CreateInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            GetTestDataPath("nidek-ark1s-sample.xml"),
+            timestamp,
+            _ => CreateSkippedAttachmentStatus());
+
+        var failed = _processor.Process(
+            CreateInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            GetTestDataPath("nidek-ark1s-sample.xml"),
+            timestamp,
+            _ => CreateFailedAttachmentStatus());
+
+        Assert.Equal(baseline.ExportContent, skipped.ExportContent);
+        Assert.Equal(baseline.ExportContent, failed.ExportContent);
+        Assert.DoesNotContain("6302", skipped.ExportContent);
+        Assert.DoesNotContain("6302", failed.ExportContent);
     }
 
     [Fact]
@@ -258,6 +359,59 @@ public sealed class InterfaceProfileManualProcessorTests
             },
             IsActive = true
         };
+    }
+
+    private static AttachmentProcessingStatus CreateAttachmentStatus(IReadOnlyList<ExportFieldRecord> fields)
+    {
+        return new AttachmentProcessingStatus(
+            WasAttempted: true,
+            WasSkipped: false,
+            Success: true,
+            Reason: AttachmentProcessingStatusReason.PreparationSucceeded,
+            Message: "XDT-Anhang vorbereitet.",
+            SourcePath: @"C:\Import\report.pdf",
+            TargetPath: fields.FirstOrDefault(field => field.FieldCode == "6305")?.Value,
+            TargetFileName: "report.pdf",
+            PreparedFields: fields);
+    }
+
+    private static AttachmentProcessingStatus CreateSkippedAttachmentStatus()
+    {
+        return new AttachmentProcessingStatus(
+            WasAttempted: false,
+            WasSkipped: true,
+            Success: false,
+            Reason: AttachmentProcessingStatusReason.NoSupportedAttachment,
+            Message: "XDT-Anhang übersprungen: keine unterstützte Anhangdatei gefunden.",
+            SourcePath: null,
+            TargetPath: null,
+            TargetFileName: null,
+            PreparedFields: Array.Empty<ExportFieldRecord>());
+    }
+
+    private static AttachmentProcessingStatus CreateFailedAttachmentStatus()
+    {
+        return new AttachmentProcessingStatus(
+            WasAttempted: true,
+            WasSkipped: false,
+            Success: false,
+            Reason: AttachmentProcessingStatusReason.PreparationFailed,
+            Message: "XDT-Anhang Vorbereitung fehlgeschlagen.",
+            SourcePath: @"C:\Import\report.pdf",
+            TargetPath: null,
+            TargetFileName: null,
+            PreparedFields: Array.Empty<ExportFieldRecord>());
+    }
+
+    private static string[] SplitXdtLines(string content)
+    {
+        return content.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private static string ExpectedXdtLineWithoutCrLf(string fieldCode, string value)
+    {
+        var declaredLength = 3 + 4 + value.Length + 2;
+        return $"{declaredLength:D3}{fieldCode}{value}";
     }
 
     private static string CreateTempFolder()

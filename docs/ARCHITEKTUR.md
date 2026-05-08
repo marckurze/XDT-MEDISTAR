@@ -78,7 +78,7 @@ Sicherheitsgrenzen:
 - keine endgültige Löschung von Importdateien
 - keine produktive Geräte-Dateianhang-Verarbeitung und keine produktive externe AIS-Link-Übergabe
 
-Konservativ integriert ist außerdem eine automatische XDT-Anhang-Vorbereitung im bestehenden Automatiklauf: Sie wird nur geprüft, wenn die Überwachung manuell läuft, globale automatische Verarbeitung aktiv ist, das Schnittstellenprofil XDT-Anhänge aktiviert hat, eine AIS-Patientennummer vorhanden ist und genau ein unterstützter Anhangkandidat gefunden wird. Die Vorbereitung kann den explizit ausgewählten Kandidaten über den vorbereiteten Transfer-/Linkfeldpfad bearbeiten und hält die semantischen Felder `6302` bis `6305` nur im Verarbeitungsergebnis fest. Diese Felder werden noch nicht in produktive XDT-Exportdateien geschrieben; die produktive Linkausgabe bleibt ein separater nächster Schritt.
+Konservativ integriert ist außerdem eine automatische XDT-Anhang-Vorbereitung im bestehenden Automatiklauf: Sie wird nur geprüft, wenn die Überwachung manuell läuft, globale automatische Verarbeitung aktiv ist, das Schnittstellenprofil XDT-Anhänge aktiviert hat, eine AIS-Patientennummer vorhanden ist und genau ein unterstützter Anhangkandidat gefunden wird. Die Vorbereitung kann den explizit ausgewählten Kandidaten über den vorbereiteten Transfer-/Linkfeldpfad bearbeiten. Bei erfolgreicher Vorbereitung werden die semantischen Felder `6302`, `6303`, optional `6304` und `6305` transient an die Exportfeldliste angehängt und über den zentralen XDT-Exportmechanismus mit korrektem Längenpräfix in die erzeugte XDT-Datei geschrieben. Bei deaktivierter Funktion, mehreren unterstützten Anhängen, fehlender Eindeutigkeit oder Fehlern bleibt der bestehende Export unverändert.
 
 ### 1.5 Lizenzanzeige
 
@@ -325,9 +325,9 @@ Vorgesehene Konzepte:
 - `AttachmentExternalLinkPathTemplate`: Vorlage für 6305 vollständiger Dateipfad, typischerweise `{Attachment.TargetFullPath}`
 - `AttachmentFileNameBuilder`
 - `AttachmentTransferService`, isoliert vorbereitet für sichere Übertragung einzelner explizit übergebener Anhangdateien ohne Überschreiben
-- `ExternalAisLinkFieldBuilder`, isoliert vorbereitet für semantische Feldwerte zu `6302`, `6303`, `6304` und `6305`, noch ohne produktive XDT-Linkausgabe
-- `ExternalAisLinkXdtFieldAdapter`, isoliert vorbereitet für die Überführung dieser semantischen Werte in XDT-Feldcode/Wert-Paare `6302` bis `6305`, weiterhin ohne Längenpräfix und ohne produktive Einbindung
-- `AttachmentExternalLinkPreparationService`, isoliert vorbereitet für die explizite Orchestrierung aus Ziel-Dateiname, Copy/Move-Transfer, externen AIS-Linkfeldwerten und XDT-Feldcode/Wert-Paaren; noch ohne automatische Attachment-Zuordnung und ohne produktive Exportworkflow-Einbindung
+- `ExternalAisLinkFieldBuilder`, isoliert vorbereitet für semantische Feldwerte zu `6302`, `6303`, `6304` und `6305`
+- `ExternalAisLinkXdtFieldAdapter`, isoliert vorbereitet für die Überführung dieser semantischen Werte in XDT-Feldcode/Wert-Paare `6302` bis `6305`, weiterhin ohne Längenpräfix
+- `AttachmentExternalLinkPreparationService`, isoliert vorbereitet für die explizite Orchestrierung aus Ziel-Dateiname, Copy/Move-Transfer, externen AIS-Linkfeldwerten und XDT-Feldcode/Wert-Paaren; in der automatischen Paarverarbeitung nur konservativ bei eindeutig genau einem unterstützten Anhang eingebunden
 - `AttachmentAutoProcessingEligibilityService`, isoliert vorbereitet für die sichere Vorprüfung, ob eine spätere automatische XDT-Anhang-Verarbeitung grundsätzlich erlaubt wäre; der Service führt keine Dateioperationen aus
 - `AttachmentImportFolderScannerService`, isoliert vorbereitet für das reine Auflisten unterstützter Dateien im XDT-Anhang Importordner; der Service scannt nur die oberste Ordnerebene und verändert, verschiebt oder löscht keine Dateien
 - `AttachmentImportFolderDiagnosticService`, isoliert vorbereitet für den manuellen Diagnosebereich; er ruft den Scanner mit dem konfigurierten Importordner auf, erzeugt anzeigbare Kandidatenzeilen und startet keine Verarbeitung
@@ -359,7 +359,7 @@ Für MEDISTAR soll die externe Link-Übergabe über XDT-Feldkennungen modelliert
 | `6304` | optionale Beschreibung |
 | `6305` | vollständiger absoluter Dateipfad zur abgelegten Datei |
 
-Der vorbereitete `ExternalAisLinkFieldBuilder` erzeugt in diesem Stand nur semantische Feldwerte, z. B. `6302 -> PDF-Befund`, `6303 -> PDF`, `6304 -> Messprotokoll` und `6305 -> \\SERVER\Freigabe\Datei.pdf`. Diese Exportzeilen müssen später wie alle XDT-Zeilen mit korrektem Längenpräfix erzeugt werden. Die App soll die Zeilenlänge nicht manuell im UI pflegen lassen. Der `XdtExportBuilder` oder ein vergleichbarer Baustein soll die finalen XDT-Zeilen erzeugen.
+Der vorbereitete `ExternalAisLinkFieldBuilder` erzeugt semantische Feldwerte, z. B. `6302 -> PDF-Befund`, `6303 -> PDF`, `6304 -> Messprotokoll` und `6305 -> \\SERVER\Freigabe\Datei.pdf`. Der `ExternalAisLinkXdtFieldAdapter` überführt diese Werte in Feldcode/Wert-Paare ohne Längenpräfix. Bei erfolgreicher konservativer automatischer XDT-Anhang-Vorbereitung werden diese Paare an die Exportfeldliste angehängt; der zentrale `XdtExportBuilder` erzeugt daraus die finalen XDT-Zeilen mit korrektem Längenpräfix. Die App soll die Zeilenlänge nicht manuell im UI pflegen lassen.
 
 Ein externes Link-Template darf keine echte Patientenakte als Beispiel enthalten. Beispiele in Dokumentation und Templatepaketen müssen synthetisch sein.
 

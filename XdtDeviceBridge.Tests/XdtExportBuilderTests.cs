@@ -80,4 +80,30 @@ public sealed class XdtExportBuilderTests
         var text = Encoding.GetEncoding(1252).GetString(bytes);
         Assert.Equal("0133101äöüß\r\n", text);
     }
+
+    [Fact]
+    public void Build_ShouldCreateLengthPrefixesForExternalAisLinkFields()
+    {
+        var builder = new XdtExportBuilder();
+        var path = @"C:\GitHub\AnhangExp\4701-1_08052026_135231.PDF";
+
+        var result = builder.Build(new[]
+        {
+            new ExportFieldRecord("6302", "Datei", 1),
+            new ExportFieldRecord("6303", "PDF", 2),
+            new ExportFieldRecord("6305", path, 3)
+        });
+
+        Assert.False(result.HasErrors);
+        Assert.Contains(ExpectedLine("6302", "Datei"), result.Content);
+        Assert.Contains(ExpectedLine("6303", "PDF"), result.Content);
+        Assert.Contains(ExpectedLine("6305", path), result.Content);
+        Assert.Contains(path, result.Content);
+    }
+
+    private static string ExpectedLine(string fieldCode, string value)
+    {
+        var declaredLength = 3 + 4 + value.Length + 2;
+        return $"{declaredLength:D3}{fieldCode}{value}\r\n";
+    }
 }

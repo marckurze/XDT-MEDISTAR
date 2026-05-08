@@ -9,4 +9,5 @@ public sealed record InterfaceProfileManualProcessingResult(
     ProcessingPipelineResult? PipelineResult,
     ProcessedFileArchiveResult? ArchiveResult,
     FailedFileCopyResult? FailedFileCopyResult,
-    IReadOnlyList<string> Messages);
+    IReadOnlyList<string> Messages,
+    AttachmentProcessingStatus? AttachmentStatus = null);

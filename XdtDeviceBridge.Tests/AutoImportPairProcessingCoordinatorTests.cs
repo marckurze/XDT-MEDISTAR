@@ -193,6 +193,10 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Equal(AttachmentProcessingStatusReason.EligibilityNotMet, processed.AttachmentStatus.Reason);
         Assert.Equal(0, scanner.CallCount);
         Assert.Equal(0, preparationService.CallCount);
+        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
+        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
     }
 
     [Fact]
@@ -360,6 +364,10 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Equal(0, preparationService.CallCount);
         Assert.True(processed.AttachmentStatus!.WasSkipped);
         Assert.Equal(AttachmentProcessingStatusReason.NoSupportedAttachment, processed.AttachmentStatus.Reason);
+        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
+        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
     }
 
     [Fact]
@@ -395,10 +403,11 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Contains(processed.AttachmentStatus.PreparedFields, field => field.FieldCode == "6303");
         Assert.Contains(processed.AttachmentStatus.PreparedFields, field => field.FieldCode == "6304");
         Assert.Contains(processed.AttachmentStatus.PreparedFields, field => field.FieldCode == "6305");
-        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
-        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains("6302PDF-Befund", processed.ManualProcessingResult!.ExportContent);
+        Assert.Contains("6303PDF", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains("6304Messprotokoll", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains(@"6305C:\Export\Attachments\report.pdf", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains("XDT-Anhang-Linkfelder wurden in die Exportdatei übernommen.", processed.Messages);
     }
 
     [Fact]
@@ -431,6 +440,10 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Equal(0, preparationService.CallCount);
         Assert.Equal(AttachmentProcessingStatusReason.MultipleSupportedAttachments, processed.AttachmentStatus!.Reason);
         Assert.Contains("mehrere unterstützte Anhänge", processed.AttachmentStatus.Message);
+        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
+        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
     }
 
     [Fact]
@@ -460,6 +473,10 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Equal(AttachmentProcessingStatusReason.PreparationFailed, processed.AttachmentStatus!.Reason);
         Assert.False(processed.AttachmentStatus.Success);
         Assert.Contains("fehlgeschlagen", processed.AttachmentStatus.Message);
+        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
+        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
     }
 
     [Fact]
@@ -877,10 +894,63 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             ExportProfileDefinition exportProfile,
             string aisFilePath,
             string deviceFilePath,
-            DateTime timestamp)
+            DateTime timestamp,
+            Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null)
         {
             CallCount++;
-            return _result;
+            if (!_result.Success || _result.PipelineResult?.Patient is null || attachmentPreparation is null)
+            {
+                return _result;
+            }
+
+            var attachmentStatus = attachmentPreparation(_result.PipelineResult.Patient);
+            if (attachmentStatus is null)
+            {
+                return _result;
+            }
+
+            var messages = _result.Messages.ToList();
+            messages.Add(attachmentStatus.Message);
+
+            var exportRecords = _result.PipelineResult.ExportRecords;
+            var exportContent = _result.ExportContent;
+            if (attachmentStatus.Success
+                && !attachmentStatus.WasSkipped
+                && attachmentStatus.PreparedFields.Count > 0
+                && attachmentStatus.PreparedFields.Any(field => field.FieldCode == "6302")
+                && attachmentStatus.PreparedFields.Any(field => field.FieldCode == "6303")
+                && attachmentStatus.PreparedFields.Any(field => field.FieldCode == "6305"))
+            {
+                exportRecords = AppendAttachmentFields(exportRecords, attachmentStatus.PreparedFields);
+                exportContent = new XdtExportBuilder().Build(exportRecords).Content;
+                messages.Add("XDT-Anhang-Linkfelder wurden in die Exportdatei übernommen.");
+            }
+
+            return _result with
+            {
+                ExportContent = exportContent,
+                PipelineResult = _result.PipelineResult with
+                {
+                    ExportRecords = exportRecords,
+                    ExportContent = exportContent ?? string.Empty
+                },
+                Messages = messages,
+                AttachmentStatus = attachmentStatus
+            };
+        }
+
+        private static IReadOnlyList<ExportFieldRecord> AppendAttachmentFields(
+            IReadOnlyList<ExportFieldRecord> existingRecords,
+            IReadOnlyList<ExportFieldRecord> attachmentFields)
+        {
+            var combined = existingRecords.ToList();
+            var nextSortOrder = combined.Count == 0 ? 0 : combined.Max(record => record.SortOrder);
+            foreach (var field in attachmentFields)
+            {
+                combined.Add(new ExportFieldRecord(field.FieldCode, field.Value, ++nextSortOrder));
+            }
+
+            return combined;
         }
     }
 

@@ -20,7 +20,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         ExportProfileDefinition exportProfile,
         string aisFilePath,
         string deviceFilePath,
-        DateTime timestamp)
+        DateTime timestamp,
+        Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null)
     {
         ArgumentNullException.ThrowIfNull(interfaceProfile);
         ArgumentNullException.ThrowIfNull(exportProfile);
@@ -106,7 +107,19 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 exportContent: null);
         }
 
-        var exportResult = _xdtExportBuilder.Build(mappingResult.Records);
+        var exportRecords = mappingResult.Records;
+        var attachmentStatus = attachmentPreparation?.Invoke(patient);
+        if (attachmentStatus is not null)
+        {
+            messages.Add(attachmentStatus.Message);
+            if (ShouldAppendAttachmentFields(attachmentStatus))
+            {
+                exportRecords = AppendAttachmentFields(mappingResult.Records, attachmentStatus.PreparedFields);
+                messages.Add("XDT-Anhang-Linkfelder wurden in die Exportdatei übernommen.");
+            }
+        }
+
+        var exportResult = _xdtExportBuilder.Build(exportRecords);
         issues.AddRange(exportResult.Issues.Select(issue => new ProcessingIssue(
             issue.Severity == XdtExportIssueSeverity.Error ? ProcessingIssueSeverity.Error : ProcessingIssueSeverity.Warning,
             ProcessingStage.Export,
@@ -119,7 +132,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 deviceFilePath,
                 timestamp,
                 new[] { "XDT-Export konnte nicht fehlerfrei erzeugt werden." },
-                new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+                new ProcessingPipelineResult(patient, deviceResult.Measurements, exportRecords, exportResult.Content, issues),
                 exportResult.Content);
         }
 
@@ -141,7 +154,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 deviceFilePath,
                 timestamp,
                 fileExportResult.Issues.Select(issue => issue.Message).ToList(),
-                new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+                new ProcessingPipelineResult(patient, deviceResult.Measurements, exportRecords, exportResult.Content, issues),
                 exportResult.Content);
         }
 
@@ -157,10 +170,42 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             Success: true,
             ExportFilePath: fileExportResult.FilePath,
             ExportContent: exportResult.Content,
-            PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, exportResult.Content, issues),
+            PipelineResult: new ProcessingPipelineResult(patient, deviceResult.Measurements, exportRecords, exportResult.Content, issues),
             ArchiveResult: archiveResult,
             FailedFileCopyResult: null,
-            Messages: messages);
+            Messages: messages,
+            AttachmentStatus: attachmentStatus);
+    }
+
+    private static bool ShouldAppendAttachmentFields(AttachmentProcessingStatus attachmentStatus)
+    {
+        if (!attachmentStatus.Success
+            || attachmentStatus.WasSkipped
+            || attachmentStatus.PreparedFields.Count == 0)
+        {
+            return false;
+        }
+
+        return attachmentStatus.PreparedFields.Any(field => field.FieldCode == "6302")
+            && attachmentStatus.PreparedFields.Any(field => field.FieldCode == "6303")
+            && attachmentStatus.PreparedFields.Any(field => field.FieldCode == "6305");
+    }
+
+    private static IReadOnlyList<ExportFieldRecord> AppendAttachmentFields(
+        IReadOnlyList<ExportFieldRecord> existingRecords,
+        IReadOnlyList<ExportFieldRecord> attachmentFields)
+    {
+        var combined = existingRecords.ToList();
+        var nextSortOrder = combined.Count == 0 ? 0 : combined.Max(record => record.SortOrder);
+        foreach (var field in attachmentFields)
+        {
+            combined.Add(new ExportFieldRecord(
+                field.FieldCode,
+                field.Value,
+                ++nextSortOrder));
+        }
+
+        return combined;
     }
 
     private InterfaceProfileManualProcessingResult CreateFailureResult(
