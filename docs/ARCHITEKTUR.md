@@ -697,8 +697,11 @@ Im Infrastructure-Projekt sind Bausteine für JSON-Speicherung sowie Import und 
 - `TemplatePackageExporter`
 - `TemplatePackageImporter`
 - `TemplatePackageImportValidator`
+- `TemplatePackageImportConflictAnalyzer`
 
 Damit können V2-Profile und Templatepakete technisch serialisiert, als Dateien gespeichert, als ZIP-Paket exportiert, wieder importiert und vor einer späteren produktiven Übernahme validiert werden.
+
+Der vorbereitete `TemplatePackageImportConflictAnalyzer` analysiert ein importiertes Templatepaket gegen den lokalen Profilkatalog, ohne Profile produktiv zu speichern. Er erkennt ID-/Namenskonflikte, BuiltIn-Schutz, fehlende Schnittstellenprofil-Abhängigkeiten und unsichere Ordnerpfade. BuiltIn-Profile bleiben geschützt; UserDefined-Konflikte können später als Kopie oder bewusster Ersatz behandelt werden. XDT-Anhang-Einstellungen bleiben Bestandteil des Schnittstellenprofils und werden beim Import als prüfpflichtige Konfiguration betrachtet.
 
 ### 8.3 Offline-Lizenzierung
 
