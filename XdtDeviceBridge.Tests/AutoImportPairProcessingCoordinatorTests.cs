@@ -497,6 +497,39 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_RequiredAttachmentShouldBlockMultipleSupportedCandidates()
+    {
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate("report-1.pdf", isSupported: true),
+            CreateAttachmentCandidate("report-2.jpg", isSupported: true)
+        }));
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+
+        var result = coordinator.ProcessReadyPairs(
+            CreateInterfaceProfile(
+                isAttachmentProcessingEnabled: true,
+                attachmentImportFolder: @"C:\Import\Attachments",
+                attachmentExportFolder: @"C:\Export\Attachments",
+                attachmentRequirementMode: AttachmentRequirementMode.Required),
+            CreateExportProfile(),
+            new[] { CreatePair("patient.gdt", "device.xml") },
+            automaticProcessingEnabled: true,
+            Timestamp);
+
+        var blocked = Assert.Single(result.Results);
+        Assert.False(blocked.WasProcessed);
+        Assert.True(blocked.WasSkipped);
+        Assert.Equal("Mehrere unterstützte XDT-Anhänge gefunden; keine eindeutige Zuordnung möglich.", blocked.Status);
+        Assert.Equal(1, scanner.CallCount);
+        Assert.Equal(0, preparationService.CallCount);
+        Assert.Equal(0, processor.CallCount);
+        Assert.Equal(AttachmentProcessingStatusReason.MultipleAttachmentsAmbiguous, blocked.AttachmentStatus!.Reason);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_AttachmentPreparationFailureShouldNotBreakPairProcessing()
     {
         var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(
