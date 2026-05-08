@@ -3019,6 +3019,7 @@ public partial class MainWindow : Window
             AisFilePathTextBox.Text = dialog.FileName;
             BuilderAisFilePathTextBox.Text = dialog.FileName;
             SyncBuilderTestPreviewArea();
+            SetBuilderTestStatus("AIS-Datei geladen. Bitte als Nächstes die Gerätedatei laden.");
             AppendMessage($"AIS-Datei ausgewählt: {dialog.FileName}");
         }
     }
@@ -3035,6 +3036,7 @@ public partial class MainWindow : Window
             DeviceFilePathTextBox.Text = dialog.FileName;
             BuilderDeviceFilePathTextBox.Text = dialog.FileName;
             SyncBuilderTestPreviewArea();
+            SetBuilderTestStatus("Gerätedatei geladen. Die Exportvorschau kann jetzt aktualisiert werden.");
             AppendMessage($"Geräte-Datei ausgewählt: {dialog.FileName}");
         }
     }
@@ -3049,6 +3051,7 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog() == true)
         {
             SetAttachmentDiagnosticFilePath(dialog.FileName);
+            SetBuilderTestStatus("XDT-Anhang ausgewählt. Der Anhang kann jetzt vorbereitet werden.");
             AppendMessage($"XDT-Anhang ausgewählt: {dialog.FileName}");
         }
     }
@@ -3059,6 +3062,9 @@ public partial class MainWindow : Window
         var result = _attachmentImportFolderDiagnosticService.Scan(selectedProfile);
 
         ShowAttachmentImportFolderDiagnosticResult(result);
+        SetBuilderTestStatus(result.Success
+            ? "XDT-Anhang Importordner eingelesen."
+            : "XDT-Anhang Importordner konnte nicht eingelesen werden.");
         AppendMessage(result.Message);
     }
 
@@ -3098,6 +3104,9 @@ public partial class MainWindow : Window
             DateTime.Now);
 
         ShowAttachmentDiagnosticResult(result);
+        SetBuilderTestStatus(result.Success
+            ? "XDT-Anhang vorbereitet."
+            : "XDT-Anhang konnte nicht vorbereitet werden.");
         AppendMessage(result.Message);
     }
 
@@ -3221,6 +3230,7 @@ public partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(AisFilePathTextBox.Text) || string.IsNullOrWhiteSpace(DeviceFilePathTextBox.Text))
         {
             AppendMessage("Bitte zuerst AIS- und Geräte-Datei auswählen.");
+            SetBuilderTestStatus("Bitte zuerst AIS-Datei und Gerätedatei laden.");
             return;
         }
 
@@ -3243,10 +3253,12 @@ public partial class MainWindow : Window
 
         if (_lastPipelineResult.HasErrors)
         {
+            SetBuilderTestStatus("Exportvorschau aktualisiert, Verarbeitung enthält Fehler.");
             AppendMessage("Verarbeitung abgeschlossen mit Fehlern.");
         }
         else
         {
+            SetBuilderTestStatus($"Exportvorschau aktualisiert. {_lastPipelineResult.Measurements.Count} Messwerte erkannt.");
             AppendMessage("Verarbeitung erfolgreich abgeschlossen.");
         }
     }
@@ -3256,6 +3268,7 @@ public partial class MainWindow : Window
         if (_lastPipelineResult is null || string.IsNullOrWhiteSpace(_lastPipelineResult.ExportContent))
         {
             AppendMessage("Keine Exportvorschau vorhanden. Bitte zuerst verarbeiten.");
+            SetBuilderTestStatus("Bitte zuerst die Exportvorschau aktualisieren.");
             return;
         }
 
@@ -3274,9 +3287,12 @@ public partial class MainWindow : Window
             {
                 AppendMessage($"[Export] {issue.Severity}: {issue.Message}");
             }
+
+            SetBuilderTestStatus("Testexportdatei konnte nicht geschrieben werden.");
         }
         else
         {
+            SetBuilderTestStatus($"Testexportdatei geschrieben: {exportResult.FilePath}");
             AppendMessage($"Export erfolgreich geschrieben: {exportResult.FilePath}");
         }
     }
@@ -3304,6 +3320,11 @@ public partial class MainWindow : Window
 
         UpdateBuilderPatientSummary(_lastPipelineResult?.Patient);
         UpdateBuilderDeviceSummary();
+    }
+
+    private void SetBuilderTestStatus(string message)
+    {
+        BuilderTestStatusTextBox.Text = message;
     }
 
     private void UpdateBuilderPatientSummary(PatientData? patient)

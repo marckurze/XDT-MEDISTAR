@@ -770,22 +770,34 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0"
-                                           Text="Baukasten-Testbereich für AIS-Testdatei, Gerätedatei, XDT-Anhang-Diagnose, Messwerte und Gesamtexport-Vorschau. Der bisherige manuelle Testbereich im Tab Verarbeitung bleibt in diesem Schritt erhalten."
+                                           Text="Hier können AIS-Datei, Gerätedatei und optionaler XDT-Anhang manuell geladen werden, um Messwerte und XDT-Exportvorschau für das ausgewählte Profil zu prüfen."
                                            Foreground="DimGray"
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
 
-                                <Grid Grid.Row="1" Margin="0,0,0,8">
+                                <GroupBox Header="Status" Grid.Row="1" Margin="0,0,0,8">
+                                    <TextBox x:Name="BuilderTestStatusTextBox"
+                                             Margin="8"
+                                             MinHeight="48"
+                                             IsReadOnly="True"
+                                             TextWrapping="Wrap"
+                                             VerticalScrollBarVisibility="Auto"
+                                             Text="Bitte zuerst AIS-Datei laden."/>
+                                </GroupBox>
+
+                                <Grid Grid.Row="2" Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="8"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <GroupBox Header="AIS-GDT/XDT-Testdatei" Grid.Column="0">
+                                    <GroupBox Header="Schritt 1 - AIS-Datei laden" Grid.Column="0">
                                         <Grid Margin="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
@@ -809,12 +821,12 @@
                                                      AcceptsReturn="True"
                                                      TextWrapping="Wrap"
                                                      VerticalScrollBarVisibility="Auto"
-                                                     MinHeight="120"
+                                                     MinHeight="96"
                                                      Text="Noch keine AIS-Testdaten geladen."/>
                                         </Grid>
                                     </GroupBox>
 
-                                    <GroupBox Header="Geräte-Testdatei" Grid.Column="2">
+                                    <GroupBox Header="Schritt 2 - Gerätedatei laden" Grid.Column="2">
                                         <Grid Margin="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
@@ -838,13 +850,13 @@
                                                      AcceptsReturn="True"
                                                      TextWrapping="Wrap"
                                                      VerticalScrollBarVisibility="Auto"
-                                                     MinHeight="120"
+                                                     MinHeight="96"
                                                      Text="Noch keine Gerätedatei geladen."/>
                                         </Grid>
                                     </GroupBox>
                                 </Grid>
 
-                                <GroupBox Header="XDT-Anhang / externer AIS-Link" Grid.Row="2" Margin="0,0,0,8">
+                                <GroupBox Header="Schritt 3 - XDT-Anhang vorbereiten optional" Grid.Row="3" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -852,7 +864,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="180"/>
+                                            <RowDefinition Height="140"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
@@ -865,7 +877,7 @@
                                         <TextBlock Grid.Row="0"
                                                    Grid.Column="0"
                                                    Grid.ColumnSpan="2"
-                                                   Text="Manueller Diagnosepfad: Der Importordner wird nur gelesen. Vorbereitung erfolgt nur für eine explizit ausgewählte Anhangdatei."
+                                                   Text="Optionaler Test für PDF/JPG/DCM/TXT-Anhänge und externe AIS-Linkfelder 6302-6305. Der Importordner wird nur gelesen; Vorbereitung erfolgt nur für eine explizit ausgewählte Anhangdatei."
                                                    Foreground="DimGray"
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,8"/>
@@ -959,19 +971,19 @@
                                                  x:Name="BuilderAttachmentDiagnosticResultTextBox"
                                                  IsReadOnly="True"
                                                  AcceptsReturn="True"
-                                                 VerticalScrollBarVisibility="Auto"
-                                                 HorizontalScrollBarVisibility="Auto"
-                                                 TextWrapping="NoWrap"
-                                                 MinHeight="120"
-                                                 Text="Noch kein XDT-Anhang vorbereitet."/>
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Auto"
+                                                  TextWrapping="NoWrap"
+                                                  MinHeight="96"
+                                                  Text="Noch kein XDT-Anhang vorbereitet."/>
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox Header="Messwerte" Grid.Row="3" Margin="0,0,0,8">
+                                <GroupBox Header="Schritt 4 - Messwerte prüfen" Grid.Row="4" Margin="0,0,0,8">
                                     <DataGrid x:Name="BuilderMeasurementsGrid"
                                               AutoGenerateColumns="False"
                                               IsReadOnly="True"
-                                              MinHeight="220"
+                                              MinHeight="190"
                                               HorizontalScrollBarVisibility="Auto"
                                               VerticalScrollBarVisibility="Auto">
                                         <DataGrid.Columns>
@@ -985,17 +997,48 @@
                                     </DataGrid>
                                 </GroupBox>
 
-                                 <GroupBox Header="Gesamtexport-Vorschau" Grid.Row="4">
-                                     <TextBox x:Name="FullExportPreviewTextBox"
-                                              Margin="8"
-                                              MinHeight="260"
-                                              IsReadOnly="True"
-                                             AcceptsReturn="True"
-                                             TextWrapping="NoWrap"
-                                             FontFamily="Consolas"
-                                             HorizontalScrollBarVisibility="Auto"
-                                              VerticalScrollBarVisibility="Auto"/>
-                                 </GroupBox>
+                                <GroupBox Header="Schritt 5 - Gesamtexport-Vorschau XDT" Grid.Row="5" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                                            <Button DockPanel.Dock="Right"
+                                                    Content="Exportvorschau aktualisieren"
+                                                    Width="220"
+                                                    Margin="8,0,0,0"
+                                                    Click="Process_Click"/>
+                                            <TextBlock Text="Bitte zuerst AIS-Datei und Gerätedatei laden."
+                                                       Foreground="DimGray"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                        <TextBox x:Name="FullExportPreviewTextBox"
+                                                 Grid.Row="1"
+                                                 MinHeight="280"
+                                                 IsReadOnly="True"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="NoWrap"
+                                                 FontFamily="Consolas"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 VerticalScrollBarVisibility="Auto"/>
+                                    </Grid>
+                                </GroupBox>
+
+                                <GroupBox Header="Schritt 6 - Testexport schreiben" Grid.Row="6">
+                                    <DockPanel Margin="8">
+                                        <Button DockPanel.Dock="Right"
+                                                Content="Testexportdatei schreiben"
+                                                Width="220"
+                                                Margin="8,0,0,0"
+                                                Click="Export_Click"/>
+                                        <TextBlock Text="Schreibt eine Test-XDT-Datei mit den aktuell geladenen Beispielwerten. Nicht für automatische Verarbeitung."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                </GroupBox>
                             </Grid>
                         </Expander>
 
