@@ -99,6 +99,7 @@ public sealed class TemplatePackageExporterTests
         Assert.Contains("\"IsAttachmentProcessingEnabled\": true", json);
         Assert.Contains("\"AttachmentRequirementMode\": \"Required\"", json);
         Assert.Contains("\"AttachmentWaitTimeoutSeconds\": 45", json);
+        Assert.Contains("\"DeviceFileWaitTimeoutMinutes\": 12", json);
     }
 
     [Fact]
@@ -191,7 +192,8 @@ public sealed class TemplatePackageExporterTests
                 AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
                 IsAttachmentProcessingEnabled = true,
                 AttachmentRequirementMode = AttachmentRequirementMode.Required,
-                AttachmentWaitTimeoutSeconds = 45
+                AttachmentWaitTimeoutSeconds = 45,
+                DeviceFileWaitTimeoutMinutes = 12
             }
         };
     }

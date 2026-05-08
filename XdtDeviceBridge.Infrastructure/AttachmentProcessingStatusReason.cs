@@ -9,6 +9,10 @@ public enum AttachmentProcessingStatusReason
     NoStableAttachment,
     MultipleSupportedAttachments,
     MultipleStableAttachments,
+    AttachmentWait,
+    AttachmentOptionalTimeoutContinueWithoutAttachment,
+    AttachmentRequiredTimeoutBlock,
+    MultipleAttachmentsAmbiguous,
     PreparationSucceeded,
     PreparationFailed
 }

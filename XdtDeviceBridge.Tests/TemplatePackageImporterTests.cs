@@ -103,6 +103,7 @@ public sealed class TemplatePackageImporterTests
         Assert.True(profile.FolderOptions.IsAttachmentProcessingEnabled);
         Assert.Equal(AttachmentRequirementMode.Required, profile.FolderOptions.AttachmentRequirementMode);
         Assert.Equal(45, profile.FolderOptions.AttachmentWaitTimeoutSeconds);
+        Assert.Equal(12, profile.FolderOptions.DeviceFileWaitTimeoutMinutes);
     }
 
     [Fact]
@@ -226,7 +227,8 @@ public sealed class TemplatePackageImporterTests
                 AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
                 IsAttachmentProcessingEnabled = true,
                 AttachmentRequirementMode = AttachmentRequirementMode.Required,
-                AttachmentWaitTimeoutSeconds = 45
+                AttachmentWaitTimeoutSeconds = 45,
+                DeviceFileWaitTimeoutMinutes = 12
             }
         };
     }

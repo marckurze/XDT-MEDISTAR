@@ -32,6 +32,7 @@ public partial class MainWindow : Window
     private readonly PeriodicAutoImportScanService _periodicAutoImportScanService = new();
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
     private readonly AutoImportPairProcessingCoordinator _autoImportPairProcessingCoordinator = new();
+    private readonly AutoImportPackageStateService _autoImportPackageStateService = new();
     private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
     private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
@@ -597,6 +598,7 @@ public partial class MainWindow : Window
         InterfaceArchiveFolderTextBox.Text = profile.FolderOptions.ArchiveFolder;
         InterfaceErrorFolderTextBox.Text = profile.FolderOptions.ErrorFolder;
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = profile.FolderOptions.AutoImportScanIntervalSeconds.ToString();
+        InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = profile.FolderOptions.DeviceFileWaitTimeoutMinutes.ToString();
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
@@ -631,6 +633,7 @@ public partial class MainWindow : Window
         InterfaceArchiveFolderTextBox.Text = string.Empty;
         InterfaceErrorFolderTextBox.Text = string.Empty;
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = "5";
+        InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = "10";
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
@@ -811,6 +814,7 @@ public partial class MainWindow : Window
             ArchiveProcessedFileMode: ReadArchiveProcessedFileModeFromEditor(),
             ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor(),
             AutoImportScanIntervalSeconds: ReadAutoImportScanIntervalSecondsFromEditor(),
+            DeviceFileWaitTimeoutMinutes: ReadDeviceFileWaitTimeoutMinutesFromEditor(),
             AttachmentImportFolder: InterfaceAttachmentImportFolderTextBox.Text.Trim(),
             AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
             AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim(),
@@ -900,6 +904,27 @@ public partial class MainWindow : Window
         }
 
         return intervalSeconds;
+    }
+
+    private int ReadDeviceFileWaitTimeoutMinutesFromEditor()
+    {
+        var rawValue = InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return 10;
+        }
+
+        if (!int.TryParse(rawValue, out var timeoutMinutes))
+        {
+            throw new FormatException("Wartezeit auf Gerätedatei muss eine ganze Zahl in Minuten sein.");
+        }
+
+        if (timeoutMinutes < 0)
+        {
+            throw new ArgumentException("Wartezeit auf Gerätedatei darf nicht negativ sein.");
+        }
+
+        return timeoutMinutes;
     }
 
     private ArchiveProcessedFileMode ReadArchiveProcessedFileModeFromEditor()
@@ -2260,13 +2285,23 @@ public partial class MainWindow : Window
             return new AutoImportPairProcessingBatchResult(0, 0, 1, Array.Empty<AutoImportPairProcessingResult>());
         }
 
-        var readyPairs = scanResult.Queue.FindReadyPairs();
+        var timestamp = DateTime.Now;
+        var packageEvaluation = _autoImportPackageStateService.Evaluate(
+            interfaceProfile,
+            scanResult.Queue,
+            timestamp);
+        foreach (var message in packageEvaluation.Messages)
+        {
+            AppendMessage($"{interfaceProfile.Metadata.Name}: {message}");
+        }
+
+        var readyPairs = packageEvaluation.ReadyPairs;
         var batchResult = _autoImportPairProcessingCoordinator.ProcessReadyPairs(
             interfaceProfile,
             exportProfile,
             readyPairs,
             automaticProcessingEnabled: true,
-            DateTime.Now,
+            timestamp,
             isMonitoringRunning: _periodicScanCancellationTokenSource is not null);
 
         foreach (var result in batchResult.Results)

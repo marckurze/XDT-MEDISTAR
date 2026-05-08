@@ -49,6 +49,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(30, profile.FolderOptions.AttachmentWaitTimeoutSeconds);
         Assert.Equal(2, profile.FolderOptions.AttachmentFileStabilityWaitSeconds);
         Assert.Equal(5, profile.FolderOptions.AutoImportScanIntervalSeconds);
+        Assert.Equal(10, profile.FolderOptions.DeviceFileWaitTimeoutMinutes);
     }
 
     [Fact]
@@ -121,7 +122,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
             attachmentRequirementMode: AttachmentRequirementMode.Required,
             attachmentWaitTimeoutSeconds: 45,
             attachmentFileStabilityWaitSeconds: 3,
-            autoImportScanIntervalSeconds: 7);
+            autoImportScanIntervalSeconds: 7,
+            deviceFileWaitTimeoutMinutes: 12);
 
         var result = _service.CreateConfiguredProfile(
             userProfile,
@@ -145,6 +147,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(45, result.Profile.FolderOptions.AttachmentWaitTimeoutSeconds);
         Assert.Equal(3, result.Profile.FolderOptions.AttachmentFileStabilityWaitSeconds);
         Assert.Equal(7, result.Profile.FolderOptions.AutoImportScanIntervalSeconds);
+        Assert.Equal(12, result.Profile.FolderOptions.DeviceFileWaitTimeoutMinutes);
     }
 
     [Fact]
@@ -359,6 +362,29 @@ public sealed class InterfaceProfileConfigurationServiceTests
     }
 
     [Fact]
+    public void CreateConfiguredProfile_ShouldReportInvalidDeviceFileWaitTimeout()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(deviceFileWaitTimeoutMinutes: -1);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "tester");
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Issues, issue =>
+            issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error
+            && issue.Message == "DeviceFileWaitTimeoutMinutes must not be negative.");
+    }
+
+    [Fact]
     public void CreateConfiguredProfile_ShouldReportMoveModeWithoutArchiveProcessing()
     {
         var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
@@ -406,7 +432,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
         int attachmentWaitTimeoutSeconds = 30,
         int attachmentFileStabilityWaitSeconds = 2,
-        int autoImportScanIntervalSeconds = 5)
+        int autoImportScanIntervalSeconds = 5,
+        int deviceFileWaitTimeoutMinutes = 10)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -433,7 +460,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
             AttachmentRequirementMode: attachmentRequirementMode,
             AttachmentWaitTimeoutSeconds: attachmentWaitTimeoutSeconds,
             AttachmentFileStabilityWaitSeconds: attachmentFileStabilityWaitSeconds,
-            AutoImportScanIntervalSeconds: autoImportScanIntervalSeconds);
+            AutoImportScanIntervalSeconds: autoImportScanIntervalSeconds,
+            DeviceFileWaitTimeoutMinutes: deviceFileWaitTimeoutMinutes);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

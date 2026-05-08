@@ -166,6 +166,7 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Equal(30, options.AttachmentWaitTimeoutSeconds);
         Assert.Equal(2, options.AttachmentFileStabilityWaitSeconds);
         Assert.Equal(5, options.AutoImportScanIntervalSeconds);
+        Assert.Equal(10, options.DeviceFileWaitTimeoutMinutes);
     }
 
     [Fact]
@@ -285,6 +286,17 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Contains("AutoImportScanIntervalSeconds must be at least 1.", issues);
     }
 
+    [Fact]
+    public void Validate_ShouldReportNegativeDeviceFileWaitTimeout()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            deviceFileWaitTimeoutMinutes: -1));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("DeviceFileWaitTimeoutMinutes must not be negative.", issues);
+    }
+
     private static InterfaceProfileDefinition WithFolderOptions(InterfaceFolderOptions options)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
@@ -318,7 +330,8 @@ public sealed class InterfaceProfileDefinitionTests
         AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
         int attachmentWaitTimeoutSeconds = 30,
         int attachmentFileStabilityWaitSeconds = 2,
-        int autoImportScanIntervalSeconds = 5)
+        int autoImportScanIntervalSeconds = 5,
+        int deviceFileWaitTimeoutMinutes = 10)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -345,7 +358,8 @@ public sealed class InterfaceProfileDefinitionTests
             AttachmentRequirementMode: attachmentRequirementMode,
             AttachmentWaitTimeoutSeconds: attachmentWaitTimeoutSeconds,
             AttachmentFileStabilityWaitSeconds: attachmentFileStabilityWaitSeconds,
-            AutoImportScanIntervalSeconds: autoImportScanIntervalSeconds);
+            AutoImportScanIntervalSeconds: autoImportScanIntervalSeconds,
+            DeviceFileWaitTimeoutMinutes: deviceFileWaitTimeoutMinutes);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

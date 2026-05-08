@@ -261,7 +261,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         var coordinator = CreateCoordinator(
             new FakeManualProcessor(CreateSuccessResult(patientNumber: "")),
             scanner,
-            preparationService);
+            preparationService,
+            patientNumber: "");
 
         var result = coordinator.ProcessReadyPairs(
             CreateInterfaceProfile(
@@ -348,7 +349,7 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             scanner,
             preparationService);
 
-        var result = coordinator.ProcessReadyPairs(
+        var first = coordinator.ProcessReadyPairs(
             CreateInterfaceProfile(
                 isAttachmentProcessingEnabled: true,
                 attachmentImportFolder: @"C:\Import\Attachments",
@@ -358,12 +359,28 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             automaticProcessingEnabled: true,
             Timestamp);
 
-        var processed = Assert.Single(result.Results);
-        Assert.True(processed.Success);
+        var waiting = Assert.Single(first.Results);
+        Assert.True(waiting.WasSkipped);
+        Assert.Equal("Dateipaar vollständig, warte auf XDT-Anhang.", waiting.Status);
         Assert.Equal(1, scanner.CallCount);
         Assert.Equal(0, preparationService.CallCount);
+
+        var result = coordinator.ProcessReadyPairs(
+            CreateInterfaceProfile(
+                isAttachmentProcessingEnabled: true,
+                attachmentImportFolder: @"C:\Import\Attachments",
+                attachmentExportFolder: @"C:\Export\Attachments"),
+            CreateExportProfile(),
+            new[] { CreatePair("patient.gdt", "device.xml") },
+            automaticProcessingEnabled: true,
+            Timestamp.AddSeconds(31));
+
+        var processed = Assert.Single(result.Results);
+        Assert.True(processed.Success);
+        Assert.Equal(2, scanner.CallCount);
+        Assert.Equal(0, preparationService.CallCount);
         Assert.True(processed.AttachmentStatus!.WasSkipped);
-        Assert.Equal(AttachmentProcessingStatusReason.NoSupportedAttachment, processed.AttachmentStatus.Reason);
+        Assert.Equal(AttachmentProcessingStatusReason.AttachmentOptionalTimeoutContinueWithoutAttachment, processed.AttachmentStatus.Reason);
         Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
         Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
@@ -432,15 +449,14 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             Timestamp);
 
         var processed = Assert.Single(result.Results);
-        Assert.True(processed.Success);
+        Assert.False(processed.WasProcessed);
+        Assert.True(processed.WasSkipped);
+        Assert.Equal("Dateipaar vollständig, warte auf XDT-Anhang.", processed.Status);
         Assert.Equal(1, scanner.CallCount);
         Assert.Equal(0, preparationService.CallCount);
-        Assert.Equal(AttachmentProcessingStatusReason.NoStableAttachment, processed.AttachmentStatus!.Reason);
-        Assert.Contains("noch nicht stabil", processed.AttachmentStatus.Message);
-        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
-        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
+        Assert.Equal(AttachmentProcessingStatusReason.AttachmentWait, processed.AttachmentStatus!.Reason);
+        Assert.Contains("warte auf XDT-Anhang", processed.AttachmentStatus.Message);
+        Assert.Null(processed.ManualProcessingResult);
     }
 
 
@@ -472,8 +488,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.True(processed.Success);
         Assert.Equal(1, scanner.CallCount);
         Assert.Equal(0, preparationService.CallCount);
-        Assert.Equal(AttachmentProcessingStatusReason.MultipleStableAttachments, processed.AttachmentStatus!.Reason);
-        Assert.Contains("mehrere stabile unterstützte Anhänge", processed.AttachmentStatus.Message);
+        Assert.Equal(AttachmentProcessingStatusReason.MultipleAttachmentsAmbiguous, processed.AttachmentStatus!.Reason);
+        Assert.Contains("Mehrere unterstützte XDT-Anhänge", processed.AttachmentStatus.Message);
         Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
         Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
@@ -511,6 +527,100 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_OptionalAttachmentShouldWaitAndThenUseAttachmentWithinTimeout()
+    {
+        var candidate = CreateAttachmentCandidate(@"C:\Import\Attachments\report.pdf", isSupported: true);
+        var scanner = new FakeSequentialAttachmentScanner(
+            CreateAttachmentScanResult(),
+            CreateAttachmentScanResult(new[] { candidate }));
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: @"C:\Import\Attachments",
+            attachmentExportFolder: @"C:\Export\Attachments",
+            attachmentRequirementMode: AttachmentRequirementMode.Optional,
+            attachmentWaitTimeoutSeconds: 30);
+        var pair = CreatePair("patient.gdt", "device.xml");
+
+        var first = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
+        var firstResult = Assert.Single(first.Results);
+        Assert.True(firstResult.WasSkipped);
+        Assert.Equal("Dateipaar vollständig, warte auf XDT-Anhang.", firstResult.Status);
+        Assert.Equal(0, processor.CallCount);
+
+        var second = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(10));
+
+        var processed = Assert.Single(second.Results);
+        Assert.True(processed.Success);
+        Assert.Equal(2, scanner.CallCount);
+        Assert.Equal(1, preparationService.CallCount);
+        Assert.Equal(1, processor.CallCount);
+        Assert.Contains("6302PDF-Befund", processed.ManualProcessingResult!.ExportContent);
+        Assert.Contains(@"6305C:\Export\Attachments\report.pdf", processed.ManualProcessingResult.ExportContent);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentWaitShouldStartWhenPairIsFirstSeen()
+    {
+        var candidate = CreateAttachmentCandidate(@"C:\Import\Attachments\report.pdf", isSupported: true);
+        var scanner = new FakeSequentialAttachmentScanner(
+            CreateAttachmentScanResult(),
+            CreateAttachmentScanResult(new[] { candidate }));
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: @"C:\Import\Attachments",
+            attachmentExportFolder: @"C:\Export\Attachments",
+            attachmentWaitTimeoutSeconds: 30);
+        var pair = CreatePair("patient.gdt", "device.xml");
+
+        var pairDetectedAt = Timestamp.AddMinutes(5);
+        var first = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, pairDetectedAt);
+        var second = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, pairDetectedAt.AddSeconds(10));
+
+        Assert.True(Assert.Single(first.Results).WasSkipped);
+        var processed = Assert.Single(second.Results);
+        Assert.True(processed.Success);
+        Assert.Equal(1, processor.CallCount);
+        Assert.Equal(1, preparationService.CallCount);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_RequiredAttachmentShouldBlockAfterTimeout()
+    {
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult());
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: @"C:\Import\Attachments",
+            attachmentExportFolder: @"C:\Export\Attachments",
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            attachmentWaitTimeoutSeconds: 30);
+        var pair = CreatePair("patient.gdt", "device.xml");
+
+        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
+        var second = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(30));
+
+        var blocked = Assert.Single(second.Results);
+        Assert.False(blocked.WasProcessed);
+        Assert.True(blocked.WasSkipped);
+        Assert.False(blocked.Success);
+        Assert.Equal("XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.", blocked.Status);
+        Assert.Equal(0, preparationService.CallCount);
+        Assert.Equal(0, processor.CallCount);
+
+        var third = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(60));
+        Assert.Equal("XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.", Assert.Single(third.Results).Status);
+        Assert.Equal(0, processor.CallCount);
     }
 
     [Fact]
@@ -734,7 +844,9 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         bool clearDeviceImportFolderBeforeProcessing = false,
         bool isAttachmentProcessingEnabled = false,
         string attachmentImportFolder = "",
-        string attachmentExportFolder = "")
+        string attachmentExportFolder = "",
+        AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
+        int attachmentWaitTimeoutSeconds = 30)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
         {
@@ -751,7 +863,9 @@ public sealed class AutoImportPairProcessingCoordinatorTests
                 ClearDeviceImportFolderBeforeProcessing = clearDeviceImportFolderBeforeProcessing,
                 IsAttachmentProcessingEnabled = isAttachmentProcessingEnabled,
                 AttachmentImportFolder = attachmentImportFolder,
-                AttachmentExportFolder = attachmentExportFolder
+                AttachmentExportFolder = attachmentExportFolder,
+                AttachmentRequirementMode = attachmentRequirementMode,
+                AttachmentWaitTimeoutSeconds = attachmentWaitTimeoutSeconds
             },
             IsActive = true
         };
@@ -811,7 +925,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     private static AutoImportPairProcessingCoordinator CreateCoordinator(
         IInterfaceProfileManualProcessor manualProcessor,
         IAttachmentImportFolderScannerService scanner,
-        IAttachmentExternalLinkPreparationService preparationService)
+        IAttachmentExternalLinkPreparationService preparationService,
+        string? patientNumber = "11253")
     {
         return new AutoImportPairProcessingCoordinator(
             manualProcessor,
@@ -819,7 +934,9 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             new AttachmentAutoProcessingEligibilityService(),
             scanner,
             new AttachmentAutoCandidateSelectionService(),
-            preparationService);
+            preparationService,
+            new FakeAisPatientDataReader(patientNumber),
+            new AttachmentPackageDecisionService());
     }
 
     private static ProcessingPipelineResult CreatePipelineResult(string? patientNumber)
@@ -1021,6 +1138,45 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         }
     }
 
+    private sealed class FakeSequentialAttachmentScanner : IAttachmentImportFolderScannerService
+    {
+        private readonly Queue<AttachmentImportFolderScanResult> _results;
+        private AttachmentImportFolderScanResult? _lastResult;
+
+        public FakeSequentialAttachmentScanner(params AttachmentImportFolderScanResult[] results)
+        {
+            _results = new Queue<AttachmentImportFolderScanResult>(results);
+        }
+
+        public int CallCount { get; private set; }
+
+        public AttachmentImportFolderScanResult Scan(InterfaceFolderOptions folderOptions)
+        {
+            CallCount++;
+            if (_results.Count > 0)
+            {
+                _lastResult = _results.Dequeue();
+            }
+
+            return _lastResult ?? CreateAttachmentScanResult();
+        }
+
+        public AttachmentImportFolderScanResult Scan(string attachmentImportFolder)
+        {
+            return Scan(new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: false));
+        }
+    }
+
     private sealed class FakeAttachmentPreparationService : IAttachmentExternalLinkPreparationService
     {
         private readonly AttachmentExternalLinkPreparationResult _result;
@@ -1039,6 +1195,34 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             CallCount++;
             LastRequest = request;
             return _result;
+        }
+    }
+
+    private sealed class FakeAisPatientDataReader : IAisPatientDataReader
+    {
+        private readonly string? _patientNumber;
+
+        public FakeAisPatientDataReader(string? patientNumber)
+        {
+            _patientNumber = patientNumber;
+        }
+
+        public AisPatientDataReadResult Read(string aisFilePath)
+        {
+            var patient = new PatientData(
+                PatientNumber: _patientNumber,
+                LastName: "Muster",
+                FirstName: "Mara",
+                BirthDate: null,
+                PostalCodeCity: null,
+                Street: null,
+                GenderCode: null,
+                SourceSystem: null,
+                TargetSystem: null,
+                GdtVersion: null,
+                ExaminationType: null);
+
+            return new AisPatientDataReadResult(true, patient, null);
         }
     }
 }

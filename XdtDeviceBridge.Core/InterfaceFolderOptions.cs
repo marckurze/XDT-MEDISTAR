@@ -25,4 +25,5 @@ public sealed record InterfaceFolderOptions(
     AttachmentRequirementMode AttachmentRequirementMode = AttachmentRequirementMode.Optional,
     int AttachmentWaitTimeoutSeconds = 30,
     int AttachmentFileStabilityWaitSeconds = 2,
-    int AutoImportScanIntervalSeconds = 5);
+    int AutoImportScanIntervalSeconds = 5,
+    int DeviceFileWaitTimeoutMinutes = 10);

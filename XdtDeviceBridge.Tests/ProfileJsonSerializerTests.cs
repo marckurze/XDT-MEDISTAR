@@ -70,7 +70,8 @@ public sealed class ProfileJsonSerializerTests
                 AttachmentRequirementMode = AttachmentRequirementMode.Required,
                 AttachmentWaitTimeoutSeconds = 45,
                 AttachmentFileStabilityWaitSeconds = 3,
-                AutoImportScanIntervalSeconds = 7
+                AutoImportScanIntervalSeconds = 7,
+                DeviceFileWaitTimeoutMinutes = 12
             }
         };
 
@@ -93,6 +94,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Contains("\"AttachmentWaitTimeoutSeconds\": 45", json);
         Assert.Contains("\"AttachmentFileStabilityWaitSeconds\": 3", json);
         Assert.Contains("\"AutoImportScanIntervalSeconds\": 7", json);
+        Assert.Contains("\"DeviceFileWaitTimeoutMinutes\": 12", json);
     }
 
     [Fact]
@@ -152,6 +154,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(30, deserialized.FolderOptions.AttachmentWaitTimeoutSeconds);
         Assert.Equal(2, deserialized.FolderOptions.AttachmentFileStabilityWaitSeconds);
         Assert.Equal(5, deserialized.FolderOptions.AutoImportScanIntervalSeconds);
+        Assert.Equal(10, deserialized.FolderOptions.DeviceFileWaitTimeoutMinutes);
     }
 
     [Fact]
@@ -201,7 +204,8 @@ public sealed class ProfileJsonSerializerTests
             "AttachmentRequirementMode": "Required",
             "AttachmentWaitTimeoutSeconds": 45,
             "AttachmentFileStabilityWaitSeconds": 3,
-            "AutoImportScanIntervalSeconds": 7
+            "AutoImportScanIntervalSeconds": 7,
+            "DeviceFileWaitTimeoutMinutes": 12
           },
           "IsActive": false,
           "IsLicenseRequired": true,
@@ -224,6 +228,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(45, deserialized.FolderOptions.AttachmentWaitTimeoutSeconds);
         Assert.Equal(3, deserialized.FolderOptions.AttachmentFileStabilityWaitSeconds);
         Assert.Equal(7, deserialized.FolderOptions.AutoImportScanIntervalSeconds);
+        Assert.Equal(12, deserialized.FolderOptions.DeviceFileWaitTimeoutMinutes);
     }
 
     [Fact]

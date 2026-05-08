@@ -121,6 +121,11 @@ public static class InterfaceProfileDefinitionValidator
             issues.Add("AutoImportScanIntervalSeconds must be at least 1.");
         }
 
+        if (profile.FolderOptions.DeviceFileWaitTimeoutMinutes < 0)
+        {
+            issues.Add("DeviceFileWaitTimeoutMinutes must not be negative.");
+        }
+
         if (profile.FolderOptions.ArchiveProcessedFiles
             && profile.FolderOptions.ArchiveRetentionDays > 0
             && string.IsNullOrWhiteSpace(profile.FolderOptions.ArchiveFolder))

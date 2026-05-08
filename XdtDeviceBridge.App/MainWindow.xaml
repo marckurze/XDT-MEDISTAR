@@ -1031,6 +1031,15 @@
                                                      ToolTip="Intervall der manuell gestarteten periodischen Ordnerabfrage in Sekunden. Minimum: 1 Sekunde."/>
                                             <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                         </StackPanel>
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Wartezeit auf Gerätedatei:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                            <TextBox x:Name="InterfaceDeviceFileWaitTimeoutMinutesTextBox"
+                                                     Width="120"
+                                                     Text="10"
+                                                     ToolTip="Maximale Wartezeit, nachdem eine AIS-Datei erkannt wurde, bis eine passende Gerätedatei erwartet wird. 0 bedeutet: nicht warten."/>
+                                            <TextBlock Text=" Minuten" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                        </StackPanel>
                                     </Grid>
                                 </GroupBox>
 

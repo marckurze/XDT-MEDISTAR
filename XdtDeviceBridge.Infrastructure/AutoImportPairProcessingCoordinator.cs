@@ -10,8 +10,12 @@ public sealed class AutoImportPairProcessingCoordinator
     private readonly IAttachmentImportFolderScannerService _attachmentScannerService;
     private readonly AttachmentAutoCandidateSelectionService _attachmentCandidateSelectionService;
     private readonly IAttachmentExternalLinkPreparationService _attachmentPreparationService;
+    private readonly IAisPatientDataReader _aisPatientDataReader;
+    private readonly AttachmentPackageDecisionService _attachmentPackageDecisionService;
     private readonly HashSet<string> _processedPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _processingPairKeys = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _blockedPairKeys = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, DateTime> _pairReadySinceUtc = new(StringComparer.OrdinalIgnoreCase);
 
     public AutoImportPairProcessingCoordinator()
         : this(new InterfaceProfileManualProcessor(), new DuplicateImportFileHandler())
@@ -32,7 +36,9 @@ public sealed class AutoImportPairProcessingCoordinator
             new AttachmentAutoProcessingEligibilityService(),
             new AttachmentImportFolderScannerService(),
             new AttachmentAutoCandidateSelectionService(),
-            new AttachmentExternalLinkPreparationService())
+            new AttachmentExternalLinkPreparationService(),
+            new AisPatientDataReader(),
+            new AttachmentPackageDecisionService())
     {
     }
 
@@ -43,6 +49,27 @@ public sealed class AutoImportPairProcessingCoordinator
         IAttachmentImportFolderScannerService attachmentScannerService,
         AttachmentAutoCandidateSelectionService attachmentCandidateSelectionService,
         IAttachmentExternalLinkPreparationService attachmentPreparationService)
+        : this(
+            manualProcessor,
+            duplicateImportFileHandler,
+            attachmentEligibilityService,
+            attachmentScannerService,
+            attachmentCandidateSelectionService,
+            attachmentPreparationService,
+            new AisPatientDataReader(),
+            new AttachmentPackageDecisionService())
+    {
+    }
+
+    public AutoImportPairProcessingCoordinator(
+        IInterfaceProfileManualProcessor manualProcessor,
+        DuplicateImportFileHandler duplicateImportFileHandler,
+        AttachmentAutoProcessingEligibilityService attachmentEligibilityService,
+        IAttachmentImportFolderScannerService attachmentScannerService,
+        AttachmentAutoCandidateSelectionService attachmentCandidateSelectionService,
+        IAttachmentExternalLinkPreparationService attachmentPreparationService,
+        IAisPatientDataReader aisPatientDataReader,
+        AttachmentPackageDecisionService attachmentPackageDecisionService)
     {
         _manualProcessor = manualProcessor ?? throw new ArgumentNullException(nameof(manualProcessor));
         _duplicateImportFileHandler = duplicateImportFileHandler ?? throw new ArgumentNullException(nameof(duplicateImportFileHandler));
@@ -50,6 +77,8 @@ public sealed class AutoImportPairProcessingCoordinator
         _attachmentScannerService = attachmentScannerService ?? throw new ArgumentNullException(nameof(attachmentScannerService));
         _attachmentCandidateSelectionService = attachmentCandidateSelectionService ?? throw new ArgumentNullException(nameof(attachmentCandidateSelectionService));
         _attachmentPreparationService = attachmentPreparationService ?? throw new ArgumentNullException(nameof(attachmentPreparationService));
+        _aisPatientDataReader = aisPatientDataReader ?? throw new ArgumentNullException(nameof(aisPatientDataReader));
+        _attachmentPackageDecisionService = attachmentPackageDecisionService ?? throw new ArgumentNullException(nameof(attachmentPackageDecisionService));
     }
 
     public AutoImportPairProcessingBatchResult ProcessReadyPairs(
@@ -97,6 +126,20 @@ public sealed class AutoImportPairProcessingCoordinator
                 continue;
             }
 
+            if (_blockedPairKeys.Contains(pairKey))
+            {
+                var status = SkippedStatus(
+                    AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock,
+                    "XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.");
+                results.Add(CreateDeferredResult(
+                    pairKey,
+                    pair,
+                    status.Message,
+                    new[] { status.Message },
+                    status));
+                continue;
+            }
+
             if (_processingPairKeys.Contains(pairKey))
             {
                 results.Add(new AutoImportPairProcessingResult(
@@ -113,6 +156,19 @@ public sealed class AutoImportPairProcessingCoordinator
                 continue;
             }
 
+            var attachmentGate = EvaluateAttachmentPackageBeforeProcessing(
+                interfaceProfile,
+                pair,
+                pairKey,
+                automaticProcessingEnabled,
+                isMonitoringRunning,
+                timestamp);
+            if (attachmentGate.DeferredResult is not null)
+            {
+                results.Add(attachmentGate.DeferredResult);
+                continue;
+            }
+
             _processingPairKeys.Add(pairKey);
             try
             {
@@ -122,18 +178,15 @@ public sealed class AutoImportPairProcessingCoordinator
                     pair.AisFile.FilePath,
                     pair.DeviceFile.FilePath,
                     timestamp,
-                    patient => PrepareAttachmentIfAllowed(
-                        interfaceProfile,
-                        patient,
-                        automaticProcessingEnabled,
-                        isMonitoringRunning,
-                        timestamp));
+                    attachmentGate.AttachmentPreparation);
                 _processedPairKeys.Add(pairKey);
+                _pairReadySinceUtc.Remove(pairKey);
                 results.Add(CreateProcessedResult(interfaceProfile, pairKey, pair, processingResult, processingResult.AttachmentStatus));
             }
             catch (Exception ex)
             {
                 _processedPairKeys.Add(pairKey);
+                _pairReadySinceUtc.Remove(pairKey);
                 results.Add(new AutoImportPairProcessingResult(
                     PairKey: pairKey,
                     AisFilePath: pair.AisFile.FilePath,
@@ -178,6 +231,201 @@ public sealed class AutoImportPairProcessingCoordinator
             ManualProcessingResult: processingResult,
             Messages: AppendAttachmentMessage(processingResult.Messages, attachmentStatus),
             AttachmentStatus: attachmentStatus);
+    }
+
+    private AttachmentGateDecision EvaluateAttachmentPackageBeforeProcessing(
+        InterfaceProfileDefinition interfaceProfile,
+        PendingImportPair pair,
+        string pairKey,
+        bool automaticProcessingEnabled,
+        bool isMonitoringRunning,
+        DateTime timestamp)
+    {
+        if (!interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled
+            || !automaticProcessingEnabled
+            || !isMonitoringRunning)
+        {
+            return new AttachmentGateDecision(
+                DeferredResult: null,
+                AttachmentPreparation: patient => PrepareAttachmentIfAllowed(
+                    interfaceProfile,
+                    patient,
+                    automaticProcessingEnabled,
+                    isMonitoringRunning,
+                    timestamp));
+        }
+
+        var patientReadResult = _aisPatientDataReader.Read(pair.AisFile.FilePath);
+        if (!patientReadResult.Success
+            || patientReadResult.Patient is null
+            || string.IsNullOrWhiteSpace(patientReadResult.Patient.PatientNumber))
+        {
+            var status = SkippedStatus(
+                AttachmentProcessingStatusReason.EligibilityNotMet,
+                "XDT-Anhang übersprungen: AIS-Patientennummer fehlt; keine sichere Zuordnung möglich.");
+            return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => status);
+        }
+
+        var eligibility = _attachmentEligibilityService.Evaluate(
+            interfaceProfile,
+            patientReadResult.Patient,
+            isMonitoringRunning,
+            automaticProcessingEnabled);
+        if (!eligibility.IsAllowed)
+        {
+            var status = SkippedStatus(
+                AttachmentProcessingStatusReason.EligibilityNotMet,
+                $"XDT-Anhang übersprungen: {string.Join(" ", eligibility.Reasons)}");
+            return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => status);
+        }
+
+        var scanResult = _attachmentScannerService.Scan(interfaceProfile.FolderOptions);
+        var pairReadySince = GetPairReadySince(pairKey, timestamp);
+        var hasWaitTimedOut = HasAttachmentWaitTimedOut(interfaceProfile, pairReadySince, timestamp);
+        var packageDecision = _attachmentPackageDecisionService.Decide(
+            interfaceProfile,
+            patientReadResult.Patient,
+            scanResult,
+            isMonitoringRunning,
+            automaticProcessingEnabled,
+            hasWaitTimedOut);
+
+        if (packageDecision.ShouldWait)
+        {
+            var status = SkippedStatus(
+                AttachmentProcessingStatusReason.AttachmentWait,
+                "Dateipaar vollständig, warte auf XDT-Anhang.");
+            return new AttachmentGateDecision(
+                DeferredResult: CreateDeferredResult(
+                    pairKey,
+                    pair,
+                    "Dateipaar vollständig, warte auf XDT-Anhang.",
+                    new[] { status.Message, packageDecision.Message },
+                    status),
+                AttachmentPreparation: null);
+        }
+
+        if (packageDecision.ShouldBlock)
+        {
+            var message = packageDecision.Reason == AttachmentPackageDecisionReason.AttachmentRequiredTimeoutBlock
+                ? "XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert."
+                : packageDecision.Message;
+            var status = SkippedStatus(MapPackageDecisionReason(packageDecision.Reason), message);
+            _pairReadySinceUtc.Remove(pairKey);
+            if (packageDecision.Reason == AttachmentPackageDecisionReason.AttachmentRequiredTimeoutBlock
+                || interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required)
+            {
+                _blockedPairKeys.Add(pairKey);
+            }
+            return new AttachmentGateDecision(
+                DeferredResult: CreateDeferredResult(pairKey, pair, message, new[] { message, packageDecision.Message }, status),
+                AttachmentPreparation: null);
+        }
+
+        if (packageDecision.CanContinueWithoutAttachment)
+        {
+            var message = packageDecision.Reason == AttachmentPackageDecisionReason.AttachmentOptionalTimeoutContinueWithoutAttachment
+                ? "XDT-Anhang optional: Timeout erreicht, Export ohne Anhang."
+                : packageDecision.Message;
+            var status = SkippedStatus(MapPackageDecisionReason(packageDecision.Reason), message);
+            return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => status);
+        }
+
+        if (packageDecision.CanProcessAttachment && packageDecision.SelectedCandidate is not null)
+        {
+            var selectedCandidate = packageDecision.SelectedCandidate;
+            return new AttachmentGateDecision(
+                DeferredResult: null,
+                AttachmentPreparation: patient => PrepareSelectedAttachment(
+                    interfaceProfile,
+                    patient,
+                    selectedCandidate,
+                    timestamp));
+        }
+
+        var fallbackStatus = SkippedStatus(
+            AttachmentProcessingStatusReason.ScanError,
+            $"XDT-Anhang übersprungen: {packageDecision.Message}");
+        return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => fallbackStatus);
+    }
+
+    private DateTime GetPairReadySince(string pairKey, DateTime timestamp)
+    {
+        if (!_pairReadySinceUtc.TryGetValue(pairKey, out var pairReadySince))
+        {
+            pairReadySince = timestamp;
+            _pairReadySinceUtc[pairKey] = pairReadySince;
+        }
+
+        return pairReadySince;
+    }
+
+    private static bool HasAttachmentWaitTimedOut(
+        InterfaceProfileDefinition interfaceProfile,
+        DateTime pairReadySince,
+        DateTime timestamp)
+    {
+        var timeout = TimeSpan.FromSeconds(Math.Max(0, interfaceProfile.FolderOptions.AttachmentWaitTimeoutSeconds));
+        return timestamp - pairReadySince >= timeout;
+    }
+
+    private static AutoImportPairProcessingResult CreateDeferredResult(
+        string pairKey,
+        PendingImportPair pair,
+        string status,
+        IReadOnlyList<string> messages,
+        AttachmentProcessingStatus? attachmentStatus)
+    {
+        return new AutoImportPairProcessingResult(
+            PairKey: pairKey,
+            AisFilePath: pair.AisFile.FilePath,
+            DeviceFilePath: pair.DeviceFile.FilePath,
+            WasProcessed: false,
+            WasSkipped: true,
+            Success: false,
+            Status: status,
+            ExportFilePath: null,
+            ManualProcessingResult: null,
+            Messages: messages,
+            AttachmentStatus: attachmentStatus);
+    }
+
+    private AttachmentProcessingStatus PrepareSelectedAttachment(
+        InterfaceProfileDefinition interfaceProfile,
+        PatientData patient,
+        AttachmentImportFileCandidate selectedCandidate,
+        DateTime timestamp)
+    {
+        var preparationResult = _attachmentPreparationService.Prepare(new AttachmentExternalLinkPreparationRequest(
+            FolderOptions: interfaceProfile.FolderOptions,
+            SourceAttachmentPath: selectedCandidate.FullPath,
+            Patient: patient,
+            ProcessingTimestamp: timestamp,
+            IsSourceStable: selectedCandidate.IsStable));
+        if (!preparationResult.Success)
+        {
+            return new AttachmentProcessingStatus(
+                WasAttempted: true,
+                WasSkipped: false,
+                Success: false,
+                Reason: AttachmentProcessingStatusReason.PreparationFailed,
+                Message: $"XDT-Anhang Vorbereitung fehlgeschlagen: {preparationResult.ErrorMessage}",
+                SourcePath: selectedCandidate.FullPath,
+                TargetPath: preparationResult.TargetPath,
+                TargetFileName: preparationResult.TargetFileName,
+                PreparedFields: Array.Empty<ExportFieldRecord>());
+        }
+
+        return new AttachmentProcessingStatus(
+            WasAttempted: true,
+            WasSkipped: false,
+            Success: true,
+            Reason: AttachmentProcessingStatusReason.PreparationSucceeded,
+            Message: $"XDT-Anhang vorbereitet: {preparationResult.TargetPath}",
+            SourcePath: selectedCandidate.FullPath,
+            TargetPath: preparationResult.TargetPath,
+            TargetFileName: preparationResult.TargetFileName,
+            PreparedFields: preparationResult.ExportFields);
     }
 
     private AttachmentProcessingStatus PrepareAttachmentIfAllowed(
@@ -325,8 +573,34 @@ public sealed class AutoImportPairProcessingCoordinator
             : "Automatischer Fehler, Dateien kopiert";
     }
 
+    private static AttachmentProcessingStatusReason MapPackageDecisionReason(AttachmentPackageDecisionReason reason)
+    {
+        return reason switch
+        {
+            AttachmentPackageDecisionReason.AttachmentOptionalWait or AttachmentPackageDecisionReason.AttachmentRequiredWait
+                => AttachmentProcessingStatusReason.AttachmentWait,
+            AttachmentPackageDecisionReason.AttachmentOptionalTimeoutContinueWithoutAttachment
+                => AttachmentProcessingStatusReason.AttachmentOptionalTimeoutContinueWithoutAttachment,
+            AttachmentPackageDecisionReason.AttachmentRequiredTimeoutBlock
+                => AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock,
+            AttachmentPackageDecisionReason.AttachmentNotStableWait
+                => AttachmentProcessingStatusReason.NoStableAttachment,
+            AttachmentPackageDecisionReason.MultipleAttachmentsAmbiguous
+                => AttachmentProcessingStatusReason.MultipleAttachmentsAmbiguous,
+            AttachmentPackageDecisionReason.ScanError
+                => AttachmentProcessingStatusReason.ScanError,
+            AttachmentPackageDecisionReason.MissingPatientNumber or AttachmentPackageDecisionReason.MissingAttachmentFolders
+                => AttachmentProcessingStatusReason.EligibilityNotMet,
+            _ => AttachmentProcessingStatusReason.None
+        };
+    }
+
     public static string CreatePairKey(string interfaceProfileId, string aisFilePath, string deviceFilePath)
     {
         return $"{interfaceProfileId}|{aisFilePath}|{deviceFilePath}";
     }
+
+    private sealed record AttachmentGateDecision(
+        AutoImportPairProcessingResult? DeferredResult,
+        Func<PatientData, AttachmentProcessingStatus?>? AttachmentPreparation);
 }
