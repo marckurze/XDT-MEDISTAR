@@ -35,6 +35,10 @@ public partial class MainWindow : Window
     private readonly AutoImportPackageStateService _autoImportPackageStateService = new();
     private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
     private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
+    private readonly BuilderTestExportService _builderTestExportService = new();
+    private readonly AttachmentFileNameBuilder _attachmentFileNameBuilder = new();
+    private readonly ExternalAisLinkFieldBuilder _externalAisLinkFieldBuilder = new();
+    private readonly ExternalAisLinkXdtFieldAdapter _externalAisLinkXdtFieldAdapter = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -60,6 +64,10 @@ public partial class MainWindow : Window
     private int _draftRuleSequence;
     private CancellationTokenSource? _periodicScanCancellationTokenSource;
     private Task? _periodicScanTask;
+    private IReadOnlyList<ExportFieldRecord> _builderTransientAttachmentFields = Array.Empty<ExportFieldRecord>();
+    private AttachmentImportCandidateDisplayRow? _builderSelectedAttachmentCandidate;
+    private string? _builderPreviewAttachmentTargetPath;
+    private string? _builderPreviewAttachmentTargetFileName;
 
     public MainWindow()
     {
@@ -329,7 +337,7 @@ public partial class MainWindow : Window
     {
         if (_lastPipelineResult is null)
         {
-            return "Noch keine Beispielwerte geladen. Bitte zuerst im Tab Verarbeitung eine AIS-GDT-Datei und eine Gerätedatei verarbeiten.";
+            return "Noch keine Beispielwerte geladen. Bitte zuerst AIS-Datei und Gerätedatei laden.";
         }
 
         var result = _lastPipelineResult;
@@ -339,7 +347,10 @@ public partial class MainWindow : Window
             .Select(rule => CreatePreviewMappingRule(rule, result))
             .ToList();
         var mappingResult = _mappingEngine.Map(patient, result.Measurements, mappingRules);
-        var exportResult = _xdtExportBuilder.Build(mappingResult.Records);
+        var exportRecords = BuilderTestExportService.AppendTransientAttachmentFields(
+            mappingResult.Records,
+            _builderTransientAttachmentFields);
+        var exportResult = _xdtExportBuilder.Build(exportRecords);
         var unresolvedPlaceholders = effectiveRules
             .SelectMany(rule =>
             {
@@ -352,6 +363,9 @@ public partial class MainWindow : Window
 
         var builder = new StringBuilder();
         builder.AppendLine($"Exportprofil: {exportProfile.Metadata.Name}");
+        builder.AppendLine(_builderTransientAttachmentFields.Count > 0
+            ? "XDT-Anhang-Linkfelder: 6302-6305 werden nur transient für diese Baukasten-Vorschau ergänzt."
+            : "XDT-Anhang-Linkfelder: Kein XDT-Anhang eingelesen. Vorschau enthält keine 6302-6305.");
         if (draftRule is not null)
         {
             builder.AppendLine("Entwurfsregel aktiv: Diese Vorschau ist temporär und wurde nicht gespeichert.");
@@ -557,6 +571,7 @@ public partial class MainWindow : Window
 
         SyncAttachmentDiagnosticProfileSelection(sender as System.Windows.Controls.ComboBox);
         _attachmentImportCandidateRows.Clear();
+        ClearBuilderAttachmentPreviewState(updatePreview: true);
         UpdateAttachmentDiagnosticProfileDisplay();
     }
 
@@ -564,19 +579,22 @@ public partial class MainWindow : Window
     {
         if (GetSelectedAttachmentDiagnosticProfile() is not InterfaceProfileDefinition profile)
         {
-            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, BuilderAttachmentDiagnosticProfileText, "-");
-            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, BuilderAttachmentDiagnosticImportFolderText, "-");
-            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, BuilderAttachmentDiagnosticExportFolderText, "-");
+            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, "-");
+            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, "-");
+            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, "-");
+            UpdateBuilderAttachmentProfileDetails(null);
             return;
         }
 
-        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, BuilderAttachmentDiagnosticProfileText, profile.Metadata.Name);
-        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, BuilderAttachmentDiagnosticImportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentImportFolder)
+        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, profile.Metadata.Name);
+        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentImportFolder)
             ? "-"
             : profile.FolderOptions.AttachmentImportFolder);
-        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, BuilderAttachmentDiagnosticExportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentExportFolder)
+        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentExportFolder)
             ? "-"
             : profile.FolderOptions.AttachmentExportFolder);
+        UpdateBuilderAttachmentProfileDetails(profile);
+        SelectExportProfileForInterfaceProfile(profile);
     }
 
     private InterfaceProfileDefinition? GetSelectedAttachmentDiagnosticProfile()
@@ -609,15 +627,66 @@ public partial class MainWindow : Window
         SetAttachmentDiagnosticSelectedProfile(profile);
     }
 
+    private void UpdateBuilderAttachmentProfileDetails(InterfaceProfileDefinition? profile)
+    {
+        if (profile is null)
+        {
+            BuilderAttachmentProfileDetailsTextBox.Text = "Bitte erst Schnittstellenprofil anlegen.";
+            BuilderReadXdtAttachmentButton.IsEnabled = false;
+            return;
+        }
+
+        var options = profile.FolderOptions;
+        var aisProfileName = _profileCatalog?.AisProfiles
+            .FirstOrDefault(aisProfile => string.Equals(aisProfile.Metadata.Id, profile.AisProfileId, StringComparison.Ordinal))?
+            .Metadata.Name ?? profile.AisProfileId;
+        var deviceProfileName = _profileCatalog?.DeviceProfiles
+            .FirstOrDefault(deviceProfile => string.Equals(deviceProfile.Metadata.Id, profile.DeviceProfileId, StringComparison.Ordinal))?
+            .Metadata.Name ?? profile.DeviceProfileId;
+        var exportProfileName = _profileCatalog?.ExportProfiles
+            .FirstOrDefault(exportProfile => string.Equals(exportProfile.Metadata.Id, profile.ExportProfileId, StringComparison.Ordinal))?
+            .Metadata.Name ?? profile.ExportProfileId;
+
+        var builder = new StringBuilder();
+        AppendSummaryLine(builder, "gewähltes Schnittstellenprofil", profile.Metadata.Name);
+        AppendSummaryLine(builder, "AIS-Profil", aisProfileName);
+        AppendSummaryLine(builder, "Geräteprofil", deviceProfileName);
+        AppendSummaryLine(builder, "Exportprofil", exportProfileName);
+        AppendSummaryLine(builder, "XDT-Anhänge für AIS aktiv", options.IsAttachmentProcessingEnabled ? "Ja" : "Nein");
+        AppendSummaryLine(builder, "XDT-Anhang ist", options.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "optional");
+        AppendSummaryLine(builder, "XDT-Anhang Importordner", options.AttachmentImportFolder);
+        AppendSummaryLine(builder, "XDT-Anhang Exportordner", options.AttachmentExportFolder);
+        AppendSummaryLine(builder, "XDT-Anhang Dateiname", options.AttachmentFileNameTemplate);
+        AppendSummaryLine(builder, "6302 Dokumentenname", options.AttachmentExternalLinkDocumentName);
+        AppendSummaryLine(builder, "6303 Dateiformat", options.AttachmentExternalLinkFileFormat);
+        AppendSummaryLine(builder, "6304 Beschreibung", options.AttachmentExternalLinkDescription);
+        AppendSummaryLine(builder, "6305 vollständiger Dateipfad", options.AttachmentExternalLinkPathTemplate);
+
+        BuilderAttachmentProfileDetailsTextBox.Text = builder.ToString().TrimEnd();
+        BuilderReadXdtAttachmentButton.IsEnabled = true;
+    }
+
+    private void SelectExportProfileForInterfaceProfile(InterfaceProfileDefinition profile)
+    {
+        if (_profileCatalog is null || ExportProfileComboBox.ItemsSource is null)
+        {
+            return;
+        }
+
+        var exportProfile = _profileCatalog.ExportProfiles.FirstOrDefault(candidate =>
+            string.Equals(candidate.Metadata.Id, profile.ExportProfileId, StringComparison.Ordinal));
+        if (exportProfile is not null && !ReferenceEquals(ExportProfileComboBox.SelectedItem, exportProfile))
+        {
+            ExportProfileComboBox.SelectedItem = exportProfile;
+        }
+    }
+
     private static void SetAttachmentDiagnosticProfileDisplayValue(
         System.Windows.Controls.TextBlock primary,
-        System.Windows.Controls.TextBlock secondary,
         string value)
     {
         primary.Text = value;
         primary.ToolTip = value == "-" ? null : value;
-        secondary.Text = value;
-        secondary.ToolTip = value == "-" ? null : value;
     }
 
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -3018,6 +3087,7 @@ public partial class MainWindow : Window
         {
             AisFilePathTextBox.Text = dialog.FileName;
             BuilderAisFilePathTextBox.Text = dialog.FileName;
+            ClearBuilderAttachmentPreviewState(updatePreview: false);
             SyncBuilderTestPreviewArea();
             SetBuilderTestStatus("AIS-Datei geladen. Bitte als Nächstes die Gerätedatei laden.");
             AppendMessage($"AIS-Datei ausgewählt: {dialog.FileName}");
@@ -3035,6 +3105,7 @@ public partial class MainWindow : Window
         {
             DeviceFilePathTextBox.Text = dialog.FileName;
             BuilderDeviceFilePathTextBox.Text = dialog.FileName;
+            ClearBuilderAttachmentPreviewState(updatePreview: false);
             SyncBuilderTestPreviewArea();
             SetBuilderTestStatus("Gerätedatei geladen. Die Exportvorschau kann jetzt aktualisiert werden.");
             AppendMessage($"Geräte-Datei ausgewählt: {dialog.FileName}");
@@ -3066,6 +3137,76 @@ public partial class MainWindow : Window
             ? "XDT-Anhang Importordner eingelesen."
             : "XDT-Anhang Importordner konnte nicht eingelesen werden.");
         AppendMessage(result.Message);
+    }
+
+    private void ReadBuilderXdtAttachment_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
+        if (selectedProfile is null)
+        {
+            _attachmentImportCandidateRows.Clear();
+            ClearBuilderAttachmentPreviewState(updatePreview: true);
+            const string message = "Bitte erst Schnittstellenprofil anlegen.";
+            SetAttachmentDiagnosticResultText(message);
+            SetBuilderTestStatus(message);
+            AppendMessage(message);
+            return;
+        }
+
+        var result = _attachmentImportFolderDiagnosticService.Scan(selectedProfile);
+        ShowAttachmentImportFolderDiagnosticResult(result);
+        if (!result.Success)
+        {
+            ClearBuilderAttachmentPreviewState(updatePreview: true);
+            SetBuilderTestStatus(result.Message);
+            AppendMessage(result.Message);
+            return;
+        }
+
+        var supportedCandidates = result.Candidates
+            .Where(candidate => candidate.IsSupported)
+            .ToList();
+
+        if (supportedCandidates.Count == 0)
+        {
+            ClearBuilderAttachmentPreviewState(updatePreview: true);
+            const string message = "Keine unterstützte XDT-Anhangdatei gefunden.";
+            SetBuilderTestStatus(message);
+            AppendMessage(message);
+            return;
+        }
+
+        if (supportedCandidates.Count > 1)
+        {
+            ClearBuilderAttachmentPreviewState(updatePreview: true);
+            const string message = "Mehrere unterstützte XDT-Anhänge gefunden. Keine eindeutige Zuordnung.";
+            SetBuilderTestStatus(message);
+            AppendMessage(message);
+            return;
+        }
+
+        var selectedCandidate = supportedCandidates[0];
+        if (!selectedCandidate.IsStable)
+        {
+            ClearBuilderAttachmentPreviewState(updatePreview: true);
+            const string message = "XDT-Anhang ist noch nicht stabil.";
+            SetBuilderTestStatus(message);
+            AppendMessage(message);
+            return;
+        }
+
+        BuilderAttachmentDiagnosticCandidatesGrid.SelectedItem = selectedCandidate;
+        if (!TryPrepareBuilderAttachmentPreview(selectedProfile, selectedCandidate, DateTime.Now, out var messageText))
+        {
+            ClearBuilderAttachmentPreviewState(updatePreview: true);
+            SetBuilderTestStatus(messageText);
+            AppendMessage(messageText);
+            return;
+        }
+
+        ShowFullExportPreviewForSelectedProfile();
+        SetBuilderTestStatus("XDT-Anhang eingelesen. Linkfelder werden in der Vorschau berücksichtigt. Exportprofil wurde nicht verändert.");
+        AppendMessage(messageText);
     }
 
     private void AttachmentDiagnosticCandidatesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -3108,6 +3249,118 @@ public partial class MainWindow : Window
             ? "XDT-Anhang vorbereitet."
             : "XDT-Anhang konnte nicht vorbereitet werden.");
         AppendMessage(result.Message);
+    }
+
+    private bool TryPrepareBuilderAttachmentPreview(
+        InterfaceProfileDefinition interfaceProfile,
+        AttachmentImportCandidateDisplayRow candidate,
+        DateTime processingTimestamp,
+        out string message)
+    {
+        ClearBuilderAttachmentPreviewState(updatePreview: false);
+
+        var patient = GetPatientForAttachmentDiagnostic();
+        if (patient is null || string.IsNullOrWhiteSpace(patient.PatientNumber))
+        {
+            message = "Für den XDT-Anhang-Test muss zuerst eine AIS-GDT/XDT-Datei mit Patientennummer geladen werden.";
+            return false;
+        }
+
+        var options = interfaceProfile.FolderOptions;
+        if (string.IsNullOrWhiteSpace(options.AttachmentExportFolder))
+        {
+            message = "XDT-Anhang Exportordner ist nicht gesetzt.";
+            return false;
+        }
+
+        string desiredFileName;
+        string targetFileName;
+        string targetPath;
+        try
+        {
+            desiredFileName = _attachmentFileNameBuilder.Build(
+                options.AttachmentFileNameTemplate,
+                patient,
+                processingTimestamp,
+                candidate.Extension);
+            targetFileName = Directory.Exists(options.AttachmentExportFolder)
+                ? _attachmentFileNameBuilder.BuildUniqueFileName(options.AttachmentExportFolder, desiredFileName)
+                : desiredFileName;
+            targetPath = Path.Combine(options.AttachmentExportFolder, targetFileName);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            message = $"XDT-Anhang-Zieldateiname konnte nicht vorbereitet werden: {ex.Message}";
+            return false;
+        }
+
+        var fieldBuildResult = _externalAisLinkFieldBuilder.Build(options, targetPath, candidate.Extension);
+        if (!fieldBuildResult.Success || fieldBuildResult.FieldSet is null)
+        {
+            message = fieldBuildResult.ErrorMessage ?? "XDT-Anhang-Linkfelder konnten nicht vorbereitet werden.";
+            return false;
+        }
+
+        var adapterResult = _externalAisLinkXdtFieldAdapter.Adapt(fieldBuildResult.FieldSet);
+        if (!adapterResult.Success)
+        {
+            message = adapterResult.ErrorMessage ?? "XDT-Anhang-Linkfelder konnten nicht in XDT-Felder umgesetzt werden.";
+            return false;
+        }
+
+        _builderSelectedAttachmentCandidate = candidate;
+        _builderPreviewAttachmentTargetFileName = targetFileName;
+        _builderPreviewAttachmentTargetPath = targetPath;
+        _builderTransientAttachmentFields = adapterResult.Fields;
+        SetAttachmentDiagnosticFilePath(candidate.FullPath);
+        SetAttachmentDiagnosticResultText(FormatBuilderAttachmentPreviewResult(
+            candidate,
+            targetFileName,
+            targetPath,
+            options.AttachmentTransferMode,
+            adapterResult.Fields));
+
+        message = "XDT-Anhang eingelesen. Linkfelder werden in der Vorschau berücksichtigt.";
+        return true;
+    }
+
+    private static string FormatBuilderAttachmentPreviewResult(
+        AttachmentImportCandidateDisplayRow candidate,
+        string targetFileName,
+        string targetPath,
+        AttachmentTransferMode transferMode,
+        IReadOnlyList<ExportFieldRecord> fields)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Status: XDT-Anhang eingelesen");
+        builder.AppendLine("Einlesen verändert keine Dateien. Der Anhang wird erst beim Testexport in den gewählten Zielordner übernommen.");
+        builder.AppendLine();
+        builder.AppendLine($"Quelle: {candidate.FullPath}");
+        builder.AppendLine($"Ziel-Dateiname Vorschau: {targetFileName}");
+        builder.AppendLine($"Zielpfad Vorschau: {targetPath}");
+        builder.AppendLine($"Transfermodus: {transferMode}");
+        builder.AppendLine();
+        builder.AppendLine("Vorbereitete XDT-Felder:");
+        foreach (var field in fields.OrderBy(field => field.SortOrder))
+        {
+            builder.AppendLine($"{field.FieldCode} = {field.Value}");
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private void ClearBuilderAttachmentPreviewState(bool updatePreview)
+    {
+        _builderSelectedAttachmentCandidate = null;
+        _builderPreviewAttachmentTargetPath = null;
+        _builderPreviewAttachmentTargetFileName = null;
+        _builderTransientAttachmentFields = Array.Empty<ExportFieldRecord>();
+        SetAttachmentDiagnosticFilePath(string.Empty);
+
+        if (updatePreview && _lastPipelineResult is not null)
+        {
+            ShowFullExportPreviewForSelectedProfile();
+        }
     }
 
     private PatientData? GetPatientForAttachmentDiagnostic()
@@ -3258,9 +3511,116 @@ public partial class MainWindow : Window
         }
         else
         {
-            SetBuilderTestStatus($"Exportvorschau aktualisiert. {_lastPipelineResult.Measurements.Count} Messwerte erkannt.");
+            SetBuilderTestStatus(_builderTransientAttachmentFields.Count > 0
+                ? $"Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert. {_lastPipelineResult.Measurements.Count} Messwerte erkannt. Exportprofil wurde nicht verändert."
+                : $"Kein XDT-Anhang eingelesen. Vorschau enthält keine 6302-6305. {_lastPipelineResult.Measurements.Count} Messwerte erkannt.");
             AppendMessage("Verarbeitung erfolgreich abgeschlossen.");
         }
+    }
+
+    private void RunBuilderTestExport_Click(object sender, RoutedEventArgs e)
+    {
+        if (_lastPipelineResult is null)
+        {
+            SetBuilderTestStatus("Bitte zuerst AIS-Datei und Gerätedatei laden.");
+            AppendMessage("Testexport nicht gestartet: keine Beispielwerte geladen.");
+            return;
+        }
+
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            SetBuilderTestStatus("Bitte zuerst ein Exportprofil auswählen.");
+            AppendMessage("Testexport nicht gestartet: kein Exportprofil ausgewählt.");
+            return;
+        }
+
+        using var dialog = new WinForms.FolderBrowserDialog
+        {
+            Description = "Temporären Zielordner für den Baukasten-Testexport auswählen"
+        };
+        if (dialog.ShowDialog() != WinForms.DialogResult.OK)
+        {
+            return;
+        }
+
+        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
+        var sourceAttachmentPath = _builderSelectedAttachmentCandidate is not null && _builderTransientAttachmentFields.Count > 0
+            ? _builderSelectedAttachmentCandidate.FullPath
+            : null;
+        var fileName = _plannedFileName ?? _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
+        var result = _builderTestExportService.Export(new BuilderTestExportRequest(
+            TargetFolder: dialog.SelectedPath,
+            ExportFileName: fileName,
+            OutputEncoding: exportProfile.OutputEncoding,
+            ExportProfileName: exportProfile.Metadata.Name,
+            ExportRules: GetEffectiveExportRules(exportProfile, null, null),
+            Patient: _lastPipelineResult.Patient,
+            Measurements: _lastPipelineResult.Measurements,
+            FolderOptions: sourceAttachmentPath is null ? null : selectedProfile?.FolderOptions,
+            SourceAttachmentPath: sourceAttachmentPath,
+            IsSourceAttachmentStable: _builderSelectedAttachmentCandidate?.IsStable,
+            ProcessingTimestamp: DateTime.Now));
+
+        FullExportPreviewTextBox.Text = FormatBuilderTestExportResultPreview(exportProfile, result);
+
+        if (!result.Success)
+        {
+            SetBuilderTestStatus("Testexport konnte nicht erstellt werden.");
+            foreach (var issue in result.Issues)
+            {
+                AppendMessage($"[Baukasten-Testexport] {issue}");
+            }
+
+            return;
+        }
+
+        var statusBuilder = new StringBuilder();
+        statusBuilder.AppendLine($"Testexport erstellt: {result.ExportFilePath}");
+        if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
+        {
+            statusBuilder.AppendLine($"XDT-Anhang wurde in den Testexport-Zielordner übernommen: {result.AttachmentTargetPath}");
+        }
+
+        statusBuilder.Append("Exportprofil wurde nicht verändert.");
+        SetBuilderTestStatus(statusBuilder.ToString());
+        AppendMessage($"Testexport erstellt: {result.ExportFilePath}");
+        if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
+        {
+            AppendMessage($"XDT-Anhang wurde in den Testexport-Zielordner übernommen: {result.AttachmentTargetPath}");
+        }
+    }
+
+    private static string FormatBuilderTestExportResultPreview(
+        ExportProfileDefinition exportProfile,
+        BuilderTestExportResult result)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Exportprofil: {exportProfile.Metadata.Name}");
+        builder.AppendLine("Baukasten-Testexport: Exportprofil wurde nicht verändert.");
+        if (!string.IsNullOrWhiteSpace(result.ExportFilePath))
+        {
+            builder.AppendLine($"Test-XDT-Datei: {result.ExportFilePath}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
+        {
+            builder.AppendLine($"Test-XDT-Anhang: {result.AttachmentTargetPath}");
+        }
+
+        if (result.Issues.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Hinweise:");
+            foreach (var issue in result.Issues)
+            {
+                builder.AppendLine($"- {issue}");
+            }
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("ExportContent:");
+        builder.Append(result.ExportContent.Length == 0 ? "(leer)" : result.ExportContent);
+        return builder.ToString().TrimEnd();
     }
 
     private void Export_Click(object sender, RoutedEventArgs e)
@@ -3316,6 +3676,11 @@ public partial class MainWindow : Window
         if (_lastPipelineResult is not null)
         {
             BuilderMeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
+            BuilderMeasurementsExpander.Header = $"Schritt 4 - Messwerte prüfen ({_lastPipelineResult.Measurements.Count} Messwerte erkannt)";
+        }
+        else
+        {
+            BuilderMeasurementsExpander.Header = "Schritt 4 - Messwerte prüfen";
         }
 
         UpdateBuilderPatientSummary(_lastPipelineResult?.Patient);
