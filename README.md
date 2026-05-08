@@ -24,7 +24,7 @@ Für vollständige Verarbeitungspakete ist ein zweistufiges Wartemodell vorberei
 
 Für langsam schreibende Geräte ist zusätzlich eine Stabilitätsprüfung vorbereitet: XDT-Anhänge werden erst automatisch ausgewählt oder übertragen, wenn sie über die konfigurierte Stabilitätswartezeit unverändert und lesbar bleiben. Standard ist 2 Sekunden. Das periodische Ordnerabfrage-Intervall ist pro Schnittstellenprofil konfigurierbar; der Standard bleibt 5 Sekunden. Es wird weiterhin kein FileSystemWatcher verwendet.
 
-Der Tab `Profile & Templates` enthält einen Bereich `Test & Vorschau` für den Baukasten-Test: AIS-Testdatei laden, Gerätedatei laden, XDT-Anhang-Diagnose ausführen, Messwerte prüfen und die Gesamtexport-Vorschau kontrollieren. Der Tab `Verarbeitung` bleibt der Betriebsbereich für aktive Schnittstellenprofile, manuell gestartete Überwachung und automatische Verarbeitung; der bisherige manuelle Testbereich ist in diesem Schritt dort noch erhalten.
+Der Tab `Profile & Templates` enthält einen Bereich `Test & Vorschau` für den Baukasten-Test: AIS-Testdatei laden, Gerätedatei laden, XDT-Anhang-Diagnose ausführen, Messwerte prüfen und die Gesamtexport-Vorschau kontrollieren. Der Tab `Verarbeitung` bleibt der Betriebsbereich für aktive Schnittstellenprofile, manuell gestartete Überwachung und automatische Verarbeitung. Der bisherige manuelle Testbereich ist dort weiterhin als eingeklappter Diagnose-/Rückfallbereich `Diagnose / manueller Alt-Test` erhalten.
 
 ## Aktueller Funktionsumfang
 

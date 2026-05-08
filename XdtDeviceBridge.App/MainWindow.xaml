@@ -15,14 +15,6 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="3*"/>
-                            <RowDefinition Height="6"/>
-                            <RowDefinition Height="2*"/>
-                            <RowDefinition Height="6"/>
-                            <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
                         <GroupBox Header="Aktive Schnittstellenprofile" Grid.Row="0" Margin="0,0,0,8">
@@ -191,6 +183,37 @@
                             </Grid>
                         </GroupBox>
 
+                        <GroupBox Header="Meldungen" Grid.Row="1" Margin="0,0,0,8">
+                            <TextBox x:Name="MessagesTextBox"
+                                     Margin="8"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     TextWrapping="Wrap"
+                                     MinHeight="120"/>
+                        </GroupBox>
+
+                        <Expander Header="Diagnose / manueller Alt-Test" Grid.Row="2" IsExpanded="False" Margin="0,0,0,0">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Text="Dieser Bereich bleibt als Diagnose- und Rückfallfunktion erhalten. Der neue Baukasten-Test befindet sich im Tab Profile &amp; Templates unter Test &amp; Vorschau."
+                                           Foreground="DimGray"
+                                           FontWeight="Bold"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+
                         <Grid Grid.Row="1" Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="220"/>
@@ -205,13 +228,13 @@
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="NIDEK-XML-Datei auswählen" Margin="0,0,8,0" Click="SelectDeviceFile_Click" />
+                            <Button Grid.Column="0" Content="NIDEK-/Gerätedatei auswählen" Margin="0,0,8,0" Click="SelectDeviceFile_Click" />
                             <TextBox Grid.Column="1" x:Name="DeviceFilePathTextBox" IsReadOnly="True" />
                         </Grid>
 
                         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
-                            <Button Content="Verarbeiten" Width="150" Margin="0,0,8,0" Click="Process_Click" />
-                            <Button Content="Exportdatei schreiben" Width="180" Click="Export_Click" />
+                            <Button Content="Manuell verarbeiten" Width="160" Margin="0,0,8,0" Click="Process_Click" />
+                            <Button Content="Manuelle Exportdatei schreiben" Width="230" Click="Export_Click" />
                         </StackPanel>
 
                         <GroupBox Header="Patientendaten" Grid.Row="4" Margin="0,0,0,8">
@@ -400,22 +423,8 @@
                             </Grid>
                         </GroupBox>
 
-                        <GridSplitter Grid.Row="9"
-                                      Height="6"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Center"
-                                      ResizeDirection="Rows"
-                                      ShowsPreview="True"/>
-
-                        <GroupBox Header="Meldungen" Grid.Row="10">
-                            <TextBox x:Name="MessagesTextBox"
-                                     Margin="8"
-                                     IsReadOnly="True"
-                                     AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto"
-                                     TextWrapping="Wrap"
-                                     MinHeight="120"/>
-                        </GroupBox>
+                            </Grid>
+                        </Expander>
                     </Grid>
                 </ScrollViewer>
             </TabItem>
