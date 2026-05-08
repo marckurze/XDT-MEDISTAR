@@ -96,6 +96,7 @@ public sealed class TemplatePackageExporterTests
         Assert.Contains("\"AttachmentExternalLinkFileFormat\": \"{ExtensionUpperWithoutDot}\"", json);
         Assert.Contains("\"AttachmentExternalLinkDescription\": \"Messprotokoll Autorefraktor\"", json);
         Assert.Contains("\"AttachmentExternalLinkPathTemplate\": \"{Attachment.TargetFullPath}\"", json);
+        Assert.Contains("\"IsAttachmentProcessingEnabled\": true", json);
     }
 
     [Fact]
@@ -185,7 +186,8 @@ public sealed class TemplatePackageExporterTests
                 AttachmentExternalLinkDocumentName = "PDF-Befund",
                 AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
                 AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
-                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}"
+                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
+                IsAttachmentProcessingEnabled = true
             }
         };
     }

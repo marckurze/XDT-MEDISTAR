@@ -65,7 +65,8 @@ public sealed class ProfileJsonSerializerTests
                 AttachmentExternalLinkDocumentName = "PDF-Befund",
                 AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
                 AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
-                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}"
+                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
+                IsAttachmentProcessingEnabled = true
             }
         };
 
@@ -83,6 +84,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Contains("\"AttachmentExternalLinkFileFormat\":", json);
         Assert.Contains("\"AttachmentExternalLinkDescription\":", json);
         Assert.Contains("\"AttachmentExternalLinkPathTemplate\":", json);
+        Assert.Contains("\"IsAttachmentProcessingEnabled\": true", json);
     }
 
     [Fact]
@@ -137,6 +139,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal("{ExtensionUpperWithoutDot}", deserialized.FolderOptions.AttachmentExternalLinkFileFormat);
         Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", deserialized.FolderOptions.AttachmentExternalLinkPathTemplate);
+        Assert.False(deserialized.FolderOptions.IsAttachmentProcessingEnabled);
     }
 
     [Fact]
@@ -181,7 +184,8 @@ public sealed class ProfileJsonSerializerTests
             "AttachmentExternalLinkDocumentName": "PDF-Befund",
             "AttachmentExternalLinkFileFormat": "{ExtensionUpperWithoutDot}",
             "AttachmentExternalLinkDescription": "Messprotokoll Autorefraktor",
-            "AttachmentExternalLinkPathTemplate": "{Attachment.TargetFullPath}"
+            "AttachmentExternalLinkPathTemplate": "{Attachment.TargetFullPath}",
+            "IsAttachmentProcessingEnabled": true
           },
           "IsActive": false,
           "IsLicenseRequired": true,
@@ -199,6 +203,53 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal("{ExtensionUpperWithoutDot}", deserialized.FolderOptions.AttachmentExternalLinkFileFormat);
         Assert.Equal("Messprotokoll Autorefraktor", deserialized.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", deserialized.FolderOptions.AttachmentExternalLinkPathTemplate);
+        Assert.True(deserialized.FolderOptions.IsAttachmentProcessingEnabled);
+    }
+
+    [Fact]
+    public void InterfaceProfileDefinition_ShouldKeepExplicitAttachmentProcessingDisabled()
+    {
+        var json = """
+        {
+          "Metadata": {
+            "Id": "interface-attachments-disabled",
+            "Name": "Interface Attachments Disabled",
+            "ProfileKind": "InterfaceProfile",
+            "Description": null,
+            "Vendor": null,
+            "Product": null,
+            "Version": "1.0",
+            "CreatedAt": "2026-05-03T12:00:00+00:00",
+            "UpdatedAt": "2026-05-03T12:00:00+00:00",
+            "CreatedBy": "Test",
+            "IsBuiltIn": false,
+            "IsUserDefined": true
+          },
+          "AisProfileId": "ais",
+          "DeviceProfileId": "device",
+          "ExportProfileId": "export",
+          "FolderOptions": {
+            "AisImportFolder": "",
+            "DeviceImportFolder": "",
+            "ExportFolder": "",
+            "ArchiveFolder": "",
+            "ErrorFolder": "",
+            "ClearAisImportFolderBeforeProcessing": false,
+            "ClearDeviceImportFolderBeforeProcessing": false,
+            "ClearExportFolderAfterSuccessfulTransfer": false,
+            "ArchiveProcessedFiles": false,
+            "MoveFailedFilesToErrorFolder": true,
+            "IsAttachmentProcessingEnabled": false
+          },
+          "IsActive": false,
+          "IsLicenseRequired": true,
+          "Description": null
+        }
+        """;
+
+        var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
+
+        Assert.False(deserialized.FolderOptions.IsAttachmentProcessingEnabled);
     }
 
     [Fact]

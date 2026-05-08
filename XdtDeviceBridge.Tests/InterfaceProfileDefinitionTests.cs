@@ -161,6 +161,7 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Equal("{ExtensionUpperWithoutDot}", options.AttachmentExternalLinkFileFormat);
         Assert.Equal(string.Empty, options.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", options.AttachmentExternalLinkPathTemplate);
+        Assert.False(options.IsAttachmentProcessingEnabled);
     }
 
     [Fact]
@@ -262,7 +263,8 @@ public sealed class InterfaceProfileDefinitionTests
         string attachmentExternalLinkDocumentName = "Datei",
         string attachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
         string attachmentExternalLinkDescription = "",
-        string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}")
+        string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
+        bool isAttachmentProcessingEnabled = false)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -284,7 +286,8 @@ public sealed class InterfaceProfileDefinitionTests
             AttachmentExternalLinkDocumentName: attachmentExternalLinkDocumentName,
             AttachmentExternalLinkFileFormat: attachmentExternalLinkFileFormat,
             AttachmentExternalLinkDescription: attachmentExternalLinkDescription,
-            AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate);
+            AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate,
+            IsAttachmentProcessingEnabled: isAttachmentProcessingEnabled);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

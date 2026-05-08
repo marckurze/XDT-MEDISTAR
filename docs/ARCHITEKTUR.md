@@ -313,6 +313,7 @@ Vorgesehene Konzepte:
 - `AttachmentImportFolder`: GA-Dateianhang Import
 - `AttachmentExportFolder`: GA-Dateianhang Export
 - `AttachmentFileNameTemplate`, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
+- `IsAttachmentProcessingEnabled`: vorbereitete Einschaltfunktion pro Schnittstellenprofil, Standard `false`; spätere Nutzung nur bei manuell gestarteter Überwachung, aktivierter automatischer Verarbeitung und vorhandener AIS-Patientennummer
 - `AttachmentHandlingMode`: `None`, `Optional`, `Required`
 - `AttachmentTransferMode`: `Copy`, `Move`; Standard ist `Move`, damit der GA-Dateianhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann
 - `AttachmentLinkExport` über XDT-Felder
@@ -325,6 +326,7 @@ Vorgesehene Konzepte:
 - `ExternalAisLinkFieldBuilder`, isoliert vorbereitet für semantische Feldwerte zu `6302`, `6303`, `6304` und `6305`, noch ohne produktive XDT-Linkausgabe
 - `ExternalAisLinkXdtFieldAdapter`, isoliert vorbereitet für die Überführung dieser semantischen Werte in XDT-Feldcode/Wert-Paare `6302` bis `6305`, weiterhin ohne Längenpräfix und ohne produktive Einbindung
 - `AttachmentExternalLinkPreparationService`, isoliert vorbereitet für die explizite Orchestrierung aus Ziel-Dateiname, Copy/Move-Transfer, externen AIS-Linkfeldwerten und XDT-Feldcode/Wert-Paaren; noch ohne automatische Attachment-Zuordnung und ohne produktive Exportworkflow-Einbindung
+- `AttachmentAutoProcessingEligibilityService`, isoliert vorbereitet für die sichere Vorprüfung, ob eine spätere automatische XDT-Anhang-Verarbeitung grundsätzlich erlaubt wäre; der Service führt keine Dateioperationen aus
 - manueller Diagnosepfad im Tab `Verarbeitung`, der eine explizit ausgewählte Anhangdatei testweise vorbereitet und Ziel-Dateiname, Zielpfad sowie Feldcode/Wert-Paare `6302` bis `6305` anzeigt; er ist nicht Teil des periodischen Scans und nicht in die produktive Exportdatei eingebunden
 - `ExternalLinkExportRule` oder vergleichbare Exportregel
 - Validierung über `FolderSafetyValidator`

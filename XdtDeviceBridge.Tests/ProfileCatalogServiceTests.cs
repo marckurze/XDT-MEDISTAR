@@ -270,7 +270,8 @@ public sealed class ProfileCatalogServiceTests
                 AttachmentExternalLinkDocumentName = "PDF-Befund",
                 AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
                 AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
-                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}"
+                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
+                IsAttachmentProcessingEnabled = true
             }
         };
 
@@ -285,6 +286,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Equal("{ExtensionUpperWithoutDot}", loadedProfile.FolderOptions.AttachmentExternalLinkFileFormat);
         Assert.Equal("Messprotokoll Autorefraktor", loadedProfile.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", loadedProfile.FolderOptions.AttachmentExternalLinkPathTemplate);
+        Assert.True(loadedProfile.FolderOptions.IsAttachmentProcessingEnabled);
     }
 
     [Fact]

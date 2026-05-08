@@ -563,6 +563,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
         InterfaceAttachmentTransferModeComboBox.SelectedValue = profile.FolderOptions.AttachmentTransferMode.ToString();
+        InterfaceAttachmentProcessingEnabledCheckBox.IsChecked = profile.FolderOptions.IsAttachmentProcessingEnabled;
         InterfaceAttachmentLinkDocumentNameTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDocumentName;
         InterfaceAttachmentLinkFileFormatTextBox.Text = profile.FolderOptions.AttachmentExternalLinkFileFormat;
         InterfaceAttachmentLinkDescriptionTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDescription;
@@ -592,6 +593,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
         InterfaceAttachmentTransferModeComboBox.SelectedValue = AttachmentTransferMode.Move.ToString();
+        InterfaceAttachmentProcessingEnabledCheckBox.IsChecked = false;
         InterfaceAttachmentLinkDocumentNameTextBox.Text = string.Empty;
         InterfaceAttachmentLinkFileFormatTextBox.Text = string.Empty;
         InterfaceAttachmentLinkDescriptionTextBox.Text = string.Empty;
@@ -770,7 +772,8 @@ public partial class MainWindow : Window
             AttachmentExternalLinkDocumentName: InterfaceAttachmentLinkDocumentNameTextBox.Text.Trim(),
             AttachmentExternalLinkFileFormat: InterfaceAttachmentLinkFileFormatTextBox.Text.Trim(),
             AttachmentExternalLinkDescription: InterfaceAttachmentLinkDescriptionTextBox.Text.Trim(),
-            AttachmentExternalLinkPathTemplate: InterfaceAttachmentLinkPathTemplateTextBox.Text.Trim());
+            AttachmentExternalLinkPathTemplate: InterfaceAttachmentLinkPathTemplateTextBox.Text.Trim(),
+            IsAttachmentProcessingEnabled: InterfaceAttachmentProcessingEnabledCheckBox.IsChecked == true);
     }
 
     private AttachmentTransferMode ReadAttachmentTransferModeFromEditor()

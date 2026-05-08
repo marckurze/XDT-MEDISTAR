@@ -20,4 +20,5 @@ public sealed record InterfaceFolderOptions(
     string AttachmentExternalLinkDocumentName = "Datei",
     string AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
     string AttachmentExternalLinkDescription = "",
-    string AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}");
+    string AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
+    bool IsAttachmentProcessingEnabled = false);

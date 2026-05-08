@@ -44,6 +44,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal("{ExtensionUpperWithoutDot}", profile.FolderOptions.AttachmentExternalLinkFileFormat);
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", profile.FolderOptions.AttachmentExternalLinkPathTemplate);
+        Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
     }
 
     [Fact]
@@ -111,7 +112,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
             attachmentExternalLinkDocumentName: "PDF-Befund",
             attachmentExternalLinkFileFormat: "{ExtensionUpperWithoutDot}",
             attachmentExternalLinkDescription: "Messprotokoll Autorefraktor",
-            attachmentExternalLinkPathTemplate: "{Attachment.TargetFullPath}");
+            attachmentExternalLinkPathTemplate: "{Attachment.TargetFullPath}",
+            isAttachmentProcessingEnabled: true);
 
         var result = _service.CreateConfiguredProfile(
             userProfile,
@@ -130,6 +132,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal("{ExtensionUpperWithoutDot}", result.Profile.FolderOptions.AttachmentExternalLinkFileFormat);
         Assert.Equal("Messprotokoll Autorefraktor", result.Profile.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", result.Profile.FolderOptions.AttachmentExternalLinkPathTemplate);
+        Assert.True(result.Profile.FolderOptions.IsAttachmentProcessingEnabled);
     }
 
     [Fact]
@@ -317,7 +320,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         string attachmentExternalLinkDocumentName = "Datei",
         string attachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
         string attachmentExternalLinkDescription = "",
-        string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}")
+        string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}",
+        bool isAttachmentProcessingEnabled = false)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -339,7 +343,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
             AttachmentExternalLinkDocumentName: attachmentExternalLinkDocumentName,
             AttachmentExternalLinkFileFormat: attachmentExternalLinkFileFormat,
             AttachmentExternalLinkDescription: attachmentExternalLinkDescription,
-            AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate);
+            AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate,
+            IsAttachmentProcessingEnabled: isAttachmentProcessingEnabled);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

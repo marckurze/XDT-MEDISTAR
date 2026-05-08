@@ -970,6 +970,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
@@ -1018,17 +1019,27 @@
                                             <ComboBoxItem Content="Verschieben" Tag="Move"/>
                                         </ComboBox>
 
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
+                                        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                            <CheckBox x:Name="InterfaceAttachmentProcessingEnabledCheckBox"
+                                                      Content="XDT-Anhänge für AIS automatisch verarbeiten"
+                                                      Margin="0,0,0,4"
+                                                      ToolTip="Vorbereitete Einschaltfunktion. Es findet noch keine produktive automatische XDT-Anhang-Verarbeitung statt."/>
+                                            <TextBlock Text="Nur bei manuell gestarteter Überwachung und aktiver automatischer Verarbeitung. Keine Verarbeitung ohne AIS-Patientennummer."
+                                                       Foreground="DarkOrange"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
 
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
 
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
 
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
+                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
+
+                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
                                     </Grid>
                                 </GroupBox>
 
