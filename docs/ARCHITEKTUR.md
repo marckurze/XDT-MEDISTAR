@@ -328,6 +328,7 @@ Vorgesehene Konzepte:
 - `AttachmentExternalLinkPreparationService`, isoliert vorbereitet für die explizite Orchestrierung aus Ziel-Dateiname, Copy/Move-Transfer, externen AIS-Linkfeldwerten und XDT-Feldcode/Wert-Paaren; noch ohne automatische Attachment-Zuordnung und ohne produktive Exportworkflow-Einbindung
 - `AttachmentAutoProcessingEligibilityService`, isoliert vorbereitet für die sichere Vorprüfung, ob eine spätere automatische XDT-Anhang-Verarbeitung grundsätzlich erlaubt wäre; der Service führt keine Dateioperationen aus
 - `AttachmentImportFolderScannerService`, isoliert vorbereitet für das reine Auflisten unterstützter Dateien im XDT-Anhang Importordner; der Service scannt nur die oberste Ordnerebene und verändert, verschiebt oder löscht keine Dateien
+- `AttachmentImportFolderDiagnosticService`, isoliert vorbereitet für den manuellen Diagnosebereich; er ruft den Scanner mit dem konfigurierten Importordner auf, erzeugt anzeigbare Kandidatenzeilen und startet keine Verarbeitung
 - manueller Diagnosepfad im Tab `Verarbeitung`, der eine explizit ausgewählte Anhangdatei testweise vorbereitet und Ziel-Dateiname, Zielpfad sowie Feldcode/Wert-Paare `6302` bis `6305` anzeigt; er ist nicht Teil des periodischen Scans und nicht in die produktive Exportdatei eingebunden
 - `ExternalLinkExportRule` oder vergleichbare Exportregel
 - Validierung über `FolderSafetyValidator`

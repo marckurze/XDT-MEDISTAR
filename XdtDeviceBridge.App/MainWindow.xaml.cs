@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
     private readonly AutoImportPairProcessingCoordinator _autoImportPairProcessingCoordinator = new();
     private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
+    private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -45,6 +46,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
     private readonly ObservableCollection<ScannedImportPairRow> _scannedImportPairRows = new();
+    private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
 
     private ProcessingPipelineResult? _lastPipelineResult;
@@ -67,6 +69,7 @@ public partial class MainWindow : Window
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         ActiveInterfaceProfilesGrid.ItemsSource = _activeInterfaceProfileStatusRows;
         ScannedImportPairsGrid.ItemsSource = _scannedImportPairRows;
+        AttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -520,6 +523,8 @@ public partial class MainWindow : Window
         if (activeProfiles.Count == 0)
         {
             AttachmentDiagnosticInterfaceProfileComboBox.SelectedIndex = -1;
+            _attachmentImportCandidateRows.Clear();
+            UpdateAttachmentDiagnosticProfileDisplay();
             AttachmentDiagnosticResultTextBox.Text = "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.";
             return;
         }
@@ -529,10 +534,42 @@ public partial class MainWindow : Window
             : activeProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedInterfaceProfileId, StringComparison.Ordinal));
 
         AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = selectedProfile ?? activeProfiles[0];
+        UpdateAttachmentDiagnosticProfileDisplay();
         if (AttachmentDiagnosticResultTextBox.Text == "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.")
         {
             AttachmentDiagnosticResultTextBox.Text = "Noch kein XDT-Anhang vorbereitet.";
         }
+    }
+
+    private void AttachmentDiagnosticInterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        _attachmentImportCandidateRows.Clear();
+        UpdateAttachmentDiagnosticProfileDisplay();
+    }
+
+    private void UpdateAttachmentDiagnosticProfileDisplay()
+    {
+        if (AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
+        {
+            AttachmentDiagnosticProfileText.Text = "-";
+            AttachmentDiagnosticProfileText.ToolTip = null;
+            AttachmentDiagnosticImportFolderText.Text = "-";
+            AttachmentDiagnosticImportFolderText.ToolTip = null;
+            AttachmentDiagnosticExportFolderText.Text = "-";
+            AttachmentDiagnosticExportFolderText.ToolTip = null;
+            return;
+        }
+
+        AttachmentDiagnosticProfileText.Text = profile.Metadata.Name;
+        AttachmentDiagnosticProfileText.ToolTip = profile.Metadata.Name;
+        AttachmentDiagnosticImportFolderText.Text = string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentImportFolder)
+            ? "-"
+            : profile.FolderOptions.AttachmentImportFolder;
+        AttachmentDiagnosticImportFolderText.ToolTip = AttachmentDiagnosticImportFolderText.Text;
+        AttachmentDiagnosticExportFolderText.Text = string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentExportFolder)
+            ? "-"
+            : profile.FolderOptions.AttachmentExportFolder;
+        AttachmentDiagnosticExportFolderText.ToolTip = AttachmentDiagnosticExportFolderText.Text;
     }
 
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -2843,6 +2880,33 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ScanXdtAttachmentImportFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var selectedProfile = AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
+        var result = _attachmentImportFolderDiagnosticService.Scan(selectedProfile);
+
+        ShowAttachmentImportFolderDiagnosticResult(result);
+        AppendMessage(result.Message);
+    }
+
+    private void AttachmentDiagnosticCandidatesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (AttachmentDiagnosticCandidatesGrid.SelectedItem is not AttachmentImportCandidateDisplayRow row)
+        {
+            return;
+        }
+
+        if (!row.IsSupported)
+        {
+            AttachmentDiagnosticFilePathTextBox.Text = string.Empty;
+            AppendMessage($"XDT-Anhang-Kandidat ist nicht unterstützt und wurde nicht ausgewählt: {row.FileName}");
+            return;
+        }
+
+        AttachmentDiagnosticFilePathTextBox.Text = row.FullPath;
+        AppendMessage($"XDT-Anhang-Kandidat ausgewählt: {row.FullPath}");
+    }
+
     private void PrepareXdtAttachment_Click(object sender, RoutedEventArgs e)
     {
         var selectedProfile = AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
@@ -2922,6 +2986,34 @@ public partial class MainWindow : Window
 
         AttachmentDiagnosticResultTextBox.Text = builder.ToString().TrimEnd();
         AttachmentDiagnosticResultTextBox.ScrollToHome();
+    }
+
+    private void ShowAttachmentImportFolderDiagnosticResult(AttachmentImportFolderDiagnosticResult result)
+    {
+        _attachmentImportCandidateRows.Clear();
+        foreach (var row in result.Candidates)
+        {
+            _attachmentImportCandidateRows.Add(row);
+        }
+
+        var builder = new StringBuilder();
+        builder.AppendLine($"Status: {(result.Success ? "Importordner eingelesen" : "Fehler")}");
+        builder.AppendLine(result.Message);
+        builder.AppendLine();
+        builder.AppendLine($"Schnittstellenprofil: {DisplayOrDash(result.InterfaceProfileName)}");
+        builder.AppendLine($"XDT-Anhang Importordner: {DisplayOrDash(result.ImportFolder)}");
+        builder.AppendLine($"XDT-Anhang Exportordner: {DisplayOrDash(result.ExportFolder)}");
+        builder.AppendLine($"Gefundene Kandidaten: {result.Candidates.Count}");
+        builder.AppendLine($"Unterstützt: {result.Candidates.Count(row => row.IsSupported)}");
+        builder.AppendLine($"Nicht unterstützt: {result.Candidates.Count(row => !row.IsSupported)}");
+
+        AttachmentDiagnosticResultTextBox.Text = builder.ToString().TrimEnd();
+        AttachmentDiagnosticResultTextBox.ScrollToHome();
+    }
+
+    private static string DisplayOrDash(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "-" : value;
     }
 
     private void Process_Click(object sender, RoutedEventArgs e)

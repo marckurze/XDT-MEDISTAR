@@ -2,7 +2,7 @@ using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Infrastructure;
 
-public sealed class AttachmentImportFolderScannerService
+public sealed class AttachmentImportFolderScannerService : IAttachmentImportFolderScannerService
 {
     private static readonly StringComparer FilePathComparer = OperatingSystem.IsWindows()
         ? StringComparer.OrdinalIgnoreCase
