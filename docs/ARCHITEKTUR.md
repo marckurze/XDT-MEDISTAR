@@ -324,6 +324,7 @@ Vorgesehene Konzepte:
 - `AttachmentTransferService`, isoliert vorbereitet für sichere Übertragung einzelner explizit übergebener Anhangdateien ohne Überschreiben
 - `ExternalAisLinkFieldBuilder`, isoliert vorbereitet für semantische Feldwerte zu `6302`, `6303`, `6304` und `6305`, noch ohne produktive XDT-Linkausgabe
 - `ExternalAisLinkXdtFieldAdapter`, isoliert vorbereitet für die Überführung dieser semantischen Werte in XDT-Feldcode/Wert-Paare `6302` bis `6305`, weiterhin ohne Längenpräfix und ohne produktive Einbindung
+- `AttachmentExternalLinkPreparationService`, isoliert vorbereitet für die explizite Orchestrierung aus Ziel-Dateiname, Copy/Move-Transfer, externen AIS-Linkfeldwerten und XDT-Feldcode/Wert-Paaren; noch ohne automatische Attachment-Zuordnung und ohne produktive Exportworkflow-Einbindung
 - `ExternalLinkExportRule` oder vergleichbare Exportregel
 - Validierung über `FolderSafetyValidator`
 - Kollisionsschutz bei Dateinamen

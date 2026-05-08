@@ -2,7 +2,7 @@ using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Infrastructure;
 
-public sealed class AttachmentTransferService
+public sealed class AttachmentTransferService : IAttachmentTransferService
 {
     private readonly AttachmentFileNameBuilder _fileNameBuilder;
     private readonly FolderSafetyValidator _folderSafetyValidator;
