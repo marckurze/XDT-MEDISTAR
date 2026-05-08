@@ -322,6 +322,7 @@ Vorgesehene Konzepte:
 - `AttachmentExternalLinkPathTemplate`: Vorlage für 6305 vollständiger Dateipfad, typischerweise `{Attachment.TargetFullPath}`
 - `AttachmentFileNameBuilder`
 - `AttachmentTransferService`, isoliert vorbereitet für sichere Übertragung einzelner explizit übergebener Anhangdateien ohne Überschreiben
+- `ExternalAisLinkFieldBuilder`, isoliert vorbereitet für semantische Feldwerte zu `6302`, `6303`, `6304` und `6305`, noch ohne produktive XDT-Linkausgabe
 - `ExternalLinkExportRule` oder vergleichbare Exportregel
 - Validierung über `FolderSafetyValidator`
 - Kollisionsschutz bei Dateinamen
@@ -348,7 +349,7 @@ Für MEDISTAR soll die externe Link-Übergabe über XDT-Feldkennungen modelliert
 | `6304` | optionale Beschreibung |
 | `6305` | vollständiger absoluter Dateipfad zur abgelegten Datei |
 
-Diese Exportzeilen müssen wie alle XDT-Zeilen mit korrektem Längenpräfix erzeugt werden. Die App soll die Zeilenlänge nicht manuell im UI pflegen lassen. Der `XdtExportBuilder` oder ein vergleichbarer Baustein soll die finalen XDT-Zeilen erzeugen.
+Der vorbereitete `ExternalAisLinkFieldBuilder` erzeugt in diesem Stand nur semantische Feldwerte, z. B. `6302 -> PDF-Befund`, `6303 -> PDF`, `6304 -> Messprotokoll` und `6305 -> \\SERVER\Freigabe\Datei.pdf`. Diese Exportzeilen müssen später wie alle XDT-Zeilen mit korrektem Längenpräfix erzeugt werden. Die App soll die Zeilenlänge nicht manuell im UI pflegen lassen. Der `XdtExportBuilder` oder ein vergleichbarer Baustein soll die finalen XDT-Zeilen erzeugen.
 
 Ein externes Link-Template darf keine echte Patientenakte als Beispiel enthalten. Beispiele in Dokumentation und Templatepaketen müssen synthetisch sein.
 
