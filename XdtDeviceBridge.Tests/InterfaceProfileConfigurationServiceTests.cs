@@ -38,6 +38,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Null(profile.FolderOptions.ArchiveRetentionDays);
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentImportFolder);
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExportFolder);
+        Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, profile.FolderOptions.AttachmentFileNameTemplate);
     }
 
     [Fact]
@@ -99,7 +100,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         };
         var options = CreateFolderOptions(
             attachmentImportFolder: @"\\SERVER\Freigabe\XDT\GAImport",
-            attachmentExportFolder: @"\\SERVER\Freigabe\XDT\GAExport");
+            attachmentExportFolder: @"\\SERVER\Freigabe\XDT\GAExport",
+            attachmentFileNameTemplate: "GA_{Ais.PatientNumber}{ExtensionUpper}");
 
         var result = _service.CreateConfiguredProfile(
             userProfile,
@@ -112,6 +114,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.True(result.Success);
         Assert.Equal(@"\\SERVER\Freigabe\XDT\GAImport", result.Profile!.FolderOptions.AttachmentImportFolder);
         Assert.Equal(@"\\SERVER\Freigabe\XDT\GAExport", result.Profile.FolderOptions.AttachmentExportFolder);
+        Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", result.Profile.FolderOptions.AttachmentFileNameTemplate);
     }
 
     [Fact]
@@ -272,7 +275,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
         ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
         int? archiveRetentionDays = null,
         string attachmentImportFolder = "",
-        string attachmentExportFolder = "")
+        string attachmentExportFolder = "",
+        string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -288,7 +292,8 @@ public sealed class InterfaceProfileConfigurationServiceTests
             ArchiveProcessedFileMode: archiveProcessedFileMode,
             ArchiveRetentionDays: archiveRetentionDays,
             AttachmentImportFolder: attachmentImportFolder,
-            AttachmentExportFolder: attachmentExportFolder);
+            AttachmentExportFolder: attachmentExportFolder,
+            AttachmentFileNameTemplate: attachmentFileNameTemplate);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

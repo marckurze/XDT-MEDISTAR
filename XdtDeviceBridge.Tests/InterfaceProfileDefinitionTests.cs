@@ -155,6 +155,7 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Null(options.ArchiveRetentionDays);
         Assert.Equal(string.Empty, options.AttachmentImportFolder);
         Assert.Equal(string.Empty, options.AttachmentExportFolder);
+        Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, options.AttachmentFileNameTemplate);
     }
 
     [Fact]
@@ -225,7 +226,8 @@ public sealed class InterfaceProfileDefinitionTests
         ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
         int? archiveRetentionDays = null,
         string attachmentImportFolder = "",
-        string attachmentExportFolder = "")
+        string attachmentExportFolder = "",
+        string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -241,7 +243,8 @@ public sealed class InterfaceProfileDefinitionTests
             ArchiveProcessedFileMode: archiveProcessedFileMode,
             ArchiveRetentionDays: archiveRetentionDays,
             AttachmentImportFolder: attachmentImportFolder,
-            AttachmentExportFolder: attachmentExportFolder);
+            AttachmentExportFolder: attachmentExportFolder,
+            AttachmentFileNameTemplate: attachmentFileNameTemplate);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

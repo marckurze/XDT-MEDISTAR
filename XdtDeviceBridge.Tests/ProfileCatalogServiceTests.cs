@@ -264,7 +264,8 @@ public sealed class ProfileCatalogServiceTests
             FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
             {
                 AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
-                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport"
+                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport",
+                AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}"
             }
         };
 
@@ -273,6 +274,7 @@ public sealed class ProfileCatalogServiceTests
         var loadedProfile = Assert.Single(_service.Load(paths).InterfaceProfiles);
         Assert.Equal(@"C:\XdtDeviceBridge\GAImport", loadedProfile.FolderOptions.AttachmentImportFolder);
         Assert.Equal(@"C:\XdtDeviceBridge\GAExport", loadedProfile.FolderOptions.AttachmentExportFolder);
+        Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", loadedProfile.FolderOptions.AttachmentFileNameTemplate);
     }
 
     [Fact]

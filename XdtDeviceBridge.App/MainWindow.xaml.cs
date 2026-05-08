@@ -531,6 +531,7 @@ public partial class MainWindow : Window
         InterfaceErrorFolderTextBox.Text = profile.FolderOptions.ErrorFolder;
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
+        InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
 
         InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
@@ -554,6 +555,7 @@ public partial class MainWindow : Window
         InterfaceErrorFolderTextBox.Text = string.Empty;
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
+        InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
         InterfaceClearAisImportFolderCheckBox.IsChecked = false;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
@@ -722,7 +724,8 @@ public partial class MainWindow : Window
             ArchiveProcessedFileMode: ReadArchiveProcessedFileModeFromEditor(),
             ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor(),
             AttachmentImportFolder: InterfaceAttachmentImportFolderTextBox.Text.Trim(),
-            AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim());
+            AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
+            AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim());
     }
 
     private ArchiveProcessedFileMode ReadArchiveProcessedFileModeFromEditor()

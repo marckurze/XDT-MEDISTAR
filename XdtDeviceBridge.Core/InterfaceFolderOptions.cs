@@ -14,4 +14,5 @@ public sealed record InterfaceFolderOptions(
     ArchiveProcessedFileMode ArchiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
     int? ArchiveRetentionDays = null,
     string AttachmentImportFolder = "",
-    string AttachmentExportFolder = "");
+    string AttachmentExportFolder = "",
+    string? AttachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate);

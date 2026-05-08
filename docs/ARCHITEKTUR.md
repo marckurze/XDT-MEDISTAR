@@ -68,7 +68,7 @@ Der Prototyp unterstützt:
 - optionale Fehlerablage mit Kopie der beteiligten Importdateien
 - `error.txt` im Fehlerordner
 - vorbereitete Archiv-Aufbewahrungslogik ohne automatische Ausführung
-- optionale GA-Dateianhang-Import-/Exportordner im Schnittstellenprofilmodell und in der UI, noch ohne Dateianhang-Verarbeitung
+- optionale GA-Dateianhang-Import-/Exportordner und `AttachmentFileNameTemplate` im Schnittstellenprofilmodell und in der UI, noch ohne Dateianhang-Verarbeitung
 
 Sicherheitsgrenzen:
 
@@ -312,7 +312,7 @@ Vorgesehene Konzepte:
 
 - `AttachmentImportFolder`: GA-Dateianhang Import
 - `AttachmentExportFolder`: GA-Dateianhang Export
-- `AttachmentFileNameTemplate`
+- `AttachmentFileNameTemplate`, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
 - `AttachmentHandlingMode`: `None`, `Optional`, `Required`
 - `AttachmentTransferMode`: `Copy`, `Move`
 - `AttachmentLinkExport` über XDT-Felder

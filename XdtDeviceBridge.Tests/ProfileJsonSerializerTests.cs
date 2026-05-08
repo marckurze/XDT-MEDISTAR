@@ -59,7 +59,8 @@ public sealed class ProfileJsonSerializerTests
             FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
             {
                 AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
-                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport"
+                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport",
+                AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}"
             }
         };
 
@@ -71,6 +72,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(profile.FolderOptions, deserialized.FolderOptions);
         Assert.Contains("\"AttachmentImportFolder\":", json);
         Assert.Contains("\"AttachmentExportFolder\":", json);
+        Assert.Contains("\"AttachmentFileNameTemplate\":", json);
     }
 
     [Fact]
@@ -119,6 +121,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Null(deserialized.FolderOptions.ArchiveRetentionDays);
         Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentImportFolder);
         Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentExportFolder);
+        Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, deserialized.FolderOptions.AttachmentFileNameTemplate);
     }
 
     [Fact]
@@ -157,7 +160,8 @@ public sealed class ProfileJsonSerializerTests
             "ArchiveProcessedFileMode": "Copy",
             "ArchiveRetentionDays": null,
             "AttachmentImportFolder": "C:\\XdtDeviceBridge\\GAImport",
-            "AttachmentExportFolder": "C:\\XdtDeviceBridge\\GAExport"
+            "AttachmentExportFolder": "C:\\XdtDeviceBridge\\GAExport",
+            "AttachmentFileNameTemplate": "GA_{Ais.PatientNumber}{ExtensionUpper}"
           },
           "IsActive": false,
           "IsLicenseRequired": true,
@@ -169,6 +173,7 @@ public sealed class ProfileJsonSerializerTests
 
         Assert.Equal(@"C:\XdtDeviceBridge\GAImport", deserialized.FolderOptions.AttachmentImportFolder);
         Assert.Equal(@"C:\XdtDeviceBridge\GAExport", deserialized.FolderOptions.AttachmentExportFolder);
+        Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", deserialized.FolderOptions.AttachmentFileNameTemplate);
     }
 
     [Fact]
