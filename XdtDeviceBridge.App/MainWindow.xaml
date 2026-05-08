@@ -954,7 +954,7 @@
                                                    Grid.ColumnSpan="2"
                                                    Text="Ergebnis:"
                                                    FontWeight="Bold"
-                                                   Margin="0,0,0,2"/>
+                                                   Margin="0"/>
 
                                         <TextBox Grid.Row="7"
                                                  Grid.Column="0"
@@ -966,6 +966,7 @@
                                                   HorizontalScrollBarVisibility="Auto"
                                                   TextWrapping="NoWrap"
                                                   MinHeight="96"
+                                                  Margin="0"
                                                   Text="Noch kein XDT-Anhang vorbereitet."/>
                                     </Grid>
                                 </GroupBox>

@@ -134,6 +134,7 @@ public sealed class BuilderTestExportServiceTests
         Assert.Equal(Path.Combine(targetFolder, "11253_08052026_204806.PDF"), result.AttachmentTargetPath);
         Assert.True(File.Exists(result.AttachmentTargetPath));
         Assert.Equal(Path.Combine(simulatedProfileFolder, "11253_08052026_204806.PDF"), result.AttachmentSimulatedTargetPath);
+        Assert.False(File.Exists(Path.Combine(simulatedProfileFolder, "11253_08052026_204806.PDF")));
         Assert.Contains(result.ExportRecords, record => record.FieldCode == "6305" && record.Value == result.AttachmentSimulatedTargetPath);
         Assert.Contains("6302", result.ExportContent, StringComparison.Ordinal);
         Assert.Contains("6303", result.ExportContent, StringComparison.Ordinal);
@@ -169,6 +170,8 @@ public sealed class BuilderTestExportServiceTests
         Assert.Equal(Path.Combine(targetFolder, "11253_08052026_204806_001.PDF"), result.AttachmentTargetPath);
         Assert.Equal(Path.Combine(simulatedProfileFolder, "11253_08052026_204806_001.PDF"), result.AttachmentSimulatedTargetPath);
         Assert.Equal("existing", File.ReadAllText(Path.Combine(targetFolder, "11253_08052026_204806.PDF")));
+        Assert.True(File.Exists(sourceAttachment));
+        Assert.False(File.Exists(result.AttachmentSimulatedTargetPath));
         Assert.Contains($"6305{result.AttachmentSimulatedTargetPath}", result.ExportContent, StringComparison.Ordinal);
         Assert.DoesNotContain($"6305{targetFolder}", result.ExportContent, StringComparison.Ordinal);
     }

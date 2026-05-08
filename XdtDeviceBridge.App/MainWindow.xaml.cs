@@ -3225,8 +3225,31 @@ public partial class MainWindow : Window
             return;
         }
 
-        ShowFullExportPreviewForSelectedProfile();
-        SetBuilderTestStatus("XDT-Anhang eingelesen. Vorschau verwendet simulierten Zielpfad aus dem Schnittstellenprofil. Exportprofil wurde nicht verändert.");
+        if (HasManualTestInputFiles())
+        {
+            try
+            {
+                RefreshManualProcessingPreview();
+                SetBuilderTestStatus("Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert.");
+                AppendMessage("Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert.");
+            }
+            catch (Exception ex) when (ex is IOException
+                or UnauthorizedAccessException
+                or ArgumentException
+                or NotSupportedException
+                or PathTooLongException
+                or InvalidOperationException)
+            {
+                SetBuilderTestStatus($"XDT-Anhang eingelesen. Exportvorschau konnte noch nicht aktualisiert werden: {ex.Message}");
+                AppendMessage($"XDT-Anhang eingelesen, Exportvorschau konnte noch nicht aktualisiert werden: {ex.Message}");
+            }
+        }
+        else
+        {
+            ShowFullExportPreviewForSelectedProfile();
+            SetBuilderTestStatus("XDT-Anhang eingelesen. Exportvorschau wird aktualisiert, sobald AIS- und Gerätedatei geladen sind.");
+        }
+
         AppendMessage(messageText);
     }
 
@@ -3508,6 +3531,30 @@ public partial class MainWindow : Window
             return;
         }
 
+        RefreshManualProcessingPreview();
+
+        if (_lastPipelineResult!.HasErrors)
+        {
+            SetBuilderTestStatus("Exportvorschau aktualisiert, Verarbeitung enthält Fehler.");
+            AppendMessage("Verarbeitung abgeschlossen mit Fehlern.");
+        }
+        else
+        {
+            SetBuilderTestStatus(_builderTransientAttachmentFields.Count > 0
+                ? $"Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert. {_lastPipelineResult.Measurements.Count} Messwerte erkannt. Exportprofil wurde nicht verändert."
+                : $"Kein XDT-Anhang eingelesen. Vorschau enthält keine 6302-6305. {_lastPipelineResult.Measurements.Count} Messwerte erkannt.");
+            AppendMessage("Verarbeitung erfolgreich abgeschlossen.");
+        }
+    }
+
+    private bool HasManualTestInputFiles()
+    {
+        return !string.IsNullOrWhiteSpace(AisFilePathTextBox.Text)
+            && !string.IsNullOrWhiteSpace(DeviceFilePathTextBox.Text);
+    }
+
+    private void RefreshManualProcessingPreview()
+    {
         _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
         _lastPipelineResult = _pipelineService.ProcessFiles(AisFilePathTextBox.Text, DeviceFilePathTextBox.Text, _currentProfile);
 
@@ -3524,19 +3571,6 @@ public partial class MainWindow : Window
 
         ShowIssues(_lastPipelineResult.Issues);
         SyncBuilderTestPreviewArea();
-
-        if (_lastPipelineResult.HasErrors)
-        {
-            SetBuilderTestStatus("Exportvorschau aktualisiert, Verarbeitung enthält Fehler.");
-            AppendMessage("Verarbeitung abgeschlossen mit Fehlern.");
-        }
-        else
-        {
-            SetBuilderTestStatus(_builderTransientAttachmentFields.Count > 0
-                ? $"Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert. {_lastPipelineResult.Measurements.Count} Messwerte erkannt. Exportprofil wurde nicht verändert."
-                : $"Kein XDT-Anhang eingelesen. Vorschau enthält keine 6302-6305. {_lastPipelineResult.Measurements.Count} Messwerte erkannt.");
-            AppendMessage("Verarbeitung erfolgreich abgeschlossen.");
-        }
     }
 
     private void RunBuilderTestExport_Click(object sender, RoutedEventArgs e)
@@ -3565,8 +3599,8 @@ public partial class MainWindow : Window
         }
 
         var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
-        var sourceAttachmentPath = _builderSelectedAttachmentCandidate is not null && _builderTransientAttachmentFields.Count > 0
-            ? _builderSelectedAttachmentCandidate.FullPath
+        var sourceAttachmentPath = _builderTransientAttachmentFields.Count > 0
+            ? _builderSelectedAttachmentCandidate?.FullPath ?? GetAttachmentDiagnosticFilePath()
             : null;
         var fileName = _plannedFileName ?? _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
         var result = _builderTestExportService.Export(new BuilderTestExportRequest(
@@ -3596,15 +3630,16 @@ public partial class MainWindow : Window
         }
 
         var statusBuilder = new StringBuilder();
-        statusBuilder.AppendLine($"Testexport erstellt: {result.ExportFilePath}");
+        statusBuilder.AppendLine("Testexport erstellt.");
+        statusBuilder.AppendLine($"Test-XDT-Datei: {result.ExportFilePath}");
         if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
         {
-            statusBuilder.AppendLine($"XDT-Anhang wurde in den Testexport-Zielordner übernommen: {result.AttachmentTargetPath}");
+            statusBuilder.AppendLine($"Test-XDT-Anhang: {result.AttachmentTargetPath}");
         }
 
         if (!string.IsNullOrWhiteSpace(result.AttachmentSimulatedTargetPath))
         {
-            statusBuilder.AppendLine($"6305 verweist auf den simulierten Schnittstellenprofil-Zielpfad: {result.AttachmentSimulatedTargetPath}");
+            statusBuilder.AppendLine($"Simulierter 6305-Zielpfad: {result.AttachmentSimulatedTargetPath}");
         }
 
         statusBuilder.Append("Exportprofil wurde nicht verändert.");
