@@ -16,6 +16,8 @@ Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche 
 
 Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet unterstützte XDT-Anhang-Dateitypen im konfigurierten XDT-Anhang Importordner auf und verändert keine Dateien. Der manuelle Diagnosebereich kann diesen Importordner einlesen und gefundene XDT-Anhänge anzeigen; automatische Zuordnung und produktive XDT-Linkausgabe bleiben offen.
 
+Eine isolierte automatische Kandidatenauswahl ist ebenfalls vorbereitet: Automatisch eindeutig ist zunächst nur der Fall, dass genau eine unterstützte Anhangdatei im XDT-Anhang Importordner gefunden wurde. Bei mehreren unterstützten Dateien wird nicht automatisch ausgewählt, weil der Patientenbezug unsicher wäre.
+
 ## Aktueller Funktionsumfang
 
 - Einlesen einer AIS-GDT-Datei mit Patientendaten.
