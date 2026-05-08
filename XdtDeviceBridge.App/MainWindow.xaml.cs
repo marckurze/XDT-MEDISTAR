@@ -2182,7 +2182,8 @@ public partial class MainWindow : Window
             exportProfile,
             readyPairs,
             automaticProcessingEnabled: true,
-            DateTime.Now);
+            DateTime.Now,
+            isMonitoringRunning: _periodicScanCancellationTokenSource is not null);
 
         foreach (var result in batchResult.Results)
         {

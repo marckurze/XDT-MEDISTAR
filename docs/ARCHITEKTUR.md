@@ -78,6 +78,8 @@ Sicherheitsgrenzen:
 - keine endgültige Löschung von Importdateien
 - keine produktive Geräte-Dateianhang-Verarbeitung und keine produktive externe AIS-Link-Übergabe
 
+Konservativ integriert ist außerdem eine automatische XDT-Anhang-Vorbereitung im bestehenden Automatiklauf: Sie wird nur geprüft, wenn die Überwachung manuell läuft, globale automatische Verarbeitung aktiv ist, das Schnittstellenprofil XDT-Anhänge aktiviert hat, eine AIS-Patientennummer vorhanden ist und genau ein unterstützter Anhangkandidat gefunden wird. Die Vorbereitung kann den explizit ausgewählten Kandidaten über den vorbereiteten Transfer-/Linkfeldpfad bearbeiten und hält die semantischen Felder `6302` bis `6305` nur im Verarbeitungsergebnis fest. Diese Felder werden noch nicht in produktive XDT-Exportdateien geschrieben; die produktive Linkausgabe bleibt ein separater nächster Schritt.
+
 ### 1.5 Lizenzanzeige
 
 Der Lizenzbereich zeigt den lokalen Lizenzstatus, Lizenzanfragen, importierte Lizenzdateien, lizenzierte Geräte/Anbindungen und Karenzzeiten für neue Anbindungen.

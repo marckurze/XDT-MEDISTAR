@@ -18,6 +18,8 @@ Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet
 
 Eine isolierte automatische Kandidatenauswahl ist ebenfalls vorbereitet: Automatisch eindeutig ist zunächst nur der Fall, dass genau eine unterstützte Anhangdatei im XDT-Anhang Importordner gefunden wurde. Bei mehreren unterstützten Dateien wird nicht automatisch ausgewählt, weil der Patientenbezug unsicher wäre.
 
+Die konservative automatische XDT-Anhang-Vorbereitung ist vorbereitet: Sie greift nur während der manuell gestarteten Überwachung, bei aktivierter globaler automatischer Verarbeitung, aktivierter XDT-Anhang-Funktion im Schnittstellenprofil und genau einem unterstützten Anhangkandidaten. Das Ergebnis hält vorbereitete Feldwerte für 6302 bis 6305 als Status fest; diese Felder werden in diesem Stand noch nicht in die produktive XDT-Exportdatei geschrieben.
+
 ## Aktueller Funktionsumfang
 
 - Einlesen einer AIS-GDT-Datei mit Patientendaten.

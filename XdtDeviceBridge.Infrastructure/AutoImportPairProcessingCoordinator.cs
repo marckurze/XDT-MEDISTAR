@@ -6,6 +6,10 @@ public sealed class AutoImportPairProcessingCoordinator
 {
     private readonly IInterfaceProfileManualProcessor _manualProcessor;
     private readonly DuplicateImportFileHandler _duplicateImportFileHandler;
+    private readonly AttachmentAutoProcessingEligibilityService _attachmentEligibilityService;
+    private readonly IAttachmentImportFolderScannerService _attachmentScannerService;
+    private readonly AttachmentAutoCandidateSelectionService _attachmentCandidateSelectionService;
+    private readonly IAttachmentExternalLinkPreparationService _attachmentPreparationService;
     private readonly HashSet<string> _processedPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _processingPairKeys = new(StringComparer.OrdinalIgnoreCase);
 
@@ -22,9 +26,30 @@ public sealed class AutoImportPairProcessingCoordinator
     public AutoImportPairProcessingCoordinator(
         IInterfaceProfileManualProcessor manualProcessor,
         DuplicateImportFileHandler duplicateImportFileHandler)
+        : this(
+            manualProcessor,
+            duplicateImportFileHandler,
+            new AttachmentAutoProcessingEligibilityService(),
+            new AttachmentImportFolderScannerService(),
+            new AttachmentAutoCandidateSelectionService(),
+            new AttachmentExternalLinkPreparationService())
+    {
+    }
+
+    public AutoImportPairProcessingCoordinator(
+        IInterfaceProfileManualProcessor manualProcessor,
+        DuplicateImportFileHandler duplicateImportFileHandler,
+        AttachmentAutoProcessingEligibilityService attachmentEligibilityService,
+        IAttachmentImportFolderScannerService attachmentScannerService,
+        AttachmentAutoCandidateSelectionService attachmentCandidateSelectionService,
+        IAttachmentExternalLinkPreparationService attachmentPreparationService)
     {
         _manualProcessor = manualProcessor ?? throw new ArgumentNullException(nameof(manualProcessor));
         _duplicateImportFileHandler = duplicateImportFileHandler ?? throw new ArgumentNullException(nameof(duplicateImportFileHandler));
+        _attachmentEligibilityService = attachmentEligibilityService ?? throw new ArgumentNullException(nameof(attachmentEligibilityService));
+        _attachmentScannerService = attachmentScannerService ?? throw new ArgumentNullException(nameof(attachmentScannerService));
+        _attachmentCandidateSelectionService = attachmentCandidateSelectionService ?? throw new ArgumentNullException(nameof(attachmentCandidateSelectionService));
+        _attachmentPreparationService = attachmentPreparationService ?? throw new ArgumentNullException(nameof(attachmentPreparationService));
     }
 
     public AutoImportPairProcessingBatchResult ProcessReadyPairs(
@@ -32,7 +57,8 @@ public sealed class AutoImportPairProcessingCoordinator
         ExportProfileDefinition exportProfile,
         IEnumerable<PendingImportPair> readyPairs,
         bool automaticProcessingEnabled,
-        DateTime timestamp)
+        DateTime timestamp,
+        bool isMonitoringRunning = true)
     {
         ArgumentNullException.ThrowIfNull(interfaceProfile);
         ArgumentNullException.ThrowIfNull(exportProfile);
@@ -96,8 +122,16 @@ public sealed class AutoImportPairProcessingCoordinator
                     pair.AisFile.FilePath,
                     pair.DeviceFile.FilePath,
                     timestamp);
+                var attachmentStatus = processingResult.Success
+                    ? PrepareAttachmentIfAllowed(
+                        interfaceProfile,
+                        processingResult.PipelineResult?.Patient,
+                        automaticProcessingEnabled,
+                        isMonitoringRunning,
+                        timestamp)
+                    : null;
                 _processedPairKeys.Add(pairKey);
-                results.Add(CreateProcessedResult(interfaceProfile, pairKey, pair, processingResult));
+                results.Add(CreateProcessedResult(interfaceProfile, pairKey, pair, processingResult, attachmentStatus));
             }
             catch (Exception ex)
             {
@@ -131,7 +165,8 @@ public sealed class AutoImportPairProcessingCoordinator
         InterfaceProfileDefinition interfaceProfile,
         string pairKey,
         PendingImportPair pair,
-        InterfaceProfileManualProcessingResult processingResult)
+        InterfaceProfileManualProcessingResult processingResult,
+        AttachmentProcessingStatus? attachmentStatus)
     {
         return new AutoImportPairProcessingResult(
             PairKey: pairKey,
@@ -143,7 +178,110 @@ public sealed class AutoImportPairProcessingCoordinator
             Status: CreateStatus(interfaceProfile, processingResult),
             ExportFilePath: processingResult.ExportFilePath,
             ManualProcessingResult: processingResult,
-            Messages: processingResult.Messages);
+            Messages: AppendAttachmentMessage(processingResult.Messages, attachmentStatus),
+            AttachmentStatus: attachmentStatus);
+    }
+
+    private AttachmentProcessingStatus PrepareAttachmentIfAllowed(
+        InterfaceProfileDefinition interfaceProfile,
+        PatientData? patient,
+        bool automaticProcessingEnabled,
+        bool isMonitoringRunning,
+        DateTime timestamp)
+    {
+        var eligibility = _attachmentEligibilityService.Evaluate(
+            interfaceProfile,
+            patient,
+            isMonitoringRunning,
+            automaticProcessingEnabled);
+
+        if (!eligibility.IsAllowed)
+        {
+            return SkippedStatus(
+                AttachmentProcessingStatusReason.EligibilityNotMet,
+                $"XDT-Anhang übersprungen: {string.Join(" ", eligibility.Reasons)}");
+        }
+
+        var scanResult = _attachmentScannerService.Scan(interfaceProfile.FolderOptions);
+        var selectionResult = _attachmentCandidateSelectionService.SelectCandidate(scanResult);
+        if (!selectionResult.CanProcessAutomatically || selectionResult.SelectedCandidate is null)
+        {
+            return selectionResult.Reason switch
+            {
+                AttachmentAutoCandidateSelectionReason.ScanError => SkippedStatus(
+                    AttachmentProcessingStatusReason.ScanError,
+                    $"XDT-Anhang übersprungen: {selectionResult.ErrorMessage ?? "Importordner konnte nicht eingelesen werden."}"),
+                AttachmentAutoCandidateSelectionReason.NoSupportedAttachment => SkippedStatus(
+                    AttachmentProcessingStatusReason.NoSupportedAttachment,
+                    "XDT-Anhang übersprungen: keine unterstützte Anhangdatei gefunden."),
+                AttachmentAutoCandidateSelectionReason.MultipleSupportedAttachments => SkippedStatus(
+                    AttachmentProcessingStatusReason.MultipleSupportedAttachments,
+                    "XDT-Anhang übersprungen: mehrere unterstützte Anhänge gefunden, keine eindeutige Zuordnung."),
+                _ => SkippedStatus(
+                    AttachmentProcessingStatusReason.ScanError,
+                    $"XDT-Anhang übersprungen: {selectionResult.ErrorMessage ?? "keine eindeutige Auswahl möglich."}")
+            };
+        }
+
+        var request = new AttachmentExternalLinkPreparationRequest(
+            FolderOptions: interfaceProfile.FolderOptions,
+            SourceAttachmentPath: selectionResult.SelectedCandidate.FullPath,
+            Patient: patient!,
+            ProcessingTimestamp: timestamp);
+
+        var preparationResult = _attachmentPreparationService.Prepare(request);
+        if (!preparationResult.Success)
+        {
+            return new AttachmentProcessingStatus(
+                WasAttempted: true,
+                WasSkipped: false,
+                Success: false,
+                Reason: AttachmentProcessingStatusReason.PreparationFailed,
+                Message: $"XDT-Anhang Vorbereitung fehlgeschlagen: {preparationResult.ErrorMessage}",
+                SourcePath: selectionResult.SelectedCandidate.FullPath,
+                TargetPath: preparationResult.TargetPath,
+                TargetFileName: preparationResult.TargetFileName,
+                PreparedFields: Array.Empty<ExportFieldRecord>());
+        }
+
+        return new AttachmentProcessingStatus(
+            WasAttempted: true,
+            WasSkipped: false,
+            Success: true,
+            Reason: AttachmentProcessingStatusReason.PreparationSucceeded,
+            Message: $"XDT-Anhang vorbereitet: {preparationResult.TargetPath}",
+            SourcePath: selectionResult.SelectedCandidate.FullPath,
+            TargetPath: preparationResult.TargetPath,
+            TargetFileName: preparationResult.TargetFileName,
+            PreparedFields: preparationResult.ExportFields);
+    }
+
+    private static AttachmentProcessingStatus SkippedStatus(
+        AttachmentProcessingStatusReason reason,
+        string message)
+    {
+        return new AttachmentProcessingStatus(
+            WasAttempted: false,
+            WasSkipped: true,
+            Success: false,
+            Reason: reason,
+            Message: message,
+            SourcePath: null,
+            TargetPath: null,
+            TargetFileName: null,
+            PreparedFields: Array.Empty<ExportFieldRecord>());
+    }
+
+    private static IReadOnlyList<string> AppendAttachmentMessage(
+        IReadOnlyList<string> messages,
+        AttachmentProcessingStatus? attachmentStatus)
+    {
+        if (attachmentStatus is null)
+        {
+            return messages;
+        }
+
+        return messages.Concat(new[] { attachmentStatus.Message }).ToList();
     }
 
     private static string CreateStatus(

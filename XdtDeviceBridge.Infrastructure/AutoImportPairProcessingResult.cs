@@ -10,4 +10,5 @@ public sealed record AutoImportPairProcessingResult(
     string Status,
     string? ExportFilePath,
     InterfaceProfileManualProcessingResult? ManualProcessingResult,
-    IReadOnlyList<string> Messages);
+    IReadOnlyList<string> Messages,
+    AttachmentProcessingStatus? AttachmentStatus = null);
