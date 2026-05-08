@@ -13,6 +13,18 @@ namespace XdtDeviceBridge.App;
 
 public partial class MainWindow : Window
 {
+    private static readonly HashSet<string> SupportedBuilderAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf",
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".tif",
+        ".tiff",
+        ".dcm",
+        ".txt"
+    };
+
     private readonly ProcessingPipelineService _pipelineService = new();
     private readonly ExportFileNameBuilder _fileNameBuilder = new();
     private readonly FileExportService _fileExportService = new();
@@ -3153,49 +3165,58 @@ public partial class MainWindow : Window
             return;
         }
 
-        var result = _attachmentImportFolderDiagnosticService.Scan(selectedProfile);
-        ShowAttachmentImportFolderDiagnosticResult(result);
-        if (!result.Success)
+        var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            ClearBuilderAttachmentPreviewState(updatePreview: true);
-            SetBuilderTestStatus(result.Message);
-            AppendMessage(result.Message);
+            Filter = "XDT-Anhänge (*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt)|*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt|Alle Dateien (*.*)|*.*",
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
             return;
         }
 
-        var supportedCandidates = result.Candidates
-            .Where(candidate => candidate.IsSupported)
-            .ToList();
-
-        if (supportedCandidates.Count == 0)
+        var selectedFile = dialog.FileName;
+        var extension = Path.GetExtension(selectedFile);
+        var fileInfo = new FileInfo(selectedFile);
+        if (!fileInfo.Exists)
         {
+            _attachmentImportCandidateRows.Clear();
             ClearBuilderAttachmentPreviewState(updatePreview: true);
-            const string message = "Keine unterstützte XDT-Anhangdatei gefunden.";
+            var message = $"XDT-Anhangdatei wurde nicht gefunden: {selectedFile}";
             SetBuilderTestStatus(message);
+            SetAttachmentDiagnosticResultText(message);
             AppendMessage(message);
             return;
         }
 
-        if (supportedCandidates.Count > 1)
-        {
-            ClearBuilderAttachmentPreviewState(updatePreview: true);
-            const string message = "Mehrere unterstützte XDT-Anhänge gefunden. Keine eindeutige Zuordnung.";
-            SetBuilderTestStatus(message);
-            AppendMessage(message);
-            return;
-        }
+        var isSupported = SupportedBuilderAttachmentExtensions.Contains(extension);
+        var selectedCandidate = new AttachmentImportCandidateDisplayRow(
+            FileName: fileInfo.Name,
+            Extension: extension,
+            FullPath: fileInfo.FullName,
+            SizeBytes: fileInfo.Length,
+            LastWriteTimeUtc: fileInfo.LastWriteTimeUtc,
+            IsSupported: isSupported,
+            IsStable: true,
+            Status: isSupported
+                ? "Unterstützt, Baukasten-Dateiauswahl"
+                : "Nicht unterstützt: Dateityp nicht unterstützt.");
 
-        var selectedCandidate = supportedCandidates[0];
-        if (!selectedCandidate.IsStable)
-        {
-            ClearBuilderAttachmentPreviewState(updatePreview: true);
-            const string message = "XDT-Anhang ist noch nicht stabil.";
-            SetBuilderTestStatus(message);
-            AppendMessage(message);
-            return;
-        }
-
+        _attachmentImportCandidateRows.Clear();
+        _attachmentImportCandidateRows.Add(selectedCandidate);
         BuilderAttachmentDiagnosticCandidatesGrid.SelectedItem = selectedCandidate;
+
+        if (!isSupported)
+        {
+            ClearBuilderAttachmentPreviewState(updatePreview: true);
+            var message = $"Nicht unterstützter XDT-Anhang-Dateityp: {extension}. Unterstützt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT.";
+            SetBuilderTestStatus(message);
+            SetAttachmentDiagnosticResultText(message);
+            AppendMessage(message);
+            return;
+        }
+
         if (!TryPrepareBuilderAttachmentPreview(selectedProfile, selectedCandidate, DateTime.Now, out var messageText))
         {
             ClearBuilderAttachmentPreviewState(updatePreview: true);
@@ -3205,7 +3226,7 @@ public partial class MainWindow : Window
         }
 
         ShowFullExportPreviewForSelectedProfile();
-        SetBuilderTestStatus("XDT-Anhang eingelesen. Linkfelder werden in der Vorschau berücksichtigt. Exportprofil wurde nicht verändert.");
+        SetBuilderTestStatus("XDT-Anhang eingelesen. Vorschau verwendet simulierten Zielpfad aus dem Schnittstellenprofil. Exportprofil wurde nicht verändert.");
         AppendMessage(messageText);
     }
 
@@ -3333,11 +3354,11 @@ public partial class MainWindow : Window
     {
         var builder = new StringBuilder();
         builder.AppendLine("Status: XDT-Anhang eingelesen");
-        builder.AppendLine("Einlesen verändert keine Dateien. Der Anhang wird erst beim Testexport in den gewählten Zielordner übernommen.");
+        builder.AppendLine("Einlesen verändert keine Dateien. Die Quelle kann aus einem beliebigen Speicherort stammen; 6305 simuliert den Schnittstellenprofil-Zielpfad.");
         builder.AppendLine();
         builder.AppendLine($"Quelle: {candidate.FullPath}");
         builder.AppendLine($"Ziel-Dateiname Vorschau: {targetFileName}");
-        builder.AppendLine($"Zielpfad Vorschau: {targetPath}");
+        builder.AppendLine($"Simulierter 6305-Zielpfad: {targetPath}");
         builder.AppendLine($"Transfermodus: {transferMode}");
         builder.AppendLine();
         builder.AppendLine("Vorbereitete XDT-Felder:");
@@ -3581,12 +3602,22 @@ public partial class MainWindow : Window
             statusBuilder.AppendLine($"XDT-Anhang wurde in den Testexport-Zielordner übernommen: {result.AttachmentTargetPath}");
         }
 
+        if (!string.IsNullOrWhiteSpace(result.AttachmentSimulatedTargetPath))
+        {
+            statusBuilder.AppendLine($"6305 verweist auf den simulierten Schnittstellenprofil-Zielpfad: {result.AttachmentSimulatedTargetPath}");
+        }
+
         statusBuilder.Append("Exportprofil wurde nicht verändert.");
         SetBuilderTestStatus(statusBuilder.ToString());
         AppendMessage($"Testexport erstellt: {result.ExportFilePath}");
         if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
         {
             AppendMessage($"XDT-Anhang wurde in den Testexport-Zielordner übernommen: {result.AttachmentTargetPath}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.AttachmentSimulatedTargetPath))
+        {
+            AppendMessage($"6305 verweist auf den simulierten Schnittstellenprofil-Zielpfad: {result.AttachmentSimulatedTargetPath}");
         }
     }
 
@@ -3605,6 +3636,11 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
         {
             builder.AppendLine($"Test-XDT-Anhang: {result.AttachmentTargetPath}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.AttachmentSimulatedTargetPath))
+        {
+            builder.AppendLine($"Simulierter 6305-Zielpfad: {result.AttachmentSimulatedTargetPath}");
         }
 
         if (result.Issues.Count > 0)

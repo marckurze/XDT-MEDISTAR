@@ -6,14 +6,20 @@ public sealed class BuilderTestExportService
 {
     private readonly MappingEngine _mappingEngine;
     private readonly XdtExportBuilder _xdtExportBuilder;
-    private readonly IAttachmentExternalLinkPreparationService _attachmentPreparationService;
+    private readonly AttachmentFileNameBuilder _attachmentFileNameBuilder;
+    private readonly IAttachmentTransferService _attachmentTransferService;
+    private readonly ExternalAisLinkFieldBuilder _externalAisLinkFieldBuilder;
+    private readonly ExternalAisLinkXdtFieldAdapter _externalAisLinkXdtFieldAdapter;
     private readonly FileExportService _fileExportService;
 
     public BuilderTestExportService()
         : this(
             new MappingEngine(),
             new XdtExportBuilder(),
-            new AttachmentExternalLinkPreparationService(),
+            new AttachmentFileNameBuilder(),
+            new AttachmentTransferService(),
+            new ExternalAisLinkFieldBuilder(),
+            new ExternalAisLinkXdtFieldAdapter(),
             new FileExportService())
     {
     }
@@ -21,12 +27,18 @@ public sealed class BuilderTestExportService
     public BuilderTestExportService(
         MappingEngine mappingEngine,
         XdtExportBuilder xdtExportBuilder,
-        IAttachmentExternalLinkPreparationService attachmentPreparationService,
+        AttachmentFileNameBuilder attachmentFileNameBuilder,
+        IAttachmentTransferService attachmentTransferService,
+        ExternalAisLinkFieldBuilder externalAisLinkFieldBuilder,
+        ExternalAisLinkXdtFieldAdapter externalAisLinkXdtFieldAdapter,
         FileExportService fileExportService)
     {
         _mappingEngine = mappingEngine ?? throw new ArgumentNullException(nameof(mappingEngine));
         _xdtExportBuilder = xdtExportBuilder ?? throw new ArgumentNullException(nameof(xdtExportBuilder));
-        _attachmentPreparationService = attachmentPreparationService ?? throw new ArgumentNullException(nameof(attachmentPreparationService));
+        _attachmentFileNameBuilder = attachmentFileNameBuilder ?? throw new ArgumentNullException(nameof(attachmentFileNameBuilder));
+        _attachmentTransferService = attachmentTransferService ?? throw new ArgumentNullException(nameof(attachmentTransferService));
+        _externalAisLinkFieldBuilder = externalAisLinkFieldBuilder ?? throw new ArgumentNullException(nameof(externalAisLinkFieldBuilder));
+        _externalAisLinkXdtFieldAdapter = externalAisLinkXdtFieldAdapter ?? throw new ArgumentNullException(nameof(externalAisLinkXdtFieldAdapter));
         _fileExportService = fileExportService ?? throw new ArgumentNullException(nameof(fileExportService));
     }
 
@@ -78,7 +90,8 @@ public sealed class BuilderTestExportService
         }
 
         IReadOnlyList<ExportFieldRecord> attachmentFields = Array.Empty<ExportFieldRecord>();
-        AttachmentExternalLinkPreparationResult? attachmentResult = null;
+        AttachmentTransferResult? attachmentTransferResult = null;
+        string? simulatedAttachmentTargetPath = null;
         if (!string.IsNullOrWhiteSpace(request.SourceAttachmentPath))
         {
             if (request.FolderOptions is null)
@@ -87,27 +100,65 @@ public sealed class BuilderTestExportService
                 return Fail(issues);
             }
 
-            Directory.CreateDirectory(request.TargetFolder);
-            var testFolderOptions = request.FolderOptions with
+            if (request.IsSourceAttachmentStable == false)
             {
-                AttachmentExportFolder = request.TargetFolder
-            };
-
-            attachmentResult = _attachmentPreparationService.Prepare(new AttachmentExternalLinkPreparationRequest(
-                FolderOptions: testFolderOptions,
-                SourceAttachmentPath: request.SourceAttachmentPath,
-                Patient: request.Patient,
-                ProcessingTimestamp: request.ProcessingTimestamp,
-                OriginalExtension: Path.GetExtension(request.SourceAttachmentPath),
-                IsSourceStable: request.IsSourceAttachmentStable));
-
-            if (!attachmentResult.Success)
-            {
-                issues.Add(attachmentResult.ErrorMessage ?? "XDT-Anhang konnte für den Testexport nicht vorbereitet werden.");
+                issues.Add("XDT-Anhang ist noch nicht stabil.");
                 return Fail(issues);
             }
 
-            attachmentFields = attachmentResult.ExportFields;
+            if (string.IsNullOrWhiteSpace(request.FolderOptions.AttachmentExportFolder))
+            {
+                issues.Add("Schnittstellenprofil-XDT-Anhang Exportordner fehlt.");
+                return Fail(issues);
+            }
+
+            Directory.CreateDirectory(request.TargetFolder);
+            var desiredAttachmentFileName = _attachmentFileNameBuilder.Build(
+                request.FolderOptions.AttachmentFileNameTemplate,
+                request.Patient,
+                request.ProcessingTimestamp,
+                Path.GetExtension(request.SourceAttachmentPath));
+            attachmentTransferResult = _attachmentTransferService.Transfer(
+                request.SourceAttachmentPath,
+                request.TargetFolder,
+                desiredAttachmentFileName,
+                AttachmentTransferMode.Copy);
+
+            if (!attachmentTransferResult.Success)
+            {
+                issues.Add(attachmentTransferResult.ErrorMessage ?? "XDT-Anhang konnte für den Testexport nicht kopiert werden.");
+                return Fail(issues);
+            }
+
+            simulatedAttachmentTargetPath = Path.Combine(
+                request.FolderOptions.AttachmentExportFolder,
+                attachmentTransferResult.FileName ?? desiredAttachmentFileName);
+            var fieldBuildResult = _externalAisLinkFieldBuilder.Build(
+                request.FolderOptions,
+                simulatedAttachmentTargetPath,
+                Path.GetExtension(request.SourceAttachmentPath));
+            if (!fieldBuildResult.Success || fieldBuildResult.FieldSet is null)
+            {
+                issues.Add(fieldBuildResult.ErrorMessage ?? "XDT-Anhang-Linkfelder konnten nicht vorbereitet werden.");
+                return Fail(
+                    issues,
+                    attachmentTargetPath: attachmentTransferResult.TargetPath,
+                    attachmentTargetFileName: attachmentTransferResult.FileName,
+                    simulatedAttachmentTargetPath: simulatedAttachmentTargetPath);
+            }
+
+            var adapterResult = _externalAisLinkXdtFieldAdapter.Adapt(fieldBuildResult.FieldSet);
+            if (!adapterResult.Success)
+            {
+                issues.Add(adapterResult.ErrorMessage ?? "XDT-Anhang-Linkfelder konnten nicht in XDT-Felder umgesetzt werden.");
+                return Fail(
+                    issues,
+                    attachmentTargetPath: attachmentTransferResult.TargetPath,
+                    attachmentTargetFileName: attachmentTransferResult.FileName,
+                    simulatedAttachmentTargetPath: simulatedAttachmentTargetPath);
+            }
+
+            attachmentFields = adapterResult.Fields;
         }
 
         var preview = BuildPreview(new BuilderTestExportPreviewRequest(
@@ -121,7 +172,13 @@ public sealed class BuilderTestExportService
         if (string.IsNullOrWhiteSpace(preview.ExportContent))
         {
             issues.Add("Testexport-Inhalt ist leer.");
-            return Fail(issues, preview.ExportContent, preview.ExportRecords, attachmentResult);
+            return Fail(
+                issues,
+                preview.ExportContent,
+                preview.ExportRecords,
+                attachmentTransferResult?.TargetPath,
+                attachmentTransferResult?.FileName,
+                simulatedAttachmentTargetPath);
         }
 
         var exportResult = _fileExportService.Export(
@@ -135,8 +192,9 @@ public sealed class BuilderTestExportService
             Success: !preview.Issues.Any(issue => issue.StartsWith("Error", StringComparison.OrdinalIgnoreCase))
                 && !exportResult.HasErrors,
             ExportFilePath: exportResult.FilePath,
-            AttachmentTargetPath: attachmentResult?.TargetPath,
-            AttachmentTargetFileName: attachmentResult?.TargetFileName,
+            AttachmentTargetPath: attachmentTransferResult?.TargetPath,
+            AttachmentTargetFileName: attachmentTransferResult?.FileName,
+            AttachmentSimulatedTargetPath: simulatedAttachmentTargetPath,
             ExportContent: preview.ExportContent,
             ExportRecords: preview.ExportRecords,
             Issues: issues);
@@ -173,13 +231,16 @@ public sealed class BuilderTestExportService
         IReadOnlyList<string> issues,
         string exportContent = "",
         IReadOnlyList<ExportFieldRecord>? exportRecords = null,
-        AttachmentExternalLinkPreparationResult? attachmentResult = null)
+        string? attachmentTargetPath = null,
+        string? attachmentTargetFileName = null,
+        string? simulatedAttachmentTargetPath = null)
     {
         return new BuilderTestExportResult(
             Success: false,
             ExportFilePath: null,
-            AttachmentTargetPath: attachmentResult?.TargetPath,
-            AttachmentTargetFileName: attachmentResult?.TargetFileName,
+            AttachmentTargetPath: attachmentTargetPath,
+            AttachmentTargetFileName: attachmentTargetFileName,
+            AttachmentSimulatedTargetPath: simulatedAttachmentTargetPath,
             ExportContent: exportContent,
             ExportRecords: exportRecords ?? Array.Empty<ExportFieldRecord>(),
             Issues: issues);

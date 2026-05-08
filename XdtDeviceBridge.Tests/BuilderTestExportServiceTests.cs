@@ -108,7 +108,8 @@ public sealed class BuilderTestExportServiceTests
         var service = new BuilderTestExportService();
         var sourceAttachment = CreateSourceFile("original.pdf", "PDF");
         var targetFolder = CreateTempFolder();
-        var options = CreateOptions(targetFolder) with
+        var simulatedProfileFolder = CreateTempFolder();
+        var options = CreateOptions(simulatedProfileFolder) with
         {
             AttachmentTransferMode = AttachmentTransferMode.Move
         };
@@ -128,15 +129,18 @@ public sealed class BuilderTestExportServiceTests
 
         Assert.True(result.Success);
         Assert.True(File.Exists(result.ExportFilePath!));
-        Assert.False(File.Exists(sourceAttachment));
+        Assert.True(File.Exists(sourceAttachment));
         Assert.NotNull(result.AttachmentTargetPath);
         Assert.Equal(Path.Combine(targetFolder, "11253_08052026_204806.PDF"), result.AttachmentTargetPath);
         Assert.True(File.Exists(result.AttachmentTargetPath));
-        Assert.Contains(result.ExportRecords, record => record.FieldCode == "6305" && record.Value == result.AttachmentTargetPath);
+        Assert.Equal(Path.Combine(simulatedProfileFolder, "11253_08052026_204806.PDF"), result.AttachmentSimulatedTargetPath);
+        Assert.Contains(result.ExportRecords, record => record.FieldCode == "6305" && record.Value == result.AttachmentSimulatedTargetPath);
         Assert.Contains("6302", result.ExportContent, StringComparison.Ordinal);
         Assert.Contains("6303", result.ExportContent, StringComparison.Ordinal);
         Assert.Contains("6304", result.ExportContent, StringComparison.Ordinal);
-        Assert.Contains($"6305{result.AttachmentTargetPath}", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains($"6305{result.AttachmentSimulatedTargetPath}", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain($"6305{targetFolder}", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain(sourceAttachment, result.ExportContent, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -145,6 +149,7 @@ public sealed class BuilderTestExportServiceTests
         var service = new BuilderTestExportService();
         var sourceAttachment = CreateSourceFile("original.pdf", "PDF");
         var targetFolder = CreateTempFolder();
+        var simulatedProfileFolder = CreateTempFolder();
         File.WriteAllText(Path.Combine(targetFolder, "11253_08052026_204806.PDF"), "existing");
 
         var result = service.Export(new BuilderTestExportRequest(
@@ -155,15 +160,17 @@ public sealed class BuilderTestExportServiceTests
             ExportRules: CreateExportRules(),
             Patient: CreatePatient(),
             Measurements: CreateMeasurements(),
-            FolderOptions: CreateOptions(targetFolder),
+            FolderOptions: CreateOptions(simulatedProfileFolder),
             SourceAttachmentPath: sourceAttachment,
             IsSourceAttachmentStable: true,
             ProcessingTimestamp: Timestamp));
 
         Assert.True(result.Success);
         Assert.Equal(Path.Combine(targetFolder, "11253_08052026_204806_001.PDF"), result.AttachmentTargetPath);
+        Assert.Equal(Path.Combine(simulatedProfileFolder, "11253_08052026_204806_001.PDF"), result.AttachmentSimulatedTargetPath);
         Assert.Equal("existing", File.ReadAllText(Path.Combine(targetFolder, "11253_08052026_204806.PDF")));
-        Assert.Contains($"6305{result.AttachmentTargetPath}", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains($"6305{result.AttachmentSimulatedTargetPath}", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain($"6305{targetFolder}", result.ExportContent, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<ExportRuleDefinition> CreateExportRules()

@@ -951,15 +951,10 @@
 
                                         <TextBlock Grid.Row="6"
                                                    Grid.Column="0"
+                                                   Grid.ColumnSpan="2"
                                                    Text="Ergebnis:"
                                                    FontWeight="Bold"
-                                                   Margin="0,3,8,8"/>
-                                        <TextBlock Grid.Row="6"
-                                                   Grid.Column="1"
-                                                   Text="Einlesen verändert keine Dateien. Kopie/Verschieben für den Baukasten erfolgt erst bei Schritt 6 im gewählten Testexport-Zielordner."
-                                                   Foreground="DimGray"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,3,0,8"/>
+                                                   Margin="0,0,0,2"/>
 
                                         <TextBox Grid.Row="7"
                                                  Grid.Column="0"
