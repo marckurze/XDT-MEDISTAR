@@ -699,12 +699,15 @@ Im Infrastructure-Projekt sind Bausteine für JSON-Speicherung sowie Import und 
 - `TemplatePackageImportValidator`
 - `TemplatePackageImportConflictAnalyzer`
 - `TemplatePackageImportPlanBuilder`
+- `TemplatePackageImportDryRunService`
 
 Damit können V2-Profile und Templatepakete technisch serialisiert, als Dateien gespeichert, als ZIP-Paket exportiert, wieder importiert und vor einer späteren produktiven Übernahme validiert werden.
 
 Der vorbereitete `TemplatePackageImportConflictAnalyzer` analysiert ein importiertes Templatepaket gegen den lokalen Profilkatalog, ohne Profile produktiv zu speichern. Er erkennt ID-/Namenskonflikte, BuiltIn-Schutz, fehlende Schnittstellenprofil-Abhängigkeiten und unsichere Ordnerpfade. BuiltIn-Profile bleiben geschützt; UserDefined-Konflikte können später als Kopie oder bewusster Ersatz behandelt werden. XDT-Anhang-Einstellungen bleiben Bestandteil des Schnittstellenprofils und werden beim Import als prüfpflichtige Konfiguration betrachtet.
 
 Auf Basis dieser Analyse erzeugt der vorbereitete `TemplatePackageImportPlanBuilder` einen noch nicht ausgeführten Importplan. Der Plan schlägt sichere Standardaktionen wie `ImportAsNew`, `ImportAsCopy`, `KeepExisting` oder `Blocked` vor; `ReplaceExisting` bleibt eine spätere bewusste Benutzerentscheidung. BuiltIn-Profile werden nie automatisch ersetzt, UserDefined-Konflikte werden zunächst als Kopie geplant, fehlende Abhängigkeiten blockieren den Import und XDT-Anhang-Einstellungen werden als prüfpflichtig markiert. Der Importplan führt noch keine produktive Übernahme aus und schreibt keine Profile in den lokalen Katalog.
+
+Als nächster vorbereiteter Schritt simuliert der `TemplatePackageImportDryRunService` die spätere Ausführung eines Importplans, ohne Dateien zu schreiben. Der Dry-Run zeigt, welche Profile als neu, als Kopie, als Ersatz, als bestehend beibehalten, übersprungen oder blockiert behandelt würden. Er weist geplante Ziel-IDs und Zielnamen aus und simuliert für Schnittstellenprofile das Abhängigkeits-Remapping auf lokale Profile oder auf im Paket importierte Profile. Fehlende oder blockierte Abhängigkeiten werden sichtbar, XDT-Anhang-Einstellungen bleiben prüfpflichtig, und importierte Schnittstellenprofile werden nicht automatisch aktiviert. Auch dieser Schritt ist nur Vorschau und führt keine produktive Übernahme aus.
 
 ### 8.3 Offline-Lizenzierung
 
