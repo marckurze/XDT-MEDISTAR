@@ -16,4 +16,8 @@ public sealed record InterfaceFolderOptions(
     string AttachmentImportFolder = "",
     string AttachmentExportFolder = "",
     string? AttachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
-    AttachmentTransferMode AttachmentTransferMode = AttachmentTransferMode.Move);
+    AttachmentTransferMode AttachmentTransferMode = AttachmentTransferMode.Move,
+    string AttachmentExternalLinkDocumentName = "Datei",
+    string AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
+    string AttachmentExternalLinkDescription = "",
+    string AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}");

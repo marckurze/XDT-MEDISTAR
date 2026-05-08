@@ -12,7 +12,7 @@ Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfol
 
 Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt bzw. konfiguriert werden, gelten aber noch nicht als produktiv validiert.
 
-Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp sind optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export`, `AttachmentFileNameTemplate` sowie der vorbereitete `AttachmentTransferService` mit Copy/Move-Modus im Schnittstellenprofilmodell und in der UI vorbereitet. Standard für Geräte-Dateianhänge ist `Move`, damit der GA-Dateianhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann; produktive Dateianhang-Zuordnung, XDT-Linkerzeugung und Dokument-/Dateianhang-Templates sind weiterhin offen.
+Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp ist der Konfigurationsbereich `XDT-Anhänge für AIS` im Schnittstellenprofil vorbereitet: optionale Import-/Exportordner, `AttachmentFileNameTemplate`, vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus und XDT-Linkfeld-Vorlagen für 6302, 6303, 6304 und 6305. Standard für Geräte-Dateianhänge ist `Move`, damit der XDT-Anhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann; produktive Dateianhang-Zuordnung, XDT-Linkerzeugung und Dokument-/Dateianhang-Templates sind weiterhin offen.
 
 ## Aktueller Funktionsumfang
 
@@ -68,10 +68,11 @@ Ein Schnittstellenprofil enthaelt:
 - Exportordner ans AIS
 - Archivordner
 - Fehlerordner
-- GA-Dateianhang Import (optional)
-- GA-Dateianhang Export (optional)
-- GA-Dateianhang Dateiname, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
-- GA-Dateianhang Übertragung: Kopieren oder Verschieben, Standard `Verschieben`, vorbereitet für spätere Dateianhang-Verarbeitung
+- XDT-Anhang Importordner (optional)
+- XDT-Anhang Exportordner (optional)
+- XDT-Anhang Dateiname, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
+- XDT-Anhang Übertragung: Kopieren oder Verschieben, Standard `Verschieben`, vorbereitet für spätere Dateianhang-Verarbeitung
+- vorbereitete XDT-Linkfeld-Vorlagen 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung und 6305 vollständiger Dateipfad
 - Aktiv-Haken fuer automatische Verarbeitung
 - Lizenzpflicht-Haken
 - Archivierungsoptionen

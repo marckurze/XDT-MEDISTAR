@@ -157,6 +157,10 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Equal(string.Empty, options.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, options.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, options.AttachmentTransferMode);
+        Assert.Equal("Datei", options.AttachmentExternalLinkDocumentName);
+        Assert.Equal("{ExtensionUpperWithoutDot}", options.AttachmentExternalLinkFileFormat);
+        Assert.Equal(string.Empty, options.AttachmentExternalLinkDescription);
+        Assert.Equal("{Attachment.TargetFullPath}", options.AttachmentExternalLinkPathTemplate);
     }
 
     [Fact]
@@ -165,6 +169,20 @@ public sealed class InterfaceProfileDefinitionTests
         var profile = WithFolderOptions(CreateFolderOptions(
             attachmentImportFolder: string.Empty,
             attachmentExportFolder: string.Empty));
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptEmptyAttachmentExternalLinkFields()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            attachmentExternalLinkDocumentName: string.Empty,
+            attachmentExternalLinkFileFormat: string.Empty,
+            attachmentExternalLinkDescription: string.Empty,
+            attachmentExternalLinkPathTemplate: string.Empty));
 
         var issues = InterfaceProfileDefinitionValidator.Validate(profile);
 
@@ -240,7 +258,11 @@ public sealed class InterfaceProfileDefinitionTests
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
         string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
-        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Move)
+        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Move,
+        string attachmentExternalLinkDocumentName = "Datei",
+        string attachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
+        string attachmentExternalLinkDescription = "",
+        string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}")
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -258,7 +280,11 @@ public sealed class InterfaceProfileDefinitionTests
             AttachmentImportFolder: attachmentImportFolder,
             AttachmentExportFolder: attachmentExportFolder,
             AttachmentFileNameTemplate: attachmentFileNameTemplate,
-            AttachmentTransferMode: attachmentTransferMode);
+            AttachmentTransferMode: attachmentTransferMode,
+            AttachmentExternalLinkDocumentName: attachmentExternalLinkDocumentName,
+            AttachmentExternalLinkFileFormat: attachmentExternalLinkFileFormat,
+            AttachmentExternalLinkDescription: attachmentExternalLinkDescription,
+            AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate);
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

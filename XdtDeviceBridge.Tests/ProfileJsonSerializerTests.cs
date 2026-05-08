@@ -61,7 +61,11 @@ public sealed class ProfileJsonSerializerTests
                 AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
                 AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport",
                 AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}",
-                AttachmentTransferMode = AttachmentTransferMode.Move
+                AttachmentTransferMode = AttachmentTransferMode.Move,
+                AttachmentExternalLinkDocumentName = "PDF-Befund",
+                AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
+                AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
+                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}"
             }
         };
 
@@ -75,6 +79,10 @@ public sealed class ProfileJsonSerializerTests
         Assert.Contains("\"AttachmentExportFolder\":", json);
         Assert.Contains("\"AttachmentFileNameTemplate\":", json);
         Assert.Contains("\"AttachmentTransferMode\": \"Move\"", json);
+        Assert.Contains("\"AttachmentExternalLinkDocumentName\":", json);
+        Assert.Contains("\"AttachmentExternalLinkFileFormat\":", json);
+        Assert.Contains("\"AttachmentExternalLinkDescription\":", json);
+        Assert.Contains("\"AttachmentExternalLinkPathTemplate\":", json);
     }
 
     [Fact]
@@ -125,6 +133,10 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, deserialized.FolderOptions.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, deserialized.FolderOptions.AttachmentTransferMode);
+        Assert.Equal("Datei", deserialized.FolderOptions.AttachmentExternalLinkDocumentName);
+        Assert.Equal("{ExtensionUpperWithoutDot}", deserialized.FolderOptions.AttachmentExternalLinkFileFormat);
+        Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentExternalLinkDescription);
+        Assert.Equal("{Attachment.TargetFullPath}", deserialized.FolderOptions.AttachmentExternalLinkPathTemplate);
     }
 
     [Fact]
@@ -165,7 +177,11 @@ public sealed class ProfileJsonSerializerTests
             "AttachmentImportFolder": "C:\\XdtDeviceBridge\\GAImport",
             "AttachmentExportFolder": "C:\\XdtDeviceBridge\\GAExport",
             "AttachmentFileNameTemplate": "GA_{Ais.PatientNumber}{ExtensionUpper}",
-            "AttachmentTransferMode": "Move"
+            "AttachmentTransferMode": "Move",
+            "AttachmentExternalLinkDocumentName": "PDF-Befund",
+            "AttachmentExternalLinkFileFormat": "{ExtensionUpperWithoutDot}",
+            "AttachmentExternalLinkDescription": "Messprotokoll Autorefraktor",
+            "AttachmentExternalLinkPathTemplate": "{Attachment.TargetFullPath}"
           },
           "IsActive": false,
           "IsLicenseRequired": true,
@@ -179,6 +195,10 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(@"C:\XdtDeviceBridge\GAExport", deserialized.FolderOptions.AttachmentExportFolder);
         Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", deserialized.FolderOptions.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, deserialized.FolderOptions.AttachmentTransferMode);
+        Assert.Equal("PDF-Befund", deserialized.FolderOptions.AttachmentExternalLinkDocumentName);
+        Assert.Equal("{ExtensionUpperWithoutDot}", deserialized.FolderOptions.AttachmentExternalLinkFileFormat);
+        Assert.Equal("Messprotokoll Autorefraktor", deserialized.FolderOptions.AttachmentExternalLinkDescription);
+        Assert.Equal("{Attachment.TargetFullPath}", deserialized.FolderOptions.AttachmentExternalLinkPathTemplate);
     }
 
     [Fact]

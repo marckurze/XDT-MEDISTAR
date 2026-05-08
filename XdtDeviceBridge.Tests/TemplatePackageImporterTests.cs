@@ -85,6 +85,24 @@ public sealed class TemplatePackageImporterTests
     }
 
     [Fact]
+    public void Import_ShouldReadAttachmentExternalLinkSettingsFromInterfaceProfile()
+    {
+        var zipPath = ExportPackage(CreateInterfaceProfileWithAttachmentSettings());
+
+        var result = _importer.Import(zipPath);
+
+        var profile = Assert.Single(result.InterfaceProfiles);
+        Assert.Equal(@"C:\XdtDeviceBridge\GAImport", profile.FolderOptions.AttachmentImportFolder);
+        Assert.Equal(@"C:\XdtDeviceBridge\GAExport", profile.FolderOptions.AttachmentExportFolder);
+        Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", profile.FolderOptions.AttachmentFileNameTemplate);
+        Assert.Equal(AttachmentTransferMode.Move, profile.FolderOptions.AttachmentTransferMode);
+        Assert.Equal("PDF-Befund", profile.FolderOptions.AttachmentExternalLinkDocumentName);
+        Assert.Equal("{ExtensionUpperWithoutDot}", profile.FolderOptions.AttachmentExternalLinkFileFormat);
+        Assert.Equal("Messprotokoll Autorefraktor", profile.FolderOptions.AttachmentExternalLinkDescription);
+        Assert.Equal("{Attachment.TargetFullPath}", profile.FolderOptions.AttachmentExternalLinkPathTemplate);
+    }
+
+    [Fact]
     public void Import_ShouldIgnoreUnknownAdditionalFile()
     {
         var zipPath = ExportPackage();
@@ -152,10 +170,10 @@ public sealed class TemplatePackageImporterTests
         Assert.Contains("Template package ZIP must contain package.json.", exception.Message);
     }
 
-    private string ExportPackage()
+    private string ExportPackage(InterfaceProfileDefinition? interfaceProfileOverride = null)
     {
         var zipPath = CreateTempZipPath();
-        _exporter.Export(zipPath, CreateRequest());
+        _exporter.Export(zipPath, CreateRequest(interfaceProfileOverride));
         return zipPath;
     }
 
@@ -166,12 +184,12 @@ public sealed class TemplatePackageImporterTests
         return Path.Combine(folder, "profiles.zip");
     }
 
-    private static TemplatePackageExportRequest CreateRequest()
+    private static TemplatePackageExportRequest CreateRequest(InterfaceProfileDefinition? interfaceProfileOverride = null)
     {
         var aisProfile = DefaultAisProfiles.CreateMedistarDefault();
         var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault();
         var exportProfile = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();
-        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
+        var interfaceProfile = interfaceProfileOverride ?? DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
 
         var package = CreateTemplatePackage(new[]
         {
@@ -187,6 +205,24 @@ public sealed class TemplatePackageImporterTests
             DeviceProfiles: new[] { deviceProfile },
             ExportProfiles: new[] { exportProfile },
             InterfaceProfiles: new[] { interfaceProfile });
+    }
+
+    private static InterfaceProfileDefinition CreateInterfaceProfileWithAttachmentSettings()
+    {
+        return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
+            {
+                AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
+                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport",
+                AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}",
+                AttachmentTransferMode = AttachmentTransferMode.Move,
+                AttachmentExternalLinkDocumentName = "PDF-Befund",
+                AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
+                AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
+                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}"
+            }
+        };
     }
 
     private static TemplatePackage CreateTemplatePackage(IReadOnlyList<ProfileMetadata> includedProfiles)

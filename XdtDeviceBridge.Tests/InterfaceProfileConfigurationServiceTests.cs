@@ -40,6 +40,10 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, profile.FolderOptions.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, profile.FolderOptions.AttachmentTransferMode);
+        Assert.Equal("Datei", profile.FolderOptions.AttachmentExternalLinkDocumentName);
+        Assert.Equal("{ExtensionUpperWithoutDot}", profile.FolderOptions.AttachmentExternalLinkFileFormat);
+        Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExternalLinkDescription);
+        Assert.Equal("{Attachment.TargetFullPath}", profile.FolderOptions.AttachmentExternalLinkPathTemplate);
     }
 
     [Fact]
@@ -103,7 +107,11 @@ public sealed class InterfaceProfileConfigurationServiceTests
             attachmentImportFolder: @"\\SERVER\Freigabe\XDT\GAImport",
             attachmentExportFolder: @"\\SERVER\Freigabe\XDT\GAExport",
             attachmentFileNameTemplate: "GA_{Ais.PatientNumber}{ExtensionUpper}",
-            attachmentTransferMode: AttachmentTransferMode.Move);
+            attachmentTransferMode: AttachmentTransferMode.Move,
+            attachmentExternalLinkDocumentName: "PDF-Befund",
+            attachmentExternalLinkFileFormat: "{ExtensionUpperWithoutDot}",
+            attachmentExternalLinkDescription: "Messprotokoll Autorefraktor",
+            attachmentExternalLinkPathTemplate: "{Attachment.TargetFullPath}");
 
         var result = _service.CreateConfiguredProfile(
             userProfile,
@@ -118,6 +126,10 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(@"\\SERVER\Freigabe\XDT\GAExport", result.Profile.FolderOptions.AttachmentExportFolder);
         Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", result.Profile.FolderOptions.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, result.Profile.FolderOptions.AttachmentTransferMode);
+        Assert.Equal("PDF-Befund", result.Profile.FolderOptions.AttachmentExternalLinkDocumentName);
+        Assert.Equal("{ExtensionUpperWithoutDot}", result.Profile.FolderOptions.AttachmentExternalLinkFileFormat);
+        Assert.Equal("Messprotokoll Autorefraktor", result.Profile.FolderOptions.AttachmentExternalLinkDescription);
+        Assert.Equal("{Attachment.TargetFullPath}", result.Profile.FolderOptions.AttachmentExternalLinkPathTemplate);
     }
 
     [Fact]
@@ -301,7 +313,11 @@ public sealed class InterfaceProfileConfigurationServiceTests
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
         string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
-        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Move)
+        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Move,
+        string attachmentExternalLinkDocumentName = "Datei",
+        string attachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
+        string attachmentExternalLinkDescription = "",
+        string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}")
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,
@@ -319,7 +335,11 @@ public sealed class InterfaceProfileConfigurationServiceTests
             AttachmentImportFolder: attachmentImportFolder,
             AttachmentExportFolder: attachmentExportFolder,
             AttachmentFileNameTemplate: attachmentFileNameTemplate,
-            AttachmentTransferMode: attachmentTransferMode);
+            AttachmentTransferMode: attachmentTransferMode,
+            AttachmentExternalLinkDocumentName: attachmentExternalLinkDocumentName,
+            AttachmentExternalLinkFileFormat: attachmentExternalLinkFileFormat,
+            AttachmentExternalLinkDescription: attachmentExternalLinkDescription,
+            AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate);
     }
 
     private static ProfileMetadata CreateUserMetadata(string id)

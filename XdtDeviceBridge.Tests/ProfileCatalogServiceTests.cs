@@ -266,7 +266,11 @@ public sealed class ProfileCatalogServiceTests
                 AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
                 AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport",
                 AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}",
-                AttachmentTransferMode = AttachmentTransferMode.Move
+                AttachmentTransferMode = AttachmentTransferMode.Move,
+                AttachmentExternalLinkDocumentName = "PDF-Befund",
+                AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
+                AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
+                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}"
             }
         };
 
@@ -277,6 +281,10 @@ public sealed class ProfileCatalogServiceTests
         Assert.Equal(@"C:\XdtDeviceBridge\GAExport", loadedProfile.FolderOptions.AttachmentExportFolder);
         Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", loadedProfile.FolderOptions.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, loadedProfile.FolderOptions.AttachmentTransferMode);
+        Assert.Equal("PDF-Befund", loadedProfile.FolderOptions.AttachmentExternalLinkDocumentName);
+        Assert.Equal("{ExtensionUpperWithoutDot}", loadedProfile.FolderOptions.AttachmentExternalLinkFileFormat);
+        Assert.Equal("Messprotokoll Autorefraktor", loadedProfile.FolderOptions.AttachmentExternalLinkDescription);
+        Assert.Equal("{Attachment.TargetFullPath}", loadedProfile.FolderOptions.AttachmentExternalLinkPathTemplate);
     }
 
     [Fact]

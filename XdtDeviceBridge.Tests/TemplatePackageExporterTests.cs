@@ -75,6 +75,30 @@ public sealed class TemplatePackageExporterTests
     }
 
     [Fact]
+    public void Export_ShouldContainAttachmentExternalLinkSettingsInInterfaceProfile()
+    {
+        var zipPath = CreateTempZipPath();
+        var interfaceProfile = CreateInterfaceProfileWithAttachmentSettings();
+
+        _exporter.Export(zipPath, CreateRequest(interfaceProfile));
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        var entry = Assert.Single(archive.Entries, entry => entry.FullName == "interfaces/interface-medistar-nidek-ark1s-default.json");
+        using var stream = entry.Open();
+        using var reader = new StreamReader(stream);
+        var json = reader.ReadToEnd();
+
+        Assert.Contains("\"AttachmentImportFolder\":", json);
+        Assert.Contains("\"AttachmentExportFolder\":", json);
+        Assert.Contains("\"AttachmentFileNameTemplate\":", json);
+        Assert.Contains("\"AttachmentTransferMode\": \"Move\"", json);
+        Assert.Contains("\"AttachmentExternalLinkDocumentName\": \"PDF-Befund\"", json);
+        Assert.Contains("\"AttachmentExternalLinkFileFormat\": \"{ExtensionUpperWithoutDot}\"", json);
+        Assert.Contains("\"AttachmentExternalLinkDescription\": \"Messprotokoll Autorefraktor\"", json);
+        Assert.Contains("\"AttachmentExternalLinkPathTemplate\": \"{Attachment.TargetFullPath}\"", json);
+    }
+
+    [Fact]
     public void Export_ShouldWriteDeserializablePackageJson()
     {
         var zipPath = CreateTempZipPath();
@@ -118,12 +142,12 @@ public sealed class TemplatePackageExporterTests
         return Path.Combine(folder, "profiles.zip");
     }
 
-    private static TemplatePackageExportRequest CreateRequest()
+    private static TemplatePackageExportRequest CreateRequest(InterfaceProfileDefinition? interfaceProfileOverride = null)
     {
         var aisProfile = DefaultAisProfiles.CreateMedistarDefault();
         var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault();
         var exportProfile = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();
-        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
+        var interfaceProfile = interfaceProfileOverride ?? DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
         var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
 
         var package = new TemplatePackage(
@@ -146,6 +170,24 @@ public sealed class TemplatePackageExporterTests
             DeviceProfiles: new[] { deviceProfile },
             ExportProfiles: new[] { exportProfile },
             InterfaceProfiles: new[] { interfaceProfile });
+    }
+
+    private static InterfaceProfileDefinition CreateInterfaceProfileWithAttachmentSettings()
+    {
+        return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
+            {
+                AttachmentImportFolder = @"C:\XdtDeviceBridge\GAImport",
+                AttachmentExportFolder = @"C:\XdtDeviceBridge\GAExport",
+                AttachmentFileNameTemplate = "GA_{Ais.PatientNumber}{ExtensionUpper}",
+                AttachmentTransferMode = AttachmentTransferMode.Move,
+                AttachmentExternalLinkDocumentName = "PDF-Befund",
+                AttachmentExternalLinkFileFormat = "{ExtensionUpperWithoutDot}",
+                AttachmentExternalLinkDescription = "Messprotokoll Autorefraktor",
+                AttachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}"
+            }
+        };
     }
 
     private static ProfileMetadata CreateMetadata(

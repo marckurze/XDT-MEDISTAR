@@ -68,7 +68,7 @@ Der Prototyp unterstützt:
 - optionale Fehlerablage mit Kopie der beteiligten Importdateien
 - `error.txt` im Fehlerordner
 - vorbereitete Archiv-Aufbewahrungslogik ohne automatische Ausführung
-- optionale GA-Dateianhang-Import-/Exportordner, `AttachmentFileNameTemplate` und vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, Standard `Move`, noch ohne produktive Dateianhang-Zuordnung
+- Konfigurationsbereich `XDT-Anhänge für AIS` mit optionalen Import-/Exportordnern, `AttachmentFileNameTemplate`, vorbereitetem `AttachmentTransferService` mit Copy/Move-Modus, Standard `Move`, und vorbereiteten XDT-Linkfeld-Vorlagen 6302/6303/6304/6305, noch ohne produktive Dateianhang-Zuordnung
 
 Sicherheitsgrenzen:
 
@@ -316,6 +316,10 @@ Vorgesehene Konzepte:
 - `AttachmentHandlingMode`: `None`, `Optional`, `Required`
 - `AttachmentTransferMode`: `Copy`, `Move`; Standard ist `Move`, damit der GA-Dateianhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann
 - `AttachmentLinkExport` über XDT-Felder
+- `AttachmentExternalLinkDocumentName`: Vorlage für 6302 Dokumentenname
+- `AttachmentExternalLinkFileFormat`: Vorlage für 6303 Dateiformat
+- `AttachmentExternalLinkDescription`: Vorlage für 6304 Beschreibung
+- `AttachmentExternalLinkPathTemplate`: Vorlage für 6305 vollständiger Dateipfad, typischerweise `{Attachment.TargetFullPath}`
 - `AttachmentFileNameBuilder`
 - `AttachmentTransferService`, isoliert vorbereitet für sichere Übertragung einzelner explizit übergebener Anhangdateien ohne Überschreiben
 - `ExternalLinkExportRule` oder vergleichbare Exportregel

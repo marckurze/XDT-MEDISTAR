@@ -792,6 +792,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="160"/>
@@ -859,10 +860,6 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
@@ -889,27 +886,47 @@
                                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Fehlerordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="4" Grid.Column="1" x:Name="InterfaceErrorFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="4" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Error" Click="SelectInterfaceFolder_Click"/>
+                                    </Grid>
+                                </GroupBox>
 
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="GA-Dateianhang Import (optional):" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="5"
+                                <GroupBox Header="XDT-Anhänge für AIS" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="230"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="96"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="XDT-Anhang Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="0"
                                                  Grid.Column="1"
                                                  x:Name="InterfaceAttachmentImportFolderTextBox"
                                                  Margin="0,0,8,8"
                                                  HorizontalScrollBarVisibility="Auto"
-                                                 ToolTip="Optionaler Ordner für Geräte-Dateianhänge. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="5" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
+                                                 ToolTip="Optionaler Ordner für Geräte-Dateianhänge, die später als externe AIS-Links übergeben werden. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
+                                        <Button Grid.Row="0" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="GA-Dateianhang Export (optional):" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="6"
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="XDT-Anhang Exportordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="1"
                                                  Grid.Column="1"
                                                  x:Name="InterfaceAttachmentExportFolderTextBox"
                                                  Margin="0,0,8,8"
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Optionaler Zielordner für umbenannte Geräte-Dateianhänge und spätere externe AIS-Links. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="6" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="1" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="GA-Dateianhang Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="7"
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="XDT-Anhang Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="2"
                                                  Grid.Column="1"
                                                  Grid.ColumnSpan="2"
                                                  x:Name="InterfaceAttachmentFileNameTemplateTextBox"
@@ -917,22 +934,35 @@
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Dateinamen-Template für spätere Geräte-Dateianhänge, z. B. {Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}. Leer bedeutet: sicherer Standard."/>
 
-                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="GA-Dateianhang Übertragung:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <ComboBox Grid.Row="8"
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="XDT-Anhang Übertragung:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="3"
                                                   Grid.Column="1"
                                                   x:Name="InterfaceAttachmentTransferModeComboBox"
                                                   SelectedValuePath="Tag"
                                                   SelectedValue="Move"
                                                   Width="220"
                                                   HorizontalAlignment="Left"
+                                                  Margin="0,0,0,8"
                                                   ToolTip="Vorbereiteter Übertragungsmodus für spätere Geräte-Dateianhänge. In diesem Schritt wird noch keine Attachment-Verarbeitung gestartet.">
                                             <ComboBoxItem Content="Kopieren" Tag="Copy"/>
                                             <ComboBoxItem Content="Verschieben" Tag="Move"/>
                                         </ComboBox>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
+
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
+
+                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox Header="Ordnerbereinigung" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Ordnerbereinigung" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <StackPanel Margin="8">
                                         <TextBlock Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
                                                    Foreground="DarkRed"
@@ -954,7 +984,7 @@
                                     </StackPanel>
                                 </GroupBox>
 
-                                <GroupBox Header="Archivierung" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Archivierung" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>

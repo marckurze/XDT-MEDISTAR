@@ -533,6 +533,10 @@ public partial class MainWindow : Window
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
         InterfaceAttachmentTransferModeComboBox.SelectedValue = profile.FolderOptions.AttachmentTransferMode.ToString();
+        InterfaceAttachmentLinkDocumentNameTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDocumentName;
+        InterfaceAttachmentLinkFileFormatTextBox.Text = profile.FolderOptions.AttachmentExternalLinkFileFormat;
+        InterfaceAttachmentLinkDescriptionTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDescription;
+        InterfaceAttachmentLinkPathTemplateTextBox.Text = profile.FolderOptions.AttachmentExternalLinkPathTemplate;
 
         InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
@@ -558,6 +562,10 @@ public partial class MainWindow : Window
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
         InterfaceAttachmentTransferModeComboBox.SelectedValue = AttachmentTransferMode.Move.ToString();
+        InterfaceAttachmentLinkDocumentNameTextBox.Text = string.Empty;
+        InterfaceAttachmentLinkFileFormatTextBox.Text = string.Empty;
+        InterfaceAttachmentLinkDescriptionTextBox.Text = string.Empty;
+        InterfaceAttachmentLinkPathTemplateTextBox.Text = string.Empty;
         InterfaceClearAisImportFolderCheckBox.IsChecked = false;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
@@ -728,7 +736,11 @@ public partial class MainWindow : Window
             AttachmentImportFolder: InterfaceAttachmentImportFolderTextBox.Text.Trim(),
             AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
             AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim(),
-            AttachmentTransferMode: ReadAttachmentTransferModeFromEditor());
+            AttachmentTransferMode: ReadAttachmentTransferModeFromEditor(),
+            AttachmentExternalLinkDocumentName: InterfaceAttachmentLinkDocumentNameTextBox.Text.Trim(),
+            AttachmentExternalLinkFileFormat: InterfaceAttachmentLinkFileFormatTextBox.Text.Trim(),
+            AttachmentExternalLinkDescription: InterfaceAttachmentLinkDescriptionTextBox.Text.Trim(),
+            AttachmentExternalLinkPathTemplate: InterfaceAttachmentLinkPathTemplateTextBox.Text.Trim());
     }
 
     private AttachmentTransferMode ReadAttachmentTransferModeFromEditor()
