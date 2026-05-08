@@ -124,7 +124,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentImportFolder);
         Assert.Equal(string.Empty, deserialized.FolderOptions.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, deserialized.FolderOptions.AttachmentFileNameTemplate);
-        Assert.Equal(AttachmentTransferMode.Copy, deserialized.FolderOptions.AttachmentTransferMode);
+        Assert.Equal(AttachmentTransferMode.Move, deserialized.FolderOptions.AttachmentTransferMode);
     }
 
     [Fact]
@@ -179,6 +179,52 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal(@"C:\XdtDeviceBridge\GAExport", deserialized.FolderOptions.AttachmentExportFolder);
         Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", deserialized.FolderOptions.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, deserialized.FolderOptions.AttachmentTransferMode);
+    }
+
+    [Fact]
+    public void InterfaceProfileDefinition_ShouldKeepExplicitAttachmentTransferModeCopy()
+    {
+        var json = """
+        {
+          "Metadata": {
+            "Id": "interface-attachments-copy",
+            "Name": "Interface Attachments Copy",
+            "ProfileKind": "InterfaceProfile",
+            "Description": null,
+            "Vendor": null,
+            "Product": null,
+            "Version": "1.0",
+            "CreatedAt": "2026-05-03T12:00:00+00:00",
+            "UpdatedAt": "2026-05-03T12:00:00+00:00",
+            "CreatedBy": "Test",
+            "IsBuiltIn": false,
+            "IsUserDefined": true
+          },
+          "AisProfileId": "ais",
+          "DeviceProfileId": "device",
+          "ExportProfileId": "export",
+          "FolderOptions": {
+            "AisImportFolder": "",
+            "DeviceImportFolder": "",
+            "ExportFolder": "",
+            "ArchiveFolder": "",
+            "ErrorFolder": "",
+            "ClearAisImportFolderBeforeProcessing": false,
+            "ClearDeviceImportFolderBeforeProcessing": false,
+            "ClearExportFolderAfterSuccessfulTransfer": false,
+            "ArchiveProcessedFiles": false,
+            "MoveFailedFilesToErrorFolder": true,
+            "AttachmentTransferMode": "Copy"
+          },
+          "IsActive": false,
+          "IsLicenseRequired": true,
+          "Description": null
+        }
+        """;
+
+        var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
+
+        Assert.Equal(AttachmentTransferMode.Copy, deserialized.FolderOptions.AttachmentTransferMode);
     }
 
     [Fact]

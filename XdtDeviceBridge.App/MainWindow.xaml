@@ -922,7 +922,7 @@
                                                   Grid.Column="1"
                                                   x:Name="InterfaceAttachmentTransferModeComboBox"
                                                   SelectedValuePath="Tag"
-                                                  SelectedValue="Copy"
+                                                  SelectedValue="Move"
                                                   Width="220"
                                                   HorizontalAlignment="Left"
                                                   ToolTip="Vorbereiteter Übertragungsmodus für spätere Geräte-Dateianhänge. In diesem Schritt wird noch keine Attachment-Verarbeitung gestartet.">

@@ -68,7 +68,7 @@ Der Prototyp unterstützt:
 - optionale Fehlerablage mit Kopie der beteiligten Importdateien
 - `error.txt` im Fehlerordner
 - vorbereitete Archiv-Aufbewahrungslogik ohne automatische Ausführung
-- optionale GA-Dateianhang-Import-/Exportordner, `AttachmentFileNameTemplate` und vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, noch ohne produktive Dateianhang-Zuordnung
+- optionale GA-Dateianhang-Import-/Exportordner, `AttachmentFileNameTemplate` und vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, Standard `Move`, noch ohne produktive Dateianhang-Zuordnung
 
 Sicherheitsgrenzen:
 
@@ -314,7 +314,7 @@ Vorgesehene Konzepte:
 - `AttachmentExportFolder`: GA-Dateianhang Export
 - `AttachmentFileNameTemplate`, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
 - `AttachmentHandlingMode`: `None`, `Optional`, `Required`
-- `AttachmentTransferMode`: `Copy`, `Move`
+- `AttachmentTransferMode`: `Copy`, `Move`; Standard ist `Move`, damit der GA-Dateianhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann
 - `AttachmentLinkExport` über XDT-Felder
 - `AttachmentFileNameBuilder`
 - `AttachmentTransferService`, isoliert vorbereitet für sichere Übertragung einzelner explizit übergebener Anhangdateien ohne Überschreiben

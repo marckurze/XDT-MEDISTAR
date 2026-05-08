@@ -156,7 +156,7 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.Equal(string.Empty, options.AttachmentImportFolder);
         Assert.Equal(string.Empty, options.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, options.AttachmentFileNameTemplate);
-        Assert.Equal(AttachmentTransferMode.Copy, options.AttachmentTransferMode);
+        Assert.Equal(AttachmentTransferMode.Move, options.AttachmentTransferMode);
     }
 
     [Fact]
@@ -240,7 +240,7 @@ public sealed class InterfaceProfileDefinitionTests
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
         string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
-        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Copy)
+        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Move)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,

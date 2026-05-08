@@ -16,4 +16,4 @@ public sealed record InterfaceFolderOptions(
     string AttachmentImportFolder = "",
     string AttachmentExportFolder = "",
     string? AttachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
-    AttachmentTransferMode AttachmentTransferMode = AttachmentTransferMode.Copy);
+    AttachmentTransferMode AttachmentTransferMode = AttachmentTransferMode.Move);

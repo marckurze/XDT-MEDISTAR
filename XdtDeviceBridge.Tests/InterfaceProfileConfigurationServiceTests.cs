@@ -39,7 +39,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentImportFolder);
         Assert.Equal(string.Empty, profile.FolderOptions.AttachmentExportFolder);
         Assert.Equal(AttachmentFileNameBuilder.DefaultTemplate, profile.FolderOptions.AttachmentFileNameTemplate);
-        Assert.Equal(AttachmentTransferMode.Copy, profile.FolderOptions.AttachmentTransferMode);
+        Assert.Equal(AttachmentTransferMode.Move, profile.FolderOptions.AttachmentTransferMode);
     }
 
     [Fact]
@@ -118,6 +118,27 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(@"\\SERVER\Freigabe\XDT\GAExport", result.Profile.FolderOptions.AttachmentExportFolder);
         Assert.Equal("GA_{Ais.PatientNumber}{ExtensionUpper}", result.Profile.FolderOptions.AttachmentFileNameTemplate);
         Assert.Equal(AttachmentTransferMode.Move, result.Profile.FolderOptions.AttachmentTransferMode);
+    }
+
+    [Fact]
+    public void CreateConfiguredProfile_ShouldPreserveExplicitAttachmentTransferModeCopy()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-user")
+        };
+        var options = CreateFolderOptions(attachmentTransferMode: AttachmentTransferMode.Copy);
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            _timestamp,
+            "TestUser");
+
+        Assert.True(result.Success);
+        Assert.Equal(AttachmentTransferMode.Copy, result.Profile!.FolderOptions.AttachmentTransferMode);
     }
 
     [Fact]
@@ -280,7 +301,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
         string attachmentFileNameTemplate = AttachmentFileNameBuilder.DefaultTemplate,
-        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Copy)
+        AttachmentTransferMode attachmentTransferMode = AttachmentTransferMode.Move)
     {
         return new InterfaceFolderOptions(
             AisImportFolder: aisImportFolder,

@@ -557,7 +557,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
-        InterfaceAttachmentTransferModeComboBox.SelectedValue = AttachmentTransferMode.Copy.ToString();
+        InterfaceAttachmentTransferModeComboBox.SelectedValue = AttachmentTransferMode.Move.ToString();
         InterfaceClearAisImportFolderCheckBox.IsChecked = false;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
