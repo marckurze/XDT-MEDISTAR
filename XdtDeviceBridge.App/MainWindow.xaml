@@ -481,6 +481,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <WrapPanel Grid.Row="0">
                                 <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,8" Click="ExportTemplatePackage_Click"/>
@@ -493,6 +494,82 @@
                                        Text="Neue Geräte- und AIS-Profile werden später über einen Profil-Assistenten erstellt."
                                        Foreground="DimGray"
                                        TextWrapping="Wrap"/>
+                            <GroupBox Grid.Row="2"
+                                      Header="Templatepaket-Importvorschau"
+                                      Margin="0,8,0,0">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="180"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="120"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0"
+                                               x:Name="TemplatePackageImportPreviewSummaryText"
+                                               Text="Noch kein Templatepaket importiert."
+                                               FontWeight="Bold"
+                                               TextWrapping="Wrap"
+                                               Margin="0,0,0,6"/>
+                                    <TextBox Grid.Row="1"
+                                             x:Name="TemplatePackageImportPreviewMessagesTextBox"
+                                             IsReadOnly="True"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             VerticalScrollBarVisibility="Auto"
+                                             MinHeight="70"
+                                             Margin="0,0,0,8"
+                                             Text="Die Vorschau zeigt nach dem Import Validierung, Konfliktanalyse, Importplan und Dry-Run. Es wird nichts gespeichert."/>
+                                    <DataGrid Grid.Row="2"
+                                              x:Name="TemplatePackageImportPreviewGrid"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto"
+                                              MinHeight="160"
+                                              Margin="0,0,0,8">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Profilart" Binding="{Binding ProfileKind}" MinWidth="130" Width="130"/>
+                                            <DataGridTextColumn Header="Importierter Name" Binding="{Binding ImportedProfileName}" MinWidth="220" Width="220"/>
+                                            <DataGridTextColumn Header="Importierte ID" Binding="{Binding ImportedProfileId}" MinWidth="180" Width="180"/>
+                                            <DataGridTextColumn Header="Geplante Aktion" Binding="{Binding PlannedAction}" MinWidth="160" Width="160"/>
+                                            <DataGridTextColumn Header="Zielname" Binding="{Binding TargetProfileName}" MinWidth="220" Width="220"/>
+                                            <DataGridTextColumn Header="Ziel-ID" Binding="{Binding TargetProfileId}" MinWidth="180" Width="180"/>
+                                            <DataGridTextColumn Header="Konflikt" Binding="{Binding Conflict}" MinWidth="150" Width="150"/>
+                                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="90" Width="90"/>
+                                            <DataGridTextColumn Header="Meldung" Binding="{Binding Message}" MinWidth="320" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <TextBlock Grid.Row="3"
+                                               Text="Abhängigkeitsauflösung für Schnittstellenprofile"
+                                               FontWeight="Bold"
+                                               Margin="0,0,0,4"/>
+                                    <DataGrid Grid.Row="4"
+                                              x:Name="TemplatePackageImportDependencyPreviewGrid"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto"
+                                              MinHeight="110">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Schnittstellenprofil" Binding="{Binding InterfaceProfileName}" MinWidth="220" Width="220"/>
+                                            <DataGridTextColumn Header="Abhängigkeit" Binding="{Binding DependencyKind}" MinWidth="130" Width="130"/>
+                                            <DataGridTextColumn Header="Originalname" Binding="{Binding OriginalProfileName}" MinWidth="180" Width="180"/>
+                                            <DataGridTextColumn Header="Original-ID" Binding="{Binding OriginalProfileId}" MinWidth="180" Width="180"/>
+                                            <DataGridTextColumn Header="Zielname" Binding="{Binding TargetProfileName}" MinWidth="180" Width="180"/>
+                                            <DataGridTextColumn Header="Ziel-ID" Binding="{Binding TargetProfileId}" MinWidth="180" Width="180"/>
+                                            <DataGridTextColumn Header="Auflösung" Binding="{Binding Resolution}" MinWidth="180" Width="180"/>
+                                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="90" Width="90"/>
+                                            <DataGridTextColumn Header="Meldung" Binding="{Binding Message}" MinWidth="320" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </GroupBox>
                         </Grid>
 
                         <Expander Header="Profilnamen" IsExpanded="True" Grid.Row="2" Margin="0,0,0,8">

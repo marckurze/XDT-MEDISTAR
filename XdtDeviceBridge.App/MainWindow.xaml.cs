@@ -33,6 +33,10 @@ public partial class MainWindow : Window
     private readonly TemplatePackageExporter _templatePackageExporter = new();
     private readonly TemplatePackageImporter _templatePackageImporter = new();
     private readonly TemplatePackageImportValidator _templatePackageImportValidator = new();
+    private readonly TemplatePackageImportConflictAnalyzer _templatePackageImportConflictAnalyzer = new();
+    private readonly TemplatePackageImportPlanBuilder _templatePackageImportPlanBuilder = new();
+    private readonly TemplatePackageImportDryRunService _templatePackageImportDryRunService = new();
+    private readonly TemplatePackageImportPreviewDisplayService _templatePackageImportPreviewDisplayService = new();
     private readonly InstallationInfoProvider _installationInfoProvider = new();
     private readonly LicenseFileRepository _licenseFileRepository = new();
     private readonly LicensedDeviceGracePeriodRepository _licensedDeviceGracePeriodRepository = new();
@@ -3023,7 +3027,13 @@ public partial class MainWindow : Window
         {
             var importResult = _templatePackageImporter.Import(dialog.FileName);
             var validationResult = _templatePackageImportValidator.Validate(importResult);
+            var existingCatalog = _profileCatalog ?? CreateEmptyProfileCatalog();
+            var analysisResult = _templatePackageImportConflictAnalyzer.Analyze(importResult, existingCatalog);
+            var importPlan = _templatePackageImportPlanBuilder.Build(analysisResult);
+            var dryRunResult = _templatePackageImportDryRunService.Preview(importResult, importPlan, existingCatalog);
+            ShowTemplatePackageImportPreview(validationResult, analysisResult, importPlan, dryRunResult);
             ShowTemplatePackageImportResult(importResult, validationResult);
+            AppendProfileMessage("Templatepaket-Importvorschau wurde aktualisiert. Es wurde nichts gespeichert.");
         }
         catch (Exception ex)
         {
@@ -3080,12 +3090,60 @@ public partial class MainWindow : Window
         AppendProfileMessage("Templatepaket wurde geprüft. Es wurde noch nicht produktiv übernommen.");
     }
 
+    private void ShowTemplatePackageImportPreview(
+        TemplatePackageImportValidationResult validationResult,
+        TemplatePackageImportAnalysisResult analysisResult,
+        TemplatePackageImportPlan importPlan,
+        TemplatePackageImportDryRunResult dryRunResult)
+    {
+        var display = _templatePackageImportPreviewDisplayService.Create(
+            validationResult,
+            analysisResult,
+            importPlan,
+            dryRunResult);
+
+        TemplatePackageImportPreviewSummaryText.Text = display.Summary.SummaryText;
+        TemplatePackageImportPreviewMessagesTextBox.Text = FormatTemplatePackageImportPreviewMessages(display);
+        TemplatePackageImportPreviewGrid.ItemsSource = display.Rows;
+        TemplatePackageImportDependencyPreviewGrid.ItemsSource = display.DependencyRows;
+    }
+
+    private static string FormatTemplatePackageImportPreviewMessages(TemplatePackageImportPreviewDisplay display)
+    {
+        var builder = new StringBuilder();
+        foreach (var message in display.Messages)
+        {
+            builder.AppendLine(message);
+        }
+
+        if (display.Warnings.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Hinweise/Warnungen:");
+            foreach (var warning in display.Warnings.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                builder.AppendLine($"- {warning}");
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
     private static string FormatTemplatePackageImportIssue(TemplatePackageImportValidationIssue issue)
     {
         var profileKind = issue.ProfileKind?.ToString() ?? "Unbekannt";
         var profileId = string.IsNullOrWhiteSpace(issue.ProfileId) ? "ohne Profil-ID" : issue.ProfileId;
 
         return $"{issue.Message} ({profileKind}, {profileId})";
+    }
+
+    private static ProfileCatalog CreateEmptyProfileCatalog()
+    {
+        return new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>());
     }
 
     private void SelectAisFile_Click(object sender, RoutedEventArgs e)
