@@ -701,6 +701,7 @@ Im Infrastructure-Projekt sind Bausteine für JSON-Speicherung sowie Import und 
 - `TemplatePackageImportPlanBuilder`
 - `TemplatePackageImportDryRunService`
 - `TemplatePackageImportPreviewDisplayService`
+- `TemplatePackageImportExecutor`
 
 Damit können V2-Profile und Templatepakete technisch serialisiert, als Dateien gespeichert, als ZIP-Paket exportiert, wieder importiert und vor einer späteren produktiven Übernahme validiert werden.
 
@@ -710,7 +711,9 @@ Auf Basis dieser Analyse erzeugt der vorbereitete `TemplatePackageImportPlanBuil
 
 Als nächster vorbereiteter Schritt simuliert der `TemplatePackageImportDryRunService` die spätere Ausführung eines Importplans, ohne Dateien zu schreiben. Der Dry-Run zeigt, welche Profile als neu, als Kopie, als Ersatz, als bestehend beibehalten, übersprungen oder blockiert behandelt würden. Er weist geplante Ziel-IDs und Zielnamen aus und simuliert für Schnittstellenprofile das Abhängigkeits-Remapping auf lokale Profile oder auf im Paket importierte Profile. Fehlende oder blockierte Abhängigkeiten werden sichtbar, XDT-Anhang-Einstellungen bleiben prüfpflichtig, und importierte Schnittstellenprofile werden nicht automatisch aktiviert. Auch dieser Schritt ist nur Vorschau und führt keine produktive Übernahme aus.
 
-Der Tab `Profile & Templates` zeigt im Templatepaket-Importbereich eine Importvorschau. Diese Vorschau kombiniert Validierung, Konfliktanalyse, Importplan und Dry-Run in einer Übersicht mit Profilzeilen und Abhängigkeitsauflösung für Schnittstellenprofile. BuiltIn-Schutz, fehlende Abhängigkeiten, prüfpflichtige XDT-Anhang-Einstellungen und die Nicht-Aktivierung importierter Schnittstellenprofile werden sichtbar gemacht. Profile werden weiterhin nicht produktiv übernommen, es werden keine JSON-Dateien geschrieben und kein lokaler Profilkatalog verändert.
+Der Tab `Profile & Templates` zeigt im Templatepaket-Importbereich eine Importvorschau. Diese Vorschau kombiniert Validierung, Konfliktanalyse, Importplan und Dry-Run in einer Übersicht mit Profilzeilen und Abhängigkeitsauflösung für Schnittstellenprofile. BuiltIn-Schutz, fehlende Abhängigkeiten, prüfpflichtige XDT-Anhang-Einstellungen und die Nicht-Aktivierung importierter Schnittstellenprofile werden sichtbar gemacht.
+
+Über den expliziten Button `Import als UserDefined übernehmen` können unkritische geplante Profile sicher in den lokalen Profilkatalog übernommen werden. Ausgeführt werden nur `ImportAsNew` und `ImportAsCopy`; die Profile werden als UserDefined gespeichert. `ReplaceExisting` wird noch nicht ausgeführt, bestehende Profile werden nicht überschrieben und BuiltIn-Profile bleiben unverändert. Importierte Schnittstellenprofile werden immer inaktiv gespeichert, XDT-Anhang-Automatik wird deaktiviert, und Ordnerpfade sowie Linkfelder 6302-6305 müssen vor einer späteren Aktivierung geprüft werden.
 
 ### 8.3 Offline-Lizenzierung
 

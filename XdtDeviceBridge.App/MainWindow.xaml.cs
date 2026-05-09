@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     private readonly TemplatePackageImportPlanBuilder _templatePackageImportPlanBuilder = new();
     private readonly TemplatePackageImportDryRunService _templatePackageImportDryRunService = new();
     private readonly TemplatePackageImportPreviewDisplayService _templatePackageImportPreviewDisplayService = new();
+    private readonly TemplatePackageImportExecutor _templatePackageImportExecutor = new();
     private readonly InstallationInfoProvider _installationInfoProvider = new();
     private readonly LicenseFileRepository _licenseFileRepository = new();
     private readonly LicensedDeviceGracePeriodRepository _licensedDeviceGracePeriodRepository = new();
@@ -84,6 +85,9 @@ public partial class MainWindow : Window
     private AttachmentImportCandidateDisplayRow? _builderSelectedAttachmentCandidate;
     private string? _builderPreviewAttachmentTargetPath;
     private string? _builderPreviewAttachmentTargetFileName;
+    private TemplatePackageImportResult? _lastTemplatePackageImportResult;
+    private TemplatePackageImportPlan? _lastTemplatePackageImportPlan;
+    private TemplatePackageImportDryRunResult? _lastTemplatePackageImportDryRunResult;
 
     public MainWindow()
     {
@@ -3031,13 +3035,55 @@ public partial class MainWindow : Window
             var analysisResult = _templatePackageImportConflictAnalyzer.Analyze(importResult, existingCatalog);
             var importPlan = _templatePackageImportPlanBuilder.Build(analysisResult);
             var dryRunResult = _templatePackageImportDryRunService.Preview(importResult, importPlan, existingCatalog);
+            _lastTemplatePackageImportResult = importResult;
+            _lastTemplatePackageImportPlan = importPlan;
+            _lastTemplatePackageImportDryRunResult = dryRunResult;
             ShowTemplatePackageImportPreview(validationResult, analysisResult, importPlan, dryRunResult);
+            UpdateTemplatePackageImportExecuteButton(dryRunResult);
+            TemplatePackageImportExecutionResultTextBox.Text = "Noch keine Importübernahme ausgeführt.";
             ShowTemplatePackageImportResult(importResult, validationResult);
             AppendProfileMessage("Templatepaket-Importvorschau wurde aktualisiert. Es wurde nichts gespeichert.");
         }
         catch (Exception ex)
         {
+            ClearTemplatePackageImportExecutionState();
             AppendProfileMessage($"Templatepaket konnte nicht importiert oder geprüft werden: {ex.Message}");
+        }
+    }
+
+    private void ExecuteTemplatePackageImport_Click(object sender, RoutedEventArgs e)
+    {
+        if (_lastTemplatePackageImportResult is null
+            || _lastTemplatePackageImportPlan is null
+            || _lastTemplatePackageImportDryRunResult is null)
+        {
+            AppendProfileMessage("Kein Templatepaket-Importplan vorhanden. Bitte zuerst ein Templatepaket importieren und prüfen.");
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var result = _templatePackageImportExecutor.Execute(
+                _lastTemplatePackageImportResult,
+                _lastTemplatePackageImportPlan,
+                _lastTemplatePackageImportDryRunResult,
+                paths);
+
+            TemplatePackageImportExecutionResultTextBox.Text = FormatTemplatePackageImportExecutionResult(result);
+            AppendProfileMessage($"Templatepaket-Import abgeschlossen: {result.ImportedProfiles.Count} Profil(e) als UserDefined importiert, {result.Skipped} übersprungen, {result.Blocked} blockiert.");
+            AppendProfileMessage("BuiltIn-Profile wurden nicht überschrieben. Importierte Schnittstellenprofile wurden nicht automatisch aktiviert.");
+
+            _profileCatalogService.EnsureDefaultProfiles(paths);
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileUiAfterCatalogChange(catalog);
+            ExecuteTemplatePackageImportButton.IsEnabled = false;
+        }
+        catch (Exception ex)
+        {
+            TemplatePackageImportExecutionResultTextBox.Text = $"Importübernahme konnte nicht ausgeführt werden: {ex.Message}";
+            AppendProfileMessage($"Templatepaket-Importübernahme fehlgeschlagen: {ex.Message}");
         }
     }
 
@@ -3106,6 +3152,94 @@ public partial class MainWindow : Window
         TemplatePackageImportPreviewMessagesTextBox.Text = FormatTemplatePackageImportPreviewMessages(display);
         TemplatePackageImportPreviewGrid.ItemsSource = display.Rows;
         TemplatePackageImportDependencyPreviewGrid.ItemsSource = display.DependencyRows;
+    }
+
+    private void UpdateTemplatePackageImportExecuteButton(TemplatePackageImportDryRunResult dryRunResult)
+    {
+        ExecuteTemplatePackageImportButton.IsEnabled = dryRunResult.Items.Any(item =>
+            item.WouldWrite
+            && !item.IsBlocking
+            && item.PlannedAction is TemplatePackageImportAction.ImportAsNew or TemplatePackageImportAction.ImportAsCopy);
+    }
+
+    private void ClearTemplatePackageImportExecutionState()
+    {
+        _lastTemplatePackageImportResult = null;
+        _lastTemplatePackageImportPlan = null;
+        _lastTemplatePackageImportDryRunResult = null;
+        ExecuteTemplatePackageImportButton.IsEnabled = false;
+    }
+
+    private void RefreshProfileUiAfterCatalogChange(ProfileCatalog catalog)
+    {
+        AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
+        DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
+        ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
+        InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
+        ShowProfileNameColumns(catalog);
+        InitializeExportRulesView(catalog);
+        InitializeInterfaceProfileConfiguration(catalog);
+        InitializeAttachmentDiagnosticProfiles(catalog);
+        UpdatePlaceholderTables();
+        RefreshLicensedDeviceStatesFromLocalLicense();
+    }
+
+    private static string FormatTemplatePackageImportExecutionResult(TemplatePackageImportExecutionResult result)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Import abgeschlossen: {result.ImportedProfiles.Count} Profil(e) als UserDefined importiert.");
+        builder.AppendLine($"ImportAsNew: {result.ImportedAsNew}");
+        builder.AppendLine($"ImportAsCopy: {result.ImportedAsCopy}");
+        builder.AppendLine($"Übersprungen: {result.Skipped}");
+        builder.AppendLine($"Blockiert: {result.Blocked}");
+        builder.AppendLine($"Fehler: {result.Failed}");
+        builder.AppendLine();
+
+        if (result.ImportedProfiles.Count > 0)
+        {
+            builder.AppendLine("Geschriebene Profile:");
+            foreach (var item in result.ImportedProfiles)
+            {
+                builder.AppendLine($"- {item.ProfileKind}: {item.TargetProfileName} ({item.TargetProfileId}) - {item.Message}");
+            }
+            builder.AppendLine();
+        }
+
+        if (result.SkippedProfiles.Count > 0)
+        {
+            builder.AppendLine("Übersprungen:");
+            foreach (var item in result.SkippedProfiles)
+            {
+                builder.AppendLine($"- {item.ProfileKind}: {item.SourceProfileName} - {item.Message}");
+            }
+            builder.AppendLine();
+        }
+
+        if (result.BlockedProfiles.Count > 0)
+        {
+            builder.AppendLine("Blockiert:");
+            foreach (var item in result.BlockedProfiles)
+            {
+                builder.AppendLine($"- {item.ProfileKind}: {item.SourceProfileName} - {item.Message}");
+            }
+            builder.AppendLine();
+        }
+
+        if (result.Warnings.Count > 0)
+        {
+            builder.AppendLine("Warnungen:");
+            foreach (var warning in result.Warnings)
+            {
+                builder.AppendLine($"- {warning}");
+            }
+            builder.AppendLine();
+        }
+
+        builder.AppendLine("Importierte Schnittstellenprofile wurden deaktiviert und müssen vor Aktivierung geprüft werden.");
+        builder.AppendLine("BuiltIn-Profile wurden nicht überschrieben.");
+        builder.Append("ReplaceExisting wird in diesem Schritt noch nicht unterstützt.");
+
+        return builder.ToString();
     }
 
     private static string FormatTemplatePackageImportPreviewMessages(TemplatePackageImportPreviewDisplay display)

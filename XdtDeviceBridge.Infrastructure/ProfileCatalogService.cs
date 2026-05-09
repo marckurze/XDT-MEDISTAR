@@ -72,6 +72,39 @@ public sealed class ProfileCatalogService
         _repository.SaveExportProfileDefinition(filePath, profile);
     }
 
+    public void SaveNewAisProfile(AppDataPaths paths, AisProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        ArgumentNullException.ThrowIfNull(profile);
+
+        var filePath = CreateProfilePath(GetAisFolder(paths), profile.Metadata.Id);
+        if (File.Exists(filePath))
+        {
+            throw new InvalidOperationException($"AIS profile already exists and will not be overwritten: {profile.Metadata.Id}");
+        }
+
+        _repository.SaveAisProfile(filePath, profile);
+    }
+
+    public void SaveNewDeviceProfileDefinition(AppDataPaths paths, DeviceProfileDefinition profile)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        ArgumentNullException.ThrowIfNull(profile);
+
+        var filePath = CreateProfilePath(GetDevicesFolder(paths), profile.Metadata.Id);
+        if (File.Exists(filePath))
+        {
+            throw new InvalidOperationException($"Device profile already exists and will not be overwritten: {profile.Metadata.Id}");
+        }
+
+        _repository.SaveDeviceProfileDefinition(filePath, profile);
+    }
+
+    public void SaveNewInterfaceProfileDefinition(AppDataPaths paths, InterfaceProfileDefinition profile)
+    {
+        SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
+    }
+
     public void SaveInterfaceProfileDefinition(AppDataPaths paths, InterfaceProfileDefinition profile, bool overwriteExisting)
     {
         ArgumentNullException.ThrowIfNull(paths);
