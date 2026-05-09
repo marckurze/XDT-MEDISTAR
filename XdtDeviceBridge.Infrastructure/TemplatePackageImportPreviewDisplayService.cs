@@ -68,17 +68,72 @@ public sealed class TemplatePackageImportPreviewDisplayService
         profilePlans.TryGetValue(CreateProfileKey(item.ProfileKind, item.ImportedProfileId), out var plan);
         var conflict = plan?.ConflictType ?? TemplatePackageImportConflictType.None;
         var status = CreateStatus(item, conflict, plan);
+        var availableActions = CreateAvailableActions(item, plan, conflict);
+        var selectedAction = item.IsBlocking ? TemplatePackageImportAction.Blocked : item.PlannedAction;
 
         return new TemplatePackageImportPreviewRow(
-            ProfileKind: FormatProfileKind(item.ProfileKind),
-            ImportedProfileName: DisplayOrDash(item.ImportedProfileName),
-            ImportedProfileId: DisplayOrDash(item.ImportedProfileId),
-            PlannedAction: FormatAction(item.PlannedAction, plan?.ExistingProfileSource),
-            TargetProfileName: DisplayOrDash(item.TargetProfileName),
-            TargetProfileId: DisplayOrDash(item.TargetProfileId),
-            Conflict: FormatConflict(conflict, plan?.ExistingProfileSource),
-            Status: status,
-            Message: item.Message);
+            profileKindValue: item.ProfileKind,
+            profileKind: FormatProfileKind(item.ProfileKind),
+            importedProfileName: DisplayOrDash(item.ImportedProfileName),
+            importedProfileId: DisplayOrDash(item.ImportedProfileId),
+            selectedAction: selectedAction,
+            availableActions: availableActions,
+            isActionSelectionEnabled: !item.IsBlocking && availableActions.Count > 1,
+            plannedAction: FormatAction(item.PlannedAction, plan?.ExistingProfileSource),
+            targetProfileName: DisplayOrDash(item.TargetProfileName),
+            targetProfileId: DisplayOrDash(item.TargetProfileId),
+            conflict: FormatConflict(conflict, plan?.ExistingProfileSource),
+            status: status,
+            message: item.Message);
+    }
+
+    private static IReadOnlyList<TemplatePackageImportPreviewActionOption> CreateAvailableActions(
+        TemplatePackageImportDryRunItem item,
+        TemplatePackageImportProfilePlan? plan,
+        TemplatePackageImportConflictType conflict)
+    {
+        if (item.IsBlocking || item.PlannedAction == TemplatePackageImportAction.Blocked)
+        {
+            return new[]
+            {
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.Blocked, "Blockiert")
+            };
+        }
+
+        if (conflict == TemplatePackageImportConflictType.None)
+        {
+            return new[]
+            {
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.ImportAsNew, "Neu importieren"),
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.Skip, "Überspringen")
+            };
+        }
+
+        if (plan?.ExistingProfileSource == TemplatePackageImportExistingProfileSource.UserDefined)
+        {
+            return new[]
+            {
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.ImportAsCopy, "Als Kopie importieren"),
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.KeepExisting, "Bestehendes behalten"),
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.Skip, "Überspringen")
+            };
+        }
+
+        if (plan?.ExistingProfileSource == TemplatePackageImportExistingProfileSource.None)
+        {
+            return new[]
+            {
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.ImportAsNew, "Neu importieren"),
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.ImportAsCopy, "Als Kopie importieren"),
+                new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.Skip, "Überspringen")
+            };
+        }
+
+        return new[]
+        {
+            new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.ImportAsCopy, "Als Kopie importieren"),
+            new TemplatePackageImportPreviewActionOption(TemplatePackageImportAction.Skip, "Überspringen")
+        };
     }
 
     private static IEnumerable<TemplatePackageImportDependencyPreviewRow> CreateDependencyRows(

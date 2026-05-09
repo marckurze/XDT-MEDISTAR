@@ -38,6 +38,7 @@ public partial class MainWindow : Window
     private readonly TemplatePackageImportDryRunService _templatePackageImportDryRunService = new();
     private readonly TemplatePackageImportPreviewDisplayService _templatePackageImportPreviewDisplayService = new();
     private readonly TemplatePackageImportExecutor _templatePackageImportExecutor = new();
+    private readonly TemplatePackageImportSelectionService _templatePackageImportSelectionService = new();
     private readonly InstallationInfoProvider _installationInfoProvider = new();
     private readonly LicenseFileRepository _licenseFileRepository = new();
     private readonly LicensedDeviceGracePeriodRepository _licensedDeviceGracePeriodRepository = new();
@@ -86,8 +87,12 @@ public partial class MainWindow : Window
     private string? _builderPreviewAttachmentTargetPath;
     private string? _builderPreviewAttachmentTargetFileName;
     private TemplatePackageImportResult? _lastTemplatePackageImportResult;
+    private TemplatePackageImportValidationResult? _lastTemplatePackageImportValidationResult;
+    private TemplatePackageImportAnalysisResult? _lastTemplatePackageImportAnalysisResult;
+    private TemplatePackageImportPlan? _lastTemplatePackageImportBasePlan;
     private TemplatePackageImportPlan? _lastTemplatePackageImportPlan;
     private TemplatePackageImportDryRunResult? _lastTemplatePackageImportDryRunResult;
+    private bool _updatingTemplatePackageImportPreview;
 
     public MainWindow()
     {
@@ -3036,6 +3041,9 @@ public partial class MainWindow : Window
             var importPlan = _templatePackageImportPlanBuilder.Build(analysisResult);
             var dryRunResult = _templatePackageImportDryRunService.Preview(importResult, importPlan, existingCatalog);
             _lastTemplatePackageImportResult = importResult;
+            _lastTemplatePackageImportValidationResult = validationResult;
+            _lastTemplatePackageImportAnalysisResult = analysisResult;
+            _lastTemplatePackageImportBasePlan = importPlan;
             _lastTemplatePackageImportPlan = importPlan;
             _lastTemplatePackageImportDryRunResult = dryRunResult;
             ShowTemplatePackageImportPreview(validationResult, analysisResult, importPlan, dryRunResult);
@@ -3048,6 +3056,40 @@ public partial class MainWindow : Window
         {
             ClearTemplatePackageImportExecutionState();
             AppendProfileMessage($"Templatepaket konnte nicht importiert oder geprüft werden: {ex.Message}");
+        }
+    }
+
+    private void TemplatePackageImportActionComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_updatingTemplatePackageImportPreview
+            || _lastTemplatePackageImportResult is null
+            || _lastTemplatePackageImportValidationResult is null
+            || _lastTemplatePackageImportAnalysisResult is null
+            || _lastTemplatePackageImportBasePlan is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var selections = GetTemplatePackageImportUserSelections();
+            var updatedPlan = _templatePackageImportSelectionService.Apply(_lastTemplatePackageImportBasePlan, selections);
+            var existingCatalog = _profileCatalog ?? CreateEmptyProfileCatalog();
+            var dryRunResult = _templatePackageImportDryRunService.Preview(_lastTemplatePackageImportResult, updatedPlan, existingCatalog);
+            _lastTemplatePackageImportPlan = updatedPlan;
+            _lastTemplatePackageImportDryRunResult = dryRunResult;
+            ShowTemplatePackageImportPreview(
+                _lastTemplatePackageImportValidationResult,
+                _lastTemplatePackageImportAnalysisResult,
+                updatedPlan,
+                dryRunResult);
+            UpdateTemplatePackageImportExecuteButton(dryRunResult);
+            TemplatePackageImportExecutionResultTextBox.Text = "Importvorschau wurde anhand der Benutzerentscheidung aktualisiert. Noch keine Importübernahme ausgeführt.";
+        }
+        catch (Exception ex)
+        {
+            TemplatePackageImportExecutionResultTextBox.Text = $"Importvorschau konnte nicht aktualisiert werden: {ex.Message}";
+            AppendProfileMessage($"Templatepaket-Importvorschau konnte nicht aktualisiert werden: {ex.Message}");
         }
     }
 
@@ -3142,16 +3184,24 @@ public partial class MainWindow : Window
         TemplatePackageImportPlan importPlan,
         TemplatePackageImportDryRunResult dryRunResult)
     {
-        var display = _templatePackageImportPreviewDisplayService.Create(
-            validationResult,
-            analysisResult,
-            importPlan,
-            dryRunResult);
+        _updatingTemplatePackageImportPreview = true;
+        try
+        {
+            var display = _templatePackageImportPreviewDisplayService.Create(
+                validationResult,
+                analysisResult,
+                importPlan,
+                dryRunResult);
 
-        TemplatePackageImportPreviewSummaryText.Text = display.Summary.SummaryText;
-        TemplatePackageImportPreviewMessagesTextBox.Text = FormatTemplatePackageImportPreviewMessages(display);
-        TemplatePackageImportPreviewGrid.ItemsSource = display.Rows;
-        TemplatePackageImportDependencyPreviewGrid.ItemsSource = display.DependencyRows;
+            TemplatePackageImportPreviewSummaryText.Text = display.Summary.SummaryText;
+            TemplatePackageImportPreviewMessagesTextBox.Text = FormatTemplatePackageImportPreviewMessages(display);
+            TemplatePackageImportPreviewGrid.ItemsSource = display.Rows;
+            TemplatePackageImportDependencyPreviewGrid.ItemsSource = display.DependencyRows;
+        }
+        finally
+        {
+            _updatingTemplatePackageImportPreview = false;
+        }
     }
 
     private void UpdateTemplatePackageImportExecuteButton(TemplatePackageImportDryRunResult dryRunResult)
@@ -3165,9 +3215,28 @@ public partial class MainWindow : Window
     private void ClearTemplatePackageImportExecutionState()
     {
         _lastTemplatePackageImportResult = null;
+        _lastTemplatePackageImportValidationResult = null;
+        _lastTemplatePackageImportAnalysisResult = null;
+        _lastTemplatePackageImportBasePlan = null;
         _lastTemplatePackageImportPlan = null;
         _lastTemplatePackageImportDryRunResult = null;
         ExecuteTemplatePackageImportButton.IsEnabled = false;
+    }
+
+    private IReadOnlyList<TemplatePackageImportUserSelection> GetTemplatePackageImportUserSelections()
+    {
+        return (TemplatePackageImportPreviewGrid.ItemsSource as IEnumerable<TemplatePackageImportPreviewRow>
+                ?? Array.Empty<TemplatePackageImportPreviewRow>())
+            .Where(row => row.IsActionSelectionEnabled)
+            .Select(row => new TemplatePackageImportUserSelection(
+                ProfileKind: row.ProfileKindValue,
+                ImportedProfileId: row.ImportedProfileId,
+                SelectedAction: row.SelectedAction,
+                TargetProfileId: null,
+                TargetProfileName: null,
+                IsValid: true,
+                ValidationMessage: null))
+            .ToList();
     }
 
     private void RefreshProfileUiAfterCatalogChange(ProfileCatalog catalog)

@@ -526,7 +526,7 @@
                                     <DataGrid Grid.Row="2"
                                               x:Name="TemplatePackageImportPreviewGrid"
                                               AutoGenerateColumns="False"
-                                              IsReadOnly="True"
+                                              IsReadOnly="False"
                                               CanUserAddRows="False"
                                               CanUserDeleteRows="False"
                                               HorizontalScrollBarVisibility="Auto"
@@ -534,15 +534,27 @@
                                               MinHeight="160"
                                               Margin="0,0,0,8">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Profilart" Binding="{Binding ProfileKind}" MinWidth="130" Width="130"/>
-                                            <DataGridTextColumn Header="Importierter Name" Binding="{Binding ImportedProfileName}" MinWidth="220" Width="220"/>
-                                            <DataGridTextColumn Header="Importierte ID" Binding="{Binding ImportedProfileId}" MinWidth="180" Width="180"/>
-                                            <DataGridTextColumn Header="Geplante Aktion" Binding="{Binding PlannedAction}" MinWidth="160" Width="160"/>
-                                            <DataGridTextColumn Header="Zielname" Binding="{Binding TargetProfileName}" MinWidth="220" Width="220"/>
-                                            <DataGridTextColumn Header="Ziel-ID" Binding="{Binding TargetProfileId}" MinWidth="180" Width="180"/>
-                                            <DataGridTextColumn Header="Konflikt" Binding="{Binding Conflict}" MinWidth="150" Width="150"/>
-                                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="90" Width="90"/>
-                                            <DataGridTextColumn Header="Meldung" Binding="{Binding Message}" MinWidth="320" Width="*"/>
+                                            <DataGridTextColumn Header="Profilart" Binding="{Binding ProfileKind}" MinWidth="130" Width="130" IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Importierter Name" Binding="{Binding ImportedProfileName}" MinWidth="220" Width="220" IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Importierte ID" Binding="{Binding ImportedProfileId}" MinWidth="180" Width="180" IsReadOnly="True"/>
+                                            <DataGridTemplateColumn Header="Auswahl" MinWidth="180" Width="180">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <ComboBox ItemsSource="{Binding AvailableActions}"
+                                                                  SelectedValue="{Binding SelectedAction, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  SelectedValuePath="Action"
+                                                                  DisplayMemberPath="DisplayName"
+                                                                  IsEnabled="{Binding IsActionSelectionEnabled}"
+                                                                  SelectionChanged="TemplatePackageImportActionComboBox_SelectionChanged"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                            <DataGridTextColumn Header="Geplante Aktion" Binding="{Binding PlannedAction}" MinWidth="160" Width="160" IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Zielname" Binding="{Binding TargetProfileName}" MinWidth="220" Width="220" IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Ziel-ID" Binding="{Binding TargetProfileId}" MinWidth="180" Width="180" IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Konflikt" Binding="{Binding Conflict}" MinWidth="150" Width="150" IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="90" Width="90" IsReadOnly="True"/>
+                                            <DataGridTextColumn Header="Meldung" Binding="{Binding Message}" MinWidth="320" Width="*" IsReadOnly="True"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
                                     <TextBlock Grid.Row="3"

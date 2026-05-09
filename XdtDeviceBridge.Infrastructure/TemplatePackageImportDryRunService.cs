@@ -57,7 +57,10 @@ public sealed class TemplatePackageImportDryRunService
         var targetId = GetTargetProfileId(profilePlan, isIllegalBuiltInReplace);
         var targetName = GetTargetProfileName(profilePlan, isIllegalBuiltInReplace);
         var dependencyRemaps = CreateDependencyRemaps(profilePlan, importedProfiles, planIndex, localProfiles).ToList();
-        var hasBlockedDependency = dependencyRemaps.Any(remap =>
+        var shouldValidateDependencies = profilePlan.PlannedAction is TemplatePackageImportAction.ImportAsNew
+            or TemplatePackageImportAction.ImportAsCopy
+            or TemplatePackageImportAction.ReplaceExisting;
+        var hasBlockedDependency = shouldValidateDependencies && dependencyRemaps.Any(remap =>
             remap.Resolution is TemplatePackageImportDependencyResolution.Missing
                 or TemplatePackageImportDependencyResolution.Blocked);
         var isBlocking = profilePlan.IsBlocking

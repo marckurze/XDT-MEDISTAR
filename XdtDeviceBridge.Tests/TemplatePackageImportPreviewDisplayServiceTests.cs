@@ -187,6 +187,69 @@ public sealed class TemplatePackageImportPreviewDisplayServiceTests
         Assert.Contains(display.Messages, message => message.Contains("0 Fehler, 1 Warnungen", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void Create_ShouldOfferOnlyNewAndSkipForConflictFreeRows()
+    {
+        var display = CreateDisplay(
+            Plan(ProfileKind.AisProfile, "ais-new", "New AIS"),
+            Item(ProfileKind.AisProfile, "ais-new", "New AIS"));
+
+        var row = Assert.Single(display.Rows);
+        Assert.True(row.IsActionSelectionEnabled);
+        Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ImportAsNew);
+        Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.Skip);
+        Assert.DoesNotContain(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ReplaceExisting);
+    }
+
+    [Fact]
+    public void Create_ShouldOfferKeepExistingForUserDefinedConflict()
+    {
+        var display = CreateDisplay(
+            Plan(
+                ProfileKind.ExportProfile,
+                "export-imported",
+                "Export",
+                conflictType: TemplatePackageImportConflictType.SameIdExists,
+                plannedAction: TemplatePackageImportAction.ImportAsCopy,
+                existingSource: TemplatePackageImportExistingProfileSource.UserDefined),
+            Item(
+                ProfileKind.ExportProfile,
+                "export-imported",
+                "Export",
+                plannedAction: TemplatePackageImportAction.ImportAsCopy));
+
+        var row = Assert.Single(display.Rows);
+        Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ImportAsCopy);
+        Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.KeepExisting);
+        Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.Skip);
+        Assert.DoesNotContain(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ReplaceExisting);
+    }
+
+    [Fact]
+    public void Create_ShouldDisableActionSelectionForBlockedRows()
+    {
+        var display = CreateDisplay(
+            Plan(
+                ProfileKind.InterfaceProfile,
+                "interface-blocked",
+                "Interface",
+                conflictType: TemplatePackageImportConflictType.MissingDependency,
+                plannedAction: TemplatePackageImportAction.Blocked,
+                isBlocking: true),
+            Item(
+                ProfileKind.InterfaceProfile,
+                "interface-blocked",
+                "Interface",
+                plannedAction: TemplatePackageImportAction.Blocked,
+                isBlocking: true,
+                wouldWrite: false));
+
+        var row = Assert.Single(display.Rows);
+        Assert.False(row.IsActionSelectionEnabled);
+        var action = Assert.Single(row.AvailableActions);
+        Assert.Equal(TemplatePackageImportAction.Blocked, action.Action);
+    }
+
     private TemplatePackageImportPreviewDisplay CreateDisplay(
         TemplatePackageImportProfilePlan plan,
         TemplatePackageImportDryRunItem item,
