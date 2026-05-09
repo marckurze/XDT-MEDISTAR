@@ -704,7 +704,9 @@ Im Infrastructure-Projekt sind Bausteine für JSON-Speicherung sowie Import und 
 - `TemplatePackageImportPreviewDisplayService`
 - `TemplatePackageImportExecutor`
 
-Damit können V2-Profile und Templatepakete technisch serialisiert, als Dateien gespeichert, als ZIP-Paket exportiert, wieder importiert und vor einer späteren produktiven Übernahme validiert werden.
+Damit können V2-Profile und Templatepakete technisch serialisiert, als Dateien gespeichert, als ZIP-Paket exportiert, wieder importiert, validiert, als Importvorschau angezeigt und explizit als sichere UserDefined-Profile übernommen werden.
+
+Die aktuelle Importpipeline lautet: `TemplatePackageImporter` -> `TemplatePackageImportValidator` -> `TemplatePackageImportConflictAnalyzer` -> `TemplatePackageImportPlanBuilder` -> `TemplatePackageImportDryRunService` -> `TemplatePackageImportPreviewDisplayService` -> `TemplatePackageImportSelectionService` -> `TemplatePackageImportExecutor`.
 
 Der vorbereitete `TemplatePackageImportConflictAnalyzer` analysiert ein importiertes Templatepaket gegen den lokalen Profilkatalog, ohne Profile produktiv zu speichern. Er erkennt ID-/Namenskonflikte, BuiltIn-Schutz, fehlende Schnittstellenprofil-Abhängigkeiten und unsichere Ordnerpfade. BuiltIn-Profile bleiben geschützt; UserDefined-Konflikte können später als Kopie oder bewusster Ersatz behandelt werden. XDT-Anhang-Einstellungen bleiben Bestandteil des Schnittstellenprofils und werden beim Import als prüfpflichtige Konfiguration betrachtet.
 
@@ -946,11 +948,11 @@ Die spätere Automatik darf keine blinde medizinische Interpretation vornehmen. 
 Die nächsten sinnvollen Integrationsschritte sollten klein bleiben und den stabilen Prototyp nicht gefährden:
 
 1. Dokumentation von Iststand und Zielbild weiter konsistent halten.
-2. Produktive Übernahme importierter Templatepakete mit Konfliktlösung planen.
+2. Aktivierungsprüfung für importierte Schnittstellenprofile planen.
 3. Vollständigen Profil-Assistenten für unbekannte Geräte konzipieren.
 4. Vorbereitete V2-Geräteprofile mit echten Praxisdateien validieren.
 5. LM7/LM7P-Error-Tags als Gerätewarnung bzw. `DeviceParseIssue` fachlich spezifizieren.
-6. Geräte-Dateianhang-Verarbeitung und MEDISTAR externen Link über XDT als nächsten Baukastenbaustein planen.
+6. Geräte-Dateianhang-Verarbeitung und MEDISTAR externen Link über XDT weiter produktiv validieren.
 7. Installer-/Deployment-Konzept erstellen.
 8. Echte Ordnerüberwachung bzw. Windows-Dienst erst nach gesonderter Sicherheitsentscheidung planen.
 

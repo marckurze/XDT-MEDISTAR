@@ -268,12 +268,14 @@ Noch nicht final umgesetzt bzw. bewusst noch nicht aktiviert:
 - digitale Signaturpruefung fuer Lizenzdateien
 - produktive Lizenzsperre
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
-- produktive Uebernahme importierter Templatepakete mit Konfliktloesung
+- `ReplaceExisting` fuer importierte Templatepakete und freie Konfliktloesungsdialoge
 - Geräte-Dateianhang-Import und MEDISTAR externer Link über XDT
 - optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export`
 - Dokument-/Dateianhang-Template für vorhandene Geräteanhänge
 - selbst erzeugte PDF-Protokolle
 - Installer / Deployment
+
+Templatepakete koennen inzwischen analysiert, in einer Importvorschau geprueft und als sichere UserDefined-Profile uebernommen werden. Ersetzen bestehender Profile und automatische Aktivierung importierter Schnittstellenprofile sind weiterhin nicht aktiv.
 
 ### 13. Build und Test
 

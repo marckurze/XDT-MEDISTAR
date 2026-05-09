@@ -390,6 +390,8 @@ Offene automatisierte Lücken:
 - Manuelle Dateisystemtests mit real langsam schreibenden Geräten bleiben Praxisabnahme.
 - Keine produktive Mehrfachanhang-Zuordnungsheuristik, daher keine Tests für automatische Auswahl aus mehreren Anhängen.
 
+Ergänzend ist der Templatepaket-Importfluss E2E-nah automatisiert abgesichert. Die Tests prüfen Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme, Dependency-Remapping, BuiltIn-Schutz und deaktivierte importierte Schnittstellenprofile. Eine manuelle Importprüfung kann später in einen eigenen Abnahmeplan aufgenommen werden.
+
 ## 13. Ergebnisprotokoll für manuelle Tests
 
 | Testfall | Datum/Uhrzeit | Tester | Profil | Ergebnis bestanden ja/nein | Exportdatei | Anhang-Zieldatei | Auffälligkeiten | Screenshot/Notiz |

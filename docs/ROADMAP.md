@@ -1,6 +1,6 @@
 # Roadmap XdtDeviceBridge
 
-Stand: 2026-05-08
+Stand: 2026-05-09
 
 Projekt: XdtDeviceBridge / XDT Verwaltung
 
@@ -109,8 +109,25 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - BuiltIn-Profile werden nicht überschrieben.
 - UserDefined-Profile werden separat gespeichert.
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
-- Templatepaket-Export, Templatepaket-Import und Importvalidierung sind vorbereitet.
-- Die produktive Übernahme importierter Templatepakete mit Konfliktlösung ist noch offen.
+- Templatepaket-Export und Templatepaket-Import sind vorhanden.
+- Importierte Templatepakete werden validiert.
+- Konflikte werden analysiert: gleiche ID, gleicher Name, BuiltIn-Schutz, UserDefined-Konflikte, fehlende Abhängigkeiten und prüfpflichtige Ordner-/XDT-Anhang-Einstellungen.
+- Aus der Analyse wird ein Importplan erzeugt.
+- Der Dry-Run und die UI-Importvorschau zeigen geplante Aktionen, Ziel-IDs/Zielnamen, Abhängigkeiten und Warnungen.
+- Sichere Benutzeraktionen sind möglich:
+  - `Neu importieren`
+  - `Als Kopie importieren`
+  - `Bestehendes behalten`
+  - `Überspringen`
+- Die explizite Übernahme als UserDefined-Profile ist vorhanden.
+- `ImportAsNew` und `ImportAsCopy` werden geschrieben; `KeepExisting`, `Skip` und blockierte Profile werden nicht geschrieben.
+- BuiltIn-Profile werden nicht überschrieben.
+- Abhängigkeiten von importierten Schnittstellenprofilen werden auf lokale oder neu importierte Zielprofile remapped.
+- Importierte Schnittstellenprofile bleiben inaktiv.
+- `IsAttachmentProcessingEnabled` wird bei importierten Schnittstellenprofilen deaktiviert.
+- XDT-Anhang-Einstellungen bleiben erhalten und müssen vor Aktivierung geprüft werden.
+- `ReplaceExisting` bleibt deaktiviert.
+- Der sichere Importfluss ist E2E-nah automatisiert getestet.
 
 ### Lizenzstatus
 
@@ -129,6 +146,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - MEDISTAR-kompatibler XDT-Export mit zentral erzeugten Längenpräfixen.
 - Baukasten-Testexport für XDT-Datei plus umbenannten XDT-Anhang ist testseitig abgesichert.
 - Externe AIS-Linkfelder `6302`, `6303`, optional `6304` und `6305` sind fachlich anhand des MEDISTAR-Beispiels und technisch im Baukasten-/Testpfad belegt.
+- Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Dependency-Remapping.
 
 Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vollständige produktive Praxisabnahme für automatische Attachment-Verarbeitung sollte anhand von `docs/END_TO_END_TESTPLAN.md` noch separat protokolliert werden.
 
@@ -139,7 +157,11 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 - TOPCON CL300.
 - TOPCON KR800.
 - TOPCON TRK2P.
-- Vollständige produktive Templatepaket-Übernahme mit Konfliktlösung.
+- `ReplaceExisting` für UserDefined-Profile.
+- Freie Konfliktlösungs-/Bearbeitungsdialoge.
+- Manuelle Zielnamen-/ID-Bearbeitung in der UI.
+- Aktivierungsassistent für importierte Schnittstellenprofile.
+- Geführte Prüfung von Ordnerpfaden und XDT-Anhang-Einstellungen nach Import.
 - Vollständiger Profil-Assistent für unbekannte Geräte.
 - Digitale Lizenzsignatur.
 - Online-Lizenzierung.
@@ -175,12 +197,13 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 - Aktuellen Stand `0.1.0-prototype` sauber vom nächsten Meilenstein trennen.
 - Offene produktive Validierungen klar markieren.
 
-### Phase 2: Templatepaket produktiv übernehmen mit Konfliktlösung
+### Phase 2: Importierte Schnittstellenprofile prüfen und aktivieren
 
-- Konfliktmodell für Profil-IDs, Namen, Versionen und BuiltIn/UserDefined-Regeln definieren.
-- Importierte Profile zunächst als Vorschau anzeigen.
-- Produktive Übernahme nur als UserDefined-Profile erlauben.
-- Konflikte interaktiv oder regelbasiert lösen.
+- Geführte Prüfung importierter Schnittstellenprofile entwerfen.
+- Ordnerpfade, Archiv-/Fehleroptionen und XDT-Anhang-Einstellungen vor Aktivierung sichtbar prüfen.
+- Aktivierungsassistent für importierte Schnittstellenprofile vorbereiten.
+- Optional spätere manuelle Zielnamen-/ID-Bearbeitung für ImportAsCopy planen.
+- Optional späteres `ReplaceExisting` für UserDefined-Profile separat spezifizieren.
 
 ### Phase 3: Geräte-Datei-Explorer / Profil-Assistent
 
@@ -213,16 +236,15 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 1. `docs/ROADMAP.md` und `docs/PROJEKT_UEBERBLICK.md` fachlich abgleichen.
 2. `CHANGELOG.md` mit einem Abschnitt für den aktuellen Entwicklungsstand fortführen.
 3. Version für den nächsten Meilenstein nur vorbereiten, aber erst nach E2E-Abnahme erhöhen.
-4. Templatepaket-Konfliktmodell als kleines Design-Dokument ergänzen.
-5. Datenmodell für Templatepaket-Importkonflikte implementieren.
-6. Tests für Konflikterkennung ergänzen: gleiche ID, gleicher Name, BuiltIn-Ziel, ältere Version, neuere Version.
-7. Importvorschau für Templatepakete im UI vorbereiten.
-8. Produktive Übernahme importierter Profile ausschließlich als UserDefined ermöglichen.
-9. E2E-Testplan mit realen Testordnern ausführen und Ergebnisprotokoll ergänzen.
-10. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
-11. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
-12. Lizenzsignatur-Konzept dokumentieren, bevor produktive Sperren umgesetzt werden.
-13. Installer-/Deployment-Checkliste erstellen.
+4. Aktivierungsassistent für importierte Schnittstellenprofile als kleines Design-Dokument skizzieren.
+5. Prüfliste für importierte Ordnerpfade, Archiv-/Fehleroptionen und XDT-Anhang-Einstellungen modellieren.
+6. UI-Preview für die Aktivierungsprüfung importierter Schnittstellenprofile vorbereiten.
+7. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
+8. E2E-Testplan mit realen Testordnern ausführen und Ergebnisprotokoll ergänzen.
+9. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
+10. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
+11. Lizenzsignatur-Konzept dokumentieren, bevor produktive Sperren umgesetzt werden.
+12. Installer-/Deployment-Checkliste erstellen.
 
 ## 7. Risiken / offene Entscheidungen
 
@@ -248,4 +270,6 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 - Templatepaket kann produktiv als UserDefined übernommen werden.
 - Konflikte beim Templatepaket-Import werden erkannt und nicht still überschrieben.
 - BuiltIn-Profile bleiben geschützt.
+- `ReplaceExisting` bleibt deaktiviert, bis es gesondert spezifiziert und getestet ist.
+- Importierte Schnittstellenprofile bleiben inaktiv, bis sie bewusst geprüft und aktiviert werden.
 - Keine unbekannten Dateien werden gelöscht, verschoben oder verarbeitet.

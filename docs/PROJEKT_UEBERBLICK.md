@@ -1,6 +1,6 @@
 # Projektueberblick XdtDeviceBridge / XDT Verwaltung
 
-Stand: 2026-05-08
+Stand: 2026-05-09
 
 Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Sessions und Projektplanung. Sie trennt aktuellen Iststand, validierten Kernworkflow, vorbereitete Bausteine und Zielbild.
 
@@ -103,7 +103,7 @@ Er enthaelt:
 - Exportregeln
 - Platzhalter
 - Templatepaket-Export
-- Templatepaket-Import mit Validierung
+- Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
 - Baukastenbereich `Test & Vorschau`
 
 Der Bereich `Test & Vorschau` erlaubt:
@@ -320,7 +320,23 @@ Templatepakete:
 - Templatepaket-Export ist vorhanden.
 - Templatepaket-Import ist vorhanden.
 - Importvalidierung ist vorhanden.
-- Produktive Uebernahme importierter Templatepakete mit Konfliktloesung ist weiterhin offen.
+- Konfliktanalyse ist vorhanden.
+- Importplan ist vorhanden.
+- Dry-Run / Importvorschau ist vorhanden.
+- Die UI-Vorschau zeigt Konflikte, Abhaengigkeiten, BuiltIn-Schutz und XDT-Anhang-Warnungen.
+- Sichere Benutzeraktionen sind moeglich:
+  - Neu importieren
+  - Als Kopie importieren
+  - Bestehendes behalten
+  - Ueberspringen
+- Explizite Uebernahme als UserDefined ist vorhanden.
+- BuiltIn-Profile werden nicht ueberschrieben.
+- Abhaengigkeiten von Schnittstellenprofilen werden auf lokale oder importierte Zielprofile remapped.
+- Importierte Schnittstellenprofile bleiben inaktiv.
+- `IsAttachmentProcessingEnabled` wird bei importierten Schnittstellenprofilen deaktiviert.
+- XDT-Anhang-Einstellungen bleiben erhalten, muessen aber vor Aktivierung geprueft werden.
+- `ReplaceExisting` ist weiterhin nicht aktiv.
+- Der sichere Importfluss ist E2E-nah automatisiert getestet.
 
 ## 15. Vorbereitete Geraeteprofile
 
@@ -399,8 +415,8 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 An `docs/ROADMAP.md` orientierte naechste Schritte:
 
 1. E2E-Testplan praktisch ausfuehren und protokollieren.
-2. Templatepaket-Import mit Konfliktmodell planen.
-3. Templatepaket produktiv als UserDefined uebernehmen.
+2. Aktivierungsassistent fuer importierte Schnittstellenprofile planen.
+3. Gefuehrte Pruefung von Ordnerpfaden und XDT-Anhang-Einstellungen nach Import vorbereiten.
 4. Geraete-Datei-Explorer / Profil-Assistent vorbereiten.
 5. V2-Geraeteprofile produktiv validieren.
 6. Lizenzsignatur und spaetere Lizenzdurchsetzung planen.
@@ -431,7 +447,7 @@ Optionaler XDT-Anhang bedeutet: Wenn genau ein stabiler Anhang rechtzeitig kommt
 
 Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden.
 
-Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben werden, UserDefined-Profile werden separat gespeichert. Templatepaket-Export/Import und Validierung sind vorhanden; produktive Uebernahme mit Konfliktloesung ist offen.
+Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben werden, UserDefined-Profile werden separat gespeichert. Templatepaket-Export/Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
 
 Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P.
 
@@ -441,5 +457,5 @@ Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale 
 
 Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: E2E-Testplan praktisch ausfuehren, Templatepaket-Konfliktmodell planen, produktive Templatepaket-Uebernahme als UserDefined implementieren, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
+Naechste sinnvolle Schritte: E2E-Testplan praktisch ausfuehren, importierte Schnittstellenprofile pruefen/aktivieren, Ordnerpfade und XDT-Anhang-Einstellungen nach Import gefuehrt pruefen, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
 ```
