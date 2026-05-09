@@ -718,6 +718,8 @@ In der Importvorschau können sichere Benutzerentscheidungen getroffen werden. E
 
 Über den expliziten Button `Import als UserDefined übernehmen` können unkritische geplante Profile sicher in den lokalen Profilkatalog übernommen werden. Ausgeführt werden nur `ImportAsNew` und `ImportAsCopy`; die Profile werden als UserDefined gespeichert. `ReplaceExisting` wird noch nicht ausgeführt, bestehende Profile werden nicht überschrieben und BuiltIn-Profile bleiben unverändert. Importierte Schnittstellenprofile werden immer inaktiv gespeichert, XDT-Anhang-Automatik wird deaktiviert, und Ordnerpfade sowie Linkfelder 6302-6305 müssen vor einer späteren Aktivierung geprüft werden.
 
+Der komplette sichere Importfluss ist testseitig End-to-End-nah abgesichert: Ein exportiertes Templatepaket kann wieder importiert, validiert, analysiert, geplant, per Benutzerentscheidung angepasst, im Dry-Run geprüft und anschließend explizit als UserDefined übernommen werden. Die Tests prüfen BuiltIn-Schutz, UserDefined-Konflikte, `KeepExisting`, `Skip`, blockierte Abhängigkeiten, Remapping von Schnittstellenprofil-Abhängigkeiten, deaktivierte importierte Schnittstellenprofile und erhaltene XDT-Anhang-Einstellungen bei deaktivierter Anhang-Automatik. `ReplaceExisting` bleibt bewusst offen und wird auch bei manipulierten Plänen nicht ausgeführt.
+
 ### 8.3 Offline-Lizenzierung
 
 Für die spätere Offline-Lizenzierung sind folgende Modelle und Infrastrukturbausteine vorhanden:
