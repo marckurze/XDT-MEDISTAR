@@ -216,7 +216,8 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 
 - LM7/LM7P mit echten LAN/XML-Dateien validieren.
 - NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P mit echten Gerätedateien testen.
-- Exporttemplates je Gerät gegen AIS-Anforderungen prüfen.
+- Manuelle Exportprofile je Gerät gegen AIS-Anforderungen prüfen.
+- AIS-/MEDISTAR-Default-Exporttemplates bleiben bewusst zurückgestellt, bis ein neues Fachkonzept vorliegt.
 - Dokumentierte Beispielprofile mit Testergebnissen verknüpfen.
 
 ### Phase 5: Lizenzsignatur und Lizenzdurchsetzung

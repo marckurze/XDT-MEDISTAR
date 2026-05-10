@@ -150,6 +150,8 @@ Typische Inhalte:
 - Vorgaben für Ergebnisfelder, z. B. `6228`, `6330` bis `6399`, `8410` bis `8480`
 - Ausgabeart je Untersuchungsart: Textzeile, Einzelwert, Kategorie/Wert-Paar oder Ergebnisblock
 
+AIS-/MEDISTAR-spezifische Default-Exporttemplates, automatische Default-Feldkennungen je Geräteart und automatische `6330`-Mensch-Zusatzzeilen sind bewusst zurückgestellt. Der aktuelle Weg bleibt die manuelle, frei konfigurierbare Exportprofil- und Baukastenlogik; bestehende Exportprofile und BuiltIns werden dadurch nicht verändert.
+
 ### 2.2 DeviceProfile
 
 `DeviceProfile` beschreibt, wie Gerätedateien gelesen und Messwerte erkannt werden.

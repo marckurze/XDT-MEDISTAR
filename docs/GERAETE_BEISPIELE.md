@@ -78,7 +78,7 @@ V0   L.:S=+ 6.00 Z=- 2.25*  2 P=0.50 OUT 1.50 UP
 
 Ableitung:
 
-- eigenes Exporttemplate erforderlich
+- eigenes manuell konfiguriertes Exportprofil erforderlich; keine automatische Default-Template-Ableitung
 - Dioptrienformatierung erforderlich
 - Achsenformatierung erforderlich
 - Prisma-/Basisformatierung erforderlich
@@ -346,7 +346,9 @@ Das bisher analysierte lokale Praxisfragment enthält die Schreibweise `Sphare` 
 - `Sphare`/`NearSphare`: Praxisbeispiel, nicht blind entfernen.
 - `Sphere`/`NearSphere`: bevorzugte standardisierte LAN-XML-Tags laut Manual.
 
-### MEDISTAR-Templates
+### MEDISTAR-orientierte Beispielausgabe
+
+Hinweis: Die folgenden Zeilen sind Beispiele für manuelle Exportregel-Entwürfe. Sie sind keine verbindlichen MEDISTAR-Default-Templates und dürfen nicht automatisch in bestehende Profile oder BuiltIns übernommen werden.
 
 Basis:
 
@@ -404,8 +406,8 @@ Zusatzdateien:
 Ableitung:
 
 - mehrere Ergebniszeilen erforderlich
-- Pachymetrie-Template
-- Tonometrie-Template
+- manuelle Pachymetrie-Ausgaberegel
+- manuelle Tonometrie-Ausgaberegel
 - korrigierter IOP optional
 - Geräte-Dateianhang-/externe-AIS-Link-Verknüpfung relevant
 - optionale PDF-Erzeugung sinnvoll
@@ -415,7 +417,7 @@ Spätere Profilanforderung:
 - `DeviceProfileDefinition` mit mehreren Untersuchungsarten
 - `ExportProfileDefinition` mit mehreren `6228`-Regeln oder MEDISTAR-spezifischen Zielzeilen
 - `AttachmentDefinition` / `DocumentExportRule`
-- externer AIS-Link als künftiges Exporttemplate
+- externer AIS-Link über `6302` bis `6305` relevant; keine automatische Default-Template-Ableitung
 
 ## 5.1 NIDEK NT530P – erkannte SourcePaths und Attachments
 
@@ -544,7 +546,7 @@ Ableitung:
 
 - XML-Parser muss Namespaces und Attribute handhaben
 - eigenes Geräteprofil `TOPCON CL300`
-- ähnliches MEDISTAR-Template wie Lensmeter, aber andere SourcePaths
+- ähnliche manuelle MEDISTAR-orientierte Ergebnisregel wie Lensmeter möglich, aber mit anderen SourcePaths
 
 ## 6.1 TOPCON CL300 – erkannte SourcePaths und JOIA/XML-Besonderheiten
 
@@ -653,7 +655,7 @@ Ableitung:
 
 - ein Gerät liefert mehrere Untersuchungsarten in einer Datei
 - Exportprofil muss auswählen können, welche Untersuchungen übernommen werden
-- Refraktion und Keratometrie benötigen getrennte Ergebnis-Templates
+- Refraktion und Keratometrie benötigen getrennte manuelle Ergebnisregeln
 - Mapping muss `Measure[@type='...']` unterscheiden können
 
 Spätere Profilanforderung:
@@ -1032,7 +1034,7 @@ Neue Profile sollen später schrittweise und testgetrieben umgesetzt werden.
 
 Dieser Abschnitt ergänzt die gerätespezifischen Beispiele um generische MEDISTAR-Zielbilder aus der fachlichen Auswertung `MEDISTAR Geräteanbindung Augenarzt - Erklärung der Werte`.
 
-Die Zeilentypen `V0`, `V1`, `V2`, `V3`, `V7`, `P` und `Y` sind MEDISTAR-interne Karteikarten-Zeilenbezeichnungen. Sie dienen hier als Referenz für spätere MEDISTAR-Templates und Exportprofilnamen. Sie sind nicht als harte XDT-Schnittstellenlogik zu verstehen und gelten nicht automatisch für andere AIS/PVS-Systeme.
+Die Zeilentypen `V0`, `V1`, `V2`, `V3`, `V7`, `P` und `Y` sind MEDISTAR-interne Karteikarten-Zeilenbezeichnungen. Sie dienen hier nur als fachliche Orientierung für spätere manuelle Exportprofilnamen und Beispielausgaben. Sie sind nicht als harte XDT-Schnittstellenlogik zu verstehen, gelten nicht automatisch für andere AIS/PVS-Systeme und begründen keine automatische MEDISTAR-Default-Template-Erzeugung.
 
 Die App muss zwischen drei Ebenen unterscheiden:
 
@@ -1063,7 +1065,7 @@ Fachliche Bedeutung:
 - `Z=` = Zylinder in Dioptrien
 - `*` = Achse in Grad
 
-Template-Ableitung:
+Informative Beispiel-Ableitung, kein automatisches Default-Template:
 
 ```text
 R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis}
@@ -1094,7 +1096,7 @@ Fachliche Bedeutung:
 - `*` = Achse
 - Werte werden getrennt nach rechtem und linkem Auge dargestellt
 
-Template-Ableitung:
+Informative Beispiel-Ableitung, kein automatisches Default-Template:
 
 ```text
 R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis}
@@ -1124,7 +1126,7 @@ Fachliche Bedeutung:
 - `A=` = Addition in Dioptrien
 - Fernwert plus Addition ergibt den Nahwert
 
-Template-Ableitung:
+Informative Beispiel-Ableitung, kein automatisches Default-Template:
 
 ```text
 F R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis} A={R_Add:Diopter}
@@ -1164,7 +1166,7 @@ Fachliche Bedeutung:
 - `*` = Achse in Grad
 - `//` = Abschluss-/Trennzeichen der MEDISTAR-Darstellung
 
-Template-Ableitung:
+Informative Beispiel-Ableitung, kein automatisches Default-Template:
 
 ```text
 R: R1={R_R1:Keratometry}*{R_R1_Axis:Axis} R2={R_R2:Keratometry}*{R_R2_Axis:Axis} //
@@ -1195,7 +1197,7 @@ Fachliche Bedeutung:
 - `mmHg` = Millimeter-Quecksilbersäule
 - `15:01` = Messzeit, fachlich relevant wegen tageszeitabhängiger IOP-Werte
 
-Template-Ableitung:
+Informative Beispiel-Ableitung, kein automatisches Default-Template:
 
 ```text
 R = {R_IOP_1:Iop} [{R_IOP_AVG:Iop}] mmHg {Device.Time}
@@ -1225,7 +1227,7 @@ Fachliche Bedeutung:
 - Wert in eckigen Klammern = Durchschnittswert
 - Einheit kann je Gerät `mm` oder `µm` sein
 
-Template-Ableitung:
+Informative Beispiel-Ableitung, kein automatisches Default-Template:
 
 ```text
 PR: {R_Pachy_1:Pachy} {R_Pachy_2:Pachy} {R_Pachy_3:Pachy} [{R_Pachy_Avg:Pachy}] mm

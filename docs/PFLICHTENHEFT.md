@@ -1594,7 +1594,7 @@ Die im Dokument genannten MEDISTAR-Zeilentypen wie `V0`, `V1`, `V2`, `V3`, `V7`,
 Für die App sind diese Zeilentypen:
 
 - informativ
-- als Empfehlung für MEDISTAR-Templates relevant
+- als Orientierung für manuell gepflegte MEDISTAR-orientierte Exportprofile relevant
 - hilfreich zur Benennung von Exportprofilen
 - hilfreich zur Darstellung im Mapping-/Template-Editor
 
@@ -1612,19 +1612,32 @@ Die App muss deshalb drei Ebenen klar unterscheiden:
 2. AIS-spezifische Darstellung: z. B. MEDISTAR-Zeilentypen `V0`, `V1`, `P`, `Y`.
 3. Fachliche Bedeutung der Messwerte: Sphäre, Zylinder, Achse, Addition, Augendruck, Pachymetrie, Hornhautradien usw.
 
+### 17.1.1 Zurückgestelltes Thema: AIS-/MEDISTAR-Exporttemplate-Defaults
+
+AIS-/MEDISTAR-spezifische Default-Exporttemplates werden derzeit nicht als verbindliche Umsetzungsanforderung geführt. Das Konzept wird fachlich neu bewertet.
+
+Bis dahin gilt:
+
+- Exportprofile bleiben über den Baukasten manuell konfigurierbar.
+- Die bestehende validierte MEDISTAR/NIDEK-ARK1S-Verarbeitung bleibt unverändert.
+- Es erfolgt keine automatische Ergänzung von `6330`-Mensch-Zeilen.
+- Es erfolgt keine automatische Änderung bestehender Exportprofile.
+- BuiltIn-Profile werden nicht verändert.
+- Aus den folgenden MEDISTAR-Zeilentypen und Beispielausgaben darf aktuell keine automatische Default-Template-Logik abgeleitet werden.
+
 ### 17.2 Informative MEDISTAR-Zeilentypen
 
-Die folgenden Zeilentypen dienen als Orientierung für MEDISTAR-Templates. Sie dürfen nicht als allgemeingültige XDT-Regel betrachtet werden.
+Die folgenden Zeilentypen dienen nur als informative Orientierung für MEDISTAR-orientierte manuelle Exportprofile. Sie dürfen nicht als allgemeingültige XDT-Regel und nicht als verbindliche Default-Template-Vorgabe betrachtet werden.
 
-| Zeilentyp | Bedeutung in MEDISTAR | Typische Geräteklasse | Anforderung an die App |
+| Zeilentyp | Bedeutung in MEDISTAR | Typische Geräteklasse | Informative Orientierung |
 |---|---|---|---|
-| `V0` | Brillenwerte / Lensmeter | Lensmeter, z. B. NIDEK LM-1800P, NIDEK LM7, TOPCON CL300 | Templates für rechtes und linkes Auge mit Sphäre, Zylinder und Achse; perspektivisch Prisma, Basisrichtung, Addition und PD |
-| `V1` | objektive Refraktion | Autorefraktor, z. B. NIDEK ARK1S, Topcon TRK-2P/KR800 | Sphäre, Zylinder und Achse rechts/links; optional SE und PD |
-| `V2` | Phoropter / subjektive Refraktion | Phoropter, subjektive Refraktionsdaten | Fernwertkennzeichnung, Sphäre, Zylinder, Achse, Addition rechts/links; optional Visus/VA |
+| `V0` | Brillenwerte / Lensmeter | Lensmeter, z. B. NIDEK LM-1800P, NIDEK LM7, TOPCON CL300 | mögliche manuelle Ausgabe für rechtes und linkes Auge mit Sphäre, Zylinder und Achse; Prisma, Basisrichtung, Addition und PD nur nach fachlicher Prüfung |
+| `V1` | objektive Refraktion | Autorefraktor, z. B. NIDEK ARK1S, Topcon TRK-2P/KR800 | mögliche manuelle Ausgabe mit Sphäre, Zylinder und Achse rechts/links; optional SE und PD |
+| `V2` | Phoropter / subjektive Refraktion | Phoropter, subjektive Refraktionsdaten | mögliche manuelle Ausgabe mit Fernwertkennzeichnung, Sphäre, Zylinder, Achse, Addition rechts/links; optional Visus/VA |
 | `V3` | Rezeptwerte | AIS-interner Rezeptprozess | zunächst informativ; keine primäre Exportanforderung der Geräteanbindung |
-| `V7` | Hornhautradien / Keratometrie | Keratometer, Kombigeräte | R1/K1, R2/K2, Achsen, Durchschnitt/AV, errechneter Astigmatismus/ra je Auge |
-| `P` | Augendruck / NCT / Tonometrie | Non-Contact-Tonometer | Einzelmessungen, Mittelwert, Einheit mmHg/Torr, Messzeit rechts/links |
-| `Y` | Pachymetrie oder korrigierter IOP | Pachymeter, Tonometer/Pachymeter-Kombigeräte | Hornhautdicke, Mittelwerte, Einheit mm oder µm; korrigierten IOP als eigenen Werttyp behandeln |
+| `V7` | Hornhautradien / Keratometrie | Keratometer, Kombigeräte | mögliche manuelle Ausgabe mit R1/K1, R2/K2, Achsen, Durchschnitt/AV und errechnetem Astigmatismus/ra je Auge |
+| `P` | Augendruck / NCT / Tonometrie | Non-Contact-Tonometer | mögliche manuelle Ausgabe mit Einzelmessungen, Mittelwert, Einheit mmHg/Torr und Messzeit rechts/links |
+| `Y` | Pachymetrie oder korrigierter IOP | Pachymeter, Tonometer/Pachymeter-Kombigeräte | mögliche manuelle Ausgabe mit Hornhautdicke, Mittelwerten und Einheit mm oder µm; korrigierten IOP als eigenen Werttyp behandeln |
 
 Wichtig: `Y` kann in medizinischen Einrichtungen auch für andere Inhalte, z. B. Laborwerte, verwendet werden. `Y` darf daher nicht hart als universeller Pachymetrie-Exporttyp kodiert werden.
 
@@ -1638,29 +1651,31 @@ Die App muss erkannte technische Werte nicht nur als Rohpfade, sondern mit fachl
 | Zylinder | astigmatische Korrektur | Dioptrien | numerisch erkennen, benennen und mit `Diopter` formatieren |
 | Achse | Lage der Zylinderwirkung | Grad | erkennen und profilabhängig mit `Axis` formatieren, z. B. `*180` oder `* 49` |
 | Addition | Nahzusatz bei Fern-/Nahwerten | Dioptrien, typischerweise positiv | als eigenen Messwerttyp unterstützen, z. B. `R_Add`, `L_Add` |
-| Fernwert | Werte für Fernsicht, in MEDISTAR oft `F` | Template-Textbestandteil | Fern-/Nahwert-Templates ermöglichen, ohne `F` als harte Schnittstellenlogik zu behandeln |
+| Fernwert | Werte für Fernsicht, in MEDISTAR oft `F` | Textbestandteil einer manuell gepflegten Ausgabe | Fern-/Nahwert-Ausgaben ermöglichen, ohne `F` als harte Schnittstellenlogik zu behandeln |
 | IOP / Augendruck | Augeninnendruck | mmHg oder Torr | Einzelmessungen, Mittelwert und Messzeit darstellen; Formatfunktion `Iop` |
 | Pachymetrie / Hornhautdicke | Hornhautdicke | mm oder µm | Einheit und Darstellung profilabhängig behandeln; Formatfunktion `Pachy` |
 | Keratometrie / Hornhautradien | R1/R2 bzw. K1/K2, AV und errechneter Astigmatismus | mm oder optional Dioptrien | als eigene Messgruppe unterstützen; Formatfunktionen `Keratometry`, `Axis`, `Diopter` |
 
 Die App darf medizinische Korrekturen, z. B. korrigierten IOP nach Dresdner Korrekturtabelle, nicht eigenständig berechnen, solange dies nicht fachlich validiert und explizit spezifiziert wurde. Wenn ein Gerät bereits korrigierte Werte liefert, dürfen diese übernommen werden. Eigene Berechnungslogik wäre ein gesondertes Medizinprodukt-/Haftungsthema und ist nicht Bestandteil der aktuellen Version.
 
-### 17.4 Anforderungen an Export-Templates
+### 17.4 Manuelle Exportprofil-Konfiguration und zurückgestellte Default-Templates
 
-Die Beispiele zeigen, dass die Ausgabe stark von Gerätetyp, AIS und gewünschter Karteikartendarstellung abhängt. Die App muss daher unterstützen:
+Die Beispiele zeigen, dass die Ausgabe stark von Gerätetyp, AIS und gewünschter Karteikartendarstellung abhängt. Sie sind keine verbindlichen Default-Templates und dürfen nicht automatisch in bestehende Profile oder BuiltIns übernommen werden.
+
+Die manuelle Exportprofil-Konfiguration soll weiterhin unterstützen:
 
 - mehrere Ergebniszeilen pro Untersuchung
 - denselben Ziel-Feldcode mehrfach verwenden, z. B. `6228`
 - Ergebniszeilen mit mehreren Platzhaltern aufbauen
 - Ausgabe in medizinisch lesbarer Syntax
-- Zeilentyp-Empfehlung informativ speichern
+- Zeilentyp-Hinweise informativ speichern
 - Export je AIS unterschiedlich konfigurieren
 - Formatfunktionen pro Platzhalter anwenden
 - manuelle Bearbeitung der Ergebniszeile erlauben
 - Platzhalter per Baukasten einfügen
 - Gesamtexport-Vorschau anzeigen
 
-Beispiele für MEDISTAR-orientierte, aber nicht MEDISTAR-hartkodierte Ergebniszeilen:
+Informative Beispiele für MEDISTAR-orientierte, aber nicht MEDISTAR-hartkodierte Ergebniszeilen:
 
 ```text
 R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis}
@@ -1752,7 +1767,7 @@ Die App muss dem Anwender ermöglichen:
 
 Aus der fachlichen Auswertung ergeben sich folgende spätere Profilanforderungen:
 
-| Profiltyp | Muss unterstützen | Informative MEDISTAR-Empfehlung |
+| Profiltyp | Muss unterstützen | Informative MEDISTAR-Orientierung |
 |---|---|---|
 | Lensmeter-Profil | Sphäre, Zylinder, Achse, optional Addition, zweite Addition, Nahsphäre, Prisma/Basisrichtung, UV-Transmission, ConfidenceIndex/Error und PD; für NIDEK LM7/LM7P LAN-XML `NIDEK_V1.00` und `NIDEK_V1.01` | `V0` |
 | Autorefraktor-Profil | Sphäre, Zylinder, Achse, PD, optional SE | `V1` |
@@ -1765,12 +1780,14 @@ Aus der fachlichen Auswertung ergeben sich folgende spätere Profilanforderungen
 
 Diese Ergänzung implementiert keine neuen Geräteprofile.
 
+Sie implementiert außerdem keine AIS-/MEDISTAR-Default-Exporttemplates und keine automatische `6330`-Zusatzzeile.
+
 Die Informationen dienen zur:
 
 - Verbesserung des Pflichtenhefts
-- Verbesserung des Baukasten-/Template-Editors
+- Verbesserung des Baukasten-/Exportregel-Editors
 - besseren Benennung von Messwerten
 - besseren Formatvorschlägen
-- Vorbereitung weiterer Profile
+- Vorbereitung weiterer Profile nach gesonderter fachlicher Freigabe
 
 Die MEDISTAR-Zeilentypen bleiben informativ und werden nicht als allgemeingültige XDT-Schnittstellenlogik festgelegt.

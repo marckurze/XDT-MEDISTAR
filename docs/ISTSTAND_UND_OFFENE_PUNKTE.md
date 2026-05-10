@@ -1,0 +1,388 @@
+# Iststand und offene Punkte
+
+Stand: 2026-05-10
+
+Basis dieses Abgleichs:
+
+- Repository-Stand nach Ruecksetzung auf Commit `6b9bc20bab896e7fa103748ba20e435c34d3e8cd`
+- Dokumente: `README.md`, `CHANGELOG.md`, `VERSION`, `Directory.Build.props`, `docs/PFLICHTENHEFT.md`, `docs/ARCHITEKTUR.md`, `docs/ROADMAP.md`, `docs/PROJEKT_UEBERBLICK.md`, `docs/GERAETE_BEISPIELE.md`, `docs/END_TO_END_TESTPLAN.md`
+- Code-/Teststand in `XdtDeviceBridge.App`, `XdtDeviceBridge.Core`, `XdtDeviceBridge.Infrastructure` und `XdtDeviceBridge.Tests`
+
+## 1. Kurzfazit
+
+Die Dokumentation passt grundsaetzlich zum aktuellen Projektstand. README, Roadmap, Projektueberblick und Architektur beschreiben den stabilen Kern mit MEDISTAR und NIDEK ARK1S, die manuell gestartete periodische Automatik, XDT-Anhaenge fuer AIS, den Baukasten-Testexport und den sicheren Templatepaket-Import weitgehend zutreffend.
+
+Kritische Abweichungen, bei denen die Dokumentation eine produktiv fertige Funktion behauptet, die im Code eindeutig fehlt, wurden nicht gefunden. Es gibt aber kleinere Unschaerfen:
+
+- `docs/ARCHITEKTUR.md` enthaelt im XDT-Anhang-Abschnitt noch einzelne Formulierungen aus einer frueheren Vorbereitungsphase, waehrend derselbe Abschnitt spaeter bereits die produktive Linkausgabe ueber `6302` bis `6305` beschreibt.
+- `CHANGELOG.md` enthaelt im historischen Abschnitt `0.1.0-prototype` noch offene Punkte, die im spaeteren `Unreleased`-Abschnitt inzwischen teilweise umgesetzt sind. Das ist historisch korrekt, kann aber beim Querlesen irritieren.
+- `docs/PFLICHTENHEFT.md` ist weiterhin eher Zielbild als Iststand. Aussagen zu SQLite und vollstaendiger Ordnerueberwachung muessen deshalb als Zielanforderungen gelesen werden.
+- Die nach dem Sicherungspunkt wieder entfernten MEDISTAR-/AIS-Exporttemplate-Default-Arbeiten sind im aktuellen Code nicht vorhanden. AIS-/MEDISTAR-Default-Feldkennungen und automatische 6330-Vorschlagsregeln sind bewusst zurueckgestellt; bis zu einem neuen Fachkonzept sollen dazu keine Codex-Umsetzungsauftraege erteilt werden.
+
+Besonders stabil wirken aktuell:
+
+- MEDISTAR + NIDEK ARK1S Kernworkflow
+- zentrale XDT-Erzeugung ueber `XdtExportBuilder`
+- BuiltIn/UserDefined-Profiltrennung
+- sichere Templatepaket-Importpipeline bis UserDefined-Uebernahme
+- Datei- und Paketlogik fuer stabile AIS-/Geraete-/XDT-Anhangdateien
+
+Vorbereitet, aber noch nicht als produktiv abgenommen:
+
+- V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
+- praktische End-to-End-Abnahme der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung in echten Ordnern
+- Aktivierungsassistent fuer importierte Schnittstellenprofile
+- Lizenzsignatur, harte Lizenzdurchsetzung und Installer/Deployment
+- AIS-/MEDISTAR-Exporttemplate-Default-Konzept bewusst zurueckgestellt
+
+## 2. Aktueller Iststand der App
+
+### Version
+
+- `VERSION`: `0.1.0-prototype`
+- `Directory.Build.props`: `Version` und `InformationalVersion` ebenfalls `0.1.0-prototype`
+- `AssemblyVersion` und `FileVersion`: `0.1.0.0`
+
+### Validierter Kernworkflow
+
+- Lokale WPF-Desktop-App.
+- Dateibasierte Bridge zwischen AIS und augenaerztlichen Messgeraeten.
+- Praktischer Kernfokus: MEDISTAR + NIDEK ARK1S.
+- MEDISTAR-kompatibler XDT-Export mit:
+  - `8000 = 6310`
+  - Patientendaten wie `3000`, `3101`, `3102`, `3103`
+  - Untersuchungsart `8402`
+  - Ergebniszeilen `6228` fuer rechts/links im validierten ARK1S-Workflow
+- Keine Cloud, kein Windows-Dienst, kein Autostart, keine Verarbeitung beim App-Start.
+
+### Tabs
+
+Die App hat aktuell vier Haupt-Tabs:
+
+- `Verarbeitung`
+- `Profile & Templates`
+- `Schnittstellenprofile`
+- `Lizenz`
+
+### Verarbeitung
+
+Der Tab `Verarbeitung` ist auf Betrieb und Automatik ausgerichtet:
+
+- aktive Schnittstellenprofile
+- manuell startbare und stoppbare Ueberwachung
+- Checkbox fuer automatische Verarbeitung gefundener Dateipaare
+- Anzeige gefundener Dateipaare bzw. Verarbeitungspakete
+- Status-/Logmeldungen
+- alter manueller Diagnosebereich als eingeklappter Rueckfallbereich
+
+Die automatische Verarbeitung startet nicht beim App-Start. Sie laeuft nur nach bewusstem Start der Ueberwachung und nur mit aktivierter automatischer Verarbeitung.
+
+### Profile & Templates
+
+Der Tab `Profile & Templates` enthaelt:
+
+- Profiluebersicht
+- BuiltIn- und UserDefined-Profile
+- Exportprofil-Entwurf
+- Templatepaket Export/Import
+- Importvalidierung, Konfliktanalyse, Importplan, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme
+- Baukastenbereich `Test & Vorschau`
+
+Der Baukasten `Test & Vorschau` kann:
+
+- AIS-Testdatei laden
+- Geraetedatei laden
+- XDT-Anhang aus beliebigem Speicherort einlesen
+- Messwerte pruefen
+- Gesamtexport-Vorschau XDT anzeigen
+- Testexport erstellen
+
+Beim Baukasten-Testexport wird der Anhang physisch in den gewaehlt Testordner kopiert, waehrend `6305` in der XDT-Datei den simulierten Zielpfad aus dem Schnittstellenprofil verwendet. Exportprofile und BuiltIn-Profile werden dadurch nicht veraendert.
+
+### Schnittstellenprofile
+
+Schnittstellenprofile verbinden AIS-Profil, Geraeteprofil, Exportprofil, Ordner und XDT-Anhang-Einstellungen.
+
+Aktuelle Felder und Konzepte:
+
+- AIS-Importordner
+- Geraete-Importordner
+- Exportordner ans AIS
+- Archivordner
+- Fehlerordner
+- Ordnerabfrage-Intervall, Standard `5` Sekunden, Minimum `1`
+- Wartezeit auf Geraetedatei, Standard `10` Minuten
+- Archivierungsmodus `Copy`/`Move`
+- Archiv-/Fehleroptionen
+- XDT-Anhang Importordner
+- XDT-Anhang Exportordner
+- XDT-Anhang Dateiname
+- XDT-Anhang Uebertragung `Copy`/`Move`, Standard `Move`
+- XDT-Anhaenge fuer AIS automatisch verarbeiten, Standard aus
+- XDT-Anhang ist `Optional` oder `Required`
+- Wartezeit auf XDT-Anhang, Standard `30` Sekunden
+- Dateistabilitaet abwarten, Standard `2` Sekunden
+- XDT-Felder `6302`, `6303`, optional `6304`, `6305`
+
+### Lizenz
+
+Der Tab `Lizenz` enthaelt:
+
+- InstallationInfo
+- Lizenzanfrage exportieren
+- Lizenzdatei importieren
+- Lizenzstatus anzeigen
+- Bewertung aktiver lizenzpflichtiger Schnittstellenprofile
+- Karenzzeitmodell
+
+Eine harte produktive Lizenzsperre und digitale Signaturpruefung sind nicht aktiv umgesetzt.
+
+### XDT-Anhaenge fuer AIS
+
+Der Code enthaelt Services und Tests fuer:
+
+- Scannen unterstuetzter Anhaenge in der obersten Ebene
+- unterstuetzte Typen wie PDF, JPG/JPEG, PNG, TIF/TIFF, DCM und TXT
+- Stabilitaetspruefung vor Verarbeitung
+- eindeutige Kandidatenauswahl nur bei genau einem stabilen unterstuetzten Anhang
+- Copy/Move-Transfer mit Kollisionsschutz
+- Aufbau externer AIS-Linkfelder:
+  - `6302` Dokumentenname
+  - `6303` Dateiformat
+  - `6304` Beschreibung optional
+  - `6305` vollstaendiger Dateipfad
+- zentrale Laengenpraefix-Erzeugung ueber `XdtExportBuilder`
+
+Mehrere unterstuetzte Anhaenge werden nicht automatisch zugeordnet. Instabile Anhaenge werden nicht verschoben, verlinkt oder exportiert.
+
+### Paket-Wartelogik
+
+Die Paketlogik ist zweistufig:
+
+1. Eine stabile AIS-Datei wartet auf eine stabile Geraetedatei.
+2. Erst nach vollstaendigem AIS-/Geraete-Paar beginnt die XDT-Anhang-Wartezeit.
+
+Weitere Regeln:
+
+- `DeviceFileWaitTimeoutMinutes`, Standard `10`
+- neuere AIS-Datei ersetzt aeltere wartende AIS-Datei
+- abgelaufene AIS-Auftraege erzeugen keinen Export
+- optionaler XDT-Anhang: nach Timeout Export ohne Anhang
+- verpflichtender XDT-Anhang: nach Timeout Blockade/Fehler
+- mehrere Anhaenge: keine automatische Zuordnung; optional Warn-/Skip-Verhalten, Pflicht blockiert
+
+### Dateistabilitaet
+
+- `FileStabilityService` prueft Groesse und Aenderungszeitpunkt.
+- AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil sind.
+- Instabile Dateien werden spaeter erneut betrachtet und nicht verschoben, geloescht oder verlinkt.
+
+### Scan-Intervall
+
+- Es gibt keinen `FileSystemWatcher`.
+- Die Ueberwachung nutzt periodischen Scan.
+- `PeriodicAutoImportScanService` nutzt das pro Schnittstellenprofil konfigurierte Intervall, Standard `5` Sekunden.
+
+### Archivierung und Fehlerablage
+
+- Bekannte erfolgreich verarbeitete AIS-/Geraetedateien koennen nach Profiloption archiviert werden.
+- Archivmodus `Copy` oder `Move`.
+- Fehlerablage kopiert bekannte betroffene Dateien in den Fehlerordner und schreibt `error.txt`.
+- Unbekannte Dateien werden nicht geloescht oder verschoben.
+- Exportordner werden nicht pauschal bereinigt.
+
+### Sicherheitsentscheidungen
+
+- BuiltIn-Profile werden nicht ueberschrieben.
+- UserDefined-Profile werden separat gespeichert.
+- Keine Verarbeitung beim App-Start.
+- Kein Windows-Dienst.
+- Kein Autostart.
+- Kein FileSystemWatcher.
+- Keine unbekannten Dateien anfassen.
+- Keine pauschale Ordnerleerung.
+- Exportordner nicht bereinigen.
+- Instabile Dateien nicht verarbeiten.
+- Mehrere XDT-Anhaenge nicht automatisch zuordnen.
+- Keine medizinische Bewertung.
+- Keine harte Lizenzsperre ohne gesonderte Spezifikation.
+
+## 3. Praktisch validiert
+
+Belastbar validiert bzw. testseitig abgesichert sind aktuell:
+
+| Bereich | Validierungsgrad | Grundlage |
+| --- | --- | --- |
+| MEDISTAR + NIDEK ARK1S Kernworkflow | praktisch und testseitig validiert | README, Projektueberblick, Core-/Pipeline-Tests |
+| MEDISTAR-kompatibler XDT-Export | testseitig validiert | `XdtExportBuilderTests`, `CorePipelineEndToEndTests`, ARK1S-bezogene Tests |
+| XDT-Laengenpraefixe | testseitig validiert | `XdtExportBuilderTests`, Linkfeld-Adapter-Tests |
+| XDT-Anhang-Linkfelder `6302` bis `6305` | testseitig validiert | Attachment-, Coordinator-, ManualProcessor- und BuilderTestExport-Tests |
+| Baukasten-Testexport mit simuliertem 6305-Zielpfad | testseitig validiert | `BuilderTestExportServiceTests` |
+| Automatische Paketlogik AIS -> Geraet -> XDT-Anhang | testseitig validiert | `AutoImportPackageStateServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `AttachmentPackageDecisionServiceTests` |
+| Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
+| BuiltIn/UserDefined-Schutz | testseitig validiert | `ProfileCatalogServiceTests`, TemplateImport-Tests |
+
+Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle Praxisabnahme der automatischen AIS-/Geraete-/XDT-Anhang-Faelle aus `docs/END_TO_END_TESTPLAN.md`.
+
+## 4. Vorbereitet, aber noch nicht produktiv validiert
+
+- NIDEK LM7/LM7P
+- NIDEK NT530P
+- TOPCON CL300
+- TOPCON KR800
+- TOPCON TRK2P
+- vollstaendiger Profil-Assistent fuer unbekannte Geraete
+- Geraete-Datei-Explorer
+- weitere AIS-Systeme ausser MEDISTAR
+- AIS-/MEDISTAR-Exporttemplate-Default-Konzept mit Feldkennungen je Untersuchungsart: bewusst zurueckgestellt, neues Fachkonzept erforderlich
+- automatische MEDISTAR `6330`-Default-Zusatzzeilen: bewusst zurueckgestellt
+- gefuehrte Aktivierung importierter Schnittstellenprofile
+- ReplaceExisting fuer bestehende UserDefined-Profile
+- digitale Lizenzsignatur
+- produktive Lizenzsperre
+- Installer und Deployment
+- optionaler spaeterer Windows-Dienst, Autostart oder FileSystemWatcher
+
+## 5. Dokumentationsabgleich
+
+| Bereich | Aussage in Dokumentation | Tatsaechlicher Code-/Projektstand | Bewertung | Empfehlung |
+| --- | --- | --- | --- | --- |
+| Version | `0.1.0-prototype` in README, VERSION und Buildprops. | Versionen stimmen ueberein. | passt | Keine Aenderung noetig. |
+| Automatikmodell | Keine Verarbeitung beim App-Start, manuell gestartete Ueberwachung, periodischer Scan. | Code nutzt `PeriodicAutoImportScanService`, keine automatische Startlogik. | passt | Keine Aenderung noetig. |
+| FileSystemWatcher / Dienst / Autostart | Dokumentation sagt: nicht enthalten. | Keine entsprechende Implementierung erkennbar. | passt | Als Sicherheitsentscheidung beibehalten. |
+| Paket-Wartelogik | Roadmap, Projektueberblick und E2E-Testplan beschreiben zweistufige Logik. | `AutoImportPackageStateService` und Coordinator bilden die Logik ab. | passt | Praktischen E2E-Testplan ausfuehren. |
+| XDT-Anhaenge | Dokumentation beschreibt sichere automatische Vorbereitung und Linkausgabe `6302` bis `6305`. | Services, Coordinator, ManualProcessor und Testexport enthalten diese Logik. | passt | In Architektur fruehere "nur vorbereitet"-Formulierungen glaetten. |
+| Baukasten Test & Vorschau | Projektueberblick beschreibt Dateiauswahl, simulierten 6305-Pfad und Testexport. | `BuilderTestExportService` und UI enthalten diese Funktion. | passt | Keine Aenderung noetig. |
+| Templatepaket-Import | Roadmap/Projektueberblick beschreiben Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl und UserDefined-Uebernahme. | Entsprechende Services, UI-Glue und E2E-nahe Tests vorhanden. | passt | ReplaceExisting und Aktivierungsassistent weiter als offen fuehren. |
+| MEDISTAR/NIDEK ARK1S | Als validierter Kernworkflow beschrieben. | BuiltIn-Profile, Parser, Mapping und Tests vorhanden. | passt | Als stabilen Kern beibehalten. |
+| V2-Geraeteprofile | Als vorbereitet, nicht produktiv validiert beschrieben. | BuiltIn-Profile und Beispiel-Doku vorhanden; keine Praxisvalidierung behauptet. | passt | Pro Geraet Validierungsplan abarbeiten. |
+| Lizenzsystem | Anzeige, Lizenzdatei, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige und Karenzzeitservices; keine harte Durchsetzung. | passt | Signatur und Sperrregeln separat spezifizieren. |
+| Installer/Deployment | In Roadmap als offen. | Kein Installer-Projekt erkennbar. | passt | Deployment-Konzept spaeter erstellen. |
+| SQLite/JSON-Speicherung | Pflichtenheft nennt SQLite als Ziel, Projektueberblick beschreibt JSON/AppData. | Code nutzt JSON-Dateien unter LocalAppData. | unklar | Architekturentscheidung treffen: JSON bewusst beibehalten oder SQLite neu planen. |
+| Profil-Assistent | Roadmap fuehrt Assistent als offen. | Kein vollstaendiger Assistent; Profilkatalog und Entwurfsfunktionen existieren. | passt | Geraete-Datei-Explorer als naechsten vorbereitenden Schritt planen. |
+| PDF-/EV-Dokumentenerzeugung | Als Zukunft/offen beschrieben. | Keine PDF-Erzeugung und keine MEDISTAR-interne EV-Zeile. 6302-6305-Link ist der aktuelle Weg. | passt | EV vs. strukturierter Link fachlich entscheiden. |
+| MEDISTAR-Feldkennungen / Exporttemplates | Roadmap und Pflichtenheft markieren AIS-/MEDISTAR-Default-Exporttemplates als zurueckgestellt. | Keine `AisExportTemplate`-/Default-MEDISTAR-Template-Implementierung vorhanden. | passt | Keine Umsetzung beauftragen, bis ein neues Fachkonzept vorliegt. |
+| Tests / Testabdeckung | Doku nennt automatisierte Abdeckung und E2E-nahe Templateimport-Tests. | Testprojekt enthaelt umfangreiche Service- und E2E-nahe Tests. Letzter bekannter Stand: 811 Tests gruen vor dieser Doku-Aenderung. | passt | Build/Test nach dieser Doku-Aenderung erneut ausfuehren. |
+| Pflichtenheft als Iststand | Pflichtenheft enthaelt Zielbild-Aussagen zu SQLite und spaeteren Funktionen. | Code ist Prototyp mit JSON und begrenztem Funktionsumfang. | unklar | Pflichtenheft deutlicher als Ziel-/Anforderungsdokument kennzeichnen. |
+| CHANGELOG Historie | Historischer Abschnitt nennt einige damals offene Punkte. | Unreleased dokumentiert spaeter umgesetzte Schritte. | passt mit Unschaerfe | Bei naechster Version Changelog klar in releasefaehige Abschnitte schneiden. |
+
+## 6. Offene Punkte
+
+| Prioritaet | Thema | Aktueller Status | Was fehlt konkret? | Empfohlener naechster Schritt | Risiko, wenn offen bleibt | Abhaengigkeiten |
+| --- | --- | --- | --- | --- | --- | --- |
+| hoch | E2E-Testplan praktisch ausfuehren | Testplan vorhanden, automatisierte Tests vorhanden. | Manuelle Praxisprotokolle fuer Testfaelle 1 bis 12 fehlen. | Synthetische Testordner anlegen und `docs/END_TO_END_TESTPLAN.md` praktisch abarbeiten. | Automatik wirkt testseitig stabil, aber reale Bedien-/Ordnerfehler bleiben unentdeckt. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
+| hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Kernworkflow und Linkfelder testseitig vorhanden. | Abnahme mit echten/realistischen Praxisordnern, Archiv-/Fehlerablage und Wartezeiten. | Einen reproduzierbaren Praxislauf mit Optional/Pflicht-Anhang protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in der Praxis auffallen. | E2E-Testplan, Testanhaenge |
+| hoch | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden. | Gefuehrte Pruefung importierter Schnittstellenprofile, Ordnerpfade, XDT-Anhang-Einstellungen und bewusste Aktivierung. | Kleinen Assistenten fuer "importiertes Schnittstellenprofil pruefen und aktivieren" konzipieren. | Importierte Profile bleiben zwar sicher, aber fuer Anwender noch nicht komfortabel produktiv nutzbar. | TemplateImport Executor, Profilkatalog |
+| hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
+| mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach Aktivierungsassistent als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
+| mittel | Manuelle Zielnamen-/ID-Bearbeitung im Templateimport | Automatische Kopienamen vorhanden. | UI zum Bearbeiten vorgeschlagener Namen/IDs. | Nur ergaenzen, wenn Anwenderfeedback Bedarf zeigt. | Importnamen koennen weniger sprechend sein. | Importplan, SelectionService |
+| mittel | Geraete-Datei-Explorer | Noch kein vollstaendiger Explorer. | Datei anzeigen, SourcePaths untersuchen, Messwerte markieren, Kandidaten fuer Exportregeln uebernehmen. | Kleinen read-only Explorer fuer XML/Geraetedateien bauen. | Neue Geraeteprofile bleiben Codex-/Entwickleraufgabe. | XmlDeviceParser, PlaceholderDisplayHelper |
+| mittel | Profil-Assistent fuer unbekannte Geraete | Noch offen. | Gefuehrtes Erstellen von Geraete-, Export- und Schnittstellenprofilen. | Nach Geraete-Datei-Explorer planen. | Skalierung auf neue Geraete bleibt langsam. | Geraete-Datei-Explorer, ProfileCatalog |
+| mittel | NIDEK LM7/LM7P produktiv validieren | Profile und Beispiele vorbereitet. | Echte/repraesentative Dateien, Vergleich mit Praxisanforderung, Exportabnahme. | LM7-Testpaket mit synthetischen/echten Musterdateien erstellen und validieren. | Vorbereitetes Profil koennte in Details falsch mappen. | Testdaten, MEDISTAR-Anforderungen |
+| mittel | NIDEK NT530P produktiv validieren | Profile vorbereitet. | Echte Dateien fuer Tonometry/Pachymetry und ggf. Attachmentfaelle. | Geraetespezifischen E2E-Testplan ergaenzen. | Falsche oder unvollstaendige Messwertuebernahme. | Testdaten |
+| mittel | TOPCON CL300 produktiv validieren | Profile vorbereitet. | Namespace-/Dateistruktur mit echten Beispielen pruefen. | CL300-Beispieldateien sammeln und Parserpfade bestaetigen. | Vorbereitete SourcePaths koennen unvollstaendig sein. | Testdaten |
+| mittel | TOPCON KR800 produktiv validieren | Profile vorbereitet. | REF/KM/SBJ-Strukturen mit echten Daten pruefen. | KR800-Testdaten auswerten und Exportregeln validieren. | Mehruntersuchungsdaten koennen falsch gruppiert werden. | Testdaten |
+| mittel | TOPCON TRK2P produktiv validieren | Profile vorbereitet. | TM/CCT/IOP-Strukturen und Einheiten pruefen. | TRK2P-Testdaten auswerten und Exportregeln validieren. | IOP/CCT-Ausgabe koennte fachlich unpassend sein. | Testdaten |
+| niedrig | AIS-/MEDISTAR-Exporttemplate-Default-Konzept | Bewusst zurueckgestellt; nach Reset nicht implementiert. | Neues Fachkonzept. Bis dahin keine Modelle, Services, UI, 6330-Automatik oder Codex-Umsetzungsauftraege dazu. | Nicht implementieren; fachliche Neubewertung ausserhalb des aktuellen Entwicklungsstrangs abwarten. | Anwender pflegen Exportregeln weiter manuell im Baukasten. | Neues Fachkonzept, MEDISTAR-Fachabstimmung |
+| mittel | Weitere AIS-Profile ausser MEDISTAR | Nicht produktiv umgesetzt. | AIS-spezifische Parser, Feldkennungen, Exportregeln und Tests. | Erst nach MEDISTAR-Kern stabilisieren und Bedarf priorisieren. | App bleibt MEDISTAR-zentriert. | AIS-Dokumentation |
+| mittel | SQLite vs. JSON | Code nutzt JSON; Pflichtenheft nennt SQLite als Ziel. | Bewusste Architekturentscheidung und ggf. Migrationsplan. | ADR erstellen: JSON fuer Prototyp beibehalten oder SQLite planen. | Doku und Architekturziele bleiben uneindeutig. | Profilkatalog, Deployment |
+| mittel | Installer / Deployment | Offen. | Installer, Updateprozess, AppData-Pfade, Support-/Rollback-Anleitung. | Nach Praxis-E2E einen ersten MSIX/Setup-Plan erstellen. | Installation bleibt Entwickler-/Handarbeit. | Versionierung, Signatur, Support |
+| mittel | Technische Installations-/Supportdoku | Teilweise vorhanden. | Klare Anleitung fuer Ordner, Berechtigungen, Backup, Logs, Fehleranalyse. | `docs/INSTALLATION_SUPPORT.md` planen. | Praxiseinrichtung wird fehleranfaellig. | Deployment-Konzept |
+| mittel | Testdaten/Sample-Dateien | Tests nutzen interne Beispiele, manuelle Testdaten nicht voll paketiert. | Synthetische AIS-, Geraete- und Anhangdateien fuer E2E. | Testdatenverzeichnis mit synthetischen, patientenfreien Dateien definieren. | Manuelle Reproduktion bleibt schwierig. | Datenschutz, E2E-Testplan |
+| mittel | Mehrfachanhang-Zuordnung | Absichtlich nicht automatisch. | Fachliche Regel, wenn mehrere Anhaenge vorkommen. | Zunaechst bei "keine automatische Zuordnung" bleiben; spaeter UI-/Manuell-Auswahl spezifizieren. | Pflicht-Anhang-Faelle blockieren bei mehreren Dateien. | Patientenbezug, Praxisablauf |
+| mittel | MEDISTAR EV vs. 6302-6305 | Architektur bevorzugt strukturierte 6302-6305. | Entscheidung, ob EV-Anzeigezeilen jemals durch die App erzeugt werden sollen. | Bei MEDISTAR-Rueckmeldung fachlich pruefen, ansonsten 6302-6305 beibehalten. | Unklare Erwartung an Karteikartenanzeige. | MEDISTAR-Testimport |
+| niedrig | Windows-Dienst spaeter ja/nein | Nicht implementiert. | Betriebsentscheidung. | Erst nach stabiler Desktop-Automatik entscheiden. | App muss manuell gestartet bleiben. | Deployment, Lizenz |
+| niedrig | Autostart spaeter ja/nein | Nicht implementiert. | Betriebsentscheidung. | Mit Dienst-/Deployment-Konzept klaeren. | Nach Neustart kein automatischer Betrieb. | Deployment |
+| niedrig | FileSystemWatcher spaeter ja/nein | Nicht implementiert, periodischer Scan aktiv. | Entscheidung, ob Watcher trotz Stabilitaetslogik sinnvoll ist. | Periodischen Scan in Praxis messen, erst danach entscheiden. | Scan-Latenz bleibt intervallabhaengig. | Stabilitaet, Paketlogik |
+| niedrig | Archivloeschung im laufenden Betrieb | Cleanup-Service vorbereitet. | UI/Automatik fuer sichere Vorschau und Ausfuehrung. | Nur mit ausdruecklicher Preview und Schutzregeln planen. | Archiv kann wachsen. | Archivstrategie |
+| niedrig | PDF-Erzeugung durch App | Nicht implementiert. | Renderer, Layout, medizinische Freigabe, Linkintegration. | Nach externem Linkworkflow bewerten. | Keine App-eigenen Befund-PDFs. | 6302-6305, MEDISTAR-Anforderungen |
+| niedrig | Online-Lizenzierung | Nicht implementiert. | Server/API/Datenschutzkonzept. | Nur bei Produktbedarf planen. | Keine zentrale Lizenzverwaltung. | Signatur, Kundensupport |
+| niedrig | UI-Feinschliff | Viele Bereiche funktional, aber gewachsen. | Kleine Bedien-/Layoutkorrekturen nach Praxisfeedback. | Feedback sammeln und gezielt kleine UI-Schritte machen. | Anwender finden fortgeschrittene Funktionen schwerer. | Praxisfeedback |
+
+## 7. Priorisierte Roadmap
+
+### Phase 1: Konsolidierung / Dokumentation / Tests
+
+- Diese Abgleichdatei als aktuelle Orientierung nutzen.
+- `docs/END_TO_END_TESTPLAN.md` praktisch ausfuehren und protokollieren.
+- Synthetische Testdaten fuer AIS, ARK1S und XDT-Anhang vorbereiten.
+- Kleinere Doku-Unschaerfen in Architektur/Pflichtenheft spaeter glaetten.
+
+### Phase 2: Stabilisierung produktiver MEDISTAR + ARK1S + XDT-Anhang Workflow
+
+- Automatische Paketlogik in realistischen Ordnern pruefen.
+- Optional-/Pflicht-Anhaenge mit echten Timing-Faellen testen.
+- Archiv-/Fehlerablage im Praxisablauf pruefen.
+- MEDISTAR-Testimport der `6302` bis `6305`-Links dokumentieren.
+
+### Phase 3: Template-/Profil-Baukasten
+
+- Aktivierungsassistent fuer importierte Schnittstellenprofile.
+- Pruefung von Ordnerpfaden und XDT-Anhang-Einstellungen vor Aktivierung.
+- Optional spaeter ReplaceExisting fuer UserDefined mit Backup/Bestaetigung.
+- AIS-/MEDISTAR-Default-Exporttemplates nicht umsetzen, bis ein neues Fachkonzept vorliegt.
+
+### Phase 4: Geraete-Datei-Explorer / Profil-Assistent
+
+- Read-only Explorer fuer Geraetedateien und SourcePaths.
+- Uebernahme erkannter Messwerte in Exportregel-Entwurf.
+- Gefuehrter Profil-Assistent fuer neue Geraete.
+
+### Phase 5: Weitere Geraete validieren
+
+- LM7/LM7P
+- NT530P
+- TOPCON CL300
+- TOPCON KR800
+- TOPCON TRK2P
+
+### Phase 6: Lizenzierung haerten
+
+- Digitale Signaturpruefung.
+- Manipulationsschutz.
+- Klare Sperrregeln und Karenzlogik.
+- Optional spaeter Online-Lizenzierung.
+
+### Phase 7: Installer / Deployment
+
+- Installer/Updateprozess.
+- Support- und Installationsdokumentation.
+- Backup-/Restore-Konzept fuer LocalAppData-Konfiguration.
+
+## 8. Risiken und Entscheidungen
+
+| Entscheidung | Aktueller Stand | Offene Frage |
+| --- | --- | --- |
+| JSON vs. SQLite | JSON unter LocalAppData ist implementiert. | Bleibt JSON fuer 0.x bewusst gesetzt oder wird SQLite spaeter eingefuehrt? |
+| Dienst vs. manuell gestartete App | Manuell gestartete WPF-App. | Soll es spaeter einen Windows-Dienst geben? |
+| FileSystemWatcher vs. periodischer Scan | Periodischer Scan, kein Watcher. | Reicht der Scan produktiv aus? |
+| Lizenzsperre | Anzeige und Karenzzeitmodell, keine harte Sperre. | Wann und nach welchen Regeln wird eine Sperre aktiviert? |
+| MEDISTAR EV vs. 6302-6305 | Strukturierter externer Link ueber `6302` bis `6305`. | Soll MEDISTAR-interne EV-Anzeige jemals aktiv erzeugt werden? |
+| Mehrere Anhaenge | Keine automatische Zuordnung. | Bleibt es bei Block/Warnung oder kommt eine manuelle Zuordnung? |
+| Mehrere AIS-Dateien | Neuere AIS-Datei ersetzt aeltere wartende Datei. | Reicht diese Regel fuer Mehrplatz-/Mehrpatientenbetrieb? |
+| Mehrere Geraete/Arbeitsplaetze | Schnittstellenprofile koennen getrennte Ordner haben. | Braucht es Arbeitsplatz-/Geraetebezeichner und Monitoring-Ansichten? |
+| UserDefined-Import / ReplaceExisting | ImportAsNew/ImportAsCopy/KeepExisting/Skip vorhanden, ReplaceExisting aus. | Wann ist Ersetzen sicher genug? |
+| Geraeteprofile automatisch erkennen | Nicht implementiert. | Automatisch erkennen oder weiter manuell/assistentengestuetzt erstellen? |
+| MEDISTAR-Exporttemplates | Bewusst zurueckgestellt. | Neues Fachkonzept erforderlich; bis dahin keine Umsetzung und keine automatische 6330-Ergaenzung. |
+| Archivloeschung | Cleanup-Service vorbereitet, keine automatische Ausfuehrung. | Soll es eine sichere, explizite UI-Aktion geben? |
+
+## 9. Empfohlener naechster Codex-Schritt
+
+Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
+
+**E2E-Testplan praktisch ausfuehrbar machen und Ergebnisprotokoll vorbereiten.**
+
+Konkreter Umfang:
+
+- keine Produktivlogik aendern
+- keine Profile oder BuiltIns aendern
+- ein synthetisches Testdatenpaket bzw. eine Testdaten-Checkliste fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang definieren
+- `docs/END_TO_END_TESTPLAN.md` um eine ausfuellbare Ergebnisprotokoll-Vorlage und konkrete Dateinamen/Pruefschritte ergaenzen
+- optional eine separate Datei `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` erstellen
+- danach Build und Tests ausfuehren
+
+Das ist der beste naechste Schritt, weil die Kernlogik bereits umfangreich testseitig abgesichert ist, aber die praktische Abnahme der automatischen Paket- und Anhanglogik noch als groesste Restunsicherheit bleibt.
+
+## 10. Keine Aenderungen an Code
+
+Dieser Abgleich ist eine reine Dokumentationsdatei. Es wurden keine Produktivlogik, UI, Tests, Profile, BuiltIn-Profile oder Exportprofile geaendert.
