@@ -8,6 +8,10 @@ public sealed record ActiveInterfaceProfileStatusRow(
     string AisImportFolder,
     string DeviceImportFolder,
     string ExportFolder,
+    string AttachmentImportFolder,
+    string AttachmentExportFolder,
+    string AttachmentConfigurationStatus,
     string LicenseStatus,
     string FolderStatus,
-    string ProcessingStatus);
+    string ProcessingStatus,
+    InterfaceMonitoringCardDisplay MonitoringCard);

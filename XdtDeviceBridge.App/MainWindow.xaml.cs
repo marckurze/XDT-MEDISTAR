@@ -46,6 +46,8 @@ public partial class MainWindow : Window
     private readonly LicensedDeviceStateEvaluator _licensedDeviceStateEvaluator = new();
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
+    private readonly InterfaceMonitoringEventDeduplicationService _monitoringEventDeduplicationService = new();
+    private readonly Dictionary<string, string> _lastPeriodicScanSnapshotsByProfile = new(StringComparer.OrdinalIgnoreCase);
     private readonly AutoImportScannerService _autoImportScannerService = new();
     private readonly PeriodicAutoImportScanService _periodicAutoImportScanService = new();
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
@@ -2294,6 +2296,9 @@ public partial class MainWindow : Window
         var scanInterval = PeriodicAutoImportScanService.GetEffectiveInterval(activeProfiles);
         PeriodicScanIntervalText.Text = $"{scanInterval.TotalSeconds:0} Sekunden";
         ActiveProfileScanResultTextBox.Text = $"Überwachung läuft mit {scanInterval.TotalSeconds:0} Sekunden Intervall. Es wird nichts gelöscht oder bereinigt.";
+        _lastPeriodicScanSnapshotsByProfile.Clear();
+        _monitoringEventDeduplicationService.Reset();
+        AppendMonitoringEvent("monitoring", "monitoring-state", "Überwachung gestartet.");
 
         _periodicScanTask = Task.Run(() => _periodicAutoImportScanService.StartAsync(
             activeProfiles,
@@ -2339,6 +2344,7 @@ public partial class MainWindow : Window
         StartPeriodicScanButton.IsEnabled = true;
         StopPeriodicScanButton.IsEnabled = false;
         ActiveProfileScanButton.IsEnabled = true;
+        AppendMonitoringEvent("monitoring", "monitoring-state", "Überwachung gestoppt.");
     }
 
     private void ShowPeriodicScanResult(AutoImportScanResult result)
@@ -2370,14 +2376,20 @@ public partial class MainWindow : Window
 
         builder.AppendLine("Hinweis: Die Überwachung scannt nur. Es wird nichts automatisch verarbeitet.");
 
-        if (!string.IsNullOrWhiteSpace(ActiveProfileScanResultTextBox.Text))
+        var shouldAppendScanSummary = ShouldAppendPeriodicScanSummary(result);
+        if (shouldAppendScanSummary && !string.IsNullOrWhiteSpace(ActiveProfileScanResultTextBox.Text))
         {
             ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
             ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
         }
 
-        ActiveProfileScanResultTextBox.AppendText(builder.ToString().TrimEnd());
-        ActiveProfileScanResultTextBox.ScrollToEnd();
+        if (shouldAppendScanSummary)
+        {
+            ActiveProfileScanResultTextBox.AppendText(builder.ToString().TrimEnd());
+            ActiveProfileScanResultTextBox.ScrollToEnd();
+        }
+
+        RecordScanMonitoringEvents(profileName, result);
 
         if (profile is not null)
         {
@@ -2387,20 +2399,69 @@ public partial class MainWindow : Window
         var automaticProcessingResult = TryProcessReadyPairsAutomatically(profile, result);
         if (automaticProcessingResult is null)
         {
-            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-            ActiveProfileScanResultTextBox.AppendText("Automatische Verarbeitung: deaktiviert.");
+            if (shouldAppendScanSummary)
+            {
+                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+                ActiveProfileScanResultTextBox.AppendText("Automatische Verarbeitung: deaktiviert.");
+            }
         }
         else
         {
-            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-            ActiveProfileScanResultTextBox.AppendText($"Automatisch verarbeitet: {automaticProcessingResult.ProcessedCount}");
-            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-            ActiveProfileScanResultTextBox.AppendText($"Bereits verarbeitet übersprungen: {automaticProcessingResult.SkippedAlreadyProcessedCount}");
-            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-            ActiveProfileScanResultTextBox.AppendText($"Automatische Fehler: {automaticProcessingResult.ErrorCount}");
+            if (shouldAppendScanSummary)
+            {
+                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+                ActiveProfileScanResultTextBox.AppendText($"Automatisch verarbeitet: {automaticProcessingResult.ProcessedCount}");
+                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+                ActiveProfileScanResultTextBox.AppendText($"Bereits verarbeitet übersprungen: {automaticProcessingResult.SkippedAlreadyProcessedCount}");
+                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
+                ActiveProfileScanResultTextBox.AppendText($"Automatische Fehler: {automaticProcessingResult.ErrorCount}");
+            }
         }
 
         ActiveProfileScanResultTextBox.ScrollToEnd();
+    }
+
+    private bool ShouldAppendPeriodicScanSummary(AutoImportScanResult result)
+    {
+        var snapshot = CreatePeriodicScanSnapshot(result);
+        if (_lastPeriodicScanSnapshotsByProfile.TryGetValue(result.InterfaceProfileId, out var previousSnapshot)
+            && string.Equals(previousSnapshot, snapshot, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        _lastPeriodicScanSnapshotsByProfile[result.InterfaceProfileId] = snapshot;
+        return true;
+    }
+
+    private static string CreatePeriodicScanSnapshot(AutoImportScanResult result)
+    {
+        var builder = new StringBuilder();
+        builder.Append(result.AisFilesDetected);
+        builder.Append('|');
+        builder.Append(result.DeviceFilesDetected);
+        builder.Append('|');
+        builder.Append(result.FilesQueued);
+        builder.Append('|');
+        builder.Append(result.ReadyPairs);
+
+        foreach (var message in result.Messages.OrderBy(message => message, StringComparer.Ordinal))
+        {
+            builder.Append("|M:");
+            builder.Append(message);
+        }
+
+        foreach (var file in result.Queue.GetAll())
+        {
+            builder.Append("|F:");
+            builder.Append(file.Kind);
+            builder.Append(':');
+            builder.Append(file.Status);
+            builder.Append(':');
+            builder.Append(file.FilePath);
+        }
+
+        return builder.ToString();
     }
 
     private AutoImportPairProcessingBatchResult? TryProcessReadyPairsAutomatically(
@@ -2414,7 +2475,7 @@ public partial class MainWindow : Window
 
         if (interfaceProfile is null)
         {
-            AppendMessage("Automatische Verarbeitung nicht möglich: Schnittstellenprofil wurde nicht gefunden.");
+            AppendMonitoringEvent("monitoring", "automatic-processing-error", "Automatische Verarbeitung nicht möglich: Schnittstellenprofil wurde nicht gefunden.", InterfaceMonitoringEventSeverity.Error);
             return new AutoImportPairProcessingBatchResult(0, 0, 1, Array.Empty<AutoImportPairProcessingResult>());
         }
 
@@ -2422,7 +2483,11 @@ public partial class MainWindow : Window
             string.Equals(profile.Metadata.Id, interfaceProfile.ExportProfileId, StringComparison.Ordinal));
         if (exportProfile is null)
         {
-            AppendMessage($"Automatische Verarbeitung nicht möglich: Exportprofil fehlt für {interfaceProfile.Metadata.Name}.");
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                "automatic-processing-export-profile-missing",
+                $"Automatische Verarbeitung nicht möglich: Exportprofil fehlt für {interfaceProfile.Metadata.Name}.",
+                InterfaceMonitoringEventSeverity.Error);
             return new AutoImportPairProcessingBatchResult(0, 0, 1, Array.Empty<AutoImportPairProcessingResult>());
         }
 
@@ -2433,7 +2498,10 @@ public partial class MainWindow : Window
             timestamp);
         foreach (var message in packageEvaluation.Messages)
         {
-            AppendMessage($"{interfaceProfile.Metadata.Name}: {message}");
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                "package-state",
+                $"{interfaceProfile.Metadata.Name}: {message}");
         }
 
         var readyPairs = packageEvaluation.ReadyPairs;
@@ -2455,10 +2523,10 @@ public partial class MainWindow : Window
 
             if (result.WasSkipped)
             {
-                AppendMessage($"{interfaceProfile.Metadata.Name}: {result.Status}");
+                AppendPairMonitoringEvent(interfaceProfile, result, "status", $"{interfaceProfile.Metadata.Name}: {result.Status}");
                 foreach (var message in result.Messages)
                 {
-                    AppendMessage(message);
+                    AppendPairMonitoringEvent(interfaceProfile, result, $"message:{message}", message);
                 }
 
                 continue;
@@ -2466,16 +2534,25 @@ public partial class MainWindow : Window
 
             if (result.Success)
             {
-                AppendMessage($"{interfaceProfile.Metadata.Name}: automatisch verarbeitet. Exportdatei: {result.ExportFilePath}");
+                AppendPairMonitoringEvent(
+                    interfaceProfile,
+                    result,
+                    "status",
+                    $"{interfaceProfile.Metadata.Name}: automatisch verarbeitet. Exportdatei: {result.ExportFilePath}");
             }
             else
             {
-                AppendMessage($"{interfaceProfile.Metadata.Name}: automatische Verarbeitung fehlgeschlagen.");
+                AppendPairMonitoringEvent(
+                    interfaceProfile,
+                    result,
+                    "status",
+                    $"{interfaceProfile.Metadata.Name}: automatische Verarbeitung fehlgeschlagen.",
+                    InterfaceMonitoringEventSeverity.Error);
             }
 
             foreach (var message in result.Messages)
             {
-                AppendMessage(message);
+                AppendPairMonitoringEvent(interfaceProfile, result, $"message:{message}", message);
             }
         }
 
@@ -4114,6 +4191,77 @@ public partial class MainWindow : Window
     private void AppendMessage(string message)
     {
         AppendText(MessagesTextBox, message);
+    }
+
+    private void RecordScanMonitoringEvents(string profileName, AutoImportScanResult result)
+    {
+        if (result.AisFilesDetected > 0)
+        {
+            AppendMonitoringEvent(
+                result.InterfaceProfileId,
+                "scan-ais-detected",
+                $"{profileName}: AIS-Datei erkannt ({result.AisFilesDetected}).");
+        }
+
+        if (result.DeviceFilesDetected > 0)
+        {
+            AppendMonitoringEvent(
+                result.InterfaceProfileId,
+                "scan-device-detected",
+                $"{profileName}: Gerätedatei erkannt ({result.DeviceFilesDetected}).");
+        }
+
+        if (result.ReadyPairs > 0)
+        {
+            AppendMonitoringEvent(
+                result.InterfaceProfileId,
+                "scan-ready-pair",
+                $"{profileName}: AIS-/Geräte-Paar vollständig ({result.ReadyPairs}).");
+        }
+
+        foreach (var message in result.Messages)
+        {
+            AppendMonitoringEvent(
+                result.InterfaceProfileId,
+                $"scan-message:{message}",
+                $"{profileName}: {message}",
+                InterfaceMonitoringEventSeverity.Warning);
+        }
+    }
+
+    private void AppendPairMonitoringEvent(
+        InterfaceProfileDefinition interfaceProfile,
+        AutoImportPairProcessingResult result,
+        string eventKey,
+        string message,
+        InterfaceMonitoringEventSeverity severity = InterfaceMonitoringEventSeverity.Info)
+    {
+        AppendMonitoringEvent(
+            interfaceProfile.Metadata.Id,
+            $"pair:{result.PairKey}:{eventKey}",
+            message,
+            severity);
+    }
+
+    private void AppendMonitoringEvent(
+        string scopeId,
+        string eventKey,
+        string message,
+        InterfaceMonitoringEventSeverity severity = InterfaceMonitoringEventSeverity.Info)
+    {
+        var entry = _monitoringEventDeduplicationService.Record(
+            scopeId,
+            eventKey,
+            message,
+            DateTime.Now,
+            severity);
+
+        if (entry is null)
+        {
+            return;
+        }
+
+        AppendMessage(entry.Message);
     }
 
     private void AppendProfileMessage(string message)

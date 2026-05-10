@@ -112,6 +112,8 @@ Funktionen:
 
 Wichtig: Es gibt keinen Windows-Dienst, keinen Autostart und aktuell keinen FileSystemWatcher. Die Ueberwachung basiert auf periodischem Scan.
 
+Die Monitoring-Meldungen im Tab `Verarbeitung` werden dedupliziert: Wiederholt ein Scan denselben technischen Zustand oder dieselbe Statusmeldung, wird sie nicht erneut als neues Ereignis angehängt. Die Übersicht der aktiven Schnittstellenprofile zeigt zusätzlich die konfigurierten XDT-Anhang Import-/Exportordner oder `kein Anhang konfiguriert`. Damit ist die spätere Umstellung auf eine kachel- bzw. radarartige Monitoring-Ansicht fachlich vorbereitet, ohne dass bereits eine Radar-Animation umgesetzt ist.
+
 ### 4. Optionale automatische Verarbeitung
 
 Im Tab `Verarbeitung` gibt es den Haken `Gefundene Dateipaare automatisch verarbeiten`.

@@ -96,6 +96,73 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("Bereit für spätere Automatik", row.ProcessingStatus);
     }
 
+    [Fact]
+    public void BuildRows_ShouldShowNoAttachmentConfiguredWhenAttachmentOptionsAreEmpty()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        Assert.Equal("kein Anhang konfiguriert", row.AttachmentImportFolder);
+        Assert.Equal("kein Anhang konfiguriert", row.AttachmentExportFolder);
+        Assert.Equal("kein Anhang konfiguriert", row.AttachmentConfigurationStatus);
+        Assert.Equal("kein Anhang konfiguriert", row.MonitoringCard.AttachmentConfigurationStatus);
+        Assert.Contains(row.MonitoringCard.ExpectedInputs, input => input.Name == "XDT-Anhang");
+    }
+
+    [Fact]
+    public void BuildRows_ShouldShowAttachmentFoldersWhenConfigured()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export") with
+            {
+                AttachmentImportFolder = @"C:\XDT\AnhangImp",
+                AttachmentExportFolder = @"C:\XDT\AnhangExp",
+                IsAttachmentProcessingEnabled = true,
+                AttachmentRequirementMode = AttachmentRequirementMode.Required
+            }
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        Assert.Equal(@"C:\XDT\AnhangImp", row.AttachmentImportFolder);
+        Assert.Equal(@"C:\XDT\AnhangExp", row.AttachmentExportFolder);
+        Assert.Equal("XDT-Anhang aktiv (Pflicht)", row.AttachmentConfigurationStatus);
+        Assert.Equal(row.AttachmentImportFolder, row.MonitoringCard.AttachmentImportFolder);
+        Assert.Equal(row.AttachmentExportFolder, row.MonitoringCard.AttachmentExportFolder);
+    }
+
+    [Fact]
+    public void BuildRows_ShouldMarkIncompleteAttachmentFolders()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export") with
+            {
+                IsAttachmentProcessingEnabled = true
+            }
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        Assert.Equal("XDT-Anhang Importordner fehlt", row.AttachmentImportFolder);
+        Assert.Equal("XDT-Anhang Exportordner fehlt", row.AttachmentExportFolder);
+        Assert.Equal("XDT-Anhang aktiv, Ordner unvollständig", row.AttachmentConfigurationStatus);
+    }
+
     private IReadOnlyList<ActiveInterfaceProfileStatusRow> BuildRows(
         InterfaceProfileDefinition profile,
         LicensedDeviceState? licenseState = null)

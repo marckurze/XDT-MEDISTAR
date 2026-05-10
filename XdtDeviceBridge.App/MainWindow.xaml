@@ -126,6 +126,27 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
+                                        <DataGridTextColumn Header="XDT-Anhang Import" Binding="{Binding AttachmentImportFolder}" MinWidth="240" Width="240">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding AttachmentImportFolder}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="XDT-Anhang Export" Binding="{Binding AttachmentExportFolder}" MinWidth="240" Width="240">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding AttachmentExportFolder}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="XDT-Anhang" Binding="{Binding AttachmentConfigurationStatus}" MinWidth="220" Width="220">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource TrimmedCellTextStyle}">
+                                                    <Setter Property="ToolTip" Value="{Binding AttachmentConfigurationStatus}"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
                                         <DataGridTextColumn Header="Lizenz" Binding="{Binding LicenseStatus}" MinWidth="160" Width="160"/>
                                         <DataGridTextColumn Header="Ordnerstatus" Binding="{Binding FolderStatus}" MinWidth="220" Width="220">
                                             <DataGridTextColumn.ElementStyle>
