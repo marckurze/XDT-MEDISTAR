@@ -68,6 +68,7 @@ public partial class MainWindow : Window
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
+    private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
@@ -2483,6 +2484,122 @@ public partial class MainWindow : Window
     private void EnableAutomaticPairProcessingCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         RefreshInterfaceMonitoringCards();
+    }
+
+    private void DecreaseMonitoringScanInterval_Click(object sender, RoutedEventArgs e)
+    {
+        ChangeMonitoringScanInterval(sender, -1);
+    }
+
+    private void IncreaseMonitoringScanInterval_Click(object sender, RoutedEventArgs e)
+    {
+        ChangeMonitoringScanInterval(sender, 1);
+    }
+
+    private void ChangeMonitoringScanInterval(object sender, int deltaSeconds)
+    {
+        if (sender is not FrameworkElement element
+            || element.DataContext is not InterfaceMonitoringCardDisplay card)
+        {
+            return;
+        }
+
+        if (_profileCatalog is null)
+        {
+            AppendMonitoringEvent(
+                "monitoring",
+                "scan-interval-change-error",
+                "Scanintervall kann nicht geändert werden, weil keine Profile geladen sind.",
+                InterfaceMonitoringEventSeverity.Warning);
+            return;
+        }
+
+        var profile = _profileCatalog.InterfaceProfiles.FirstOrDefault(candidate =>
+            string.Equals(candidate.Metadata.Id, card.InterfaceProfileId, StringComparison.Ordinal));
+        if (profile is null)
+        {
+            AppendMonitoringEvent(
+                card.InterfaceProfileId,
+                "scan-interval-change-error",
+                "Scanintervall kann nicht geändert werden, weil das Schnittstellenprofil nicht gefunden wurde.",
+                InterfaceMonitoringEventSeverity.Warning);
+            return;
+        }
+
+        var result = _interfaceProfileScanIntervalUpdateService.ChangeBy(
+            profile,
+            deltaSeconds,
+            DateTimeOffset.UtcNow,
+            Environment.UserName);
+
+        if (!result.Changed)
+        {
+            AppendMonitoringEvent(
+                profile.Metadata.Id,
+                result.ReachedMinimum ? "scan-interval-minimum" : "scan-interval-maximum",
+                $"{profile.Metadata.Name}: {result.Message}",
+                InterfaceMonitoringEventSeverity.Warning);
+            return;
+        }
+
+        if (!result.Success || result.Profile is null)
+        {
+            AppendMonitoringEvent(
+                profile.Metadata.Id,
+                "scan-interval-change-error",
+                $"{profile.Metadata.Name}: Scanintervall wurde nicht gespeichert.",
+                InterfaceMonitoringEventSeverity.Error);
+            foreach (var issue in result.Issues.Where(issue => issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error))
+            {
+                var pathPart = string.IsNullOrWhiteSpace(issue.Path) ? string.Empty : $" ({issue.Path})";
+                AppendMonitoringEvent(
+                    profile.Metadata.Id,
+                    $"scan-interval-validation:{issue.Message}",
+                    $"{profile.Metadata.Name}: {issue.Message}{pathPart}",
+                    InterfaceMonitoringEventSeverity.Error);
+            }
+
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var overwriteExisting = profile.Metadata.IsUserDefined && !profile.Metadata.IsBuiltIn;
+            _profileCatalogService.SaveInterfaceProfileDefinition(paths, result.Profile, overwriteExisting);
+
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(
+                catalog,
+                selectedExportProfileId: (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id,
+                selectedInterfaceProfileId: result.Profile.Metadata.Id);
+
+            var activationText = _periodicScanCancellationTokenSource is null
+                ? "Wird beim nächsten Start der Überwachung verwendet."
+                : "Wird beim nächsten Start der Überwachung aktiv.";
+            AppendMonitoringEvent(
+                result.Profile.Metadata.Id,
+                "scan-interval-changed",
+                $"Scanintervall für {result.Profile.Metadata.Name} auf {result.EffectiveIntervalSeconds} Sekunden geändert. {activationText}");
+
+            if (result.CreatedUserDefinedCopy)
+            {
+                AppendMonitoringEvent(
+                    result.Profile.Metadata.Id,
+                    "scan-interval-builtin-copy",
+                    "BuiltIn-Profil wurde nicht überschrieben; die Änderung wurde als UserDefined-Konfiguration gespeichert.",
+                    InterfaceMonitoringEventSeverity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            AppendMonitoringEvent(
+                profile.Metadata.Id,
+                "scan-interval-save-error",
+                $"{profile.Metadata.Name}: Scanintervall konnte nicht gespeichert werden: {ex.Message}",
+                InterfaceMonitoringEventSeverity.Error);
+        }
     }
 
     private void MonitoringRadar_Loaded(object sender, RoutedEventArgs e)

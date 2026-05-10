@@ -265,7 +265,23 @@
                                                     </Grid>
 
                                                     <WrapPanel Margin="0,0,0,8">
-                                                        <TextBlock Text="{Binding ScanIntervalText, StringFormat=Intervall: {0}}" Margin="0,0,12,4"/>
+                                                        <Button Content="−"
+                                                                Width="24"
+                                                                Height="22"
+                                                                Padding="0"
+                                                                Margin="0,0,4,4"
+                                                                Click="DecreaseMonitoringScanInterval_Click"
+                                                                ToolTip="Scanintervall um 1 Sekunde verringern"/>
+                                                        <TextBlock Text="{Binding ScanIntervalText, StringFormat=Intervall: {0}}"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,2,4,4"/>
+                                                        <Button Content="+"
+                                                                Width="24"
+                                                                Height="22"
+                                                                Padding="0"
+                                                                Margin="0,0,12,4"
+                                                                Click="IncreaseMonitoringScanInterval_Click"
+                                                                ToolTip="Scanintervall um 1 Sekunde erhöhen"/>
                                                         <TextBlock Text="{Binding LastScanText, StringFormat=Letzter Scan: {0}}" Margin="0,0,12,4"/>
                                                         <TextBlock Text="{Binding AutomaticProcessingText, StringFormat=Automatik: {0}}" Margin="0,0,0,4"/>
                                                     </WrapPanel>
