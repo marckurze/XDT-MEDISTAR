@@ -6,6 +6,7 @@ namespace XdtDeviceBridge.Infrastructure;
 public sealed class InterfaceMonitoringCardStatusService
 {
     private readonly IAisPatientDataReader _aisPatientDataReader;
+    private readonly Dictionary<string, DateTime> _attachmentWaitStartedAtByPairKey = new(StringComparer.OrdinalIgnoreCase);
 
     public InterfaceMonitoringCardStatusService()
         : this(new AisPatientDataReader())
@@ -140,15 +141,19 @@ public sealed class InterfaceMonitoringCardStatusService
         {
             "ais" => input with
             {
-                Status = patient is null ? "gefunden" : "Patient erkannt",
+                Name = patient is null ? "AIS-Patientendatei" : CreatePatientMainText(patient, Path.GetFileName(processingResult.AisFilePath)),
+                Status = patient is null ? "gefunden" : "",
                 StatusClass = "Success",
-                Detail = CreatePatientDisplay(patient, Path.GetFileName(processingResult.AisFilePath))
+                Detail = JoinDetails(CreatePatientDisplay(patient, Path.GetFileName(processingResult.AisFilePath)), processingResult.AisFilePath),
+                DisplayDetail = patient is null ? Path.GetFileName(processingResult.AisFilePath) : ""
             },
             "device" => input with
             {
-                Status = "gefunden",
+                Name = "Empfangen",
+                Status = "",
                 StatusClass = "Success",
-                Detail = Path.GetFileName(processingResult.DeviceFilePath)
+                Detail = processingResult.DeviceFilePath,
+                DisplayDetail = Path.GetFileName(processingResult.DeviceFilePath)
             },
             "attachment" => CreateAttachmentInputFromProcessing(input, attachmentStatus),
             _ => input
@@ -167,7 +172,8 @@ public sealed class InterfaceMonitoringCardStatusService
             {
                 Status = "ersetzt",
                 StatusClass = "Waiting",
-                Detail = packageEvaluation.Messages.LastOrDefault() ?? "Vorherige AIS-Datei ersetzt."
+                Detail = packageEvaluation.Messages.LastOrDefault() ?? "Vorherige AIS-Datei ersetzt.",
+                DisplayDetail = "ersetzt"
             };
         }
 
@@ -177,7 +183,8 @@ public sealed class InterfaceMonitoringCardStatusService
             {
                 Status = "abgelaufen",
                 StatusClass = "Blocked",
-                Detail = packageEvaluation.Messages.LastOrDefault() ?? "AIS-Datei abgelaufen."
+                Detail = packageEvaluation.Messages.LastOrDefault() ?? "AIS-Datei abgelaufen.",
+                DisplayDetail = "abgelaufen"
             };
         }
 
@@ -185,17 +192,22 @@ public sealed class InterfaceMonitoringCardStatusService
         {
             return input with
             {
+                Name = "AIS-Patientendatei",
                 Status = "erwartet",
                 StatusClass = "Waiting",
-                Detail = input.FolderPath
+                Detail = input.FolderPath,
+                DisplayDetail = ""
             };
         }
 
+        var patientMainText = CreatePatientMainText(patient, aisFile.FileName);
         return input with
         {
-            Status = patient is null ? "gefunden" : "Patient erkannt",
+            Name = patient is null ? "AIS-Patientendatei" : patientMainText,
+            Status = patient is null ? "gefunden" : "",
             StatusClass = patient is null ? "Active" : "Success",
-            Detail = CreatePatientDisplay(patient, aisFile.FileName)
+            Detail = JoinDetails(CreatePatientDisplay(patient, aisFile.FilePath), aisFile.FilePath),
+            DisplayDetail = patient is null ? aisFile.FileName : ""
         };
     }
 
@@ -219,25 +231,27 @@ public sealed class InterfaceMonitoringCardStatusService
                 : "";
             return input with
             {
+                Name = "Geräte-Datei",
                 Status = waitsForDevice ? "wartet auf Gerät" : "erwartet",
                 StatusClass = waitsForDevice ? "Waiting" : "Neutral",
                 Detail = waitsForDevice
                     ? JoinDetails(packageEvaluation?.Messages.LastOrDefault() ?? "AIS-Datei vorhanden, Gerätedatei fehlt.", remaining)
-                    : input.FolderPath
+                    : input.FolderPath,
+                DisplayDetail = waitsForDevice ? remaining : ""
             };
         }
 
         return input with
         {
-            Status = deviceFile.Status == PendingImportFileStatus.Stable ? "gefunden" : "instabil",
+            Name = deviceFile.Status == PendingImportFileStatus.Stable ? "Empfangen" : "Geräte-Datei",
+            Status = deviceFile.Status == PendingImportFileStatus.Stable ? "" : "instabil",
             StatusClass = deviceFile.Status == PendingImportFileStatus.Stable ? "Success" : "Waiting",
-            Detail = string.IsNullOrWhiteSpace(deviceProfileName)
-                ? deviceFile.FileName
-                : $"{deviceFile.FileName} ({deviceProfileName})"
+            Detail = JoinDetails(deviceFile.FilePath, deviceProfileName),
+            DisplayDetail = string.IsNullOrWhiteSpace(deviceProfileName) ? deviceFile.FileName : deviceProfileName
         };
     }
 
-    private static ExpectedInputDisplayItem CreateAttachmentInputFromScan(
+    private ExpectedInputDisplayItem CreateAttachmentInputFromScan(
         ExpectedInputDisplayItem input,
         InterfaceProfileDefinition interfaceProfile,
         AutoImportScanResult scanResult,
@@ -248,9 +262,11 @@ public sealed class InterfaceMonitoringCardStatusService
         {
             return input with
             {
+                Name = "XDT-Anhang",
                 Status = "konfiguriert",
                 StatusClass = "Neutral",
-                Detail = input.Detail
+                Detail = input.Detail,
+                DisplayDetail = ""
             };
         }
 
@@ -260,18 +276,18 @@ public sealed class InterfaceMonitoringCardStatusService
         {
             return input with
             {
-                Status = interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "optional",
+                Name = "XDT-Anhang",
+                Status = interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "Optional",
                 StatusClass = "Neutral",
-                Detail = input.Detail
+                Detail = input.Detail,
+                DisplayDetail = ""
             };
         }
 
         var readyPair = scanResult.Queue.FindReadyPairs().FirstOrDefault();
         var waitStartedAt = readyPair is null
             ? scanTimestamp
-            : MaxDate(
-                readyPair.AisFile.StableAtUtc ?? readyPair.AisFile.DetectedAtUtc,
-                readyPair.DeviceFile.StableAtUtc ?? readyPair.DeviceFile.DetectedAtUtc);
+            : GetOrCreateAttachmentWaitStartedAt(interfaceProfile, readyPair, scanTimestamp);
         var remaining = CreateRemainingTimeText(
             waitStartedAt,
             TimeSpan.FromSeconds(Math.Max(0, interfaceProfile.FolderOptions.AttachmentWaitTimeoutSeconds)),
@@ -281,13 +297,15 @@ public sealed class InterfaceMonitoringCardStatusService
 
         return input with
         {
+            Name = "XDT-Anhang",
             Status = timeoutReached
-                ? "Timeout"
-                : isRequired ? "Pflicht wartet" : "optional wartet",
+                ? "Timeout erreicht"
+                : $"{(isRequired ? "Pflicht" : "Optional")} - {remaining}",
             StatusClass = timeoutReached && isRequired ? "Blocked" : "Waiting",
             Detail = JoinDetails(
                 isRequired ? "Wartet auf verpflichtenden XDT-Anhang." : "Wartet auf optionalen XDT-Anhang.",
-                remaining)
+                remaining),
+            DisplayDetail = ""
         };
     }
 
@@ -302,7 +320,7 @@ public sealed class InterfaceMonitoringCardStatusService
 
         var (status, statusClass) = attachmentStatus.Reason switch
         {
-            AttachmentProcessingStatusReason.PreparationSucceeded => ("erfolgreich", "Success"),
+            AttachmentProcessingStatusReason.PreparationSucceeded => ("", "Success"),
             AttachmentProcessingStatusReason.AttachmentWait => ("wartet", "Waiting"),
             AttachmentProcessingStatusReason.NoStableAttachment => ("nicht stabil", "Waiting"),
             AttachmentProcessingStatusReason.AttachmentOptionalTimeoutContinueWithoutAttachment => ("übersprungen", "Neutral"),
@@ -310,17 +328,25 @@ public sealed class InterfaceMonitoringCardStatusService
             AttachmentProcessingStatusReason.MultipleSupportedAttachments => ("mehrere Anhänge", "Blocked"),
             AttachmentProcessingStatusReason.MultipleStableAttachments => ("mehrere Anhänge", "Blocked"),
             AttachmentProcessingStatusReason.MultipleAttachmentsAmbiguous => ("mehrere Anhänge", "Blocked"),
-            AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock => ("Timeout", "Blocked"),
+            AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock => ("Pflicht blockiert", "Blocked"),
             AttachmentProcessingStatusReason.PreparationFailed => ("fehlgeschlagen", "Error"),
             AttachmentProcessingStatusReason.ScanError => ("fehlgeschlagen", "Error"),
             _ => attachmentStatus.Success ? ("erfolgreich", "Success") : ("übersprungen", "Neutral")
         };
 
+        var receivedAttachmentName = attachmentStatus.Reason == AttachmentProcessingStatusReason.PreparationSucceeded
+            ? $"{CreateAttachmentExtensionLabel(attachmentStatus)} Empfangen"
+            : input.Name;
+
         return input with
         {
+            Name = receivedAttachmentName,
             Status = status,
             StatusClass = statusClass,
-            Detail = CreateAttachmentDetail(attachmentStatus)
+            Detail = CreateAttachmentDetail(attachmentStatus),
+            DisplayDetail = attachmentStatus.Reason == AttachmentProcessingStatusReason.PreparationSucceeded
+                ? attachmentStatus.TargetFileName ?? FileNameOrEmpty(attachmentStatus.SourcePath)
+                : ""
         };
     }
 
@@ -488,6 +514,24 @@ public sealed class InterfaceMonitoringCardStatusService
             : $"Patient: {patient.PatientNumber}";
     }
 
+    private static string CreatePatientMainText(PatientData? patient, string fallback = "")
+    {
+        if (patient is null)
+        {
+            return fallback;
+        }
+
+        var fullName = string.Join(" ", new[] { patient.FirstName, patient.LastName }.Where(value => !string.IsNullOrWhiteSpace(value)));
+        if (!string.IsNullOrWhiteSpace(fullName))
+        {
+            return fullName;
+        }
+
+        return string.IsNullOrWhiteSpace(patient.PatientNumber)
+            ? fallback
+            : patient.PatientNumber;
+    }
+
     private static string CreateAttachmentDetail(AttachmentProcessingStatus attachmentStatus)
     {
         if (!string.IsNullOrWhiteSpace(attachmentStatus.TargetFileName))
@@ -508,6 +552,15 @@ public sealed class InterfaceMonitoringCardStatusService
         return string.IsNullOrWhiteSpace(path) ? "" : Path.GetFileName(path);
     }
 
+    private static string CreateAttachmentExtensionLabel(AttachmentProcessingStatus attachmentStatus)
+    {
+        var fileName = attachmentStatus.TargetFileName ?? FileNameOrEmpty(attachmentStatus.SourcePath);
+        var extension = Path.GetExtension(fileName);
+        return string.IsNullOrWhiteSpace(extension)
+            ? "Anhang"
+            : extension.TrimStart('.').ToUpperInvariant();
+    }
+
     private static string CreateRemainingTimeText(DateTime startedAtUtc, TimeSpan timeout, DateTime nowUtc)
     {
         if (timeout <= TimeSpan.Zero)
@@ -522,6 +575,32 @@ public sealed class InterfaceMonitoringCardStatusService
         }
 
         return $"noch {remaining:mm\\:ss}";
+    }
+
+    private DateTime GetOrCreateAttachmentWaitStartedAt(
+        InterfaceProfileDefinition interfaceProfile,
+        PendingImportPair pair,
+        DateTime scanTimestamp)
+    {
+        var key = CreateDisplayPairInstanceKey(interfaceProfile.Metadata.Id, pair);
+        if (!_attachmentWaitStartedAtByPairKey.TryGetValue(key, out var startedAt))
+        {
+            startedAt = scanTimestamp;
+            _attachmentWaitStartedAtByPairKey[key] = startedAt;
+        }
+
+        return startedAt;
+    }
+
+    private static string CreateDisplayPairInstanceKey(string interfaceProfileId, PendingImportPair pair)
+    {
+        return string.Join(
+            "|",
+            interfaceProfileId,
+            pair.AisFile.FilePath,
+            pair.AisFile.DetectedAtUtc.Ticks.ToString(),
+            pair.DeviceFile.FilePath,
+            pair.DeviceFile.DetectedAtUtc.Ticks.ToString());
     }
 
     private static DateTime MaxDate(DateTime first, DateTime second)

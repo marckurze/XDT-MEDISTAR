@@ -48,7 +48,8 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         Assert.Equal("Wartet auf Gerät", updated.CurrentStatus);
         Assert.Equal("Patient: Marc Kurze", updated.PatientDisplayText);
         Assert.Equal("patient.gdt", updated.AisFileName);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "Patient erkannt" && input.Detail == "Patient: Marc Kurze");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Name == "Marc Kurze" && input.Status == "" && input.DisplayDetail == "");
+        Assert.DoesNotContain(updated.ExpectedInputs, input => input.Key == "ais" && input.DisplayDetail.Contains(@"C:\Test\AIS", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -65,7 +66,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), DateTime.Today, automaticProcessingEnabled: false);
 
         Assert.Equal("ark1s.xml", updated.DeviceFileName);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Status == "gefunden" && input.Detail.Contains("ark1s.xml"));
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Name == "Empfangen" && input.Status == "" && !input.DisplayDetail.Contains(@"C:\Test\Device", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -82,7 +83,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), DateTime.Today, automaticProcessingEnabled: true);
 
         Assert.Equal("Wartet auf XDT-Anhang", updated.CurrentStatus);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "optional wartet" && input.StatusClass == "Waiting");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status.StartsWith("Optional", StringComparison.Ordinal) && input.StatusClass == "Waiting");
     }
 
     [Fact]
@@ -119,9 +120,10 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         queue.AddOrUpdate(CreateFile(@"C:\Test\Device\ark1s.xml", ImportFileKind.DeviceXml, now.AddSeconds(-20)));
         var scanResult = CreateScanResult(profile, queue, aisFiles: 1, deviceFiles: 1, readyPairs: 1);
 
+        service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now.AddSeconds(-20), automaticProcessingEnabled: true);
         var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now, automaticProcessingEnabled: true);
 
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht wartet" && input.Detail.Contains("noch 00:10"));
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht - noch 00:10");
     }
 
     [Fact]
@@ -151,7 +153,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         Assert.Equal("Success", updated.StatusClass);
         Assert.Equal("result.xdt", updated.ExportFileName);
         Assert.Equal("4701-1.pdf", updated.AttachmentFileName);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "erfolgreich" && input.StatusClass == "Success");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Name == "PDF Empfangen" && input.Status == "" && input.StatusClass == "Success");
     }
 
     [Fact]
@@ -179,7 +181,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
 
         Assert.Equal("XDT-Anhang Pflicht blockiert", updated.CurrentStatus);
         Assert.Equal("Blocked", updated.StatusClass);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Timeout" && input.StatusClass == "Blocked");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht blockiert" && input.StatusClass == "Blocked");
     }
 
     [Fact]

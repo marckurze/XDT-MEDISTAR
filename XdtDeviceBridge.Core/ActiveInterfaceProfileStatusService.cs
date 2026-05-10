@@ -190,7 +190,7 @@ public sealed class ActiveInterfaceProfileStatusService
                 Key: "attachment",
                 Name: "XDT-Anhang",
                 FolderPath: attachmentImportFolder,
-                Status: isAttachmentImportMissing ? "fehlt" : "erwartet",
+                Status: isAttachmentImportMissing ? "fehlt" : FormatRequirementMode(folderOptions.AttachmentRequirementMode),
                 StatusClass: isAttachmentImportMissing ? "Error" : "Neutral",
                 Detail: attachmentStatus));
         }

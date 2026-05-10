@@ -658,6 +658,31 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_RequiredAttachmentTimeoutShouldNotRestartWhenStableTimestampChangesBetweenScans()
+    {
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult());
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: @"C:\Import\Attachments",
+            attachmentExportFolder: @"C:\Export\Attachments",
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            attachmentWaitTimeoutSeconds: 30);
+        var firstSeenPair = CreatePair("patient.gdt", "device.xml", detectedAtUtc: Timestamp, stableAtUtc: Timestamp);
+        var nextScanPair = CreatePair("patient.gdt", "device.xml", detectedAtUtc: Timestamp, stableAtUtc: Timestamp.AddSeconds(30));
+
+        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { firstSeenPair }, true, Timestamp);
+        var timedOut = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { nextScanPair }, true, Timestamp.AddSeconds(30));
+
+        var blocked = Assert.Single(timedOut.Results);
+        Assert.Equal("XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.", blocked.Status);
+        Assert.False(blocked.Success);
+        Assert.Equal(0, processor.CallCount);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_RequiredAttachmentTimeoutShouldMoveKnownFilesToErrorFolderAndKeepUnknownFiles()
     {
         var files = CreateTempImportFiles();
@@ -912,24 +937,30 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.True(File.Exists(unknownFile));
     }
 
-    private static PendingImportPair CreatePair(string aisFilePath, string deviceFilePath)
+    private static PendingImportPair CreatePair(
+        string aisFilePath,
+        string deviceFilePath,
+        DateTime? detectedAtUtc = null,
+        DateTime? stableAtUtc = null)
     {
+        var detectedAt = detectedAtUtc ?? Timestamp;
+        var stableAt = stableAtUtc ?? Timestamp;
         return new PendingImportPair(
             AisFile: new PendingImportFile(
                 FilePath: aisFilePath,
                 FileName: Path.GetFileName(aisFilePath),
                 Kind: ImportFileKind.AisGdt,
                 Status: PendingImportFileStatus.Stable,
-                DetectedAtUtc: Timestamp,
-                StableAtUtc: Timestamp,
+                DetectedAtUtc: detectedAt,
+                StableAtUtc: stableAt,
                 Message: null),
             DeviceFile: new PendingImportFile(
                 FilePath: deviceFilePath,
                 FileName: Path.GetFileName(deviceFilePath),
                 Kind: ImportFileKind.DeviceXml,
                 Status: PendingImportFileStatus.Stable,
-                DetectedAtUtc: Timestamp,
-                StableAtUtc: Timestamp,
+                DetectedAtUtc: detectedAt,
+                StableAtUtc: stableAt,
                 Message: null),
             IsReady: true);
     }

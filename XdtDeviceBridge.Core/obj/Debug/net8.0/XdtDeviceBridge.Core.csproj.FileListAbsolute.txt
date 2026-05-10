@@ -10,3 +10,6 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Cor
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\refint\XdtDeviceBridge.Core.dll
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\XdtDeviceBridge.Core.pdb
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\ref\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Core.deps.json
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Core.pdb

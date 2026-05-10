@@ -80,6 +80,7 @@ public partial class MainWindow : Window
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, bool> _monitoringDetailsExpandedByProfileId = new(StringComparer.OrdinalIgnoreCase);
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -91,6 +92,7 @@ public partial class MainWindow : Window
     private int _draftRuleSequence;
     private CancellationTokenSource? _periodicScanCancellationTokenSource;
     private Task? _periodicScanTask;
+    private bool _refreshingInterfaceMonitoringCards;
     private IReadOnlyList<ExportFieldRecord> _builderTransientAttachmentFields = Array.Empty<ExportFieldRecord>();
     private AttachmentImportCandidateDisplayRow? _builderSelectedAttachmentCandidate;
     private string? _builderPreviewAttachmentTargetPath;
@@ -2273,20 +2275,68 @@ public partial class MainWindow : Window
 
     private void RefreshInterfaceMonitoringCards()
     {
-        _interfaceMonitoringCards.Clear();
-        var isMonitoringActive = _periodicScanCancellationTokenSource is not null;
-        foreach (var row in _activeInterfaceProfileStatusRows)
+        _refreshingInterfaceMonitoringCards = true;
+        try
         {
-            var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
-            var runtimeCard = GetRuntimeMonitoringCard(row);
-            _interfaceMonitoringCards.Add(runtimeCard with
+            _interfaceMonitoringCards.Clear();
+            var isMonitoringActive = _periodicScanCancellationTokenSource is not null;
+            foreach (var row in _activeInterfaceProfileStatusRows)
             {
-                CurrentStatus = runtimeState.CurrentStatus,
-                StatusClass = runtimeState.StatusClass,
-                LastScanText = runtimeState.LastScanText,
-                IsScanAnimationActive = isMonitoringActive,
-                AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein"
-            });
+                var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
+                var runtimeCard = GetRuntimeMonitoringCard(row);
+                _interfaceMonitoringCards.Add(runtimeCard with
+                {
+                    CurrentStatus = runtimeState.CurrentStatus,
+                    StatusClass = runtimeState.StatusClass,
+                    LastScanText = runtimeState.LastScanText,
+                    IsScanAnimationActive = isMonitoringActive,
+                    AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein",
+                    IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId)
+                });
+            }
+        }
+        finally
+        {
+            _refreshingInterfaceMonitoringCards = false;
+        }
+    }
+
+    private bool GetMonitoringDetailsExpanded(string interfaceProfileId)
+    {
+        return _monitoringDetailsExpandedByProfileId.TryGetValue(interfaceProfileId, out var isExpanded)
+            && isExpanded;
+    }
+
+    private void MonitoringDetailsExpander_Expanded(object sender, RoutedEventArgs e)
+    {
+        SetMonitoringDetailsExpanded(sender, isExpanded: true);
+    }
+
+    private void MonitoringDetailsExpander_Collapsed(object sender, RoutedEventArgs e)
+    {
+        SetMonitoringDetailsExpanded(sender, isExpanded: false);
+    }
+
+    private void SetMonitoringDetailsExpanded(object sender, bool isExpanded)
+    {
+        if (_refreshingInterfaceMonitoringCards)
+        {
+            return;
+        }
+
+        if (sender is not FrameworkElement element
+            || element.DataContext is not InterfaceMonitoringCardDisplay card)
+        {
+            return;
+        }
+
+        _monitoringDetailsExpandedByProfileId[card.InterfaceProfileId] = isExpanded;
+        if (_interfaceMonitoringRuntimeCards.TryGetValue(card.InterfaceProfileId, out var runtimeCard))
+        {
+            _interfaceMonitoringRuntimeCards[card.InterfaceProfileId] = runtimeCard with
+            {
+                IsDetailsExpanded = isExpanded
+            };
         }
     }
 
@@ -2365,7 +2415,8 @@ public partial class MainWindow : Window
                 FolderDetails: Array.Empty<InterfaceMonitoringDetailItem>(),
                 AttachmentImportFolder: "",
                 AttachmentExportFolder: "",
-                AttachmentConfigurationStatus: "kein Anhang konfiguriert");
+                AttachmentConfigurationStatus: "kein Anhang konfiguriert",
+                IsDetailsExpanded: GetMonitoringDetailsExpanded(profile.Metadata.Id));
     }
 
     private void SetAllMonitoringRuntimeStates(string currentStatus, string statusClass)
@@ -2897,6 +2948,10 @@ public partial class MainWindow : Window
             packageEvaluation,
             timestamp,
             EnableAutomaticPairProcessingCheckBox.IsChecked == true);
+        updatedCard = updatedCard with
+        {
+            IsDetailsExpanded = GetMonitoringDetailsExpanded(profile.Metadata.Id)
+        };
         _interfaceMonitoringRuntimeCards[profile.Metadata.Id] = updatedCard;
         _interfaceMonitoringRuntimeStates[profile.Metadata.Id] = new InterfaceMonitoringRuntimeState(
             updatedCard.CurrentStatus,
@@ -2915,6 +2970,10 @@ public partial class MainWindow : Window
             result,
             timestamp,
             EnableAutomaticPairProcessingCheckBox.IsChecked == true);
+        updatedCard = updatedCard with
+        {
+            IsDetailsExpanded = GetMonitoringDetailsExpanded(profile.Metadata.Id)
+        };
         _interfaceMonitoringRuntimeCards[profile.Metadata.Id] = updatedCard;
         _interfaceMonitoringRuntimeStates[profile.Metadata.Id] = new InterfaceMonitoringRuntimeState(
             updatedCard.CurrentStatus,

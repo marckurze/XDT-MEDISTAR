@@ -24,4 +24,5 @@ public sealed record InterfaceMonitoringCardDisplay(
     IReadOnlyList<InterfaceMonitoringDetailItem> FolderDetails,
     string AttachmentImportFolder,
     string AttachmentExportFolder,
-    string AttachmentConfigurationStatus);
+    string AttachmentConfigurationStatus,
+    bool IsDetailsExpanded = false);

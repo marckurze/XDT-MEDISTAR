@@ -14,3 +14,6 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDevice
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\refint\XdtDeviceBridge.Infrastructure.dll
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\XdtDeviceBridge.Infrastructure.pdb
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\ref\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Infrastructure.deps.json
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Infrastructure.pdb

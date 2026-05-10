@@ -106,3 +106,17 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\refint\XdtDeviceBr
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.pdb
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\XdtDeviceBridge.Tests.genruntimeconfig.cache
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\obj\Debug\net8.0\ref\XdtDeviceBridge.Tests.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\.msCoverageSourceRootsMapping_XdtDeviceBridge.Tests
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\CoverletSourceRootsMapping_XdtDeviceBridge.Tests
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\testhost.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\testhost.exe
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\xunit.runner.visualstudio.testadapter.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\xunit.runner.reporters.netcoreapp10.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\xunit.runner.utility.netcoreapp10.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\TestData\nidek-ark1s-sample.xml
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\TestData\sample-gdt-ansi.gdt
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\TestData\sample-gdt-utf8.gdt
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.deps.json
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.runtimeconfig.json
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.pdb

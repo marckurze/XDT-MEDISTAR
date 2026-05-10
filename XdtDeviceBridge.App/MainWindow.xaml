@@ -208,7 +208,7 @@
                                                                 <Border Grid.Column="2" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.35"/>
                                                             </Grid>
                                                             <Rectangle Height="46"
-                                                                       Width="34"
+                                                                       Width="17"
                                                                        RadiusX="3"
                                                                        RadiusY="3"
                                                                        HorizontalAlignment="Left"
@@ -288,19 +288,42 @@
                                                                         ToolTip="{Binding Detail}">
                                                                     <StackPanel>
                                                                         <TextBlock Text="{Binding Name}" FontWeight="Bold" TextWrapping="Wrap"/>
-                                                                        <TextBlock Text="{Binding Status}" Foreground="DimGray" TextWrapping="Wrap"/>
-                                                                        <TextBlock Text="{Binding Detail}"
+                                                                        <TextBlock Text="{Binding Status}" Foreground="DimGray" TextWrapping="Wrap">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding Status}" Value="">
+                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
+                                                                        <TextBlock Text="{Binding DisplayDetail}"
                                                                                    Foreground="#4B5563"
                                                                                    FontSize="10"
                                                                                    TextWrapping="Wrap"
-                                                                                   MaxHeight="34"/>
+                                                                                   MaxHeight="34">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding DisplayDetail}" Value="">
+                                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
                                                                     </StackPanel>
                                                                 </Border>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
 
-                                                    <Expander Header="Details / Ordner" IsExpanded="False">
+                                                    <Expander Header="Details"
+                                                              IsExpanded="{Binding IsDetailsExpanded, Mode=OneWay}"
+                                                              Expanded="MonitoringDetailsExpander_Expanded"
+                                                              Collapsed="MonitoringDetailsExpander_Collapsed">
                                                         <StackPanel Margin="0,6,0,0">
                                                             <TextBlock Text="Statusdetails" FontWeight="Bold" Margin="0,0,0,4"/>
                                                             <Grid Margin="0,0,0,6">

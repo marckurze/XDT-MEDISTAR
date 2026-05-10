@@ -656,9 +656,7 @@ public sealed class AutoImportPairProcessingCoordinator
             "|",
             CreatePairKey(interfaceProfileId, pair.AisFile.FilePath, pair.DeviceFile.FilePath),
             pair.AisFile.DetectedAtUtc.Ticks.ToString(),
-            pair.AisFile.StableAtUtc?.Ticks.ToString() ?? "",
-            pair.DeviceFile.DetectedAtUtc.Ticks.ToString(),
-            pair.DeviceFile.StableAtUtc?.Ticks.ToString() ?? "");
+            pair.DeviceFile.DetectedAtUtc.Ticks.ToString());
     }
 
     private sealed record AttachmentGateDecision(

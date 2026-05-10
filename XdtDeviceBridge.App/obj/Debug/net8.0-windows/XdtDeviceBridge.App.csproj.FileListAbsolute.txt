@@ -24,3 +24,8 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\refint\XdtDe
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\XdtDeviceBridge.App.pdb
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\XdtDeviceBridge.App.genruntimeconfig.cache
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\ref\XdtDeviceBridge.App.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.exe
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.deps.json
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.runtimeconfig.json
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.dll
+C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.pdb

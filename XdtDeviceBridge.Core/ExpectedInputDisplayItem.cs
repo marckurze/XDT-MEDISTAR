@@ -6,4 +6,5 @@ public sealed record ExpectedInputDisplayItem(
     string FolderPath,
     string Status,
     string StatusClass,
-    string Detail);
+    string Detail,
+    string DisplayDetail = "");
