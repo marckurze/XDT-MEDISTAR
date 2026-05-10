@@ -1,6 +1,7 @@
 namespace XdtDeviceBridge.Core;
 
 public sealed record ExpectedInputDisplayItem(
+    string Key,
     string Name,
     string FolderPath,
     string Status,

@@ -187,6 +187,7 @@ public sealed class ActiveInterfaceProfileStatusService
         {
             var isAttachmentImportMissing = string.IsNullOrWhiteSpace(folderOptions.AttachmentImportFolder);
             expectedInputs.Add(new ExpectedInputDisplayItem(
+                Key: "attachment",
                 Name: "XDT-Anhang",
                 FolderPath: attachmentImportFolder,
                 Status: isAttachmentImportMissing ? "fehlt" : "erwartet",
@@ -220,6 +221,13 @@ public sealed class ActiveInterfaceProfileStatusService
             ScanIntervalText: $"{Math.Max(1, folderOptions.AutoImportScanIntervalSeconds)} s",
             LastScanText: "-",
             AutomaticProcessingText: "Nein",
+            PatientDisplayText: "",
+            AisFileName: "",
+            DeviceFileName: "",
+            AttachmentFileName: "",
+            ExportFileName: "",
+            LastSuccessfulExportText: "",
+            LastMessage: "",
             ExpectedInputs: expectedInputs,
             FolderDetails: folderDetails,
             AttachmentImportFolder: attachmentImportFolder,
@@ -235,6 +243,7 @@ public sealed class ActiveInterfaceProfileStatusService
     {
         var isMissing = string.IsNullOrWhiteSpace(folderPath);
         return new ExpectedInputDisplayItem(
+            Key: CreateInputKey(name),
             Name: name,
             FolderPath: DisplayOrMissing(folderPath, missingMessage),
             Status: isMissing ? "fehlt" : configuredStatus,
@@ -295,5 +304,12 @@ public sealed class ActiveInterfaceProfileStatusService
         return string.IsNullOrWhiteSpace(value)
             ? missingMessage
             : value;
+    }
+
+    private static string CreateInputKey(string name)
+    {
+        return name.StartsWith("AIS", StringComparison.OrdinalIgnoreCase)
+            ? "ais"
+            : "device";
     }
 }

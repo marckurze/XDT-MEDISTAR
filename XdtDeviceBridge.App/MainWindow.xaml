@@ -218,6 +218,16 @@
                                                                TextWrapping="Wrap"
                                                                Margin="0,0,0,6"/>
 
+                                                    <StackPanel Margin="0,0,0,6">
+                                                        <TextBlock Text="{Binding PatientDisplayText}" TextWrapping="Wrap" Foreground="#374151"/>
+                                                        <TextBlock Text="{Binding AisFileName, StringFormat=AIS-Datei: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
+                                                        <TextBlock Text="{Binding DeviceFileName, StringFormat=Gerätedatei: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
+                                                        <TextBlock Text="{Binding AttachmentFileName, StringFormat=Anhang: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
+                                                        <TextBlock Text="{Binding ExportFileName, StringFormat=Export: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
+                                                        <TextBlock Text="{Binding LastSuccessfulExportText, StringFormat=Letzter erfolgreicher Export: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
+                                                        <TextBlock Text="{Binding LastMessage, StringFormat=Letzte Meldung: {0}}" TextWrapping="Wrap" Foreground="DimGray"/>
+                                                    </StackPanel>
+
                                                     <Expander Header="Details / Ordner" IsExpanded="False">
                                                         <ItemsControl ItemsSource="{Binding FolderDetails}" Margin="0,6,0,0">
                                                             <ItemsControl.ItemTemplate>

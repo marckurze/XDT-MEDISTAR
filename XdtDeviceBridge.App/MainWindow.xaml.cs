@@ -53,6 +53,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
     private readonly AutoImportPairProcessingCoordinator _autoImportPairProcessingCoordinator = new();
     private readonly AutoImportPackageStateService _autoImportPackageStateService = new();
+    private readonly InterfaceMonitoringCardStatusService _interfaceMonitoringCardStatusService = new();
     private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
     private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
     private readonly BuilderTestExportService _builderTestExportService = new();
@@ -75,6 +76,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -2272,7 +2274,8 @@ public partial class MainWindow : Window
         foreach (var row in _activeInterfaceProfileStatusRows)
         {
             var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
-            _interfaceMonitoringCards.Add(row.MonitoringCard with
+            var runtimeCard = GetRuntimeMonitoringCard(row);
+            _interfaceMonitoringCards.Add(runtimeCard with
             {
                 CurrentStatus = runtimeState.CurrentStatus,
                 StatusClass = runtimeState.StatusClass,
@@ -2284,9 +2287,77 @@ public partial class MainWindow : Window
 
     private InterfaceMonitoringRuntimeState GetMonitoringRuntimeState(string interfaceProfileId)
     {
+        if (_interfaceMonitoringRuntimeCards.TryGetValue(interfaceProfileId, out var card))
+        {
+            return new InterfaceMonitoringRuntimeState(
+                card.CurrentStatus,
+                card.StatusClass,
+                card.LastScanText);
+        }
+
         return _interfaceMonitoringRuntimeStates.TryGetValue(interfaceProfileId, out var state)
             ? state
             : new InterfaceMonitoringRuntimeState("Gestoppt", "Neutral", "-");
+    }
+
+    private InterfaceMonitoringCardDisplay GetRuntimeMonitoringCard(ActiveInterfaceProfileStatusRow row)
+    {
+        if (!_interfaceMonitoringRuntimeCards.TryGetValue(row.MonitoringCard.InterfaceProfileId, out var runtimeCard))
+        {
+            return row.MonitoringCard;
+        }
+
+        return row.MonitoringCard with
+        {
+            CurrentStatus = runtimeCard.CurrentStatus,
+            StatusClass = runtimeCard.StatusClass,
+            LastScanText = runtimeCard.LastScanText,
+            AutomaticProcessingText = runtimeCard.AutomaticProcessingText,
+            PatientDisplayText = runtimeCard.PatientDisplayText,
+            AisFileName = runtimeCard.AisFileName,
+            DeviceFileName = runtimeCard.DeviceFileName,
+            AttachmentFileName = runtimeCard.AttachmentFileName,
+            ExportFileName = runtimeCard.ExportFileName,
+            LastSuccessfulExportText = runtimeCard.LastSuccessfulExportText,
+            LastMessage = runtimeCard.LastMessage,
+            ExpectedInputs = runtimeCard.ExpectedInputs
+        };
+    }
+
+    private InterfaceMonitoringCardDisplay GetRuntimeMonitoringCard(InterfaceProfileDefinition profile)
+    {
+        var row = _activeInterfaceProfileStatusRows.FirstOrDefault(currentRow =>
+            string.Equals(currentRow.MonitoringCard.InterfaceProfileId, profile.Metadata.Id, StringComparison.Ordinal));
+        if (row is not null)
+        {
+            return GetRuntimeMonitoringCard(row);
+        }
+
+        return _interfaceMonitoringRuntimeCards.TryGetValue(profile.Metadata.Id, out var card)
+            ? card
+            : new InterfaceMonitoringCardDisplay(
+                InterfaceProfileId: profile.Metadata.Id,
+                InterfaceProfileName: profile.Metadata.Name,
+                AisName: profile.AisProfileId,
+                DeviceName: profile.DeviceProfileId,
+                ExportProfileName: profile.ExportProfileId,
+                CurrentStatus: "Gestoppt",
+                StatusClass: "Neutral",
+                ScanIntervalText: $"{Math.Max(1, profile.FolderOptions.AutoImportScanIntervalSeconds)} s",
+                LastScanText: "-",
+                AutomaticProcessingText: "Nein",
+                PatientDisplayText: "",
+                AisFileName: "",
+                DeviceFileName: "",
+                AttachmentFileName: "",
+                ExportFileName: "",
+                LastSuccessfulExportText: "",
+                LastMessage: "",
+                ExpectedInputs: Array.Empty<ExpectedInputDisplayItem>(),
+                FolderDetails: Array.Empty<InterfaceMonitoringDetailItem>(),
+                AttachmentImportFolder: "",
+                AttachmentExportFolder: "",
+                AttachmentConfigurationStatus: "kein Anhang konfiguriert");
     }
 
     private void SetAllMonitoringRuntimeStates(string currentStatus, string statusClass)
@@ -2295,6 +2366,11 @@ public partial class MainWindow : Window
         {
             var previousState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
             _interfaceMonitoringRuntimeStates[row.MonitoringCard.InterfaceProfileId] = previousState with
+            {
+                CurrentStatus = currentStatus,
+                StatusClass = statusClass
+            };
+            _interfaceMonitoringRuntimeCards[row.MonitoringCard.InterfaceProfileId] = GetRuntimeMonitoringCard(row) with
             {
                 CurrentStatus = currentStatus,
                 StatusClass = statusClass
@@ -2315,6 +2391,16 @@ public partial class MainWindow : Window
             StatusClass = statusClass,
             LastScanText = string.IsNullOrWhiteSpace(lastScanText) ? previousState.LastScanText : lastScanText
         };
+
+        if (_interfaceMonitoringRuntimeCards.TryGetValue(interfaceProfileId, out var card))
+        {
+            _interfaceMonitoringRuntimeCards[interfaceProfileId] = card with
+            {
+                CurrentStatus = currentStatus,
+                StatusClass = statusClass,
+                LastScanText = string.IsNullOrWhiteSpace(lastScanText) ? card.LastScanText : lastScanText
+            };
+        }
     }
 
     private void StartPeriodicScan_Click(object sender, RoutedEventArgs e)
@@ -2420,12 +2506,14 @@ public partial class MainWindow : Window
         var profileName = profile?.Metadata.Name ?? result.InterfaceProfileId;
         PeriodicScanLastRunText.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
         PeriodicScanReadyPairsText.Text = result.ReadyPairs.ToString();
-        var lastScanText = PeriodicScanLastRunText.Text;
-        SetMonitoringRuntimeState(
-            result.InterfaceProfileId,
-            CreateMonitoringStatusFromScanResult(result),
-            CreateMonitoringStatusClassFromScanResult(result),
-            lastScanText);
+        var timestamp = DateTime.Now;
+        var packageEvaluation = profile is null
+            ? null
+            : _autoImportPackageStateService.Evaluate(profile, result.Queue, timestamp);
+        if (profile is not null)
+        {
+            UpdateMonitoringCardFromScan(profile, result, packageEvaluation, timestamp);
+        }
 
         var builder = new StringBuilder();
         builder.AppendLine($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} - {profileName}");
@@ -2468,7 +2556,7 @@ public partial class MainWindow : Window
             AddReadyPairsFromScanResult(profile, result);
         }
 
-        var automaticProcessingResult = TryProcessReadyPairsAutomatically(profile, result);
+        var automaticProcessingResult = TryProcessReadyPairsAutomatically(profile, result, packageEvaluation);
         if (automaticProcessingResult is null)
         {
             if (shouldAppendScanSummary)
@@ -2488,15 +2576,6 @@ public partial class MainWindow : Window
                 ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
                 ActiveProfileScanResultTextBox.AppendText($"Automatische Fehler: {automaticProcessingResult.ErrorCount}");
             }
-        }
-
-        if (automaticProcessingResult is not null)
-        {
-            SetMonitoringRuntimeState(
-                result.InterfaceProfileId,
-                CreateMonitoringStatusFromAutomaticProcessing(automaticProcessingResult),
-                CreateMonitoringStatusClassFromAutomaticProcessing(automaticProcessingResult),
-                lastScanText);
         }
 
         RefreshInterfaceMonitoringCards();
@@ -2544,6 +2623,45 @@ public partial class MainWindow : Window
         }
 
         return builder.ToString();
+    }
+
+    private void UpdateMonitoringCardFromScan(
+        InterfaceProfileDefinition profile,
+        AutoImportScanResult result,
+        AutoImportPackageEvaluationResult? packageEvaluation,
+        DateTime timestamp)
+    {
+        var currentCard = GetRuntimeMonitoringCard(profile);
+        var updatedCard = _interfaceMonitoringCardStatusService.ApplyScanResult(
+            currentCard,
+            profile,
+            result,
+            packageEvaluation,
+            timestamp,
+            EnableAutomaticPairProcessingCheckBox.IsChecked == true);
+        _interfaceMonitoringRuntimeCards[profile.Metadata.Id] = updatedCard;
+        _interfaceMonitoringRuntimeStates[profile.Metadata.Id] = new InterfaceMonitoringRuntimeState(
+            updatedCard.CurrentStatus,
+            updatedCard.StatusClass,
+            updatedCard.LastScanText);
+    }
+
+    private void UpdateMonitoringCardFromProcessingResult(
+        InterfaceProfileDefinition profile,
+        AutoImportPairProcessingResult result,
+        DateTime timestamp)
+    {
+        var currentCard = GetRuntimeMonitoringCard(profile);
+        var updatedCard = _interfaceMonitoringCardStatusService.ApplyProcessingResult(
+            currentCard,
+            result,
+            timestamp,
+            EnableAutomaticPairProcessingCheckBox.IsChecked == true);
+        _interfaceMonitoringRuntimeCards[profile.Metadata.Id] = updatedCard;
+        _interfaceMonitoringRuntimeStates[profile.Metadata.Id] = new InterfaceMonitoringRuntimeState(
+            updatedCard.CurrentStatus,
+            updatedCard.StatusClass,
+            updatedCard.LastScanText);
     }
 
     private static string CreateMonitoringStatusFromScanResult(AutoImportScanResult result)
@@ -2630,7 +2748,8 @@ public partial class MainWindow : Window
 
     private AutoImportPairProcessingBatchResult? TryProcessReadyPairsAutomatically(
         InterfaceProfileDefinition? interfaceProfile,
-        AutoImportScanResult scanResult)
+        AutoImportScanResult scanResult,
+        AutoImportPackageEvaluationResult? packageEvaluation)
     {
         if (EnableAutomaticPairProcessingCheckBox.IsChecked != true || _periodicScanCancellationTokenSource is null)
         {
@@ -2656,7 +2775,7 @@ public partial class MainWindow : Window
         }
 
         var timestamp = DateTime.Now;
-        var packageEvaluation = _autoImportPackageStateService.Evaluate(
+        packageEvaluation ??= _autoImportPackageStateService.Evaluate(
             interfaceProfile,
             scanResult.Queue,
             timestamp);
@@ -2687,6 +2806,7 @@ public partial class MainWindow : Window
 
             if (result.WasSkipped)
             {
+                UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
                 AppendPairMonitoringEvent(interfaceProfile, result, "status", $"{interfaceProfile.Metadata.Name}: {result.Status}");
                 foreach (var message in result.Messages)
                 {
@@ -2698,6 +2818,7 @@ public partial class MainWindow : Window
 
             if (result.Success)
             {
+                UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
                 AppendPairMonitoringEvent(
                     interfaceProfile,
                     result,
@@ -2706,6 +2827,7 @@ public partial class MainWindow : Window
             }
             else
             {
+                UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
                 AppendPairMonitoringEvent(
                     interfaceProfile,
                     result,
@@ -2812,11 +2934,8 @@ public partial class MainWindow : Window
                     builder.AppendLine($"Geräte-Dateien erkannt: {result.DeviceFilesDetected}");
                     builder.AppendLine($"Dateien in Warteliste: {result.FilesQueued}");
                     builder.AppendLine($"Fertige Paare: {result.ReadyPairs}");
-                    SetMonitoringRuntimeState(
-                        profile.Metadata.Id,
-                        CreateMonitoringStatusFromScanResult(result),
-                        CreateMonitoringStatusClassFromScanResult(result),
-                        scanTimestampText);
+                    var packageEvaluation = _autoImportPackageStateService.Evaluate(profile, result.Queue, DateTime.Now);
+                    UpdateMonitoringCardFromScan(profile, result, packageEvaluation, DateTime.Now);
 
                     if (result.Messages.Count == 0)
                     {
