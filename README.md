@@ -112,7 +112,7 @@ Funktionen:
 
 Wichtig: Es gibt keinen Windows-Dienst, keinen Autostart und aktuell keinen FileSystemWatcher. Die Ueberwachung basiert auf periodischem Scan.
 
-Die Monitoring-Meldungen im Tab `Verarbeitung` werden dedupliziert: Wiederholt ein Scan denselben technischen Zustand oder dieselbe Statusmeldung, wird sie nicht erneut als neues Ereignis angehängt. Die Übersicht der aktiven Schnittstellenprofile zeigt zusätzlich die konfigurierten XDT-Anhang Import-/Exportordner oder `kein Anhang konfiguriert`. Damit ist die spätere Umstellung auf eine kachel- bzw. radarartige Monitoring-Ansicht fachlich vorbereitet, ohne dass bereits eine Radar-Animation umgesetzt ist.
+Die Monitoring-Meldungen im Tab `Verarbeitung` werden dedupliziert: Wiederholt ein Scan denselben technischen Zustand oder dieselbe Statusmeldung, wird sie nicht erneut als neues Ereignis angehängt. Die Übersicht der aktiven Schnittstellenprofile enthält jetzt einen `Schnittstellen-Monitor` mit Karten pro aktiver Schnittstelle. Die Karten zeigen Profilzuordnung, Scanstatus, erwartete Eingänge wie AIS-Datei, Gerätedatei und optional XDT-Anhang sowie ausklappbare Ordnerdetails. Die technische Detailtabelle bleibt als eingeklappter Fallback erhalten. Damit ist die spätere Umstellung auf eine radarartige Monitoring-Ansicht fachlich vorbereitet, ohne dass bereits eine Radar-Animation umgesetzt ist.
 
 ### 4. Optionale automatische Verarbeitung
 

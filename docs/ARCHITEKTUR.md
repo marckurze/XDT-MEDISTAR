@@ -45,7 +45,7 @@ Aktueller Stand:
 - Dateien werden nur berücksichtigt, wenn sie stabil und lesbar sind.
 - Es wird keine unbekannte Datei gelöscht oder verschoben.
 
-Die Monitoring-Anzeige ist als Zwischenschritt in Richtung kachel-/radarartiger Oberfläche vorbereitet. Pro aktivem Schnittstellenprofil werden neben AIS-, Geräte- und Exportordner auch die XDT-Anhang Import-/Exportordner bzw. `kein Anhang konfiguriert` angezeigt. Ein dedupliziertes Eventmodell protokolliert Monitoring-Ereignisse nur bei Statusänderungen; identische Scan- oder Blockademeldungen werden nicht bei jedem Intervall erneut angehängt. Die optische Radar-Animation ist damit noch nicht umgesetzt, aber die fachlichen Displaymodelle pro Schnittstelle sind vorbereitet.
+Die Monitoring-Anzeige ist als Zwischenschritt in Richtung kachel-/radarartiger Oberfläche vorbereitet. Pro aktivem Schnittstellenprofil gibt es im Tab `Verarbeitung` eine Karte mit Profilzuordnung, Scanstatus, erwarteten Eingängen und ausklappbaren Ordnerdetails. Neben AIS-, Geräte- und Exportordner werden dort auch die XDT-Anhang Import-/Exportordner bzw. `kein Anhang konfiguriert` angezeigt. Die bestehende technische Tabelle bleibt als eingeklappte Detailansicht erhalten. Ein dedupliziertes Eventmodell protokolliert Monitoring-Ereignisse nur bei Statusänderungen; identische Scan- oder Blockademeldungen werden nicht bei jedem Intervall erneut angehängt. Die optische Radar-Animation ist damit noch nicht umgesetzt, aber die fachlichen Displaymodelle pro Schnittstelle sind vorbereitet.
 
 ### 1.3 Optionale automatische Verarbeitung
 

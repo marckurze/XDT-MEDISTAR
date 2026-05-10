@@ -19,15 +19,72 @@
 
                         <GroupBox Header="Aktive Schnittstellenprofile" Grid.Row="0" Margin="0,0,0,8">
                             <Grid Margin="8">
+                                <Grid.Resources>
+                                    <Style x:Key="MonitoringCardBorderStyle" TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="#9CA3AF"/>
+                                        <Setter Property="Background" Value="#F9FAFB"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="CornerRadius" Value="6"/>
+                                        <Setter Property="Padding" Value="10"/>
+                                        <Setter Property="Margin" Value="0,0,10,10"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Active">
+                                                <Setter Property="BorderBrush" Value="#2563EB"/>
+                                                <Setter Property="Background" Value="#EFF6FF"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
+                                                <Setter Property="BorderBrush" Value="#D97706"/>
+                                                <Setter Property="Background" Value="#FFFBEB"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Success">
+                                                <Setter Property="BorderBrush" Value="#16A34A"/>
+                                                <Setter Property="Background" Value="#F0FDF4"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
+                                                <Setter Property="BorderBrush" Value="#DC2626"/>
+                                                <Setter Property="Background" Value="#FEF2F2"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Blocked">
+                                                <Setter Property="BorderBrush" Value="#C2410C"/>
+                                                <Setter Property="Background" Value="#FFF7ED"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                    <Style x:Key="MonitoringInputBadgeStyle" TargetType="Border">
+                                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                        <Setter Property="Background" Value="White"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="CornerRadius" Value="4"/>
+                                        <Setter Property="Padding" Value="6"/>
+                                        <Setter Property="Margin" Value="0,0,6,6"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
+                                                <Setter Property="BorderBrush" Value="#DC2626"/>
+                                                <Setter Property="Background" Value="#FEF2F2"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
+                                                <Setter Property="BorderBrush" Value="#D97706"/>
+                                                <Setter Property="Background" Value="#FFFBEB"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusClass}" Value="Success">
+                                                <Setter Property="BorderBrush" Value="#16A34A"/>
+                                                <Setter Property="Background" Value="#F0FDF4"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Resources>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="220"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="150"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="170"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
@@ -66,22 +123,134 @@
                                     <TextBlock x:Name="PeriodicScanReadyPairsText" Text="0" MinWidth="40" Margin="0,3,0,8"/>
                                     <CheckBox x:Name="EnableAutomaticPairProcessingCheckBox"
                                               Content="Gefundene Dateipaare automatisch verarbeiten"
-                                              Margin="0,3,16,8"/>
+                                              Margin="0,3,16,8"
+                                              Checked="EnableAutomaticPairProcessingCheckBox_Changed"
+                                              Unchecked="EnableAutomaticPairProcessingCheckBox_Changed"/>
                                     <TextBlock Text="Automatische Verarbeitung erfolgt nur während der manuell gestarteten Überwachung. Importdateien werden nicht gelöscht oder verschoben."
                                                Foreground="DarkRed"
                                                FontWeight="Bold"
                                                TextWrapping="Wrap"
                                                Margin="0,3,0,8"/>
                                 </WrapPanel>
-                                <DataGrid Grid.Row="3"
-                                          x:Name="ActiveInterfaceProfilesGrid"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          CanUserAddRows="False"
-                                          CanUserDeleteRows="False"
-                                          HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto"
-                                          MinHeight="180">
+                                <TextBlock Grid.Row="3"
+                                           Text="Schnittstellen-Monitor"
+                                           FontWeight="Bold"
+                                           Margin="0,4,0,4"/>
+                                <ItemsControl Grid.Row="4"
+                                              x:Name="InterfaceMonitoringCardsItemsControl"
+                                              Margin="0,0,0,4">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource MonitoringCardBorderStyle}"
+                                                    Width="360"
+                                                    MinHeight="210">
+                                                <StackPanel>
+                                                    <DockPanel LastChildFill="False" Margin="0,0,0,6">
+                                                        <TextBlock Text="{Binding InterfaceProfileName}"
+                                                                   FontWeight="Bold"
+                                                                   FontSize="14"
+                                                                   TextWrapping="Wrap"
+                                                                   DockPanel.Dock="Left"
+                                                                   MaxWidth="230"/>
+                                                        <Border DockPanel.Dock="Right"
+                                                                Background="#E5E7EB"
+                                                                CornerRadius="4"
+                                                                Padding="6,2"
+                                                                Margin="8,0,0,0">
+                                                            <TextBlock Text="{Binding CurrentStatus}"
+                                                                       FontWeight="Bold"
+                                                                       TextWrapping="Wrap"/>
+                                                        </Border>
+                                                    </DockPanel>
+
+                                                    <Grid Margin="0,0,0,8">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="86"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+                                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS:" FontWeight="Bold" Margin="0,0,6,2"/>
+                                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding AisName}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Gerät:" FontWeight="Bold" Margin="0,0,6,2"/>
+                                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DeviceName}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Export:" FontWeight="Bold" Margin="0,0,6,0"/>
+                                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ExportProfileName}" TextWrapping="Wrap"/>
+                                                    </Grid>
+
+                                                    <WrapPanel Margin="0,0,0,8">
+                                                        <TextBlock Text="{Binding ScanIntervalText, StringFormat=Intervall: {0}}" Margin="0,0,12,4"/>
+                                                        <TextBlock Text="{Binding LastScanText, StringFormat=Letzter Scan: {0}}" Margin="0,0,12,4"/>
+                                                        <TextBlock Text="{Binding AutomaticProcessingText, StringFormat=Automatik: {0}}" Margin="0,0,0,4"/>
+                                                    </WrapPanel>
+
+                                                    <TextBlock Text="Erwartete Eingänge" FontWeight="Bold" Margin="0,0,0,4"/>
+                                                    <ItemsControl ItemsSource="{Binding ExpectedInputs}" Margin="0,0,0,6">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Style="{StaticResource MonitoringInputBadgeStyle}"
+                                                                        Width="104"
+                                                                        ToolTip="{Binding Detail}">
+                                                                    <StackPanel>
+                                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" TextWrapping="Wrap"/>
+                                                                        <TextBlock Text="{Binding Status}" Foreground="DimGray" TextWrapping="Wrap"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <TextBlock Text="{Binding AttachmentConfigurationStatus}"
+                                                               Foreground="DimGray"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,0,0,6"/>
+
+                                                    <Expander Header="Details / Ordner" IsExpanded="False">
+                                                        <ItemsControl ItemsSource="{Binding FolderDetails}" Margin="0,6,0,0">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Grid Margin="0,0,0,3">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="130"/>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                                        <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap"/>
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </Expander>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Expander Grid.Row="5"
+                                          Header="Technische Detailansicht"
+                                          IsExpanded="False"
+                                          Margin="0,4,0,8">
+                                    <DataGrid x:Name="ActiveInterfaceProfilesGrid"
+                                              AutoGenerateColumns="False"
+                                              IsReadOnly="True"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              HorizontalScrollBarVisibility="Auto"
+                                              VerticalScrollBarVisibility="Auto"
+                                              MinHeight="180">
                                     <DataGrid.Resources>
                                         <Style x:Key="TrimmedCellTextStyle" TargetType="TextBlock">
                                             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -157,12 +326,13 @@
                                         </DataGridTextColumn>
                                         <DataGridTextColumn Header="Status" Binding="{Binding ProcessingStatus}" MinWidth="220" Width="*"/>
                                     </DataGrid.Columns>
-                                </DataGrid>
-                                <TextBlock Grid.Row="4"
-                                           Text="Scan-Ergebnis"
+                                    </DataGrid>
+                                </Expander>
+                                <TextBlock Grid.Row="6"
+                                           Text="Technische Scan-Zusammenfassung"
                                            FontWeight="Bold"
                                            Margin="0,8,0,4"/>
-                                <TextBox Grid.Row="5"
+                                <TextBox Grid.Row="7"
                                          x:Name="ActiveProfileScanResultTextBox"
                                          IsReadOnly="True"
                                          AcceptsReturn="True"
@@ -171,11 +341,11 @@
                                          TextWrapping="NoWrap"
                                          MinHeight="120"
                                          Text="Noch kein Scan ausgeführt."/>
-                                <TextBlock Grid.Row="6"
+                                <TextBlock Grid.Row="8"
                                            Text="Gefundene Dateipaare"
                                            FontWeight="Bold"
                                            Margin="0,8,0,4"/>
-                                <DataGrid Grid.Row="7"
+                                <DataGrid Grid.Row="9"
                                           x:Name="ScannedImportPairsGrid"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
@@ -193,7 +363,7 @@
                                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="160" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <Button Grid.Row="8"
+                                <Button Grid.Row="10"
                                         x:Name="ProcessSelectedImportPairButton"
                                         Content="Ausgewähltes Paar verarbeiten"
                                         Width="240"
@@ -204,7 +374,7 @@
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Meldungen" Grid.Row="1" Margin="0,0,0,8">
+                        <GroupBox Header="Monitoring-Ereignisse" Grid.Row="1" Margin="0,0,0,8">
                             <TextBox x:Name="MessagesTextBox"
                                      Margin="8"
                                      IsReadOnly="True"

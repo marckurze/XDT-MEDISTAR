@@ -113,7 +113,7 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("kein Anhang konfiguriert", row.AttachmentExportFolder);
         Assert.Equal("kein Anhang konfiguriert", row.AttachmentConfigurationStatus);
         Assert.Equal("kein Anhang konfiguriert", row.MonitoringCard.AttachmentConfigurationStatus);
-        Assert.Contains(row.MonitoringCard.ExpectedInputs, input => input.Name == "XDT-Anhang");
+        Assert.DoesNotContain(row.MonitoringCard.ExpectedInputs, input => input.Name == "XDT-Anhang");
     }
 
     [Fact]
@@ -140,6 +140,7 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("XDT-Anhang aktiv (Pflicht)", row.AttachmentConfigurationStatus);
         Assert.Equal(row.AttachmentImportFolder, row.MonitoringCard.AttachmentImportFolder);
         Assert.Equal(row.AttachmentExportFolder, row.MonitoringCard.AttachmentExportFolder);
+        Assert.Contains(row.MonitoringCard.ExpectedInputs, input => input.Name == "XDT-Anhang");
     }
 
     [Fact]
@@ -161,6 +162,84 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("XDT-Anhang Importordner fehlt", row.AttachmentImportFolder);
         Assert.Equal("XDT-Anhang Exportordner fehlt", row.AttachmentExportFolder);
         Assert.Equal("XDT-Anhang aktiv, Ordner unvollständig", row.AttachmentConfigurationStatus);
+    }
+
+    [Fact]
+    public void BuildRows_ShouldCreateMonitoringCardWithProfileNamesAndDefaultRuntimeStatus()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        Assert.Equal("Test-Schnittstelle", row.MonitoringCard.InterfaceProfileName);
+        Assert.Equal("MEDISTAR", row.MonitoringCard.AisName);
+        Assert.Equal("NIDEK ARK1S", row.MonitoringCard.DeviceName);
+        Assert.Equal("MEDISTAR + NIDEK ARK1S Export", row.MonitoringCard.ExportProfileName);
+        Assert.Equal("Gestoppt", row.MonitoringCard.CurrentStatus);
+        Assert.Equal("Neutral", row.MonitoringCard.StatusClass);
+        Assert.Equal("5 s", row.MonitoringCard.ScanIntervalText);
+        Assert.Equal("-", row.MonitoringCard.LastScanText);
+        Assert.Equal("Nein", row.MonitoringCard.AutomaticProcessingText);
+    }
+
+    [Fact]
+    public void BuildRows_ShouldCreateExpectedInputBadgesForAisAndDevice()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        var aisInput = Assert.Single(row.MonitoringCard.ExpectedInputs, input => input.Name == "AIS-Patientendatei");
+        Assert.Equal("erwartet", aisInput.Status);
+        Assert.Equal("Neutral", aisInput.StatusClass);
+        Assert.Equal(@"C:\XDT\AIS", aisInput.FolderPath);
+
+        var deviceInput = Assert.Single(row.MonitoringCard.ExpectedInputs, input => input.Name == "Geräte-Datei");
+        Assert.Equal("erwartet", deviceInput.Status);
+        Assert.Equal("Neutral", deviceInput.StatusClass);
+        Assert.Equal(@"C:\XDT\Device", deviceInput.FolderPath);
+    }
+
+    [Fact]
+    public void BuildRows_ShouldCreateFolderDetailsForMonitoringCard()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export") with
+            {
+                ArchiveFolder = @"C:\XDT\Archiv",
+                ErrorFolder = @"C:\XDT\Fehler",
+                AttachmentImportFolder = @"C:\XDT\AnhangImp",
+                AttachmentExportFolder = @"C:\XDT\AnhangExp",
+                AttachmentRequirementMode = AttachmentRequirementMode.Required
+            }
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "AIS-Importordner" && detail.Value == @"C:\XDT\AIS");
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "Geräte-Importordner" && detail.Value == @"C:\XDT\Device");
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "Exportordner ans AIS" && detail.Value == @"C:\XDT\Export");
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "Archivordner" && detail.Value == @"C:\XDT\Archiv");
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "Fehlerordner" && detail.Value == @"C:\XDT\Fehler");
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "XDT-Anhang Importordner" && detail.Value == @"C:\XDT\AnhangImp");
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "XDT-Anhang Exportordner" && detail.Value == @"C:\XDT\AnhangExp");
+        Assert.Contains(row.MonitoringCard.FolderDetails, detail => detail.Name == "Anhang Erwartung" && detail.Value == "Pflicht");
     }
 
     private IReadOnlyList<ActiveInterfaceProfileStatusRow> BuildRows(

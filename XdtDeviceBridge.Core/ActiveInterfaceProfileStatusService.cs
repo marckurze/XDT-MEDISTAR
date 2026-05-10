@@ -44,13 +44,16 @@ public sealed class ActiveInterfaceProfileStatusService
         var folderStatus = CreateFolderStatus(profile.FolderOptions);
         var licenseStatus = CreateLicenseStatus(profile, licenseState);
         var processingStatus = CreateProcessingStatus(folderStatus, profile, licenseState);
-        var monitoringCard = CreateMonitoringCard(profile);
+        var aisName = GetAisProfileName(profile.AisProfileId, aisProfilesById);
+        var deviceName = GetDeviceProfileName(profile.DeviceProfileId, deviceProfilesById);
+        var exportProfileName = GetExportProfileName(profile.ExportProfileId, exportProfilesById);
+        var monitoringCard = CreateMonitoringCard(profile, aisName, deviceName, exportProfileName);
 
         return new ActiveInterfaceProfileStatusRow(
             Name: profile.Metadata.Name,
-            AisName: GetAisProfileName(profile.AisProfileId, aisProfilesById),
-            DeviceName: GetDeviceProfileName(profile.DeviceProfileId, deviceProfilesById),
-            ExportProfileName: GetExportProfileName(profile.ExportProfileId, exportProfilesById),
+            AisName: aisName,
+            DeviceName: deviceName,
+            ExportProfileName: exportProfileName,
             AisImportFolder: profile.FolderOptions.AisImportFolder,
             DeviceImportFolder: profile.FolderOptions.DeviceImportFolder,
             ExportFolder: profile.FolderOptions.ExportFolder,
@@ -163,7 +166,11 @@ public sealed class ActiveInterfaceProfileStatusService
         return "Bereit für spätere Automatik";
     }
 
-    private static InterfaceMonitoringCardDisplay CreateMonitoringCard(InterfaceProfileDefinition profile)
+    private static InterfaceMonitoringCardDisplay CreateMonitoringCard(
+        InterfaceProfileDefinition profile,
+        string aisName,
+        string deviceName,
+        string exportProfileName)
     {
         var folderOptions = profile.FolderOptions;
         var attachmentImportFolder = CreateAttachmentFolderDisplay(folderOptions, folderOptions.AttachmentImportFolder, "XDT-Anhang Importordner fehlt");
@@ -172,18 +179,67 @@ public sealed class ActiveInterfaceProfileStatusService
 
         var expectedInputs = new List<ExpectedInputDisplayItem>
         {
-            new("AIS-Datei", DisplayOrMissing(folderOptions.AisImportFolder, "AIS-Importordner fehlt"), string.IsNullOrWhiteSpace(folderOptions.AisImportFolder) ? "fehlt" : "konfiguriert"),
-            new("Gerätedatei", DisplayOrMissing(folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt"), string.IsNullOrWhiteSpace(folderOptions.DeviceImportFolder) ? "fehlt" : "konfiguriert"),
-            new("XDT-Anhang", attachmentImportFolder, attachmentStatus)
+            CreateExpectedInput("AIS-Patientendatei", folderOptions.AisImportFolder, "AIS-Importordner fehlt", "erwartet"),
+            CreateExpectedInput("Geräte-Datei", folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt", "erwartet")
+        };
+
+        if (HasAttachmentConfiguration(folderOptions))
+        {
+            var isAttachmentImportMissing = string.IsNullOrWhiteSpace(folderOptions.AttachmentImportFolder);
+            expectedInputs.Add(new ExpectedInputDisplayItem(
+                Name: "XDT-Anhang",
+                FolderPath: attachmentImportFolder,
+                Status: isAttachmentImportMissing ? "fehlt" : "erwartet",
+                StatusClass: isAttachmentImportMissing ? "Error" : "Neutral",
+                Detail: attachmentStatus));
+        }
+
+        var folderDetails = new List<InterfaceMonitoringDetailItem>
+        {
+            new("AIS-Importordner", DisplayOrMissing(folderOptions.AisImportFolder, "AIS-Importordner fehlt")),
+            new("Geräte-Importordner", DisplayOrMissing(folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt")),
+            new("Exportordner ans AIS", DisplayOrMissing(folderOptions.ExportFolder, "Exportordner fehlt")),
+            new("Archivordner", DisplayOrMissing(folderOptions.ArchiveFolder, "Archivordner nicht konfiguriert")),
+            new("Fehlerordner", DisplayOrMissing(folderOptions.ErrorFolder, "Fehlerordner nicht konfiguriert")),
+            new("XDT-Anhang Importordner", attachmentImportFolder),
+            new("XDT-Anhang Exportordner", attachmentExportFolder),
+            new("Wartezeit Gerätedatei", $"{Math.Max(0, folderOptions.DeviceFileWaitTimeoutMinutes)} Minuten"),
+            new("Wartezeit XDT-Anhang", $"{Math.Max(0, folderOptions.AttachmentWaitTimeoutSeconds)} Sekunden"),
+            new("Dateistabilität", $"{Math.Max(0, folderOptions.AttachmentFileStabilityWaitSeconds)} Sekunden"),
+            new("Anhang Erwartung", HasAttachmentConfiguration(folderOptions) ? FormatRequirementMode(folderOptions.AttachmentRequirementMode) : "kein Anhang konfiguriert")
         };
 
         return new InterfaceMonitoringCardDisplay(
             InterfaceProfileId: profile.Metadata.Id,
             InterfaceProfileName: profile.Metadata.Name,
+            AisName: aisName,
+            DeviceName: deviceName,
+            ExportProfileName: exportProfileName,
+            CurrentStatus: "Gestoppt",
+            StatusClass: "Neutral",
+            ScanIntervalText: $"{Math.Max(1, folderOptions.AutoImportScanIntervalSeconds)} s",
+            LastScanText: "-",
+            AutomaticProcessingText: "Nein",
             ExpectedInputs: expectedInputs,
+            FolderDetails: folderDetails,
             AttachmentImportFolder: attachmentImportFolder,
             AttachmentExportFolder: attachmentExportFolder,
             AttachmentConfigurationStatus: attachmentStatus);
+    }
+
+    private static ExpectedInputDisplayItem CreateExpectedInput(
+        string name,
+        string? folderPath,
+        string missingMessage,
+        string configuredStatus)
+    {
+        var isMissing = string.IsNullOrWhiteSpace(folderPath);
+        return new ExpectedInputDisplayItem(
+            Name: name,
+            FolderPath: DisplayOrMissing(folderPath, missingMessage),
+            Status: isMissing ? "fehlt" : configuredStatus,
+            StatusClass: isMissing ? "Error" : "Neutral",
+            Detail: isMissing ? missingMessage : DisplayOrMissing(folderPath, missingMessage));
     }
 
     private static string CreateAttachmentFolderDisplay(

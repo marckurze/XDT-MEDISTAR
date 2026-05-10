@@ -70,9 +70,11 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
+    private readonly ObservableCollection<InterfaceMonitoringCardDisplay> _interfaceMonitoringCards = new();
     private readonly ObservableCollection<ScannedImportPairRow> _scannedImportPairRows = new();
     private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
+    private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -104,6 +106,7 @@ public partial class MainWindow : Window
         DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
         ExportRulesGrid.ItemsSource = _visibleExportRules;
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
+        InterfaceMonitoringCardsItemsControl.ItemsSource = _interfaceMonitoringCards;
         ActiveInterfaceProfilesGrid.ItemsSource = _activeInterfaceProfileStatusRows;
         ScannedImportPairsGrid.ItemsSource = _scannedImportPairRows;
         AttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
@@ -2249,6 +2252,8 @@ public partial class MainWindow : Window
             _activeInterfaceProfileStatusRows.Add(row);
         }
 
+        RefreshInterfaceMonitoringCards();
+
         ActiveInterfaceProfilesStatusText.Text = rows.Count == 0
             ? "Keine aktiven Schnittstellenprofile konfiguriert."
             : $"{rows.Count} aktive Schnittstellenprofil(e) für die spätere automatische Verarbeitung konfiguriert.";
@@ -2257,7 +2262,59 @@ public partial class MainWindow : Window
     private void ClearActiveInterfaceProfilesOverview(string message)
     {
         _activeInterfaceProfileStatusRows.Clear();
+        _interfaceMonitoringCards.Clear();
         ActiveInterfaceProfilesStatusText.Text = message;
+    }
+
+    private void RefreshInterfaceMonitoringCards()
+    {
+        _interfaceMonitoringCards.Clear();
+        foreach (var row in _activeInterfaceProfileStatusRows)
+        {
+            var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
+            _interfaceMonitoringCards.Add(row.MonitoringCard with
+            {
+                CurrentStatus = runtimeState.CurrentStatus,
+                StatusClass = runtimeState.StatusClass,
+                LastScanText = runtimeState.LastScanText,
+                AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein"
+            });
+        }
+    }
+
+    private InterfaceMonitoringRuntimeState GetMonitoringRuntimeState(string interfaceProfileId)
+    {
+        return _interfaceMonitoringRuntimeStates.TryGetValue(interfaceProfileId, out var state)
+            ? state
+            : new InterfaceMonitoringRuntimeState("Gestoppt", "Neutral", "-");
+    }
+
+    private void SetAllMonitoringRuntimeStates(string currentStatus, string statusClass)
+    {
+        foreach (var row in _activeInterfaceProfileStatusRows)
+        {
+            var previousState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
+            _interfaceMonitoringRuntimeStates[row.MonitoringCard.InterfaceProfileId] = previousState with
+            {
+                CurrentStatus = currentStatus,
+                StatusClass = statusClass
+            };
+        }
+    }
+
+    private void SetMonitoringRuntimeState(
+        string interfaceProfileId,
+        string currentStatus,
+        string statusClass,
+        string? lastScanText = null)
+    {
+        var previousState = GetMonitoringRuntimeState(interfaceProfileId);
+        _interfaceMonitoringRuntimeStates[interfaceProfileId] = previousState with
+        {
+            CurrentStatus = currentStatus,
+            StatusClass = statusClass,
+            LastScanText = string.IsNullOrWhiteSpace(lastScanText) ? previousState.LastScanText : lastScanText
+        };
     }
 
     private void StartPeriodicScan_Click(object sender, RoutedEventArgs e)
@@ -2298,6 +2355,8 @@ public partial class MainWindow : Window
         ActiveProfileScanResultTextBox.Text = $"Überwachung läuft mit {scanInterval.TotalSeconds:0} Sekunden Intervall. Es wird nichts gelöscht oder bereinigt.";
         _lastPeriodicScanSnapshotsByProfile.Clear();
         _monitoringEventDeduplicationService.Reset();
+        SetAllMonitoringRuntimeStates("Scannt", "Active");
+        RefreshInterfaceMonitoringCards();
         AppendMonitoringEvent("monitoring", "monitoring-state", "Überwachung gestartet.");
 
         _periodicScanTask = Task.Run(() => _periodicAutoImportScanService.StartAsync(
@@ -2328,6 +2387,11 @@ public partial class MainWindow : Window
         StopPeriodicScan(updateUi: true);
     }
 
+    private void EnableAutomaticPairProcessingCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        RefreshInterfaceMonitoringCards();
+    }
+
     private void StopPeriodicScan(bool updateUi)
     {
         _periodicScanCancellationTokenSource?.Cancel();
@@ -2344,6 +2408,8 @@ public partial class MainWindow : Window
         StartPeriodicScanButton.IsEnabled = true;
         StopPeriodicScanButton.IsEnabled = false;
         ActiveProfileScanButton.IsEnabled = true;
+        SetAllMonitoringRuntimeStates("Gestoppt", "Neutral");
+        RefreshInterfaceMonitoringCards();
         AppendMonitoringEvent("monitoring", "monitoring-state", "Überwachung gestoppt.");
     }
 
@@ -2354,6 +2420,12 @@ public partial class MainWindow : Window
         var profileName = profile?.Metadata.Name ?? result.InterfaceProfileId;
         PeriodicScanLastRunText.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
         PeriodicScanReadyPairsText.Text = result.ReadyPairs.ToString();
+        var lastScanText = PeriodicScanLastRunText.Text;
+        SetMonitoringRuntimeState(
+            result.InterfaceProfileId,
+            CreateMonitoringStatusFromScanResult(result),
+            CreateMonitoringStatusClassFromScanResult(result),
+            lastScanText);
 
         var builder = new StringBuilder();
         builder.AppendLine($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} - {profileName}");
@@ -2418,6 +2490,16 @@ public partial class MainWindow : Window
             }
         }
 
+        if (automaticProcessingResult is not null)
+        {
+            SetMonitoringRuntimeState(
+                result.InterfaceProfileId,
+                CreateMonitoringStatusFromAutomaticProcessing(automaticProcessingResult),
+                CreateMonitoringStatusClassFromAutomaticProcessing(automaticProcessingResult),
+                lastScanText);
+        }
+
+        RefreshInterfaceMonitoringCards();
         ActiveProfileScanResultTextBox.ScrollToEnd();
     }
 
@@ -2462,6 +2544,88 @@ public partial class MainWindow : Window
         }
 
         return builder.ToString();
+    }
+
+    private static string CreateMonitoringStatusFromScanResult(AutoImportScanResult result)
+    {
+        if (result.Messages.Any(message => message.Contains("XDT-Anhang", StringComparison.OrdinalIgnoreCase)
+            && message.Contains("warte", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Wartet auf XDT-Anhang";
+        }
+
+        if (result.Messages.Any(message => message.Contains("blockiert", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("Fehler", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Fehler / blockiert";
+        }
+
+        if (result.ReadyPairs > 0)
+        {
+            return "AIS-/Geräte-Paar vollständig";
+        }
+
+        if (result.AisFilesDetected > 0 && result.DeviceFilesDetected == 0)
+        {
+            return "Wartet auf Gerät";
+        }
+
+        if (result.DeviceFilesDetected > 0 && result.AisFilesDetected == 0)
+        {
+            return "Wartet auf AIS";
+        }
+
+        return "Wartet auf AIS";
+    }
+
+    private static string CreateMonitoringStatusClassFromScanResult(AutoImportScanResult result)
+    {
+        if (result.Messages.Any(message => message.Contains("blockiert", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Blocked";
+        }
+
+        if (result.Messages.Any(message => message.Contains("Fehler", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Error";
+        }
+
+        if (result.ReadyPairs > 0)
+        {
+            return "Active";
+        }
+
+        return "Waiting";
+    }
+
+    private static string CreateMonitoringStatusFromAutomaticProcessing(AutoImportPairProcessingBatchResult result)
+    {
+        if (result.ErrorCount > 0)
+        {
+            return "Fehler / blockiert";
+        }
+
+        if (result.ProcessedCount > 0)
+        {
+            return "Export erfolgreich";
+        }
+
+        return "Scannt";
+    }
+
+    private static string CreateMonitoringStatusClassFromAutomaticProcessing(AutoImportPairProcessingBatchResult result)
+    {
+        if (result.ErrorCount > 0)
+        {
+            return "Error";
+        }
+
+        if (result.ProcessedCount > 0)
+        {
+            return "Success";
+        }
+
+        return "Active";
     }
 
     private AutoImportPairProcessingBatchResult? TryProcessReadyPairsAutomatically(
@@ -2629,7 +2793,8 @@ public partial class MainWindow : Window
         try
         {
             var builder = new StringBuilder();
-            builder.AppendLine($"Einmaliger Scan: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
+            var scanTimestampText = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
+            builder.AppendLine($"Einmaliger Scan: {scanTimestampText}");
             builder.AppendLine("Hinweis: Es wird nichts verarbeitet, gelöscht oder exportiert.");
 
             foreach (var profile in activeProfiles)
@@ -2647,6 +2812,11 @@ public partial class MainWindow : Window
                     builder.AppendLine($"Geräte-Dateien erkannt: {result.DeviceFilesDetected}");
                     builder.AppendLine($"Dateien in Warteliste: {result.FilesQueued}");
                     builder.AppendLine($"Fertige Paare: {result.ReadyPairs}");
+                    SetMonitoringRuntimeState(
+                        profile.Metadata.Id,
+                        CreateMonitoringStatusFromScanResult(result),
+                        CreateMonitoringStatusClassFromScanResult(result),
+                        scanTimestampText);
 
                     if (result.Messages.Count == 0)
                     {
@@ -2666,6 +2836,7 @@ public partial class MainWindow : Window
                 catch (Exception ex)
                 {
                     builder.AppendLine($"Scan-Fehler: {ex.Message}");
+                    SetMonitoringRuntimeState(profile.Metadata.Id, "Fehler / blockiert", "Error", scanTimestampText);
                 }
             }
 
@@ -2677,6 +2848,7 @@ public partial class MainWindow : Window
 
             ActiveProfileScanResultTextBox.Text = builder.ToString().TrimEnd();
             ActiveProfileScanResultTextBox.ScrollToHome();
+            RefreshInterfaceMonitoringCards();
         }
         finally
         {
@@ -4297,6 +4469,11 @@ public partial class MainWindow : Window
         textBox.AppendText(message);
         textBox.ScrollToEnd();
     }
+
+    private sealed record InterfaceMonitoringRuntimeState(
+        string CurrentStatus,
+        string StatusClass,
+        string LastScanText);
 
     private sealed class ScannedImportPairRow
     {
