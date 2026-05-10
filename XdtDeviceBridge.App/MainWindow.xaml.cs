@@ -2610,16 +2610,16 @@ public partial class MainWindow : Window
             return;
         }
 
-        var rotateTransform = FindVisualChild<RotateTransform>(element);
-        var pulseRing = FindVisualChildByTag<FrameworkElement>(element, "RadarPulseRing");
+        var scanBar = FindVisualChildByTag<FrameworkElement>(element, "RadarScanBar");
+        var scanBarTransform = scanBar?.RenderTransform as TranslateTransform;
         StopRadarAnimation(element);
 
         if (!card.IsScanAnimationActive)
         {
-            element.Opacity = 0.45;
-            if (rotateTransform is not null)
+            element.Opacity = 0.72;
+            if (scanBarTransform is not null)
             {
-                rotateTransform.Angle = 0;
+                scanBarTransform.X = 0;
             }
 
             return;
@@ -2627,26 +2627,35 @@ public partial class MainWindow : Window
 
         element.Opacity = 1;
         var scanIntervalSeconds = Math.Clamp(card.ScanIntervalSeconds, 1, 60);
-        var rotationAnimation = new DoubleAnimation
+        if (scanBar is not null && scanBarTransform is not null)
         {
-            From = 0,
-            To = 360,
-            Duration = new Duration(TimeSpan.FromSeconds(scanIntervalSeconds)),
-            RepeatBehavior = RepeatBehavior.Forever
-        };
-        rotateTransform?.BeginAnimation(RotateTransform.AngleProperty, rotationAnimation);
-
-        if (pulseRing is not null)
-        {
-            var pulseAnimation = new DoubleAnimation
+            var surfaceWidth = element.ActualWidth > 0 ? element.ActualWidth : 320;
+            var barWidth = scanBar.ActualWidth > 0
+                ? scanBar.ActualWidth
+                : double.IsNaN(scanBar.Width) || scanBar.Width <= 0
+                    ? 60
+                    : scanBar.Width;
+            var travelDistance = Math.Max(0, surfaceWidth - barWidth);
+            var oneWayDurationSeconds = Math.Max(0.4, scanIntervalSeconds / 2.0);
+            var scanAnimation = new DoubleAnimation
             {
-                From = 0.35,
-                To = 0.9,
-                Duration = new Duration(TimeSpan.FromSeconds(Math.Max(0.4, scanIntervalSeconds / 2.0))),
+                From = 0,
+                To = travelDistance,
+                Duration = new Duration(TimeSpan.FromSeconds(oneWayDurationSeconds)),
                 AutoReverse = true,
                 RepeatBehavior = RepeatBehavior.Forever
             };
-            pulseRing.BeginAnimation(UIElement.OpacityProperty, pulseAnimation);
+            scanBarTransform.BeginAnimation(TranslateTransform.XProperty, scanAnimation);
+
+            var pulseAnimation = new DoubleAnimation
+            {
+                From = 0.42,
+                To = 0.9,
+                Duration = new Duration(TimeSpan.FromSeconds(Math.Max(0.4, oneWayDurationSeconds))),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            scanBar.BeginAnimation(UIElement.OpacityProperty, pulseAnimation);
         }
     }
 
@@ -2660,11 +2669,14 @@ public partial class MainWindow : Window
 
     private static void StopRadarAnimation(FrameworkElement element)
     {
-        var rotateTransform = FindVisualChild<RotateTransform>(element);
-        rotateTransform?.BeginAnimation(RotateTransform.AngleProperty, null);
+        var scanBar = FindVisualChildByTag<FrameworkElement>(element, "RadarScanBar");
+        if (scanBar?.RenderTransform is TranslateTransform scanBarTransform)
+        {
+            scanBarTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            scanBarTransform.X = 0;
+        }
 
-        var pulseRing = FindVisualChildByTag<FrameworkElement>(element, "RadarPulseRing");
-        pulseRing?.BeginAnimation(UIElement.OpacityProperty, null);
+        scanBar?.BeginAnimation(UIElement.OpacityProperty, null);
     }
 
     private static T? FindVisualChild<T>(DependencyObject parent)

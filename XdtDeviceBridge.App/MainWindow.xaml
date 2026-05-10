@@ -21,16 +21,16 @@
                             <Grid Margin="8">
                                 <Grid.Resources>
                                     <Style x:Key="MonitoringCardBorderStyle" TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="#9CA3AF"/>
-                                        <Setter Property="Background" Value="#F9FAFB"/>
+                                        <Setter Property="BorderBrush" Value="#86A79A"/>
+                                        <Setter Property="Background" Value="#F8FAF8"/>
                                         <Setter Property="BorderThickness" Value="1"/>
                                         <Setter Property="CornerRadius" Value="6"/>
-                                        <Setter Property="Padding" Value="10"/>
+                                        <Setter Property="Padding" Value="9"/>
                                         <Setter Property="Margin" Value="0,0,10,10"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding StatusClass}" Value="Active">
-                                                <Setter Property="BorderBrush" Value="#2563EB"/>
-                                                <Setter Property="Background" Value="#EFF6FF"/>
+                                                <Setter Property="BorderBrush" Value="#17803D"/>
+                                                <Setter Property="Background" Value="#F0FDF4"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
                                                 <Setter Property="BorderBrush" Value="#D97706"/>
@@ -51,11 +51,11 @@
                                         </Style.Triggers>
                                     </Style>
                                     <Style x:Key="MonitoringInputBadgeStyle" TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
-                                        <Setter Property="Background" Value="White"/>
+                                        <Setter Property="BorderBrush" Value="#B7D0C1"/>
+                                        <Setter Property="Background" Value="#FFFFFF"/>
                                         <Setter Property="BorderThickness" Value="1"/>
                                         <Setter Property="CornerRadius" Value="4"/>
-                                        <Setter Property="Padding" Value="6"/>
+                                        <Setter Property="Padding" Value="5"/>
                                         <Setter Property="Margin" Value="0,0,6,6"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding StatusClass}" Value="Error">
@@ -132,11 +132,7 @@
                                                TextWrapping="Wrap"
                                                Margin="0,3,0,8"/>
                                 </WrapPanel>
-                                <TextBlock Grid.Row="3"
-                                           Text="Schnittstellen-Monitor"
-                                           FontWeight="Bold"
-                                           Margin="0,4,0,4"/>
-                                <ItemsControl Grid.Row="4"
+                                <ItemsControl Grid.Row="3"
                                               x:Name="InterfaceMonitoringCardsItemsControl"
                                               Margin="0,0,0,4">
                                     <ItemsControl.ItemsPanel>
@@ -147,94 +143,10 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Style="{StaticResource MonitoringCardBorderStyle}"
-                                                    Width="360"
-                                                    MinHeight="210">
+                                                    Width="350"
+                                                    MinHeight="168">
                                                 <StackPanel>
-                                                    <DockPanel LastChildFill="False" Margin="0,0,0,6">
-                                                        <TextBlock Text="{Binding InterfaceProfileName}"
-                                                                   FontWeight="Bold"
-                                                                   FontSize="14"
-                                                                   TextWrapping="Wrap"
-                                                                   DockPanel.Dock="Left"
-                                                                   MaxWidth="230"/>
-                                                        <Grid DockPanel.Dock="Right"
-                                                              Width="42"
-                                                              Height="42"
-                                                              Margin="8,0,0,0"
-                                                              Loaded="MonitoringRadar_Loaded"
-                                                              Unloaded="MonitoringRadar_Unloaded"
-                                                              ToolTip="{Binding ScanIntervalText, StringFormat=Radar-Puls: {0}}">
-                                                            <Ellipse Tag="RadarPulseRing"
-                                                                     StrokeThickness="2"
-                                                                     Opacity="0.55">
-                                                                <Ellipse.Style>
-                                                                    <Style TargetType="Ellipse">
-                                                                        <Setter Property="Stroke" Value="#9CA3AF"/>
-                                                                        <Setter Property="Fill" Value="#F3F4F6"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Active">
-                                                                                <Setter Property="Stroke" Value="#2563EB"/>
-                                                                                <Setter Property="Fill" Value="#DBEAFE"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
-                                                                                <Setter Property="Stroke" Value="#D97706"/>
-                                                                                <Setter Property="Fill" Value="#FEF3C7"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Success">
-                                                                                <Setter Property="Stroke" Value="#16A34A"/>
-                                                                                <Setter Property="Fill" Value="#DCFCE7"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
-                                                                                <Setter Property="Stroke" Value="#DC2626"/>
-                                                                                <Setter Property="Fill" Value="#FEE2E2"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Blocked">
-                                                                                <Setter Property="Stroke" Value="#C2410C"/>
-                                                                                <Setter Property="Fill" Value="#FFEDD5"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </Ellipse.Style>
-                                                            </Ellipse>
-                                                            <Line X1="21"
-                                                                  Y1="21"
-                                                                  X2="21"
-                                                                  Y2="5"
-                                                                  StrokeThickness="2"
-                                                                  StrokeStartLineCap="Round"
-                                                                  StrokeEndLineCap="Round">
-                                                                <Line.RenderTransform>
-                                                                    <RotateTransform CenterX="21" CenterY="21"/>
-                                                                </Line.RenderTransform>
-                                                                <Line.Style>
-                                                                    <Style TargetType="Line">
-                                                                        <Setter Property="Stroke" Value="#6B7280"/>
-                                                                        <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Active">
-                                                                                <Setter Property="Stroke" Value="#2563EB"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
-                                                                                <Setter Property="Stroke" Value="#D97706"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Success">
-                                                                                <Setter Property="Stroke" Value="#16A34A"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
-                                                                                <Setter Property="Stroke" Value="#DC2626"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Blocked">
-                                                                                <Setter Property="Stroke" Value="#C2410C"/>
-                                                                            </DataTrigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </Line.Style>
-                                                            </Line>
-                                                            <Ellipse Width="8"
-                                                                     Height="8"
-                                                                     Fill="#111827"
-                                                                     HorizontalAlignment="Center"
-                                                                     VerticalAlignment="Center"/>
-                                                        </Grid>
+                                                    <DockPanel LastChildFill="True" Margin="0,0,0,5">
                                                         <Border DockPanel.Dock="Right"
                                                                 Background="#E5E7EB"
                                                                 CornerRadius="4"
@@ -244,27 +156,110 @@
                                                                        FontWeight="Bold"
                                                                        TextWrapping="Wrap"/>
                                                         </Border>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding InterfaceProfileName}"
+                                                                       FontSize="11"
+                                                                       Foreground="#4B5563"
+                                                                       TextWrapping="Wrap"/>
+                                                            <TextBlock Text="{Binding AisName, StringFormat=AIS: {0}}"
+                                                                       FontSize="11"
+                                                                       Foreground="#6B7280"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
                                                     </DockPanel>
 
-                                                    <Grid Margin="0,0,0,8">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="86"/>
-                                                            <ColumnDefinition Width="*"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <Grid.RowDefinitions>
-                                                            <RowDefinition Height="Auto"/>
-                                                            <RowDefinition Height="Auto"/>
-                                                            <RowDefinition Height="Auto"/>
-                                                        </Grid.RowDefinitions>
-                                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS:" FontWeight="Bold" Margin="0,0,6,2"/>
-                                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding AisName}" TextWrapping="Wrap" Margin="0,0,0,2"/>
-                                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Gerät:" FontWeight="Bold" Margin="0,0,6,2"/>
-                                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DeviceName}" TextWrapping="Wrap" Margin="0,0,0,2"/>
-                                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Export:" FontWeight="Bold" Margin="0,0,6,0"/>
-                                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ExportProfileName}" TextWrapping="Wrap"/>
-                                                    </Grid>
+                                                    <Border CornerRadius="6"
+                                                            BorderThickness="1"
+                                                            BorderBrush="#14532D"
+                                                            Background="#071F16"
+                                                            Padding="6"
+                                                            Margin="0,0,0,7">
+                                                        <Grid x:Name="MonitoringRadarSurface"
+                                                              Height="54"
+                                                              ClipToBounds="True"
+                                                              Loaded="MonitoringRadar_Loaded"
+                                                              Unloaded="MonitoringRadar_Unloaded"
+                                                              ToolTip="{Binding ScanIntervalText, StringFormat=Radar-Puls: {0}}">
+                                                            <Grid.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                    <GradientStop Color="#08291D" Offset="0"/>
+                                                                    <GradientStop Color="#0F3A2A" Offset="0.55"/>
+                                                                    <GradientStop Color="#05130E" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Grid.Background>
+                                                            <Grid>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="*"/>
+                                                                    <RowDefinition Height="*"/>
+                                                                    <RowDefinition Height="*"/>
+                                                                </Grid.RowDefinitions>
+                                                                <Border Grid.Row="0" BorderBrush="#1F6B46" BorderThickness="0,0,0,1" Opacity="0.55"/>
+                                                                <Border Grid.Row="1" BorderBrush="#1F6B46" BorderThickness="0,0,0,1" Opacity="0.45"/>
+                                                            </Grid>
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <Border Grid.Column="0" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.35"/>
+                                                                <Border Grid.Column="1" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.45"/>
+                                                                <Border Grid.Column="2" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.35"/>
+                                                            </Grid>
+                                                            <Rectangle Height="44"
+                                                                       Width="60"
+                                                                       RadiusX="4"
+                                                                       RadiusY="4"
+                                                                       HorizontalAlignment="Left"
+                                                                       VerticalAlignment="Center"
+                                                                       Tag="RadarScanBar"
+                                                                       Opacity="0.72">
+                                                                <Rectangle.RenderTransform>
+                                                                    <TranslateTransform/>
+                                                                </Rectangle.RenderTransform>
+                                                                <Rectangle.Style>
+                                                                    <Style TargetType="Rectangle">
+                                                                        <Setter Property="Fill">
+                                                                            <Setter.Value>
+                                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                                                    <GradientStop Color="#003D27" Offset="0"/>
+                                                                                    <GradientStop Color="#22C55E" Offset="0.55"/>
+                                                                                    <GradientStop Color="#BBF7D0" Offset="1"/>
+                                                                                </LinearGradientBrush>
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
+                                                                                <Setter Property="Fill" Value="#F59E0B"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
+                                                                                <Setter Property="Fill" Value="#EF4444"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Blocked">
+                                                                                <Setter Property="Fill" Value="#F97316"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding IsScanAnimationActive}" Value="False">
+                                                                                <Setter Property="Fill" Value="#6B7280"/>
+                                                                                <Setter Property="Opacity" Value="0.45"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Rectangle.Style>
+                                                            </Rectangle>
+                                                            <Border BorderBrush="#5EEA92"
+                                                                    BorderThickness="1"
+                                                                    Opacity="0.32"/>
+                                                            <TextBlock Text="{Binding ScanIntervalText, StringFormat=Scan {0}}"
+                                                                       Foreground="#BBF7D0"
+                                                                       FontSize="10"
+                                                                       HorizontalAlignment="Right"
+                                                                       VerticalAlignment="Bottom"
+                                                                       Margin="0,0,6,4"/>
+                                                        </Grid>
+                                                    </Border>
 
-                                                    <WrapPanel Margin="0,0,0,8">
+                                                    <WrapPanel Margin="0,0,0,6">
                                                         <Button Content="−"
                                                                 Width="24"
                                                                 Height="22"
@@ -307,43 +302,84 @@
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
 
-                                                    <TextBlock Text="{Binding AttachmentConfigurationStatus}"
-                                                               Foreground="DimGray"
-                                                               TextWrapping="Wrap"
-                                                               Margin="0,0,0,6"/>
-
-                                                    <StackPanel Margin="0,0,0,6">
-                                                        <TextBlock Text="{Binding PatientDisplayText}" TextWrapping="Wrap" Foreground="#374151"/>
-                                                        <TextBlock Text="{Binding AisFileName, StringFormat=AIS-Datei: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
-                                                        <TextBlock Text="{Binding DeviceFileName, StringFormat=Gerätedatei: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
-                                                        <TextBlock Text="{Binding AttachmentFileName, StringFormat=Anhang: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
-                                                        <TextBlock Text="{Binding ExportFileName, StringFormat=Export: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
-                                                        <TextBlock Text="{Binding LastSuccessfulExportText, StringFormat=Letzter erfolgreicher Export: {0}}" TextWrapping="Wrap" Foreground="#374151"/>
-                                                        <TextBlock Text="{Binding LastMessage, StringFormat=Letzte Meldung: {0}}" TextWrapping="Wrap" Foreground="DimGray"/>
-                                                    </StackPanel>
-
                                                     <Expander Header="Details / Ordner" IsExpanded="False">
-                                                        <ItemsControl ItemsSource="{Binding FolderDetails}" Margin="0,6,0,0">
-                                                            <ItemsControl.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <Grid Margin="0,0,0,3">
-                                                                        <Grid.ColumnDefinitions>
-                                                                            <ColumnDefinition Width="130"/>
-                                                                            <ColumnDefinition Width="*"/>
-                                                                        </Grid.ColumnDefinitions>
-                                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0"/>
-                                                                        <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap"/>
-                                                                    </Grid>
-                                                                </DataTemplate>
-                                                            </ItemsControl.ItemTemplate>
-                                                        </ItemsControl>
+                                                        <StackPanel Margin="0,6,0,0">
+                                                            <TextBlock Text="Statusdetails" FontWeight="Bold" Margin="0,0,0,4"/>
+                                                            <Grid Margin="0,0,0,6">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="130"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                </Grid.RowDefinitions>
+                                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Schnittstelle" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding InterfaceProfileName}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Gerät" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DeviceName}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportprofil" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ExportProfileName}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Anhang" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding AttachmentConfigurationStatus}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Letzte Meldung" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding LastMessage}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Patient" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding PatientDisplayText}" TextWrapping="Wrap"/>
+                                                            </Grid>
+
+                                                            <TextBlock Text="Datei- und Exportinformationen" FontWeight="Bold" Margin="0,2,0,4"/>
+                                                            <Grid Margin="0,0,0,6">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="130"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                </Grid.RowDefinitions>
+                                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Datei" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding AisFileName}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Gerätedatei" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DeviceFileName}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Anhang" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding AttachmentFileName}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Export" FontWeight="Bold" Margin="0,0,8,3"/>
+                                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ExportFileName}" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Letzter Erfolg" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding LastSuccessfulExportText}" TextWrapping="Wrap"/>
+                                                            </Grid>
+
+                                                            <TextBlock Text="Ordnerinformationen" FontWeight="Bold" Margin="0,2,0,4"/>
+                                                            <ItemsControl ItemsSource="{Binding FolderDetails}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Grid Margin="0,0,0,3">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="130"/>
+                                                                                <ColumnDefinition Width="*"/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                                            <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap"/>
+                                                                        </Grid>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
                                                     </Expander>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <Expander Grid.Row="5"
+                                <Expander Grid.Row="4"
                                           Header="Technische Detailansicht"
                                           IsExpanded="False"
                                           Margin="0,4,0,8">
