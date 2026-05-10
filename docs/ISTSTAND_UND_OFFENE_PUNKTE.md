@@ -30,7 +30,7 @@ Besonders stabil wirken aktuell:
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 - V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
-- praktische End-to-End-Abnahme der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung in echten Ordnern
+- praktische End-to-End-Abnahme der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung in echten Ordnern; Testplan und Protokollvorlage sind vorbereitet, die manuelle Durchfuehrung bleibt offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile
 - Lizenzsignatur, harte Lizenzdurchsetzung und Installer/Deployment
 - AIS-/MEDISTAR-Exporttemplate-Default-Konzept bewusst zurueckgestellt
@@ -222,7 +222,7 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
 | BuiltIn/UserDefined-Schutz | testseitig validiert | `ProfileCatalogServiceTests`, TemplateImport-Tests |
 
-Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle Praxisabnahme der automatischen AIS-/Geraete-/XDT-Anhang-Faelle aus `docs/END_TO_END_TESTPLAN.md`.
+Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle Praxisabnahme der automatischen AIS-/Geraete-/XDT-Anhang-Faelle aus `docs/END_TO_END_TESTPLAN.md`. Fuer die Durchfuehrung steht die ausfuellbare Vorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` bereit.
 
 ## 4. Vorbereitet, aber noch nicht produktiv validiert
 
@@ -270,7 +270,7 @@ Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle P
 
 | Prioritaet | Thema | Aktueller Status | Was fehlt konkret? | Empfohlener naechster Schritt | Risiko, wenn offen bleibt | Abhaengigkeiten |
 | --- | --- | --- | --- | --- | --- | --- |
-| hoch | E2E-Testplan praktisch ausfuehren | Testplan vorhanden, automatisierte Tests vorhanden. | Manuelle Praxisprotokolle fuer Testfaelle 1 bis 12 fehlen. | Synthetische Testordner anlegen und `docs/END_TO_END_TESTPLAN.md` praktisch abarbeiten. | Automatik wirkt testseitig stabil, aber reale Bedien-/Ordnerfehler bleiben unentdeckt. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
+| hoch | E2E-Testplan praktisch ausfuehren | Testplan, praktische Durchfuehrungsschritte und Protokollvorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` sind vorhanden; automatisierte Tests sind vorhanden. | Manuelle Praxisprotokolle fuer Testfaelle 1 bis 12 fehlen. | Synthetische Testordner anlegen, Testdaten bereitstellen und `docs/END_TO_END_TESTPLAN.md` mit der Protokollvorlage praktisch abarbeiten. | Automatik wirkt testseitig stabil, aber reale Bedien-/Ordnerfehler bleiben unentdeckt. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
 | hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Kernworkflow und Linkfelder testseitig vorhanden. | Abnahme mit echten/realistischen Praxisordnern, Archiv-/Fehlerablage und Wartezeiten. | Einen reproduzierbaren Praxislauf mit Optional/Pflicht-Anhang protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in der Praxis auffallen. | E2E-Testplan, Testanhaenge |
 | hoch | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden. | Gefuehrte Pruefung importierter Schnittstellenprofile, Ordnerpfade, XDT-Anhang-Einstellungen und bewusste Aktivierung. | Kleinen Assistenten fuer "importiertes Schnittstellenprofil pruefen und aktivieren" konzipieren. | Importierte Profile bleiben zwar sicher, aber fuer Anwender noch nicht komfortabel produktiv nutzbar. | TemplateImport Executor, Profilkatalog |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
@@ -304,7 +304,7 @@ Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle P
 ### Phase 1: Konsolidierung / Dokumentation / Tests
 
 - Diese Abgleichdatei als aktuelle Orientierung nutzen.
-- `docs/END_TO_END_TESTPLAN.md` praktisch ausfuehren und protokollieren.
+- `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` praktisch ausfuehren und protokollieren.
 - Synthetische Testdaten fuer AIS, ARK1S und XDT-Anhang vorbereiten.
 - Kleinere Doku-Unschaerfen in Architektur/Pflichtenheft spaeter glaetten.
 
@@ -370,15 +370,15 @@ Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle P
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
 
-**E2E-Testplan praktisch ausfuehrbar machen und Ergebnisprotokoll vorbereiten.**
+**E2E-Testplan praktisch ausfuehren und protokollieren.**
 
 Konkreter Umfang:
 
 - keine Produktivlogik aendern
 - keine Profile oder BuiltIns aendern
-- ein synthetisches Testdatenpaket bzw. eine Testdaten-Checkliste fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang definieren
-- `docs/END_TO_END_TESTPLAN.md` um eine ausfuellbare Ergebnisprotokoll-Vorlage und konkrete Dateinamen/Pruefschritte ergaenzen
-- optional eine separate Datei `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` erstellen
+- ein synthetisches Testdatenpaket bzw. konkrete synthetische Dateien fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang bereitstellen
+- `docs/END_TO_END_TESTPLAN.md` praktisch Schritt fuer Schritt abarbeiten
+- Ergebnisse in `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` dokumentieren
 - danach Build und Tests ausfuehren
 
 Das ist der beste naechste Schritt, weil die Kernlogik bereits umfangreich testseitig abgesichert ist, aber die praktische Abnahme der automatischen Paket- und Anhanglogik noch als groesste Restunsicherheit bleibt.

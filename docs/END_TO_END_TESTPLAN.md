@@ -43,12 +43,24 @@ Empfohlene reproduzierbare Ordnerstruktur:
 | XDT-Anhang Importordner | `C:\GitHub\AnhangImp` |
 | XDT-Anhang Exportordner | `C:\GitHub\AnhangExp` |
 
+### 3.1 Vorbereitung der Testumgebung
+
+1. Die Ordnerstruktur lokal anlegen.
+2. In allen Ordnern ausschließlich Testdaten verwenden.
+3. Keine Produktivordner, keine echten Patientenordner und keine Netzwerkordner aus dem laufenden Praxisbetrieb verwenden.
+4. Den Testlauf in `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` dokumentieren.
+5. App-Version und Git-Commit vor Testbeginn im Protokoll eintragen.
+
 Vor jedem manuellen Testfall:
 
 1. Anwendung schließen oder Überwachung stoppen.
-2. Testordner kontrolliert leeren oder neue eindeutige Unterordner verwenden.
-3. Keine produktiven Patienten- oder Geräteordner verwenden.
-4. Sicherstellen, dass keine alte Exportdatei oder alter Anhang das Ergebnis verfälscht.
+2. Nur die definierten Testordner verwenden.
+3. Exportordner manuell leeren, aber nur im Testsetup und niemals in Produktivordnern.
+4. AIS-, Geräte- und XDT-Anhang-Importordner manuell leeren oder neue eindeutige Unterordner je Testfall verwenden.
+5. Archiv- und Fehlerordner entweder testfallweise notieren oder eindeutige Unterordner je Testfall verwenden.
+6. Keine echten Patientendaten verwenden.
+7. Sicherstellen, dass keine alte Exportdatei oder alter Anhang das Ergebnis verfälscht.
+8. Vor dem Ablegen neuer Dateien prüfen, dass die Überwachung gestoppt ist, wenn der Testfall eine genaue Ablagereihenfolge erfordert.
 
 ## 4. Testdateien
 
@@ -68,6 +80,25 @@ Benötigt werden synthetische oder anonymisierte Testdateien:
 - Nicht unterstützte Datei, z. B. `.docx` oder `.tmp`.
 
 Für MEDISTAR/NIDEK ARK1S sollten die bekannten validierten Testdateien bzw. synthetische Kopien davon verwendet werden.
+
+### 4.1 Testdaten-Checkliste
+
+Für eine vollständige praktische Abnahme werden benötigt:
+
+- synthetische AIS-GDT/XDT-Datei mit Patientennummer in `3000`
+- synthetische NIDEK ARK1S XML-Datei
+- synthetische PDF- oder TXT-Anhangdatei
+- optional zweite unterstützte Anhangdatei für den Mehrfachanhang-Test
+- optional nicht unterstützte Datei, z. B. `.docx` oder `.tmp`
+- optional instabile Datei, z. B. eine Datei, die während des Scans noch kopiert, geöffnet oder verändert wird
+
+Die Testdateien sollten vorab im Protokoll festgehalten werden:
+
+- Dateiname
+- Quellpfad
+- erwartete Patientennummer
+- erwarteter Ziel-Dateiname des Anhangs
+- erwarteter `6305`-Zielpfad
 
 ## 5. Profilkonfiguration
 
@@ -92,7 +123,50 @@ Standardkonfiguration für die manuellen Testfälle:
 | 6304 Beschreibung | `Test M.Kurze` |
 | 6305 vollständiger Dateipfad | `{Attachment.TargetFullPath}` |
 
-## 6. Testfälle
+## 6. Praktischer Ablauf je Testfall
+
+Sofern der jeweilige Testfall nichts anderes vorgibt, ist dieser Ablauf zu verwenden:
+
+1. App starten.
+2. Tab `Schnittstellenprofile` öffnen.
+3. Test-Schnittstellenprofil prüfen oder auswählen.
+4. Ordner auf die Testordner setzen.
+5. Archivierung und Archivmodus gemäß Testfall setzen.
+6. XDT-Anhang-Automatik gemäß Testfall aktivieren oder deaktivieren.
+7. XDT-Anhang-Modus `Optional` oder `Pflicht` gemäß Testfall setzen.
+8. Wartezeiten prüfen:
+   - Wartezeit auf Gerätedatei
+   - Wartezeit auf XDT-Anhang
+   - Dateistabilität
+   - Ordnerabfrage-Intervall
+9. Tab `Verarbeitung` öffnen.
+10. Überwachung starten.
+11. Haken `Gefundene Dateipaare automatisch verarbeiten` gemäß Testfall setzen.
+12. Dateien in der im Testfall angegebenen Reihenfolge ablegen.
+13. Statusmeldung im Tab `Verarbeitung` abwarten.
+14. Exportordner prüfen.
+15. Exportdatei mit Texteditor prüfen.
+16. Archivordner prüfen.
+17. Fehlerordner prüfen.
+18. XDT-Anhang Exportordner prüfen.
+19. Ergebnis in `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` eintragen.
+20. Überwachung stoppen, bevor der nächste Testfall vorbereitet wird.
+
+## 7. Hinweise zu Timing und Dateistabilität
+
+- Eine AIS-Datei darf vor der Gerätedatei kommen.
+- Die Gerätedatei darf später kommen, solange `DeviceFileWaitTimeoutMinutes` nicht überschritten ist.
+- Die XDT-Anhang-Wartezeit beginnt erst nach erkanntem vollständigem AIS-/Geräte-Paar.
+- Dateien müssen stabil sein, bevor sie verarbeitet, verschoben oder verlinkt werden.
+- Bei Tests mit Wartezeiten immer mindestens folgenden Puffer einplanen:
+  - `Ordnerabfrage-Intervall`
+  - plus `Dateistabilität abwarten`
+  - plus mindestens 2 Sekunden Sicherheitszuschlag
+- Bei optionalem Anhang ohne Datei muss bis `AttachmentWaitTimeoutSeconds` gewartet werden, bevor Export ohne Anhang erwartet wird.
+- Bei verspätetem optionalem Anhang muss der Anhang innerhalb `AttachmentWaitTimeoutSeconds` nach vollständigem AIS-/Geräte-Paar abgelegt und stabil werden.
+- Bei instabilen Dateien die Datei während mindestens eines Scan-Intervalls geöffnet, kopiert oder verändert halten.
+
+## 8. Testfälle
 
 ### Testfall 1: Normale Verarbeitung ohne XDT-Anhang-Funktion
 
@@ -284,7 +358,7 @@ Erwartung:
 - Optionaler Anhang: Export ohne Anhang nach Timeout.
 - Pflicht-Anhang: Blockade, weil kein unterstützter Anhang vorhanden ist.
 
-## 7. Erwartete Ergebnisse
+## 9. Erwartete Ergebnisse
 
 Allgemeine erwartete Ergebnisse über alle Testfälle:
 
@@ -296,7 +370,16 @@ Allgemeine erwartete Ergebnisse über alle Testfälle:
 - Mehrere unterstützte Anhänge werden nicht automatisch zugeordnet.
 - Exportordner wird nicht pauschal bereinigt.
 
-## 8. Prüfpunkte in der Exportdatei
+Ein einzelner Testfall gilt als bestanden, wenn:
+
+- die erwartete Exportdatei vorhanden oder bewusst nicht vorhanden ist
+- der XDT-Inhalt zum Testfall passt
+- ein XDT-Anhang korrekt übertragen oder bewusst nicht übertragen wurde
+- Archiv- und Fehlerverhalten zum Testfall passen
+- die Statusmeldung plausibel zum Testfall passt
+- keine unbekannten Dateien verändert wurden
+
+## 10. Prüfpunkte in der Exportdatei
 
 Zu prüfen:
 
@@ -318,7 +401,39 @@ Zu prüfen:
 - Backslashes im Pfad bleiben erhalten.
 - `6305` verweist auf die tatsächlich im XDT-Anhang Exportordner abgelegte Datei.
 
-## 9. Prüfpunkte im Archiv
+### 10.1 Manuelle Prüfanleitung für die XDT-Datei
+
+1. Erzeugte XDT-Datei im Exportordner mit einem Texteditor öffnen.
+2. Nach folgenden Feldkennungen suchen:
+   - `8000`
+   - `3000`
+   - `3101`
+   - `3102`
+   - `3103`
+   - `8402`
+   - `6228`
+   - `6302`
+   - `6303`
+   - `6304`
+   - `6305`
+3. Bei Tests mit erfolgreichem XDT-Anhang prüfen:
+   - `6302` ist vorhanden.
+   - `6303` ist vorhanden.
+   - `6304` ist vorhanden, wenn eine Beschreibung gesetzt ist.
+   - `6305` ist vorhanden.
+   - `6305` entspricht dem erwarteten Zielpfad im XDT-Anhang Exportordner.
+4. Bei Tests ohne Anhang, deaktiviertem Anhang, optionalem Timeout, instabilem Anhang oder Mehrfachanhang prüfen:
+   - keine `6302`
+   - keine `6303`
+   - keine `6304`
+   - keine `6305`
+5. XDT-Längenpräfixe plausibel prüfen:
+   - Jede Zeile beginnt mit einer Länge.
+   - Danach folgt die Feldkennung.
+   - Danach folgt der Feldwert.
+   - Backslashes im Pfad bleiben erhalten.
+
+## 11. Prüfpunkte im Archiv
 
 Zu prüfen:
 
@@ -333,7 +448,7 @@ Zu prüfen:
   - keine unbekannten Dateien wurden gelöscht.
   - falls später eine sichere Ablage für abgelaufene Dateien aktiv wird, muss sie nachvollziehbar dokumentiert sein.
 
-## 10. Prüfpunkte im XDT-Anhang Exportordner
+## 12. Prüfpunkte im XDT-Anhang Exportordner
 
 Zu prüfen:
 
@@ -351,7 +466,7 @@ Zu prüfen:
 - Bei instabiler Datei:
   - keine beschädigte oder halbe Datei wird exportiert.
 
-## 11. Fehler-/Warnmeldungen
+## 13. Fehler-/Warnmeldungen
 
 Zu erwartende Statusmeldungen:
 
@@ -364,7 +479,7 @@ Zu erwartende Statusmeldungen:
 - `Mehrere XDT-Anhänge gefunden: keine automatische Zuordnung.`
 - `XDT-Anhang ist noch nicht stabil; wird später erneut geprüft.`
 
-## 12. Automatisierte Testabdeckung
+## 14. Automatisierte Testabdeckung
 
 Aktuell relevante automatisierte Tests:
 
@@ -392,7 +507,13 @@ Offene automatisierte Lücken:
 
 Ergänzend ist der Templatepaket-Importfluss E2E-nah automatisiert abgesichert. Die Tests prüfen Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme, Dependency-Remapping, BuiltIn-Schutz und deaktivierte importierte Schnittstellenprofile. Eine manuelle Importprüfung kann später in einen eigenen Abnahmeplan aufgenommen werden.
 
-## 13. Ergebnisprotokoll für manuelle Tests
+## 15. Ergebnisprotokoll für manuelle Tests
+
+Für praktische Abnahmen soll bevorzugt die separate Vorlage verwendet werden:
+
+- `docs/E2E_TESTPROTOKOLL_TEMPLATE.md`
+
+Die folgende Tabelle bleibt als kompakte Schnellübersicht erhalten.
 
 | Testfall | Datum/Uhrzeit | Tester | Profil | Ergebnis bestanden ja/nein | Exportdatei | Anhang-Zieldatei | Auffälligkeiten | Screenshot/Notiz |
 |---|---|---|---|---|---|---|---|---|
@@ -409,7 +530,7 @@ Ergänzend ist der Templatepaket-Importfluss E2E-nah automatisiert abgesichert. 
 | 11 |  |  |  |  |  |  |  |  |
 | 12 |  |  |  |  |  |  |  |  |
 
-## 14. Abnahmekriterien
+## 16. Abnahmekriterien
 
 Der automatische AIS-/Geräte-/XDT-Anhang-Ablauf gilt für diesen Prototyp als abgenommen, wenn:
 

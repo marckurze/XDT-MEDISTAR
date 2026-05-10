@@ -241,7 +241,7 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 5. Prüfliste für importierte Ordnerpfade, Archiv-/Fehleroptionen und XDT-Anhang-Einstellungen modellieren.
 6. UI-Preview für die Aktivierungsprüfung importierter Schnittstellenprofile vorbereiten.
 7. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
-8. E2E-Testplan mit realen Testordnern ausführen und Ergebnisprotokoll ergänzen.
+8. E2E-Testplan mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
 9. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
 10. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 11. Lizenzsignatur-Konzept dokumentieren, bevor produktive Sperren umgesetzt werden.
