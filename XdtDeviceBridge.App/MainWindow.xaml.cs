@@ -2610,9 +2610,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        var scanBar = FindVisualChildByTag<FrameworkElement>(element, "RadarScanBar");
-        var scanBarTransform = scanBar?.RenderTransform as TranslateTransform;
         StopRadarAnimation(element);
+        var scanBar = FindVisualChildByTag<FrameworkElement>(element, "RadarScanBar");
+        var scanBarTransform = scanBar is null
+            ? null
+            : EnsureMutableTranslateTransform(scanBar);
 
         if (!card.IsScanAnimationActive)
         {
@@ -2670,13 +2672,26 @@ public partial class MainWindow : Window
     private static void StopRadarAnimation(FrameworkElement element)
     {
         var scanBar = FindVisualChildByTag<FrameworkElement>(element, "RadarScanBar");
-        if (scanBar?.RenderTransform is TranslateTransform scanBarTransform)
+        if (scanBar?.RenderTransform is TranslateTransform scanBarTransform
+            && !scanBarTransform.IsFrozen)
         {
             scanBarTransform.BeginAnimation(TranslateTransform.XProperty, null);
             scanBarTransform.X = 0;
         }
 
         scanBar?.BeginAnimation(UIElement.OpacityProperty, null);
+    }
+
+    private static TranslateTransform EnsureMutableTranslateTransform(FrameworkElement element)
+    {
+        if (element.RenderTransform is TranslateTransform transform && !transform.IsFrozen)
+        {
+            return transform;
+        }
+
+        transform = new TranslateTransform();
+        element.RenderTransform = transform;
+        return transform;
     }
 
     private static T? FindVisualChild<T>(DependencyObject parent)
