@@ -5,6 +5,8 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using XdtDeviceBridge.Core;
 using XdtDeviceBridge.Infrastructure;
 using WinForms = System.Windows.Forms;
@@ -2271,6 +2273,7 @@ public partial class MainWindow : Window
     private void RefreshInterfaceMonitoringCards()
     {
         _interfaceMonitoringCards.Clear();
+        var isMonitoringActive = _periodicScanCancellationTokenSource is not null;
         foreach (var row in _activeInterfaceProfileStatusRows)
         {
             var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
@@ -2280,6 +2283,7 @@ public partial class MainWindow : Window
                 CurrentStatus = runtimeState.CurrentStatus,
                 StatusClass = runtimeState.StatusClass,
                 LastScanText = runtimeState.LastScanText,
+                IsScanAnimationActive = isMonitoringActive,
                 AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein"
             });
         }
@@ -2312,6 +2316,7 @@ public partial class MainWindow : Window
             CurrentStatus = runtimeCard.CurrentStatus,
             StatusClass = runtimeCard.StatusClass,
             LastScanText = runtimeCard.LastScanText,
+            IsScanAnimationActive = runtimeCard.IsScanAnimationActive,
             AutomaticProcessingText = runtimeCard.AutomaticProcessingText,
             PatientDisplayText = runtimeCard.PatientDisplayText,
             AisFileName = runtimeCard.AisFileName,
@@ -2343,7 +2348,9 @@ public partial class MainWindow : Window
                 ExportProfileName: profile.ExportProfileId,
                 CurrentStatus: "Gestoppt",
                 StatusClass: "Neutral",
+                ScanIntervalSeconds: Math.Max(1, profile.FolderOptions.AutoImportScanIntervalSeconds),
                 ScanIntervalText: $"{Math.Max(1, profile.FolderOptions.AutoImportScanIntervalSeconds)} s",
+                IsScanAnimationActive: false,
                 LastScanText: "-",
                 AutomaticProcessingText: "Nein",
                 PatientDisplayText: "",
@@ -2476,6 +2483,113 @@ public partial class MainWindow : Window
     private void EnableAutomaticPairProcessingCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         RefreshInterfaceMonitoringCards();
+    }
+
+    private void MonitoringRadar_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element
+            || element.DataContext is not InterfaceMonitoringCardDisplay card)
+        {
+            return;
+        }
+
+        var rotateTransform = FindVisualChild<RotateTransform>(element);
+        var pulseRing = FindVisualChildByTag<FrameworkElement>(element, "RadarPulseRing");
+        StopRadarAnimation(element);
+
+        if (!card.IsScanAnimationActive)
+        {
+            element.Opacity = 0.45;
+            if (rotateTransform is not null)
+            {
+                rotateTransform.Angle = 0;
+            }
+
+            return;
+        }
+
+        element.Opacity = 1;
+        var scanIntervalSeconds = Math.Clamp(card.ScanIntervalSeconds, 1, 60);
+        var rotationAnimation = new DoubleAnimation
+        {
+            From = 0,
+            To = 360,
+            Duration = new Duration(TimeSpan.FromSeconds(scanIntervalSeconds)),
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        rotateTransform?.BeginAnimation(RotateTransform.AngleProperty, rotationAnimation);
+
+        if (pulseRing is not null)
+        {
+            var pulseAnimation = new DoubleAnimation
+            {
+                From = 0.35,
+                To = 0.9,
+                Duration = new Duration(TimeSpan.FromSeconds(Math.Max(0.4, scanIntervalSeconds / 2.0))),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            pulseRing.BeginAnimation(UIElement.OpacityProperty, pulseAnimation);
+        }
+    }
+
+    private void MonitoringRadar_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            StopRadarAnimation(element);
+        }
+    }
+
+    private static void StopRadarAnimation(FrameworkElement element)
+    {
+        var rotateTransform = FindVisualChild<RotateTransform>(element);
+        rotateTransform?.BeginAnimation(RotateTransform.AngleProperty, null);
+
+        var pulseRing = FindVisualChildByTag<FrameworkElement>(element, "RadarPulseRing");
+        pulseRing?.BeginAnimation(UIElement.OpacityProperty, null);
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent)
+        where T : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T typedChild)
+            {
+                return typedChild;
+            }
+
+            var descendant = FindVisualChild<T>(child);
+            if (descendant is not null)
+            {
+                return descendant;
+            }
+        }
+
+        return null;
+    }
+
+    private static T? FindVisualChildByTag<T>(DependencyObject parent, object tag)
+        where T : FrameworkElement
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T typedChild && Equals(typedChild.Tag, tag))
+            {
+                return typedChild;
+            }
+
+            var descendant = FindVisualChildByTag<T>(child, tag);
+            if (descendant is not null)
+            {
+                return descendant;
+            }
+        }
+
+        return null;
     }
 
     private void StopPeriodicScan(bool updateUi)

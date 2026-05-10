@@ -183,9 +183,32 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("MEDISTAR + NIDEK ARK1S Export", row.MonitoringCard.ExportProfileName);
         Assert.Equal("Gestoppt", row.MonitoringCard.CurrentStatus);
         Assert.Equal("Neutral", row.MonitoringCard.StatusClass);
+        Assert.Equal(5, row.MonitoringCard.ScanIntervalSeconds);
         Assert.Equal("5 s", row.MonitoringCard.ScanIntervalText);
+        Assert.False(row.MonitoringCard.IsScanAnimationActive);
         Assert.Equal("-", row.MonitoringCard.LastScanText);
         Assert.Equal("Nein", row.MonitoringCard.AutomaticProcessingText);
+    }
+
+    [Fact]
+    public void BuildRows_ShouldUseConfiguredScanIntervalForMonitoringCard()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export") with
+            {
+                AutoImportScanIntervalSeconds = 12
+            }
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        Assert.Equal(12, row.MonitoringCard.ScanIntervalSeconds);
+        Assert.Equal("12 s", row.MonitoringCard.ScanIntervalText);
+        Assert.False(row.MonitoringCard.IsScanAnimationActive);
     }
 
     [Fact]

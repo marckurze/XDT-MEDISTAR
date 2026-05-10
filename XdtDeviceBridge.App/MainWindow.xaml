@@ -157,6 +157,84 @@
                                                                    TextWrapping="Wrap"
                                                                    DockPanel.Dock="Left"
                                                                    MaxWidth="230"/>
+                                                        <Grid DockPanel.Dock="Right"
+                                                              Width="42"
+                                                              Height="42"
+                                                              Margin="8,0,0,0"
+                                                              Loaded="MonitoringRadar_Loaded"
+                                                              Unloaded="MonitoringRadar_Unloaded"
+                                                              ToolTip="{Binding ScanIntervalText, StringFormat=Radar-Puls: {0}}">
+                                                            <Ellipse Tag="RadarPulseRing"
+                                                                     StrokeThickness="2"
+                                                                     Opacity="0.55">
+                                                                <Ellipse.Style>
+                                                                    <Style TargetType="Ellipse">
+                                                                        <Setter Property="Stroke" Value="#9CA3AF"/>
+                                                                        <Setter Property="Fill" Value="#F3F4F6"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Active">
+                                                                                <Setter Property="Stroke" Value="#2563EB"/>
+                                                                                <Setter Property="Fill" Value="#DBEAFE"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
+                                                                                <Setter Property="Stroke" Value="#D97706"/>
+                                                                                <Setter Property="Fill" Value="#FEF3C7"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Success">
+                                                                                <Setter Property="Stroke" Value="#16A34A"/>
+                                                                                <Setter Property="Fill" Value="#DCFCE7"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
+                                                                                <Setter Property="Stroke" Value="#DC2626"/>
+                                                                                <Setter Property="Fill" Value="#FEE2E2"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Blocked">
+                                                                                <Setter Property="Stroke" Value="#C2410C"/>
+                                                                                <Setter Property="Fill" Value="#FFEDD5"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Ellipse.Style>
+                                                            </Ellipse>
+                                                            <Line X1="21"
+                                                                  Y1="21"
+                                                                  X2="21"
+                                                                  Y2="5"
+                                                                  StrokeThickness="2"
+                                                                  StrokeStartLineCap="Round"
+                                                                  StrokeEndLineCap="Round">
+                                                                <Line.RenderTransform>
+                                                                    <RotateTransform CenterX="21" CenterY="21"/>
+                                                                </Line.RenderTransform>
+                                                                <Line.Style>
+                                                                    <Style TargetType="Line">
+                                                                        <Setter Property="Stroke" Value="#6B7280"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Active">
+                                                                                <Setter Property="Stroke" Value="#2563EB"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
+                                                                                <Setter Property="Stroke" Value="#D97706"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Success">
+                                                                                <Setter Property="Stroke" Value="#16A34A"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
+                                                                                <Setter Property="Stroke" Value="#DC2626"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Blocked">
+                                                                                <Setter Property="Stroke" Value="#C2410C"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Line.Style>
+                                                            </Line>
+                                                            <Ellipse Width="8"
+                                                                     Height="8"
+                                                                     Fill="#111827"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"/>
+                                                        </Grid>
                                                         <Border DockPanel.Dock="Right"
                                                                 Background="#E5E7EB"
                                                                 CornerRadius="4"
