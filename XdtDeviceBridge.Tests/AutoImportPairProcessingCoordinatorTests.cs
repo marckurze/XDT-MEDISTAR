@@ -644,16 +644,81 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         var second = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(30));
 
         var blocked = Assert.Single(second.Results);
-        Assert.False(blocked.WasProcessed);
-        Assert.True(blocked.WasSkipped);
+        Assert.True(blocked.WasProcessed);
+        Assert.False(blocked.WasSkipped);
         Assert.False(blocked.Success);
         Assert.Equal("XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.", blocked.Status);
+        Assert.Equal(1, second.ErrorCount);
         Assert.Equal(0, preparationService.CallCount);
         Assert.Equal(0, processor.CallCount);
 
         var third = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(60));
-        Assert.Equal("XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.", Assert.Single(third.Results).Status);
+        Assert.Empty(third.Results);
         Assert.Equal(0, processor.CallCount);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_RequiredAttachmentTimeoutShouldMoveKnownFilesToErrorFolderAndKeepUnknownFiles()
+    {
+        var files = CreateTempImportFiles();
+        var unknownFile = Path.Combine(files.Folder, "unknown.txt");
+        File.WriteAllText(unknownFile, "unknown");
+        var errorFolder = CreateTempFolder();
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult());
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+        var profile = CreateInterfaceProfile(
+            errorFolder: errorFolder,
+            moveFailedFilesToErrorFolder: true,
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: @"C:\Import\Attachments",
+            attachmentExportFolder: @"C:\Export\Attachments",
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            attachmentWaitTimeoutSeconds: 1);
+        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
+
+        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
+        var result = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(1));
+
+        var blocked = Assert.Single(result.Results);
+        Assert.False(blocked.Success);
+        Assert.Contains("Bekannte Importdateien des blockierten Pakets wurden in den Fehlerordner verschoben:", blocked.Messages);
+        Assert.False(File.Exists(files.AisFilePath));
+        Assert.False(File.Exists(files.DeviceFilePath));
+        Assert.True(File.Exists(unknownFile));
+        Assert.True(File.Exists(Path.Combine(errorFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
+        Assert.True(File.Exists(Path.Combine(errorFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_RequiredAttachmentTimeoutShouldNotBlockNewInvestigation()
+    {
+        var candidate = CreateAttachmentCandidate(@"C:\Import\Attachments\report.pdf", isSupported: true);
+        var scanner = new FakeSequentialAttachmentScanner(
+            CreateAttachmentScanResult(),
+            CreateAttachmentScanResult(),
+            CreateAttachmentScanResult(new[] { candidate }));
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: @"C:\Import\Attachments",
+            attachmentExportFolder: @"C:\Export\Attachments",
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            attachmentWaitTimeoutSeconds: 1);
+        var firstPair = CreatePair("patient-a.gdt", "device-a.xml");
+        var secondPair = CreatePair("patient-b.gdt", "device-b.xml");
+
+        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { firstPair }, true, Timestamp);
+        var blocked = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { firstPair }, true, Timestamp.AddSeconds(1));
+        var processed = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { secondPair }, true, Timestamp.AddSeconds(2));
+
+        Assert.False(Assert.Single(blocked.Results).Success);
+        Assert.True(Assert.Single(processed.Results).Success);
+        Assert.Equal(1, processor.CallCount);
+        Assert.Equal(1, preparationService.CallCount);
     }
 
     [Fact]
@@ -871,10 +936,12 @@ public sealed class AutoImportPairProcessingCoordinatorTests
 
     private static InterfaceProfileDefinition CreateInterfaceProfile(
         string archiveFolder = "",
+        string errorFolder = "",
         bool archiveProcessedFiles = false,
         ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
         bool clearAisImportFolderBeforeProcessing = false,
         bool clearDeviceImportFolderBeforeProcessing = false,
+        bool moveFailedFilesToErrorFolder = false,
         bool isAttachmentProcessingEnabled = false,
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
@@ -890,10 +957,12 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
             {
                 ArchiveFolder = archiveFolder,
+                ErrorFolder = errorFolder,
                 ArchiveProcessedFiles = archiveProcessedFiles,
                 ArchiveProcessedFileMode = archiveProcessedFileMode,
                 ClearAisImportFolderBeforeProcessing = clearAisImportFolderBeforeProcessing,
                 ClearDeviceImportFolderBeforeProcessing = clearDeviceImportFolderBeforeProcessing,
+                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder,
                 IsAttachmentProcessingEnabled = isAttachmentProcessingEnabled,
                 AttachmentImportFolder = attachmentImportFolder,
                 AttachmentExportFolder = attachmentExportFolder,

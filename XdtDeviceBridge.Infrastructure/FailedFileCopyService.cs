@@ -13,6 +13,43 @@ public sealed class FailedFileCopyService
         DateTime failedAtUtc,
         string failureReason)
     {
+        return TransferFailedFiles(
+            errorFolder,
+            interfaceProfileName,
+            aisFilePath,
+            deviceFilePath,
+            failedAtUtc,
+            failureReason,
+            moveFiles: false);
+    }
+
+    public FailedFileCopyResult MoveFailedFiles(
+        string errorFolder,
+        string interfaceProfileName,
+        string aisFilePath,
+        string deviceFilePath,
+        DateTime failedAtUtc,
+        string failureReason)
+    {
+        return TransferFailedFiles(
+            errorFolder,
+            interfaceProfileName,
+            aisFilePath,
+            deviceFilePath,
+            failedAtUtc,
+            failureReason,
+            moveFiles: true);
+    }
+
+    private static FailedFileCopyResult TransferFailedFiles(
+        string errorFolder,
+        string interfaceProfileName,
+        string aisFilePath,
+        string deviceFilePath,
+        DateTime failedAtUtc,
+        string failureReason,
+        bool moveFiles)
+    {
         if (string.IsNullOrWhiteSpace(errorFolder))
         {
             throw new ArgumentException("Error folder must not be empty.", nameof(errorFolder));
@@ -39,8 +76,8 @@ public sealed class FailedFileCopyService
             profileFolderName);
 
         Directory.CreateDirectory(dayFolder);
-        CopySingleFile(aisFilePath, Path.Combine(dayFolder, "AIS"), copiedFiles, issues);
-        CopySingleFile(deviceFilePath, Path.Combine(dayFolder, "Device"), copiedFiles, issues);
+        TransferSingleFile(aisFilePath, Path.Combine(dayFolder, "AIS"), copiedFiles, issues, moveFiles);
+        TransferSingleFile(deviceFilePath, Path.Combine(dayFolder, "Device"), copiedFiles, issues, moveFiles);
         WriteErrorFile(
             dayFolder,
             interfaceProfileName,
@@ -57,11 +94,12 @@ public sealed class FailedFileCopyService
             HasErrors: issues.Count > 0);
     }
 
-    private static void CopySingleFile(
+    private static void TransferSingleFile(
         string sourceFilePath,
         string targetFolder,
         List<string> copiedFiles,
-        List<string> issues)
+        List<string> issues,
+        bool moveFile)
     {
         if (!File.Exists(sourceFilePath))
         {
@@ -73,7 +111,15 @@ public sealed class FailedFileCopyService
         {
             Directory.CreateDirectory(targetFolder);
             var targetFilePath = GetNextAvailableFilePath(targetFolder, Path.GetFileName(sourceFilePath));
-            File.Copy(sourceFilePath, targetFilePath);
+            if (moveFile)
+            {
+                File.Move(sourceFilePath, targetFilePath);
+            }
+            else
+            {
+                File.Copy(sourceFilePath, targetFilePath);
+            }
+
             copiedFiles.Add(targetFilePath);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

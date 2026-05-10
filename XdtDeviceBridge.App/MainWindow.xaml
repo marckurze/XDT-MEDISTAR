@@ -207,14 +207,14 @@
                                                                 <Border Grid.Column="1" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.45"/>
                                                                 <Border Grid.Column="2" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.35"/>
                                                             </Grid>
-                                                            <Rectangle Height="44"
-                                                                       Width="60"
-                                                                       RadiusX="4"
-                                                                       RadiusY="4"
+                                                            <Rectangle Height="46"
+                                                                       Width="34"
+                                                                       RadiusX="3"
+                                                                       RadiusY="3"
                                                                        HorizontalAlignment="Left"
                                                                        VerticalAlignment="Center"
                                                                        Tag="RadarScanBar"
-                                                                       Opacity="0.72">
+                                                                       Opacity="0.58">
                                                                 <Rectangle.RenderTransform>
                                                                     <TranslateTransform/>
                                                                 </Rectangle.RenderTransform>
@@ -223,22 +223,15 @@
                                                                         <Setter Property="Fill">
                                                                             <Setter.Value>
                                                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                                    <GradientStop Color="#003D27" Offset="0"/>
-                                                                                    <GradientStop Color="#22C55E" Offset="0.55"/>
-                                                                                    <GradientStop Color="#BBF7D0" Offset="1"/>
+                                                                                    <GradientStop Color="#002417" Offset="0"/>
+                                                                                    <GradientStop Color="#10B981" Offset="0.38"/>
+                                                                                    <GradientStop Color="#BBF7D0" Offset="0.52"/>
+                                                                                    <GradientStop Color="#10B981" Offset="0.66"/>
+                                                                                    <GradientStop Color="#002417" Offset="1"/>
                                                                                 </LinearGradientBrush>
                                                                             </Setter.Value>
                                                                         </Setter>
                                                                         <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Waiting">
-                                                                                <Setter Property="Fill" Value="#F59E0B"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Error">
-                                                                                <Setter Property="Fill" Value="#EF4444"/>
-                                                                            </DataTrigger>
-                                                                            <DataTrigger Binding="{Binding StatusClass}" Value="Blocked">
-                                                                                <Setter Property="Fill" Value="#F97316"/>
-                                                                            </DataTrigger>
                                                                             <DataTrigger Binding="{Binding IsScanAnimationActive}" Value="False">
                                                                                 <Setter Property="Fill" Value="#6B7280"/>
                                                                                 <Setter Property="Opacity" Value="0.45"/>
@@ -296,6 +289,11 @@
                                                                     <StackPanel>
                                                                         <TextBlock Text="{Binding Name}" FontWeight="Bold" TextWrapping="Wrap"/>
                                                                         <TextBlock Text="{Binding Status}" Foreground="DimGray" TextWrapping="Wrap"/>
+                                                                        <TextBlock Text="{Binding Detail}"
+                                                                                   Foreground="#4B5563"
+                                                                                   FontSize="10"
+                                                                                   TextWrapping="Wrap"
+                                                                                   MaxHeight="34"/>
                                                                     </StackPanel>
                                                                 </Border>
                                                             </DataTemplate>

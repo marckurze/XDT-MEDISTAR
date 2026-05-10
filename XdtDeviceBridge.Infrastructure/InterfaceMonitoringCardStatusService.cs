@@ -52,7 +52,16 @@ public sealed class InterfaceMonitoringCardStatusService
         };
 
         var expectedInputs = updatedCard.ExpectedInputs
-            .Select(input => UpdateInputFromScan(input, interfaceProfile, scanResult, packageEvaluation, aisFile, deviceFile, patient))
+            .Select(input => UpdateInputFromScan(
+                input,
+                updatedCard.DeviceName,
+                interfaceProfile,
+                scanResult,
+                packageEvaluation,
+                aisFile,
+                deviceFile,
+                patient,
+                scanTimestamp))
             .ToList();
 
         return updatedCard with
@@ -103,18 +112,20 @@ public sealed class InterfaceMonitoringCardStatusService
 
     private ExpectedInputDisplayItem UpdateInputFromScan(
         ExpectedInputDisplayItem input,
+        string deviceProfileName,
         InterfaceProfileDefinition interfaceProfile,
         AutoImportScanResult scanResult,
         AutoImportPackageEvaluationResult? packageEvaluation,
         PendingImportFile? aisFile,
         PendingImportFile? deviceFile,
-        PatientData? patient)
+        PatientData? patient,
+        DateTime scanTimestamp)
     {
         return input.Key switch
         {
             "ais" => CreateAisInput(input, aisFile, patient, packageEvaluation),
-            "device" => CreateDeviceInput(input, deviceFile, packageEvaluation),
-            "attachment" => CreateAttachmentInputFromScan(input, interfaceProfile, scanResult, packageEvaluation),
+            "device" => CreateDeviceInput(input, deviceProfileName, deviceFile, packageEvaluation, aisFile, scanTimestamp, interfaceProfile.FolderOptions.DeviceFileWaitTimeoutMinutes),
+            "attachment" => CreateAttachmentInputFromScan(input, interfaceProfile, scanResult, packageEvaluation, scanTimestamp),
             _ => input
         };
     }
@@ -190,18 +201,28 @@ public sealed class InterfaceMonitoringCardStatusService
 
     private static ExpectedInputDisplayItem CreateDeviceInput(
         ExpectedInputDisplayItem input,
+        string deviceProfileName,
         PendingImportFile? deviceFile,
-        AutoImportPackageEvaluationResult? packageEvaluation)
+        AutoImportPackageEvaluationResult? packageEvaluation,
+        PendingImportFile? aisFile,
+        DateTime scanTimestamp,
+        int deviceFileWaitTimeoutMinutes)
     {
         if (deviceFile is null)
         {
             var waitsForDevice = packageEvaluation?.Reason == AutoImportPackageStateReason.WaitingForDeviceFile;
+            var remaining = waitsForDevice && aisFile is not null
+                ? CreateRemainingTimeText(
+                    aisFile.DetectedAtUtc,
+                    TimeSpan.FromMinutes(Math.Max(0, deviceFileWaitTimeoutMinutes)),
+                    scanTimestamp)
+                : "";
             return input with
             {
                 Status = waitsForDevice ? "wartet auf Gerät" : "erwartet",
                 StatusClass = waitsForDevice ? "Waiting" : "Neutral",
                 Detail = waitsForDevice
-                    ? packageEvaluation?.Messages.LastOrDefault() ?? "AIS-Datei vorhanden, Gerätedatei fehlt."
+                    ? JoinDetails(packageEvaluation?.Messages.LastOrDefault() ?? "AIS-Datei vorhanden, Gerätedatei fehlt.", remaining)
                     : input.FolderPath
             };
         }
@@ -210,7 +231,9 @@ public sealed class InterfaceMonitoringCardStatusService
         {
             Status = deviceFile.Status == PendingImportFileStatus.Stable ? "gefunden" : "instabil",
             StatusClass = deviceFile.Status == PendingImportFileStatus.Stable ? "Success" : "Waiting",
-            Detail = deviceFile.FileName
+            Detail = string.IsNullOrWhiteSpace(deviceProfileName)
+                ? deviceFile.FileName
+                : $"{deviceFile.FileName} ({deviceProfileName})"
         };
     }
 
@@ -218,7 +241,8 @@ public sealed class InterfaceMonitoringCardStatusService
         ExpectedInputDisplayItem input,
         InterfaceProfileDefinition interfaceProfile,
         AutoImportScanResult scanResult,
-        AutoImportPackageEvaluationResult? packageEvaluation)
+        AutoImportPackageEvaluationResult? packageEvaluation,
+        DateTime scanTimestamp)
     {
         if (!interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled)
         {
@@ -242,13 +266,28 @@ public sealed class InterfaceMonitoringCardStatusService
             };
         }
 
+        var readyPair = scanResult.Queue.FindReadyPairs().FirstOrDefault();
+        var waitStartedAt = readyPair is null
+            ? scanTimestamp
+            : MaxDate(
+                readyPair.AisFile.StableAtUtc ?? readyPair.AisFile.DetectedAtUtc,
+                readyPair.DeviceFile.StableAtUtc ?? readyPair.DeviceFile.DetectedAtUtc);
+        var remaining = CreateRemainingTimeText(
+            waitStartedAt,
+            TimeSpan.FromSeconds(Math.Max(0, interfaceProfile.FolderOptions.AttachmentWaitTimeoutSeconds)),
+            scanTimestamp);
+        var isRequired = interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required;
+        var timeoutReached = remaining == "Timeout erreicht";
+
         return input with
         {
-            Status = "wartet",
-            StatusClass = "Waiting",
-            Detail = interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required
-                ? "Wartet auf verpflichtenden XDT-Anhang."
-                : "Wartet auf optionalen XDT-Anhang."
+            Status = timeoutReached
+                ? "Timeout"
+                : isRequired ? "Pflicht wartet" : "optional wartet",
+            StatusClass = timeoutReached && isRequired ? "Blocked" : "Waiting",
+            Detail = JoinDetails(
+                isRequired ? "Wartet auf verpflichtenden XDT-Anhang." : "Wartet auf optionalen XDT-Anhang.",
+                remaining)
         };
     }
 
@@ -271,7 +310,7 @@ public sealed class InterfaceMonitoringCardStatusService
             AttachmentProcessingStatusReason.MultipleSupportedAttachments => ("mehrere Anhänge", "Blocked"),
             AttachmentProcessingStatusReason.MultipleStableAttachments => ("mehrere Anhänge", "Blocked"),
             AttachmentProcessingStatusReason.MultipleAttachmentsAmbiguous => ("mehrere Anhänge", "Blocked"),
-            AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock => ("blockiert", "Blocked"),
+            AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock => ("Timeout", "Blocked"),
             AttachmentProcessingStatusReason.PreparationFailed => ("fehlgeschlagen", "Error"),
             AttachmentProcessingStatusReason.ScanError => ("fehlgeschlagen", "Error"),
             _ => attachmentStatus.Success ? ("erfolgreich", "Success") : ("übersprungen", "Neutral")
@@ -467,5 +506,31 @@ public sealed class InterfaceMonitoringCardStatusService
     private static string FileNameOrEmpty(string? path)
     {
         return string.IsNullOrWhiteSpace(path) ? "" : Path.GetFileName(path);
+    }
+
+    private static string CreateRemainingTimeText(DateTime startedAtUtc, TimeSpan timeout, DateTime nowUtc)
+    {
+        if (timeout <= TimeSpan.Zero)
+        {
+            return "Timeout erreicht";
+        }
+
+        var remaining = timeout - (nowUtc.ToUniversalTime() - startedAtUtc.ToUniversalTime());
+        if (remaining <= TimeSpan.Zero)
+        {
+            return "Timeout erreicht";
+        }
+
+        return $"noch {remaining:mm\\:ss}";
+    }
+
+    private static DateTime MaxDate(DateTime first, DateTime second)
+    {
+        return first >= second ? first : second;
+    }
+
+    private static string JoinDetails(params string[] details)
+    {
+        return string.Join(" - ", details.Where(detail => !string.IsNullOrWhiteSpace(detail)));
     }
 }

@@ -12,6 +12,7 @@ public sealed class AutoImportPairProcessingCoordinator
     private readonly IAttachmentExternalLinkPreparationService _attachmentPreparationService;
     private readonly IAisPatientDataReader _aisPatientDataReader;
     private readonly AttachmentPackageDecisionService _attachmentPackageDecisionService;
+    private readonly TerminalBlockedImportFileHandler _terminalBlockedImportFileHandler;
     private readonly HashSet<string> _processedPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _processingPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _blockedPairKeys = new(StringComparer.OrdinalIgnoreCase);
@@ -70,6 +71,29 @@ public sealed class AutoImportPairProcessingCoordinator
         IAttachmentExternalLinkPreparationService attachmentPreparationService,
         IAisPatientDataReader aisPatientDataReader,
         AttachmentPackageDecisionService attachmentPackageDecisionService)
+        : this(
+            manualProcessor,
+            duplicateImportFileHandler,
+            attachmentEligibilityService,
+            attachmentScannerService,
+            attachmentCandidateSelectionService,
+            attachmentPreparationService,
+            aisPatientDataReader,
+            attachmentPackageDecisionService,
+            new TerminalBlockedImportFileHandler())
+    {
+    }
+
+    public AutoImportPairProcessingCoordinator(
+        IInterfaceProfileManualProcessor manualProcessor,
+        DuplicateImportFileHandler duplicateImportFileHandler,
+        AttachmentAutoProcessingEligibilityService attachmentEligibilityService,
+        IAttachmentImportFolderScannerService attachmentScannerService,
+        AttachmentAutoCandidateSelectionService attachmentCandidateSelectionService,
+        IAttachmentExternalLinkPreparationService attachmentPreparationService,
+        IAisPatientDataReader aisPatientDataReader,
+        AttachmentPackageDecisionService attachmentPackageDecisionService,
+        TerminalBlockedImportFileHandler terminalBlockedImportFileHandler)
     {
         _manualProcessor = manualProcessor ?? throw new ArgumentNullException(nameof(manualProcessor));
         _duplicateImportFileHandler = duplicateImportFileHandler ?? throw new ArgumentNullException(nameof(duplicateImportFileHandler));
@@ -79,6 +103,7 @@ public sealed class AutoImportPairProcessingCoordinator
         _attachmentPreparationService = attachmentPreparationService ?? throw new ArgumentNullException(nameof(attachmentPreparationService));
         _aisPatientDataReader = aisPatientDataReader ?? throw new ArgumentNullException(nameof(aisPatientDataReader));
         _attachmentPackageDecisionService = attachmentPackageDecisionService ?? throw new ArgumentNullException(nameof(attachmentPackageDecisionService));
+        _terminalBlockedImportFileHandler = terminalBlockedImportFileHandler ?? throw new ArgumentNullException(nameof(terminalBlockedImportFileHandler));
     }
 
     public AutoImportPairProcessingBatchResult ProcessReadyPairs(
@@ -106,6 +131,7 @@ public sealed class AutoImportPairProcessingCoordinator
         foreach (var pair in readyPairs.Where(pair => pair.IsReady))
         {
             var pairKey = CreatePairKey(interfaceProfile.Metadata.Id, pair.AisFile.FilePath, pair.DeviceFile.FilePath);
+            var pairInstanceKey = CreatePairInstanceKey(interfaceProfile.Metadata.Id, pair);
             if (_processedPairKeys.Contains(pairKey))
             {
                 var duplicateResult = _duplicateImportFileHandler.HandleAlreadyProcessedPair(
@@ -126,24 +152,15 @@ public sealed class AutoImportPairProcessingCoordinator
                 continue;
             }
 
-            if (_blockedPairKeys.Contains(pairKey))
+            if (_blockedPairKeys.Contains(pairInstanceKey))
             {
-                var status = SkippedStatus(
-                    AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock,
-                    "XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.");
-                results.Add(CreateDeferredResult(
-                    pairKey,
-                    pair,
-                    status.Message,
-                    new[] { status.Message },
-                    status));
                 continue;
             }
 
-            if (_processingPairKeys.Contains(pairKey))
+            if (_processingPairKeys.Contains(pairInstanceKey))
             {
                 results.Add(new AutoImportPairProcessingResult(
-                    PairKey: pairKey,
+                    PairKey: pairInstanceKey,
                     AisFilePath: pair.AisFile.FilePath,
                     DeviceFilePath: pair.DeviceFile.FilePath,
                     WasProcessed: false,
@@ -159,7 +176,7 @@ public sealed class AutoImportPairProcessingCoordinator
             var attachmentGate = EvaluateAttachmentPackageBeforeProcessing(
                 interfaceProfile,
                 pair,
-                pairKey,
+                pairInstanceKey,
                 automaticProcessingEnabled,
                 isMonitoringRunning,
                 timestamp);
@@ -169,7 +186,7 @@ public sealed class AutoImportPairProcessingCoordinator
                 continue;
             }
 
-            _processingPairKeys.Add(pairKey);
+            _processingPairKeys.Add(pairInstanceKey);
             try
             {
                 var processingResult = _manualProcessor.Process(
@@ -180,15 +197,15 @@ public sealed class AutoImportPairProcessingCoordinator
                     timestamp,
                     attachmentGate.AttachmentPreparation);
                 _processedPairKeys.Add(pairKey);
-                _pairReadySinceUtc.Remove(pairKey);
-                results.Add(CreateProcessedResult(interfaceProfile, pairKey, pair, processingResult, processingResult.AttachmentStatus));
+                _pairReadySinceUtc.Remove(pairInstanceKey);
+                results.Add(CreateProcessedResult(interfaceProfile, pairInstanceKey, pair, processingResult, processingResult.AttachmentStatus));
             }
             catch (Exception ex)
             {
                 _processedPairKeys.Add(pairKey);
-                _pairReadySinceUtc.Remove(pairKey);
+                _pairReadySinceUtc.Remove(pairInstanceKey);
                 results.Add(new AutoImportPairProcessingResult(
-                    PairKey: pairKey,
+                    PairKey: pairInstanceKey,
                     AisFilePath: pair.AisFile.FilePath,
                     DeviceFilePath: pair.DeviceFile.FilePath,
                     WasProcessed: true,
@@ -201,7 +218,7 @@ public sealed class AutoImportPairProcessingCoordinator
             }
             finally
             {
-                _processingPairKeys.Remove(pairKey);
+                _processingPairKeys.Remove(pairInstanceKey);
             }
         }
 
@@ -236,7 +253,7 @@ public sealed class AutoImportPairProcessingCoordinator
     private AttachmentGateDecision EvaluateAttachmentPackageBeforeProcessing(
         InterfaceProfileDefinition interfaceProfile,
         PendingImportPair pair,
-        string pairKey,
+        string pairInstanceKey,
         bool automaticProcessingEnabled,
         bool isMonitoringRunning,
         DateTime timestamp)
@@ -280,7 +297,7 @@ public sealed class AutoImportPairProcessingCoordinator
         }
 
         var scanResult = _attachmentScannerService.Scan(interfaceProfile.FolderOptions);
-        var pairReadySince = GetPairReadySince(pairKey, timestamp);
+        var pairReadySince = GetPairReadySince(pairInstanceKey, timestamp);
         var hasWaitTimedOut = HasAttachmentWaitTimedOut(interfaceProfile, pairReadySince, timestamp);
         var packageDecision = _attachmentPackageDecisionService.Decide(
             interfaceProfile,
@@ -293,11 +310,11 @@ public sealed class AutoImportPairProcessingCoordinator
         if (packageDecision.ShouldWait)
         {
             var status = SkippedStatus(
-                AttachmentProcessingStatusReason.AttachmentWait,
-                "Dateipaar vollständig, warte auf XDT-Anhang.");
+                    AttachmentProcessingStatusReason.AttachmentWait,
+                    "Dateipaar vollständig, warte auf XDT-Anhang.");
             return new AttachmentGateDecision(
                 DeferredResult: CreateDeferredResult(
-                    pairKey,
+                    pairInstanceKey,
                     pair,
                     "Dateipaar vollständig, warte auf XDT-Anhang.",
                     new[] { status.Message, packageDecision.Message },
@@ -311,14 +328,26 @@ public sealed class AutoImportPairProcessingCoordinator
                 ? "XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert."
                 : packageDecision.Message;
             var status = SkippedStatus(MapPackageDecisionReason(packageDecision.Reason), message);
-            _pairReadySinceUtc.Remove(pairKey);
-            if (packageDecision.Reason == AttachmentPackageDecisionReason.AttachmentRequiredTimeoutBlock
-                || interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required)
+            _pairReadySinceUtc.Remove(pairInstanceKey);
+            if (packageDecision.Reason == AttachmentPackageDecisionReason.AttachmentRequiredTimeoutBlock)
             {
-                _blockedPairKeys.Add(pairKey);
+                _blockedPairKeys.Add(pairInstanceKey);
+                var handlingResult = _terminalBlockedImportFileHandler.Handle(
+                    interfaceProfile,
+                    pair,
+                    timestamp.ToUniversalTime(),
+                    message);
+                var messages = new[] { message, packageDecision.Message }
+                    .Concat(handlingResult.Messages)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToList();
+                return new AttachmentGateDecision(
+                    DeferredResult: CreateTerminalBlockedResult(pairInstanceKey, pair, message, messages, status),
+                    AttachmentPreparation: null);
             }
+
             return new AttachmentGateDecision(
-                DeferredResult: CreateDeferredResult(pairKey, pair, message, new[] { message, packageDecision.Message }, status),
+                DeferredResult: CreateDeferredResult(pairInstanceKey, pair, message, new[] { message, packageDecision.Message }, status),
                 AttachmentPreparation: null);
         }
 
@@ -382,6 +411,27 @@ public sealed class AutoImportPairProcessingCoordinator
             DeviceFilePath: pair.DeviceFile.FilePath,
             WasProcessed: false,
             WasSkipped: true,
+            Success: false,
+            Status: status,
+            ExportFilePath: null,
+            ManualProcessingResult: null,
+            Messages: messages,
+            AttachmentStatus: attachmentStatus);
+    }
+
+    private static AutoImportPairProcessingResult CreateTerminalBlockedResult(
+        string pairKey,
+        PendingImportPair pair,
+        string status,
+        IReadOnlyList<string> messages,
+        AttachmentProcessingStatus? attachmentStatus)
+    {
+        return new AutoImportPairProcessingResult(
+            PairKey: pairKey,
+            AisFilePath: pair.AisFile.FilePath,
+            DeviceFilePath: pair.DeviceFile.FilePath,
+            WasProcessed: true,
+            WasSkipped: false,
             Success: false,
             Status: status,
             ExportFilePath: null,
@@ -598,6 +648,17 @@ public sealed class AutoImportPairProcessingCoordinator
     public static string CreatePairKey(string interfaceProfileId, string aisFilePath, string deviceFilePath)
     {
         return $"{interfaceProfileId}|{aisFilePath}|{deviceFilePath}";
+    }
+
+    private static string CreatePairInstanceKey(string interfaceProfileId, PendingImportPair pair)
+    {
+        return string.Join(
+            "|",
+            CreatePairKey(interfaceProfileId, pair.AisFile.FilePath, pair.DeviceFile.FilePath),
+            pair.AisFile.DetectedAtUtc.Ticks.ToString(),
+            pair.AisFile.StableAtUtc?.Ticks.ToString() ?? "",
+            pair.DeviceFile.DetectedAtUtc.Ticks.ToString(),
+            pair.DeviceFile.StableAtUtc?.Ticks.ToString() ?? "");
     }
 
     private sealed record AttachmentGateDecision(

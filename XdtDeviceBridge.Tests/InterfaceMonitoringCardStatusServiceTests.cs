@@ -65,7 +65,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), DateTime.Today, automaticProcessingEnabled: false);
 
         Assert.Equal("ark1s.xml", updated.DeviceFileName);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Status == "gefunden" && input.Detail == "ark1s.xml");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Status == "gefunden" && input.Detail.Contains("ark1s.xml"));
     }
 
     [Fact]
@@ -82,7 +82,46 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), DateTime.Today, automaticProcessingEnabled: true);
 
         Assert.Equal("Wartet auf XDT-Anhang", updated.CurrentStatus);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "wartet" && input.StatusClass == "Waiting");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "optional wartet" && input.StatusClass == "Waiting");
+    }
+
+    [Fact]
+    public void ApplyScanResult_ShouldShowRemainingDeviceWaitTime()
+    {
+        var profile = CreateProfile();
+        var card = CreateCard(profile);
+        var now = new DateTime(2026, 5, 10, 12, 2, 0, DateTimeKind.Utc);
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var queue = new PendingImportQueue();
+        queue.AddOrUpdate(CreateFile(@"C:\Test\AIS\patient.gdt", ImportFileKind.AisGdt, now.AddMinutes(-2)));
+        var scanResult = CreateScanResult(profile, queue, aisFiles: 1);
+
+        var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.WaitingForDeviceFile), now, automaticProcessingEnabled: true);
+
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Detail.Contains("noch 08:00"));
+    }
+
+    [Fact]
+    public void ApplyScanResult_ShouldShowRemainingRequiredAttachmentWaitTime()
+    {
+        var profile = CreateProfile(isAttachmentEnabled: true, attachmentRequirementMode: AttachmentRequirementMode.Required) with
+        {
+            FolderOptions = CreateProfile(isAttachmentEnabled: true, attachmentRequirementMode: AttachmentRequirementMode.Required).FolderOptions with
+            {
+                AttachmentWaitTimeoutSeconds = 30
+            }
+        };
+        var card = CreateCard(profile);
+        var now = new DateTime(2026, 5, 10, 12, 0, 20, DateTimeKind.Utc);
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var queue = new PendingImportQueue();
+        queue.AddOrUpdate(CreateFile(@"C:\Test\AIS\patient.gdt", ImportFileKind.AisGdt, now.AddSeconds(-20)));
+        queue.AddOrUpdate(CreateFile(@"C:\Test\Device\ark1s.xml", ImportFileKind.DeviceXml, now.AddSeconds(-20)));
+        var scanResult = CreateScanResult(profile, queue, aisFiles: 1, deviceFiles: 1, readyPairs: 1);
+
+        var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now, automaticProcessingEnabled: true);
+
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht wartet" && input.Detail.Contains("noch 00:10"));
     }
 
     [Fact]
@@ -140,7 +179,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
 
         Assert.Equal("XDT-Anhang Pflicht blockiert", updated.CurrentStatus);
         Assert.Equal("Blocked", updated.StatusClass);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "blockiert" && input.StatusClass == "Blocked");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Timeout" && input.StatusClass == "Blocked");
     }
 
     [Fact]
@@ -219,15 +258,16 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
             Reason: reason);
     }
 
-    private static PendingImportFile CreateFile(string filePath, ImportFileKind kind)
+    private static PendingImportFile CreateFile(string filePath, ImportFileKind kind, DateTime? detectedAtUtc = null)
     {
+        var detectedAt = detectedAtUtc ?? DateTime.UtcNow;
         return new PendingImportFile(
             FilePath: filePath,
             FileName: Path.GetFileName(filePath),
             Kind: kind,
             Status: PendingImportFileStatus.Stable,
-            DetectedAtUtc: DateTime.UtcNow,
-            StableAtUtc: DateTime.UtcNow,
+            DetectedAtUtc: detectedAt,
+            StableAtUtc: detectedAt,
             Message: null);
     }
 
