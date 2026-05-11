@@ -600,6 +600,244 @@ Weiterhin offen:
 - Reaktivierungsdetails
 - Testmatrix fuer Deaktivierung
 
+## V1-Entscheidungslinie: laufende und wartende Pakete (Vorschlag)
+
+Dieser Abschnitt konkretisiert die fachliche Linie fuer Paket- und Wartezustaende bei spaeterer produktiver Aktivierung, Deaktivierung und Reaktivierung. Er ist Konzept und Spezifikation, aber weiterhin keine Implementierung. Paketlogik, Scanlogik, UI und Persistenz werden dadurch nicht geaendert.
+
+### Relevante Paket-/Verarbeitungszustaende
+
+Fachlich relevante Zustaende im Umfeld der aktuellen automatischen Verarbeitung sind:
+
+- kein Paket aktiv
+- AIS-Datei erkannt, wartet auf Geraetedatei
+- neue AIS-Datei ersetzt aeltere wartende AIS-Datei
+- AIS-/Geraete-Paar erkannt
+- Dateistabilitaet wird abgewartet
+- XDT-Anhang-Wartezeit laeuft
+- optionaler XDT-Anhang fehlt noch
+- Pflicht-XDT-Anhang fehlt noch
+- mehrere Anhaenge gefunden oder Zuordnung unsicher
+- Export wird vorbereitet
+- Export erfolgreich abgeschlossen
+- Export fehlgeschlagen
+- Pflicht-Anhang-Timeout als terminaler Paketfehler
+- Paket terminal abgeschlossen
+- neue Untersuchung kann danach wieder starten
+
+V1-Leitplanke:
+
+- Aktivierungs- und Deaktivierungsentscheidungen duerfen diese Zustaende nicht unkontrolliert veraendern.
+- Keine Aktivierungs- oder Deaktivierungsentscheidung darf Paketinformationen stillschweigend loeschen.
+- Keine Aktivierungs- oder Deaktivierungsentscheidung darf Dateien als Nebenwirkung anfassen.
+
+### Aktivierung und bestehende Dateien
+
+V1-Linie:
+
+Aktivierung darf keine vorhandenen Dateien sofort verarbeiten.
+
+Das bedeutet:
+
+- Aktivierung startet keine Sofortverarbeitung.
+- Aktivierung scannt nicht unmittelbar Ordner.
+- Aktivierung erzeugt keine XDT-Datei.
+- Aktivierung kopiert oder verschiebt keine Anhangdateien.
+- Aktivierung loescht keine Dateien.
+- Aktivierung bereinigt keine Ordner.
+- Der bestehende periodische Scan bleibt das Betriebsmodell.
+
+Offene Fragen:
+
+- Soll bei Aktivierung ein Startzeitpunkt oder Fingerprint gesetzt werden, damit alte Dateien vor Aktivierung nicht unbeabsichtigt verarbeitet werden?
+- Darf der erste Scan nach Aktivierung nur Dateien beruecksichtigen, die nach Aktivierungszeitpunkt erstellt oder geaendert wurden?
+- Muss der Benutzer vor Aktivierung auf vorhandene Dateien in AIS-, Geraete- oder Anhangordnern hingewiesen werden?
+
+Konservative Empfehlung:
+
+- V1 sollte vermeiden, dass bei Aktivierung sofort alte Importordnerbestaende verarbeitet werden.
+- Vor produktiver Implementierung braucht es eine klare Regel fuer Altbestand in AIS-, Geraete- und Anhangordnern.
+- Ohne diese Regel darf produktive Aktivierung nicht als "direkt nach Klick verarbeitet Bestand" umgesetzt werden.
+
+### Deaktivierung und neue Pakete
+
+V1-Linie:
+
+Nach Deaktivierung duerfen fuer dieses Schnittstellenprofil keine neuen Pakete mehr begonnen werden.
+
+Das bedeutet:
+
+- keine neue AIS-Datei als neuer Auftrag beginnen
+- keine neue Geraetedatei zu einem neuen Auftrag zuordnen
+- keine neue XDT-Anhang-Wartephase beginnen
+- keine neue Exportvorbereitung beginnen
+
+Deaktivierung wirkt ab dem Zeitpunkt der wirksamen Statusaenderung fuer neue Paketstarts.
+
+### Deaktivierung bei AIS-Datei wartet auf Geraetedatei
+
+Fall:
+
+Eine AIS-Datei wurde erkannt und wartet noch auf die passende Geraetedatei.
+
+Fachliche Optionen:
+
+- Option A: Wartendes Paket kontrolliert abbrechen. Es entsteht kein Export. Die AIS-Datei bleibt unangetastet oder wird nur gemaess bereits definierter Fehler-/Archivregel behandelt.
+- Option B: Wartendes Paket noch bis Timeout laufen lassen. Nach Timeout entsteht kein Export.
+- Option C: Deaktivierung wird blockiert, solange ein Paket wartet.
+
+Konservative V1-Empfehlung:
+
+- Deaktivierung soll neue Pakete verhindern.
+- Fuer eine bereits wartende AIS-Datei ist kontrollierter Abbruch oder definierter Timeout fachlich zu entscheiden.
+- Keine Datei darf geloescht werden.
+- Keine pauschale Ordnerbereinigung.
+- Ohne klare Implementierungsregel darf dieser Fall nicht produktiv umgesetzt werden.
+
+### Deaktivierung bei erkanntem AIS-/Geraete-Paar
+
+Fall:
+
+AIS- und Geraetedatei sind bereits erkannt, aber der Export ist noch nicht abgeschlossen.
+
+Fachliche Optionen:
+
+- Option A: Verarbeitung kontrolliert zu Ende fuehren. Vorteil: Die bereits begonnene Untersuchung wird abgeschlossen. Risiko: Nach Deaktivierung entsteht noch ein Export.
+- Option B: Verarbeitung kontrolliert abbrechen. Vorteil: Deaktivierung wirkt sofort. Risiko: Untersuchungsergebnis geht nicht zurueck ins AIS.
+- Option C: Deaktivierung blockieren, bis das Paket abgeschlossen ist. Vorteil: klare Datenkonsistenz. Risiko: Benutzer kann das Profil nicht sofort deaktivieren.
+
+Konservative V1-Empfehlung:
+
+- Kein stiller Abbruch.
+- Kein unkommentierter Export nach Deaktivierung.
+- Eine spaetere UI sollte anzeigen, wenn laufende Pakete vorhanden sind.
+- V1 sollte entweder Deaktivierung bei laufendem Paket blockieren oder Benutzer bewusst entscheiden lassen.
+- Diese Entscheidung muss vor Implementierung getroffen und getestet werden.
+
+### Deaktivierung waehrend XDT-Anhang-Wartezeit
+
+Fall:
+
+AIS-/Geraete-Paar ist vollstaendig, aber XDT-Anhang-Wartezeit laeuft.
+
+Varianten:
+
+- optionaler Anhang
+- Pflicht-Anhang
+- mehrere Anhaenge oder unsichere Zuordnung
+- Dateistabilitaet noch nicht erfuellt
+
+Konservative V1-Empfehlung:
+
+- Keine Anhangdateien kopieren, verschieben oder loeschen.
+- Keine Linkfelder `6302`, `6303`, `6304` oder `6305` erzeugen, nur weil deaktiviert wurde.
+- Bereits begonnene Anhang-Wartephase darf nicht unkontrolliert abgebrochen werden.
+- Bei Pflicht-Anhang darf keine erfolgreiche Ausgabe ohne Pflicht-Anhang erzeugt werden.
+- Die Produktiventscheidung muss festlegen, ob die Wartephase kontrolliert zu Ende gefuehrt wird, das Paket kontrolliert abbricht oder Deaktivierung bis zum Abschluss blockiert.
+
+### Deaktivierung bei Exportvorbereitung
+
+Fall:
+
+Export wird gerade vorbereitet oder steht unmittelbar bevor.
+
+Konservative V1-Empfehlung:
+
+- Kein halbfertiger Export.
+- Keine teilweise geschriebenen XDT-Dateien.
+- Wenn Export bereits begonnen hat, muessen Atomaritaet und Fehlerbehandlung vor Implementierung geklaert sein.
+- Deaktivierung darf nicht mitten in einen Schreibvorgang eingreifen.
+- V1 sollte entweder laufende Exportvorbereitung abschliessen lassen, Deaktivierung blockieren oder Abbruch nur vor Beginn des Schreibens erlauben.
+
+### Aktivierung nach vorheriger Deaktivierung / Reaktivierung
+
+Reaktivierung ist eine neue Aktivierung.
+
+Das bedeutet:
+
+- keine alten Preview-Daten verwenden
+- keine alte Warnungsbestaetigung blind wiederverwenden
+- keine alten Paketinformationen automatisch fortsetzen
+- frische Evaluation ausfuehren
+- frischen Guard ausfuehren
+- frische WarningConfirmation erstellen
+- frischen ActivationPlan erstellen
+- finale Re-Evaluation direkt vor Speicherung erzwingen
+
+Bewusst offen:
+
+- ob alte wartende Pakete aus der Zeit vor Deaktivierung bei Reaktivierung ignoriert, blockiert oder neu bewertet werden
+- ob ein Aktivierungszeitpunkt oder Fingerprint eingefuehrt wird
+
+Konservative Empfehlung:
+
+- Reaktivierung darf alte wartende Pakete nicht stillschweigend wiederaufnehmen.
+
+### Paketinformationen / interne Zustaende
+
+Offene Fragen:
+
+- Gibt es interne Warteschlangen oder nur fluechtige Scan-Zustaende?
+- Wo werden wartende AIS-Auftraege gehalten?
+- Wie werden terminale Paketfehler abgebildet?
+- Sind Paketinformationen persistent oder nur in-memory?
+- Wie wird beim Profilwechsel oder bei Deaktivierung mit In-Memory-Zustaenden umgegangen?
+
+Konservative V1-Linie:
+
+- Ohne klare Modellierung duerfen Paketinformationen bei Deaktivierung nicht stillschweigend geloescht werden.
+- Neue Pakete nach Deaktivierung verhindern.
+- Bestehende Pakete nur nach definierter Regel abbrechen, beenden oder blockieren.
+
+### UI-Anforderungen fuer spaetere produktive Deaktivierung
+
+Eine spaetere produktive Deaktivierungs-UI sollte vor der Deaktivierung anzeigen:
+
+- Profilname
+- aktueller Aktivstatus
+- ob wartende oder laufende Pakete bekannt sind
+- welcher Zustand vorliegt:
+  - wartet auf Geraetedatei
+  - wartet auf XDT-Anhang
+  - Exportvorbereitung
+  - Fehler oder Timeout
+- welche Folge Deaktivierung hat:
+  - neue Pakete werden nicht mehr begonnen
+  - vorhandene Dateien werden nicht geloescht
+  - laufende Pakete werden nach definierter Regel behandelt
+
+Falls Paketzustand nicht ermittelbar ist:
+
+- UI muss das ehrlich anzeigen.
+- Keine falsche Sicherheit vortaeuschen.
+
+### Kompakte V1-Empfehlung
+
+Konservative V1-Linie:
+
+- Aktivierung startet keine Sofortverarbeitung.
+- Deaktivierung verhindert neue Paketstarts.
+- Deaktivierung loescht keine Dateien und bereinigt keine Ordner.
+- Bereits laufende oder wartende Pakete duerfen nicht stillschweigend verworfen werden.
+- Vor produktiver Implementierung muss entschieden werden, ob laufende Pakete abgeschlossen werden, abgebrochen werden oder Deaktivierung blockieren.
+- Fuer V1 ist `Deaktivierung blockiert, solange ein aktives oder wartendes Paket vorhanden ist` als konservativste Option zu pruefen.
+- Reaktivierung ist eine neue Aktivierung und darf alte Pakete nicht stillschweigend wieder aufnehmen.
+
+Noch nicht implementiert.
+
+Weiterhin offen:
+
+- konkrete Paketstatus-Erkennung
+- ob Paketstatus persistent oder nur in-memory ist
+- Umgang mit AIS-Datei wartet auf Geraetedatei
+- Umgang mit XDT-Anhang-Wartezeit
+- Umgang mit Exportvorbereitung
+- ob Deaktivierung bei laufenden Paketen blockiert
+- ob Benutzer laufende Pakete bewusst abbrechen darf
+- ob Aktivierungszeitpunkt oder Fingerprint eingefuehrt wird
+- ob Altbestand in Importordnern beim Aktivieren ignoriert wird
+- wie Reaktivierung mit Altbestand umgeht
+- Testmatrix fuer Paket-/Deaktivierungsfaelle
+
 ## 1. Wann darf ein Profil produktiv aktiviert werden?
 
 Aktueller Stand:
