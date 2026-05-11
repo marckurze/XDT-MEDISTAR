@@ -1,6 +1,6 @@
 # Iststand und offene Punkte
 
-Stand: 2026-05-10
+Stand: 2026-05-11
 
 Basis dieses Abgleichs:
 
@@ -22,6 +22,7 @@ Kritische Abweichungen, bei denen die Dokumentation eine produktiv fertige Funkt
 Besonders stabil wirken aktuell:
 
 - MEDISTAR + NIDEK ARK1S Kernworkflow
+- MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link im Pflicht-Anhang-Praxislauf
 - zentrale XDT-Erzeugung ueber `XdtExportBuilder`
 - BuiltIn/UserDefined-Profiltrennung
 - sichere Templatepaket-Importpipeline bis UserDefined-Uebernahme
@@ -30,7 +31,7 @@ Besonders stabil wirken aktuell:
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 - V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
-- praktische End-to-End-Abnahme der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung in echten Ordnern; Testplan und Protokollvorlage sind vorbereitet, die manuelle Durchfuehrung bleibt offen
+- weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile
 - Lizenzsignatur, harte Lizenzdurchsetzung und Installer/Deployment
 - AIS-/MEDISTAR-Exporttemplate-Default-Konzept bewusst zurueckgestellt
@@ -214,15 +215,16 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | Bereich | Validierungsgrad | Grundlage |
 | --- | --- | --- |
 | MEDISTAR + NIDEK ARK1S Kernworkflow | praktisch und testseitig validiert | README, Projektueberblick, Core-/Pipeline-Tests |
+| MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link | praktisch validiert | `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md` |
 | MEDISTAR-kompatibler XDT-Export | testseitig validiert | `XdtExportBuilderTests`, `CorePipelineEndToEndTests`, ARK1S-bezogene Tests |
 | XDT-Laengenpraefixe | testseitig validiert | `XdtExportBuilderTests`, Linkfeld-Adapter-Tests |
-| XDT-Anhang-Linkfelder `6302` bis `6305` | testseitig validiert | Attachment-, Coordinator-, ManualProcessor- und BuilderTestExport-Tests |
+| XDT-Anhang-Linkfelder `6302` bis `6305` | praktisch fuer MEDISTAR + ARK1S Pflicht-Anhang und testseitig validiert | Praxisprotokoll, Attachment-, Coordinator-, ManualProcessor- und BuilderTestExport-Tests |
 | Baukasten-Testexport mit simuliertem 6305-Zielpfad | testseitig validiert | `BuilderTestExportServiceTests` |
 | Automatische Paketlogik AIS -> Geraet -> XDT-Anhang | testseitig validiert | `AutoImportPackageStateServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `AttachmentPackageDecisionServiceTests` |
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
 | BuiltIn/UserDefined-Schutz | testseitig validiert | `ProfileCatalogServiceTests`, TemplateImport-Tests |
 
-Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle Praxisabnahme der automatischen AIS-/Geraete-/XDT-Anhang-Faelle aus `docs/END_TO_END_TESTPLAN.md`. Fuer die Durchfuehrung steht die ausfuellbare Vorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` bereit.
+Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link: Pflicht-Anhang vorhanden, Pflicht-Anhang fehlt/Fehlerfall und MEDISTAR-Livesystem-Linkaufruf sind bestanden. Noch offen ist die vollstaendige manuelle Praxisabnahme der weiteren Faelle aus `docs/END_TO_END_TESTPLAN.md`. Fuer die weitere Durchfuehrung steht die ausfuellbare Vorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` bereit.
 
 ## 4. Vorbereitet, aber noch nicht produktiv validiert
 
@@ -270,8 +272,8 @@ Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle P
 
 | Prioritaet | Thema | Aktueller Status | Was fehlt konkret? | Empfohlener naechster Schritt | Risiko, wenn offen bleibt | Abhaengigkeiten |
 | --- | --- | --- | --- | --- | --- | --- |
-| hoch | E2E-Testplan praktisch ausfuehren | Testplan, praktische Durchfuehrungsschritte und Protokollvorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` sind vorhanden; automatisierte Tests sind vorhanden. | Manuelle Praxisprotokolle fuer Testfaelle 1 bis 12 fehlen. | Synthetische Testordner anlegen, Testdaten bereitstellen und `docs/END_TO_END_TESTPLAN.md` mit der Protokollvorlage praktisch abarbeiten. | Automatik wirkt testseitig stabil, aber reale Bedien-/Ordnerfehler bleiben unentdeckt. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
-| hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Kernworkflow und Linkfelder testseitig vorhanden. | Abnahme mit echten/realistischen Praxisordnern, Archiv-/Fehlerablage und Wartezeiten. | Einen reproduzierbaren Praxislauf mit Optional/Pflicht-Anhang protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in der Praxis auffallen. | E2E-Testplan, Testanhaenge |
+| hoch | E2E-Testplan praktisch weiter ausfuehren | Testplan, Durchfuehrungsschritte und Protokollvorlage sind vorhanden; MEDISTAR + ARK1S + Pflicht-XDT-Anhang wurde am 2026-05-11 praktisch bestanden dokumentiert. | Weitere manuelle Praxisprotokolle fuer die restlichen Testfaelle fehlen, insbesondere optionale Anhaenge, Mehrfachanhaenge, instabile Dateien und nicht unterstuetzte Dateien. | Restliche Faelle aus `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` abarbeiten. | Nicht getestete Randfaelle koennen im Praxisbetrieb auffallen. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
+| hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Pflicht-Anhang vorhanden/fehlt und MEDISTAR-Linkaufruf sind praktisch validiert. | Breitere Praxisabnahme mit optionalem Anhang, Mehrfachanhang, Archiv-/Fehlerablage und Wartezeiten. | Naechsten Praxislauf fuer optionale Anhaenge und Mehrfachanhang-Sicherheit protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in noch nicht getesteten Varianten auffallen. | E2E-Testplan, Testanhaenge |
 | hoch | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden. | Gefuehrte Pruefung importierter Schnittstellenprofile, Ordnerpfade, XDT-Anhang-Einstellungen und bewusste Aktivierung. | Kleinen Assistenten fuer "importiertes Schnittstellenprofil pruefen und aktivieren" konzipieren. | Importierte Profile bleiben zwar sicher, aber fuer Anwender noch nicht komfortabel produktiv nutzbar. | TemplateImport Executor, Profilkatalog |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
 | mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach Aktivierungsassistent als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
@@ -370,14 +372,14 @@ Noch nicht als praktisch abgeschlossen markiert ist die vollstaendige manuelle P
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
 
-**E2E-Testplan praktisch ausfuehren und protokollieren.**
+**Restliche E2E-Testfaelle praktisch ausfuehren und protokollieren.**
 
 Konkreter Umfang:
 
 - keine Produktivlogik aendern
 - keine Profile oder BuiltIns aendern
-- ein synthetisches Testdatenpaket bzw. konkrete synthetische Dateien fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang bereitstellen
-- `docs/END_TO_END_TESTPLAN.md` praktisch Schritt fuer Schritt abarbeiten
+- ein synthetisches Testdatenpaket bzw. konkrete synthetische Dateien fuer die noch offenen Varianten bereitstellen
+- die noch nicht protokollierten Faelle aus `docs/END_TO_END_TESTPLAN.md` praktisch Schritt fuer Schritt abarbeiten
 - Ergebnisse in `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` dokumentieren
 - danach Build und Tests ausfuehren
 

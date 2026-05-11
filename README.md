@@ -8,13 +8,13 @@ Aktuelle Version:
 
 `0.1.0-prototype`
 
-Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfolgreich validiert. Die automatische Verarbeitung ist manuell startbar und bewusst nicht als Windows-Dienst oder Autostart umgesetzt.
+Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfolgreich validiert. Der Workflow MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link wurde am 2026-05-11 praktisch geprüft; externe Anhänge können über `6302`, `6303`, optional `6304` und `6305` in MEDISTAR übernommen und aus der Karteikarte geöffnet werden. Die automatische Verarbeitung ist manuell startbar und bewusst nicht als Windows-Dienst oder Autostart umgesetzt.
 
-Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt bzw. konfiguriert werden, gelten aber noch nicht als produktiv validiert.
+Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S, einschließlich XDT-Anhang-Link für den geprüften Pflicht-Anhang-Praxislauf. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt bzw. konfiguriert werden, gelten aber noch nicht als produktiv validiert.
 
 Die aktualisierte Roadmap mit Iststand, Sicherheitsentscheidungen und empfohlenen naechsten Entwicklungsphasen steht in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
-Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp ist der Konfigurationsbereich `XDT-Anhänge für AIS` im Schnittstellenprofil vorbereitet: optionale Import-/Exportordner, `AttachmentFileNameTemplate`, vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, `ExternalAisLinkFieldBuilder` für semantische Feldwerte, `ExternalAisLinkXdtFieldAdapter` für XDT-Feldcode/Wert-Paare, isolierter `AttachmentExternalLinkPreparationService` zur Orchestrierung auf explizite Eingabe und XDT-Linkfeld-Vorlagen für 6302, 6303, 6304 und 6305. Der Baukasten im Tab `Profile & Templates` kann eine explizit ausgewählte Anhangdatei für Vorschau und Testexport vorbereiten und zeigt Ziel-Dateiname, Zielpfad sowie vorbereitete XDT-Felder an. Standard für Geräte-Dateianhänge ist `Move`, damit der XDT-Anhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann; vollständige automatische Dateianhang-Zuordnung, Mehrfachanhang-Heuristiken und Dokument-/Dateianhang-Templates sind weiterhin offen. XDT-Längenpräfixe werden nicht in der Konfiguration gepflegt, sondern zentral durch den Exportmechanismus erzeugt.
+Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind für den validierten MEDISTAR/NIDEK-ARK1S-Pflicht-Anhang-Praxislauf praktisch bestätigt. Im aktuellen Prototyp ist der Konfigurationsbereich `XDT-Anhänge für AIS` im Schnittstellenprofil vorbereitet: optionale Import-/Exportordner, `AttachmentFileNameTemplate`, vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, `ExternalAisLinkFieldBuilder` für semantische Feldwerte, `ExternalAisLinkXdtFieldAdapter` für XDT-Feldcode/Wert-Paare, isolierter `AttachmentExternalLinkPreparationService` zur Orchestrierung auf explizite Eingabe und XDT-Linkfeld-Vorlagen für 6302, 6303, 6304 und 6305. Der Baukasten im Tab `Profile & Templates` kann eine explizit ausgewählte Anhangdatei für Vorschau und Testexport vorbereiten und zeigt Ziel-Dateiname, Zielpfad sowie vorbereitete XDT-Felder an. Standard für Geräte-Dateianhänge ist `Move`, damit der XDT-Anhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann; Mehrfachanhang-Heuristiken, Dokument-/Dateianhang-Templates und weitere Geräte-/AIS-Validierungen sind weiterhin offen. XDT-Längenpräfixe werden nicht in der Konfiguration gepflegt, sondern zentral durch den Exportmechanismus erzeugt.
 
 Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet unterstützte XDT-Anhang-Dateitypen im konfigurierten XDT-Anhang Importordner auf und verändert keine Dateien. Vollständige automatische Zuordnung und Mehrfachanhang-Heuristiken bleiben offen.
 
@@ -256,6 +256,7 @@ Der praktisch validierte Workflow ist:
 9. App erzeugt XDT-Datei.
 10. MEDISTAR kann die XDT-Datei einlesen.
 11. Importdateien werden ins Archiv verschoben, wenn so konfiguriert.
+12. Bei aktivierter XDT-Anhang-Pflichtfunktion werden die Linkfelder `6302`, `6303`, optional `6304` und `6305` erzeugt; der externe Anhang kann aus der MEDISTAR-Karteikarte geöffnet werden.
 
 ### 12. Noch nicht produktiv umgesetzt
 
@@ -271,8 +272,7 @@ Noch nicht final umgesetzt bzw. bewusst noch nicht aktiviert:
 - produktive Lizenzsperre
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
 - `ReplaceExisting` fuer importierte Templatepakete und freie Konfliktloesungsdialoge
-- Geräte-Dateianhang-Import und MEDISTAR externer Link über XDT
-- optionale Ordner `GA-Dateianhang Import` und `GA-Dateianhang Export`
+- Mehrfachanhang-Heuristiken und manuelle Zuordnung für unsichere Anhangfälle
 - Dokument-/Dateianhang-Template für vorhandene Geräteanhänge
 - selbst erzeugte PDF-Protokolle
 - Installer / Deployment

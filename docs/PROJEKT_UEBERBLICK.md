@@ -50,6 +50,7 @@ Praktisch validiert ist weiterhin der Workflow:
 - Patientendaten uebernehmen
 - Messwerte aus XML mappen
 - MEDISTAR-kompatible XDT-Datei erzeugen
+- XDT-Anhang-Link ueber `6302`, `6303`, optional `6304` und `6305` im Pflicht-Anhang-Praxislauf
 
 Wichtige XDT-Felder im validierten Kernworkflow:
 
@@ -57,6 +58,9 @@ Wichtige XDT-Felder im validierten Kernworkflow:
 - Patientendaten, insbesondere `3000`, `3101`, `3102`, `3103`
 - `8402` Untersuchungsart
 - `6228` Ergebniszeilen fuer rechte/linke Messwerte
+- bei erfolgreichem XDT-Anhang-Link `6302`, `6303`, optional `6304` und `6305`
+
+Der XDT-Anhang-Link wurde am 2026-05-11 mit MEDISTAR + NIDEK ARK1S praktisch validiert: Pflicht-Anhang vorhanden, Pflicht-Anhang fehlt/Fehlerfall und Linkaufruf aus einer MEDISTAR-Karteikarte wurden erfolgreich geprüft. Es werden keine personenbezogenen Patientendaten oder Live-System-Pfade dokumentiert.
 
 Dieser Kernworkflow ist der stabile Prototyp-Kern und muss bei allen naechsten Schritten unveraendert funktionsfaehig bleiben.
 
@@ -202,6 +206,7 @@ Technische Grundsaetze:
 - Mehrere unterstuetzte Anhaenge werden nicht automatisch zugeordnet.
 - Instabile Anhaenge werden nicht verarbeitet, nicht verschoben und nicht verlinkt.
 - Exportprofile werden durch XDT-Anhang-Test und Testexport nicht dauerhaft veraendert.
+- MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link ist fuer den Pflicht-Anhang-Praxislauf praktisch validiert; weitere Geraete/AIS und Mehrfachanhangfaelle bleiben separat zu pruefen.
 
 ## 10. Paket-Wartelogik
 
@@ -414,7 +419,7 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 
 An `docs/ROADMAP.md` orientierte naechste Schritte:
 
-1. E2E-Testplan praktisch ausfuehren und protokollieren.
+1. Restliche E2E-Testfaelle praktisch ausfuehren und protokollieren.
 2. Aktivierungsassistent fuer importierte Schnittstellenprofile planen.
 3. Gefuehrte Pruefung von Ordnerpfaden und XDT-Anhang-Einstellungen nach Import vorbereiten.
 4. Geraete-Datei-Explorer / Profil-Assistent vorbereiten.
@@ -431,13 +436,13 @@ Wir arbeiten an XdtDeviceBridge / XDT Verwaltung, Version 0.1.0-prototype.
 
 XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer eine dateibasierte AIS-/Geraete-Bridge im augenaerztlichen Umfeld. Fokus ist MEDISTAR mit XDT/GDT und NIDEK ARK1S XML. Es gibt keine Cloud, keinen Windows-Dienst, keinen Autostart, keinen FileSystemWatcher und keine Verarbeitung beim App-Start.
 
-Praktisch validiert ist MEDISTAR + NIDEK ARK1S: AIS-GDT/XDT einlesen, NIDEK ARK1S XML einlesen, Patientendaten und Messwerte mappen und eine MEDISTAR-kompatible XDT-Datei erzeugen. Wichtige Felder sind 8000=6310, Patientendaten 3000/3101/3102/3103, 8402 Untersuchungsart und 6228 Ergebniszeilen rechts/links.
+Praktisch validiert ist MEDISTAR + NIDEK ARK1S: AIS-GDT/XDT einlesen, NIDEK ARK1S XML einlesen, Patientendaten und Messwerte mappen und eine MEDISTAR-kompatible XDT-Datei erzeugen. Wichtige Felder sind 8000=6310, Patientendaten 3000/3101/3102/3103, 8402 Untersuchungsart und 6228 Ergebniszeilen rechts/links. Am 2026-05-11 wurde zusaetzlich der XDT-Anhang-Link ueber 6302/6303/optional 6304/6305 praktisch validiert; ein externer Anhang konnte aus einer MEDISTAR-Karteikarte geoeffnet werden.
 
-Die Haupt-Tabs sind Verarbeitung, Profile & Templates, Schnittstellenprofile und Lizenz. Verarbeitung ist der Betriebsbereich mit aktiven Schnittstellenprofilen, manuell startbarer Ueberwachung, automatischer Verarbeitung per Haken, Paketstatus und Meldungen. Der alte manuelle Diagnosebereich bleibt eingeklappt als Rueckfallfunktion erhalten.
+Die Haupt-Tabs sind Verarbeitung, Profile & Templates, Schnittstellenprofile und Lizenz. Verarbeitung ist der Betriebsbereich mit Schnittstellen-Monitor, aktiven Schnittstellenprofilen, manuell startbarer Ueberwachung, automatischer Verarbeitung per Haken, Paketstatus und Monitoring-Ereignissen.
 
 Profile & Templates ist der Baukastenbereich. Dort gibt es Test & Vorschau: AIS-Datei laden, Geraetedatei laden, XDT-Anhang einlesen, Messwerte pruefen, Gesamtexport-Vorschau XDT und Testexport erstellen. Das Schnittstellenprofil dient als Testkontext, das Exportprofil steuert normale Ergebnisfelder.
 
-XDT-Anhaenge fuer AIS sind vorbereitet. Unterstuetzt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT. Externe Linkfelder sind 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung optional und 6305 vollstaendiger Dateipfad. XDT-Längenpraefixe erzeugt der XdtExportBuilder zentral, nicht die UI.
+XDT-Anhaenge fuer AIS sind fuer den validierten MEDISTAR/ARK1S-Pflicht-Anhang-Praxislauf praktisch bestaetigt. Unterstuetzt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT. Externe Linkfelder sind 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung optional und 6305 vollstaendiger Dateipfad. XDT-Längenpraefixe erzeugt der XdtExportBuilder zentral, nicht die UI.
 
 Im Baukasten kann ein XDT-Anhang aus beliebigem Speicherort gewaehlt werden. Vorschau und Test-XDT simulieren aber den Schnittstellenprofil-Zielpfad: 6305 zeigt auf XDT-Anhang Exportordner plus erzeugten Dateinamen. Der Testexport schreibt XDT-Datei und umbenannten Anhang physisch in einen frei gewaehlten Testordner, ohne Exportprofile oder BuiltIns zu veraendern.
 
@@ -457,5 +462,5 @@ Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale 
 
 Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: E2E-Testplan praktisch ausfuehren, importierte Schnittstellenprofile pruefen/aktivieren, Ordnerpfade und XDT-Anhang-Einstellungen nach Import gefuehrt pruefen, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
+Naechste sinnvolle Schritte: restliche E2E-Testfaelle praktisch ausfuehren, importierte Schnittstellenprofile pruefen/aktivieren, Ordnerpfade und XDT-Anhang-Einstellungen nach Import gefuehrt pruefen, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
 ```

@@ -1,6 +1,6 @@
 # Roadmap XdtDeviceBridge
 
-Stand: 2026-05-09
+Stand: 2026-05-11
 
 Projekt: XdtDeviceBridge / XDT Verwaltung
 
@@ -18,10 +18,13 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 ### Validierter Kernworkflow MEDISTAR + NIDEK ARK1S
 
 - Praktisch validierter Kernworkflow: MEDISTAR-GDT/XDT-Eingang + NIDEK ARK1S XML-Eingang + MEDISTAR-kompatibler XDT-Export.
+- Am 2026-05-11 wurde zusätzlich MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link praktisch validiert.
 - Erzeugt werden insbesondere:
   - `8000=6310`
   - `8402` Untersuchungsart
   - `6228` Ergebniszeilen
+  - bei erfolgreichem XDT-Anhang-Link `6302`, `6303`, optional `6304` und `6305`
+- Bestätigt wurden ein Pflicht-XDT-Anhang-Fall mit vorhandenem Anhang, ein Pflicht-XDT-Anhang-Fehlerfall ohne Anhang und der erfolgreiche Linkaufruf aus einer MEDISTAR-Karteikarte.
 - Dieser Workflow ist der stabile Prototyp-Kern und darf bei weiteren Ausbauphasen nicht beschädigt werden.
 
 ### Manuelle Verarbeitung
@@ -142,13 +145,14 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 ## 2. Was ist praktisch validiert?
 
 - MEDISTAR + NIDEK ARK1S als Kernworkflow.
+- MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link über `6302`, `6303`, optional `6304` und `6305` ist im Pflicht-Anhang-Praxislauf validiert.
 - Manuelle Verarbeitung für den validierten Kernworkflow.
 - MEDISTAR-kompatibler XDT-Export mit zentral erzeugten Längenpräfixen.
 - Baukasten-Testexport für XDT-Datei plus umbenannten XDT-Anhang ist testseitig abgesichert.
 - Externe AIS-Linkfelder `6302`, `6303`, optional `6304` und `6305` sind fachlich anhand des MEDISTAR-Beispiels und technisch im Baukasten-/Testpfad belegt.
 - Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Dependency-Remapping.
 
-Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vollständige produktive Praxisabnahme für automatische Attachment-Verarbeitung sollte anhand von `docs/END_TO_END_TESTPLAN.md` noch separat protokolliert werden.
+Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.
 
 ## 3. Was ist vorbereitet, aber noch nicht produktiv validiert?
 
@@ -195,7 +199,8 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 
 - Roadmap, Projektüberblick, Changelog und End-to-End-Testplan aufeinander abstimmen.
 - Aktuellen Stand `0.1.0-prototype` sauber vom nächsten Meilenstein trennen.
-- Offene produktive Validierungen klar markieren.
+- Praxisvalidierung MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link als bestanden führen.
+- Restliche E2E-Fälle klar als offen markieren.
 
 ### Phase 2: Importierte Schnittstellenprofile prüfen und aktivieren
 
@@ -241,7 +246,7 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 5. Prüfliste für importierte Ordnerpfade, Archiv-/Fehleroptionen und XDT-Anhang-Einstellungen modellieren.
 6. UI-Preview für die Aktivierungsprüfung importierter Schnittstellenprofile vorbereiten.
 7. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
-8. E2E-Testplan mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
+8. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
 9. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
 10. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 11. Lizenzsignatur-Konzept dokumentieren, bevor produktive Sperren umgesetzt werden.
@@ -253,17 +258,17 @@ Wichtig: Der XDT-Anhang-Link ist im Baukasten und in Tests vorbereitet. Eine vol
 - Windows-Dienst später ja/nein: aktuell bewusst nein; für echten Dauerbetrieb eventuell später erneut bewerten.
 - FileSystemWatcher später ja/nein: aktuell periodischer Scan; ein Watcher könnte später ergänzen, aber nicht die Stabilitätsprüfung ersetzen.
 - Lizenzsperre wann aktivieren: erst nach Signaturprüfung, Karenzzeitentscheidung und klarer Fehlerkommunikation.
-- EV-Verknüpfung vs `6302`-`6305`-Link: MEDISTAR-Beispiel ist ausgewertet; die genaue AIS-Wirkung muss je Zielsystem validiert werden.
+- EV-Verknüpfung vs `6302`-`6305`-Link: Der strukturierte Link über `6302` bis `6305` wurde für MEDISTAR + NIDEK ARK1S praktisch validiert; andere AIS-Zielsysteme müssen separat geprüft werden.
 - Mehrfachanhang-Zuordnung: aktuell keine automatische Auswahl; spätere Heuristiken brauchen sichere Patienten-/Auftragsbezüge.
 - Zweite AIS-Unterstützung außerhalb MEDISTAR: Feldlogik, Dateinamen, Importsteuerung und externe Links können je AIS abweichen.
-- Produktive Attachment-Automatik: Tests sind vorhanden, praktische Abnahme muss die Reihenfolge AIS, Gerät und Anhang realistisch prüfen.
+- Produktive Attachment-Automatik: Pflicht-Anhang vorhanden/fehlt wurde für MEDISTAR + NIDEK ARK1S praktisch geprüft; weitere E2E-Fälle bleiben offen.
 - Langsam schreibende Geräte: Stabilitätszeiten müssen im Praxisbetrieb je Gerät justiert werden.
 
 ## 8. Abnahmekriterien für nächsten Meilenstein
 
 - `dotnet build XdtDeviceBridge.sln` ist grün.
 - `dotnet test XdtDeviceBridge.sln` ist grün.
-- E2E-Testplan aus `docs/END_TO_END_TESTPLAN.md` ist mit Ergebnisprotokoll bestanden.
+- E2E-Testplan aus `docs/END_TO_END_TESTPLAN.md` ist mit Ergebnisprotokoll bestanden; der Pflicht-Anhang-Praxislauf MEDISTAR + NIDEK ARK1S ist bereits separat bestanden.
 - MEDISTAR + NIDEK ARK1S bleibt unverändert funktionsfähig.
 - Export ohne aktivierte XDT-Anhang-Funktion enthält keine `6302`, `6303`, `6304`, `6305`.
 - XDT-Anhang-Testexport erzeugt XDT-Datei plus korrekt umbenannten Anhang.

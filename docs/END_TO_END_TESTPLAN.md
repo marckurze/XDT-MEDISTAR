@@ -18,6 +18,13 @@ Der Plan prüft insbesondere:
 - Neuere AIS-Dateien ersetzen ältere wartende AIS-Aufträge.
 - Es gibt weiterhin keinen FileSystemWatcher, keinen Windows-Dienst, keinen Autostart und keine Verarbeitung beim App-Start.
 
+Praxisvalidierung vom 2026-05-11:
+
+- Der Praxislauf `MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link` wurde erfolgreich durchgeführt.
+- Geprüft wurden ein erfolgreicher Pflicht-XDT-Anhang-Fall und ein Fehlerfall mit fehlendem Pflicht-XDT-Anhang.
+- Zusätzlich wurde der Linkaufruf aus einem MEDISTAR-Livesystem erfolgreich geprüft.
+- Ergebnisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`
+
 ## 2. Voraussetzungen
 
 - Build der Lösung ist erfolgreich.
@@ -513,6 +520,10 @@ Für praktische Abnahmen soll bevorzugt die separate Vorlage verwendet werden:
 
 - `docs/E2E_TESTPROTOKOLL_TEMPLATE.md`
 
+Der Praxislauf `MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link` wurde am 2026-05-11 separat dokumentiert:
+
+- `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`
+
 Die folgende Tabelle bleibt als kompakte Schnellübersicht erhalten.
 
 | Testfall | Datum/Uhrzeit | Tester | Profil | Ergebnis bestanden ja/nein | Exportdatei | Anhang-Zieldatei | Auffälligkeiten | Screenshot/Notiz |
@@ -543,4 +554,9 @@ Der automatische AIS-/Geräte-/XDT-Anhang-Ablauf gilt für diesen Prototyp als a
 - Mehrere unterstützte Anhänge niemals automatisch ausgewählt werden.
 - Instabile Dateien niemals verschoben, verlinkt oder verarbeitet werden.
 - Neue AIS-Datei ältere wartende AIS-Datei ersetzt.
+
+Teilabnahme:
+
+- Für MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link sind der erfolgreiche Pflicht-Anhang-Fall, der Pflicht-Anhang-Fehlerfall und der Linkaufruf aus MEDISTAR praktisch validiert.
+- Die vollständige Abarbeitung aller übrigen Testfälle dieses Plans bleibt als eigener Schritt offen.
 - Keine unbekannten Dateien gelöscht oder verschoben werden.
