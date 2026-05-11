@@ -749,7 +749,7 @@ Die tatsaechlich modellierten Statuswerte sind:
 - `InterfaceProfileActivationWarningConfirmationStatus`: `NotAvailable`, `MissingEvaluation`, `Blocked`, `NoWarnings`, `ConfirmationRequired`, `Unknown`
 - `InterfaceProfileActivationPlanStatus`: `NotAvailable`, `Blocked`, `RequiresWarningConfirmation`, `Ready`, `ReadyWithAcceptedWarnings`, `Unknown`
 
-Wichtig fuer spaetere Erweiterungen: Es gibt weiterhin keinen produktiven Aktivieren-Button, keine automatische Aktivierung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled`, keine Profil-Speicherung, keine produktive Warnungsbestaetigung, keine dauerhafte Speicherung einer Warnungsbestaetigung und keine produktive `ActivationExecutor`-Implementierung. BuiltIn-Profile bleiben direkt blockiert; die spaetere Aktivierung ist auf bewusst kontrollierte UserDefined-Schnittstellenprofile ausgerichtet. Importierte Schnittstellenprofile bleiben bis zu einer spaeteren expliziten Aktivierung inaktiv.
+Wichtig fuer spaetere Erweiterungen: Es gibt weiterhin keinen produktiven Aktivieren-Button, keine automatische Aktivierung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled`, keine Profil-Speicherung, keine produktive Warnungsbestaetigung und keine dauerhafte Speicherung einer Warnungsbestaetigung. BuiltIn-Profile bleiben direkt blockiert; die spaetere Aktivierung ist auf bewusst kontrollierte UserDefined-Schnittstellenprofile ausgerichtet. Importierte Schnittstellenprofile bleiben bis zu einer spaeteren expliziten Aktivierung inaktiv.
 
 Ordner und XDT-Anhang-Konfiguration werden in der Aktivierungspruefung nur gelesen und angezeigt. Der Assistent legt keine Ordner an, erzeugt/kopiert/verschiebt/loescht keine Dateien und startet keine Anhangverarbeitung. Die Felder `6302`, `6303`, `6304` und `6305` werden nur als Konfiguration geprueft; XDT-Laengenpraefixe bleiben zentral Aufgabe des `XdtExportBuilder`.
 
@@ -760,12 +760,13 @@ Als reine technische Leitplanke fuer eine spaetere echte Aktivierung ist ein Int
 - `InterfaceProfileActivationExecutorResult`
 - `InterfaceProfileActivationExecutorStatus`
 - `InterfaceProfileActivationExecutorPrecondition`
+- `InterfaceProfileActivationExecutorStub`
 
-Dieses Skelett ist nicht in die UI eingebunden und hat keine Implementierung. Es beschreibt nur, welche Eingaben und Ergebnisdaten ein spaeterer Executor benoetigen wuerde: Schnittstellenprofil, aktuelle Evaluation, GuardResult, WarningConfirmationResult, ActivationPlan, Warnungsbestaetigungsstatus, Kontext, Zeitpunkt und optionalen Kommentar. Ergebnisdaten modellieren Status, Erfolg, Message, Preconditions, spaeter ausgefuehrte beziehungsweise nicht ausgefuehrte Schritte sowie die Sicherheitsflags `ProfileChanged`, `Saved` und `ProcessingStarted`.
+Das Skelett ist nicht in die UI eingebunden. `InterfaceProfileActivationExecutorStub` ist eine defensive Backend-Implementierung ohne produktive Wirkung: Er bewertet die uebergebenen Preconditions und gibt Statuswerte zurueck, setzt aber kein `IsActive`, speichert nichts, aendert keine Profile, startet keine Verarbeitung und fuehrt keine Datei-/Ordneroperationen aus. Der Stub benennt als fehlende Voraussetzung insbesondere, dass der aktuelle Request keinen Profilkatalog-/`AppDataPaths`-Kontext fuer frisches Laden und sichere UserDefined-Speicherung enthaelt.
 
-Die vorgesehenen Executor-Statuswerte sind `NotAvailable`, `NotImplemented`, `Blocked`, `RequiresWarningConfirmation`, `ReadyButNotExecuted`, `WouldExecute`, `Failed` und `Success`. `Success` ist nur fuer eine spaetere Implementierung reserviert; im aktuellen Stand gibt es keinen Codepfad, der eine Aktivierung ausfuehrt.
+Die vorgesehenen Executor-Statuswerte sind `NotAvailable`, `NotImplemented`, `Blocked`, `RequiresWarningConfirmation`, `ReadyButNotExecuted`, `WouldExecute`, `Failed` und `Success`. `Success` ist nur fuer eine spaetere Implementierung reserviert; im aktuellen Stand gibt es keinen Codepfad, der eine Aktivierung ausfuehrt oder speichert.
 
-Vor einer produktiven Implementierung muessen fachlich geklaert werden: Aktivierbarkeit von `ReadyWithWarnings` nach Bestaetigung, Speicherung oder Auditierung der Warnungsbestaetigung, Behandlung von `IsAttachmentProcessingEnabled`, konkret zu speicherndes Aktivierungsflag, Speicherort, finale Direktpruefung unmittelbar vor Speichern, Audit-/Logeintrag, berechtigte Benutzerrolle und fuehrende UI.
+Vor einer produktiven Implementierung muessen fachlich und technisch geklaert werden: Aktivierbarkeit von `ReadyWithWarnings` nach Bestaetigung, Speicherung oder Auditierung der Warnungsbestaetigung, Behandlung von `IsAttachmentProcessingEnabled`, konkret zu speicherndes Aktivierungsflag, frische Profilkatalog-Ladung, sichere UserDefined-Store-Methode, finale Direktpruefung unmittelbar vor Speichern, Audit-/Logeintrag, berechtigte Benutzerrolle und fuehrende UI.
 
 Die offenen fachlichen Entscheidungen sind als Konzept in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` dokumentiert. Diese Notiz ist keine Implementierungsfreigabe; sie dient als Entscheidungsgrundlage, bevor produktive Aktivierungslogik, UI-Bestaetigung oder Speicherung gebaut werden.
 

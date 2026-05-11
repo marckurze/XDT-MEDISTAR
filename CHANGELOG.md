@@ -17,6 +17,7 @@
 - Dialog `Aktivierung vorbereiten` von langer MessageBox auf ein scrollbares, resizebares Preview-Fenster umgestellt; die Inhalte sind kompakter gegliedert und vermeiden doppelte Listen, bleiben aber reine Vorschau ohne Aktivierung, Warnungsbestaetigung oder Speicherung.
 - Dialog `Aktivierung vorbereiten` weiter gestrafft: bestaetigungspflichtige Warnungen erscheinen zentral im Abschnitt Warnungsbestaetigung, Guard und Aktivierungsplan wiederholen die Warnungsliste nicht mehr vollstaendig.
 - Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor` ergaenzt; es beschreibt Request, Result, Preconditions und Statuswerte, bleibt aber ohne produktive Implementierung, UI-Anbindung, Speicherung oder Aktivierungswirkung.
+- Defensiven `InterfaceProfileActivationExecutorStub` ergaenzt; er bewertet Preconditions und liefert Statuswerte wie `ReadyButNotExecuted`, `Blocked` oder `RequiresWarningConfirmation`, fuehrt aber keine Aktivierung, Speicherung, Datei-/Ordneroperation oder Verarbeitung aus.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
@@ -35,6 +36,7 @@
 - Entscheidungsnotiz um eine V1-Spezifikation zu Aktivierungsflag, Persistenzstelle, Parallelitaets-/Aenderungsschutz, Warnungsbestaetigung/Audit und finaler Re-Evaluation erweitert; weiterhin ohne produktive Implementierung, Speicherung oder Aktivierungswirkung.
 - Entscheidungsnotiz um eine V1-Entscheidungslinie fuer spaetere Deaktivierung erweitert: Deaktivierung ist keine Loeschung, keine Ordnerbereinigung, keine Dateioperation, keine Aenderung an `IsAttachmentProcessingEnabled` und bleibt ohne produktive Implementierung.
 - Entscheidungsnotiz um eine V1-Linie fuer laufende und wartende Pakete bei spaeterer Aktivierung/Deaktivierung erweitert; Aktivierung startet keine Sofortverarbeitung, Deaktivierung verhindert neue Paketstarts und bestehende Pakete duerfen nicht stillschweigend verworfen werden.
+- Entscheidungsnotiz gestrafft: Die fruehere lange Wiederholungsliste wurde durch einen kompakten V1-Entscheidungskern mit schlanker Benutzerfuehrung, Muss-/Spaeter-Priorisierung und klarer Executor-Konsequenz ersetzt.
 - Statisches UI-Pruefprotokoll `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` ergänzt; die laufende WPF-UI wurde in der Codex-Umgebung nicht praktisch bedient, die Preview-/Dialogpfade wurden statisch auf reine Vorschau und fehlende Aktivierungswirkung geprüft.
 - Praktische Windows-Sichtpruefung des Dialogs `Aktivierung vorbereiten` im UI-Pruefprotokoll dokumentiert; scrollbares Preview-Fenster, gestraffte Texte und weiterhin fehlende produktive Wirkung sind fuer den Vorschau-Status abgenommen.
 - Klarstellung: Die Änderungen beschreiben den aktuellen Dokumentations- und Vorbereitungsstand; Produktivlogik, BuiltIn-Profile und Exportprofile wurden dadurch nicht geändert.

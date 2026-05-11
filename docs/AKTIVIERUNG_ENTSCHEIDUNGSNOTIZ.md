@@ -838,433 +838,84 @@ Weiterhin offen:
 - wie Reaktivierung mit Altbestand umgeht
 - Testmatrix fuer Paket-/Deaktivierungsfaelle
 
-## 1. Wann darf ein Profil produktiv aktiviert werden?
+## Kompakter V1-Entscheidungskern
 
-Aktueller Stand:
+Die detaillierten V1-Regeln stehen in den Abschnitten oben. Dieser Schlussabschnitt ersetzt den frueheren langen Detailbacklog und haelt die Umsetzungslinie bewusst knapp: kein Verwaltungsmonster, kein langer Wizard und keine mehrfachen Bestaetigungen derselben Information.
 
-- `Ready` kann technisch als vorbereitbar gelten.
-- `ReadyWithWarnings` wird aktuell konservativ blockiert, solange Warnungen nicht bewusst bestaetigt wurden.
-- `Blocked` darf nicht aktiviert werden.
-- `Unknown`, `NotAvailable` oder nicht eindeutig bewertete Zustaende duerfen nicht aktiviert werden.
+### Schlanke Benutzerfuehrung
 
-Offene Entscheidung:
+Die spaetere produktive UI soll den Benutzer mit wenigen klaren Schritten fuehren:
 
-- Darf `ReadyWithWarnings` nach bewusster Bestaetigung produktiv aktiviert werden?
-- Sollen bestimmte Warnungen weiterhin blockierend bleiben?
-- Wer entscheidet, ob eine Warnung fachlich harmlos oder aktivierungsrelevant ist?
+1. Profil auswaehlen.
+2. Pruefung ansehen.
+3. Aktivierung vorbereiten.
+4. Falls Warnungen vorhanden sind: bewusst bestaetigen.
+5. Final aktivieren oder spaeter bewusst deaktivieren.
 
-Empfohlene konservative Richtung:
+Leitplanken fuer die UI:
 
-- `Ready` darf spaeter aktivierbar sein.
-- `ReadyWithWarnings` darf erst nach expliziter Warnungsbestaetigung aktivierbar sein.
-- Einzelne Warnungen koennen spaeter zu Blockern hochgestuft werden, falls die Fachentscheidung das verlangt.
+- Kein ueberlanger Wizard.
+- Keine doppelte Benutzerabfrage fuer dieselbe Warnung.
+- `Ready`-Profile sollen ohne unnoetige Zusatzhuerden aktivierbar sein.
+- Warnungen werden nur bestaetigt, wenn tatsaechlich Warnungen vorhanden sind.
+- Vorschau, Warnungsbestaetigung und finale Aktion muessen eindeutig getrennt bleiben.
+- Keine versteckte Aktivierung, keine automatische Aktivierung durch Import und keine Aktivierung beim App-Start.
 
-Risiko bei falscher Entscheidung:
+### Harte V1-Regeln
 
-- Profile koennten trotz kritischer Konfiguration produktiv laufen.
-- Anwender koennten Warnungen als rein kosmetisch missverstehen.
+- UserDefined-Schnittstellenprofile duerfen spaeter aktiviert werden; BuiltIn-Profile nicht.
+- `Ready` darf aktivierbar sein.
+- `ReadyWithWarnings` darf nur nach bewusster Warnungsbestaetigung aktivierbar sein.
+- `Blocked`, `Unknown` und `NotAvailable` duerfen nicht aktiviert werden.
+- Direkt vor produktiver Speicherung ist eine frische Evaluation, Guard-Pruefung, WarningConfirmation und Planerstellung Pflicht.
+- `IsAttachmentProcessingEnabled` bleibt eine eigene Einstellung und wird nicht automatisch geaendert.
+- Aktivierung startet keine Sofortverarbeitung, keinen App-Start-Prozess, keinen Dienst, keinen Autostart und keinen FileSystemWatcher.
+- Deaktivierung ist keine Loeschung, keine Ordnerbereinigung und keine Dateioperation.
+- Deaktivierung verhindert neue Paketstarts.
+- Laufende oder wartende Pakete duerfen nicht stillschweigend verworfen, geloescht oder fortgesetzt werden.
+- Keine neue MEDISTAR-/AIS-Exporttemplate-Default-Logik, keine automatische `6330`-Zeilenlogik und keine harte Lizenzsperre ohne eigene Spezifikation.
 
-Technische Auswirkung:
+### Muss vor produktiver Aktivierung oder Deaktivierung entschieden sein
 
-- Guard, WarningConfirmation und ActivationPlan muessen unmittelbar vor echter Aktivierung neu berechnet werden.
-- Der spaetere Executor darf nicht nur alte Preview-Daten verwenden.
+- konkretes Aktivierungsflag, voraussichtlich `IsActive`, final bestaetigen
+- konkrete UserDefined-Store-Methode und BuiltIn-Overwrite-Schutz
+- minimales Warnungsbestaetigungs-/Auditmodell
+- finale Re-Evaluation im Executor inklusive frisch geladenem Profil
+- Paketregel fuer laufende oder wartende Pakete bei Deaktivierung; konservativ zu pruefen ist Blockieren der Deaktivierung, solange ein aktives oder wartendes Paket vorhanden ist
+- UI fuer finalen Aktivieren-/Deaktivieren-Schritt inklusive klarer Buttontexte
+- Testmatrix fuer `Ready`, `ReadyWithWarnings`, `Blocked`, BuiltIn/Nicht-UserDefined und Paketfaelle
 
-Status: empfohlen, aber fachlich noch freizugeben.
+### Kann spaeter separat entschieden werden
 
-## 2. Warnungsbestaetigung
+- erweiterte Auditdetails, Logaufbewahrung und Audit-Speicherort
+- Rollenmodell, falls das Projekt spaeter Rollen einfuehrt
+- Lizenzdurchsetzung und Signaturpruefung
+- Fingerprint-/Revisionserkennung ueber die Mindestregel "frisch laden und neu pruefen" hinaus
+- Sonderfaelle fuer bewusstes Abbrechen laufender Pakete
+- Reaktivierungsdetails fuer Altbestand in Importordnern
+- genaue UI-Position eines Deaktivieren-Buttons
 
-Aktueller Stand:
+### Konsequenz fuer die erste Executor-Stufe
 
-- Warnungen werden als bestaetigungspflichtige Items modelliert.
-- Es gibt keine Checkbox, keinen Bestaetigungsbutton und keine Speicherung.
+Die erste technische Stufe darf nur Backend sein. Wenn der Executor nicht sicher frisch laden und gezielt ein UserDefined-Schnittstellenprofil speichern kann, muss er defensiv nicht-produktiv bleiben. In diesem Fall liefert er einen klaren Status wie `ReadyButNotExecuted`, `NotAvailable`, `Blocked` oder `RequiresWarningConfirmation`, veraendert aber kein Profil, speichert nichts und startet keine Verarbeitung.
 
-Offene Entscheidung:
+### Technische Bestandspruefung und erster Executor-Stand
 
-- Gilt eine Warnungsbestaetigung nur im aktuellen Dialog?
-- Soll sie dauerhaft gespeichert werden?
-- Soll sie auditierbar sein?
-- Wer bestaetigt?
-- Wann verfaellt eine Bestaetigung?
-- Muss erneut bestaetigt werden, wenn sich Ordner, Profile, XDT-Anhang-Felder oder Lizenzstatus aendern?
+Aktueller technischer Befund:
 
-Empfohlene konservative Richtung:
+- `IsActive` existiert am `InterfaceProfileDefinition` und ist der naheliegende Kandidat fuer das Aktivierungsflag.
+- BuiltIn/UserDefined-Schutz ist ueber `ProfileMetadata.IsBuiltIn` und `ProfileMetadata.IsUserDefined` modelliert.
+- UserDefined-Schnittstellenprofile werden im bestehenden Profilkatalog unter `profiles/interfaces` gespeichert.
+- `ProfileCatalogService.SaveInterfaceProfileDefinition(..., overwriteExisting: true)` kann ein Schnittstellenprofil ueberschreiben, erzwingt aber selbst keine produktive finale Re-Evaluation.
+- `InterfaceProfileActivationExecutorRequest` enthaelt aktuell kein `AppDataPaths`-/Profilkatalog-Kontextobjekt und kann deshalb kein frisches Laden direkt vor Speicherung erzwingen.
 
-- Warnungsbestaetigungen nicht stillschweigend speichern.
-- Falls sie gespeichert werden, dann mit Zeitstempel, Benutzerkennung, Profil-ID, Evaluation-/Plan-Status und bestaetigten Warning-Codes.
-- Bei relevanter Profil- oder Abhaengigkeitsaenderung muss die Bestaetigung ungueltig werden.
+Konservative Entscheidung fuer die erste technische Stufe:
 
-Risiko bei falscher Entscheidung:
+- Es wird noch kein produktiver Backend-Executor gebaut.
+- `InterfaceProfileActivationExecutorStub` implementiert `IInterfaceProfileActivationExecutor` defensiv.
+- Der Stub bewertet die uebergebenen Preconditions, liefert sinnvolle Statuswerte und benennt fehlende Voraussetzungen.
+- Er setzt `IsActive` nicht, speichert nichts, aendert kein Profil, startet keine Verarbeitung und fuehrt keine Datei-/Ordneroperation aus.
 
-- Veraltete Warnungsbestaetigungen koennten spaeter eine riskante Aktivierung erlauben.
-- Nicht nachvollziehbare Bestaetigungen erschweren Support und Audit.
+Grund:
 
-Technische Auswirkung:
-
-- Es braucht ein klares Modell fuer bestaetigte Warning-Codes und deren Gueltigkeit.
-- Eine spaetere UI muss sichtbar zwischen Vorschau und echter Bestaetigung unterscheiden.
-
-Status: offen.
-
-## 3. Aktivierungsflag
-
-Aktueller Stand:
-
-- Schnittstellenprofile haben aktuell `IsActive`.
-- Importierte Schnittstellenprofile bleiben inaktiv.
-- Das vorhandene Executor-Skelett setzt kein Flag.
-
-Offene Entscheidung:
-
-- Wird `IsActive` als produktives Aktivierungsflag verwendet?
-- Gibt es ein anderes Aktivierungsflag?
-- Wird Aktivierung pro Schnittstellenprofil gespeichert?
-- Welche Auswirkung hat Aktivierung auf Monitoring und periodischen Scan?
-- Darf ein Profil aktiv sein, wenn `IsAttachmentProcessingEnabled` deaktiviert ist?
-
-Empfohlene konservative Richtung:
-
-- Aktivierung nur fuer UserDefined-Schnittstellenprofile.
-- BuiltIn bleibt unveraendert.
-- Aktivierung startet keine Verarbeitung sofort.
-- Periodischer Scan bleibt Betriebsmodell.
-- Keine Verarbeitung beim App-Start.
-
-Risiko bei falscher Entscheidung:
-
-- Importierte Profile koennten unkontrolliert in die Verarbeitung geraten.
-- BuiltIn-Profile koennten unbeabsichtigt veraendert werden.
-
-Technische Auswirkung:
-
-- Der spaetere Executor muss vor dem Speichern eindeutig wissen, welches Flag veraendert wird.
-- Monitoring darf erst nach bewusster Aktivierung und laufendem Scanmodell reagieren.
-
-Status: offen, konservative Richtung empfohlen.
-
-## 4. `IsAttachmentProcessingEnabled`
-
-Aktueller Stand:
-
-- Importierte Schnittstellenprofile behalten XDT-Anhang-Einstellungen.
-- `IsAttachmentProcessingEnabled` wird bei importierten Profilen deaktiviert.
-- Die Aktivierungspruefung bewertet die Anhang-Konfiguration nur lesend.
-
-Offene Entscheidung:
-
-- Soll eine Profilaktivierung `IsAttachmentProcessingEnabled` veraendern?
-- Oder bleibt XDT-Anhang-Automatik eine separate Einstellung?
-
-Empfohlene konservative Richtung:
-
-- Aktivierung soll `IsAttachmentProcessingEnabled` nicht automatisch aendern.
-- XDT-Anhang-Automatik bleibt eine explizite eigene Einstellung.
-- Required/Optional, Ordner und Linkfelder muessen trotzdem bewertet werden.
-
-Risiko bei falscher Entscheidung:
-
-- Ein importiertes Profil koennte unbemerkt Anhangdateien verarbeiten.
-- Pflicht-Anhang-Verhalten koennte produktiv starten, bevor Ordner und Ablage bewusst geprueft sind.
-
-Technische Auswirkung:
-
-- Der Executor darf Anhang-Automatik nicht nebenbei aktivieren.
-- Eine spaetere UI muss Aktivierung und Anhang-Automatik klar trennen.
-
-Status: empfohlen.
-
-## 5. Speicherung und Persistenz
-
-Aktueller Stand:
-
-- UserDefined-Profile werden separat gespeichert.
-- BuiltIn-Profile werden nicht ueberschrieben.
-- Der Aktivierungsassistent speichert nichts.
-
-Offene Entscheidung:
-
-- Welche Profilfelder werden bei Aktivierung gespeichert?
-- Wo werden UserDefined-Profile gespeichert?
-- Wie wird verhindert, dass BuiltIn ueberschrieben wird?
-- Wie wird ein paralleler Aenderungsstand erkannt?
-- Muss direkt vor Speicherung erneut Evaluation, Guard und Plan laufen?
-
-Empfohlene konservative Richtung:
-
-- Direkt vor Speicherung finale Re-Evaluation erzwingen.
-- Nur UserDefined-Profile speichern.
-- BuiltIn niemals ueberschreiben.
-- Keine Exportprofile oder Geraeteprofile automatisch aendern.
-- Kein `ReplaceExisting` im Aktivierungsprozess einfuehren.
-
-Risiko bei falscher Entscheidung:
-
-- Ein alter Preview-Stand koennte nach Konfigurationsaenderung trotzdem gespeichert werden.
-- Abhaengigkeiten oder Ordner koennten zwischen Vorschau und Aktivierung ungueltig geworden sein.
-
-Technische Auswirkung:
-
-- Der spaetere Executor muss Speichern als letzten Schritt nach frischer Pruefung behandeln.
-- Es braucht eine klare Fehlerantwort, wenn sich der Profilstand geaendert hat.
-
-Status: offen, konservative Richtung empfohlen.
-
-## 6. Finale Direktpruefung unmittelbar vor Aktivierung
-
-Aktueller Stand:
-
-- Preview, Guard, WarningConfirmation und ActivationPlan koennen aktuelle Zustaende anzeigen.
-- Sie sind noch keine Ausfuehrungsgrundlage.
-
-Pflicht vor echter Aktivierung:
-
-- Evaluation neu erstellen.
-- Guard neu ausfuehren.
-- WarningConfirmation pruefen.
-- ActivationPlan neu erstellen.
-- Profil noch vorhanden?
-- Profil weiterhin UserDefined?
-- Profil weiterhin nicht BuiltIn?
-- Abhaengige Profile weiterhin vorhanden?
-- Ordnerstatus weiterhin plausibel?
-- XDT-Anhang-Konfiguration weiterhin plausibel?
-- Lizenzhinweise weiterhin beruecksichtigt?
-
-Empfohlene konservative Richtung:
-
-- Keine Aktivierung aus alten Preview-Daten heraus.
-- Preview ist nur Anzeige, nicht Ausfuehrungsgrundlage.
-- Der Executor muss direkt vor Ausfuehrung frisch pruefen.
-
-Risiko bei falscher Entscheidung:
-
-- Aktivierung koennte auf einem veralteten, inzwischen ungueltigen Zustand basieren.
-
-Technische Auswirkung:
-
-- `InterfaceProfileActivationExecutorRequest` darf zwar Plan und Evaluation referenzieren, aber der produktive Executor muss deren Aktualitaet absichern oder neu erzeugen.
-
-Status: empfohlen.
-
-## 7. Audit / Log
-
-Aktueller Stand:
-
-- Es gibt noch keinen produktiven Aktivierungs-Audit.
-- Diese Notiz enthaelt keine Patientendaten, Live-Pfade oder Kundendaten.
-
-Offene Entscheidung:
-
-- Soll Aktivierung in ein Log geschrieben werden?
-- Welche Daten duerfen und sollen geloggt werden?
-- Benutzer?
-- Zeitstempel?
-- Profil-ID?
-- Alter und neuer Aktivstatus?
-- Bestaetigte Warnungen?
-- Blockerfreiheit?
-- App-Version?
-
-Empfohlene konservative Richtung:
-
-- Aktivierung sollte auditierbar sein.
-- Keine Patientendaten im Aktivierungslog.
-- Keine produktiven Kundendaten oder Live-System-Pfade in Dokumentation uebernehmen.
-- Pfade im lokalen Log nur bewusst und sparsam.
-
-Risiko bei falscher Entscheidung:
-
-- Aktivierungen waeren spaeter nicht nachvollziehbar.
-- Logs koennten unnoetig sensible Informationen enthalten.
-
-Technische Auswirkung:
-
-- Vor produktiver Implementierung braucht es ein minimales Auditmodell.
-- Audit darf nicht mit medizinischen Daten vermischt werden.
-
-Status: offen.
-
-## 8. Benutzerrolle / Berechtigung
-
-Aktueller Stand:
-
-- Im aktuellen Projekt ist keine Rollenlogik fuer Aktivierung produktiv umgesetzt.
-- Der Assistent zeigt nur Vorschau.
-
-Offene Entscheidung:
-
-- Wer darf aktivieren?
-- Braucht es eine Admin-/Technikerrolle?
-- Reicht der lokale Windows-Benutzer?
-- Gibt es im Projekt spaeter Rollen?
-- Muss Aktivierung bewusst bestaetigt werden?
-
-Empfohlene konservative Richtung:
-
-- Aktivierung nur durch bewusst handelnden Benutzer.
-- Keine automatische Aktivierung durch Import.
-- Keine Aktivierung beim App-Start.
-- Keine Aktivierung ohne sichtbare Pruefung.
-
-Risiko bei falscher Entscheidung:
-
-- Importierte Profile koennten von falscher Stelle produktiv freigegeben werden.
-
-Technische Auswirkung:
-
-- Eine spaetere UI braucht eine klare finale Bestaetigung und optional Benutzer-/Rolleninformation.
-
-Status: offen.
-
-## 9. UI-Fuehrung
-
-Aktueller Stand:
-
-- `Aktivierung vorbereiten` ist ein reines scrollbares Preview-Fenster mit OK-/Schliessen-Aktion.
-- Der Dialog zeigt Bewertung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan.
-- Es gibt keinen Aktivieren-Button.
-
-Offene Entscheidung:
-
-- Bleibt `Aktivierung vorbereiten` ein Dialog?
-- Wird spaeter ein echter mehrstufiger Wizard benoetigt?
-- Wo wird eine Warnungsbestaetigung angezeigt?
-- Wo sitzt ein finaler Aktivieren-Button?
-- Wie wird verhindert, dass Benutzer Vorschau mit echter Aktivierung verwechseln?
-
-Empfohlene konservative Richtung:
-
-- Spaeter eigener finaler Schritt mit klarer Beschriftung.
-- Deutliche Trennung zwischen Vorschau und produktiver Aktivierung.
-- Kein Aktivieren-Button im aktuellen Preview-Dialog, bis alle fachlichen Entscheidungen getroffen sind.
-
-Risiko bei falscher Entscheidung:
-
-- Anwender koennten eine Vorschau fuer eine echte Freigabe halten.
-- Produktive Aktivierung koennte ohne genuegend Kontext erfolgen.
-
-Technische Auswirkung:
-
-- UI-Texte und Button-Benennung muessen sehr eindeutig sein.
-
-Status: offen.
-
-## 10. Lizenz
-
-Aktueller Stand:
-
-- Lizenzstatus und Karenzzeitmodell sind vorbereitet.
-- Es gibt keine harte produktive Lizenzsperre.
-- Keine Online-Lizenzierung ist implementiert.
-
-Offene Entscheidung:
-
-- Darf ein lizenzpflichtiges Profil ohne gueltige Lizenz aktiviert werden?
-- Bleibt Lizenz nur Warnung?
-- Wird spaeter eine harte Sperre eingefuehrt?
-- Wie wirkt das Karenzzeitmodell?
-- Wann wird Lizenzstatus geprueft?
-
-Empfohlene konservative Richtung:
-
-- Keine harte Lizenzsperre ohne gesonderte Spezifikation.
-- Lizenzstatus im Aktivierungsprozess sichtbar machen.
-- Harte Sperre erst nach separatem Lizenzkonzept.
-
-Risiko bei falscher Entscheidung:
-
-- Aktivierung koennte gegen das spaetere Lizenzmodell laufen.
-- Eine zu harte Sperre koennte Praxisbetrieb unnoetig blockieren.
-
-Technische Auswirkung:
-
-- Lizenzbewertung bleibt vorerst Hinweis/Warnung, bis das Lizenzkonzept abgeschlossen ist.
-
-Status: offen.
-
-## 11. Produktive Verarbeitung nach Aktivierung
-
-Aktueller Stand:
-
-- Die App startet keine Verarbeitung beim App-Start.
-- Ueberwachung wird manuell gestartet.
-- Periodischer Scan bleibt aktuelles Betriebsmodell.
-
-Offene Entscheidung:
-
-- Startet Aktivierung sofort Verarbeitung?
-- Wird nur beim naechsten periodischen Scan gearbeitet?
-- Wie wird verhindert, dass beim Aktivieren alte Dateien verarbeitet werden?
-- Muss es einen Initialzustand oder Startzeitpunkt geben?
-
-Empfohlene konservative Richtung:
-
-- Aktivierung startet keine Verarbeitung sofort.
-- Kein `FileSystemWatcher`.
-- Kein Autostart.
-- Periodischer Scan bleibt Betriebsmodell.
-- Keine Verarbeitung beim App-Start.
-
-Risiko bei falscher Entscheidung:
-
-- Alte Dateien koennten direkt nach Aktivierung unerwartet verarbeitet werden.
-- Aktivierung koennte Betriebsverhalten ausloesen, das der Benutzer nicht erwartet.
-
-Technische Auswirkung:
-
-- Ein spaeterer Executor darf keine Scan- oder Verarbeitungslogik starten.
-- Ein moeglicher Initialzustand muss separat spezifiziert werden.
-
-Status: empfohlen, Details offen.
-
-## 12. Schutz vor unbeabsichtigten Dateioperationen
-
-Weiterhin gueltig:
-
-- Keine Ordnerbereinigung durch Aktivierung.
-- Keine pauschale Ordnerleerung.
-- Exportordner nicht bereinigen.
-- Keine unbekannten Dateien anfassen.
-- Keine Anhangdateien beim Aktivieren kopieren oder verschieben.
-- Keine XDT-Datei beim Aktivieren erzeugen.
-
-Risiko bei falscher Entscheidung:
-
-- Aktivierung koennte ungewollt produktive Dateien veraendern oder entfernen.
-
-Technische Auswirkung:
-
-- Der spaetere Executor darf nur Profilzustand behandeln, keine Import-/Exportdateien.
-
-Status: festzuhalten.
-
-## 13. Offener Produktivumfang
-
-Noch nicht implementiert:
-
-- produktiver `ActivationExecutor`
-- finaler Aktivieren-Button
-- UI fuer echte Warnungsbestaetigung
-- Speicherung der Warnungsbestaetigung
-- Audit-/Logeintrag
-- finale Re-Evaluation im Executor
-- tatsaechliches Setzen eines Aktivierungsflags
-- Persistenz der Profiländerung
-- Rollen-/Berechtigungspruefung
-- Lizenzdurchsetzung
-- Start-/Initialzustand fuer produktive Verarbeitung nach Aktivierung
-
-Status: offen.
-
-## 14. Empfohlene naechste Schritte
-
-Konservative Reihenfolge:
-
-1. Vorlaeufige V1-Linie fachlich abnehmen oder anpassen.
-2. Entscheidung zu Warnungsbestaetigung und Audit treffen.
-3. Entscheidung zu Aktivierungsflag und Speicherung treffen.
-4. Entscheidung zu `IsAttachmentProcessingEnabled` bestaetigen.
-5. Erst danach produktiven Executor entwerfen.
-6. Erst danach finalen UI-Schritt planen.
-7. Erst danach Implementierung in kleinen, testbaren Schritten.
-
-Status: empfohlen.
+Eine echte Aktivierung waere erst vertretbar, wenn der Executor selbst frisch laden, finale Re-Evaluation erzwingen und gezielt eine sichere UserDefined-Speicherung ausfuehren kann. Dieser Schritt ist bewusst noch nicht erreicht.
