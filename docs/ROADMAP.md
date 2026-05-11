@@ -140,7 +140,8 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Die Service-Kette lautet: `InterfaceProfileActivationEvaluationService` -> `InterfaceProfileActivationGuardService` -> `InterfaceProfileActivationWarningConfirmationService` -> `InterfaceProfileActivationPlanService` -> `InterfaceProfileActivationPreparationPreviewService`.
 - `ReadyWithWarnings` bleibt konservativ: Ohne bewusste Warnungsbestaetigung meldet der Guard `RequiresWarningConfirmation` und der Plan bleibt nicht ausfuehrbar.
 - PlannedSteps im ActivationPlan beschreiben nur spaetere Aktionen. Sie aktivieren nichts, speichern nichts und starten keine Verarbeitung.
-- Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keinen `ActivationExecutor`, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled` und keine Datei-/Ordneroperationen.
+- Ein Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor` ist vorhanden: Request, Result, Preconditions, Statuswerte und `IInterfaceProfileActivationExecutor`.
+- Es gibt keine produktive Executor-Implementierung, keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled` und keine Datei-/Ordneroperationen.
 - BuiltIn-Profile bleiben direkt geschuetzt; die spaetere Aktivierung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet.
 - Die zuletzt behobene Layout-Ueberlagerung unterhalb `Ordnerbereinigung` ist Teil des aktuellen UI-Stands und darf bei weiteren Arbeiten nicht zurueckfallen.
 
@@ -177,7 +178,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 - Freie Konfliktlösungs-/Bearbeitungsdialoge.
 - Manuelle Zielnamen-/ID-Bearbeitung in der UI.
 - Produktive Aktivierung importierter Schnittstellenprofile; Pruefung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan sind nur read-only vorbereitet.
-- Bewusste Warnungsbestaetigung mit UI, moegliche dauerhafte Speicherung, finale Sicherheitspruefung und produktiver `ActivationExecutor`.
+- Bewusste Warnungsbestaetigung mit UI, moegliche dauerhafte Speicherung, finale Sicherheitspruefung und produktive `ActivationExecutor`-Implementierung.
 - Vollständiger Profil-Assistent für unbekannte Geräte.
 - Digitale Lizenzsignatur.
 - Online-Lizenzierung.
@@ -218,7 +219,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 - Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
 - UX fuer eine spaetere bewusste Warnungsbestaetigung entscheiden, weiterhin ohne produktive Speicherung.
-- `ActivationExecutor` zunaechst als Dokumentation oder Interface-Skelett ohne produktive Implementierung entwerfen.
+- Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung planen.
 - Finale Sicherheitspruefung direkt vor Ausfuehrung, Audit-/Logeintrag und erneuten Build-/Testlauf fuer eine spaetere echte Aktivierung einplanen.
 - Fachlich entscheiden, ob `ReadyWithWarnings` nach bewusster Bestaetigung aktivierbar sein darf.
 - Optional spätere manuelle Zielnamen-/ID-Bearbeitung für ImportAsCopy planen.
@@ -257,8 +258,8 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 2. `CHANGELOG.md` mit einem Abschnitt für den aktuellen Entwicklungsstand fortführen.
 3. Version für den nächsten Meilenstein nur vorbereiten, aber erst nach E2E-Abnahme erhöhen.
 4. Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
-5. `ActivationExecutor`-Konzept als Dokumentation oder Interface-Skelett ohne produktive Wirkung entwerfen.
-6. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
+5. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
+6. Produktive `ActivationExecutor`-Implementierung separat spezifizieren, bevor sie gebaut wird.
 7. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
 8. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
 9. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
