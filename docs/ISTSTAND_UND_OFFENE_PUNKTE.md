@@ -194,6 +194,8 @@ Ein spaeterer Executor duerfte erst implementiert werden, wenn fachlich entschie
 
 Die offenen fachlichen Entscheidungen sind in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` gebuendelt. Diese Notiz ist weiterhin nur Konzept/Dokumentation und keine Freigabe fuer produktive Aktivierung.
 
+Eine statische UI-Pruefung des aktuellen Aktivierungsassistenten ist in `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` dokumentiert. Die WPF-Oberflaeche wurde in der Codex-Umgebung nicht praktisch bedient; XAML, Codebehind und Preview-Services wurden statisch darauf geprueft, dass der Dialog Vorschau bleibt und keine Aktivierung, Warnungsbestaetigung, Speicherung, Datei-/Ordneroperation oder Verarbeitung ausloest.
+
 Die zuletzt bestaetigte technische Absicherung dieses Standes:
 
 - `dotnet build XdtDeviceBridge.sln` erfolgreich, `0` Warnungen, `0` Fehler
@@ -401,6 +403,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - Read-only Aktivierungsassistent praktisch in der UI pruefen; Pruefung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan bleiben ohne produktive Wirkung.
 - UI-Konzept fuer spaetere bewusste Warnungsbestaetigung ohne sofortige Speicherung entwerfen.
 - Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung planen; Entscheidungsgrundlage: `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`.
+- Praktische Windows-Sichtpruefung des aktuellen Aktivierungsassistenten anhand `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` nachholen.
 - Finale Sicherheitspruefung, Audit-/Logeintrag und erneuten Build-/Testlauf direkt vor einer spaeteren echten Aktivierung einplanen.
 - Optional spaeter ReplaceExisting fuer UserDefined mit Backup/Bestaetigung.
 - AIS-/MEDISTAR-Default-Exporttemplates nicht umsetzen, bis ein neues Fachkonzept vorliegt.

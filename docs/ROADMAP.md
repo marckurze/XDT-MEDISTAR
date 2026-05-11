@@ -143,6 +143,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Ein Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor` ist vorhanden: Request, Result, Preconditions, Statuswerte und `IInterfaceProfileActivationExecutor`.
 - Es gibt keine produktive Executor-Implementierung, keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled` und keine Datei-/Ordneroperationen.
 - Die fachliche Entscheidungsgrundlage fuer eine spaetere produktive Aktivierung liegt in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`.
+- Eine statische UI-Pruefung ist in `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` dokumentiert; die praktische WPF-Sichtpruefung auf einem Windows-System bleibt nachzuholen.
 - BuiltIn-Profile bleiben direkt geschuetzt; die spaetere Aktivierung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet.
 - Die zuletzt behobene Layout-Ueberlagerung unterhalb `Ordnerbereinigung` ist Teil des aktuellen UI-Stands und darf bei weiteren Arbeiten nicht zurueckfallen.
 
@@ -219,6 +220,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 ### Phase 2: Importierte Schnittstellenprofile prüfen und aktivieren
 
 - Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
+- Statisches UI-Pruefprotokoll `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Basis verwenden.
 - Entscheidungsnotiz `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich abnehmen oder anpassen.
 - UX fuer eine spaetere bewusste Warnungsbestaetigung entscheiden, weiterhin ohne produktive Speicherung.
 - Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung planen.
@@ -260,15 +262,16 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 2. `CHANGELOG.md` mit einem Abschnitt für den aktuellen Entwicklungsstand fortführen.
 3. Version für den nächsten Meilenstein nur vorbereiten, aber erst nach E2E-Abnahme erhöhen.
 4. Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
-5. `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich entscheiden.
-6. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
-7. Produktive `ActivationExecutor`-Implementierung separat spezifizieren, bevor sie gebaut wird.
-8. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
-9. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
-10. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
-11. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
-12. Lizenzsignatur-Konzept dokumentieren, bevor produktive Sperren umgesetzt werden.
-13. Installer-/Deployment-Checkliste erstellen.
+5. `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` auf einem Windows-System praktisch abarbeiten.
+6. `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich entscheiden.
+7. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
+8. Produktive `ActivationExecutor`-Implementierung separat spezifizieren, bevor sie gebaut wird.
+9. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
+10. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
+11. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
+12. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
+13. Lizenzsignatur-Konzept dokumentieren, bevor produktive Sperren umgesetzt werden.
+14. Installer-/Deployment-Checkliste erstellen.
 
 ## 7. Risiken / offene Entscheidungen
 
