@@ -67,7 +67,7 @@
                                         <Setter Property="BorderThickness" Value="1"/>
                                         <Setter Property="CornerRadius" Value="6"/>
                                         <Setter Property="Padding" Value="6"/>
-                                        <Setter Property="Margin" Value="0,0,6,6"/>
+                                        <Setter Property="Margin" Value="0,0,4,6"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect BlurRadius="7"
@@ -296,7 +296,7 @@
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource MonitoringInputBadgeStyle}"
-                                                                        Width="104"
+                                                                        Width="100"
                                                                         ToolTip="{Binding Detail}">
                                                                     <StackPanel>
                                                                         <TextBlock Text="{Binding Name}" FontWeight="Bold" TextWrapping="Wrap"/>
