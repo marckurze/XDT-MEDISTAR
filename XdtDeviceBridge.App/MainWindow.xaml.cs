@@ -75,12 +75,15 @@ public partial class MainWindow : Window
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
+    private readonly InterfaceProfileActivationEvaluationService _interfaceProfileActivationEvaluationService = new();
+    private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
     private readonly ObservableCollection<InterfaceMonitoringCardDisplay> _interfaceMonitoringCards = new();
+    private readonly ObservableCollection<InterfaceProfileActivationPreviewRow> _interfaceProfileActivationPreviewRows = new();
     private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
@@ -119,6 +122,7 @@ public partial class MainWindow : Window
         ExportRulesGrid.ItemsSource = _visibleExportRules;
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         InterfaceMonitoringCardsItemsControl.ItemsSource = _interfaceMonitoringCards;
+        InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         SyncBuilderTestPreviewArea();
         InitializeProfileOverview();
@@ -718,6 +722,11 @@ public partial class MainWindow : Window
         ShowInterfaceProfileForSelectedProfile();
     }
 
+    private void RefreshInterfaceActivationPreview_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshInterfaceActivationPreview();
+    }
+
     private void ShowInterfaceProfileForSelectedProfile()
     {
         if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
@@ -758,6 +767,8 @@ public partial class MainWindow : Window
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = profile.FolderOptions.MoveFailedFilesToErrorFolder;
         InterfaceArchiveModeComboBox.SelectedValue = profile.FolderOptions.ArchiveProcessedFileMode.ToString();
         InterfaceArchiveRetentionDaysTextBox.Text = profile.FolderOptions.ArchiveRetentionDays?.ToString() ?? string.Empty;
+
+        RefreshInterfaceActivationPreview();
     }
 
     private void ClearInterfaceProfileEditor()
@@ -792,6 +803,76 @@ public partial class MainWindow : Window
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = false;
         InterfaceArchiveModeComboBox.SelectedValue = ArchiveProcessedFileMode.Copy.ToString();
         InterfaceArchiveRetentionDaysTextBox.Text = string.Empty;
+        ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateEmpty());
+    }
+
+    private void RefreshInterfaceActivationPreview()
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
+        {
+            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateEmpty());
+            return;
+        }
+
+        if (_profileCatalog is null)
+        {
+            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateError("Profilkatalog ist nicht geladen."));
+            return;
+        }
+
+        try
+        {
+            var result = _interfaceProfileActivationEvaluationService.Evaluate(
+                profile,
+                _profileCatalog,
+                CreateLicenseStatesForActivationPreview());
+            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.Create(result));
+        }
+        catch (Exception ex)
+        {
+            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateError(ex.Message));
+        }
+    }
+
+    private IReadOnlyList<LicensedDeviceState> CreateLicenseStatesForActivationPreview()
+    {
+        if (_profileCatalog is null)
+        {
+            return Array.Empty<LicensedDeviceState>();
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var license = File.Exists(paths.LicenseFile)
+                ? _licenseFileRepository.Load(paths.LicenseFile)
+                : null;
+            var gracePeriodStore = _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
+
+            return _licensedDeviceStateEvaluator.Evaluate(
+                _profileCatalog.InterfaceProfiles,
+                license,
+                gracePeriodStore.GracePeriods,
+                DateTime.UtcNow);
+        }
+        catch
+        {
+            return Array.Empty<LicensedDeviceState>();
+        }
+    }
+
+    private void ShowInterfaceActivationPreview(InterfaceProfileActivationPreviewDisplay display)
+    {
+        InterfaceActivationPreviewStatusText.Text = display.StatusText;
+        InterfaceActivationPreviewCanActivateText.Text = display.CanActivateText;
+        InterfaceActivationPreviewCountsText.Text = display.SummaryText;
+        InterfaceActivationPreviewHintText.Text = display.HintText;
+
+        _interfaceProfileActivationPreviewRows.Clear();
+        foreach (var row in display.Rows)
+        {
+            _interfaceProfileActivationPreviewRows.Add(row);
+        }
     }
 
     private void CreateInterfaceProfileForSelectedExport_Click(object sender, RoutedEventArgs e)

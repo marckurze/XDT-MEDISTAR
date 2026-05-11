@@ -106,6 +106,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
                                            Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
@@ -1639,6 +1640,70 @@
                                                    Foreground="DarkOrange"
                                                    FontWeight="Bold"
                                                    TextWrapping="Wrap"/>
+                                    </Grid>
+                                </GroupBox>
+
+                                <GroupBox Header="Prüfung vor Aktivierung" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0"
+                                                   Text="Read-only Vorschau für den späteren Aktivierungsassistenten. Diese Prüfung aktiviert nichts, speichert nichts und startet keine Verarbeitung."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,8"/>
+
+                                        <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+                                            <TextBlock x:Name="InterfaceActivationPreviewStatusText"
+                                                       Text="Status: -"
+                                                       FontWeight="Bold"
+                                                       Margin="0,3,18,8"/>
+                                            <TextBlock x:Name="InterfaceActivationPreviewCanActivateText"
+                                                       Text="Aktivierbar: -"
+                                                       FontWeight="Bold"
+                                                       Margin="0,3,18,8"/>
+                                            <TextBlock x:Name="InterfaceActivationPreviewCountsText"
+                                                       Text="Blocker: 0 | Warnungen: 0 | Hinweise: 0"
+                                                       Margin="0,3,18,8"/>
+                                            <Button Content="Prüfung aktualisieren"
+                                                    Width="180"
+                                                    Margin="0,0,0,8"
+                                                    Click="RefreshInterfaceActivationPreview_Click"/>
+                                        </WrapPanel>
+
+                                        <Grid Grid.Row="2">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0"
+                                                       x:Name="InterfaceActivationPreviewHintText"
+                                                       Text="Bitte wählen Sie ein Schnittstellenprofil aus, um die Aktivierungsprüfung anzuzeigen."
+                                                       TextWrapping="Wrap"
+                                                       Foreground="DimGray"
+                                                       Margin="0,0,0,6"/>
+                                            <DataGrid Grid.Row="1"
+                                                      x:Name="InterfaceActivationPreviewChecksGrid"
+                                                      AutoGenerateColumns="False"
+                                                      IsReadOnly="True"
+                                                      CanUserAddRows="False"
+                                                      CanUserDeleteRows="False"
+                                                      SelectionMode="Single"
+                                                      HeadersVisibility="Column"
+                                                      MinHeight="120"
+                                                      MaxHeight="220">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Schweregrad" Binding="{Binding Severity}" Width="100"/>
+                                                    <DataGridTextColumn Header="Bereich" Binding="{Binding Area}" Width="150"/>
+                                                    <DataGridTextColumn Header="Prüfung" Binding="{Binding Message}" Width="*"/>
+                                                    <DataGridTextColumn Header="Details" Binding="{Binding Detail}" Width="*"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
                                     </Grid>
                                 </GroupBox>
                              </Grid>
