@@ -15,6 +15,146 @@ Aktueller Grundsatz:
 - Es wird nichts gespeichert, kein Profil veraendert und keine Verarbeitung gestartet.
 - Das vorhandene `ActivationExecutor`-Skelett beschreibt nur einen spaeteren Vertrag.
 
+## Vorlaeufige fachliche Entscheidungslinie V1 (Vorschlag)
+
+Dieser Abschnitt ist eine fachliche Vorentscheidung fuer eine spaetere produktive Aktivierung. Er ist noch keine Implementierung und keine Freigabe fuer produktive Aktivierung.
+
+### Aktivierbare Zustaende
+
+Vorschlag fuer V1:
+
+- `Blocked` darf niemals produktiv aktiviert werden.
+- `Unknown`, `NotAvailable` oder nicht eindeutig bewertete Zustaende duerfen niemals produktiv aktiviert werden.
+- `Ready` darf grundsaetzlich produktiv aktivierbar sein.
+- `ReadyWithWarnings` darf nur nach bewusster Warnungsbestaetigung produktiv aktivierbar sein.
+- Wenn einzelne Warnungen spaeter fachlich als kritisch eingestuft werden, muessen diese Warnungen in der Bewertung zu Blockern hochgestuft werden.
+- Eine Aktivierung darf niemals aus alten Preview-Daten heraus erfolgen.
+- Direkt vor produktiver Aktivierung muss eine frische Evaluation, Guard-Pruefung, WarningConfirmation-Pruefung und ActivationPlan-Erstellung erfolgen.
+
+Fachliche Einordnung:
+
+- `ReadyWithWarnings` ist kein Fehlerzustand.
+- `ReadyWithWarnings` bedeutet: Aktivierung ist fachlich moeglich, aber nur nach bewusster Benutzerentscheidung.
+- Ohne Bestaetigung bleibt der spaetere Aktivierungsprozess blockiert.
+- Mit Bestaetigung darf ein spaeterer Executor theoretisch fortfahren, sofern alle anderen Bedingungen erfuellt sind.
+
+Grenzen:
+
+- Warnungen duerfen nicht stillschweigend akzeptiert werden.
+- Warnungen duerfen nicht automatisch durch Import akzeptiert werden.
+- Warnungen duerfen nicht allein durch Oeffnen des Dialogs akzeptiert werden.
+- Die aktuelle UI zeigt Warnungen nur an und bestaetigt sie nicht.
+
+Status: Vorschlag, nicht implementiert.
+
+### Warnungsbestaetigung
+
+Eine spaetere produktive Warnungsbestaetigung sollte mindestens enthalten:
+
+- Profil-ID
+- Profilname
+- Zeitpunkt
+- Benutzerkennung oder ausfuehrender Benutzerkontext, falls verfuegbar
+- bestaetigte Warning-Codes oder Warning-Titel
+- `EvaluationStatus` zum Zeitpunkt der Bestaetigung
+- `GuardDecision` zum Zeitpunkt der Bestaetigung
+- `ActivationPlanStatus` zum Zeitpunkt der Bestaetigung
+- Hinweistext, dass die Aktivierung trotz Warnungen bewusst fortgesetzt wurde
+
+Konservative Gueltigkeitsregel:
+
+- Wenn sich das Schnittstellenprofil relevant aendert, muss die Warnungsbestaetigung ungueltig werden.
+- Relevante Aenderungen sind insbesondere:
+  - AIS-Profil
+  - Geraeteprofil
+  - Exportprofil
+  - Import-/Exportordner
+  - XDT-Anhang-Modus `Optional`/`Required`
+  - XDT-Anhang-Import-/Exportordner
+  - Dateiname-Template
+  - Transfermodus
+  - `6302`, `6303`, `6304`, `6305`
+  - Lizenzstatus oder lizenzpflichtige Bewertung
+
+Status: Vorschlag, nicht implementiert.
+
+### Bedeutung von aktiv in V1
+
+Ein Schnittstellenprofil ist in V1 aktiv, wenn es vom bestehenden Betriebsmodell beruecksichtigt werden darf:
+
+- Das Profil darf vom bestehenden periodischen Scan beruecksichtigt werden.
+- Aktivierung startet keine Verarbeitung sofort.
+- Aktivierung startet keine Verarbeitung beim App-Start.
+- Aktivierung installiert keinen Dienst.
+- Aktivierung richtet keinen Autostart ein.
+- Aktivierung richtet keinen `FileSystemWatcher` ein.
+- Aktivierung veraendert keine AIS-/Geraete-/Exportprofile automatisch.
+- Aktivierung veraendert keine BuiltIn-Profile.
+- Aktivierung betrifft nur das UserDefined-Schnittstellenprofil.
+
+Bewusst offen:
+
+- welches konkrete Flag verwendet wird, zum Beispiel `IsActive` oder ein anderes bestehendes Aktivierungskennzeichen
+- wo genau gespeichert wird
+- wie parallele Aenderungen erkannt werden
+
+Status: Vorschlag, konkrete Persistenz noch offen.
+
+### `IsAttachmentProcessingEnabled`
+
+Konservativer Vorschlag fuer V1:
+
+- Produktive Aktivierung eines Schnittstellenprofils veraendert `IsAttachmentProcessingEnabled` nicht automatisch.
+- XDT-Anhang-Automatik bleibt eine eigene bewusste Einstellung.
+- Wenn `IsAttachmentProcessingEnabled` deaktiviert ist, darf das Schnittstellenprofil trotzdem aktiv sein.
+- Wenn XDT-Anhang `Required` ist, muss die Pruefung weiterhin sicherstellen, dass die Anhang-Konfiguration plausibel ist.
+- Eine spaetere UI darf klar anzeigen, dass Aktivierung des Profils und Aktivierung der Anhang-Automatik getrennte Dinge sind.
+
+Status: Vorschlag, nicht implementiert.
+
+### Finale Direktpruefung vor Speicherung
+
+Ein spaeterer produktiver Executor darf niemals nur auf den Daten des Preview-Dialogs arbeiten. Direkt vor einer echten Aktivierung muss neu geprueft werden:
+
+- Profil existiert noch.
+- Profil ist UserDefined.
+- Profil ist nicht BuiltIn.
+- abhaengige AIS-/Geraete-/Exportprofile existieren noch.
+- Ordnerpruefung ist weiterhin gueltig.
+- XDT-Anhang-Konfiguration ist weiterhin gueltig.
+- Evaluation ist `Ready` oder `ReadyWithWarnings` mit Bestaetigung.
+- Guard erlaubt die Aktivierung.
+- WarningConfirmation ist vorhanden, falls erforderlich.
+- ActivationPlan ist `Ready` oder `ReadyWithAcceptedWarnings`.
+- Es sind keine Blocker vorhanden.
+
+Wenn eine dieser Pruefungen fehlschlaegt, darf nicht gespeichert werden.
+
+Status: zwingende fachliche Leitplanke fuer eine spaetere Implementierung, noch nicht implementiert.
+
+### Kurzfassung der vorlaeufigen V1-Linie
+
+- Aktivierung nur fuer UserDefined-Schnittstellenprofile.
+- BuiltIn bleibt geschuetzt.
+- `Blocked` und `Unknown` niemals aktivieren.
+- `Ready` ist aktivierbar.
+- `ReadyWithWarnings` ist nur nach bewusster Bestaetigung aktivierbar.
+- `IsAttachmentProcessingEnabled` bleibt eine separate Einstellung.
+- Aktivierung startet keine Sofortverarbeitung.
+- Finale Re-Evaluation direkt vor Speicherung ist Pflicht.
+
+Weiterhin offen:
+
+- konkretes Aktivierungsflag
+- konkrete Persistenzstelle
+- konkrete UI fuer produktive Warnungsbestaetigung
+- Audit-/Logformat
+- Benutzerrollenmodell
+- endgueltiger produktiver Executor
+- Lizenzdurchsetzung
+- Verhalten bei parallelen Aenderungen
+- ob bestimmte Warnungen spaeter zu Blockern werden
+
 ## 1. Wann darf ein Profil produktiv aktiviert werden?
 
 Aktueller Stand:
@@ -296,7 +436,7 @@ Status: offen.
 
 Aktueller Stand:
 
-- `Aktivierung vorbereiten` ist ein reiner OK-Dialog.
+- `Aktivierung vorbereiten` ist ein reines scrollbares Preview-Fenster mit OK-/Schliessen-Aktion.
 - Der Dialog zeigt Bewertung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan.
 - Es gibt keinen Aktivieren-Button.
 
@@ -436,13 +576,12 @@ Status: offen.
 
 Konservative Reihenfolge:
 
-1. Praktische UI-Pruefung des aktuellen Aktivierungsassistenten.
-2. Fachliche Entscheidung zu `ReadyWithWarnings`.
-3. Entscheidung zu Warnungsbestaetigung und Audit.
-4. Entscheidung zu Aktivierungsflag und Speicherung.
-5. Entscheidung zu `IsAttachmentProcessingEnabled`.
-6. Erst danach produktiven Executor entwerfen.
-7. Erst danach finalen UI-Schritt planen.
-8. Erst danach Implementierung in kleinen, testbaren Schritten.
+1. Vorlaeufige V1-Linie fachlich abnehmen oder anpassen.
+2. Entscheidung zu Warnungsbestaetigung und Audit treffen.
+3. Entscheidung zu Aktivierungsflag und Speicherung treffen.
+4. Entscheidung zu `IsAttachmentProcessingEnabled` bestaetigen.
+5. Erst danach produktiven Executor entwerfen.
+6. Erst danach finalen UI-Schritt planen.
+7. Erst danach Implementierung in kleinen, testbaren Schritten.
 
 Status: empfohlen.

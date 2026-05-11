@@ -142,7 +142,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - PlannedSteps im ActivationPlan beschreiben nur spaetere Aktionen. Sie aktivieren nichts, speichern nichts und starten keine Verarbeitung.
 - Ein Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor` ist vorhanden: Request, Result, Preconditions, Statuswerte und `IInterfaceProfileActivationExecutor`.
 - Es gibt keine produktive Executor-Implementierung, keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled` und keine Datei-/Ordneroperationen.
-- Die fachliche Entscheidungsgrundlage fuer eine spaetere produktive Aktivierung liegt in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`.
+- Die fachliche Entscheidungsgrundlage fuer eine spaetere produktive Aktivierung liegt in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`; dort ist eine vorlaeufige V1-Linie dokumentiert, aber noch nicht implementiert.
 - Statische Pruefung und praktische Windows-Sichtpruefung des Dialogs sind in `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` dokumentiert; der aktuelle Vorschau-Dialog ist visuell abgenommen.
 - BuiltIn-Profile bleiben direkt geschuetzt; die spaetere Aktivierung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet.
 - Die zuletzt behobene Layout-Ueberlagerung unterhalb `Ordnerbereinigung` ist Teil des aktuellen UI-Stands und darf bei weiteren Arbeiten nicht zurueckfallen.
@@ -221,11 +221,11 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 - Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
 - Statisches UI-Pruefprotokoll `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Basis verwenden.
-- Entscheidungsnotiz `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich abnehmen oder anpassen.
+- Vorlaeufige V1-Linie aus `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich abnehmen oder anpassen.
 - UX fuer eine spaetere bewusste Warnungsbestaetigung entscheiden, weiterhin ohne produktive Speicherung.
 - Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung planen.
 - Finale Sicherheitspruefung direkt vor Ausfuehrung, Audit-/Logeintrag und erneuten Build-/Testlauf fuer eine spaetere echte Aktivierung einplanen.
-- Fachlich entscheiden, ob `ReadyWithWarnings` nach bewusster Bestaetigung aktivierbar sein darf.
+- Fachlich freigeben, ob die dokumentierte V1-Linie gilt: `ReadyWithWarnings` nur nach bewusster Bestaetigung, `IsAttachmentProcessingEnabled` bleibt separat und finale Re-Evaluation ist Pflicht.
 - Optional spätere manuelle Zielnamen-/ID-Bearbeitung für ImportAsCopy planen.
 - Optional späteres `ReplaceExisting` für UserDefined-Profile separat spezifizieren.
 
@@ -261,11 +261,10 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 1. `docs/ROADMAP.md` und `docs/PROJEKT_UEBERBLICK.md` fachlich abgleichen.
 2. `CHANGELOG.md` mit einem Abschnitt für den aktuellen Entwicklungsstand fortführen.
 3. Version für den nächsten Meilenstein nur vorbereiten, aber erst nach E2E-Abnahme erhöhen.
-4. Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
-5. `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` auf einem Windows-System praktisch abarbeiten.
-6. `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich entscheiden.
-7. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
-8. Produktive `ActivationExecutor`-Implementierung separat spezifizieren, bevor sie gebaut wird.
+4. Read-only Aktivierungsassistent als visuell abgenommen fuehren und `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Regressionscheck weiterverwenden.
+5. Vorlaeufige V1-Linie in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich entscheiden.
+6. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
+7. Produktive `ActivationExecutor`-Implementierung separat spezifizieren, bevor sie gebaut wird.
 9. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
 10. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
 11. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.
