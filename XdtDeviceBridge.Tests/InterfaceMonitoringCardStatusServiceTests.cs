@@ -103,6 +103,26 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
     }
 
     [Fact]
+    public void ApplyScanResult_ShouldNotShowDeviceTimeoutWhileStillWaitingForDevice()
+    {
+        var profile = CreateProfile();
+        var card = CreateCard(profile);
+        var now = new DateTime(2026, 5, 10, 12, 20, 0, DateTimeKind.Utc);
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var queue = new PendingImportQueue();
+        queue.AddOrUpdate(CreateFile(@"C:\Test\AIS\patient.gdt", ImportFileKind.AisGdt, now.AddMinutes(-20)));
+        var scanResult = CreateScanResult(profile, queue, aisFiles: 1);
+
+        var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.WaitingForDeviceFile), now, automaticProcessingEnabled: true);
+
+        Assert.Contains(updated.ExpectedInputs, input =>
+            input.Key == "device"
+            && input.Status == "wartet auf Gerät"
+            && !input.Detail.Contains("Timeout", StringComparison.OrdinalIgnoreCase)
+            && !input.DisplayDetail.Contains("Timeout", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void ApplyScanResult_ShouldShowRemainingRequiredAttachmentWaitTime()
     {
         var profile = CreateProfile(isAttachmentEnabled: true, attachmentRequirementMode: AttachmentRequirementMode.Required) with
@@ -123,7 +143,118 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now.AddSeconds(-20), automaticProcessingEnabled: true);
         var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now, automaticProcessingEnabled: true);
 
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht - noch 00:10");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht" && input.DisplayDetail == "noch 10 s");
+    }
+
+    [Fact]
+    public void ApplyScanResult_ShouldShowRemainingOptionalAttachmentWaitTime()
+    {
+        var baseProfile = CreateProfile(isAttachmentEnabled: true, attachmentRequirementMode: AttachmentRequirementMode.Optional);
+        var profile = baseProfile with
+        {
+            FolderOptions = baseProfile.FolderOptions with
+            {
+                AttachmentWaitTimeoutSeconds = 45
+            }
+        };
+        var card = CreateCard(profile);
+        var now = new DateTime(2026, 5, 10, 12, 0, 15, DateTimeKind.Utc);
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var queue = new PendingImportQueue();
+        var aisFile = CreateFile(@"C:\Test\AIS\patient.gdt", ImportFileKind.AisGdt, now.AddSeconds(-15));
+        var deviceFile = CreateFile(@"C:\Test\Device\ark1s.xml", ImportFileKind.DeviceXml, now.AddSeconds(-15));
+        queue.AddOrUpdate(aisFile);
+        queue.AddOrUpdate(deviceFile);
+        var scanResult = CreateScanResult(profile, queue, aisFiles: 1, deviceFiles: 1, readyPairs: 1);
+
+        service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now.AddSeconds(-15), automaticProcessingEnabled: true);
+        var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now, automaticProcessingEnabled: true);
+
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Optional" && input.DisplayDetail == "noch 30 s");
+    }
+
+    [Fact]
+    public void ApplyScanResult_ShouldUsePackageEvaluationReadyPairForAttachmentCountdown()
+    {
+        var baseProfile = CreateProfile(isAttachmentEnabled: true, attachmentRequirementMode: AttachmentRequirementMode.Required);
+        var profile = baseProfile with
+        {
+            FolderOptions = baseProfile.FolderOptions with
+            {
+                AttachmentWaitTimeoutSeconds = 30
+            }
+        };
+        var card = CreateCard(profile);
+        var now = new DateTime(2026, 5, 10, 12, 0, 20, DateTimeKind.Utc);
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var queue = new PendingImportQueue();
+        var aisFile = CreateFile(@"C:\Test\AIS\patient.gdt", ImportFileKind.AisGdt, now.AddSeconds(-20));
+        var deviceFile = CreateFile(@"C:\Test\Device\ark1s.xml", ImportFileKind.DeviceXml, now.AddSeconds(-20));
+        var readyPair = new PendingImportPair(aisFile, deviceFile, IsReady: true);
+        var scanResult = CreateScanResult(profile, queue, aisFiles: 1, deviceFiles: 1, readyPairs: 1);
+
+        service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing, new[] { readyPair }), now.AddSeconds(-20), automaticProcessingEnabled: true);
+        var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing, new[] { readyPair }), now, automaticProcessingEnabled: true);
+
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht" && input.DisplayDetail == "noch 10 s");
+    }
+
+    [Fact]
+    public void ApplyScanResult_ShouldShowRequiredAttachmentTimeoutWhenWaitElapsed()
+    {
+        var baseProfile = CreateProfile(isAttachmentEnabled: true, attachmentRequirementMode: AttachmentRequirementMode.Required);
+        var profile = baseProfile with
+        {
+            FolderOptions = baseProfile.FolderOptions with
+            {
+                AttachmentWaitTimeoutSeconds = 10
+            }
+        };
+        var card = CreateCard(profile);
+        var now = new DateTime(2026, 5, 10, 12, 0, 15, DateTimeKind.Utc);
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var queue = new PendingImportQueue();
+        queue.AddOrUpdate(CreateFile(@"C:\Test\AIS\patient.gdt", ImportFileKind.AisGdt, now.AddSeconds(-15)));
+        queue.AddOrUpdate(CreateFile(@"C:\Test\Device\ark1s.xml", ImportFileKind.DeviceXml, now.AddSeconds(-15)));
+        var scanResult = CreateScanResult(profile, queue, aisFiles: 1, deviceFiles: 1, readyPairs: 1);
+
+        service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now.AddSeconds(-15), automaticProcessingEnabled: true);
+        var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.ReadyForProcessing), now, automaticProcessingEnabled: true);
+
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht blockiert" && input.DisplayDetail == "Timeout erreicht");
+    }
+
+    [Fact]
+    public void ApplyProcessingResult_ShouldKeepAttachmentCountdownWhileWaiting()
+    {
+        var profile = CreateProfile(isAttachmentEnabled: true, attachmentRequirementMode: AttachmentRequirementMode.Required);
+        var card = CreateCard(profile) with
+        {
+            ExpectedInputs = CreateCard(profile).ExpectedInputs
+                .Select(input => input.Key == "attachment"
+                    ? input with { Status = "Pflicht", DisplayDetail = "noch 18 s" }
+                    : input)
+                .ToList()
+        };
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var result = CreateProcessingResult(
+            success: false,
+            status: "wartet",
+            exportFilePath: null,
+            attachmentStatus: new AttachmentProcessingStatus(
+                WasAttempted: false,
+                WasSkipped: true,
+                Success: false,
+                Reason: AttachmentProcessingStatusReason.AttachmentWait,
+                Message: "Warte auf XDT-Anhang.",
+                SourcePath: null,
+                TargetPath: null,
+                TargetFileName: null,
+                PreparedFields: Array.Empty<ExportFieldRecord>()));
+
+        var updated = service.ApplyProcessingResult(card, result, DateTime.Today, automaticProcessingEnabled: true);
+
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Status == "Pflicht" && input.DisplayDetail == "noch 18 s");
     }
 
     [Fact]
@@ -250,10 +381,12 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
             Queue: queue);
     }
 
-    private static AutoImportPackageEvaluationResult CreatePackageEvaluation(AutoImportPackageStateReason reason)
+    private static AutoImportPackageEvaluationResult CreatePackageEvaluation(
+        AutoImportPackageStateReason reason,
+        IReadOnlyList<PendingImportPair>? readyPairs = null)
     {
         return new AutoImportPackageEvaluationResult(
-            ReadyPairs: Array.Empty<PendingImportPair>(),
+            ReadyPairs: readyPairs ?? Array.Empty<PendingImportPair>(),
             Messages: reason == AutoImportPackageStateReason.None ? Array.Empty<string>() : new[] { reason.ToString() },
             ReplacedAisFiles: Array.Empty<PendingImportFile>(),
             ExpiredAisFiles: Array.Empty<PendingImportFile>(),

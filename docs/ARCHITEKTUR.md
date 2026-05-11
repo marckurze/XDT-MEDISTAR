@@ -8,16 +8,16 @@ Dieses Dokument beschreibt die geplante Zielarchitektur für XdtDeviceBridge Ver
 
 Der aktuelle Prototyp ist eine lokale WPF-Anwendung für Windows. Produktiv/praktisch validiert ist nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere V2-Profile und Automatikbausteine sind vorbereitet bzw. im Prototyp bedienbar, aber nicht im gleichen Umfang produktiv validiert.
 
-### 1.1 Manuelle Verarbeitung
+### 1.1 Baukasten-Test
 
-Der manuelle Test- und Diagnosemodus verarbeitet Dateien über die Oberfläche:
+Der manuelle Testmodus befindet sich im Tab `Profile & Templates / Test & Vorschau`:
 
 1. AIS-GDT-Datei auswählen
 2. NIDEK ARK1S XML-Datei auswählen
 3. Patientendaten und Messwerte einlesen
 4. Mapping anwenden
 5. XDT-Exportvorschau erzeugen
-6. Exportdatei manuell in einen Zielordner schreiben
+6. Test-XDT-Datei und optionalen Testanhang in einen Zielordner schreiben
 
 Der fachlich validierte Ablauf ist aktuell:
 
@@ -41,17 +41,17 @@ Aktueller Stand:
 - Es gibt keinen Autostart.
 - Es gibt keinen `FileSystemWatcher`.
 - Die Überwachung basiert auf periodischem Scan aktiver Schnittstellenprofile.
-- Gefundene AIS-/Geräte-Dateipaare werden angezeigt.
+- Gefundene AIS-/Geräte-Dateipaare werden in den Monitoring-Karten als Paketstatus sichtbar.
 - Dateien werden nur berücksichtigt, wenn sie stabil und lesbar sind.
 - Es wird keine unbekannte Datei gelöscht oder verschoben.
 
-Die Monitoring-Anzeige ist als Zwischenschritt in Richtung kachel-/radarartiger Oberfläche vorbereitet. Pro aktivem Schnittstellenprofil gibt es im Tab `Verarbeitung` eine Karte mit Profilzuordnung, Scanstatus, erwarteten Eingängen und ausklappbaren Details. Neben AIS-, Geräte- und Exportordner werden dort auch die XDT-Anhang Import-/Exportordner bzw. `kein Anhang konfiguriert` angezeigt. Laufende Scan-, Paket- und Verarbeitungsergebnisse werden nur in Displaymodelle übertragen: AIS-/Patientenstatus, erkannte Dateien, optionaler XDT-Anhangstatus, Exportdatei, Wartezustände, Restzeiten und Fehler-/Blockadestatus können in der Karte sichtbar werden, ohne die Paket- oder Exportlogik fachlich zu verändern. Die Eingangskacheln zeigen kompakte Live-Daten ohne sichtbare Pfade; Pfade bleiben als Tooltip und im Detailbereich verfügbar. Bei laufender Überwachung zeigt jede Karte eine größere Radar-/Scanfläche mit schmalem grünem, halbtransparentem, horizontal wanderndem Scanbalken. Die WPF-Animation bewegt den Balken per `TranslateTransform`; links-rechts-links bildet einen visuellen Puls auf Basis von `ScanIntervalSeconds`, löst selbst aber keinen Scan aus. Das echte Scanintervall bleibt eine Schnittstellenprofil-Konfiguration und kann in der Karte per `-`/`+` gespeichert werden; der BuiltIn-Schutz der bestehenden Profilkonfiguration bleibt erhalten. Datei-, Export- und letzte Meldungsdetails sind in `Details` verschoben, damit die Karten kompakt bleiben. Die bestehende technische Tabelle bleibt als eingeklappte Detailansicht erhalten. Ein dedupliziertes Eventmodell protokolliert Monitoring-Ereignisse nur bei Statusänderungen; identische Scan- oder Blockademeldungen werden nicht bei jedem Intervall erneut angehängt.
+Die Monitoring-Anzeige ist als Zwischenschritt in Richtung kachel-/radarartiger Oberfläche vorbereitet. Pro aktivem Schnittstellenprofil gibt es im Tab `Verarbeitung` eine grünliche Glas-/Radar-Karte mit Profilzuordnung, Scanstatus, erwarteten Eingängen und ausklappbaren Details. Neben AIS-, Geräte- und Exportordner werden dort auch die XDT-Anhang Import-/Exportordner bzw. `kein Anhang konfiguriert` angezeigt. Laufende Scan-, Paket- und Verarbeitungsergebnisse werden nur in Displaymodelle übertragen: AIS-/Patientenstatus, erkannte Dateien, optionaler XDT-Anhangstatus, Exportdatei, Wartezustände, Restzeiten und Fehler-/Blockadestatus können in der Karte sichtbar werden, ohne die Paket- oder Exportlogik fachlich zu verändern. Die XDT-Anhang-Kachel zeigt während der Wartephase `Pflicht` oder `Optional` plus Restzeit beziehungsweise Timeoutstatus. Die Eingangskacheln zeigen kompakte Live-Daten ohne sichtbare Pfade; Pfade bleiben als Tooltip und im Detailbereich verfügbar. Bei laufender Überwachung zeigt jede Karte eine größere Radar-/Scanfläche mit schmalem grünem, halbtransparentem, horizontal wanderndem Scanbalken. Die WPF-Animation bewegt den Balken per `TranslateTransform`; links-rechts-links bildet einen visuellen Puls auf Basis von `ScanIntervalSeconds`, löst selbst aber keinen Scan aus. Das echte Scanintervall bleibt eine Schnittstellenprofil-Konfiguration und kann in der Karte per `-`/`+` gespeichert werden; der BuiltIn-Schutz der bestehenden Profilkonfiguration bleibt erhalten. Datei-, Export- und letzte Meldungsdetails sind in `Details` verschoben, damit die Karten kompakt bleiben. Die technische Scan-Zusammenfassung, die alte Dateipaar-Tabelle und die technische Detailansicht sind aus der UI entfernt; Monitoring-Ereignisse erscheinen stattdessen in einem einklappbaren, monitorartigen Ereignisbereich. Ein dedupliziertes Eventmodell protokolliert Monitoring-Ereignisse nur bei Statusänderungen; identische Scan- oder Blockademeldungen werden nicht bei jedem Intervall erneut angehängt.
 
 ### 1.3 Optionale automatische Verarbeitung
 
 Während die manuell gestartete Überwachung läuft, kann der Benutzer die Option `Gefundene Dateipaare automatisch verarbeiten` aktivieren.
 
-Wenn diese Option deaktiviert ist, werden Dateipaare nur angezeigt und müssen manuell verarbeitet werden.
+Wenn diese Option deaktiviert ist, aktualisiert die Überwachung nur Monitoring-Karten und Ereignisse; es wird kein produktiver Export gestartet.
 
 Wenn diese Option aktiviert ist:
 
@@ -343,11 +343,11 @@ Vorgesehene Konzepte:
 - `AttachmentExternalLinkPreparationService`, isoliert vorbereitet für die explizite Orchestrierung aus Ziel-Dateiname, Copy/Move-Transfer, externen AIS-Linkfeldwerten und XDT-Feldcode/Wert-Paaren; in der automatischen Paarverarbeitung nur konservativ bei eindeutig genau einem unterstützten Anhang eingebunden
 - `AttachmentAutoProcessingEligibilityService`, isoliert vorbereitet für die sichere Vorprüfung, ob eine spätere automatische XDT-Anhang-Verarbeitung grundsätzlich erlaubt wäre; der Service führt keine Dateioperationen aus
 - `AttachmentImportFolderScannerService`, isoliert vorbereitet für das reine Auflisten unterstützter Dateien im XDT-Anhang Importordner; der Service scannt nur die oberste Ordnerebene, markiert unterstützte Dateien optional mit Stabilitätsstatus und verändert, verschiebt oder löscht keine Dateien
-- `AttachmentImportFolderDiagnosticService`, isoliert vorbereitet für den manuellen Diagnosebereich; er ruft den Scanner mit dem konfigurierten Importordner auf, erzeugt anzeigbare Kandidatenzeilen und startet keine Verarbeitung
+- `AttachmentImportFolderDiagnosticService`, isoliert vorbereitet für reine Anzeige-/Prüfpfade; er ruft den Scanner mit dem konfigurierten Importordner auf, erzeugt anzeigbare Kandidatenzeilen und startet keine Verarbeitung
 - `AttachmentAutoCandidateSelectionService`, isoliert vorbereitet für die sichere automatische Kandidatenentscheidung; automatisch eindeutig ist nur genau eine stabile unterstützte Anhangdatei, mehrere unterstützte oder instabile Dateien blockieren die automatische Auswahl wegen unsicherem Patientenbezug bzw. unvollständigem Schreibvorgang
 - `AttachmentPackageDecisionService`, isoliert vorbereitet für die Entscheidung, ob auf einen optionalen oder verpflichtenden XDT-Anhang gewartet, ohne Anhang fortgesetzt, mit eindeutigem Anhang verarbeitet oder wegen fehlender Eindeutigkeit blockiert werden soll
 - `AutoImportPackageStateService`, isoliert vorbereitet für die Paket-Phase vor der Verarbeitung: AIS wartet auf Gerätedatei, neuere AIS-Dateien ersetzen ältere wartende Aufträge, abgelaufene AIS-Aufträge werden nur als Status markiert und nicht blind gelöscht
-- manueller Diagnosepfad im Tab `Verarbeitung`, der eine explizit ausgewählte Anhangdatei testweise vorbereitet und Ziel-Dateiname, Zielpfad sowie Feldcode/Wert-Paare `6302` bis `6305` anzeigt; er ist nicht Teil des periodischen Scans und nicht in die produktive Exportdatei eingebunden
+- Baukasten-Testpfad im Tab `Profile & Templates`, der eine explizit ausgewählte Anhangdatei testweise vorbereitet und Ziel-Dateiname, Zielpfad sowie Feldcode/Wert-Paare `6302` bis `6305` anzeigt; er ist nicht Teil des periodischen Scans und verändert kein Exportprofil
 - `ExternalLinkExportRule` oder vergleichbare Exportregel
 - Validierung über `FolderSafetyValidator`
 - Kollisionsschutz bei Dateinamen

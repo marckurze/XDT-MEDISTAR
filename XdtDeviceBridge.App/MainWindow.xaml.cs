@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,6 +28,12 @@ public partial class MainWindow : Window
         ".txt"
     };
 
+    private static readonly DependencyProperty RadarAnimationKeyProperty = DependencyProperty.RegisterAttached(
+        "RadarAnimationKey",
+        typeof(string),
+        typeof(MainWindow),
+        new PropertyMetadata(""));
+
     private readonly ProcessingPipelineService _pipelineService = new();
     private readonly ExportFileNameBuilder _fileNameBuilder = new();
     private readonly FileExportService _fileExportService = new();
@@ -49,7 +56,6 @@ public partial class MainWindow : Window
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
     private readonly InterfaceMonitoringEventDeduplicationService _monitoringEventDeduplicationService = new();
-    private readonly Dictionary<string, string> _lastPeriodicScanSnapshotsByProfile = new(StringComparer.OrdinalIgnoreCase);
     private readonly AutoImportScannerService _autoImportScannerService = new();
     private readonly PeriodicAutoImportScanService _periodicAutoImportScanService = new();
     private readonly InterfaceProfileManualProcessor _interfaceProfileManualProcessor = new();
@@ -75,7 +81,6 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
     private readonly ObservableCollection<InterfaceMonitoringCardDisplay> _interfaceMonitoringCards = new();
-    private readonly ObservableCollection<ScannedImportPairRow> _scannedImportPairRows = new();
     private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
@@ -114,9 +119,6 @@ public partial class MainWindow : Window
         ExportRulesGrid.ItemsSource = _visibleExportRules;
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         InterfaceMonitoringCardsItemsControl.ItemsSource = _interfaceMonitoringCards;
-        ActiveInterfaceProfilesGrid.ItemsSource = _activeInterfaceProfileStatusRows;
-        ScannedImportPairsGrid.ItemsSource = _scannedImportPairRows;
-        AttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         SyncBuilderTestPreviewArea();
         InitializeProfileOverview();
@@ -161,7 +163,6 @@ public partial class MainWindow : Window
             ClearProfileNameColumns();
             ExportProfileComboBox.ItemsSource = null;
             InterfaceProfileComboBox.ItemsSource = null;
-            AttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
             BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
             SetAttachmentDiagnosticResultText("Keine Profile geladen.");
             _visibleExportRules.Clear();
@@ -575,11 +576,9 @@ public partial class MainWindow : Window
             .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
 
-        AttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = activeProfiles;
         BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = activeProfiles;
         if (activeProfiles.Count == 0)
         {
-            AttachmentDiagnosticInterfaceProfileComboBox.SelectedIndex = -1;
             BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedIndex = -1;
             _attachmentImportCandidateRows.Clear();
             UpdateAttachmentDiagnosticProfileDisplay();
@@ -593,7 +592,7 @@ public partial class MainWindow : Window
 
         SetAttachmentDiagnosticSelectedProfile(selectedProfile ?? activeProfiles[0]);
         UpdateAttachmentDiagnosticProfileDisplay();
-        if (AttachmentDiagnosticResultTextBox.Text == "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.")
+        if (BuilderAttachmentDiagnosticResultTextBox.Text == "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.")
         {
             SetAttachmentDiagnosticResultText("Noch kein XDT-Anhang vorbereitet.");
         }
@@ -616,28 +615,17 @@ public partial class MainWindow : Window
     {
         if (GetSelectedAttachmentDiagnosticProfile() is not InterfaceProfileDefinition profile)
         {
-            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, "-");
-            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, "-");
-            SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, "-");
             UpdateBuilderAttachmentProfileDetails(null);
             return;
         }
 
-        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticProfileText, profile.Metadata.Name);
-        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticImportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentImportFolder)
-            ? "-"
-            : profile.FolderOptions.AttachmentImportFolder);
-        SetAttachmentDiagnosticProfileDisplayValue(AttachmentDiagnosticExportFolderText, string.IsNullOrWhiteSpace(profile.FolderOptions.AttachmentExportFolder)
-            ? "-"
-            : profile.FolderOptions.AttachmentExportFolder);
         UpdateBuilderAttachmentProfileDetails(profile);
         SelectExportProfileForInterfaceProfile(profile);
     }
 
     private InterfaceProfileDefinition? GetSelectedAttachmentDiagnosticProfile()
     {
-        return BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition
-            ?? AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
+        return BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
     }
 
     private void SetAttachmentDiagnosticSelectedProfile(InterfaceProfileDefinition profile)
@@ -645,7 +633,6 @@ public partial class MainWindow : Window
         _updatingAttachmentDiagnosticProfileSelection = true;
         try
         {
-            AttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = profile;
             BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = profile;
         }
         finally
@@ -2278,13 +2265,13 @@ public partial class MainWindow : Window
         _refreshingInterfaceMonitoringCards = true;
         try
         {
-            _interfaceMonitoringCards.Clear();
             var isMonitoringActive = _periodicScanCancellationTokenSource is not null;
+            var desiredCards = new List<InterfaceMonitoringCardDisplay>(_activeInterfaceProfileStatusRows.Count);
             foreach (var row in _activeInterfaceProfileStatusRows)
             {
                 var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
                 var runtimeCard = GetRuntimeMonitoringCard(row);
-                _interfaceMonitoringCards.Add(runtimeCard with
+                desiredCards.Add(runtimeCard with
                 {
                     CurrentStatus = runtimeState.CurrentStatus,
                     StatusClass = runtimeState.StatusClass,
@@ -2294,11 +2281,59 @@ public partial class MainWindow : Window
                     IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId)
                 });
             }
+
+            SynchronizeMonitoringCards(desiredCards);
         }
         finally
         {
             _refreshingInterfaceMonitoringCards = false;
         }
+    }
+
+    private void SynchronizeMonitoringCards(IReadOnlyList<InterfaceMonitoringCardDisplay> desiredCards)
+    {
+        for (var index = _interfaceMonitoringCards.Count - 1; index >= 0; index--)
+        {
+            var card = _interfaceMonitoringCards[index];
+            if (!desiredCards.Any(desired => string.Equals(desired.InterfaceProfileId, card.InterfaceProfileId, StringComparison.Ordinal)))
+            {
+                _interfaceMonitoringCards.RemoveAt(index);
+            }
+        }
+
+        for (var desiredIndex = 0; desiredIndex < desiredCards.Count; desiredIndex++)
+        {
+            var desiredCard = desiredCards[desiredIndex];
+            var currentIndex = IndexOfMonitoringCard(desiredCard.InterfaceProfileId);
+            if (currentIndex < 0)
+            {
+                _interfaceMonitoringCards.Insert(Math.Min(desiredIndex, _interfaceMonitoringCards.Count), desiredCard);
+                continue;
+            }
+
+            if (currentIndex != desiredIndex)
+            {
+                _interfaceMonitoringCards.Move(currentIndex, desiredIndex);
+            }
+
+            if (!Equals(_interfaceMonitoringCards[desiredIndex], desiredCard))
+            {
+                _interfaceMonitoringCards[desiredIndex] = desiredCard;
+            }
+        }
+    }
+
+    private int IndexOfMonitoringCard(string interfaceProfileId)
+    {
+        for (var index = 0; index < _interfaceMonitoringCards.Count; index++)
+        {
+            if (string.Equals(_interfaceMonitoringCards[index].InterfaceProfileId, interfaceProfileId, StringComparison.Ordinal))
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 
     private bool GetMonitoringDetailsExpanded(string interfaceProfileId)
@@ -2472,7 +2507,7 @@ public partial class MainWindow : Window
 
         if (_profileCatalog is null)
         {
-            ActiveProfileScanResultTextBox.Text = "Keine Profile geladen.";
+            AppendMonitoringEvent("monitoring", "monitoring-start-error", "Überwachung kann nicht gestartet werden: keine Profile geladen.", InterfaceMonitoringEventSeverity.Warning);
             return;
         }
 
@@ -2483,7 +2518,7 @@ public partial class MainWindow : Window
 
         if (activeProfiles.Count == 0)
         {
-            ActiveProfileScanResultTextBox.Text = "Keine aktiven Schnittstellenprofile vorhanden.";
+            AppendMonitoringEvent("monitoring", "monitoring-start-error", "Überwachung kann nicht gestartet werden: keine aktiven Schnittstellenprofile vorhanden.", InterfaceMonitoringEventSeverity.Warning);
             return;
         }
 
@@ -2497,8 +2532,6 @@ public partial class MainWindow : Window
         PeriodicScanReadyPairsText.Text = "0";
         var scanInterval = PeriodicAutoImportScanService.GetEffectiveInterval(activeProfiles);
         PeriodicScanIntervalText.Text = $"{scanInterval.TotalSeconds:0} Sekunden";
-        ActiveProfileScanResultTextBox.Text = $"Überwachung läuft mit {scanInterval.TotalSeconds:0} Sekunden Intervall. Es wird nichts gelöscht oder bereinigt.";
-        _lastPeriodicScanSnapshotsByProfile.Clear();
         _monitoringEventDeduplicationService.Reset();
         SetAllMonitoringRuntimeStates("Scannt", "Active");
         RefreshInterfaceMonitoringCards();
@@ -2521,7 +2554,11 @@ public partial class MainWindow : Window
             Dispatcher.Invoke(() =>
             {
                 PeriodicScanStatusText.Text = "Gestoppt";
-                ActiveProfileScanResultTextBox.Text = $"Überwachung wurde mit Fehler beendet: {task.Exception.GetBaseException().Message}";
+                AppendMonitoringEvent(
+                    "monitoring",
+                    "monitoring-task-error",
+                    $"Überwachung wurde mit Fehler beendet: {task.Exception.GetBaseException().Message}",
+                    InterfaceMonitoringEventSeverity.Error);
                 StopPeriodicScan(updateUi: true);
             });
         }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
@@ -2655,13 +2692,28 @@ public partial class MainWindow : Window
 
     private void MonitoringRadar_Loaded(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element
-            || element.DataContext is not InterfaceMonitoringCardDisplay card)
+        if (sender is FrameworkElement element)
         {
+            UpdateRadarAnimation(element);
+        }
+    }
+
+    private void MonitoringRadar_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            UpdateRadarAnimation(element);
+        }
+    }
+
+    private static void UpdateRadarAnimation(FrameworkElement element)
+    {
+        if (element.DataContext is not InterfaceMonitoringCardDisplay card)
+        {
+            StopRadarAnimation(element);
             return;
         }
 
-        StopRadarAnimation(element);
         var scanBar = FindVisualChildByTag<FrameworkElement>(element, "RadarScanBar");
         var scanBarTransform = scanBar is null
             ? null
@@ -2669,6 +2721,8 @@ public partial class MainWindow : Window
 
         if (!card.IsScanAnimationActive)
         {
+            element.SetValue(RadarAnimationKeyProperty, "");
+            StopRadarAnimation(element);
             element.Opacity = 0.72;
             if (scanBarTransform is not null)
             {
@@ -2690,6 +2744,15 @@ public partial class MainWindow : Window
                     : scanBar.Width;
             var travelDistance = Math.Max(0, surfaceWidth - barWidth);
             var oneWayDurationSeconds = Math.Max(0.4, scanIntervalSeconds / 2.0);
+            var animationKey = string.Create(
+                CultureInfo.InvariantCulture,
+                $"{card.InterfaceProfileId}|{card.ScanIntervalSeconds}|{surfaceWidth:0.##}|{barWidth:0.##}|{card.IsScanAnimationActive}");
+            if (string.Equals(element.GetValue(RadarAnimationKeyProperty) as string, animationKey, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            element.SetValue(RadarAnimationKeyProperty, animationKey);
             var scanAnimation = new DoubleAnimation
             {
                 From = 0,
@@ -2727,10 +2790,10 @@ public partial class MainWindow : Window
             && !scanBarTransform.IsFrozen)
         {
             scanBarTransform.BeginAnimation(TranslateTransform.XProperty, null);
-            scanBarTransform.X = 0;
         }
 
         scanBar?.BeginAnimation(UIElement.OpacityProperty, null);
+        element.SetValue(RadarAnimationKeyProperty, "");
     }
 
     private static TranslateTransform EnsureMutableTranslateTransform(FrameworkElement element)
@@ -2824,114 +2887,12 @@ public partial class MainWindow : Window
             UpdateMonitoringCardFromScan(profile, result, packageEvaluation, timestamp);
         }
 
-        var builder = new StringBuilder();
-        builder.AppendLine($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} - {profileName}");
-        builder.AppendLine($"AIS-Dateien erkannt: {result.AisFilesDetected}");
-        builder.AppendLine($"Geräte-Dateien erkannt: {result.DeviceFilesDetected}");
-        builder.AppendLine($"Dateien in Warteliste: {result.FilesQueued}");
-        builder.AppendLine($"Fertige Paare: {result.ReadyPairs}");
-        if (result.Messages.Count == 0)
-        {
-            builder.AppendLine("Meldungen: keine.");
-        }
-        else
-        {
-            builder.AppendLine("Meldungen:");
-            foreach (var message in result.Messages)
-            {
-                builder.AppendLine($"- {message}");
-            }
-        }
-
-        builder.AppendLine("Hinweis: Die Überwachung scannt nur. Es wird nichts automatisch verarbeitet.");
-
-        var shouldAppendScanSummary = ShouldAppendPeriodicScanSummary(result);
-        if (shouldAppendScanSummary && !string.IsNullOrWhiteSpace(ActiveProfileScanResultTextBox.Text))
-        {
-            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-            ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-        }
-
-        if (shouldAppendScanSummary)
-        {
-            ActiveProfileScanResultTextBox.AppendText(builder.ToString().TrimEnd());
-            ActiveProfileScanResultTextBox.ScrollToEnd();
-        }
-
         RecordScanMonitoringEvents(profileName, result);
 
-        if (profile is not null)
-        {
-            AddReadyPairsFromScanResult(profile, result);
-        }
-
         var automaticProcessingResult = TryProcessReadyPairsAutomatically(profile, result, packageEvaluation);
-        if (automaticProcessingResult is null)
-        {
-            if (shouldAppendScanSummary)
-            {
-                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-                ActiveProfileScanResultTextBox.AppendText("Automatische Verarbeitung: deaktiviert.");
-            }
-        }
-        else
-        {
-            if (shouldAppendScanSummary)
-            {
-                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-                ActiveProfileScanResultTextBox.AppendText($"Automatisch verarbeitet: {automaticProcessingResult.ProcessedCount}");
-                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-                ActiveProfileScanResultTextBox.AppendText($"Bereits verarbeitet übersprungen: {automaticProcessingResult.SkippedAlreadyProcessedCount}");
-                ActiveProfileScanResultTextBox.AppendText(Environment.NewLine);
-                ActiveProfileScanResultTextBox.AppendText($"Automatische Fehler: {automaticProcessingResult.ErrorCount}");
-            }
-        }
+        _ = automaticProcessingResult;
 
         RefreshInterfaceMonitoringCards();
-        ActiveProfileScanResultTextBox.ScrollToEnd();
-    }
-
-    private bool ShouldAppendPeriodicScanSummary(AutoImportScanResult result)
-    {
-        var snapshot = CreatePeriodicScanSnapshot(result);
-        if (_lastPeriodicScanSnapshotsByProfile.TryGetValue(result.InterfaceProfileId, out var previousSnapshot)
-            && string.Equals(previousSnapshot, snapshot, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        _lastPeriodicScanSnapshotsByProfile[result.InterfaceProfileId] = snapshot;
-        return true;
-    }
-
-    private static string CreatePeriodicScanSnapshot(AutoImportScanResult result)
-    {
-        var builder = new StringBuilder();
-        builder.Append(result.AisFilesDetected);
-        builder.Append('|');
-        builder.Append(result.DeviceFilesDetected);
-        builder.Append('|');
-        builder.Append(result.FilesQueued);
-        builder.Append('|');
-        builder.Append(result.ReadyPairs);
-
-        foreach (var message in result.Messages.OrderBy(message => message, StringComparer.Ordinal))
-        {
-            builder.Append("|M:");
-            builder.Append(message);
-        }
-
-        foreach (var file in result.Queue.GetAll())
-        {
-            builder.Append("|F:");
-            builder.Append(file.Kind);
-            builder.Append(':');
-            builder.Append(file.Status);
-            builder.Append(':');
-            builder.Append(file.FilePath);
-        }
-
-        return builder.ToString();
     }
 
     private void UpdateMonitoringCardFromScan(
@@ -3115,12 +3076,6 @@ public partial class MainWindow : Window
 
         foreach (var result in batchResult.Results)
         {
-            UpdateScannedPairStatus(
-                interfaceProfile.Metadata.Id,
-                result.AisFilePath,
-                result.DeviceFilePath,
-                result.Status);
-
             if (result.WasSkipped)
             {
                 UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
@@ -3159,55 +3114,14 @@ public partial class MainWindow : Window
             }
         }
 
-        ScannedImportPairsGrid.Items.Refresh();
         return batchResult;
-    }
-
-    private void AddReadyPairsFromScanResult(InterfaceProfileDefinition profile, AutoImportScanResult result)
-    {
-        var exportProfileName = GetExportProfileDisplayName(profile.ExportProfileId);
-        foreach (var pair in result.Queue.FindReadyPairs())
-        {
-            var existingRow = _scannedImportPairRows.FirstOrDefault(row =>
-                string.Equals(row.InterfaceProfileId, profile.Metadata.Id, StringComparison.Ordinal)
-                && string.Equals(row.AisFilePath, pair.AisFile.FilePath, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(row.DeviceFilePath, pair.DeviceFile.FilePath, StringComparison.OrdinalIgnoreCase));
-
-            if (existingRow is not null)
-            {
-                continue;
-            }
-
-            _scannedImportPairRows.Add(new ScannedImportPairRow(
-                InterfaceProfileId: profile.Metadata.Id,
-                InterfaceProfileName: profile.Metadata.Name,
-                ExportProfileId: profile.ExportProfileId,
-                ExportProfileName: exportProfileName,
-                AisFilePath: pair.AisFile.FilePath,
-                DeviceFilePath: pair.DeviceFile.FilePath,
-                ExportFolder: profile.FolderOptions.ExportFolder,
-                Status: "Bereit"));
-        }
-    }
-
-    private void UpdateScannedPairStatus(string interfaceProfileId, string aisFilePath, string deviceFilePath, string status)
-    {
-        var row = _scannedImportPairRows.FirstOrDefault(currentRow =>
-            string.Equals(currentRow.InterfaceProfileId, interfaceProfileId, StringComparison.Ordinal)
-            && string.Equals(currentRow.AisFilePath, aisFilePath, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(currentRow.DeviceFilePath, deviceFilePath, StringComparison.OrdinalIgnoreCase));
-
-        if (row is not null)
-        {
-            row.Status = status;
-        }
     }
 
     private async void ScanActiveProfilesOnce_Click(object sender, RoutedEventArgs e)
     {
         if (_profileCatalog is null)
         {
-            ActiveProfileScanResultTextBox.Text = "Keine Profile geladen.";
+            AppendMonitoringEvent("monitoring", "manual-scan-error", "Einmaliger Scan nicht möglich: keine Profile geladen.", InterfaceMonitoringEventSeverity.Warning);
             return;
         }
 
@@ -3218,203 +3132,47 @@ public partial class MainWindow : Window
 
         if (activeProfiles.Count == 0)
         {
-            _scannedImportPairRows.Clear();
-            ProcessSelectedImportPairButton.IsEnabled = false;
-            ActiveProfileScanResultTextBox.Text = "Keine aktiven Schnittstellenprofile vorhanden.";
+            AppendMonitoringEvent("monitoring", "manual-scan-error", "Einmaliger Scan nicht möglich: keine aktiven Schnittstellenprofile vorhanden.", InterfaceMonitoringEventSeverity.Warning);
             return;
         }
 
-        _scannedImportPairRows.Clear();
-        ProcessSelectedImportPairButton.IsEnabled = false;
         ActiveProfileScanButton.IsEnabled = false;
-        ActiveProfileScanResultTextBox.Text = "Scan läuft. Es wird nichts verarbeitet, gelöscht oder exportiert.";
+        AppendMonitoringEvent("monitoring", "manual-scan-started", "Einmaliger Scan gestartet.");
 
         try
         {
-            var builder = new StringBuilder();
             var scanTimestampText = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
-            builder.AppendLine($"Einmaliger Scan: {scanTimestampText}");
-            builder.AppendLine("Hinweis: Es wird nichts verarbeitet, gelöscht oder exportiert.");
 
             foreach (var profile in activeProfiles)
             {
-                builder.AppendLine();
-                builder.AppendLine(profile.Metadata.Name);
-
                 try
                 {
                     var result = await _autoImportScannerService
                         .ScanOnceAsync(profile, TimeSpan.FromMilliseconds(200))
                         .ConfigureAwait(true);
 
-                    builder.AppendLine($"AIS-Dateien erkannt: {result.AisFilesDetected}");
-                    builder.AppendLine($"Geräte-Dateien erkannt: {result.DeviceFilesDetected}");
-                    builder.AppendLine($"Dateien in Warteliste: {result.FilesQueued}");
-                    builder.AppendLine($"Fertige Paare: {result.ReadyPairs}");
                     var packageEvaluation = _autoImportPackageStateService.Evaluate(profile, result.Queue, DateTime.Now);
                     UpdateMonitoringCardFromScan(profile, result, packageEvaluation, DateTime.Now);
-
-                    if (result.Messages.Count == 0)
-                    {
-                        builder.AppendLine("Meldungen: keine.");
-                    }
-                    else
-                    {
-                        builder.AppendLine("Meldungen:");
-                        foreach (var message in result.Messages)
-                        {
-                            builder.AppendLine($"- {message}");
-                        }
-                    }
-
-                    AddReadyPairsFromScanResult(profile, result);
+                    RecordScanMonitoringEvents(profile.Metadata.Name, result);
                 }
                 catch (Exception ex)
                 {
-                    builder.AppendLine($"Scan-Fehler: {ex.Message}");
                     SetMonitoringRuntimeState(profile.Metadata.Id, "Fehler / blockiert", "Error", scanTimestampText);
+                    AppendMonitoringEvent(
+                        profile.Metadata.Id,
+                        "manual-scan-error",
+                        $"{profile.Metadata.Name}: Scan-Fehler: {ex.Message}",
+                        InterfaceMonitoringEventSeverity.Error);
                 }
             }
 
-            if (_scannedImportPairRows.Count == 0)
-            {
-                builder.AppendLine();
-                builder.AppendLine("Keine verarbeitbaren Dateipaare gefunden.");
-            }
-
-            ActiveProfileScanResultTextBox.Text = builder.ToString().TrimEnd();
-            ActiveProfileScanResultTextBox.ScrollToHome();
             RefreshInterfaceMonitoringCards();
+            AppendMonitoringEvent("monitoring", "manual-scan-finished", "Einmaliger Scan abgeschlossen.");
         }
         finally
         {
             ActiveProfileScanButton.IsEnabled = true;
         }
-    }
-
-    private void ScannedImportPairsGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        ProcessSelectedImportPairButton.IsEnabled = ScannedImportPairsGrid.SelectedItem is ScannedImportPairRow;
-    }
-
-    private void ProcessSelectedImportPair_Click(object sender, RoutedEventArgs e)
-    {
-        if (ScannedImportPairsGrid.SelectedItem is not ScannedImportPairRow selectedPair)
-        {
-            AppendMessage("Kein Dateipaar ausgewählt.");
-            return;
-        }
-
-        if (_profileCatalog is null)
-        {
-            SetScannedPairStatus(selectedPair, "Fehler");
-            AppendMessage("Dateipaar kann nicht verarbeitet werden, weil keine Profile geladen sind.");
-            return;
-        }
-
-        var interfaceProfile = _profileCatalog.InterfaceProfiles.FirstOrDefault(profile =>
-            string.Equals(profile.Metadata.Id, selectedPair.InterfaceProfileId, StringComparison.Ordinal));
-        if (interfaceProfile is null)
-        {
-            SetScannedPairStatus(selectedPair, "Fehler");
-            AppendMessage("Zugehöriges Schnittstellenprofil wurde nicht gefunden.");
-            return;
-        }
-
-        var exportProfile = _profileCatalog.ExportProfiles.FirstOrDefault(profile =>
-            string.Equals(profile.Metadata.Id, selectedPair.ExportProfileId, StringComparison.Ordinal));
-        if (exportProfile is null)
-        {
-            SetScannedPairStatus(selectedPair, "Fehler");
-            AppendMessage("Zugehöriges Exportprofil wurde nicht gefunden.");
-            return;
-        }
-
-        try
-        {
-            SetScannedPairStatus(selectedPair, "Wird verarbeitet");
-            var result = _interfaceProfileManualProcessor.Process(
-                interfaceProfile,
-                exportProfile,
-                selectedPair.AisFilePath,
-                selectedPair.DeviceFilePath,
-                DateTime.Now);
-
-            if (!result.Success)
-            {
-                SetScannedPairStatus(selectedPair, CreateFailedPairStatus(result));
-                foreach (var message in result.Messages)
-                {
-                    AppendMessage(message);
-                }
-
-                return;
-            }
-
-            SetScannedPairStatus(selectedPair, CreateProcessedPairStatus(interfaceProfile, result));
-            if (result.PipelineResult is not null)
-            {
-                _lastPipelineResult = result.PipelineResult;
-                ShowPatient(result.PipelineResult.Patient);
-                MeasurementsGrid.ItemsSource = result.PipelineResult.Measurements;
-                BuilderMeasurementsGrid.ItemsSource = result.PipelineResult.Measurements;
-                ShowIssues(result.PipelineResult.Issues);
-                UpdatePlaceholderTables();
-                ShowExportRulePreviewForSelectedRule();
-                ShowFullExportPreviewForSelectedProfile();
-            }
-
-            ExportPreviewTextBox.Text = result.ExportContent ?? string.Empty;
-            PlannedFileNameText.Text = $"Exportdatei: {result.ExportFilePath}";
-            SyncBuilderTestPreviewArea();
-            AppendMessage($"Dateipaar erfolgreich verarbeitet. Exportdatei: {result.ExportFilePath}");
-            foreach (var message in result.Messages.Where(message => !string.Equals(message, "Dateipaar erfolgreich verarbeitet.", StringComparison.Ordinal)))
-            {
-                AppendMessage(message);
-            }
-        }
-        catch (Exception ex)
-        {
-            SetScannedPairStatus(selectedPair, "Fehler");
-            AppendMessage($"Dateipaar konnte nicht verarbeitet werden: {ex.Message}");
-        }
-    }
-
-    private static string CreateProcessedPairStatus(
-        InterfaceProfileDefinition interfaceProfile,
-        InterfaceProfileManualProcessingResult result)
-    {
-        if (result.ArchiveResult is null)
-        {
-            return "Verarbeitet";
-        }
-
-        if (result.ArchiveResult.HasErrors)
-        {
-            return "Verarbeitet, Archivierung mit Fehlern";
-        }
-
-        return interfaceProfile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move
-            ? "Verarbeitet und ins Archiv verschoben"
-            : "Verarbeitet und archiviert";
-    }
-
-    private static string CreateFailedPairStatus(InterfaceProfileManualProcessingResult result)
-    {
-        if (result.FailedFileCopyResult is null)
-        {
-            return "Fehler";
-        }
-
-        return result.FailedFileCopyResult.HasErrors
-            ? "Fehler, Fehlerablage fehlgeschlagen"
-            : "Fehler, Dateien kopiert";
-    }
-
-    private void SetScannedPairStatus(ScannedImportPairRow row, string status)
-    {
-        row.Status = status;
-        ScannedImportPairsGrid.Items.Refresh();
     }
 
     private static string CreateLicensedDeviceStatusText(
@@ -4043,7 +3801,6 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() == true)
         {
-            AisFilePathTextBox.Text = dialog.FileName;
             BuilderAisFilePathTextBox.Text = dialog.FileName;
             ClearBuilderAttachmentPreviewState(updatePreview: false);
             SyncBuilderTestPreviewArea();
@@ -4061,7 +3818,6 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() == true)
         {
-            DeviceFilePathTextBox.Text = dialog.FileName;
             BuilderDeviceFilePathTextBox.Text = dialog.FileName;
             ClearBuilderAttachmentPreviewState(updatePreview: false);
             SyncBuilderTestPreviewArea();
@@ -4360,7 +4116,7 @@ public partial class MainWindow : Window
             return _lastPipelineResult.Patient;
         }
 
-        var aisFilePath = AisFilePathTextBox.Text.Trim();
+        var aisFilePath = BuilderAisFilePathTextBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(aisFilePath))
         {
             return _lastPipelineResult?.Patient;
@@ -4449,28 +4205,23 @@ public partial class MainWindow : Window
 
     private void SetAttachmentDiagnosticFilePath(string value)
     {
-        AttachmentDiagnosticFilePathTextBox.Text = value;
         BuilderAttachmentDiagnosticFilePathTextBox.Text = value;
     }
 
     private string GetAttachmentDiagnosticFilePath()
     {
-        return !string.IsNullOrWhiteSpace(BuilderAttachmentDiagnosticFilePathTextBox.Text)
-            ? BuilderAttachmentDiagnosticFilePathTextBox.Text
-            : AttachmentDiagnosticFilePathTextBox.Text;
+        return BuilderAttachmentDiagnosticFilePathTextBox.Text;
     }
 
     private void SetAttachmentDiagnosticResultText(string value)
     {
-        AttachmentDiagnosticResultTextBox.Text = value;
         BuilderAttachmentDiagnosticResultTextBox.Text = value;
-        AttachmentDiagnosticResultTextBox.ScrollToHome();
         BuilderAttachmentDiagnosticResultTextBox.ScrollToHome();
     }
 
     private void Process_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(AisFilePathTextBox.Text) || string.IsNullOrWhiteSpace(DeviceFilePathTextBox.Text))
+        if (string.IsNullOrWhiteSpace(BuilderAisFilePathTextBox.Text) || string.IsNullOrWhiteSpace(BuilderDeviceFilePathTextBox.Text))
         {
             AppendMessage("Bitte zuerst AIS- und Geräte-Datei auswählen.");
             SetBuilderTestStatus("Bitte zuerst AIS-Datei und Gerätedatei laden.");
@@ -4495,25 +4246,22 @@ public partial class MainWindow : Window
 
     private bool HasManualTestInputFiles()
     {
-        return !string.IsNullOrWhiteSpace(AisFilePathTextBox.Text)
-            && !string.IsNullOrWhiteSpace(DeviceFilePathTextBox.Text);
+        return !string.IsNullOrWhiteSpace(BuilderAisFilePathTextBox.Text)
+            && !string.IsNullOrWhiteSpace(BuilderDeviceFilePathTextBox.Text);
     }
 
     private void RefreshManualProcessingPreview()
     {
         _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
-        _lastPipelineResult = _pipelineService.ProcessFiles(AisFilePathTextBox.Text, DeviceFilePathTextBox.Text, _currentProfile);
+        _lastPipelineResult = _pipelineService.ProcessFiles(BuilderAisFilePathTextBox.Text, BuilderDeviceFilePathTextBox.Text, _currentProfile);
 
         ShowPatient(_lastPipelineResult.Patient);
-        MeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
         BuilderMeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
-        ExportPreviewTextBox.Text = _lastPipelineResult.ExportContent;
         UpdatePlaceholderTables();
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
 
         _plannedFileName = _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
-        PlannedFileNameText.Text = $"Geplanter Dateiname: {_plannedFileName}";
 
         ShowIssues(_lastPipelineResult.Issues);
         SyncBuilderTestPreviewArea();
@@ -4676,20 +4424,11 @@ public partial class MainWindow : Window
 
     private void ShowPatient(PatientData? patient)
     {
-        PatientNumberText.Text = patient?.PatientNumber ?? string.Empty;
-        LastNameText.Text = patient?.LastName ?? string.Empty;
-        FirstNameText.Text = patient?.FirstName ?? string.Empty;
-        BirthDateText.Text = patient?.BirthDate ?? string.Empty;
-        StreetText.Text = patient?.Street ?? string.Empty;
-        PostalCodeCityText.Text = patient?.PostalCodeCity ?? string.Empty;
         UpdateBuilderPatientSummary(patient);
     }
 
     private void SyncBuilderTestPreviewArea()
     {
-        BuilderAisFilePathTextBox.Text = AisFilePathTextBox.Text;
-        BuilderDeviceFilePathTextBox.Text = DeviceFilePathTextBox.Text;
-
         if (_lastPipelineResult is not null)
         {
             BuilderMeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
@@ -4711,7 +4450,7 @@ public partial class MainWindow : Window
 
     private void UpdateBuilderPatientSummary(PatientData? patient)
     {
-        if (patient is null && string.IsNullOrWhiteSpace(AisFilePathTextBox.Text))
+        if (patient is null && string.IsNullOrWhiteSpace(BuilderAisFilePathTextBox.Text))
         {
             BuilderPatientSummaryTextBox.Text = "Noch keine AIS-Testdaten geladen.";
             return;
@@ -4737,7 +4476,7 @@ public partial class MainWindow : Window
 
     private void UpdateBuilderDeviceSummary()
     {
-        var deviceFilePath = DeviceFilePathTextBox.Text.Trim();
+        var deviceFilePath = BuilderDeviceFilePathTextBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(deviceFilePath) && _lastPipelineResult is null)
         {
             BuilderDeviceSummaryTextBox.Text = "Noch keine Gerätedatei geladen.";
@@ -4910,45 +4649,6 @@ public partial class MainWindow : Window
         string CurrentStatus,
         string StatusClass,
         string LastScanText);
-
-    private sealed class ScannedImportPairRow
-    {
-        public ScannedImportPairRow(
-            string InterfaceProfileId,
-            string InterfaceProfileName,
-            string ExportProfileId,
-            string ExportProfileName,
-            string AisFilePath,
-            string DeviceFilePath,
-            string ExportFolder,
-            string Status)
-        {
-            this.InterfaceProfileId = InterfaceProfileId;
-            this.InterfaceProfileName = InterfaceProfileName;
-            this.ExportProfileId = ExportProfileId;
-            this.ExportProfileName = ExportProfileName;
-            this.AisFilePath = AisFilePath;
-            this.DeviceFilePath = DeviceFilePath;
-            this.ExportFolder = ExportFolder;
-            this.Status = Status;
-        }
-
-        public string InterfaceProfileId { get; }
-
-        public string InterfaceProfileName { get; }
-
-        public string ExportProfileId { get; }
-
-        public string ExportProfileName { get; }
-
-        public string AisFilePath { get; }
-
-        public string DeviceFilePath { get; }
-
-        public string ExportFolder { get; }
-
-        public string Status { get; set; }
-    }
 
     private sealed class PlaceholderRow : INotifyPropertyChanged
     {

@@ -32,7 +32,8 @@ public sealed class InterfaceMonitoringCardStatusService
 
         var aisFile = FindFirstAisFile(scanResult.Queue);
         var deviceFile = FindFirstDeviceFile(scanResult.Queue);
-        var readyPair = scanResult.Queue.FindReadyPairs().FirstOrDefault();
+        var readyPair = packageEvaluation?.ReadyPairs.FirstOrDefault()
+            ?? scanResult.Queue.FindReadyPairs().FirstOrDefault();
         var patient = TryReadPatient(aisFile);
         var statusText = CreateScanStatusText(scanResult, packageEvaluation, interfaceProfile);
         var statusClass = CreateScanStatusClass(scanResult, packageEvaluation);
@@ -229,15 +230,18 @@ public sealed class InterfaceMonitoringCardStatusService
                     TimeSpan.FromMinutes(Math.Max(0, deviceFileWaitTimeoutMinutes)),
                     scanTimestamp)
                 : "";
+            var visibleRemaining = string.Equals(remaining, "Timeout erreicht", StringComparison.Ordinal)
+                ? ""
+                : remaining;
             return input with
             {
                 Name = "Geräte-Datei",
                 Status = waitsForDevice ? "wartet auf Gerät" : "erwartet",
                 StatusClass = waitsForDevice ? "Waiting" : "Neutral",
                 Detail = waitsForDevice
-                    ? JoinDetails(packageEvaluation?.Messages.LastOrDefault() ?? "AIS-Datei vorhanden, Gerätedatei fehlt.", remaining)
+                    ? JoinDetails(packageEvaluation?.Messages.LastOrDefault() ?? "AIS-Datei vorhanden, Gerätedatei fehlt.", visibleRemaining)
                     : input.FolderPath,
-                DisplayDetail = waitsForDevice ? remaining : ""
+                DisplayDetail = waitsForDevice ? visibleRemaining : ""
             };
         }
 
@@ -270,7 +274,10 @@ public sealed class InterfaceMonitoringCardStatusService
             };
         }
 
-        var pairComplete = scanResult.ReadyPairs > 0
+        var readyPair = packageEvaluation?.ReadyPairs.FirstOrDefault()
+            ?? scanResult.Queue.FindReadyPairs().FirstOrDefault();
+        var pairComplete = readyPair is not null
+            || scanResult.ReadyPairs > 0
             || packageEvaluation?.Reason == AutoImportPackageStateReason.ReadyForProcessing;
         if (!pairComplete)
         {
@@ -284,7 +291,6 @@ public sealed class InterfaceMonitoringCardStatusService
             };
         }
 
-        var readyPair = scanResult.Queue.FindReadyPairs().FirstOrDefault();
         var waitStartedAt = readyPair is null
             ? scanTimestamp
             : GetOrCreateAttachmentWaitStartedAt(interfaceProfile, readyPair, scanTimestamp);
@@ -298,14 +304,14 @@ public sealed class InterfaceMonitoringCardStatusService
         return input with
         {
             Name = "XDT-Anhang",
-            Status = timeoutReached
-                ? "Timeout erreicht"
-                : $"{(isRequired ? "Pflicht" : "Optional")} - {remaining}",
+            Status = timeoutReached && isRequired
+                ? "Pflicht blockiert"
+                : isRequired ? "Pflicht" : "Optional",
             StatusClass = timeoutReached && isRequired ? "Blocked" : "Waiting",
             Detail = JoinDetails(
                 isRequired ? "Wartet auf verpflichtenden XDT-Anhang." : "Wartet auf optionalen XDT-Anhang.",
                 remaining),
-            DisplayDetail = ""
+            DisplayDetail = remaining
         };
     }
 
@@ -321,7 +327,7 @@ public sealed class InterfaceMonitoringCardStatusService
         var (status, statusClass) = attachmentStatus.Reason switch
         {
             AttachmentProcessingStatusReason.PreparationSucceeded => ("", "Success"),
-            AttachmentProcessingStatusReason.AttachmentWait => ("wartet", "Waiting"),
+            AttachmentProcessingStatusReason.AttachmentWait => (string.IsNullOrWhiteSpace(input.Status) ? "wartet" : input.Status, "Waiting"),
             AttachmentProcessingStatusReason.NoStableAttachment => ("nicht stabil", "Waiting"),
             AttachmentProcessingStatusReason.AttachmentOptionalTimeoutContinueWithoutAttachment => ("übersprungen", "Neutral"),
             AttachmentProcessingStatusReason.NoSupportedAttachment => ("übersprungen", "Neutral"),
@@ -345,8 +351,12 @@ public sealed class InterfaceMonitoringCardStatusService
             StatusClass = statusClass,
             Detail = CreateAttachmentDetail(attachmentStatus),
             DisplayDetail = attachmentStatus.Reason == AttachmentProcessingStatusReason.PreparationSucceeded
-                ? attachmentStatus.TargetFileName ?? FileNameOrEmpty(attachmentStatus.SourcePath)
-                : ""
+                ? ""
+                : attachmentStatus.Reason == AttachmentProcessingStatusReason.AttachmentWait
+                    ? input.DisplayDetail
+                    : attachmentStatus.Reason == AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock
+                        ? "Timeout erreicht"
+                        : ""
         };
     }
 
@@ -574,7 +584,9 @@ public sealed class InterfaceMonitoringCardStatusService
             return "Timeout erreicht";
         }
 
-        return $"noch {remaining:mm\\:ss}";
+        return remaining < TimeSpan.FromMinutes(1)
+            ? $"noch {Math.Ceiling(remaining.TotalSeconds):0} s"
+            : $"noch {remaining:mm\\:ss}";
     }
 
     private DateTime GetOrCreateAttachmentWaitStartedAt(

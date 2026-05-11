@@ -14,9 +14,9 @@ Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S. Weitere
 
 Die aktualisierte Roadmap mit Iststand, Sicherheitsentscheidungen und empfohlenen naechsten Entwicklungsphasen steht in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
-Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp ist der Konfigurationsbereich `XDT-Anhänge für AIS` im Schnittstellenprofil vorbereitet: optionale Import-/Exportordner, `AttachmentFileNameTemplate`, vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, `ExternalAisLinkFieldBuilder` für semantische Feldwerte, `ExternalAisLinkXdtFieldAdapter` für XDT-Feldcode/Wert-Paare, isolierter `AttachmentExternalLinkPreparationService` zur Orchestrierung auf explizite Eingabe und XDT-Linkfeld-Vorlagen für 6302, 6303, 6304 und 6305. Im Tab `Verarbeitung` ist zusätzlich ein manueller Diagnosepfad `XDT-Anhang Test / externer AIS-Link` vorbereitet; er arbeitet nur mit einer explizit ausgewählten Anhangdatei und zeigt Ziel-Dateiname, Zielpfad sowie vorbereitete XDT-Felder an. Standard für Geräte-Dateianhänge ist `Move`, damit der XDT-Anhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann; vollständige automatische Dateianhang-Zuordnung, Mehrfachanhang-Heuristiken und Dokument-/Dateianhang-Templates sind weiterhin offen. XDT-Längenpräfixe werden nicht in der Konfiguration gepflegt, sondern zentral durch den Exportmechanismus erzeugt.
+Geräte-Dateianhang-Import und externe Link-Übergabe ans AIS sind verbindliche zukünftige Anforderungen des Baukastens. Im aktuellen Prototyp ist der Konfigurationsbereich `XDT-Anhänge für AIS` im Schnittstellenprofil vorbereitet: optionale Import-/Exportordner, `AttachmentFileNameTemplate`, vorbereiteter `AttachmentTransferService` mit Copy/Move-Modus, `ExternalAisLinkFieldBuilder` für semantische Feldwerte, `ExternalAisLinkXdtFieldAdapter` für XDT-Feldcode/Wert-Paare, isolierter `AttachmentExternalLinkPreparationService` zur Orchestrierung auf explizite Eingabe und XDT-Linkfeld-Vorlagen für 6302, 6303, 6304 und 6305. Der Baukasten im Tab `Profile & Templates` kann eine explizit ausgewählte Anhangdatei für Vorschau und Testexport vorbereiten und zeigt Ziel-Dateiname, Zielpfad sowie vorbereitete XDT-Felder an. Standard für Geräte-Dateianhänge ist `Move`, damit der XDT-Anhang-Importordner nach erfolgreicher Übernahme sauber bleiben kann; vollständige automatische Dateianhang-Zuordnung, Mehrfachanhang-Heuristiken und Dokument-/Dateianhang-Templates sind weiterhin offen. XDT-Längenpräfixe werden nicht in der Konfiguration gepflegt, sondern zentral durch den Exportmechanismus erzeugt.
 
-Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet unterstützte XDT-Anhang-Dateitypen im konfigurierten XDT-Anhang Importordner auf und verändert keine Dateien. Der manuelle Diagnosebereich kann diesen Importordner einlesen und gefundene XDT-Anhänge anzeigen; vollständige automatische Zuordnung und Mehrfachanhang-Heuristiken bleiben offen.
+Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet unterstützte XDT-Anhang-Dateitypen im konfigurierten XDT-Anhang Importordner auf und verändert keine Dateien. Vollständige automatische Zuordnung und Mehrfachanhang-Heuristiken bleiben offen.
 
 Eine isolierte automatische Kandidatenauswahl ist ebenfalls vorbereitet: Automatisch eindeutig ist zunächst nur der Fall, dass genau eine unterstützte Anhangdatei im XDT-Anhang Importordner gefunden wurde. Bei mehreren unterstützten Dateien wird nicht automatisch ausgewählt, weil der Patientenbezug unsicher wäre.
 
@@ -26,7 +26,7 @@ Für vollständige Verarbeitungspakete ist ein zweistufiges Wartemodell vorberei
 
 Für langsam schreibende Geräte ist zusätzlich eine Stabilitätsprüfung vorbereitet: XDT-Anhänge werden erst automatisch ausgewählt oder übertragen, wenn sie über die konfigurierte Stabilitätswartezeit unverändert und lesbar bleiben. Standard ist 2 Sekunden. Das periodische Ordnerabfrage-Intervall ist pro Schnittstellenprofil konfigurierbar; der Standard bleibt 5 Sekunden. Es wird weiterhin kein FileSystemWatcher verwendet.
 
-Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich `Test & Vorschau` für den Baukasten-Test: AIS-Testdatei laden, Gerätedatei laden, optional XDT-Anhang einlesen, Messwerte prüfen, Gesamtexport-Vorschau kontrollieren und einen Testexport erstellen. Das verwendete Schnittstellenprofil wird dort mit AIS-, Geräte-, Exportprofil- und XDT-Anhang-Konfiguration angezeigt. Der Button `XDT-Anhang einlesen` öffnet eine Dateiauswahl, sodass ein XDT-Anhang aus beliebigem Speicherort für die externe Template-Vorbereitung gewählt werden kann. Sobald AIS- und Gerätedatei geladen sind, aktualisiert der Baukasten nach dem Einlesen automatisch die Gesamtexport-Vorschau mit den transienten Linkfeldern 6302 bis 6305. Vorschau und Testexport simulieren trotzdem den im Schnittstellenprofil definierten XDT-Anhang-Exportpfad: 6305 zeigt auf `XDT-Anhang Exportordner` plus erzeugten Dateinamen, nicht auf den Quellpfad. `Testexport erstellen` öffnet eine Ordnerauswahl und schreibt Test-XDT-Datei plus korrekt umbenannten Anhang physisch in den gewählten Testordner; der 6305-Wert in der Test-XDT-Datei bleibt auf den simulierten Schnittstellenprofil-Zielpfad ausgerichtet, und der produktive Schnittstellenprofil-Exportordner wird im Baukasten-Test nicht beschrieben. Exportprofile und BuiltIn-Profile werden dadurch nicht verändert. `Messwerte prüfen` ist standardmäßig eingeklappt, `Verfügbare Platzhalter` bleibt standardmäßig ausgeklappt. Der Tab `Verarbeitung` bleibt der Betriebsbereich für aktive Schnittstellenprofile, manuell gestartete Überwachung und automatische Verarbeitung. Der bisherige manuelle Testbereich ist dort weiterhin als eingeklappter Diagnose-/Rückfallbereich `Diagnose / manueller Alt-Test` erhalten.
+Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich `Test & Vorschau` für den Baukasten-Test: AIS-Testdatei laden, Gerätedatei laden, optional XDT-Anhang einlesen, Messwerte prüfen, Gesamtexport-Vorschau kontrollieren und einen Testexport erstellen. Das verwendete Schnittstellenprofil wird dort mit AIS-, Geräte-, Exportprofil- und XDT-Anhang-Konfiguration angezeigt. Der Button `XDT-Anhang einlesen` öffnet eine Dateiauswahl, sodass ein XDT-Anhang aus beliebigem Speicherort für die externe Template-Vorbereitung gewählt werden kann. Sobald AIS- und Gerätedatei geladen sind, aktualisiert der Baukasten nach dem Einlesen automatisch die Gesamtexport-Vorschau mit den transienten Linkfeldern 6302 bis 6305. Vorschau und Testexport simulieren trotzdem den im Schnittstellenprofil definierten XDT-Anhang-Exportpfad: 6305 zeigt auf `XDT-Anhang Exportordner` plus erzeugten Dateinamen, nicht auf den Quellpfad. `Testexport erstellen` öffnet eine Ordnerauswahl und schreibt Test-XDT-Datei plus korrekt umbenannten Anhang physisch in den gewählten Testordner; der 6305-Wert in der Test-XDT-Datei bleibt auf den simulierten Schnittstellenprofil-Zielpfad ausgerichtet, und der produktive Schnittstellenprofil-Exportordner wird im Baukasten-Test nicht beschrieben. Exportprofile und BuiltIn-Profile werden dadurch nicht verändert. `Messwerte prüfen` ist standardmäßig eingeklappt, `Verfügbare Platzhalter` bleibt standardmäßig ausgeklappt. Der Tab `Verarbeitung` bleibt der Betriebsbereich für aktive Schnittstellenprofile, manuell gestartete Überwachung und automatische Verarbeitung.
 
 ## Aktueller Funktionsumfang
 
@@ -54,19 +54,19 @@ Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich 
 
 ## Aktueller Automatik-Prototyp
 
-Der Automatik-Prototyp bereitet die spaetere produktive Ordnerverarbeitung vor und kann bereits manuell gestartet werden. Er ersetzt den manuellen Testmodus nicht, sondern ergaenzt ihn.
+Der Automatik-Prototyp bereitet die spaetere produktive Ordnerverarbeitung vor und kann bereits manuell gestartet werden. Der manuelle Baukasten-Test befindet sich im Tab `Profile & Templates`.
 
-### 1. Manuelle Verarbeitung
+### 1. Baukasten-Test
 
-Die App unterstuetzt weiterhin einen manuellen Testmodus:
+Die App unterstuetzt weiterhin einen manuellen Testmodus im Tab `Profile & Templates / Test & Vorschau`:
 
 - AIS-GDT/XDT-Datei auswaehlen.
 - Geraetedatei auswaehlen, aktuell XML fuer NIDEK ARK1S validiert.
-- Verarbeitung starten.
+- Exportvorschau aktualisieren.
 - Exportvorschau anzeigen.
-- XDT-Datei in Exportordner schreiben.
+- Test-XDT-Datei und optionalen Testanhang in einen frei gewählten Testordner schreiben.
 
-Dieser manuelle Modus bleibt als Test- und Diagnosemodus erhalten.
+Dieser manuelle Modus ist vom Betriebsmonitor im Tab `Verarbeitung` getrennt.
 
 ### 2. Schnittstellenprofile
 
@@ -107,12 +107,12 @@ Funktionen:
 - aktive Schnittstellenprofile werden regelmaessig gescannt
 - AIS-Importordner und Geraete-Importordner werden geprueft
 - Dateien werden erst verarbeitet, wenn sie stabil und lesbar sind
-- fertige AIS-/Geraete-Dateipaare werden angezeigt
+- fertige AIS-/Geraete-Dateipaare werden in den Monitoring-Karten als Paketstatus sichtbar
 - Ueberwachung kann manuell gestoppt werden
 
 Wichtig: Es gibt keinen Windows-Dienst, keinen Autostart und aktuell keinen FileSystemWatcher. Die Ueberwachung basiert auf periodischem Scan.
 
-Die Monitoring-Meldungen im Tab `Verarbeitung` werden dedupliziert: Wiederholt ein Scan denselben technischen Zustand oder dieselbe Statusmeldung, wird sie nicht erneut als neues Ereignis angehängt. Die Übersicht der aktiven Schnittstellenprofile enthält Karten pro aktiver Schnittstelle. Die Karten zeigen Profilzuordnung, Scanstatus, erwartete Eingänge wie AIS-Datei, Gerätedatei und optional XDT-Anhang sowie ausklappbare Details. Laufende Scan-/Paket-/Verarbeitungsergebnisse füllen die Karten mit Status wie `Wartet auf AIS`, `Wartet auf Gerät`, `Wartet auf XDT-Anhang`, `Export erfolgreich` oder `Fehler / blockiert`; falls vorhanden werden Patient, erkannte Dateien, XDT-Anhang-Zustand, Exportdatei und Warte-/Restzeiten sichtbar. Die Eingangskacheln zeigen kompakte Live-Daten ohne sichtbare Pfade; Pfade bleiben in Tooltips und im Detailbereich verfügbar. Bei laufender Überwachung zeigt jede Karte eine deutlich sichtbare Radar-/Scanfläche mit schmalem grünem, halbtransparentem, horizontal wanderndem Scanbalken, dessen UI-Animation an das konfigurierte Scanintervall der Schnittstelle angelehnt ist. Das Scanintervall kann in der Karte per `-`/`+` als Schnittstellenprofil-Konfiguration angepasst werden; BuiltIn-Profile werden dabei nicht überschrieben. Detailinformationen wie AIS-Datei, Gerätedatei, Anhang, Export, letzter erfolgreicher Export und letzte Meldung liegen im Bereich `Details`. Die Animation ist nur eine Anzeige und steuert keine Verarbeitung. Die technische Detailtabelle bleibt als eingeklappter Fallback erhalten.
+Die Monitoring-Meldungen im Tab `Verarbeitung` werden dedupliziert: Wiederholt ein Scan denselben technischen Zustand oder dieselbe Statusmeldung, wird sie nicht erneut als neues Ereignis angehängt. Die Übersicht der aktiven Schnittstellenprofile enthält grünliche Radar-/Glas-Karten pro aktiver Schnittstelle. Die Karten zeigen Profilzuordnung, Scanstatus, erwartete Eingänge wie AIS-Datei, Gerätedatei und optional XDT-Anhang sowie ausklappbare Details. Laufende Scan-/Paket-/Verarbeitungsergebnisse füllen die Karten mit Status wie `Wartet auf AIS`, `Wartet auf Gerät`, `Wartet auf XDT-Anhang`, `Export erfolgreich` oder `Fehler / blockiert`; falls vorhanden werden Patient, erkannte Dateien, XDT-Anhang-Zustand, Exportdatei und Warte-/Restzeiten sichtbar. Die XDT-Anhang-Kachel zeigt während der Wartephase `Pflicht` oder `Optional` plus Restzeit beziehungsweise Timeoutstatus. Die Eingangskacheln zeigen kompakte Live-Daten ohne sichtbare Pfade; Pfade bleiben in Tooltips und im Detailbereich verfügbar. Bei laufender Überwachung zeigt jede Karte eine deutlich sichtbare Radar-/Scanfläche mit schmalem grünem, halbtransparentem, horizontal wanderndem Scanbalken, dessen UI-Animation an das konfigurierte Scanintervall der Schnittstelle angelehnt ist. Das Scanintervall kann in der Karte per `-`/`+` als Schnittstellenprofil-Konfiguration angepasst werden; BuiltIn-Profile werden dabei nicht überschrieben. Detailinformationen wie AIS-Datei, Gerätedatei, Anhang, Export, letzter erfolgreicher Export und letzte Meldung liegen im Bereich `Details`. Die Animation ist nur eine Anzeige und steuert keine Verarbeitung.
 
 ### 4. Optionale automatische Verarbeitung
 
@@ -131,8 +131,8 @@ Wenn aktiviert:
 
 Wenn deaktiviert:
 
-- Dateipaare werden nur angezeigt
-- Verarbeitung erfolgt nur ueber den Button zur manuellen Paarverarbeitung
+- die Überwachung aktualisiert nur Monitoring-Karten und Ereignisse
+- es wird kein produktiver Export gestartet
 
 ### 5. Archivierungsmodus
 
