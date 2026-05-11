@@ -80,6 +80,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
     private readonly InterfaceProfileActivationGuardService _interfaceProfileActivationGuardService = new();
     private readonly InterfaceProfileActivationWarningConfirmationService _interfaceProfileActivationWarningConfirmationService = new();
+    private readonly InterfaceProfileActivationPlanService _interfaceProfileActivationPlanService = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
@@ -778,11 +779,20 @@ public partial class MainWindow : Window
                     guardResult,
                     EvaluatedAt: null,
                     Source: "PreviewOnly"));
+            var activationPlan = _interfaceProfileActivationPlanService.CreatePlan(
+                new InterfaceProfileActivationPlanRequest(
+                    profile,
+                    result,
+                    guardResult,
+                    warningConfirmationResult,
+                    WarningsAccepted: false,
+                    Context: "PreviewOnly"));
             preview = _interfaceProfileActivationPreparationPreviewService.Create(
                 profile,
                 result,
                 guardResult,
-                warningConfirmationResult);
+                warningConfirmationResult,
+                activationPlan);
             var image = guardResult.CanProceed
                 ? MessageBoxImage.Information
                 : MessageBoxImage.Warning;

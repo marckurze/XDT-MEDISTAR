@@ -18,6 +18,12 @@ public sealed record InterfaceProfileActivationPreparationPreview(
     string WarningConfirmationMessage,
     int WarningConfirmationItemCount,
     IReadOnlyList<string> WarningConfirmationItems,
+    string ActivationPlanStatusText,
+    string ActivationPlanCanExecuteLaterText,
+    string ActivationPlanMessage,
+    IReadOnlyList<string> ActivationPlanMissingRequirements,
+    IReadOnlyList<string> ActivationPlanReasons,
+    IReadOnlyList<string> ActivationPlanSteps,
     string SummaryMessage,
     string SafetyNotice,
     string MessageText);
