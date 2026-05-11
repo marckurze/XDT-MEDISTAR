@@ -206,16 +206,28 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         var activationPlanMessage = string.IsNullOrWhiteSpace(activationPlan?.SummaryMessage)
             ? ActivationPlanNotAvailableMessage
             : activationPlan.SummaryMessage;
-        var activationPlanMissingRequirements = activationPlan is null
+        var isWarningConfirmationRequired =
+            guardResult?.Decision == InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation
+            || warningConfirmationResult?.Status == InterfaceProfileActivationWarningConfirmationStatus.ConfirmationRequired
+            || activationPlan?.PlanStatus == InterfaceProfileActivationPlanStatus.RequiresWarningConfirmation;
+        var hasConfirmationWarnings = warningConfirmationItems.Count > 0;
+        var shouldCentralizeWarningConfirmation = isWarningConfirmationRequired && hasConfirmationWarnings;
+        var activationPlanMissingRequirements = activationPlan is null || shouldCentralizeWarningConfirmation
             ? Array.Empty<string>()
             : BuildActivationPlanReasons(activationPlan.MissingRequirements);
-        var activationPlanReasons = activationPlan is null
+        var activationPlanReasons = activationPlan is null || shouldCentralizeWarningConfirmation
             ? Array.Empty<string>()
             : BuildActivationPlanReasons(activationPlan.Blockers.Concat(activationPlan.Warnings).ToList());
         var activationPlanSteps = activationPlan is null
             ? Array.Empty<string>()
-            : BuildActivationPlanSteps(activationPlan);
+            : BuildActivationPlanSteps(activationPlan, compactForWarningConfirmation: shouldCentralizeWarningConfirmation);
         var summary = BuildSummaryMessage(result);
+        var displayGuardMessage = shouldCentralizeWarningConfirmation
+            ? string.Empty
+            : guardMessage;
+        var displayActivationPlanMessage = shouldCentralizeWarningConfirmation
+            ? "Siehe Abschnitt Warnungsbestätigung."
+            : activationPlanMessage;
 
         return new InterfaceProfileActivationPreparationPreview(
             Title: "Aktivierung vorbereiten",
@@ -229,7 +241,7 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             ImportantWarnings: warnings,
             GuardDecisionText: guardDecisionText,
             GuardCanProceedText: guardCanProceedText,
-            GuardMessage: guardMessage,
+            GuardMessage: displayGuardMessage,
             GuardReasons: guardReasons,
             WarningConfirmationStatusText: warningConfirmationStatusText,
             WarningConfirmationMessage: warningConfirmationMessage,
@@ -237,7 +249,7 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             WarningConfirmationItems: warningConfirmationItems,
             ActivationPlanStatusText: activationPlanStatusText,
             ActivationPlanCanExecuteLaterText: activationPlanCanExecuteLaterText,
-            ActivationPlanMessage: activationPlanMessage,
+            ActivationPlanMessage: displayActivationPlanMessage,
             ActivationPlanMissingRequirements: activationPlanMissingRequirements,
             ActivationPlanReasons: activationPlanReasons,
             ActivationPlanSteps: activationPlanSteps,
@@ -254,7 +266,7 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 warnings,
                 guardDecisionText,
                 guardCanProceedText,
-                guardMessage,
+                displayGuardMessage,
                 guardReasons,
                 warningConfirmationStatusText,
                 warningConfirmationMessage,
@@ -262,7 +274,7 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 warningConfirmationItems,
                 activationPlanStatusText,
                 activationPlanCanExecuteLaterText,
-                activationPlanMessage,
+                displayActivationPlanMessage,
                 activationPlanMissingRequirements,
                 activationPlanReasons,
                 activationPlanSteps,
@@ -425,12 +437,46 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         return $"{severity}: {reason.Message} {reason.Detail}";
     }
 
-    private static IReadOnlyList<string> BuildActivationPlanSteps(InterfaceProfileActivationPlan activationPlan)
+    private static IReadOnlyList<string> BuildActivationPlanSteps(
+        InterfaceProfileActivationPlan activationPlan,
+        bool compactForWarningConfirmation)
     {
+        if (compactForWarningConfirmation)
+        {
+            return activationPlan.PlannedSteps
+                .Take(MaxImportantItems)
+                .Select(FormatActivationPlanStepCompact)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
         return activationPlan.PlannedSteps
             .Take(MaxImportantItems)
             .Select(FormatActivationPlanStep)
             .ToList();
+    }
+
+    private static string FormatActivationPlanStepCompact(InterfaceProfileActivationPlanStep step)
+    {
+        if (step.Code.Contains("warning", StringComparison.OrdinalIgnoreCase)
+            || step.Code.Contains("warnung", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Warnungen prüfen und bestätigen";
+        }
+
+        if (step.Code.Contains("activate", StringComparison.OrdinalIgnoreCase)
+            || step.Code.Contains("aktiv", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Profil aktivieren";
+        }
+
+        if (step.Code.Contains("save", StringComparison.OrdinalIgnoreCase)
+            || step.Code.Contains("speicher", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Profiländerung speichern";
+        }
+
+        return step.Title;
     }
 
     private static string FormatActivationPlanStep(InterfaceProfileActivationPlanStep step)
@@ -475,14 +521,16 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         builder.AppendLine($"Aktivierbar: {canActivateText}");
         builder.AppendLine($"Zusammenfassung: {blockerCount} Blocker, {warningCount} Warnungen, {infoCount} Hinweise");
         builder.AppendLine();
-        builder.AppendLine(summaryMessage);
-        builder.AppendLine();
         builder.AppendLine("Technische Schutzprüfung:");
         builder.AppendLine($"Entscheidung: {guardDecisionText}");
         builder.AppendLine($"Technisch freigegeben: {guardCanProceedText}");
-        builder.AppendLine($"Hinweis: {guardMessage}");
 
-        if (guardReasons.Count > 0)
+        if (!string.IsNullOrWhiteSpace(guardMessage))
+        {
+            builder.AppendLine($"Hinweis: {guardMessage}");
+        }
+
+        if (guardReasons.Count > 0 && warningConfirmationItems.Count == 0)
         {
             builder.AppendLine();
             builder.AppendLine("Wichtigste Guard-Gründe:");
@@ -540,7 +588,7 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             AppendNumberedItems(builder, importantBlockers);
         }
 
-        if (importantWarnings.Count > 0)
+        if (importantWarnings.Count > 0 && warningConfirmationItems.Count == 0)
         {
             builder.AppendLine();
             builder.AppendLine("Wichtigste Warnungen:");

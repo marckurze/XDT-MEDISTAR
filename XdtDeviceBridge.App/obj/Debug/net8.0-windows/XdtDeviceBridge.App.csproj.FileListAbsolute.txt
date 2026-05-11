@@ -29,3 +29,5 @@ C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.deps.json
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.runtimeconfig.json
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.dll
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\InterfaceProfileActivationPreparationPreviewWindow.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\InterfaceProfileActivationPreparationPreviewWindow.g.cs

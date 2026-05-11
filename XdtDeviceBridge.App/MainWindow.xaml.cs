@@ -741,22 +741,14 @@ public partial class MainWindow : Window
         if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
         {
             preview = _interfaceProfileActivationPreparationPreviewService.CreateEmpty();
-            System.Windows.MessageBox.Show(
-                preview.MessageText,
-                preview.Title,
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            ShowInterfaceActivationPreparationPreview(preview);
             return;
         }
 
         if (_profileCatalog is null)
         {
             preview = _interfaceProfileActivationPreparationPreviewService.CreateError("Profilkatalog ist nicht geladen.");
-            System.Windows.MessageBox.Show(
-                preview.MessageText,
-                preview.Title,
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            ShowInterfaceActivationPreparationPreview(preview);
             return;
         }
 
@@ -793,24 +785,23 @@ public partial class MainWindow : Window
                 guardResult,
                 warningConfirmationResult,
                 activationPlan);
-            var image = guardResult.CanProceed
-                ? MessageBoxImage.Information
-                : MessageBoxImage.Warning;
-            System.Windows.MessageBox.Show(
-                preview.MessageText,
-                preview.Title,
-                MessageBoxButton.OK,
-                image);
+            ShowInterfaceActivationPreparationPreview(preview);
         }
         catch (Exception ex)
         {
             preview = _interfaceProfileActivationPreparationPreviewService.CreateError(ex.Message);
-            System.Windows.MessageBox.Show(
-                preview.MessageText,
-                preview.Title,
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            ShowInterfaceActivationPreparationPreview(preview);
         }
+    }
+
+    private void ShowInterfaceActivationPreparationPreview(
+        InterfaceProfileActivationPreparationPreview preview)
+    {
+        var window = new InterfaceProfileActivationPreparationPreviewWindow(preview)
+        {
+            Owner = this
+        };
+        window.ShowDialog();
     }
 
     private void ShowInterfaceProfileForSelectedProfile()

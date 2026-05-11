@@ -73,7 +73,7 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
         Assert.Empty(preview.ImportantBlockers);
         Assert.Empty(preview.ImportantWarnings);
         Assert.Contains("grundsätzlich aktivierbar", preview.SummaryMessage);
-        Assert.Contains("noch nichts aktiviert", preview.MessageText);
+        Assert.Contains("nichts aktiviert", preview.MessageText);
     }
 
     [Fact]
@@ -259,7 +259,8 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
             },
             steps: new[]
             {
-                PlanStep("warnings.confirm", "Warnungen bestätigen", "Vor einer späteren echten Aktivierung müssten die aufgeführten Warnungen bewusst bestätigt werden.", isBlocked: true)
+                PlanStep("warnings.confirm", "Warnungen bestätigen", "Vor einer späteren echten Aktivierung müssten die aufgeführten Warnungen bewusst bestätigt werden.", isBlocked: true),
+                PlanStep("activate.profile", "Profil aktivieren", "Das Schnittstellenprofil würde bei einer späteren echten Aktivierung als aktiv markiert.", isBlocked: true)
             },
             message: "Vor einer späteren Aktivierung müssen Warnungen bewusst bestätigt werden.");
 
@@ -267,8 +268,12 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
 
         Assert.Equal("Warnungsbestätigung erforderlich", preview.ActivationPlanStatusText);
         Assert.Equal("Nein", preview.ActivationPlanCanExecuteLaterText);
-        Assert.Contains(preview.ActivationPlanReasons, item => item.Contains("Lizenzstatus"));
-        Assert.Contains(preview.ActivationPlanSteps, item => item.Contains("Warnungen bestätigen"));
+        Assert.Equal("Siehe Abschnitt Warnungsbestätigung.", preview.ActivationPlanMessage);
+        Assert.Empty(preview.ActivationPlanReasons);
+        Assert.Contains("Warnungen prüfen und bestätigen", preview.ActivationPlanSteps);
+        Assert.Contains("Profil aktivieren", preview.ActivationPlanSteps);
+        Assert.Equal(1, CountOccurrences(preview.MessageText, "Lizenzstatus"));
+        Assert.DoesNotContain("Wichtigste Plan-Gründe:", preview.MessageText);
         Assert.Contains("Geplante spätere Schritte:", preview.MessageText);
         Assert.Contains("Diese Schritte wurden in diesem Schritt nicht ausgeführt.", preview.MessageText);
     }
@@ -743,5 +748,18 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
             WouldExecuteLater: true,
             IsBlocked: isBlocked,
             Severity: InterfaceProfileActivationSeverity.Info);
+    }
+
+    private static int CountOccurrences(string text, string value)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = text.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+
+        return count;
     }
 }

@@ -14,6 +14,8 @@
 - Dialog `Aktivierung vorbereiten` zeigt die vorbereitete Warnungsbestaetigung jetzt rein lesend an: `ReadyWithWarnings` listet bestaetigungspflichtige Warnungen, ohne Checkbox, Bestaetigungsbutton, Speicherung oder Aktivierung.
 - Rein lesender `InterfaceProfileActivationPlanService` vorbereitet; er fasst Aktivierungsbewertung, Guard-Entscheidung und Warnungsbestaetigungsvorschau zu einem beschreibenden Plan mit PlannedSteps zusammen, ohne Aktivierung, Speicherung oder Datei-/Ordneroperationen auszufuehren.
 - Dialog `Aktivierung vorbereiten` zeigt den `InterfaceProfileActivationPlan` jetzt rein lesend an; PlannedSteps werden beschrieben, aber nicht ausgefuehrt.
+- Dialog `Aktivierung vorbereiten` von langer MessageBox auf ein scrollbares, resizebares Preview-Fenster umgestellt; die Inhalte sind kompakter gegliedert und vermeiden doppelte Listen, bleiben aber reine Vorschau ohne Aktivierung, Warnungsbestaetigung oder Speicherung.
+- Dialog `Aktivierung vorbereiten` weiter gestrafft: bestaetigungspflichtige Warnungen erscheinen zentral im Abschnitt Warnungsbestaetigung, Guard und Aktivierungsplan wiederholen die Warnungsliste nicht mehr vollstaendig.
 - Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor` ergaenzt; es beschreibt Request, Result, Preconditions und Statuswerte, bleibt aber ohne produktive Implementierung, UI-Anbindung, Speicherung oder Aktivierungswirkung.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
