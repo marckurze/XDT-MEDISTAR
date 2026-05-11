@@ -6,13 +6,15 @@ namespace XdtDeviceBridge.Infrastructure;
 public sealed class InterfaceProfileActivationPreparationPreviewService
 {
     private const int MaxImportantItems = 5;
+    private const string SafetyNotice = "Dies ist nur eine Vorschau. Es wurden keine Warnungen bestätigt, keine Änderungen gespeichert und nichts aktiviert.";
     private const string GuardUnknownDecisionText = "Nicht eindeutig";
     private const string GuardNoCanProceedText = "Nein";
     private const string GuardUnknownMessage = "Es liegt keine eindeutige aktuelle Aktivierungsbewertung vor.";
+    private const string WarningConfirmationNotAvailableText = "nicht verfügbar";
+    private const string WarningConfirmationNotAvailableMessage = "Es liegt keine eindeutige Aktivierungsbewertung vor.";
 
     public InterfaceProfileActivationPreparationPreview CreateEmpty()
     {
-        const string safetyNotice = "Dies ist nur eine Vorschau. Es wurden keine Änderungen gespeichert.";
         const string summary = "Bitte wählen Sie zuerst ein Schnittstellenprofil aus.";
 
         return new InterfaceProfileActivationPreparationPreview(
@@ -29,8 +31,12 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             GuardCanProceedText: GuardNoCanProceedText,
             GuardMessage: GuardUnknownMessage,
             GuardReasons: Array.Empty<string>(),
+            WarningConfirmationStatusText: WarningConfirmationNotAvailableText,
+            WarningConfirmationMessage: "Bitte wählen Sie zuerst ein Schnittstellenprofil aus.",
+            WarningConfirmationItemCount: 0,
+            WarningConfirmationItems: Array.Empty<string>(),
             SummaryMessage: summary,
-            SafetyNotice: safetyNotice,
+            SafetyNotice: SafetyNotice,
             MessageText: BuildMessageText(
                 profileName: "-",
                 statusText: "Nicht bewertet",
@@ -44,13 +50,16 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 guardCanProceedText: GuardNoCanProceedText,
                 guardMessage: GuardUnknownMessage,
                 guardReasons: Array.Empty<string>(),
+                warningConfirmationStatusText: WarningConfirmationNotAvailableText,
+                warningConfirmationMessage: "Bitte wählen Sie zuerst ein Schnittstellenprofil aus.",
+                warningConfirmationItemCount: 0,
+                warningConfirmationItems: Array.Empty<string>(),
                 summary,
-                safetyNotice));
+                SafetyNotice));
     }
 
     public InterfaceProfileActivationPreparationPreview CreateError(string message)
     {
-        const string safetyNotice = "Dies ist nur eine Vorschau. Es wurden keine Änderungen gespeichert.";
         var summary = string.IsNullOrWhiteSpace(message)
             ? "Die Aktivierungsvorschau konnte nicht erstellt werden."
             : message;
@@ -70,8 +79,12 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             GuardCanProceedText: GuardNoCanProceedText,
             GuardMessage: "Die technische Schutzprüfung konnte nicht eindeutig abgeschlossen werden.",
             GuardReasons: blockers,
+            WarningConfirmationStatusText: WarningConfirmationNotAvailableText,
+            WarningConfirmationMessage: "Die Warnungsbestätigungsvorschau konnte nicht eindeutig abgeschlossen werden.",
+            WarningConfirmationItemCount: 0,
+            WarningConfirmationItems: Array.Empty<string>(),
             SummaryMessage: summary,
-            SafetyNotice: safetyNotice,
+            SafetyNotice: SafetyNotice,
             MessageText: BuildMessageText(
                 profileName: "-",
                 statusText: "Fehler",
@@ -85,21 +98,34 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 guardCanProceedText: GuardNoCanProceedText,
                 guardMessage: "Die technische Schutzprüfung konnte nicht eindeutig abgeschlossen werden.",
                 guardReasons: blockers,
+                warningConfirmationStatusText: WarningConfirmationNotAvailableText,
+                warningConfirmationMessage: "Die Warnungsbestätigungsvorschau konnte nicht eindeutig abgeschlossen werden.",
+                warningConfirmationItemCount: 0,
+                warningConfirmationItems: Array.Empty<string>(),
                 summary,
-                safetyNotice));
+                SafetyNotice));
     }
 
     public InterfaceProfileActivationPreparationPreview Create(
         InterfaceProfileDefinition? profile,
         InterfaceProfileActivationEvaluationResult? result)
     {
-        return Create(profile, result, guardResult: null);
+        return Create(profile, result, guardResult: null, warningConfirmationResult: null);
     }
 
     public InterfaceProfileActivationPreparationPreview Create(
         InterfaceProfileDefinition? profile,
         InterfaceProfileActivationEvaluationResult? result,
         InterfaceProfileActivationGuardResult? guardResult)
+    {
+        return Create(profile, result, guardResult, warningConfirmationResult: null);
+    }
+
+    public InterfaceProfileActivationPreparationPreview Create(
+        InterfaceProfileDefinition? profile,
+        InterfaceProfileActivationEvaluationResult? result,
+        InterfaceProfileActivationGuardResult? guardResult,
+        InterfaceProfileActivationWarningConfirmationResult? warningConfirmationResult)
     {
         if (profile is null || result is null)
         {
@@ -126,8 +152,17 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         var guardReasons = guardResult is null
             ? Array.Empty<string>()
             : BuildGuardReasons(guardResult);
+        var warningConfirmationStatusText = warningConfirmationResult is null
+            ? WarningConfirmationNotAvailableText
+            : FormatWarningConfirmationStatus(warningConfirmationResult.Status);
+        var warningConfirmationMessage = string.IsNullOrWhiteSpace(warningConfirmationResult?.Message)
+            ? WarningConfirmationNotAvailableMessage
+            : warningConfirmationResult.Message;
+        var warningConfirmationItems = warningConfirmationResult is null
+            ? Array.Empty<string>()
+            : BuildWarningConfirmationItems(warningConfirmationResult);
+        var warningConfirmationItemCount = warningConfirmationResult?.Warnings.Count ?? 0;
         var summary = BuildSummaryMessage(result);
-        const string safetyNotice = "Dies ist nur eine Vorschau. Es wurden keine Änderungen gespeichert.";
 
         return new InterfaceProfileActivationPreparationPreview(
             Title: "Aktivierung vorbereiten",
@@ -143,8 +178,12 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             GuardCanProceedText: guardCanProceedText,
             GuardMessage: guardMessage,
             GuardReasons: guardReasons,
+            WarningConfirmationStatusText: warningConfirmationStatusText,
+            WarningConfirmationMessage: warningConfirmationMessage,
+            WarningConfirmationItemCount: warningConfirmationItemCount,
+            WarningConfirmationItems: warningConfirmationItems,
             SummaryMessage: summary,
-            SafetyNotice: safetyNotice,
+            SafetyNotice: SafetyNotice,
             MessageText: BuildMessageText(
                 profileName: string.IsNullOrWhiteSpace(profile.Metadata.Name) ? profile.Metadata.Id : profile.Metadata.Name,
                 statusText,
@@ -158,8 +197,12 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 guardCanProceedText,
                 guardMessage,
                 guardReasons,
+                warningConfirmationStatusText,
+                warningConfirmationMessage,
+                warningConfirmationItemCount,
+                warningConfirmationItems,
                 summary,
-                safetyNotice));
+                SafetyNotice));
     }
 
     private static string BuildSummaryMessage(InterfaceProfileActivationEvaluationResult result)
@@ -241,6 +284,41 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         return $"{severity}: {reason.Message} {reason.Detail}";
     }
 
+    private static string FormatWarningConfirmationStatus(
+        InterfaceProfileActivationWarningConfirmationStatus status)
+    {
+        return status switch
+        {
+            InterfaceProfileActivationWarningConfirmationStatus.ConfirmationRequired => "erforderlich",
+            InterfaceProfileActivationWarningConfirmationStatus.NoWarnings => "nicht erforderlich",
+            InterfaceProfileActivationWarningConfirmationStatus.Blocked => "nicht möglich",
+            InterfaceProfileActivationWarningConfirmationStatus.MissingEvaluation => WarningConfirmationNotAvailableText,
+            InterfaceProfileActivationWarningConfirmationStatus.NotAvailable => WarningConfirmationNotAvailableText,
+            InterfaceProfileActivationWarningConfirmationStatus.Unknown => WarningConfirmationNotAvailableText,
+            _ => status.ToString()
+        };
+    }
+
+    private static IReadOnlyList<string> BuildWarningConfirmationItems(
+        InterfaceProfileActivationWarningConfirmationResult result)
+    {
+        return result.Warnings
+            .Take(MaxImportantItems)
+            .Select(FormatWarningConfirmationItem)
+            .ToList();
+    }
+
+    private static string FormatWarningConfirmationItem(
+        InterfaceProfileActivationWarningConfirmationItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.Detail))
+        {
+            return item.Title;
+        }
+
+        return $"{item.Title} {item.Detail}";
+    }
+
     private static string BuildMessageText(
         string profileName,
         string statusText,
@@ -254,6 +332,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         string guardCanProceedText,
         string guardMessage,
         IReadOnlyList<string> guardReasons,
+        string warningConfirmationStatusText,
+        string warningConfirmationMessage,
+        int warningConfirmationItemCount,
+        IReadOnlyList<string> warningConfirmationItems,
         string summaryMessage,
         string safetyNotice)
     {
@@ -279,6 +361,22 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             builder.AppendLine();
             builder.AppendLine("Wichtigste Guard-Gründe:");
             AppendNumberedItems(builder, guardReasons);
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("Warnungsbestätigung:");
+        builder.AppendLine($"Status: {warningConfirmationStatusText}");
+        builder.AppendLine($"Bestätigungspflichtige Warnungen: {warningConfirmationItemCount}");
+        builder.AppendLine($"Hinweis: {warningConfirmationMessage}");
+
+        if (warningConfirmationItems.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine(warningConfirmationStatusText == "erforderlich"
+                ? "Folgende Warnungen müssten vor einer späteren Aktivierung bewusst bestätigt werden:"
+                : "Vorhandene Warnungen (noch nicht bestätigbar):");
+            AppendNumberedItems(builder, warningConfirmationItems);
+            builder.AppendLine("Diese Warnungen wurden in diesem Schritt nicht bestätigt.");
         }
 
         if (importantBlockers.Count > 0)

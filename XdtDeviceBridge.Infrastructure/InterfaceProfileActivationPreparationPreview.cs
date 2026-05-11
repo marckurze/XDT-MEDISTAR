@@ -14,6 +14,10 @@ public sealed record InterfaceProfileActivationPreparationPreview(
     string GuardCanProceedText,
     string GuardMessage,
     IReadOnlyList<string> GuardReasons,
+    string WarningConfirmationStatusText,
+    string WarningConfirmationMessage,
+    int WarningConfirmationItemCount,
+    IReadOnlyList<string> WarningConfirmationItems,
     string SummaryMessage,
     string SafetyNotice,
     string MessageText);

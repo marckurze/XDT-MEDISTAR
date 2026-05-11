@@ -11,6 +11,7 @@
 - Technische Guard-/Schutzschicht fuer spaetere Schnittstellenprofil-Aktivierungen vorbereitet; sie prueft aktuelle Bewertung, BuiltIn/UserDefined-Schutz und Warnungsbestaetigung, fuehrt aber keine Aktivierung aus.
 - Dialog `Aktivierung vorbereiten` zeigt die Guard-Entscheidung jetzt rein lesend an; `ReadyWithWarnings` weist auf die spaeter erforderliche bewusste Warnungsbestaetigung hin, ohne diese zu speichern oder eine Aktivierung anzubieten.
 - Read-only Modell und Service fuer eine spaetere bewusste Warnungsbestaetigung vorbereitet; Warnungen werden als bestaetigungspflichtige Items modelliert, Blocker und Hinweise bleiben nicht bestaetigbar.
+- Dialog `Aktivierung vorbereiten` zeigt die vorbereitete Warnungsbestaetigung jetzt rein lesend an: `ReadyWithWarnings` listet bestaetigungspflichtige Warnungen, ohne Checkbox, Bestaetigungsbutton, Speicherung oder Aktivierung.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Dokumentation
