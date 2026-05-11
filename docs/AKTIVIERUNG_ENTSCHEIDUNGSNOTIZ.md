@@ -360,7 +360,245 @@ Weiterhin offen:
 - Verhalten bei parallelen Aenderungen
 - Lizenzdurchsetzung
 - ob bestimmte Warnungen zu Blockern werden
-- ob Aktivierung auch wieder deaktiviert werden kann und wie das gefuehrt wird
+- konkrete produktive Deaktivierungsfuehrung gemaess nachfolgender Deaktivierungs-V1-Linie
+
+## V1-Entscheidungslinie: Deaktivierung von Schnittstellenprofilen (Vorschlag)
+
+Dieser Abschnitt beschreibt eine fachliche V1-Linie fuer eine spaetere produktive Deaktivierung. Er ist Konzept und Spezifikation, aber weiterhin keine Implementierung. Es gibt keinen Deaktivieren-Button, keinen produktiven DeactivationExecutor und keine Profil- oder Dateioperationen.
+
+### Bedeutung von deaktiviert
+
+Ein deaktiviertes Schnittstellenprofil bedeutet in V1:
+
+- Das Profil wird vom produktiven periodischen Scan nicht mehr beruecksichtigt.
+- Fuer dieses Profil werden keine neuen AIS-/Geraete-Dateipaare mehr gestartet.
+- Fuer dieses Profil werden keine neuen XDT-Anhang-Wartephasen mehr begonnen.
+- Das Profil bleibt als Konfiguration erhalten.
+- Das Profil wird nicht geloescht.
+- AIS-, Geraete- und Exportprofile bleiben unveraendert.
+- Exportregeln und Templates bleiben unveraendert.
+- BuiltIn-Profile bleiben unveraendert.
+- Ordnerpfade und XDT-Anhang-Einstellungen bleiben erhalten.
+- `IsAttachmentProcessingEnabled` wird durch reine Deaktivierung nicht automatisch geaendert.
+
+Klarstellung:
+
+- Deaktivieren ist nicht Loeschen.
+- Deaktivieren ist nicht Ordnerbereinigung.
+- Deaktivieren ist nicht Export-, Archiv- oder Fehlerordnerbereinigung.
+- Deaktivieren erzeugt keine XDT-Dateien und startet keine Verarbeitung.
+
+### Welche Profile duerfen deaktiviert werden?
+
+V1-Linie:
+
+- Deaktivierung betrifft nur UserDefined-Schnittstellenprofile.
+- BuiltIn-Profile werden nicht direkt veraendert.
+- Falls ein BuiltIn-Profil in der UI als aktiv wirken sollte, muss vor Implementierung fachlich geklaert werden, ob eine UserDefined-Kopie oder eine separate Aktivierungszuordnung verwendet wird.
+- Importierte UserDefined-Profile, die nie aktiviert wurden, benoetigen keine Deaktivierung.
+- Bereits deaktivierte Profile sollen bei einer spaeteren Deaktivierungsanforderung keinen Fehler erzeugen, sondern einen klaren Zustand wie `Bereits deaktiviert` liefern.
+
+Bewusst offen:
+
+- konkretes Aktivierungs-/Deaktivierungsflag
+- konkrete Persistenzstelle beziehungsweise Store-Methode
+- ob Aktivierung und Deaktivierung denselben Executor verwenden oder getrennte Executor-/Servicepfade bekommen
+
+### Deaktivierung und laufende Verarbeitung
+
+Problem:
+
+Ein Schnittstellenprofil kann spaeter deaktiviert werden, waehrend bereits ein Paket laeuft oder wartet. Moegliche Faelle sind:
+
+- AIS-Datei wartet auf Geraetedatei.
+- AIS-/Geraete-Paar ist erkannt, wartet aber auf XDT-Anhang.
+- XDT-Anhang ist optional und Timeout laeuft.
+- XDT-Anhang ist required und Timeout laeuft.
+- Export wird gerade vorbereitet.
+- Paket ist bereits abgeschlossen.
+
+Konservative V1-Entscheidungslinie:
+
+- Deaktivierung startet keine neue Verarbeitung.
+- Deaktivierung loescht keine wartenden Dateien.
+- Deaktivierung loescht keine internen Paketinformationen ohne definierte Regel.
+- Neue Pakete duerfen nach Deaktivierung nicht mehr begonnen werden.
+- Fuer bereits wartende oder laufende Pakete muss vor Implementierung entschieden werden, ob sie kontrolliert zu Ende gefuehrt, kontrolliert abgebrochen oder in einen definierten Blockiert-/Abbruchstatus ueberfuehrt werden.
+
+Konservative Empfehlung:
+
+- Fuer V1 sollte Deaktivierung zunaechst verhindern, dass neue Pakete beginnen.
+- Der Umgang mit bereits laufenden oder wartenden Paketen muss vor produktiver Implementierung explizit entschieden und getestet werden.
+
+Weiterhin offen:
+
+- ob laufende Pakete beendet oder abgebrochen werden
+- wie ein Abbruch dokumentiert wird
+- ob Benutzer vor Deaktivierung auf laufende Pakete hingewiesen werden
+- ob Deaktivierung bei laufenden Paketen blockiert wird
+
+### Deaktivierung und XDT-Anhang-Automatik
+
+V1-Linie:
+
+- Deaktivierung des Schnittstellenprofils veraendert `IsAttachmentProcessingEnabled` nicht automatisch.
+- Wenn ein Profil spaeter wieder aktiviert wird, bleibt die zuvor konfigurierte XDT-Anhang-Automatik-Einstellung erhalten.
+- Waehrend das Schnittstellenprofil deaktiviert ist, darf dessen XDT-Anhang-Automatik keine neuen Anhangverarbeitungen starten.
+- Deaktivierung kopiert oder verschiebt keine Anhangdateien.
+- Deaktivierung loescht keine Anhangdateien.
+- Deaktivierung erzeugt keine Linkfelder `6302`, `6303`, `6304` oder `6305`.
+
+Klarstellung:
+
+Die XDT-Anhang-Automatik bleibt fachlich eine separate Einstellung, ist aber in einem deaktivierten Schnittstellenprofil praktisch nicht produktiv wirksam.
+
+### Deaktivierung und Ordner / Dateien
+
+Zwingende Sicherheitsgrenze:
+
+Deaktivierung darf nicht:
+
+- Ordner loeschen
+- Ordner leeren
+- Exportordner bereinigen
+- Archivordner bereinigen
+- Fehlerordner bereinigen
+- unbekannte Dateien anfassen
+- AIS-Dateien loeschen
+- Geraete-Dateien loeschen
+- XDT-Anhangdateien loeschen
+- Dateien kopieren oder verschieben
+- XDT-Exportdateien erzeugen
+
+Deaktivierung ist nur eine Status-/Konfigurationsentscheidung, keine Dateioperation.
+
+### Deaktivierung und Warnungsbestaetigung / Audit
+
+Offene Fragen:
+
+- Soll Deaktivierung auditierbar sein?
+- Soll eine fruehere Warnungsbestaetigung bei Deaktivierung bestehen bleiben?
+- Soll sie beim erneuten Aktivieren erneut erforderlich sein?
+- Wird eine Warnungsbestaetigung ungueltig, wenn ein Profil deaktiviert und spaeter wieder aktiviert wird?
+- Soll Deaktivierung einen Zeitstempel und Benutzerkontext speichern?
+
+Konservative Empfehlung:
+
+- Deaktivierung sollte spaeter auditierbar sein.
+- Eine fruehere Warnungsbestaetigung sollte bei erneuter Aktivierung nicht blind wiederverwendet werden.
+- Vor erneuter Aktivierung muss wieder frisch Evaluation, Guard, WarningConfirmation und ActivationPlan laufen.
+- Falls Warnungen noch bestehen, muss erneut bewusst bestaetigt werden.
+- Deaktivierung selbst darf keine Warnungen bestaetigen.
+
+Status: Empfehlung, nicht implementiert.
+
+### Finale Direktpruefung vor Deaktivierung
+
+Ein spaeterer DeactivationExecutor oder ein ActivationExecutor mit Deaktivierungsmodus darf nicht ohne Pruefung speichern.
+
+Direkt vor Deaktivierung muss geprueft werden:
+
+- Profil existiert noch.
+- Profil ist UserDefined.
+- Profil ist nicht BuiltIn.
+- Profil ist aktuell aktiv oder bereits deaktiviert.
+- Persistenzstelle ist gueltig.
+- Keine BuiltIn-Profile werden ueberschrieben.
+- Es ist klar, wie mit laufenden Paketen umzugehen ist.
+- Falls laufende Pakete vorhanden sind, muss die definierte V1-Regel angewendet werden.
+
+Wenn eine Pruefung fehlschlaegt:
+
+- nicht speichern
+- keine Profilaenderung
+- keine Verarbeitung
+- klare Fehlermeldung an UI
+- optional spaeterer Audit-/Logeintrag als abgebrochene Deaktivierung
+
+Status: zwingende V1-Pflicht, nicht implementiert.
+
+### UI-Fuehrung fuer spaetere Deaktivierung
+
+Vorschlag:
+
+Eine spaetere UI sollte Deaktivierung klar von Aktivierung trennen.
+
+Moegliche UI-Regeln:
+
+- Deaktivieren-Button nur bei aktivem UserDefined-Profil.
+- Kein Deaktivieren-Button fuer BuiltIn.
+- Vor Deaktivierung eine klare Zusammenfassung anzeigen:
+  - Profilname
+  - aktueller Aktivstatus
+  - Hinweis: Keine neuen Pakete werden gestartet.
+  - Hinweis: Dateien und Ordner werden nicht geloescht.
+  - Hinweis auf offene oder laufende Pakete, falls spaeter ermittelbar.
+- Benutzer muss bewusst bestaetigen.
+- Kein Deaktivieren aus automatischem Import heraus.
+- Kein Deaktivieren beim App-Start.
+
+Bewusst offen:
+
+- genaue UI-Position
+- ob eigener Dialog oder Wizard
+- ob laufende Pakete die Deaktivierung blockieren
+
+### Deaktivierung und Lizenz
+
+V1-Linie:
+
+- Deaktivierung sollte grundsaetzlich auch bei lizenzpflichtigen Profilen moeglich sein.
+- Lizenzmangel darf eine Deaktivierung nicht verhindern, sofern keine andere fachliche Regel dagegen spricht.
+- Deaktivierung ist eine risikoreduzierende Aktion und sollte nicht durch Lizenzstatus blockiert werden.
+- Lizenzstatus kann im Audit/Log erwaehnt werden, falls spaeter Audit umgesetzt wird.
+
+Status: Vorschlag, nicht implementiert.
+
+### Deaktivierung und erneute Aktivierung
+
+Wenn ein Profil deaktiviert wurde und spaeter erneut aktiviert werden soll:
+
+- erneute Aktivierung muss denselben vollstaendigen Aktivierungsprozess durchlaufen.
+- keine alte Preview verwenden.
+- keine alte Warnungsbestaetigung blind verwenden.
+- frische Evaluation ausfuehren.
+- frischen Guard ausfuehren.
+- frische WarningConfirmation erstellen.
+- frischen ActivationPlan erstellen.
+- finale Re-Evaluation direkt vor Speicherung erzwingen.
+
+Deaktivierung ist reversibel, aber Reaktivierung ist keine einfache Ruecknahme, sondern eine neue bewusste Aktivierung.
+
+### V1-Deaktivierungsspezifikation
+
+V1-Deaktivierung bedeutet:
+
+- nur UserDefined-Schnittstellenprofilstatus aendern
+- keine BuiltIn-Aenderung
+- keine Loeschung
+- keine Ordnerbereinigung
+- keine Dateioperation
+- keine Sofortverarbeitung
+- keine Aenderung an `IsAttachmentProcessingEnabled`
+- keine automatische Wiederverwendung alter Warnungsbestaetigungen
+- neue Pakete werden nach Deaktivierung nicht mehr begonnen
+- laufende oder wartende Pakete bleiben vor Implementierung gesondert zu entscheiden
+- finale Pruefung direkt vor Speicherung ist Pflicht
+
+Noch nicht implementiert.
+
+Weiterhin offen:
+
+- konkretes Deaktivierungsflag / Aktivierungsflag
+- konkrete Store-Methode
+- ob Aktivierung und Deaktivierung denselben Executor verwenden
+- Umgang mit laufenden oder wartenden Paketen
+- Audit-/Logformat fuer Deaktivierung
+- UI fuer produktive Deaktivierung
+- Benutzerrollenmodell
+- Verhalten bei parallelen Aenderungen
+- Reaktivierungsdetails
+- Testmatrix fuer Deaktivierung
 
 ## 1. Wann darf ein Profil produktiv aktiviert werden?
 
