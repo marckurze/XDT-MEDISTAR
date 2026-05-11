@@ -6,6 +6,9 @@ namespace XdtDeviceBridge.Infrastructure;
 public sealed class InterfaceProfileActivationPreparationPreviewService
 {
     private const int MaxImportantItems = 5;
+    private const string GuardUnknownDecisionText = "Nicht eindeutig";
+    private const string GuardNoCanProceedText = "Nein";
+    private const string GuardUnknownMessage = "Es liegt keine eindeutige aktuelle Aktivierungsbewertung vor.";
 
     public InterfaceProfileActivationPreparationPreview CreateEmpty()
     {
@@ -22,6 +25,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             InfoCount: 0,
             ImportantBlockers: Array.Empty<string>(),
             ImportantWarnings: Array.Empty<string>(),
+            GuardDecisionText: GuardUnknownDecisionText,
+            GuardCanProceedText: GuardNoCanProceedText,
+            GuardMessage: GuardUnknownMessage,
+            GuardReasons: Array.Empty<string>(),
             SummaryMessage: summary,
             SafetyNotice: safetyNotice,
             MessageText: BuildMessageText(
@@ -33,6 +40,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 infoCount: 0,
                 importantBlockers: Array.Empty<string>(),
                 importantWarnings: Array.Empty<string>(),
+                guardDecisionText: GuardUnknownDecisionText,
+                guardCanProceedText: GuardNoCanProceedText,
+                guardMessage: GuardUnknownMessage,
+                guardReasons: Array.Empty<string>(),
                 summary,
                 safetyNotice));
     }
@@ -55,6 +66,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             InfoCount: 0,
             ImportantBlockers: blockers,
             ImportantWarnings: Array.Empty<string>(),
+            GuardDecisionText: GuardUnknownDecisionText,
+            GuardCanProceedText: GuardNoCanProceedText,
+            GuardMessage: "Die technische Schutzprüfung konnte nicht eindeutig abgeschlossen werden.",
+            GuardReasons: blockers,
             SummaryMessage: summary,
             SafetyNotice: safetyNotice,
             MessageText: BuildMessageText(
@@ -66,6 +81,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 infoCount: 0,
                 importantBlockers: blockers,
                 importantWarnings: Array.Empty<string>(),
+                guardDecisionText: GuardUnknownDecisionText,
+                guardCanProceedText: GuardNoCanProceedText,
+                guardMessage: "Die technische Schutzprüfung konnte nicht eindeutig abgeschlossen werden.",
+                guardReasons: blockers,
                 summary,
                 safetyNotice));
     }
@@ -73,6 +92,14 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
     public InterfaceProfileActivationPreparationPreview Create(
         InterfaceProfileDefinition? profile,
         InterfaceProfileActivationEvaluationResult? result)
+    {
+        return Create(profile, result, guardResult: null);
+    }
+
+    public InterfaceProfileActivationPreparationPreview Create(
+        InterfaceProfileDefinition? profile,
+        InterfaceProfileActivationEvaluationResult? result,
+        InterfaceProfileActivationGuardResult? guardResult)
     {
         if (profile is null || result is null)
         {
@@ -89,6 +116,16 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             .Take(MaxImportantItems)
             .Select(FormatCheck)
             .ToList();
+        var guardDecisionText = guardResult is null
+            ? GuardUnknownDecisionText
+            : FormatGuardDecision(guardResult.Decision);
+        var guardCanProceedText = guardResult?.CanProceed == true ? "Ja" : "Nein";
+        var guardMessage = string.IsNullOrWhiteSpace(guardResult?.Message)
+            ? GuardUnknownMessage
+            : guardResult.Message;
+        var guardReasons = guardResult is null
+            ? Array.Empty<string>()
+            : BuildGuardReasons(guardResult);
         var summary = BuildSummaryMessage(result);
         const string safetyNotice = "Dies ist nur eine Vorschau. Es wurden keine Änderungen gespeichert.";
 
@@ -102,6 +139,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
             InfoCount: result.Infos.Count,
             ImportantBlockers: blockers,
             ImportantWarnings: warnings,
+            GuardDecisionText: guardDecisionText,
+            GuardCanProceedText: guardCanProceedText,
+            GuardMessage: guardMessage,
+            GuardReasons: guardReasons,
             SummaryMessage: summary,
             SafetyNotice: safetyNotice,
             MessageText: BuildMessageText(
@@ -113,6 +154,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
                 result.Infos.Count,
                 blockers,
                 warnings,
+                guardDecisionText,
+                guardCanProceedText,
+                guardMessage,
+                guardReasons,
                 summary,
                 safetyNotice));
     }
@@ -155,6 +200,47 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         return $"{check.Message} {check.Detail}";
     }
 
+    private static string FormatGuardDecision(InterfaceProfileActivationGuardDecision decision)
+    {
+        return decision switch
+        {
+            InterfaceProfileActivationGuardDecision.Allowed => "Technisch zulässig",
+            InterfaceProfileActivationGuardDecision.AllowedWithWarnings => "Zulässig mit Warnungen",
+            InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation => "Warnungsbestätigung erforderlich",
+            InterfaceProfileActivationGuardDecision.Blocked => "Blockiert",
+            InterfaceProfileActivationGuardDecision.Unknown => GuardUnknownDecisionText,
+            _ => decision.ToString()
+        };
+    }
+
+    private static IReadOnlyList<string> BuildGuardReasons(InterfaceProfileActivationGuardResult guardResult)
+    {
+        return guardResult.BlockerReasons
+            .Concat(guardResult.WarningReasons)
+            .Concat(guardResult.InfoReasons)
+            .Take(MaxImportantItems)
+            .Select(FormatGuardReason)
+            .ToList();
+    }
+
+    private static string FormatGuardReason(InterfaceProfileActivationGuardReason reason)
+    {
+        var severity = reason.Severity switch
+        {
+            InterfaceProfileActivationSeverity.Blocker => "Blocker",
+            InterfaceProfileActivationSeverity.Warning => "Warnung",
+            InterfaceProfileActivationSeverity.Info => "Hinweis",
+            _ => reason.Severity.ToString()
+        };
+
+        if (string.IsNullOrWhiteSpace(reason.Detail))
+        {
+            return $"{severity}: {reason.Message}";
+        }
+
+        return $"{severity}: {reason.Message} {reason.Detail}";
+    }
+
     private static string BuildMessageText(
         string profileName,
         string statusText,
@@ -164,6 +250,10 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         int infoCount,
         IReadOnlyList<string> importantBlockers,
         IReadOnlyList<string> importantWarnings,
+        string guardDecisionText,
+        string guardCanProceedText,
+        string guardMessage,
+        IReadOnlyList<string> guardReasons,
         string summaryMessage,
         string safetyNotice)
     {
@@ -178,6 +268,18 @@ public sealed class InterfaceProfileActivationPreparationPreviewService
         builder.AppendLine($"Zusammenfassung: {blockerCount} Blocker, {warningCount} Warnungen, {infoCount} Hinweise");
         builder.AppendLine();
         builder.AppendLine(summaryMessage);
+        builder.AppendLine();
+        builder.AppendLine("Technische Schutzprüfung:");
+        builder.AppendLine($"Entscheidung: {guardDecisionText}");
+        builder.AppendLine($"Technisch freigegeben: {guardCanProceedText}");
+        builder.AppendLine($"Hinweis: {guardMessage}");
+
+        if (guardReasons.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Wichtigste Guard-Gründe:");
+            AppendNumberedItems(builder, guardReasons);
+        }
 
         if (importantBlockers.Count > 0)
         {

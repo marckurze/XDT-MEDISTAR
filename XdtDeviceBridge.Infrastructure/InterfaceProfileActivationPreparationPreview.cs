@@ -10,6 +10,10 @@ public sealed record InterfaceProfileActivationPreparationPreview(
     int InfoCount,
     IReadOnlyList<string> ImportantBlockers,
     IReadOnlyList<string> ImportantWarnings,
+    string GuardDecisionText,
+    string GuardCanProceedText,
+    string GuardMessage,
+    IReadOnlyList<string> GuardReasons,
     string SummaryMessage,
     string SafetyNotice,
     string MessageText);
