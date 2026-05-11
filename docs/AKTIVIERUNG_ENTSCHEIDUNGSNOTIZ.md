@@ -155,6 +155,213 @@ Weiterhin offen:
 - Verhalten bei parallelen Aenderungen
 - ob bestimmte Warnungen spaeter zu Blockern werden
 
+## V1-Spezifikation: Aktivierungsflag, Persistenz und finale Pruefung (Vorschlag)
+
+Dieser Abschnitt konkretisiert die vorlaeufige V1-Linie fuer eine spaetere produktive Aktivierung. Er ist eine fachliche Spezifikation fuer einen spaeteren Executor, aber weiterhin keine Implementierung.
+
+### Aktivierungsflag
+
+V1-Vorschlag:
+
+- Ein Schnittstellenprofil gilt produktiv aktiv, wenn ein explizites Aktivierungskennzeichen am UserDefined-Schnittstellenprofil gesetzt ist.
+- Im bestehenden Modell ist `IsActive` der naheliegende Kandidat fuer dieses Aktivierungskennzeichen.
+- Die Entscheidung, ob `IsActive` endgueltig verwendet wird oder ob ein neues Feld benoetigt wird, muss vor Implementierung des produktiven Executors technisch bestaetigt werden.
+- Der Aktivierungsstatus gehoert zum Schnittstellenprofil, nicht zum AIS-Profil, Geraeteprofil oder Exportprofil.
+- Aktivierung darf nur UserDefined-Schnittstellenprofile betreffen.
+- BuiltIn-Profile werden niemals direkt aktiviert oder geaendert.
+- Aktivierung veraendert keine abhaengigen AIS-, Geraete- oder Exportprofile.
+- Aktivierung veraendert keine Exportregeln.
+- Aktivierung veraendert keine Templates.
+- Aktivierung veraendert nicht automatisch `IsAttachmentProcessingEnabled`.
+- Aktivierung startet keine Verarbeitung sofort.
+
+Bewusst offen:
+
+- finaler technischer Feldname, falls `IsActive` nicht ausreicht
+- Migrationsverhalten, falls ein neues Feld eingefuehrt wird
+- UI-Position und Wortlaut eines spaeteren produktiven Aktivieren-Buttons
+
+Status: fachlicher V1-Vorschlag, nicht implementiert.
+
+### Persistenzstelle fuer UserDefined-Schnittstellenprofile
+
+Aus Projektstruktur und Dokumentation erkennbarer Stand:
+
+- Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
+- Schnittstellenprofile liegen in der Profilkatalogstruktur im Unterordner `interfaces`.
+- `AppDataPathProvider` leitet den Profilordner aus `%LocalAppData%\XdtDeviceBridge\profiles` ab.
+- `ProfileCatalogService` laedt Schnittstellenprofile aus dem `interfaces`-Unterordner und speichert einzelne Schnittstellenprofile per `SaveInterfaceProfileDefinition`.
+- BuiltIn- und UserDefined-Profile sind im Modell ueber Metadaten getrennt (`IsBuiltIn`, `IsUserDefined`).
+- Beim Konfigurieren eines BuiltIn-Schnittstellenprofils wird eine UserDefined-Kopie erzeugt; importierte Schnittstellenprofile werden als UserDefined und inaktiv uebernommen.
+
+V1-Linie:
+
+- Keine neue separate Aktivierungsdatenbank.
+- Keine Speicherung in BuiltIn-Profilen.
+- Keine Aenderung an Geraeteprofilen, AIS-Profilen oder Exportprofilen.
+- Aktivierungsstatus wird als Teil des UserDefined-Schnittstellenprofils gespeichert.
+- Speicherung erfolgt nur nach finaler Re-Evaluation.
+- Falls die konkret verwendete Speichermethode keinen ausreichenden BuiltIn-/Overwrite-Schutz bietet, muss dieser Schutz vor produktiver Aktivierung ergaenzt werden.
+- Der spaetere Executor darf nicht pauschal den gesamten Katalog zurueckschreiben, sondern soll gezielt das frisch geladene und gepruefte UserDefined-Schnittstellenprofil speichern.
+
+Bewusst offen:
+
+- konkrete produktive Repository-/Store-Methode
+- exaktes Serialisierungsformat und eventuelle Versionierung
+- Migration bestehender Profile, falls das Aktivierungskennzeichen geaendert wird
+
+Status: fachlicher V1-Vorschlag, nicht implementiert.
+
+### Parallelitaets- und Aenderungsschutz
+
+Problem:
+
+Zwischen Preview-Dialog und spaeterer echter Aktivierung koennen sich Profil, Ordner, abhaengige Profile oder Lizenzstatus aendern. Der Preview-Dialog ist deshalb keine Ausfuehrungsgrundlage.
+
+Mindestschutz fuer V1:
+
+- Profil direkt vor Ausfuehrung neu laden.
+- Evaluation neu ausfuehren.
+- Guard neu ausfuehren.
+- WarningConfirmation neu bewerten.
+- ActivationPlan neu erstellen.
+- Wenn das Ergebnis nicht mehr `Ready` oder `ReadyWithAcceptedWarnings` ist, nicht speichern.
+- Wenn sich relevante Profilfelder geaendert haben, muss eine alte Warnungsbestaetigung ungueltig werden.
+- Wenn sich Warning-Codes geaendert haben, muss neu bestaetigt werden.
+- Wenn Ordner oder Abhaengigkeiten nicht mehr gueltig sind, muss Aktivierung blockieren.
+
+Optionale spaetere Schutzmechanismen:
+
+- Konfigurations-Fingerprint oder Hash ueber relevante Profilfelder
+- `LastModified`-Zeitstempel
+- Version oder Revision des UserDefined-Profils
+- Vergleich der bestaetigten Warning-Codes mit der aktuellen Warnungsliste
+- Vergleich des Profil-Fingerprints aus Warnungsbestaetigung und frisch geladenem Profil
+
+Status: Mindestschutz fachlich gefordert, technische Mechanik noch offen.
+
+### Warnungsbestaetigung und Audit-Grundmodell
+
+Eine produktive Warnungsbestaetigung darf nicht stillschweigend erfolgen und muss mindestens im Aktivierungsvorgang nachvollziehbar sein.
+
+Variante A: Nur im aktuellen Aktivierungsvorgang verwenden
+
+- einfacher umzusetzen
+- weniger Persistenz
+- keine dauerhafte Bestaetigungsdatenhaltung
+- schlechter auditierbar
+- bei Abbruch oder Neustart muss erneut bestaetigt werden
+
+Variante B: Dauerhaft auditierbar speichern
+
+- besser nachvollziehbar
+- braucht Auditmodell
+- braucht Benutzer-/Zeitstempel
+- braucht Invalidierungslogik bei Profilaenderung
+- braucht klares Speicherziel und Datenschutzgrenzen
+
+Konservative Empfehlung:
+
+- Variante B ist fuer eine spaetere produktive Aktivierung vorzuziehen.
+- Variante B darf erst nach separater Spezifikation von Auditmodell, Speicherort, Benutzerkontext, Datenschutzgrenzen und Invalidierungslogik umgesetzt werden.
+- Bis dahin darf die bestehende Vorschau keine Warnungen produktiv bestaetigen.
+
+Mindestdaten fuer spaetere Auditierung:
+
+- Profil-ID
+- Profilname
+- Zeitpunkt
+- Benutzerkennung oder lokaler Benutzerkontext, falls verfuegbar
+- App-Version
+- bestaetigte Warning-Codes oder Warning-Titel
+- `EvaluationStatus`
+- `GuardDecision`
+- `ActivationPlanStatus`
+- Hinweistext der bewussten Bestaetigung
+- optional Profil-Fingerprint
+
+Sicherheitsgrenzen:
+
+- Keine Patientendaten im Audit.
+- Keine Kundendaten in Dokumentation.
+- Live-Pfade nur bewusst und sparsam, falls ueberhaupt lokal geloggt.
+- Audit darf keine produktive Verarbeitung ausloesen.
+
+Status: fachliche Empfehlung fuer Variante B, nicht implementiert.
+
+### Finale Re-Evaluation direkt vor Speicherung
+
+Ein spaeterer produktiver Executor muss direkt vor Speicherung folgende Pipeline frisch ausfuehren:
+
+1. Schnittstellenprofil neu laden.
+2. Pruefen: Profil existiert.
+3. Pruefen: Profil ist UserDefined.
+4. Pruefen: Profil ist nicht BuiltIn.
+5. Evaluation neu erstellen.
+6. Guard neu ausfuehren.
+7. WarningConfirmation neu bewerten.
+8. ActivationPlan neu erstellen.
+9. Pruefen: keine Blocker.
+10. Pruefen: `Ready` oder `ReadyWithAcceptedWarnings`.
+11. Pruefen: Warnungsbestaetigung vorhanden, falls erforderlich.
+12. Erst danach speichern.
+
+Wenn eine Pruefung fehlschlaegt:
+
+- keine Speicherung
+- keine Profiländerung
+- keine Verarbeitung
+- klare Fehlermeldung an UI
+- optional spaeterer Audit-/Logeintrag als abgebrochene Aktivierung
+
+Status: zwingende V1-Pflicht, nicht implementiert.
+
+### `IsAttachmentProcessingEnabled` bleibt getrennt
+
+V1-Linie:
+
+- Aktivierung des Schnittstellenprofils aktiviert nicht automatisch die XDT-Anhang-Automatik.
+- `IsAttachmentProcessingEnabled` bleibt eigene bewusste Einstellung.
+- Ein Profil darf aktiv sein, auch wenn `IsAttachmentProcessingEnabled` `false` ist.
+- Wenn XDT-Anhang `Required` konfiguriert ist, bleibt die Pruefung streng.
+- Eine spaetere UI muss klar unterscheiden:
+  - Schnittstellenprofil aktiv
+  - XDT-Anhang-Automatik aktiv
+
+Status: fachlicher V1-Vorschlag, nicht implementiert.
+
+### V1-Executor-Spezifikation
+
+Ein spaeterer V1-Executor darf nur speichern, wenn:
+
+- Profil frisch geladen wurde.
+- Profil UserDefined ist.
+- Profil nicht BuiltIn ist.
+- frische Evaluation `Ready` oder `ReadyWithWarnings` ergibt.
+- Guard `Allowed` oder `AllowedWithWarnings` ergibt.
+- bei `ReadyWithWarnings` eine gueltige Warnungsbestaetigung vorliegt.
+- ActivationPlan `Ready` oder `ReadyWithAcceptedWarnings` ist.
+- keine Blocker vorhanden sind.
+- Persistenz nur das UserDefined-Schnittstellenprofil betrifft.
+- `IsAttachmentProcessingEnabled` nicht automatisch geaendert wird.
+- keine Verarbeitung sofort gestartet wird.
+
+Noch nicht implementiert.
+
+Weiterhin offen:
+
+- konkreter Feldname des Aktivierungsflags, falls `IsActive` nicht endgueltig bestaetigt wird
+- konkrete Repository-/Store-Methode
+- Migrationsbedarf
+- Audit-Speicherort
+- Benutzerrollenmodell
+- UI fuer produktive Warnungsbestaetigung
+- UI fuer finalen Aktivieren-Button
+- Verhalten bei parallelen Aenderungen
+- Lizenzdurchsetzung
+- ob bestimmte Warnungen zu Blockern werden
+- ob Aktivierung auch wieder deaktiviert werden kann und wie das gefuehrt wird
+
 ## 1. Wann darf ein Profil produktiv aktiviert werden?
 
 Aktueller Stand:

@@ -193,7 +193,7 @@ Als naechste technische Leitplanke existiert ein reines Interface-/Model-Skelett
 
 Ein spaeterer Executor duerfte erst implementiert werden, wenn fachlich entschieden ist, ob `ReadyWithWarnings` nach Bestaetigung aktivierbar ist, wie Warnungsbestaetigungen gespeichert oder auditiert werden, ob `IsAttachmentProcessingEnabled` beim Aktivieren veraendert wird, welches Aktivierungsflag gespeichert wird, welche finalen Pruefungen direkt vor dem Speichern laufen, ob ein Audit-/Logeintrag erzeugt wird, welche Benutzerrolle aktivieren darf und welche UI den Prozess fuehrt.
 
-Die offenen fachlichen Entscheidungen sind in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` gebuendelt. Die Notiz enthaelt inzwischen eine vorlaeufige V1-Entscheidungslinie: Aktivierung nur fuer UserDefined, BuiltIn bleibt geschuetzt, `Ready` ist aktivierbar, `ReadyWithWarnings` nur nach bewusster Bestaetigung, `Blocked`/`Unknown` nie aktivieren, `IsAttachmentProcessingEnabled` bleibt separat und finale Re-Evaluation direkt vor Speicherung ist Pflicht. Diese Linie ist weiterhin nur Konzept/Dokumentation und keine Freigabe fuer produktive Aktivierung.
+Die offenen fachlichen Entscheidungen sind in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` gebuendelt. Die Notiz enthaelt inzwischen eine vorlaeufige V1-Entscheidungslinie und eine konkretere V1-Spezifikation: Aktivierung nur fuer UserDefined, BuiltIn bleibt geschuetzt, `Ready` ist aktivierbar, `ReadyWithWarnings` nur nach bewusster Bestaetigung, `Blocked`/`Unknown` nie aktivieren, `IsAttachmentProcessingEnabled` bleibt separat und finale Re-Evaluation direkt vor Speicherung ist Pflicht. Der Aktivierungsstatus wird fachlich dem UserDefined-Schnittstellenprofil zugeordnet; `IsActive` ist der naheliegende Kandidat, muss aber vor Implementierung endgueltig bestaetigt werden. Die Persistenz soll an der bestehenden UserDefined-Schnittstellenprofil-Ablage im Profilkatalog ansetzen, nicht an AIS-, Geraete- oder Exportprofilen. Diese Linie ist weiterhin nur Konzept/Dokumentation und keine Freigabe fuer produktive Aktivierung.
 
 Statische Pruefung und praktische Windows-Sichtpruefung des aktuellen Aktivierungsassistenten sind in `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` dokumentiert. Die WPF-Oberflaeche wurde in der Codex-Umgebung nicht praktisch bedient; XAML, Codebehind und Preview-Services wurden statisch darauf geprueft, dass der Dialog Vorschau bleibt und keine Aktivierung, Warnungsbestaetigung, Speicherung, Datei-/Ordneroperation oder Verarbeitung ausloest. Der scrollbare Dialog `Aktivierung vorbereiten` wurde durch den Benutzer auf Windows praktisch sichtgeprueft und fuer den aktuellen Vorschau-Status abgenommen.
 
@@ -202,9 +202,9 @@ Die zuletzt bestaetigte technische Absicherung dieses Standes:
 - `dotnet build XdtDeviceBridge.sln` erfolgreich, `0` Warnungen, `0` Fehler
 - `dotnet test XdtDeviceBridge.sln` erfolgreich, `919` Tests bestanden, `0` fehlgeschlagen, `0` uebersprungen
 
-Offen bleiben die echte produktive Aktivierung, eine bewusste Warnungsbestaetigungs-UI, eine moegliche dauerhafte Speicherung einer Warnungsbestaetigung, eine produktive `ActivationExecutor`-Implementierung, die konkrete Persistenz, Audit-/Logeintraege fuer spaetere Aktivierungen, Benutzerrollen, Lizenzdurchsetzung, Verhalten bei parallelen Aenderungen und die finale fachliche Freigabe der in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` dokumentierten V1-Linie.
+Offen bleiben die echte produktive Aktivierung, die finale technische Bestaetigung des Aktivierungsflags, die konkrete Repository-/Store-Methode, eine bewusste Warnungsbestaetigungs-UI, eine moegliche auditierbare Speicherung einer Warnungsbestaetigung, eine produktive `ActivationExecutor`-Implementierung, Audit-Speicherort, Benutzerrollen, Lizenzdurchsetzung, Verhalten bei parallelen Aenderungen, Deaktivierungsverhalten und die finale fachliche Freigabe der in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` dokumentierten V1-Linie.
 
-Empfohlener naechster Schritt: Noch nicht produktiv aktivieren. Als naechstes sollte ein UI-Konzept fuer spaetere Warnungsbestaetigung ohne produktive Speicherung oder eine separate fachliche Spezifikation fuer den produktiven Executor erstellt werden. Eine produktive Executor-Implementierung bleibt danach ein separater, fachlich freizugebender Schritt.
+Empfohlener naechster Schritt: Noch nicht produktiv aktivieren. Als naechstes sollten der konkrete Feldname fuer das Aktivierungsflag, die produktive Store-Methode und das Audit-/Warnungsbestaetigungsmodell fachlich final freigegeben werden. Eine produktive Executor-Implementierung bleibt danach ein separater, fachlich freizugebender Schritt.
 
 ### Lizenz
 
@@ -402,8 +402,9 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 ### Phase 3: Template-/Profil-Baukasten
 
 - Read-only Aktivierungsassistent ist praktisch in der UI sichtgeprueft und fuer den Vorschau-Status abgenommen; Pruefung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan bleiben ohne produktive Wirkung.
+- V1-Spezifikation aus `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich final abnehmen: Aktivierungsflag, UserDefined-Persistenz, Aenderungsschutz, Warnungsbestaetigung/Audit und finale Re-Evaluation.
 - UI-Konzept fuer spaetere bewusste Warnungsbestaetigung ohne sofortige Speicherung entwerfen.
-- Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung planen; Entscheidungsgrundlage: `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`.
+- Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung, Warnungsbestaetigung und konkreter Store-Methode planen; Entscheidungsgrundlage: `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`.
 - `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Regressionscheck fuer spaetere UI-Aenderungen weiterfuehren.
 - Finale Sicherheitspruefung, Audit-/Logeintrag und erneuten Build-/Testlauf direkt vor einer spaeteren echten Aktivierung einplanen.
 - Optional spaeter ReplaceExisting fuer UserDefined mit Backup/Bestaetigung.
