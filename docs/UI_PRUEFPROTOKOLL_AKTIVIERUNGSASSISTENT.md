@@ -39,6 +39,17 @@ Aktueller bekannter Stand:
 
 Die WPF-Oberflaeche wurde in der Codex-Umgebung nicht praktisch per GUI gestartet oder visuell bedient. Es steht hier keine verlaessliche WPF-UI-Automation mit Sichtpruefung/Screenshot zur Verfuegung.
 
+Die praktische Sichtpruefung des Dialogs `Aktivierung vorbereiten` wurde nach der Umstellung auf das scrollbare Preview-Fenster und nach der Textstraffung durch den Benutzer auf einem Windows-System durchgefuehrt. Rueckmeldung:
+
+- Der Bereich `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sieht sauber aus.
+- Der Dialog `Aktivierung vorbereiten` ist deutlich besser lesbar.
+- Scroll-/Resize-Loesung und Abschnittsgliederung sind ausreichend.
+- Die Redundanzen wurden ausreichend reduziert.
+- Die Warnungsbestaetigung wird zentral dargestellt.
+- Technische Schutzpruefung und Aktivierungsplan sind kompakter.
+- Der Sicherheitshinweis ist weiterhin deutlich sichtbar.
+- Der Dialog wird insgesamt als sehr gut bewertet; es kann weitergearbeitet werden.
+
 Stattdessen wurde eine statische Pruefung folgender Dateien durchgefuehrt:
 
 - `XdtDeviceBridge.App/MainWindow.xaml`
@@ -48,7 +59,7 @@ Stattdessen wurde eine statische Pruefung folgender Dateien durchgefuehrt:
 - `XdtDeviceBridge.Infrastructure/IInterfaceProfileActivationExecutor.cs`
 - `XdtDeviceBridge.Infrastructure/InterfaceProfileActivationExecutor*.cs`
 
-Bewertung der praktischen UI-Ausfuehrung: Nicht in Codex-Umgebung praktisch ausgefuehrt.
+Bewertung der praktischen UI-Ausfuehrung: In der Codex-Umgebung nicht praktisch ausgefuehrt; durch Benutzer auf Windows praktisch sichtgeprueft und fuer den aktuellen Vorschau-Status abgenommen.
 
 ## 5. Statisches Pruefergebnis
 
@@ -71,7 +82,7 @@ Die statische Pruefung ergab:
 
 | Nr. | Prueffall | Erwartetes Ergebnis | Statisch nachvollziehbares Ergebnis | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Tab `Schnittstellenprofile` oeffnen | Bereich `Pruefung vor Aktivierung` sichtbar; keine Ueberlagerung mit Ordnerbereinigung/Archivierung | `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` liegen in getrennten Grid-Rows 6/7/8. Praktische Sichtpruefung bleibt offen. | statisch bestanden |
+| 1 | Tab `Schnittstellenprofile` oeffnen | Bereich `Pruefung vor Aktivierung` sichtbar; keine Ueberlagerung mit Ordnerbereinigung/Archivierung | `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` liegen in getrennten Grid-Rows 6/7/8. Praktische Benutzersichtpruefung: Bereich sieht sauber aus. | statisch bestanden / praktisch abgenommen |
 | 2 | Schnittstellenprofil ohne Auswahl | Verstaendlicher Hinweis oder deaktivierte Aktion; keine Exception | `CreateEmpty()` liefert Hinweis `Bitte waehlen Sie zuerst ein Schnittstellenprofil aus.`; Preview-Fenster zeigt nur OK/Schliessen. | statisch bestanden |
 | 3 | Gueltiges UserDefined-Profil mit `Ready` | Status Ready/aktivierbar, keine Blocker, Dialog zeigt Plan Ready, PlannedSteps beschreibend, keine Aktivierung | PreviewService formatiert `Ready` als `Bereit`; PreparationPreview formatiert Plan `Ready` als `vorbereitet`; Preview-Fenster zeigt nur OK/Schliessen. Praktische Datenprobe offen. | statisch plausibel |
 | 4 | UserDefined-Profil mit `ReadyWithWarnings` | Warnungen sichtbar, Guard verlangt Warnungsbestaetigung, WarningConfirmation listet Warnungen, Plan `RequiresWarningConfirmation`, keine Checkbox, kein Bestaetigungsbutton | Guard-Aufruf im Dialog verwendet `WarningsAccepted: false`; PreparationPreview formatiert `RequiresWarningConfirmation`, listet bestaetigungspflichtige Warnungen zentral im Abschnitt Warnungsbestaetigung und laesst Guard/Plan nur knapp verweisen. | statisch bestanden |
@@ -82,7 +93,7 @@ Die statische Pruefung ergab:
 | 9 | XDT-Anhang optional und deaktiviert | Kein Blocker allein wegen deaktivierter optionaler Anhangverarbeitung; Hinweis verstaendlich | Attachment-Anzeige zeigt `Anhangverarbeitung` aktiv/inaktiv; Bewertung bleibt Service-Aufgabe. Praktische Datenprobe offen. | statisch plausibel |
 | 10 | Button `Pruefung aktualisieren` | Bewertung aktualisiert sich; kein Profil wird gespeichert; keine Verarbeitung startet | Handler ruft nur Evaluation und `ShowInterfaceActivationPreview(...)` auf. Keine Speicherung/Verarbeitung im Handler gefunden. | statisch bestanden |
 | 11 | Button `Aktivierung vorbereiten` | Nur OK-/Schliessen-Dialog; kein Aktivieren-Button; kein Bestaetigungsbutton; keine Speicherung; keine Verarbeitung | Handler oeffnet `InterfaceProfileActivationPreparationPreviewWindow`, nutzt `Context: "PreviewOnly"`, `WarningsAccepted: false`; keine Save-/Start-/Executor-Nutzung im Handler. | statisch bestanden |
-| 12 | Scrollbarkeit und Layout | Gesamter Bereich scrollbar; Tabellen/Expander lesbar; keine Textueberlagerung | Tab-Inhalt liegt im vorhandenen ScrollViewer-/Grid-Kontext; relevante Bereiche haben eigene Auto-Rows. Der Vorbereitungdialog besitzt einen eigenen `ScrollViewer` und ist resizebar. Praktische Sichtpruefung bleibt offen. | statisch plausibel |
+| 12 | Scrollbarkeit und Layout | Gesamter Bereich scrollbar; Tabellen/Expander lesbar; keine Textueberlagerung | Tab-Inhalt liegt im vorhandenen ScrollViewer-/Grid-Kontext; relevante Bereiche haben eigene Auto-Rows. Der Vorbereitungdialog besitzt einen eigenen `ScrollViewer` und ist resizebar. Praktische Benutzersichtpruefung: Dialog ist lesbar, verstaendlich und ausreichend gestrafft. | statisch plausibel / praktisch abgenommen |
 
 ## 7. Statische Sicherheitspruefung
 
@@ -112,15 +123,29 @@ Die statische Pruefung bestaetigt den Sicherheitsrahmen des Aktivierungsassisten
 - Es werden keine Datei-/Ordneroperationen gestartet.
 - Es wird keine produktive Verarbeitung gestartet.
 
-Die praktische visuelle Pruefung der laufenden WPF-App bleibt offen, weil sie in der Codex-Umgebung nicht verlaesslich durchgefuehrt wurde.
+Die praktische Sichtpruefung des Dialogs `Aktivierung vorbereiten` wurde nach der Umstellung auf das scrollbare Preview-Fenster und nach der Textstraffung auf einem Windows-System durchgefuehrt. Ergebnis:
+
+- Der Dialog ist lesbar.
+- Die Scroll-/Resize-Loesung ist ausreichend.
+- Die Abschnitte sind verstaendlich.
+- Redundanzen wurden ausreichend reduziert.
+- Die Warnungsbestaetigung wird zentral dargestellt.
+- Technische Schutzpruefung und Aktivierungsplan sind kompakter.
+- Der Sicherheitshinweis bleibt deutlich sichtbar.
+- Der Dialog enthaelt weiterhin nur OK/Schliessen.
+- Es gibt weiterhin keinen Aktivieren-Button.
+- Es gibt weiterhin keine Checkbox.
+- Es gibt weiterhin keinen Bestaetigungsbutton.
+
+Bewertung: Die aktuelle Dialogdarstellung ist fuer den Vorschau-Status des Aktivierungsassistenten praktisch abgenommen.
 
 ## 9. Offene Punkte
 
-- Praktische Sichtpruefung auf einem Windows-System mit laufender WPF-App.
-- Manuelle Pruefung der Textlaengen und Scrollbarkeit bei kleiner Fensterbreite.
-- Manuelle Pruefung mit konkreten Beispielprofilen fuer `Ready`, `ReadyWithWarnings`, `Blocked`, BuiltIn und Nicht-UserDefined.
-- Fachliche Abnahme der gestrafften Texte im Dialog `Aktivierung vorbereiten`.
-- Praktische Sichtpruefung, ob das neue scrollbare Preview-Fenster bei kleinen Bildschirmhoehen vollstaendig bedienbar bleibt.
+- Echte produktive Aktivierung.
+- Echte produktive Warnungsbestaetigung mit UI.
+- Produktive `ActivationExecutor`-Implementierung.
+- Dauerhafte Speicherung oder Auditierung einer Warnungsbestaetigung, falls spaeter fachlich gewuenscht.
+- Rollen-/Berechtigungs- und finale Re-Evaluation-Entscheidungen vor produktiver Ausfuehrung.
 - Spaetere Entscheidung gemaess `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` vor produktiver Aktivierung.
 
 ## 10. Empfehlung fuer manuelle Windows-Pruefung
@@ -142,3 +167,5 @@ Empfohlene manuelle Reihenfolge:
 13. Bei kleiner Fensterhoehe/-breite Scrollbarkeit und Dialoglesbarkeit pruefen.
 
 Abnahmekriterium fuer die manuelle Pruefung: Der Anwender kann die Aktivierungspruefung und den Dialog verstehen, ohne den Eindruck zu bekommen, dass bereits aktiviert, bestaetigt, gespeichert oder verarbeitet wurde.
+
+Status: Die praktische Sichtpruefung des aktuellen Dialogstands ist fuer die reine Vorschau abgenommen. Die Liste bleibt als Regressionscheck fuer spaetere UI-Aenderungen erhalten.
