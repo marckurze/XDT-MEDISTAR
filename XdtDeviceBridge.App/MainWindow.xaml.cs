@@ -77,6 +77,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
     private readonly InterfaceProfileActivationEvaluationService _interfaceProfileActivationEvaluationService = new();
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
+    private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
@@ -729,6 +730,58 @@ public partial class MainWindow : Window
     private void RefreshInterfaceActivationPreview_Click(object sender, RoutedEventArgs e)
     {
         RefreshInterfaceActivationPreview();
+    }
+
+    private void PrepareInterfaceActivationPreview_Click(object sender, RoutedEventArgs e)
+    {
+        InterfaceProfileActivationPreparationPreview preview;
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
+        {
+            preview = _interfaceProfileActivationPreparationPreviewService.CreateEmpty();
+            System.Windows.MessageBox.Show(
+                preview.MessageText,
+                preview.Title,
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (_profileCatalog is null)
+        {
+            preview = _interfaceProfileActivationPreparationPreviewService.CreateError("Profilkatalog ist nicht geladen.");
+            System.Windows.MessageBox.Show(
+                preview.MessageText,
+                preview.Title,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            var result = _interfaceProfileActivationEvaluationService.Evaluate(
+                profile,
+                _profileCatalog,
+                CreateLicenseStatesForActivationPreview());
+            preview = _interfaceProfileActivationPreparationPreviewService.Create(profile, result);
+            var image = result.CanActivate
+                ? MessageBoxImage.Information
+                : MessageBoxImage.Warning;
+            System.Windows.MessageBox.Show(
+                preview.MessageText,
+                preview.Title,
+                MessageBoxButton.OK,
+                image);
+        }
+        catch (Exception ex)
+        {
+            preview = _interfaceProfileActivationPreparationPreviewService.CreateError(ex.Message);
+            System.Windows.MessageBox.Show(
+                preview.MessageText,
+                preview.Title,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private void ShowInterfaceProfileForSelectedProfile()

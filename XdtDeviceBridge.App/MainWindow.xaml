@@ -1672,8 +1672,12 @@
                                                        Margin="0,3,18,8"/>
                                             <Button Content="Prüfung aktualisieren"
                                                     Width="180"
-                                                    Margin="0,0,0,8"
+                                                    Margin="0,0,8,8"
                                                     Click="RefreshInterfaceActivationPreview_Click"/>
+                                            <Button Content="Aktivierung vorbereiten"
+                                                    Width="190"
+                                                    Margin="0,0,0,8"
+                                                    Click="PrepareInterfaceActivationPreview_Click"/>
                                         </WrapPanel>
 
                                         <Grid Grid.Row="2" Margin="0,0,0,8">
