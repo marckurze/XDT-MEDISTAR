@@ -176,6 +176,17 @@ Aktuell dokumentierte Felder:
 
 BuiltIn-Schnittstellenprofile werden nicht ueberschrieben. Beim Speichern auf Basis eines BuiltIn-Profils wird eine UserDefined-Kopie erzeugt.
 
+Aktivierungsassistent aktueller Stand:
+
+- Im Tab `Schnittstellenprofile` gibt es den Bereich `Pruefung vor Aktivierung`.
+- Die Pruefung zeigt Status, Aktivierbarkeit, Blocker-/Warnungs-/Hinweiszaehler, strukturierte Ordnerpruefung, strukturierte XDT-Anhang-Konfiguration und die eingeklappte Tabelle `Alle Pruefpunkte`.
+- Der Button `Aktivierung vorbereiten` oeffnet einen reinen OK-/Vorschaudialog.
+- Der Dialog zeigt Aktivierungsbewertung, technische Guard-Entscheidung, Warnungsbestaetigungsvorschau und `InterfaceProfileActivationPlan`.
+- Die Service-Kette ist: `InterfaceProfileActivationEvaluationService` -> `InterfaceProfileActivationGuardService` -> `InterfaceProfileActivationWarningConfirmationService` -> `InterfaceProfileActivationPlanService` -> `InterfaceProfileActivationPreparationPreviewService`.
+- Der Stand ist rein lesend: kein Aktivieren-Button, keine automatische Aktivierung, keine produktive Warnungsbestaetigung, kein `ActivationExecutor`, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled`, keine Profil-Speicherung und keine Datei-/Ordneroperationen.
+- BuiltIn-Profile bleiben geschuetzt; die spaetere Aktivierung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet.
+- Die Layout-Ueberlagerung unterhalb `Ordnerbereinigung` wurde behoben; `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` sind wieder getrennt lesbar.
+
 ## 9. XDT-Anhaenge fuer AIS
 
 XDT-Anhaenge fuer AIS sind nicht mehr nur optionales Zukunftsthema. Der Baukasten und die Schnittstellenprofile enthalten vorbereitete Konfiguration und Testpfade fuer externe AIS-Links.
@@ -420,12 +431,13 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 An `docs/ROADMAP.md` orientierte naechste Schritte:
 
 1. Restliche E2E-Testfaelle praktisch ausfuehren und protokollieren.
-2. Aktivierungsassistent fuer importierte Schnittstellenprofile planen.
-3. Gefuehrte Pruefung von Ordnerpfaden und XDT-Anhang-Einstellungen nach Import vorbereiten.
-4. Geraete-Datei-Explorer / Profil-Assistent vorbereiten.
-5. V2-Geraeteprofile produktiv validieren.
-6. Lizenzsignatur und spaetere Lizenzdurchsetzung planen.
-7. Installer / Deployment vorbereiten.
+2. Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
+3. `ActivationExecutor`-Konzept als Dokumentation oder Interface-Skelett ohne produktive Wirkung entwerfen.
+4. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
+5. Geraete-Datei-Explorer / Profil-Assistent vorbereiten.
+6. V2-Geraeteprofile produktiv validieren.
+7. Lizenzsignatur und spaetere Lizenzdurchsetzung planen.
+8. Installer / Deployment vorbereiten.
 
 ## 20. Kompakter Starttext fuer neuen Chat
 
@@ -454,6 +466,8 @@ Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verar
 
 Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben werden, UserDefined-Profile werden separat gespeichert. Templatepaket-Export/Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
 
+Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> WarningConfirmation -> ActivationPlan -> PreparationPreview. Angezeigt werden Status, Aktivierbarkeit, Ordnerpruefung, XDT-Anhang-Konfiguration, Guard-Entscheidung, spaeter erforderliche Warnungsbestaetigung und beschreibende PlannedSteps. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung, keine Datei-/Ordneroperation und keinen ActivationExecutor. Die Layout-Ueberlagerung unterhalb Ordnerbereinigung wurde behoben.
+
 Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P.
 
 Lizenzsystem: InstallationInfo, Lizenzanfrage, Lizenzimport, Statusanzeige, Bewertung lizenzpflichtiger aktiver Schnittstellenprofile und Karenzzeitmodell sind vorbereitet. Es gibt noch keine harte Lizenzsperre, keine Online-Lizenzierung und keine produktive Signaturpruefung.
@@ -462,5 +476,5 @@ Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale 
 
 Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: restliche E2E-Testfaelle praktisch ausfuehren, importierte Schnittstellenprofile pruefen/aktivieren, Ordnerpfade und XDT-Anhang-Einstellungen nach Import gefuehrt pruefen, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
+Naechste sinnvolle Schritte: restliche E2E-Testfaelle praktisch ausfuehren, aktuellen read-only Aktivierungsassistenten in der UI pruefen, ActivationExecutor-Konzept als Dokumentation oder Interface-Skelett ohne produktive Wirkung entwerfen, UI-Konzept fuer spaetere Warnungsbestaetigung ohne Speicherung spezifizieren, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
 ```

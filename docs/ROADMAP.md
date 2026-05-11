@@ -132,6 +132,18 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - `ReplaceExisting` bleibt deaktiviert.
 - Der sichere Importfluss ist E2E-nah automatisiert getestet.
 
+### Aktivierungsassistent fuer importierte Schnittstellenprofile
+
+- Der Aktivierungsassistent ist als reine Vorschau vorbereitet, aber noch nicht produktiv aktivierend.
+- Im Tab `Schnittstellenprofile` gibt es den Bereich `Pruefung vor Aktivierung` mit Status, Aktivierbarkeit, Blocker-/Warnungs-/Hinweiszaehlern, strukturierter Ordnerpruefung, strukturierter XDT-Anhang-Konfiguration und eingeklappter Tabelle `Alle Pruefpunkte`.
+- Der Button `Aktivierung vorbereiten` oeffnet einen reinen OK-Dialog. Er zeigt Aktivierungsbewertung, technische Guard-Entscheidung, Warnungsbestaetigungsvorschau und `InterfaceProfileActivationPlan`.
+- Die Service-Kette lautet: `InterfaceProfileActivationEvaluationService` -> `InterfaceProfileActivationGuardService` -> `InterfaceProfileActivationWarningConfirmationService` -> `InterfaceProfileActivationPlanService` -> `InterfaceProfileActivationPreparationPreviewService`.
+- `ReadyWithWarnings` bleibt konservativ: Ohne bewusste Warnungsbestaetigung meldet der Guard `RequiresWarningConfirmation` und der Plan bleibt nicht ausfuehrbar.
+- PlannedSteps im ActivationPlan beschreiben nur spaetere Aktionen. Sie aktivieren nichts, speichern nichts und starten keine Verarbeitung.
+- Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keinen `ActivationExecutor`, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled` und keine Datei-/Ordneroperationen.
+- BuiltIn-Profile bleiben direkt geschuetzt; die spaetere Aktivierung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet.
+- Die zuletzt behobene Layout-Ueberlagerung unterhalb `Ordnerbereinigung` ist Teil des aktuellen UI-Stands und darf bei weiteren Arbeiten nicht zurueckfallen.
+
 ### Lizenzstatus
 
 - Lizenzstatus wird angezeigt und bewertet.
@@ -164,8 +176,8 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 - `ReplaceExisting` für UserDefined-Profile.
 - Freie Konfliktlösungs-/Bearbeitungsdialoge.
 - Manuelle Zielnamen-/ID-Bearbeitung in der UI.
-- Aktivierungsassistent für importierte Schnittstellenprofile.
-- Geführte Prüfung von Ordnerpfaden und XDT-Anhang-Einstellungen nach Import.
+- Produktive Aktivierung importierter Schnittstellenprofile; Pruefung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan sind nur read-only vorbereitet.
+- Bewusste Warnungsbestaetigung mit UI, moegliche dauerhafte Speicherung, finale Sicherheitspruefung und produktiver `ActivationExecutor`.
 - Vollständiger Profil-Assistent für unbekannte Geräte.
 - Digitale Lizenzsignatur.
 - Online-Lizenzierung.
@@ -204,9 +216,11 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 ### Phase 2: Importierte Schnittstellenprofile prüfen und aktivieren
 
-- Geführte Prüfung importierter Schnittstellenprofile entwerfen.
-- Ordnerpfade, Archiv-/Fehleroptionen und XDT-Anhang-Einstellungen vor Aktivierung sichtbar prüfen.
-- Aktivierungsassistent für importierte Schnittstellenprofile vorbereiten.
+- Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
+- UX fuer eine spaetere bewusste Warnungsbestaetigung entscheiden, weiterhin ohne produktive Speicherung.
+- `ActivationExecutor` zunaechst als Dokumentation oder Interface-Skelett ohne produktive Implementierung entwerfen.
+- Finale Sicherheitspruefung direkt vor Ausfuehrung, Audit-/Logeintrag und erneuten Build-/Testlauf fuer eine spaetere echte Aktivierung einplanen.
+- Fachlich entscheiden, ob `ReadyWithWarnings` nach bewusster Bestaetigung aktivierbar sein darf.
 - Optional spätere manuelle Zielnamen-/ID-Bearbeitung für ImportAsCopy planen.
 - Optional späteres `ReplaceExisting` für UserDefined-Profile separat spezifizieren.
 
@@ -242,9 +256,9 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 1. `docs/ROADMAP.md` und `docs/PROJEKT_UEBERBLICK.md` fachlich abgleichen.
 2. `CHANGELOG.md` mit einem Abschnitt für den aktuellen Entwicklungsstand fortführen.
 3. Version für den nächsten Meilenstein nur vorbereiten, aber erst nach E2E-Abnahme erhöhen.
-4. Aktivierungsassistent für importierte Schnittstellenprofile als kleines Design-Dokument skizzieren.
-5. Prüfliste für importierte Ordnerpfade, Archiv-/Fehleroptionen und XDT-Anhang-Einstellungen modellieren.
-6. UI-Preview für die Aktivierungsprüfung importierter Schnittstellenprofile vorbereiten.
+4. Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
+5. `ActivationExecutor`-Konzept als Dokumentation oder Interface-Skelett ohne produktive Wirkung entwerfen.
+6. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
 7. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
 8. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
 9. Profil-Assistent zunächst read-only beginnen: Datei laden, Parserpfade anzeigen, keine Profiländerung.

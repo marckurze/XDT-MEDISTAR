@@ -732,6 +732,27 @@ Der `InterfaceProfileActivationWarningConfirmationService` modelliert ergaenzend
 
 Der `InterfaceProfileActivationPlanService` fasst als rein lesender letzter Vorbereitungsbaustein Aktivierungsbewertung, Guard-Entscheidung und Warnungsbestaetigungsvorschau zusammen. Er erzeugt einen `InterfaceProfileActivationPlan` mit Status wie `Blocked`, `RequiresWarningConfirmation`, `Ready` oder `ReadyWithAcceptedWarnings`, sammelt Blocker/Warnungen/Hinweise und beschreibt geplante spaetere Schritte als `PlannedSteps`. Der Dialog `Aktivierung vorbereiten` zeigt diesen Plan inzwischen ebenfalls nur als Vorschau an: Status, spaetere Ausfuehrbarkeit, wichtigste Gruende und geplante Schritte werden lesbar ausgegeben. Diese Schritte sind nur Text-/Statusmodell: Profil aktivieren, Warnungen bestaetigen, Profil speichern oder Automatik gemaess Profil verwenden werden beschrieben, aber nicht ausgefuehrt. Auch dieser Service speichert nichts, aendert keine Profile, fuehrt keine Datei-/Ordneroperationen aus und startet keine Verarbeitung.
 
+Der Uebergabestand des Aktivierungsassistenten ist damit bewusst preview-only. Die fachliche Kette lautet:
+
+```text
+InterfaceProfileActivationEvaluationService
+=> InterfaceProfileActivationGuardService
+=> InterfaceProfileActivationWarningConfirmationService
+=> InterfaceProfileActivationPlanService
+=> InterfaceProfileActivationPreparationPreviewService / UI-Vorschau
+```
+
+Die tatsaechlich modellierten Statuswerte sind:
+
+- `InterfaceProfileActivationStatus`: `NotEvaluated`, `Ready`, `ReadyWithWarnings`, `Blocked`, `Unknown`
+- `InterfaceProfileActivationGuardDecision`: `Allowed`, `AllowedWithWarnings`, `RequiresWarningConfirmation`, `Blocked`, `Unknown`
+- `InterfaceProfileActivationWarningConfirmationStatus`: `NotAvailable`, `MissingEvaluation`, `Blocked`, `NoWarnings`, `ConfirmationRequired`, `Unknown`
+- `InterfaceProfileActivationPlanStatus`: `NotAvailable`, `Blocked`, `RequiresWarningConfirmation`, `Ready`, `ReadyWithAcceptedWarnings`, `Unknown`
+
+Wichtig fuer spaetere Erweiterungen: Es gibt weiterhin keinen produktiven Aktivieren-Button, keine automatische Aktivierung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled`, keine Profil-Speicherung, keine produktive Warnungsbestaetigung, keine dauerhafte Speicherung einer Warnungsbestaetigung und keinen `ActivationExecutor`. BuiltIn-Profile bleiben direkt blockiert; die spaetere Aktivierung ist auf bewusst kontrollierte UserDefined-Schnittstellenprofile ausgerichtet. Importierte Schnittstellenprofile bleiben bis zu einer spaeteren expliziten Aktivierung inaktiv.
+
+Ordner und XDT-Anhang-Konfiguration werden in der Aktivierungspruefung nur gelesen und angezeigt. Der Assistent legt keine Ordner an, erzeugt/kopiert/verschiebt/loescht keine Dateien und startet keine Anhangverarbeitung. Die Felder `6302`, `6303`, `6304` und `6305` werden nur als Konfiguration geprueft; XDT-Laengenpraefixe bleiben zentral Aufgabe des `XdtExportBuilder`.
+
 Der komplette sichere Importfluss ist testseitig End-to-End-nah abgesichert: Ein exportiertes Templatepaket kann wieder importiert, validiert, analysiert, geplant, per Benutzerentscheidung angepasst, im Dry-Run geprüft und anschließend explizit als UserDefined übernommen werden. Die Tests prüfen BuiltIn-Schutz, UserDefined-Konflikte, `KeepExisting`, `Skip`, blockierte Abhängigkeiten, Remapping von Schnittstellenprofil-Abhängigkeiten, deaktivierte importierte Schnittstellenprofile und erhaltene XDT-Anhang-Einstellungen bei deaktivierter Anhang-Automatik. `ReplaceExisting` bleibt bewusst offen und wird auch bei manipulierten Plänen nicht ausgeführt.
 
 ### 8.3 Offline-Lizenzierung
