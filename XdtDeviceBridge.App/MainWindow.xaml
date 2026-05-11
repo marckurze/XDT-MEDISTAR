@@ -107,6 +107,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
                                            Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
@@ -1322,6 +1323,7 @@
                         <GroupBox Header="Schnittstellenprofil / Automatische Verarbeitung" Grid.Row="1">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>

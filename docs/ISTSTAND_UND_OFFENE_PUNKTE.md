@@ -33,6 +33,7 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
 - V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; erste read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau, technische Guard-Schicht, internes Modell fuer spaetere Warnungsbestaetigung und rein lesender ActivationPlan-Service sind vorhanden, inklusive strukturierter Ordner- und XDT-Anhang-Detailanzeige sowie rein lesender Guard-Entscheidung und Warnungsbestaetigungsvorschau im Dialog `Aktivierung vorbereiten`; produktive Aktivierung bleibt offen
+- UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
 - Lizenzsignatur, harte Lizenzdurchsetzung und Installer/Deployment
 - AIS-/MEDISTAR-Exporttemplate-Default-Konzept bewusst zurueckgestellt
 

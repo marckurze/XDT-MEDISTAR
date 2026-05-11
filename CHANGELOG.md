@@ -13,6 +13,7 @@
 - Read-only Modell und Service fuer eine spaetere bewusste Warnungsbestaetigung vorbereitet; Warnungen werden als bestaetigungspflichtige Items modelliert, Blocker und Hinweise bleiben nicht bestaetigbar.
 - Dialog `Aktivierung vorbereiten` zeigt die vorbereitete Warnungsbestaetigung jetzt rein lesend an: `ReadyWithWarnings` listet bestaetigungspflichtige Warnungen, ohne Checkbox, Bestaetigungsbutton, Speicherung oder Aktivierung.
 - Rein lesender `InterfaceProfileActivationPlanService` vorbereitet; er fasst Aktivierungsbewertung, Guard-Entscheidung und Warnungsbestaetigungsvorschau zu einem beschreibenden Plan mit PlannedSteps zusammen, ohne Aktivierung, Speicherung oder Datei-/Ordneroperationen auszufuehren.
+- UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Dokumentation
