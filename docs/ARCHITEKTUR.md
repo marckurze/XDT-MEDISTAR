@@ -767,6 +767,8 @@ Die vorgesehenen Executor-Statuswerte sind `NotAvailable`, `NotImplemented`, `Bl
 
 Vor einer produktiven Implementierung muessen fachlich geklaert werden: Aktivierbarkeit von `ReadyWithWarnings` nach Bestaetigung, Speicherung oder Auditierung der Warnungsbestaetigung, Behandlung von `IsAttachmentProcessingEnabled`, konkret zu speicherndes Aktivierungsflag, Speicherort, finale Direktpruefung unmittelbar vor Speichern, Audit-/Logeintrag, berechtigte Benutzerrolle und fuehrende UI.
 
+Die offenen fachlichen Entscheidungen sind als Konzept in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` dokumentiert. Diese Notiz ist keine Implementierungsfreigabe; sie dient als Entscheidungsgrundlage, bevor produktive Aktivierungslogik, UI-Bestaetigung oder Speicherung gebaut werden.
+
 Der komplette sichere Importfluss ist testseitig End-to-End-nah abgesichert: Ein exportiertes Templatepaket kann wieder importiert, validiert, analysiert, geplant, per Benutzerentscheidung angepasst, im Dry-Run geprüft und anschließend explizit als UserDefined übernommen werden. Die Tests prüfen BuiltIn-Schutz, UserDefined-Konflikte, `KeepExisting`, `Skip`, blockierte Abhängigkeiten, Remapping von Schnittstellenprofil-Abhängigkeiten, deaktivierte importierte Schnittstellenprofile und erhaltene XDT-Anhang-Einstellungen bei deaktivierter Anhang-Automatik. `ReplaceExisting` bleibt bewusst offen und wird auch bei manipulierten Plänen nicht ausgeführt.
 
 ### 8.3 Offline-Lizenzierung

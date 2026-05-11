@@ -192,12 +192,14 @@ Als naechste technische Leitplanke existiert ein reines Interface-/Model-Skelett
 
 Ein spaeterer Executor duerfte erst implementiert werden, wenn fachlich entschieden ist, ob `ReadyWithWarnings` nach Bestaetigung aktivierbar ist, wie Warnungsbestaetigungen gespeichert oder auditiert werden, ob `IsAttachmentProcessingEnabled` beim Aktivieren veraendert wird, welches Aktivierungsflag gespeichert wird, welche finalen Pruefungen direkt vor dem Speichern laufen, ob ein Audit-/Logeintrag erzeugt wird, welche Benutzerrolle aktivieren darf und welche UI den Prozess fuehrt.
 
+Die offenen fachlichen Entscheidungen sind in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` gebuendelt. Diese Notiz ist weiterhin nur Konzept/Dokumentation und keine Freigabe fuer produktive Aktivierung.
+
 Die zuletzt bestaetigte technische Absicherung dieses Standes:
 
 - `dotnet build XdtDeviceBridge.sln` erfolgreich, `0` Warnungen, `0` Fehler
 - `dotnet test XdtDeviceBridge.sln` erfolgreich, `919` Tests bestanden, `0` fehlgeschlagen, `0` uebersprungen
 
-Offen bleiben die echte produktive Aktivierung, eine bewusste Warnungsbestaetigungs-UI, eine moegliche dauerhafte Speicherung einer Warnungsbestaetigung, eine produktive `ActivationExecutor`-Implementierung, eine finale Sicherheitspruefung direkt vor Ausfuehrung, Audit-/Logeintraege fuer spaetere Aktivierungen und die fachliche Entscheidung, ob `ReadyWithWarnings` nach bewusster Bestaetigung aktivierbar sein darf.
+Offen bleiben die echte produktive Aktivierung, eine bewusste Warnungsbestaetigungs-UI, eine moegliche dauerhafte Speicherung einer Warnungsbestaetigung, eine produktive `ActivationExecutor`-Implementierung, eine finale Sicherheitspruefung direkt vor Ausfuehrung, Audit-/Logeintraege fuer spaetere Aktivierungen und die in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` dokumentierten fachlichen Entscheidungen.
 
 Empfohlener naechster Schritt: Noch nicht produktiv aktivieren. Zunaechst sollte der aktuelle Assistent praktisch in der UI geprueft oder ein UI-Konzept fuer spaetere Warnungsbestaetigung ohne produktive Speicherung erstellt werden. Eine produktive Executor-Implementierung bleibt danach ein separater, fachlich freizugebender Schritt.
 
@@ -398,7 +400,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 - Read-only Aktivierungsassistent praktisch in der UI pruefen; Pruefung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan bleiben ohne produktive Wirkung.
 - UI-Konzept fuer spaetere bewusste Warnungsbestaetigung ohne sofortige Speicherung entwerfen.
-- Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung planen.
+- Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung planen; Entscheidungsgrundlage: `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`.
 - Finale Sicherheitspruefung, Audit-/Logeintrag und erneuten Build-/Testlauf direkt vor einer spaeteren echten Aktivierung einplanen.
 - Optional spaeter ReplaceExisting fuer UserDefined mit Backup/Bestaetigung.
 - AIS-/MEDISTAR-Default-Exporttemplates nicht umsetzen, bis ein neues Fachkonzept vorliegt.
