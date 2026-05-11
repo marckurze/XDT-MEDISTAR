@@ -83,6 +83,8 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
     private readonly ObservableCollection<InterfaceMonitoringCardDisplay> _interfaceMonitoringCards = new();
+    private readonly ObservableCollection<InterfaceProfileActivationFolderDisplay> _interfaceProfileActivationFolderRows = new();
+    private readonly ObservableCollection<InterfaceProfileActivationAttachmentDisplay> _interfaceProfileActivationAttachmentRows = new();
     private readonly ObservableCollection<InterfaceProfileActivationPreviewRow> _interfaceProfileActivationPreviewRows = new();
     private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
@@ -122,6 +124,8 @@ public partial class MainWindow : Window
         ExportRulesGrid.ItemsSource = _visibleExportRules;
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         InterfaceMonitoringCardsItemsControl.ItemsSource = _interfaceMonitoringCards;
+        InterfaceActivationPreviewFolderChecksGrid.ItemsSource = _interfaceProfileActivationFolderRows;
+        InterfaceActivationPreviewAttachmentChecksGrid.ItemsSource = _interfaceProfileActivationAttachmentRows;
         InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         SyncBuilderTestPreviewArea();
@@ -826,7 +830,7 @@ public partial class MainWindow : Window
                 profile,
                 _profileCatalog,
                 CreateLicenseStatesForActivationPreview());
-            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.Create(result));
+            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.Create(profile, result));
         }
         catch (Exception ex)
         {
@@ -867,6 +871,18 @@ public partial class MainWindow : Window
         InterfaceActivationPreviewCanActivateText.Text = display.CanActivateText;
         InterfaceActivationPreviewCountsText.Text = display.SummaryText;
         InterfaceActivationPreviewHintText.Text = display.HintText;
+
+        _interfaceProfileActivationFolderRows.Clear();
+        foreach (var row in display.FolderChecks)
+        {
+            _interfaceProfileActivationFolderRows.Add(row);
+        }
+
+        _interfaceProfileActivationAttachmentRows.Clear();
+        foreach (var row in display.AttachmentChecks)
+        {
+            _interfaceProfileActivationAttachmentRows.Add(row);
+        }
 
         _interfaceProfileActivationPreviewRows.Clear();
         foreach (var row in display.Rows)

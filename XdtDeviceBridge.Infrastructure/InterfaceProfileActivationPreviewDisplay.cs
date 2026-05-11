@@ -8,6 +8,8 @@ public sealed record InterfaceProfileActivationPreviewDisplay(
     int InfoCount,
     string SummaryText,
     string HintText,
+    IReadOnlyList<InterfaceProfileActivationFolderDisplay> FolderChecks,
+    IReadOnlyList<InterfaceProfileActivationAttachmentDisplay> AttachmentChecks,
     IReadOnlyList<InterfaceProfileActivationPreviewRow> Rows);
 
 public sealed record InterfaceProfileActivationPreviewRow(
@@ -15,3 +17,17 @@ public sealed record InterfaceProfileActivationPreviewRow(
     string Area,
     string Message,
     string Detail);
+
+public sealed record InterfaceProfileActivationFolderDisplay(
+    string Label,
+    string Path,
+    string Status,
+    string Severity,
+    string Message);
+
+public sealed record InterfaceProfileActivationAttachmentDisplay(
+    string Label,
+    string Value,
+    string Status,
+    string Severity,
+    string Message);

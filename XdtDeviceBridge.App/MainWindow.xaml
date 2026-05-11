@@ -1649,6 +1649,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Grid.Row="0"
@@ -1675,7 +1676,52 @@
                                                     Click="RefreshInterfaceActivationPreview_Click"/>
                                         </WrapPanel>
 
-                                        <Grid Grid.Row="2">
+                                        <Grid Grid.Row="2" Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <GroupBox Header="Ordnerprüfung" Grid.Column="0" Margin="0,0,6,0">
+                                                <DataGrid x:Name="InterfaceActivationPreviewFolderChecksGrid"
+                                                          AutoGenerateColumns="False"
+                                                          IsReadOnly="True"
+                                                          CanUserAddRows="False"
+                                                          CanUserDeleteRows="False"
+                                                          HeadersVisibility="Column"
+                                                          MinHeight="130"
+                                                          MaxHeight="210"
+                                                          Margin="8">
+                                                    <DataGrid.Columns>
+                                                        <DataGridTextColumn Header="Ordner" Binding="{Binding Label}" Width="150"/>
+                                                        <DataGridTextColumn Header="Pfad" Binding="{Binding Path}" Width="*"/>
+                                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
+                                                        <DataGridTextColumn Header="Hinweis" Binding="{Binding Message}" Width="*"/>
+                                                    </DataGrid.Columns>
+                                                </DataGrid>
+                                            </GroupBox>
+
+                                            <GroupBox Header="XDT-Anhang-Konfiguration" Grid.Column="1" Margin="6,0,0,0">
+                                                <DataGrid x:Name="InterfaceActivationPreviewAttachmentChecksGrid"
+                                                          AutoGenerateColumns="False"
+                                                          IsReadOnly="True"
+                                                          CanUserAddRows="False"
+                                                          CanUserDeleteRows="False"
+                                                          HeadersVisibility="Column"
+                                                          MinHeight="130"
+                                                          MaxHeight="210"
+                                                          Margin="8">
+                                                    <DataGrid.Columns>
+                                                        <DataGridTextColumn Header="Einstellung" Binding="{Binding Label}" Width="170"/>
+                                                        <DataGridTextColumn Header="Wert" Binding="{Binding Value}" Width="*"/>
+                                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
+                                                        <DataGridTextColumn Header="Hinweis" Binding="{Binding Message}" Width="*"/>
+                                                    </DataGrid.Columns>
+                                                </DataGrid>
+                                            </GroupBox>
+                                        </Grid>
+
+                                        <Grid Grid.Row="3">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
@@ -1686,23 +1732,24 @@
                                                        TextWrapping="Wrap"
                                                        Foreground="DimGray"
                                                        Margin="0,0,0,6"/>
-                                            <DataGrid Grid.Row="1"
-                                                      x:Name="InterfaceActivationPreviewChecksGrid"
-                                                      AutoGenerateColumns="False"
-                                                      IsReadOnly="True"
-                                                      CanUserAddRows="False"
-                                                      CanUserDeleteRows="False"
-                                                      SelectionMode="Single"
-                                                      HeadersVisibility="Column"
-                                                      MinHeight="120"
-                                                      MaxHeight="220">
-                                                <DataGrid.Columns>
-                                                    <DataGridTextColumn Header="Schweregrad" Binding="{Binding Severity}" Width="100"/>
-                                                    <DataGridTextColumn Header="Bereich" Binding="{Binding Area}" Width="150"/>
-                                                    <DataGridTextColumn Header="Prüfung" Binding="{Binding Message}" Width="*"/>
-                                                    <DataGridTextColumn Header="Details" Binding="{Binding Detail}" Width="*"/>
-                                                </DataGrid.Columns>
-                                            </DataGrid>
+                                            <Expander Grid.Row="1" Header="Alle Prüfpunkte" IsExpanded="False">
+                                                <DataGrid x:Name="InterfaceActivationPreviewChecksGrid"
+                                                          AutoGenerateColumns="False"
+                                                          IsReadOnly="True"
+                                                          CanUserAddRows="False"
+                                                          CanUserDeleteRows="False"
+                                                          SelectionMode="Single"
+                                                          HeadersVisibility="Column"
+                                                          MinHeight="120"
+                                                          MaxHeight="220">
+                                                    <DataGrid.Columns>
+                                                        <DataGridTextColumn Header="Schweregrad" Binding="{Binding Severity}" Width="100"/>
+                                                        <DataGridTextColumn Header="Bereich" Binding="{Binding Area}" Width="150"/>
+                                                        <DataGridTextColumn Header="Prüfung" Binding="{Binding Message}" Width="*"/>
+                                                        <DataGridTextColumn Header="Details" Binding="{Binding Detail}" Width="*"/>
+                                                    </DataGrid.Columns>
+                                                </DataGrid>
+                                            </Expander>
                                         </Grid>
                                     </Grid>
                                 </GroupBox>
