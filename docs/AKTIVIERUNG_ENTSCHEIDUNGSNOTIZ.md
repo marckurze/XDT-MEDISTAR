@@ -906,14 +906,18 @@ Aktueller technischer Befund:
 - `IsActive` existiert am `InterfaceProfileDefinition` und ist der naheliegende Kandidat fuer das Aktivierungsflag.
 - BuiltIn/UserDefined-Schutz ist ueber `ProfileMetadata.IsBuiltIn` und `ProfileMetadata.IsUserDefined` modelliert.
 - UserDefined-Schnittstellenprofile werden im bestehenden Profilkatalog unter `profiles/interfaces` gespeichert.
+- `AppDataPaths` und `ProfileCatalogService.Load(...)` bilden den bestehenden Kontext fuer frisches Laden aus dem lokalen Profilkatalog.
 - `ProfileCatalogService.SaveInterfaceProfileDefinition(..., overwriteExisting: true)` kann ein Schnittstellenprofil ueberschreiben, erzwingt aber selbst keine produktive finale Re-Evaluation.
-- `InterfaceProfileActivationExecutorRequest` enthaelt aktuell kein `AppDataPaths`-/Profilkatalog-Kontextobjekt und kann deshalb kein frisches Laden direkt vor Speicherung erzwingen.
+- `ProfileMetadata` enthaelt `CreatedAt` und `UpdatedAt`, aber noch keine eigenstaendige Revision, Version fuer Parallelitaet oder Konfigurations-Fingerprint.
+- `InterfaceProfileActivationExecutorRequest` transportiert jetzt Zielprofil-ID/-Name, `OperationMode` (`ValidateOnly`, `Activate`, `Deactivate`), Quelle/Anforderungszeitpunkt, Preview-Zeitpunkt, erwartete Preview-Statuswerte, optionalen Fingerprint sowie Warnungsbestaetigungs-Token/-Codes.
+- Der Request enthaelt bewusst keine konkrete Store-Service-Referenz. Ein produktiver Executor soll Loader/Store nach Projektmuster per Konstruktor oder vergleichbarer Backend-Verdrahtung erhalten, nicht ueber beliebige Serviceobjekte im Request.
+- `InterfaceProfileActivationExecutorResult` kann fehlende produktive Faehigkeiten nun ausdruecken: frisches Laden erforderlich, sichere UserDefined-Speicherung erforderlich, finale Re-Evaluation erforderlich, nicht ausgefuehrt, nicht gespeichert, kein Profil geaendert und fehlende Capabilities.
 
 Konservative Entscheidung fuer die erste technische Stufe:
 
 - Es wird noch kein produktiver Backend-Executor gebaut.
 - `InterfaceProfileActivationExecutorStub` implementiert `IInterfaceProfileActivationExecutor` defensiv.
-- Der Stub bewertet die uebergebenen Preconditions, liefert sinnvolle Statuswerte und benennt fehlende Voraussetzungen.
+- Der Stub bewertet die uebergebenen Preconditions, liefert sinnvolle Statuswerte und benennt fehlende Voraussetzungen jetzt praeziser, etwa fehlende Zielprofil-ID, fehlenden Loader/Store-Kontext, erforderliches frisches Laden und erforderliche finale Re-Evaluation.
 - Er setzt `IsActive` nicht, speichert nichts, aendert kein Profil, startet keine Verarbeitung und fuehrt keine Datei-/Ordneroperation aus.
 
 Grund:

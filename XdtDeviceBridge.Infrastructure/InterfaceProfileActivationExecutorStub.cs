@@ -21,13 +21,22 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             NotExecutedSteps: request.ActivationPlan?.PlannedSteps ?? Array.Empty<InterfaceProfileActivationPlanStep>(),
             ProfileChanged: false,
             Saved: false,
-            ProcessingStarted: false));
+            ProcessingStarted: false,
+            WasExecuted: false,
+            WasPersisted: false,
+            WasProfileChanged: false,
+            RequiresFreshLoad: true,
+            RequiresSafeUserDefinedStore: true,
+            RequiresFinalReEvaluation: true,
+            IsValidationOnly: request.OperationMode == InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
+            MissingCapabilities: CreateMissingCapabilities(preconditions)));
     }
 
     private static InterfaceProfileActivationExecutorStatus DetermineStatus(
         InterfaceProfileActivationExecutorRequest request)
     {
-        if (request.Profile is null ||
+        if (string.IsNullOrWhiteSpace(request.EffectiveInterfaceProfileId) ||
+            request.Profile is null ||
             request.EvaluationResult is null ||
             request.GuardResult is null ||
             request.ActivationPlan is null)
@@ -62,6 +71,11 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             return InterfaceProfileActivationExecutorStatus.RequiresWarningConfirmation;
         }
 
+        if (request.OperationMode == InterfaceProfileActivationExecutorOperationMode.Deactivate)
+        {
+            return InterfaceProfileActivationExecutorStatus.NotImplemented;
+        }
+
         if (request.ActivationPlan.PlanStatus is InterfaceProfileActivationPlanStatus.Ready or
             InterfaceProfileActivationPlanStatus.ReadyWithAcceptedWarnings)
         {
@@ -78,6 +92,7 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         var evaluation = request.EvaluationResult;
         var guard = request.GuardResult;
         var plan = request.ActivationPlan;
+        var effectiveProfileId = request.EffectiveInterfaceProfileId;
 
         var preconditions = new List<InterfaceProfileActivationExecutorPrecondition>
         {
@@ -90,7 +105,13 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             Precondition(
                 "executor.freshReload.missing",
                 "Frisches Laden nicht angebunden",
-                "Der aktuelle Executor-Request enthält keinen Profilkatalog/AppDataPaths-Kontext für eine finale frische Ladung.",
+                "Der Request kann Zielprofil- und Preview-Kontext tragen; der Stub hat aber keinen Loader/Profilkatalog für eine finale frische Ladung.",
+                isSatisfied: false,
+                InterfaceProfileActivationSeverity.Blocker),
+            Precondition(
+                "executor.storeContext.missing",
+                "Store-Kontext nicht angebunden",
+                "Der Request enthält bewusst keine konkrete Store-Service-Referenz; ein produktiver Executor muss Loader/Store sicher per Konstruktor oder bestehendem Muster erhalten.",
                 isSatisfied: false,
                 InterfaceProfileActivationSeverity.Blocker),
             Precondition(
@@ -99,6 +120,23 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                 "Eine produktive Speicherung des UserDefined-Schnittstellenprofils ist in dieser Executor-Stufe nicht angebunden.",
                 isSatisfied: false,
                 InterfaceProfileActivationSeverity.Blocker),
+            Precondition(
+                "executor.finalReEvaluation.required",
+                "Finale Re-Evaluation erforderlich",
+                "Preview-Daten im Request sind nur Kontext; direkt vor einer produktiven Ausführung muss frisch geladen und neu bewertet werden.",
+                isSatisfied: false,
+                InterfaceProfileActivationSeverity.Blocker),
+            Precondition(
+                "operation.mode.modeled",
+                "Ausführungsmodus modelliert",
+                "Der Request unterscheidet ValidateOnly, Activate und Deactivate, ohne daraus im Stub produktive Aktionen abzuleiten.",
+                Enum.IsDefined(typeof(InterfaceProfileActivationExecutorOperationMode), request.OperationMode),
+                InterfaceProfileActivationSeverity.Info),
+            Precondition(
+                "profile.id.present",
+                "Zielprofil-ID vorhanden",
+                "Ein späterer Executor muss das Zielprofil eindeutig frisch laden können.",
+                !string.IsNullOrWhiteSpace(effectiveProfileId)),
             Precondition(
                 "profile.present",
                 "Schnittstellenprofil vorhanden",
@@ -171,12 +209,24 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         return preconditions;
     }
 
+    private static IReadOnlyList<string> CreateMissingCapabilities(
+        IEnumerable<InterfaceProfileActivationExecutorPrecondition> preconditions)
+    {
+        return preconditions
+            .Where(precondition => precondition.IsRequired &&
+                !precondition.IsSatisfied &&
+                precondition.Code.StartsWith("executor.", StringComparison.Ordinal))
+            .Select(precondition => precondition.Code)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+    }
+
     private static string CreateMessage(InterfaceProfileActivationExecutorStatus status)
     {
         return status switch
         {
             InterfaceProfileActivationExecutorStatus.NotAvailable =>
-                "ActivationExecutor nicht ausgeführt: erforderliche aktuelle Prüfgrundlage fehlt.",
+                "ActivationExecutor nicht ausgeführt: Zielprofil-ID, Profil oder erforderliche aktuelle Prüfgrundlage fehlt.",
             InterfaceProfileActivationExecutorStatus.Blocked =>
                 "ActivationExecutor nicht ausgeführt: Aktivierung ist blockiert.",
             InterfaceProfileActivationExecutorStatus.RequiresWarningConfirmation =>

@@ -9,4 +9,12 @@ public sealed record InterfaceProfileActivationExecutorResult(
     IReadOnlyList<InterfaceProfileActivationPlanStep> NotExecutedSteps,
     bool ProfileChanged,
     bool Saved,
-    bool ProcessingStarted);
+    bool ProcessingStarted,
+    bool WasExecuted = false,
+    bool WasPersisted = false,
+    bool WasProfileChanged = false,
+    bool RequiresFreshLoad = true,
+    bool RequiresSafeUserDefinedStore = true,
+    bool RequiresFinalReEvaluation = true,
+    bool IsValidationOnly = true,
+    IReadOnlyList<string>? MissingCapabilities = null);

@@ -142,6 +142,111 @@ public sealed class InterfaceProfileActivationExecutorStubTests
         Assert.False(result.Saved);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ShouldReturnNotAvailableWithoutProfileId()
+    {
+        var result = await _executor.ExecuteAsync(new InterfaceProfileActivationExecutorRequest(
+            Profile: null,
+            ActivationPlan: null,
+            EvaluationResult: null,
+            GuardResult: null,
+            WarningConfirmationResult: null,
+            WarningsAccepted: false));
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.NotAvailable, result.Status);
+        Assert.False(result.Success);
+        Assert.False(result.WasExecuted);
+        Assert.False(result.WasPersisted);
+        Assert.False(result.WasProfileChanged);
+        Assert.Contains(result.Preconditions, item => item.Code == "profile.id.present" && !item.IsSatisfied);
+        Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.freshReload.missing");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldExposeFreshLoadAndSafeStoreRequirements()
+    {
+        var result = await _executor.ExecuteAsync(CreateReadyRequest(CreateUserDefinedProfile()));
+
+        Assert.True(result.RequiresFreshLoad);
+        Assert.True(result.RequiresSafeUserDefinedStore);
+        Assert.True(result.RequiresFinalReEvaluation);
+        Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.freshReload.missing");
+        Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.storeContext.missing");
+        Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.safePersistence.missing");
+        Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.finalReEvaluation.required");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldTreatPreviewResultsAsNonFinalContext()
+    {
+        var profile = CreateUserDefinedProfile();
+        var request = CreateReadyRequest(profile) with
+        {
+            PreviewCreatedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-5),
+            ExpectedConfigurationFingerprint = "preview-fingerprint",
+            ExpectedEvaluationStatus = InterfaceProfileActivationStatus.Ready,
+            ExpectedActivationPlanStatus = InterfaceProfileActivationPlanStatus.Ready
+        };
+
+        var result = await _executor.ExecuteAsync(request);
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.False(result.Success);
+        Assert.True(result.RequiresFinalReEvaluation);
+        Assert.Contains(result.Preconditions, item => item.Code == "executor.finalReEvaluation.required" && !item.IsSatisfied);
+        Assert.False(profile.IsActive);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldDescribeValidateOnlyModeWithoutExecution()
+    {
+        var result = await _executor.ExecuteAsync(CreateReadyRequest(CreateUserDefinedProfile()) with
+        {
+            OperationMode = InterfaceProfileActivationExecutorOperationMode.ValidateOnly
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.True(result.IsValidationOnly);
+        Assert.False(result.WasExecuted);
+        Assert.False(result.Saved);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldReturnReadyButNotExecutedForActivateModeWithoutPersisting()
+    {
+        var profile = CreateUserDefinedProfile() with { IsActive = false };
+
+        var result = await _executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            OperationMode = InterfaceProfileActivationExecutorOperationMode.Activate
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.False(result.IsValidationOnly);
+        Assert.False(result.Success);
+        Assert.False(result.ProfileChanged);
+        Assert.False(result.Saved);
+        Assert.False(profile.IsActive);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldNotDeactivateInDeactivateMode()
+    {
+        var profile = CreateUserDefinedProfile() with { IsActive = true };
+
+        var result = await _executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            OperationMode = InterfaceProfileActivationExecutorOperationMode.Deactivate
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.NotImplemented, result.Status);
+        Assert.False(result.Success);
+        Assert.False(result.ProfileChanged);
+        Assert.False(result.Saved);
+        Assert.False(result.ProcessingStarted);
+        Assert.True(profile.IsActive);
+    }
+
     private static InterfaceProfileActivationExecutorRequest CreateReadyRequest(
         InterfaceProfileDefinition profile)
     {
@@ -151,7 +256,11 @@ public sealed class InterfaceProfileActivationExecutorStubTests
             EvaluationResult: Evaluation(InterfaceProfileActivationStatus.Ready, canActivate: true),
             GuardResult: Guard(true, InterfaceProfileActivationGuardDecision.Allowed),
             WarningConfirmationResult: WarningConfirmation(InterfaceProfileActivationWarningConfirmationStatus.NoWarnings),
-            WarningsAccepted: false);
+            WarningsAccepted: false,
+            InterfaceProfileId: profile.Metadata.Id,
+            InterfaceProfileName: profile.Metadata.Name,
+            OperationMode: InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
+            Source: "Test");
     }
 
     private static InterfaceProfileActivationExecutorRequest CreateReadyWithWarningsRequest(
@@ -175,7 +284,14 @@ public sealed class InterfaceProfileActivationExecutorStubTests
                     ? InterfaceProfileActivationGuardDecision.AllowedWithWarnings
                     : InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation),
             WarningConfirmationResult: WarningConfirmation(InterfaceProfileActivationWarningConfirmationStatus.ConfirmationRequired),
-            WarningsAccepted: warningsAccepted);
+            WarningsAccepted: warningsAccepted,
+            InterfaceProfileId: profile.Metadata.Id,
+            InterfaceProfileName: profile.Metadata.Name,
+            OperationMode: InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
+            Source: "Test",
+            ConfirmedWarningCodes: warningsAccepted
+                ? new[] { "license.required" }
+                : Array.Empty<string>());
     }
 
     private static InterfaceProfileDefinition CreateUserDefinedProfile()

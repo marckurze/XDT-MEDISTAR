@@ -758,11 +758,14 @@ Als reine technische Leitplanke fuer eine spaetere echte Aktivierung ist ein Int
 - `IInterfaceProfileActivationExecutor`
 - `InterfaceProfileActivationExecutorRequest`
 - `InterfaceProfileActivationExecutorResult`
+- `InterfaceProfileActivationExecutorOperationMode`
 - `InterfaceProfileActivationExecutorStatus`
 - `InterfaceProfileActivationExecutorPrecondition`
 - `InterfaceProfileActivationExecutorStub`
 
-Das Skelett ist nicht in die UI eingebunden. `InterfaceProfileActivationExecutorStub` ist eine defensive Backend-Implementierung ohne produktive Wirkung: Er bewertet die uebergebenen Preconditions und gibt Statuswerte zurueck, setzt aber kein `IsActive`, speichert nichts, aendert keine Profile, startet keine Verarbeitung und fuehrt keine Datei-/Ordneroperationen aus. Der Stub benennt als fehlende Voraussetzung insbesondere, dass der aktuelle Request keinen Profilkatalog-/`AppDataPaths`-Kontext fuer frisches Laden und sichere UserDefined-Speicherung enthaelt.
+Das Skelett ist nicht in die UI eingebunden. `InterfaceProfileActivationExecutorRequest` traegt nur fachliche Ausfuehrungsdaten wie Zielprofil-ID/-Name, `OperationMode`, Quelle, Preview-Zeitpunkt, erwartete Preview-Statuswerte, optionalen Fingerprint und Warnungsbestaetigungskontext. Konkrete Loader-/Store-Services werden nicht in den Request gelegt; ein spaeterer produktiver Executor muss sie nach Projektmuster selbst erhalten und direkt vor Speicherung frisch laden. `InterfaceProfileActivationExecutorResult` kann ausdruecken, dass frisches Laden, sichere UserDefined-Speicherung und finale Re-Evaluation noch erforderlich sind.
+
+`InterfaceProfileActivationExecutorStub` ist eine defensive Backend-Implementierung ohne produktive Wirkung: Er bewertet die uebergebenen Preconditions und gibt Statuswerte zurueck, setzt aber kein `IsActive`, speichert nichts, aendert keine Profile, startet keine Verarbeitung und fuehrt keine Datei-/Ordneroperationen aus. Der Stub benennt als fehlende Voraussetzung insbesondere fehlende Zielprofil-ID, fehlenden Loader-/Store-Kontext, fehlendes frisches Laden und fehlende finale Re-Evaluation.
 
 Die vorgesehenen Executor-Statuswerte sind `NotAvailable`, `NotImplemented`, `Blocked`, `RequiresWarningConfirmation`, `ReadyButNotExecuted`, `WouldExecute`, `Failed` und `Success`. `Success` ist nur fuer eine spaetere Implementierung reserviert; im aktuellen Stand gibt es keinen Codepfad, der eine Aktivierung ausfuehrt oder speichert.
 
