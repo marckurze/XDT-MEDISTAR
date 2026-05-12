@@ -30,12 +30,12 @@ Besonders stabil wirken aktuell:
 - sichere Templatepaket-Importpipeline bis UserDefined-Uebernahme
 - Datei- und Paketlogik fuer stabile AIS-/Geraete-/XDT-Anhangdateien
 - neue kompakte Geraete-/Template-Matrix als Prioritaetenbasis
-- offizielle Paketvorlage fuer MEDISTAR + NIDEK ARK1S
+- offizielle Paketvorlage fuer MEDISTAR + NIDEK ARK1S inklusive reproduzierbarem Export-/Import-Testweg
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 - V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
-- fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S ist die Vorlage vorhanden
+- fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S sind Vorlage und temporaer erzeugter Export-/Import-Test vorhanden
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
 - UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
@@ -290,6 +290,7 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | Baukasten-Testexport mit simuliertem 6305-Zielpfad | testseitig validiert | `BuilderTestExportServiceTests` |
 | Automatische Paketlogik AIS -> Geraet -> XDT-Anhang | testseitig validiert | `AutoImportPackageStateServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `AttachmentPackageDecisionServiceTests` |
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
+| ARK1S-Referenzpaket Export/Import | reproduzierbar testseitig validiert | `MedistarNidekArk1sTemplatePackageTests` |
 | BuiltIn/UserDefined-Schutz | testseitig validiert | `ProfileCatalogServiceTests`, TemplateImport-Tests |
 
 Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link: Pflicht-Anhang vorhanden, Pflicht-Anhang fehlt/Fehlerfall und MEDISTAR-Livesystem-Linkaufruf sind bestanden. Noch offen ist die vollstaendige manuelle Praxisabnahme der weiteren Faelle aus `docs/END_TO_END_TESTPLAN.md`. Fuer die weitere Durchfuehrung steht die ausfuellbare Vorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` bereit.
@@ -344,7 +345,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | --- | --- | --- | --- | --- | --- | --- |
 | hoch | E2E-Testplan praktisch weiter ausfuehren | Testplan, Durchfuehrungsschritte und Protokollvorlage sind vorhanden; MEDISTAR + ARK1S + Pflicht-XDT-Anhang wurde am 2026-05-11 praktisch bestanden dokumentiert. | Weitere manuelle Praxisprotokolle fuer die restlichen Testfaelle fehlen, insbesondere optionale Anhaenge, Mehrfachanhaenge, instabile Dateien und nicht unterstuetzte Dateien. | Restliche Faelle aus `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` abarbeiten. | Nicht getestete Randfaelle koennen im Praxisbetrieb auffallen. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
 | hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Pflicht-Anhang vorhanden/fehlt und MEDISTAR-Linkaufruf sind praktisch validiert. | Breitere Praxisabnahme mit optionalem Anhang, Mehrfachanhang, Archiv-/Fehlerablage und Wartezeiten. | Naechsten Praxislauf fuer optionale Anhaenge und Mehrfachanhang-Sicherheit protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in noch nicht getesteten Varianten auffallen. | E2E-Testplan, Testanhaenge |
-| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sechs Geraete vorhanden; praktisch validiert ist MEDISTAR + NIDEK ARK1S. Matrix und ARK1S-Paketvorlage sind dokumentiert. | Reproduzierbar erzeugtes ARK1S-ZIP-Artefakt fehlt; fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | ARK1S-Vorlage mit `TemplatePackageExporter` als ZIP erzeugen, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
+| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sechs Geraete vorhanden; praktisch validiert ist MEDISTAR + NIDEK ARK1S. Matrix, ARK1S-Paketvorlage und reproduzierbarer Export-/Import-Test sind vorhanden. | Dauerhaftes ARK1S-ZIP-Release-Artefakt und praktische App-Importabnahme fehlen; fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | Release-Ablage fuer ARK1S-ZIP festlegen, Paket in der App importieren/abnehmen, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
 | mittel | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht sind read-only vorhanden. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Vorerst parken; nur als Sicherheits-/Regressionsstand beibehalten. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | Profilkatalog, Evaluation, Guard |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
 | mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach konkreter Profil-/Templatepaket-Arbeit als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
@@ -391,7 +392,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 ### Phase 3: Fertige Geraeteprofile und Templatepakete
 
 - `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste nutzen.
-- MEDISTAR + NIDEK ARK1S stabil halten und die vorhandene Paketvorlage als reproduzierbares ZIP-Artefakt erzeugen.
+- MEDISTAR + NIDEK ARK1S stabil halten, den reproduzierbaren Pakettest beibehalten und die App-Importabnahme fuer ein spaeteres ZIP-Release-Artefakt vorbereiten.
 - NIDEK LM7/LM7P als naechstes Geraet anhand repraesentativer Dateien validieren.
 - NT530P und TOPCON-Profile erst nach Datenlage priorisieren.
 - Baukasten schlank halten; keine neue Assistentenarchitektur, solange fertige Profile und Pakete fehlen.
@@ -451,20 +452,21 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
 
-**Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S als reproduzierbares ZIP-Artefakt erzeugen.**
+**Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S praktisch in der App importieren und danach als Release-Artefakt festlegen.**
 
 Konkreter Umfang:
 
 - keine Produktivlogik aendern
 - keine BuiltIn-Profile ueberschreiben
-- vorhandene ARK1S-Paketvorlage als Spezifikation nutzen
+- vorhandene ARK1S-Paketvorlage und `MedistarNidekArk1sTemplatePackageTests` als Spezifikation nutzen
 - Paket mit dem vorhandenen `TemplatePackageExporter` erzeugen
 - Paket mit `TemplatePackageImporter` testweise einlesen
+- Import in der App mit Vorschau/DryRun praktisch abnehmen
 - danach LM7/LM7P-Dateien sammeln und gegen `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` validieren
 - danach Build und Tests ausfuehren
 
 Das ist der beste naechste Schritt, weil es den Baukasten vom Normalweg zum Rueckfallwerkzeug macht und den validierten Kernworkflow in ein wiederverwendbares Anwenderpaket ueberfuehrt.
 
-## 10. Keine Aenderungen an Code
+## 10. Keine Produktivlogik-Aenderungen
 
-Dieser Abgleich ist eine reine Dokumentationsdatei. Es wurden keine Produktivlogik, UI, Tests, Profile, BuiltIn-Profile oder Exportprofile geaendert.
+Dieser Abgleich beschreibt den aktuellen Stand. Ergaenzt wurde nur ein reproduzierbarer Testweg fuer das ARK1S-Templatepaket; Produktivlogik, UI, Profile, BuiltIn-Profile, Exportprofile und Verarbeitung wurden nicht geaendert.

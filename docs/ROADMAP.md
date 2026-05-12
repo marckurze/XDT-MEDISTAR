@@ -119,7 +119,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 ### Schnittstellenprofile und Templatepakete
 
 - Die kompakte Geraete-/Template-Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`.
-- Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; eine reproduzierbar erzeugte ZIP-Paketdatei ist der naechste kleine Schritt.
+- Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; der technische Export-/Import-Testweg erzeugt die ZIP temporaer mit `TemplatePackageExporter` und prueft sie mit `TemplatePackageImporter`. Eine dauerhaft abgelegte ZIP-Paketdatei bleibt bis zur Release-Regel offen.
 - BuiltIn-Profile werden nicht überschrieben.
 - UserDefined-Profile werden separat gespeichert.
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
@@ -179,6 +179,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Baukasten-Testexport für XDT-Datei plus umbenannten XDT-Anhang ist testseitig abgesichert.
 - Externe AIS-Linkfelder `6302`, `6303`, optional `6304` und `6305` sind fachlich anhand des MEDISTAR-Beispiels und technisch im Baukasten-/Testpfad belegt.
 - Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Dependency-Remapping.
+- MEDISTAR + NIDEK ARK1S ist als Referenzpaket reproduzierbar testseitig export-/importgeprueft; die ZIP wird dabei nur im temporaeren Testordner erzeugt.
 
 Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.
 
@@ -189,7 +190,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 - TOPCON CL300.
 - TOPCON KR800.
 - TOPCON TRK2P.
-- Fertige, auslieferbare Geraete-Templatepakete als ZIP-Artefakte. Fuer ARK1S ist die Vorlage bereits dokumentiert.
+- Fertige, auslieferbare Geraete-Templatepakete als ZIP-Artefakte. Fuer ARK1S sind Vorlage und reproduzierbarer Export-/Import-Test bereits vorhanden.
 - `ReplaceExisting` für UserDefined-Profile.
 - Freie Konfliktlösungs-/Bearbeitungsdialoge.
 - Manuelle Zielnamen-/ID-Bearbeitung in der UI.
@@ -234,7 +235,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 ### Phase 2: Fertige Geraeteprofile und Templatepakete
 
 - MEDISTAR + NIDEK ARK1S als stabilen Referenzworkflow schuetzen.
-- Aus der dokumentierten ARK1S-Paketvorlage ein reproduzierbar erzeugtes ZIP-Templatepaket ableiten.
+- Die dokumentierte ARK1S-Paketvorlage und den reproduzierbaren Export-/Import-Testweg als Grundlage fuer ein spaeteres ZIP-Release-Artefakt nutzen.
 - NIDEK LM7/LM7P mit repraesentativen XML-Dateien validieren und als naechstes fertiges Profil-/Templatepaket vorbereiten.
 - NIDEK NT530P oder TOPCON-Profile nur dann priorisieren, wenn belastbare Beispiel- und Testdaten vorliegen.
 
@@ -279,7 +280,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 ## 6. Empfohlene nächste kleine Codex-Schritte
 
-1. Erste offizielle ARK1S-Paketvorlage mit dem vorhandenen `TemplatePackageExporter` reproduzierbar als ZIP-Artefakt erzeugen.
+1. ARK1S-Referenzpaket praktisch in der App importieren und danach Ablage/Release-Regel fuer das offizielle ZIP-Artefakt festlegen.
 2. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
 3. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 4. Fuer LM7/LM7P ein fertiges Profil-/Templatepaket vorbereiten, wenn die Datenlage reicht.

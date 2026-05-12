@@ -2,7 +2,7 @@
 
 Stand: 2026-05-12
 
-Status: offizielle V1-Paketvorlage, noch keine eingecheckte ZIP-Paketdatei
+Status: offizielle V1-Paketvorlage, reproduzierbar export-/importgeprueft, noch keine eingecheckte ZIP-Paketdatei
 
 ## Zweck
 
@@ -28,7 +28,9 @@ interfaces/<interface-profile-id>.json
 
 Der vorhandene `TemplatePackageImporter` liest genau diese Struktur wieder ein. Export, Import, Validierung, Konfliktanalyse, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme sind testseitig abgesichert.
 
-Aktuell gibt es noch keinen gepflegten Repository-Schritt, der ein versioniertes ZIP-Artefakt reproduzierbar aus den BuiltIn-Profilen erzeugt. Deshalb wird in diesem Schritt bewusst keine manuell zusammengebaute ZIP-Datei eingecheckt. Diese Vorlage definiert das Paket exakt im vorhandenen Format; die echte Paketdatei soll im naechsten kleinen Schritt mit dem bestehenden `TemplatePackageExporter` reproduzierbar erzeugt werden.
+Der Test `MedistarNidekArk1sTemplatePackageTests` erzeugt das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und liest es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, enthaltene Profile, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft.
+
+Aktuell wird weiterhin keine manuell zusammengebaute ZIP-Datei eingecheckt. Ein dauerhaftes Release-Artefakt soll erst entstehen, wenn der Ablageort und der Release-Schritt fuer Templatepakete festgelegt sind.
 
 ## Paketmetadaten
 
@@ -112,13 +114,20 @@ Diese Vorlage und die spaetere Paketdatei duerfen nicht enthalten:
 - echte Serverfreigaben
 - echte Export-/Archiv-/Fehlerordner
 
+## Reproduzierbarer Testweg
+
+Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
+
+- `package.json` und die Ordner `ais/`, `devices/`, `exports/`, `interfaces/`
+- genau die vier Referenzprofile fuer MEDISTAR + NIDEK ARK1S
+- XDT-Anhang-Linkeinstellungen fuer `6302`, `6303`, optional `6304` und `6305`
+- keine offensichtlichen Live-Pfade, Kundenmarker oder Patientendatenmarker
+- Import gegen vorhandene BuiltIn-Profile nur als UserDefined-Kopie
+- importiertes Schnittstellenprofil bleibt inaktiv
+- `IsAttachmentProcessingEnabled` bleibt nach Import deaktiviert
+
 ## Naechster kleiner Schritt
 
-1. Einen reproduzierbaren Erzeugungsweg fuer die Paketdatei definieren, der den vorhandenen `TemplatePackageExporter` nutzt.
-2. ZIP-Artefakt z. B. unter `template-packages/medistar-nidek-ark1s-v1.templatepackage.zip` erzeugen.
-3. Test ergaenzen, der das Paket mit `TemplatePackageImporter` einliest und prueft:
-   - erwartete vier Profile enthalten
-   - keine Live-Pfade enthalten
-   - Schnittstellenprofil inaktiv
-   - XDT-Anhang-Automatik nach Import nicht automatisch produktiv aktiv
-4. Build und Tests ausfuehren.
+1. Ablage- und Release-Regel fuer offizielle Templatepaket-ZIP-Dateien festlegen.
+2. Danach das Artefakt z. B. unter `template-packages/medistar-nidek-ark1s-v1.templatepackage.zip` reproduzierbar erzeugen.
+3. Praktische App-Abnahme: Paket in der UI importieren, Importvorschau pruefen, keine automatische Aktivierung.
