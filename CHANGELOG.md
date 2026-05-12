@@ -20,6 +20,7 @@
 - Defensiven `InterfaceProfileActivationExecutorStub` ergaenzt; er bewertet Preconditions und liefert Statuswerte wie `ReadyButNotExecuted`, `Blocked` oder `RequiresWarningConfirmation`, fuehrt aber keine Aktivierung, Speicherung, Datei-/Ordneroperation oder Verarbeitung aus.
 - `ActivationExecutor`-Request und -Result fuer eine spaetere Backend-Aktivierung erweitert: Zielprofil-ID/-Name, OperationMode, Preview-/Statuskontext, optionale Fingerprint-/Warnungsdaten sowie praezise Result-Flags fuer frisches Laden, sichere UserDefined-Speicherung und finale Re-Evaluation; der Stub bleibt nicht-produktiv.
 - Executor-nahe Store-/Loader-Abstraktion fuer spaeteres frisches Laden und sichere UserDefined-Speicherung vorbereitet; der aktuelle Store-Stub arbeitet nur in-memory, blockiert BuiltIn/Nicht-UserDefined und speichert weiterhin nichts.
+- `InterfaceProfileActivationProfileCatalogStore` als ValidateOnly-Adapter gegen `ProfileCatalogService`/`AppDataPaths` ergaenzt; frisches Laden ist moeglich, Save bleibt DryRun ohne `SaveInterfaceProfileDefinition`, ohne JSON-Schreibzugriff und ohne Profilmutation.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 

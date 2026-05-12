@@ -5,10 +5,15 @@ public enum InterfaceProfileActivationProfileStoreStatus
     NotAvailable,
     NotFound,
     BuiltInBlocked,
+    NonUserDefinedBlocked,
     UserDefinedRequired,
     LoadedUserDefined,
+    ValidateOnly,
     SaveBlocked,
     SaveNotImplemented,
+    SaveWouldBeAllowed,
     WouldSave,
-    Saved
+    Saved,
+    MissingCapability,
+    Failed
 }

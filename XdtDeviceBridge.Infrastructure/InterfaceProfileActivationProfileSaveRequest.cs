@@ -7,4 +7,7 @@ public sealed record InterfaceProfileActivationProfileSaveRequest(
     string Source = "ActivationExecutor",
     DateTimeOffset? RequestedAtUtc = null,
     string? ExpectedConfigurationFingerprint = null,
-    bool AllowOverwriteExistingUserDefined = false);
+    bool AllowOverwriteExistingUserDefined = false,
+    InterfaceProfileActivationExecutorOperationMode OperationMode =
+        InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
+    bool FinalReEvaluationCompleted = false);

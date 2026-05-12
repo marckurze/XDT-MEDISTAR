@@ -912,9 +912,11 @@ Aktueller technischer Befund:
 - `InterfaceProfileActivationExecutorRequest` transportiert jetzt Zielprofil-ID/-Name, `OperationMode` (`ValidateOnly`, `Activate`, `Deactivate`), Quelle/Anforderungszeitpunkt, Preview-Zeitpunkt, erwartete Preview-Statuswerte, optionalen Fingerprint sowie Warnungsbestaetigungs-Token/-Codes.
 - Der Request enthaelt bewusst keine konkrete Store-Service-Referenz. Ein produktiver Executor soll Loader/Store nach Projektmuster per Konstruktor oder vergleichbarer Backend-Verdrahtung erhalten, nicht ueber beliebige Serviceobjekte im Request.
 - `InterfaceProfileActivationExecutorResult` kann fehlende produktive Faehigkeiten nun ausdruecken: frisches Laden erforderlich, sichere UserDefined-Speicherung erforderlich, finale Re-Evaluation erforderlich, nicht ausgefuehrt, nicht gespeichert, kein Profil geaendert und fehlende Capabilities.
-- Fuer den spaeteren Executor ist eine kleine Store-/Loader-Abstraktion vorbereitet: `IInterfaceProfileActivationProfileStore` mit Load-/Save-Resultmodellen und einem defensiven `InterfaceProfileActivationProfileStoreStub`.
+- Fuer den spaeteren Executor ist eine kleine Store-/Loader-Abstraktion vorbereitet: `IInterfaceProfileActivationProfileStore` mit Load-/Save-Resultmodellen, einem defensiven `InterfaceProfileActivationProfileStoreStub` und dem ValidateOnly-Adapter `InterfaceProfileActivationProfileCatalogStore`.
 - Diese Abstraktion ist executor-nah und kein allgemeiner Profilstore. Sie modelliert Zielprofil-ID, gefunden/nicht gefunden, UserDefined/BuiltIn-Schutz und nicht implementierte Speicherung.
 - Der aktuelle Store-Stub nutzt nur einen uebergebenen In-Memory-Bestand, ruft keinen Profilkatalog, schreibt nichts und fuehrt keine Datei-/Ordneroperation aus.
+- `InterfaceProfileActivationProfileCatalogStore` kann ueber `ProfileCatalogService.Load(...)` und `AppDataPaths` ein Schnittstellenprofil frisch lesen und UserDefined/BuiltIn/Nicht-UserDefined bewerten.
+- Die Save-Seite des Catalog-Adapters bleibt absichtlich ValidateOnly/DryRun: `SaveInterfaceProfileDefinition` wird nicht aufgerufen, es wird keine JSON-Datei geschrieben und `IsActive` wird nicht veraendert.
 
 Konservative Entscheidung fuer die erste technische Stufe:
 
@@ -923,6 +925,7 @@ Konservative Entscheidung fuer die erste technische Stufe:
 - Der Stub bewertet die uebergebenen Preconditions, liefert sinnvolle Statuswerte und benennt fehlende Voraussetzungen jetzt praeziser, etwa fehlende Zielprofil-ID, fehlenden Loader/Store-Kontext, erforderliches frisches Laden und erforderliche finale Re-Evaluation.
 - Er setzt `IsActive` nicht, speichert nichts, aendert kein Profil, startet keine Verarbeitung und fuehrt keine Datei-/Ordneroperation aus.
 - Der vorbereitete `InterfaceProfileActivationProfileStoreStub` speichert ebenfalls nichts. Selbst ein formal UserDefined-faehiger SaveRequest endet mit `SaveNotImplemented`.
+- Der vorbereitete `InterfaceProfileActivationProfileCatalogStore` ist die erste echte Projektstruktur-Anbindung, aber ebenfalls nicht produktiv speichernd: UserDefined-Save wird nur als `SaveWouldBeAllowed`/DryRun gemeldet, wenn finale Re-Evaluation nachgewiesen ist.
 
 Grund:
 
