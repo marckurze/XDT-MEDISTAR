@@ -279,7 +279,7 @@ public sealed class TemplatePackageImportExecutorTests
         Assert.Equal(@"C:\XdtBridge\AttachmentOut", loadedInterface.FolderOptions.AttachmentExportFolder);
         Assert.Equal("Beschreibung", loadedInterface.FolderOptions.AttachmentExternalLinkDescription);
         Assert.False(loadedInterface.FolderOptions.IsAttachmentProcessingEnabled);
-        Assert.Contains(result.Warnings, warning => warning.Contains("XDT attachment settings", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Warnings, warning => warning.Contains("XDT-Anhang-Einstellungen", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -296,7 +296,7 @@ public sealed class TemplatePackageImportExecutorTests
 
         Assert.Empty(_catalogService.Load(paths).AisProfiles);
         Assert.Equal(1, result.Blocked);
-        Assert.Contains(result.BlockedProfiles, item => item.Message.Contains("safe file name", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.BlockedProfiles, item => item.Message.Contains("sicherer Dateiname", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -454,7 +454,7 @@ public sealed class TemplatePackageImportExecutorTests
             RequiresDependencyRemap: dependencyRemaps?.Any(remap => remap.Resolution == TemplatePackageImportDependencyResolution.ImportedAsCopy) ?? false,
             DependencyRemaps: dependencyRemaps ?? Array.Empty<TemplatePackageImportDependencyRemap>(),
             DependencyRemapWarnings: profileKind == ProfileKind.InterfaceProfile
-                ? new[] { "Imported interface profile contains XDT attachment settings; folder paths and 6302/6303/6304/6305 must be reviewed before activation." }
+                ? new[] { "Importiertes Schnittstellenprofil enthält XDT-Anhang-Einstellungen; Ordnerpfade und Felder 6302/6303/6304/6305 müssen vor späterer Nutzung geprüft werden." }
                 : Array.Empty<string>(),
             Message: "Dry-run message.");
     }
@@ -473,7 +473,7 @@ public sealed class TemplatePackageImportExecutorTests
             TargetProfileId: targetId,
             TargetProfileName: targetName,
             Resolution: resolution,
-            Message: "Dependency remapped.");
+            Message: "Abhängigkeit wurde zugeordnet.");
     }
 
     private static TemplatePackageImportResult CreateImportResult(

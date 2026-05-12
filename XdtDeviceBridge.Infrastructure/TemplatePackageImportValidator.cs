@@ -12,13 +12,13 @@ public sealed class TemplatePackageImportValidator
 
         if (result.Package is null)
         {
-            AddError(issues, "Package must not be null.", null, ProfileKind.TemplatePackage);
+            AddError(issues, "Templatepaket darf nicht leer sein.", null, ProfileKind.TemplatePackage);
         }
         else if (result.Package.Metadata is null || result.Package.Metadata.ProfileKind != ProfileKind.TemplatePackage)
         {
             AddError(
                 issues,
-                "Package Metadata.ProfileKind must be TemplatePackage.",
+                "Paket-Metadaten muessen die Profilart TemplatePackage haben.",
                 result.Package.Metadata?.Id,
                 result.Package.Metadata?.ProfileKind);
         }
@@ -43,7 +43,7 @@ public sealed class TemplatePackageImportValidator
             {
                 AddError(
                     issues,
-                    $"Export profile references missing AIS profile: {exportProfile.TargetAisProfileId}",
+                    $"Exportprofil verweist auf fehlendes AIS-Profil: {exportProfile.TargetAisProfileId}",
                     exportProfile.Metadata.Id,
                     ProfileKind.ExportProfile);
             }
@@ -52,7 +52,7 @@ public sealed class TemplatePackageImportValidator
             {
                 AddError(
                     issues,
-                    $"Export profile references missing Device profile: {exportProfile.SourceDeviceProfileId}",
+                    $"Exportprofil verweist auf fehlendes Geräteprofil: {exportProfile.SourceDeviceProfileId}",
                     exportProfile.Metadata.Id,
                     ProfileKind.ExportProfile);
             }
@@ -60,7 +60,7 @@ public sealed class TemplatePackageImportValidator
 
         if (interfaceProfiles.Count == 0)
         {
-            AddWarning(issues, "Template package does not contain any interface profiles.", null, ProfileKind.InterfaceProfile);
+            AddWarning(issues, "Templatepaket enthält keine Schnittstellenprofile.", null, ProfileKind.InterfaceProfile);
         }
 
         foreach (var interfaceProfile in interfaceProfiles)
@@ -69,7 +69,7 @@ public sealed class TemplatePackageImportValidator
             {
                 AddError(
                     issues,
-                    $"Interface profile references missing AIS profile: {interfaceProfile.AisProfileId}",
+                    $"Schnittstellenprofil verweist auf fehlendes AIS-Profil: {interfaceProfile.AisProfileId}",
                     interfaceProfile.Metadata.Id,
                     ProfileKind.InterfaceProfile);
             }
@@ -78,7 +78,7 @@ public sealed class TemplatePackageImportValidator
             {
                 AddError(
                     issues,
-                    $"Interface profile references missing Device profile: {interfaceProfile.DeviceProfileId}",
+                    $"Schnittstellenprofil verweist auf fehlendes Geräteprofil: {interfaceProfile.DeviceProfileId}",
                     interfaceProfile.Metadata.Id,
                     ProfileKind.InterfaceProfile);
             }
@@ -87,7 +87,7 @@ public sealed class TemplatePackageImportValidator
             {
                 AddError(
                     issues,
-                    $"Interface profile references missing Export profile: {interfaceProfile.ExportProfileId}",
+                    $"Schnittstellenprofil verweist auf fehlendes Exportprofil: {interfaceProfile.ExportProfileId}",
                     interfaceProfile.Metadata.Id,
                     ProfileKind.InterfaceProfile);
             }
@@ -101,7 +101,7 @@ public sealed class TemplatePackageImportValidator
             {
                 AddWarning(
                     issues,
-                    "Imported delete options must be reviewed before productive activation.",
+                    "Importierte Löschoptionen müssen vor späterer Nutzung geprüft werden.",
                     interfaceProfile.Metadata.Id,
                     ProfileKind.InterfaceProfile);
             }
@@ -122,7 +122,7 @@ public sealed class TemplatePackageImportValidator
 
         foreach (var duplicateId in duplicates)
         {
-            AddError(issues, $"Duplicate {profileKind} profile Id: {duplicateId}", duplicateId, profileKind);
+            AddError(issues, $"Doppelte Profil-ID fuer {profileKind}: {duplicateId}", duplicateId, profileKind);
         }
     }
 
@@ -132,17 +132,17 @@ public sealed class TemplatePackageImportValidator
     {
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AisImportFolder))
         {
-            AddError(issues, "Active interface profile requires AisImportFolder.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);
+            AddError(issues, "Aktives Schnittstellenprofil benötigt einen AIS-Importordner.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);
         }
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.DeviceImportFolder))
         {
-            AddError(issues, "Active interface profile requires DeviceImportFolder.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);
+            AddError(issues, "Aktives Schnittstellenprofil benötigt einen Geräte-Importordner.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);
         }
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ExportFolder))
         {
-            AddError(issues, "Active interface profile requires ExportFolder.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);
+            AddError(issues, "Aktives Schnittstellenprofil benötigt einen Exportordner.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);
         }
     }
 

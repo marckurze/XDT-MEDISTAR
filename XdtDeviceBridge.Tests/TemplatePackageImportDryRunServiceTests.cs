@@ -221,7 +221,7 @@ public sealed class TemplatePackageImportDryRunServiceTests
         Assert.Equal(TemplatePackageImportDependencyResolution.ImportedAsCopy, remap.Resolution);
         Assert.Equal("ais-imported-copy", remap.TargetProfileId);
         Assert.True(item.RequiresDependencyRemap);
-        Assert.Contains(item.DependencyRemapWarnings, warning => warning.Contains("remapped", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(item.DependencyRemapWarnings, warning => warning.Contains("zugeordnet", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -266,7 +266,7 @@ public sealed class TemplatePackageImportDryRunServiceTests
 
         var item = Assert.Single(result.Items);
         Assert.Contains(item.DependencyRemapWarnings, warning => warning.Contains("6302/6303/6304/6305", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(result.Warnings, warning => warning.Contains("XDT attachment settings", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Warnings, warning => warning.Contains("XDT-Anhang-Einstellungen", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public sealed class TemplatePackageImportDryRunServiceTests
                 exportProfiles: new[] { CreateExportProfile("export-local", "Local Export", "ais-local", "device-local") }));
 
         var item = Assert.Single(result.Items);
-        Assert.Contains(item.DependencyRemapWarnings, warning => warning.Contains("will not be activated automatically", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(item.DependencyRemapWarnings, warning => warning.Contains("wird nicht automatisch aktiviert", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

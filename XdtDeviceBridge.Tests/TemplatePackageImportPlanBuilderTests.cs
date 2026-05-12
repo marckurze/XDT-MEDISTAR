@@ -117,8 +117,8 @@ public sealed class TemplatePackageImportPlanBuilderTests
         Assert.Equal(TemplatePackageImportAction.ImportAsNew, profilePlan.PlannedAction);
         Assert.False(profilePlan.IsBlocking);
         Assert.True(profilePlan.RequiresUserDecision);
-        Assert.Contains(plan.Warnings, warning => warning.Contains("folder paths", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains("must not be activated automatically", profilePlan.Message);
+        Assert.Contains(plan.Warnings, warning => warning.Contains("Ordnerpfade", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("nicht automatisch aktiviert", profilePlan.Message);
     }
 
     [Theory]
@@ -258,12 +258,12 @@ public sealed class TemplatePackageImportPlanBuilderTests
                 },
                 warnings: new[]
                 {
-                    "Imported interface profile 'Attachment Interface' contains XDT attachment folder settings that must be reviewed before use."
+                    "Importiertes Schnittstellenprofil 'Attachment Interface' enthält XDT-Anhang-Ordner; Ordnerpfade müssen vor späterer Nutzung geprüft werden."
                 }),
             GeneratedAt);
 
-        Assert.Contains(plan.Warnings, warning => warning.Contains("XDT attachment folder settings", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(plan.Warnings, warning => warning.Contains("dependency remapping", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(plan.Warnings, warning => warning.Contains("XDT-Anhang-Ordner", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(plan.Warnings, warning => warning.Contains("Abhängigkeitszuordnung", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

@@ -74,9 +74,9 @@ public sealed class TemplatePackageImportSelectionService
             TemplatePackageImportAction.ImportAsCopy => CreateImportAsCopyPlan(profilePlan, selection, reservedIds, reservedNames),
             TemplatePackageImportAction.KeepExisting => CreateKeepExistingPlan(profilePlan),
             TemplatePackageImportAction.Skip => CreateSkipPlan(profilePlan),
-            TemplatePackageImportAction.Blocked => CreateBlockedPlan(profilePlan, "Profile remains blocked by user selection."),
-            TemplatePackageImportAction.ReplaceExisting => CreateBlockedPlan(profilePlan, "ReplaceExisting is not supported in this step."),
-            _ => CreateBlockedPlan(profilePlan, $"Unsupported user selection: {selectedAction}.")
+            TemplatePackageImportAction.Blocked => CreateBlockedPlan(profilePlan, "Profil bleibt durch die Benutzerauswahl blockiert."),
+            TemplatePackageImportAction.ReplaceExisting => CreateBlockedPlan(profilePlan, "ReplaceExisting wird in diesem Schritt nicht unterstützt."),
+            _ => CreateBlockedPlan(profilePlan, $"Nicht unterstützte Benutzerauswahl: {selectedAction}.")
         };
     }
 
@@ -95,7 +95,7 @@ public sealed class TemplatePackageImportSelectionService
             RequiresRename = false,
             ProposedProfileId = profilePlan.ImportedProfileId,
             ProposedProfileName = profilePlan.ImportedProfileName,
-            Message = "Profile will be imported as new."
+            Message = "Profil wird neu importiert."
         };
     }
 
@@ -121,7 +121,7 @@ public sealed class TemplatePackageImportSelectionService
             RequiresRename = true,
             ProposedProfileId = proposedId,
             ProposedProfileName = proposedName.Value,
-            Message = "Profile will be imported as a safe UserDefined copy."
+            Message = "Profil wird als sichere UserDefined-Kopie importiert."
         };
     }
 
@@ -171,7 +171,7 @@ public sealed class TemplatePackageImportSelectionService
             RequiresRename = false,
             ProposedProfileId = null,
             ProposedProfileName = null,
-            Message = "Existing local profile will be kept."
+            Message = "Bestehendes lokales Profil bleibt erhalten."
         };
     }
 
@@ -185,7 +185,7 @@ public sealed class TemplatePackageImportSelectionService
             RequiresRename = false,
             ProposedProfileId = null,
             ProposedProfileName = null,
-            Message = "Imported profile will be skipped."
+            Message = "Importiertes Profil wird übersprungen."
         };
     }
 

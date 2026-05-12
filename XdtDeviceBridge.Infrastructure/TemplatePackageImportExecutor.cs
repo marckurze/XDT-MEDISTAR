@@ -63,7 +63,7 @@ public sealed class TemplatePackageImportExecutor
             SkippedProfiles: skipped,
             BlockedProfiles: blocked,
             Warnings: warnings.Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
-            ErrorMessage: failed == 0 ? null : "At least one profile could not be imported.",
+            ErrorMessage: failed == 0 ? null : "Mindestens ein Profil konnte nicht importiert werden.",
             ImportedAsNew: imported.Count(item => item.Action == TemplatePackageImportAction.ImportAsNew),
             ImportedAsCopy: imported.Count(item => item.Action == TemplatePackageImportAction.ImportAsCopy),
             Skipped: skipped.Count,
@@ -82,7 +82,7 @@ public sealed class TemplatePackageImportExecutor
     {
         if (!planIndex.TryGetValue(CreateProfileKey(dryRunItem.ProfileKind, dryRunItem.ImportedProfileId), out var profilePlan))
         {
-            return CreateBlockedItem(dryRunItem, "Import plan entry is missing.");
+            return CreateBlockedItem(dryRunItem, "Importplan-Eintrag fehlt.");
         }
 
         if (dryRunItem.IsBlocking || profilePlan.IsBlocking || profilePlan.PlannedAction == TemplatePackageImportAction.Blocked)
@@ -105,23 +105,23 @@ public sealed class TemplatePackageImportExecutor
         if (profilePlan.PlannedAction is not TemplatePackageImportAction.ImportAsNew
             and not TemplatePackageImportAction.ImportAsCopy)
         {
-            return CreateBlockedItem(dryRunItem, $"Unsupported import action: {profilePlan.PlannedAction}.");
+            return CreateBlockedItem(dryRunItem, $"Nicht unterstützte Importaktion: {profilePlan.PlannedAction}.");
         }
 
         if (!dryRunItem.WouldWrite)
         {
-            return CreateBlockedItem(dryRunItem, "Dry-run did not allow writing this profile.");
+            return CreateBlockedItem(dryRunItem, "Vorschau erlaubt das Schreiben dieses Profils nicht.");
         }
 
         if (string.IsNullOrWhiteSpace(dryRunItem.TargetProfileId)
             || string.IsNullOrWhiteSpace(dryRunItem.TargetProfileName))
         {
-            return CreateBlockedItem(dryRunItem, "Target profile id or name is missing.");
+            return CreateBlockedItem(dryRunItem, "Zielprofil-ID oder Zielname fehlt.");
         }
 
         if (!IsSafeProfileId(dryRunItem.TargetProfileId))
         {
-            return CreateBlockedItem(dryRunItem, "Target profile id is not a safe file name.");
+            return CreateBlockedItem(dryRunItem, "Zielprofil-ID ist kein sicherer Dateiname.");
         }
 
         try
@@ -176,32 +176,32 @@ public sealed class TemplatePackageImportExecutor
         {
             case ProfileKind.AisProfile:
                 var aisProfile = importedIndex.FindAisProfile(dryRunItem.ImportedProfileId)
-                    ?? throw new InvalidOperationException($"Imported AIS profile not found: {dryRunItem.ImportedProfileId}");
+                    ?? throw new InvalidOperationException($"Importiertes AIS-Profil nicht gefunden: {dryRunItem.ImportedProfileId}");
                 _profileCatalogService.SaveNewAisProfile(paths, ToUserDefined(aisProfile, dryRunItem, importedAt, importedBy));
-                return "AIS profile imported as UserDefined.";
+                return "AIS-Profil als UserDefined importiert.";
 
             case ProfileKind.DeviceProfile:
                 var deviceProfile = importedIndex.FindDeviceProfile(dryRunItem.ImportedProfileId)
-                    ?? throw new InvalidOperationException($"Imported device profile not found: {dryRunItem.ImportedProfileId}");
+                    ?? throw new InvalidOperationException($"Importiertes Geräteprofil nicht gefunden: {dryRunItem.ImportedProfileId}");
                 _profileCatalogService.SaveNewDeviceProfileDefinition(paths, ToUserDefined(deviceProfile, dryRunItem, importedAt, importedBy));
-                return "Device profile imported as UserDefined.";
+                return "Geräteprofil als UserDefined importiert.";
 
             case ProfileKind.ExportProfile:
                 var exportProfile = importedIndex.FindExportProfile(dryRunItem.ImportedProfileId)
-                    ?? throw new InvalidOperationException($"Imported export profile not found: {dryRunItem.ImportedProfileId}");
+                    ?? throw new InvalidOperationException($"Importiertes Exportprofil nicht gefunden: {dryRunItem.ImportedProfileId}");
                 _profileCatalogService.SaveNewExportProfile(paths, ToUserDefined(exportProfile, dryRunItem, importedAt, importedBy));
-                return "Export profile imported as UserDefined.";
+                return "Exportprofil als UserDefined importiert.";
 
             case ProfileKind.InterfaceProfile:
                 var interfaceProfile = importedIndex.FindInterfaceProfile(dryRunItem.ImportedProfileId)
-                    ?? throw new InvalidOperationException($"Imported interface profile not found: {dryRunItem.ImportedProfileId}");
+                    ?? throw new InvalidOperationException($"Importiertes Schnittstellenprofil nicht gefunden: {dryRunItem.ImportedProfileId}");
                 var safeInterfaceProfile = ToUserDefined(interfaceProfile, dryRunItem, importedAt, importedBy);
                 _profileCatalogService.SaveNewInterfaceProfileDefinition(paths, safeInterfaceProfile);
-                warnings.Add($"Imported interface profile '{safeInterfaceProfile.Metadata.Name}' was deactivated. Folder paths and XDT attachment settings must be reviewed before activation.");
-                return "Interface profile imported as inactive UserDefined profile.";
+                warnings.Add($"Importiertes Schnittstellenprofil '{safeInterfaceProfile.Metadata.Name}' wurde inaktiv importiert. Ordnerpfade und XDT-Anhang-Einstellungen müssen vor späterer Nutzung geprüft werden.");
+                return "Schnittstellenprofil als inaktives UserDefined-Profil importiert.";
 
             default:
-                throw new InvalidOperationException($"Unsupported profile kind: {dryRunItem.ProfileKind}");
+                throw new InvalidOperationException($"Nicht unterstützte Profilart: {dryRunItem.ProfileKind}");
         }
     }
 
@@ -273,13 +273,13 @@ public sealed class TemplatePackageImportExecutor
         var remap = dryRunItem.DependencyRemaps.FirstOrDefault(remap => remap.DependencyKind == dependencyKind);
         if (remap is null || string.IsNullOrWhiteSpace(remap.TargetProfileId))
         {
-            throw new InvalidOperationException($"Interface profile dependency cannot be resolved: {dependencyKind}.");
+            throw new InvalidOperationException($"Schnittstellenprofil-Abhängigkeit konnte nicht aufgelöst werden: {dependencyKind}.");
         }
 
         if (remap.Resolution is TemplatePackageImportDependencyResolution.Missing
             or TemplatePackageImportDependencyResolution.Blocked)
         {
-            throw new InvalidOperationException($"Interface profile dependency is blocked: {dependencyKind}.");
+            throw new InvalidOperationException($"Schnittstellenprofil-Abhängigkeit ist blockiert: {dependencyKind}.");
         }
 
         return remap.TargetProfileId;

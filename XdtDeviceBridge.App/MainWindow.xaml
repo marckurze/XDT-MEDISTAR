@@ -617,6 +617,13 @@
                                             <DataGridTextColumn Header="Meldung" Binding="{Binding Message}" MinWidth="320" Width="*"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
+                                    <TextBlock Grid.Row="4"
+                                               x:Name="TemplatePackageImportDependencyEmptyText"
+                                               Visibility="Collapsed"
+                                               Foreground="DimGray"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center"
+                                               Margin="4"/>
                                     <WrapPanel Grid.Row="5" Margin="0,8,0,8">
                                         <Button x:Name="ExecuteTemplatePackageImportButton"
                                                 Content="Import als UserDefined übernehmen"

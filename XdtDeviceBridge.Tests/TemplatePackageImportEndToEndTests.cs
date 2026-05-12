@@ -199,8 +199,8 @@ public sealed class TemplatePackageImportEndToEndTests
         Assert.Equal("{ExtensionUpperWithoutDot}", importedInterface.FolderOptions.AttachmentExternalLinkFileFormat);
         Assert.Equal("Test M.Kurze", importedInterface.FolderOptions.AttachmentExternalLinkDescription);
         Assert.Equal("{Attachment.TargetFullPath}", importedInterface.FolderOptions.AttachmentExternalLinkPathTemplate);
-        Assert.Contains(result.Execution.Warnings, warning => warning.Contains("XDT attachment settings", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(result.Execution.Warnings, warning => warning.Contains("deactivated", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Execution.Warnings, warning => warning.Contains("XDT-Anhang-Einstellungen", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Execution.Warnings, warning => warning.Contains("inaktiv importiert", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

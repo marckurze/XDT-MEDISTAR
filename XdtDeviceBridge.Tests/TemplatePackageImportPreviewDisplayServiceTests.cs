@@ -53,6 +53,7 @@ public sealed class TemplatePackageImportPreviewDisplayServiceTests
         Assert.DoesNotContain("Bestehendes ersetzen", row.PlannedAction);
         Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ImportAsCopy);
         Assert.Contains("BuiltIn", row.Message);
+        Assert.DoesNotContain("protected", row.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -133,13 +134,38 @@ public sealed class TemplatePackageImportPreviewDisplayServiceTests
                 dependencyWarnings: new[]
                 {
                     "Imported interface profile 'Interface' contains XDT attachment settings; folder paths and 6302/6303/6304/6305 must be reviewed before activation.",
+                    "Imported interface profile 'Interface' will not be activated automatically.",
                     "Imported interface profile 'Interface' will not be activated automatically."
                 }));
 
         var row = Assert.Single(display.Rows);
         Assert.Equal("Warnung", row.Status);
         Assert.Contains(display.Warnings, warning => warning.Contains("6302/6303/6304/6305", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(display.Warnings, warning => warning.Contains("not be activated automatically", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(display.Warnings, warning => warning.Contains("wird nicht automatisch aktiviert", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(display.Warnings.Count, display.Warnings.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        AssertVisiblePreviewTextIsGerman(display);
+    }
+
+    [Fact]
+    public void Create_ShouldExplainEmptyDependenciesWhenInterfaceProfilesAreSkipped()
+    {
+        var display = CreateDisplay(
+            Plan(
+                ProfileKind.InterfaceProfile,
+                "interface-skip",
+                "Interface",
+                plannedAction: TemplatePackageImportAction.Skip,
+                requiresUserDecision: true),
+            Item(
+                ProfileKind.InterfaceProfile,
+                "interface-skip",
+                "Interface",
+                plannedAction: TemplatePackageImportAction.Skip,
+                wouldWrite: false,
+                wouldSkip: true));
+
+        Assert.Empty(display.DependencyRows);
+        Assert.Contains("übersprungen", display.DependencyEmptyStateMessage, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -413,5 +439,19 @@ public sealed class TemplatePackageImportPreviewDisplayServiceTests
             TargetProfileName: null,
             Resolution: resolution,
             Message: $"Dependency {dependencyKind} {resolution}.");
+    }
+
+    private static void AssertVisiblePreviewTextIsGerman(TemplatePackageImportPreviewDisplay display)
+    {
+        var visibleText = string.Join(
+            Environment.NewLine,
+            display.Messages
+                .Concat(display.Warnings)
+                .Concat(display.Rows.Select(row => row.Message))
+                .Concat(display.DependencyRows.Select(row => row.Message))
+                .Concat(new[] { display.DependencyEmptyStateMessage }));
+
+        Assert.DoesNotContain("Imported interface profile", visibleText, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("must be reviewed", visibleText, StringComparison.OrdinalIgnoreCase);
     }
 }

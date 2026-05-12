@@ -28,7 +28,7 @@ interfaces/<interface-profile-id>.json
 
 Der vorhandene `TemplatePackageImporter` liest genau diese Struktur wieder ein. Export, Import, Validierung, Konfliktanalyse, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme sind testseitig abgesichert. Die App-Importvorschau nutzt dafuer einen schlanken Preview-Service, damit der UI-Pfad dieselbe pruefbare Importstrecke verwendet.
 
-Der Test `MedistarNidekArk1sTemplatePackageTests` erzeugt das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und liest es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, enthaltene Profile, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen, der UI-nahe Preview-Pfad und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft.
+Der Test `MedistarNidekArk1sTemplatePackageTests` erzeugt das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und liest es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, enthaltene Profile, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen, der UI-nahe Preview-Pfad und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft. Die Vorschau zeigt bei uebersprungenen Schnittstellenprofilen jetzt einen deutschen Leerhinweis statt einer unverstaendlich leeren Abhaengigkeitstabelle.
 
 Aktuell wird weiterhin keine manuell zusammengebaute ZIP-Datei eingecheckt. Ein dauerhaftes Release-Artefakt soll erst entstehen, wenn der Ablageort und der Release-Schritt fuer Templatepakete festgelegt sind.
 
@@ -96,6 +96,7 @@ Beim Import muessen die bestehenden Sicherheitsregeln gelten:
 - BuiltIn-Profile werden nicht ueberschrieben.
 - Konflikte und BuiltIn-geschuetzte Profile stehen in der Vorschau zunaechst auf `Ueberspringen`.
 - Import als UserDefined-Kopie erfolgt nur nach bewusster Auswahl; der vorgeschlagene Zielname kann geaendert werden.
+- Hinweise und Warnungen in der Importvorschau sind deutschsprachig und werden dedupliziert.
 - Importierte Schnittstellenprofile werden nicht automatisch aktiv.
 - `IsAttachmentProcessingEnabled` wird bei importierten Schnittstellenprofilen deaktiviert.
 - `IsActive` bleibt aus.
@@ -125,6 +126,7 @@ Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
 - keine offensichtlichen Live-Pfade, Kundenmarker oder Patientendatenmarker
 - UI-nahe Importvorschau kehrt zurueck und schreibt keine Profile
 - Konfliktstandard ist `Ueberspringen`; `Als Kopie importieren` wird erst durch Benutzerentscheidung aktiv
+- leere Abhaengigkeitsauflösung wird verstaendlich erklaert; nicht aufgeloeste Abhaengigkeiten werden als `Nicht aufgeloest` angezeigt
 - Import gegen vorhandene BuiltIn-Profile nur als UserDefined-Kopie
 - importiertes Schnittstellenprofil bleibt inaktiv
 - `IsAttachmentProcessingEnabled` bleibt nach Import deaktiviert

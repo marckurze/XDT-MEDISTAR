@@ -28,12 +28,12 @@ public sealed class TemplatePackageImportPlanBuilder
 
             if (decision.ProfileKind == ProfileKind.InterfaceProfile)
             {
-                warnings.Add($"Interface profile '{decision.ImportedProfileName}' dependency remapping must be reviewed before productive import.");
+                warnings.Add($"Abhängigkeitszuordnung für Schnittstellenprofil '{decision.ImportedProfileName}' muss vor dem produktiven Import geprüft werden.");
             }
 
             if (decision.ConflictType == TemplatePackageImportConflictType.UnsafeFolderPath)
             {
-                warnings.Add($"Profile '{decision.ImportedProfileName}' contains folder paths that must be reviewed before activation.");
+                warnings.Add($"Profil '{decision.ImportedProfileName}' enthält Ordnerpfade, die vor späterer Nutzung geprüft werden müssen.");
             }
         }
 
@@ -131,14 +131,14 @@ public sealed class TemplatePackageImportPlanBuilder
     {
         return decision.ConflictType switch
         {
-            TemplatePackageImportConflictType.None => "Profile can be imported as new.",
-            TemplatePackageImportConflictType.BuiltInProtected => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. Safe default is skip; choose import as copy consciously if needed.",
-            TemplatePackageImportConflictType.SameIdExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. Safe default is skip; choose import as copy consciously if needed.",
-            TemplatePackageImportConflictType.SameNameExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. Safe default is skip; choose import as copy consciously if needed.",
-            TemplatePackageImportConflictType.SameIdExists => "A local profile with the same Id exists. Safe default is skip; choose import as copy consciously if needed.",
-            TemplatePackageImportConflictType.SameNameExists => "A local profile with the same name exists. Safe default is skip; choose import as copy consciously if needed.",
-            TemplatePackageImportConflictType.VersionMismatch => "A local profile with a different version exists. Safe default is skip; choose import as copy consciously if needed.",
-            TemplatePackageImportConflictType.UnsafeFolderPath => "Folder paths must be reviewed before productive activation. The profile is only planned for import and must not be activated automatically.",
+            TemplatePackageImportConflictType.None => "Profil kann neu importiert werden.",
+            TemplatePackageImportConflictType.BuiltInProtected => $"BuiltIn-Profil '{decision.ExistingProfileName}' ist geschützt. Sicherer Standard ist Überspringen; wählen Sie Kopie importieren bewusst aus, wenn Sie das Profil benötigen.",
+            TemplatePackageImportConflictType.SameIdExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn-Profil '{decision.ExistingProfileName}' ist geschützt. Sicherer Standard ist Überspringen; wählen Sie Kopie importieren bewusst aus, wenn Sie das Profil benötigen.",
+            TemplatePackageImportConflictType.SameNameExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn-Profil '{decision.ExistingProfileName}' ist geschützt. Sicherer Standard ist Überspringen; wählen Sie Kopie importieren bewusst aus, wenn Sie das Profil benötigen.",
+            TemplatePackageImportConflictType.SameIdExists => "Ein lokales Profil mit derselben ID existiert bereits. Sicherer Standard ist Überspringen; wählen Sie Kopie importieren bewusst aus, wenn Sie das Profil benötigen.",
+            TemplatePackageImportConflictType.SameNameExists => "Ein lokales Profil mit demselben Namen existiert bereits. Sicherer Standard ist Überspringen; wählen Sie Kopie importieren bewusst aus, wenn Sie das Profil benötigen.",
+            TemplatePackageImportConflictType.VersionMismatch => "Ein lokales Profil mit anderer Version existiert bereits. Sicherer Standard ist Überspringen; wählen Sie Kopie importieren bewusst aus, wenn Sie das Profil benötigen.",
+            TemplatePackageImportConflictType.UnsafeFolderPath => "Ordnerpfade müssen vor späterer Nutzung geprüft werden. Das Profil wird nicht automatisch aktiviert.",
             TemplatePackageImportConflictType.MissingDependency => decision.Message,
             TemplatePackageImportConflictType.InvalidProfile => decision.Message,
             TemplatePackageImportConflictType.UnsupportedProfileKind => decision.Message,

@@ -136,7 +136,7 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
         Assert.Empty(dryRun.BlockingItems);
         Assert.Equal(4, dryRun.WouldImportAsCopy);
         Assert.Equal(0, dryRun.WouldReplaceExisting);
-        Assert.Contains(dryRun.Warnings, warning => warning.Contains("will not be activated automatically", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(dryRun.Warnings, warning => warning.Contains("wird nicht automatisch aktiviert", StringComparison.OrdinalIgnoreCase));
 
         Assert.True(execution.Success);
         Assert.Equal(4, execution.ImportedAsCopy);
@@ -187,6 +187,7 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
         Assert.Empty(preview.DryRunResult.BlockingItems);
         Assert.Equal(4, preview.Display.Rows.Count);
         Assert.Empty(preview.Display.DependencyRows);
+        Assert.Contains("übersprungen", preview.Display.DependencyEmptyStateMessage, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(0, preview.DryRunResult.WouldImportAsCopy);
         Assert.Equal(4, preview.DryRunResult.WouldSkip);
         Assert.Equal(0, preview.DryRunResult.WouldReplaceExisting);

@@ -24,7 +24,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Package must not be null.");
+        AssertError(result, "Templatepaket darf nicht leer sein.");
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Package Metadata.ProfileKind must be TemplatePackage.");
+        AssertError(result, "Paket-Metadaten muessen die Profilart TemplatePackage haben.");
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Duplicate AisProfile profile Id: ais-medistar-default");
+        AssertError(result, "Doppelte Profil-ID fuer AisProfile: ais-medistar-default");
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Interface profile references missing AIS profile: ais-medistar-default");
+        AssertError(result, "Schnittstellenprofil verweist auf fehlendes AIS-Profil: ais-medistar-default");
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Interface profile references missing Device profile: device-nidek-ark1s-default");
+        AssertError(result, "Schnittstellenprofil verweist auf fehlendes Geräteprofil: device-nidek-ark1s-default");
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Interface profile references missing Export profile: export-medistar-nidek-ark1s-default");
+        AssertError(result, "Schnittstellenprofil verweist auf fehlendes Exportprofil: export-medistar-nidek-ark1s-default");
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Export profile references missing AIS profile: ais-medistar-default");
+        AssertError(result, "Exportprofil verweist auf fehlendes AIS-Profil: ais-medistar-default");
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Export profile references missing Device profile: device-nidek-ark1s-default");
+        AssertError(result, "Exportprofil verweist auf fehlendes Geräteprofil: device-nidek-ark1s-default");
     }
 
     [Fact]
@@ -114,9 +114,9 @@ public sealed class TemplatePackageImportValidatorTests
 
         var result = _validator.Validate(importResult);
 
-        AssertError(result, "Active interface profile requires AisImportFolder.");
-        AssertError(result, "Active interface profile requires DeviceImportFolder.");
-        AssertError(result, "Active interface profile requires ExportFolder.");
+        AssertError(result, "Aktives Schnittstellenprofil benötigt einen AIS-Importordner.");
+        AssertError(result, "Aktives Schnittstellenprofil benötigt einen Geräte-Importordner.");
+        AssertError(result, "Aktives Schnittstellenprofil benötigt einen Exportordner.");
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public sealed class TemplatePackageImportValidatorTests
         var result = _validator.Validate(importResult);
 
         Assert.False(result.HasErrors);
-        AssertWarning(result, "Imported delete options must be reviewed before productive activation.");
+        AssertWarning(result, "Importierte Löschoptionen müssen vor späterer Nutzung geprüft werden.");
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public sealed class TemplatePackageImportValidatorTests
         var result = _validator.Validate(importResult);
 
         Assert.False(result.HasErrors);
-        AssertWarning(result, "Template package does not contain any interface profiles.");
+        AssertWarning(result, "Templatepaket enthält keine Schnittstellenprofile.");
     }
 
     private static TemplatePackageImportResult CreateValidResult()

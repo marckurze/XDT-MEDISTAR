@@ -83,7 +83,7 @@ public sealed class TemplatePackageImportDryRunService
 
         if (isIllegalBuiltInReplace)
         {
-            dependencyWarnings.Add("BuiltIn profile replacement is not allowed.");
+            dependencyWarnings.Add("BuiltIn-Profil darf nicht ersetzt werden.");
         }
 
         var requiresDependencyRemap = dependencyRemaps.Any(remap =>
@@ -194,7 +194,7 @@ public sealed class TemplatePackageImportDryRunService
                 TargetProfileId: localProfile.Id,
                 TargetProfileName: localProfile.Name,
                 Resolution: TemplatePackageImportDependencyResolution.LocalExisting,
-                Message: $"Dependency uses existing local {dependencyKind}: {localProfile.Name}.");
+                Message: $"Abhängigkeit nutzt lokales {FormatDependencyKind(dependencyKind)}: {localProfile.Name}.");
         }
 
         return new TemplatePackageImportDependencyRemap(
@@ -204,7 +204,7 @@ public sealed class TemplatePackageImportDryRunService
             TargetProfileId: null,
             TargetProfileName: null,
             Resolution: TemplatePackageImportDependencyResolution.Missing,
-            Message: $"Dependency is missing: {dependencyKind} {dependencyProfileId}.");
+            Message: $"Abhängigkeit konnte nicht aufgelöst werden: {FormatDependencyKind(dependencyKind)} {dependencyProfileId}.");
     }
 
     private static TemplatePackageImportDependencyRemap CreateImportedDependencyRemap(
@@ -246,11 +246,11 @@ public sealed class TemplatePackageImportDryRunService
     {
         return resolution switch
         {
-            TemplatePackageImportDependencyResolution.ImportedAsNew => $"Dependency {dependencyKind} will use imported profile '{dependencyPlan.ImportedProfileName}'.",
-            TemplatePackageImportDependencyResolution.ImportedAsCopy => $"Dependency {dependencyKind} must be remapped to copied profile '{dependencyPlan.ProposedProfileName}'.",
-            TemplatePackageImportDependencyResolution.LocalExisting => $"Dependency {dependencyKind} will use existing target '{dependencyPlan.ExistingProfileName ?? dependencyPlan.ProposedProfileName}'.",
-            TemplatePackageImportDependencyResolution.Blocked => $"Dependency {dependencyKind} is blocked and prevents safe use.",
-            _ => $"Dependency {dependencyKind} cannot be resolved."
+            TemplatePackageImportDependencyResolution.ImportedAsNew => $"Abhängigkeit {FormatDependencyKind(dependencyKind)} nutzt importiertes Profil '{dependencyPlan.ImportedProfileName}'.",
+            TemplatePackageImportDependencyResolution.ImportedAsCopy => $"Abhängigkeit {FormatDependencyKind(dependencyKind)} wird auf kopiertes Profil '{dependencyPlan.ProposedProfileName}' zugeordnet.",
+            TemplatePackageImportDependencyResolution.LocalExisting => $"Abhängigkeit {FormatDependencyKind(dependencyKind)} nutzt bestehendes Ziel '{dependencyPlan.ExistingProfileName ?? dependencyPlan.ProposedProfileName}'.",
+            TemplatePackageImportDependencyResolution.Blocked => $"Abhängigkeit {FormatDependencyKind(dependencyKind)} ist blockiert und verhindert die sichere Nutzung.",
+            _ => $"Abhängigkeit {FormatDependencyKind(dependencyKind)} konnte nicht aufgelöst werden."
         };
     }
 
@@ -268,7 +268,7 @@ public sealed class TemplatePackageImportDryRunService
         {
             if (remap.Resolution == TemplatePackageImportDependencyResolution.ImportedAsCopy)
             {
-                warnings.Add($"{remap.DependencyKind} dependency must be remapped from '{remap.OriginalProfileId}' to '{remap.TargetProfileId}'.");
+                warnings.Add($"{FormatDependencyKind(remap.DependencyKind)}-Abhängigkeit wird von '{remap.OriginalProfileId}' nach '{remap.TargetProfileId}' zugeordnet.");
             }
 
             if (remap.Resolution is TemplatePackageImportDependencyResolution.Missing
@@ -293,12 +293,12 @@ public sealed class TemplatePackageImportDryRunService
 
         var warnings = new List<string>
         {
-            $"Imported interface profile '{interfaceProfile.Metadata.Name}' will not be activated automatically."
+            $"Importiertes Schnittstellenprofil '{interfaceProfile.Metadata.Name}' wird nicht automatisch aktiviert."
         };
 
         if (HasAttachmentSettings(interfaceProfile))
         {
-            warnings.Add($"Imported interface profile '{interfaceProfile.Metadata.Name}' contains XDT attachment settings; folder paths and 6302/6303/6304/6305 must be reviewed before activation.");
+            warnings.Add($"Importiertes Schnittstellenprofil '{interfaceProfile.Metadata.Name}' enthält XDT-Anhang-Einstellungen; Ordnerpfade und Felder 6302/6303/6304/6305 müssen vor späterer Nutzung geprüft werden.");
         }
 
         return warnings;
@@ -321,7 +321,7 @@ public sealed class TemplatePackageImportDryRunService
     {
         if (isIllegalBuiltInReplace)
         {
-            return "BuiltIn profile replacement is not allowed. Dry-run blocks this item.";
+            return "BuiltIn-Profil darf nicht ersetzt werden. Die Vorschau blockiert diesen Eintrag.";
         }
 
         if (warnings.Count == 0)
@@ -434,4 +434,15 @@ public sealed class TemplatePackageImportDryRunService
     private sealed record LocalProfile(
         string Id,
         string Name);
+
+    private static string FormatDependencyKind(TemplatePackageImportDependencyKind dependencyKind)
+    {
+        return dependencyKind switch
+        {
+            TemplatePackageImportDependencyKind.AisProfile => "AIS-Profil",
+            TemplatePackageImportDependencyKind.DeviceProfile => "Geräteprofil",
+            TemplatePackageImportDependencyKind.ExportProfile => "Exportprofil",
+            _ => dependencyKind.ToString()
+        };
+    }
 }

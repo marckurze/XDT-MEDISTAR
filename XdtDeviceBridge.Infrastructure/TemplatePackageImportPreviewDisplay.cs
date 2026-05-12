@@ -6,6 +6,7 @@ public sealed record TemplatePackageImportPreviewDisplay(
     TemplatePackageImportPreviewSummary Summary,
     IReadOnlyList<TemplatePackageImportPreviewRow> Rows,
     IReadOnlyList<TemplatePackageImportDependencyPreviewRow> DependencyRows,
+    string DependencyEmptyStateMessage,
     IReadOnlyList<string> Messages,
     IReadOnlyList<string> Warnings);
 

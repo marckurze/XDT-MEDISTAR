@@ -127,8 +127,8 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Importierte Templatepakete werden validiert.
 - Konflikte werden analysiert: gleiche ID, gleicher Name, BuiltIn-Schutz, UserDefined-Konflikte, fehlende Abhängigkeiten und prüfpflichtige Ordner-/XDT-Anhang-Einstellungen.
 - Aus der Analyse wird ein Importplan erzeugt.
-- Der Dry-Run und die UI-Importvorschau zeigen geplante Aktionen, Ziel-IDs/Zielnamen, Abhängigkeiten und Warnungen.
-- Die WPF-Importvorschau ist stabilisiert: Vorschau-Erstellung laeuft ueber einen testbaren Preview-Service, parallele Importvorschauen werden verhindert, und rekursive Auswahlereignisse werden ignoriert.
+- Der Dry-Run und die UI-Importvorschau zeigen geplante Aktionen, Ziel-IDs/Zielnamen, Abhängigkeiten und Warnungen; wenn wegen `Ueberspringen` keine Abhängigkeiten anzuzeigen sind, erscheint ein kurzer Leerhinweis.
+- Die WPF-Importvorschau ist stabilisiert: Vorschau-Erstellung laeuft ueber einen testbaren Preview-Service, parallele Importvorschauen werden verhindert, rekursive Auswahlereignisse werden ignoriert, und sichtbare Hinweise/Warnungen sind deutsch lokalisiert sowie dedupliziert.
 - Bei Konflikten und BuiltIn-Schutz ist `Überspringen` der sichere Standard; `Als Kopie importieren` wird nur nach bewusster Benutzerwahl ausgefuehrt.
 - Zielnamen fuer bewusst gewaehlte Kopien sind in der Vorschau editierbar; leere oder doppelte Namen blockieren die Uebernahme.
 - Sichere Benutzeraktionen sind möglich:
@@ -139,7 +139,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Die explizite Übernahme als UserDefined-Profile ist vorhanden.
 - `ImportAsNew` und `ImportAsCopy` werden geschrieben; `KeepExisting`, `Skip` und blockierte Profile werden nicht geschrieben.
 - BuiltIn-Profile werden nicht überschrieben.
-- Abhängigkeiten von importierten Schnittstellenprofilen werden auf lokale oder neu importierte Zielprofile remapped.
+- Abhängigkeiten von importierten Schnittstellenprofilen werden auf lokale oder neu importierte Zielprofile zugeordnet.
 - Importierte Schnittstellenprofile bleiben inaktiv.
 - `IsAttachmentProcessingEnabled` wird bei importierten Schnittstellenprofilen deaktiviert.
 - XDT-Anhang-Einstellungen bleiben erhalten und müssen vor Aktivierung geprüft werden.
@@ -181,7 +181,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - MEDISTAR-kompatibler XDT-Export mit zentral erzeugten Längenpräfixen.
 - Baukasten-Testexport für XDT-Datei plus umbenannten XDT-Anhang ist testseitig abgesichert.
 - Externe AIS-Linkfelder `6302`, `6303`, optional `6304` und `6305` sind fachlich anhand des MEDISTAR-Beispiels und technisch im Baukasten-/Testpfad belegt.
-- Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Dependency-Remapping.
+- Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Abhängigkeitszuordnung.
 - MEDISTAR + NIDEK ARK1S ist als Referenzpaket reproduzierbar testseitig export-/importgeprueft; die ZIP wird dabei nur im temporaeren Testordner erzeugt, und die App-Importvorschau ist gegen den zuvor beobachteten Freeze abgesichert.
 
 Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.

@@ -31,7 +31,7 @@ public sealed class TemplatePackageImportConflictAnalyzer
                 packageName: null,
                 decisions: Array.Empty<TemplatePackageImportProfileDecision>(),
                 warnings: Array.Empty<string>(),
-                errorMessage: "Template package must not be null.");
+                errorMessage: "Templatepaket darf nicht leer sein.");
         }
 
         var localProfiles = ProfileIndex.Create(existingCatalog);
@@ -64,7 +64,7 @@ public sealed class TemplatePackageImportConflictAnalyzer
                 TemplatePackageImportConflictType.UnsupportedProfileKind,
                 TemplatePackageImportAction.Blocked,
                 isBlocking: true,
-                $"Imported profile kind {profile.Metadata.ProfileKind} does not match expected kind {profile.ProfileKind}.");
+                $"Importierte Profilart {profile.Metadata.ProfileKind} passt nicht zur erwarteten Profilart {profile.ProfileKind}.");
         }
 
         var validationIssues = ValidateProfile(profile).ToList();
@@ -76,7 +76,7 @@ public sealed class TemplatePackageImportConflictAnalyzer
                 TemplatePackageImportConflictType.InvalidProfile,
                 TemplatePackageImportAction.Blocked,
                 isBlocking: true,
-                $"Imported profile is invalid: {string.Join("; ", validationIssues)}");
+                $"Importiertes Profil ist ungültig: {string.Join("; ", validationIssues)}");
         }
 
         var dependencyIssue = FindMissingDependency(profile, availableProfiles);
@@ -102,7 +102,7 @@ public sealed class TemplatePackageImportConflictAnalyzer
                     TemplatePackageImportConflictType.UnsafeFolderPath,
                     TemplatePackageImportAction.Blocked,
                     isBlocking: true,
-                    $"Imported interface profile contains unsafe folder path '{unsafeFolderIssue.Path}': {unsafeFolderIssue.Message}");
+                    $"Importiertes Schnittstellenprofil enthält unsicheren Ordnerpfad '{unsafeFolderIssue.Path}': {unsafeFolderIssue.Message}");
             }
         }
 
@@ -118,14 +118,14 @@ public sealed class TemplatePackageImportConflictAnalyzer
                 TemplatePackageImportConflictType.BuiltInProtected,
                 TemplatePackageImportAction.ImportAsCopy,
                 isBlocking: false,
-                $"Existing BuiltIn profile '{existing.Name}' is protected. Imported profile can only be considered as a copy.");
+                $"Bestehendes BuiltIn-Profil '{existing.Name}' ist geschützt. Das importierte Profil kann nur bewusst als Kopie übernommen werden.");
         }
 
         if (existingById is not null)
         {
             var message = string.Equals(existingById.Version, profile.Metadata.Version, StringComparison.OrdinalIgnoreCase)
-                ? $"A {profile.ProfileKind} profile with the same Id already exists."
-                : $"A {profile.ProfileKind} profile with the same Id already exists with version '{existingById.Version}'. Imported version is '{profile.Metadata.Version}'.";
+                ? $"Ein {FormatProfileKind(profile.ProfileKind)} mit derselben ID existiert bereits."
+                : $"Ein {FormatProfileKind(profile.ProfileKind)} mit derselben ID existiert bereits mit Version '{existingById.Version}'. Importierte Version ist '{profile.Metadata.Version}'.";
 
             return CreateDecision(
                 profile,
@@ -144,7 +144,7 @@ public sealed class TemplatePackageImportConflictAnalyzer
                 TemplatePackageImportConflictType.SameNameExists,
                 TemplatePackageImportAction.ImportAsCopy,
                 isBlocking: false,
-                $"A {profile.ProfileKind} profile with the same name already exists.");
+                $"Ein {FormatProfileKind(profile.ProfileKind)} mit demselben Namen existiert bereits.");
         }
 
         return CreateDecision(
@@ -153,7 +153,7 @@ public sealed class TemplatePackageImportConflictAnalyzer
             TemplatePackageImportConflictType.None,
             TemplatePackageImportAction.ImportAsNew,
             isBlocking: false,
-            "Imported profile can be imported as new.");
+            "Importiertes Profil kann neu importiert werden.");
     }
 
     private FolderSafetyValidationIssue? FindUnsafeFolderIssue(InterfaceProfileDefinition interfaceProfile)
@@ -193,15 +193,15 @@ public sealed class TemplatePackageImportConflictAnalyzer
         return profile.Profile switch
         {
             ExportProfileDefinition exportProfile when !availableProfiles.AisProfileIds.Contains(exportProfile.TargetAisProfileId) =>
-                $"Export profile references missing AIS profile: {exportProfile.TargetAisProfileId}",
+                $"Exportprofil verweist auf fehlendes AIS-Profil: {exportProfile.TargetAisProfileId}",
             ExportProfileDefinition exportProfile when !availableProfiles.DeviceProfileIds.Contains(exportProfile.SourceDeviceProfileId) =>
-                $"Export profile references missing Device profile: {exportProfile.SourceDeviceProfileId}",
+                $"Exportprofil verweist auf fehlendes Geräteprofil: {exportProfile.SourceDeviceProfileId}",
             InterfaceProfileDefinition interfaceProfile when !availableProfiles.AisProfileIds.Contains(interfaceProfile.AisProfileId) =>
-                $"Interface profile references missing AIS profile: {interfaceProfile.AisProfileId}",
+                $"Schnittstellenprofil verweist auf fehlendes AIS-Profil: {interfaceProfile.AisProfileId}",
             InterfaceProfileDefinition interfaceProfile when !availableProfiles.DeviceProfileIds.Contains(interfaceProfile.DeviceProfileId) =>
-                $"Interface profile references missing Device profile: {interfaceProfile.DeviceProfileId}",
+                $"Schnittstellenprofil verweist auf fehlendes Geräteprofil: {interfaceProfile.DeviceProfileId}",
             InterfaceProfileDefinition interfaceProfile when !availableProfiles.ExportProfileIds.Contains(interfaceProfile.ExportProfileId) =>
-                $"Interface profile references missing Export profile: {interfaceProfile.ExportProfileId}",
+                $"Schnittstellenprofil verweist auf fehlendes Exportprofil: {interfaceProfile.ExportProfileId}",
             _ => null
         };
     }
@@ -214,7 +214,7 @@ public sealed class TemplatePackageImportConflictAnalyzer
             DeviceProfileDefinition deviceProfile => deviceProfile.Validate(),
             ExportProfileDefinition exportProfile => exportProfile.Validate(),
             InterfaceProfileDefinition interfaceProfile => interfaceProfile.Validate(),
-            _ => new[] { $"Unsupported profile type: {profile.Profile.GetType().Name}" }
+            _ => new[] { $"Nicht unterstützter Profiltyp: {profile.Profile.GetType().Name}" }
         };
     }
 
@@ -222,19 +222,31 @@ public sealed class TemplatePackageImportConflictAnalyzer
     {
         foreach (var interfaceProfile in importResult.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>())
         {
-            yield return $"Imported interface profile '{interfaceProfile.Metadata.Name}' must be reviewed before productive activation.";
+            yield return $"Importiertes Schnittstellenprofil '{interfaceProfile.Metadata.Name}' muss vor späterer Nutzung geprüft werden.";
 
             if (interfaceProfile.IsActive)
             {
-                yield return $"Imported interface profile '{interfaceProfile.Metadata.Name}' is marked active in the package and must not be activated automatically.";
+                yield return $"Importiertes Schnittstellenprofil '{interfaceProfile.Metadata.Name}' ist im Paket als aktiv markiert und wird beim Import nicht automatisch aktiviert.";
             }
 
             if (!string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentImportFolder)
                 || !string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentExportFolder))
             {
-                yield return $"Imported interface profile '{interfaceProfile.Metadata.Name}' contains XDT attachment folder settings that must be reviewed before use.";
+                yield return $"Importiertes Schnittstellenprofil '{interfaceProfile.Metadata.Name}' enthält XDT-Anhang-Ordner; Ordnerpfade müssen vor späterer Nutzung geprüft werden.";
             }
         }
+    }
+
+    private static string FormatProfileKind(ProfileKind profileKind)
+    {
+        return profileKind switch
+        {
+            ProfileKind.AisProfile => "AIS-Profil",
+            ProfileKind.DeviceProfile => "Geräteprofil",
+            ProfileKind.ExportProfile => "Exportprofil",
+            ProfileKind.InterfaceProfile => "Schnittstellenprofil",
+            _ => profileKind.ToString()
+        };
     }
 
     private static IReadOnlyList<ImportedProfile> CreateImportedProfiles(TemplatePackageImportResult importResult)

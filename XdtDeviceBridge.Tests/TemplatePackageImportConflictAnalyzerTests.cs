@@ -133,7 +133,7 @@ public sealed class TemplatePackageImportConflictAnalyzerTests
         Assert.Equal(TemplatePackageImportConflictType.MissingDependency, decision.ConflictType);
         Assert.Equal(TemplatePackageImportAction.Blocked, decision.SuggestedAction);
         Assert.True(decision.IsBlocking);
-        Assert.Contains("missing AIS profile", decision.Message);
+        Assert.Contains("fehlendes AIS-Profil", decision.Message);
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public sealed class TemplatePackageImportConflictAnalyzerTests
         var decision = Assert.Single(result.ProfileDecisions);
         Assert.Equal(TemplatePackageImportConflictType.MissingDependency, decision.ConflictType);
         Assert.True(decision.IsBlocking);
-        Assert.Contains("missing Device profile", decision.Message);
+        Assert.Contains("fehlendes Geräteprofil", decision.Message);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public sealed class TemplatePackageImportConflictAnalyzerTests
         var decision = Assert.Single(result.ProfileDecisions);
         Assert.Equal(TemplatePackageImportConflictType.MissingDependency, decision.ConflictType);
         Assert.True(decision.IsBlocking);
-        Assert.Contains("missing Export profile", decision.Message);
+        Assert.Contains("fehlendes Exportprofil", decision.Message);
     }
 
     [Fact]
@@ -252,9 +252,9 @@ public sealed class TemplatePackageImportConflictAnalyzerTests
 
         Assert.Equal(@"C:\XdtBridge\AttachmentIn", importResult.InterfaceProfiles[0].FolderOptions.AttachmentImportFolder);
         Assert.Equal(@"C:\XdtBridge\AttachmentOut", importResult.InterfaceProfiles[0].FolderOptions.AttachmentExportFolder);
-        Assert.Contains(result.Warnings, warning => warning.Contains("must be reviewed before productive activation", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(result.Warnings, warning => warning.Contains("must not be activated automatically", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(result.Warnings, warning => warning.Contains("XDT attachment folder settings", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Warnings, warning => warning.Contains("vor späterer Nutzung geprüft", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Warnings, warning => warning.Contains("wird beim Import nicht automatisch aktiviert", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Warnings, warning => warning.Contains("XDT-Anhang-Ordner", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

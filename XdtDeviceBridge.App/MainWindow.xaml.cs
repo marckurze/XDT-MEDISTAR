@@ -3833,6 +3833,13 @@ public partial class MainWindow : Window
             TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
             TemplatePackageImportPreviewGrid.ItemsSource = display.Rows;
             TemplatePackageImportDependencyPreviewGrid.ItemsSource = display.DependencyRows;
+            TemplatePackageImportDependencyPreviewGrid.Visibility = display.DependencyRows.Count > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            TemplatePackageImportDependencyEmptyText.Text = display.DependencyEmptyStateMessage;
+            TemplatePackageImportDependencyEmptyText.Visibility = display.DependencyRows.Count == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
             _lastTemplatePackageImportSelectionSignature = CreateTemplatePackageImportSelectionSignature(display.Rows);
         }
         finally
@@ -3884,6 +3891,9 @@ public partial class MainWindow : Window
             TemplatePackageImportPreviewMessagesTextBox.Text = "Bitte warten. Es wurde noch nichts gespeichert.";
             TemplatePackageImportPreviewGrid.ItemsSource = null;
             TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
+            TemplatePackageImportDependencyPreviewGrid.Visibility = Visibility.Visible;
+            TemplatePackageImportDependencyEmptyText.Text = "";
+            TemplatePackageImportDependencyEmptyText.Visibility = Visibility.Collapsed;
             TemplatePackageImportExecutionResultTextBox.Text = "Importvorschau wird erstellt. Noch keine Importübernahme ausgeführt.";
             _lastTemplatePackageImportSelectionSignature = string.Empty;
         }
@@ -3904,6 +3914,9 @@ public partial class MainWindow : Window
                 : $"{detail}{Environment.NewLine}{Environment.NewLine}Es wurden keine Änderungen vorgenommen.";
             TemplatePackageImportPreviewGrid.ItemsSource = null;
             TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
+            TemplatePackageImportDependencyPreviewGrid.Visibility = Visibility.Collapsed;
+            TemplatePackageImportDependencyEmptyText.Text = "Für die aktuelle Auswahl sind keine Abhängigkeiten anzuzeigen.";
+            TemplatePackageImportDependencyEmptyText.Visibility = Visibility.Visible;
             TemplatePackageImportExecutionResultTextBox.Text = summary;
             _lastTemplatePackageImportSelectionSignature = string.Empty;
         }
