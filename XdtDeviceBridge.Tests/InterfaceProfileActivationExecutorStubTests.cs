@@ -177,6 +177,187 @@ public sealed class InterfaceProfileActivationExecutorStubTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WithStore_ShouldKeepDefensiveBehaviorWithoutProfileId()
+    {
+        var store = new RecordingActivationProfileStore();
+        var executor = new InterfaceProfileActivationExecutorStub(store);
+
+        var result = await executor.ExecuteAsync(new InterfaceProfileActivationExecutorRequest(
+            Profile: null,
+            ActivationPlan: null,
+            EvaluationResult: null,
+            GuardResult: null,
+            WarningConfirmationResult: null,
+            WarningsAccepted: false,
+            OperationMode: InterfaceProfileActivationExecutorOperationMode.ValidateOnly));
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.NotAvailable, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(0, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.False(result.ProfileChanged);
+        Assert.Contains(result.Preconditions, item => item.Code == "profile.id.present" && !item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.freshLoad.attempted" && item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.checked" && !item.IsSatisfied);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStore_ShouldReturnNotAvailableForUnknownProfileId()
+    {
+        var store = new RecordingActivationProfileStore();
+        var executor = new InterfaceProfileActivationExecutorStub(store);
+        var profile = CreateUserDefinedProfile();
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            Profile = null,
+            InterfaceProfileId = "interface-missing"
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.NotAvailable, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(0, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.profile.found" && !item.IsSatisfied);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStore_ShouldBlockBuiltInProfile()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = new InterfaceProfileActivationExecutorStub(store);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            Profile = null
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.Blocked, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(1, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.profile.notBuiltIn" && !item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.notPersisted" && item.IsSatisfied);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStore_ShouldBlockNonUserDefinedProfile()
+    {
+        var profile = CreateNonUserDefinedProfile();
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = new InterfaceProfileActivationExecutorStub(store);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            Profile = null
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.Blocked, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(1, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.profile.userDefined" && !item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.notPersisted" && item.IsSatisfied);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStore_ShouldLoadUserDefinedProfileButNotActivateOrSave()
+    {
+        var profile = CreateUserDefinedProfile() with
+        {
+            IsActive = false,
+            FolderOptions = CreateUserDefinedProfile().FolderOptions with
+            {
+                IsAttachmentProcessingEnabled = false
+            }
+        };
+        var originalId = profile.Metadata.Id;
+        var originalName = profile.Metadata.Name;
+        var originalIsActive = profile.IsActive;
+        var originalAttachmentEnabled = profile.FolderOptions.IsAttachmentProcessingEnabled;
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = new InterfaceProfileActivationExecutorStub(store);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            Profile = null,
+            PreviewCreatedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-2),
+            ExpectedConfigurationFingerprint = "preview-only"
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(1, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.ProfileChanged);
+        Assert.False(result.Saved);
+        Assert.False(result.ProcessingStarted);
+        Assert.False(result.WasExecuted);
+        Assert.False(result.WasPersisted);
+        Assert.False(result.WasProfileChanged);
+        Assert.Contains("frisch geladen", result.Message);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.profile.userDefined" && item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.profile.notBuiltIn" && item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.checked" && item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.finalReEvaluation.completed" && !item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.notPersisted" && item.IsSatisfied);
+        Assert.NotNull(store.LastSaveRequest);
+        Assert.False(store.LastSaveRequest.FinalReEvaluationCompleted);
+        Assert.Equal(InterfaceProfileActivationExecutorOperationMode.ValidateOnly, store.LastSaveRequest.OperationMode);
+        Assert.Equal(originalId, profile.Metadata.Id);
+        Assert.Equal(originalName, profile.Metadata.Name);
+        Assert.Equal(originalIsActive, profile.IsActive);
+        Assert.Equal(originalAttachmentEnabled, profile.FolderOptions.IsAttachmentProcessingEnabled);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStore_ShouldNotUseStoreForActivateMode()
+    {
+        var profile = CreateUserDefinedProfile() with { IsActive = false };
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = new InterfaceProfileActivationExecutorStub(store);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            OperationMode = InterfaceProfileActivationExecutorOperationMode.Activate
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.Equal(0, store.LoadCallCount);
+        Assert.Equal(0, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.False(result.ProfileChanged);
+        Assert.False(profile.IsActive);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStore_ShouldNotDeactivateOrSaveInDeactivateMode()
+    {
+        var profile = CreateUserDefinedProfile() with { IsActive = true };
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = new InterfaceProfileActivationExecutorStub(store);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            OperationMode = InterfaceProfileActivationExecutorOperationMode.Deactivate
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.NotImplemented, result.Status);
+        Assert.Equal(0, store.LoadCallCount);
+        Assert.Equal(0, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.False(result.ProfileChanged);
+        Assert.True(profile.IsActive);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ShouldTreatPreviewResultsAsNonFinalContext()
     {
         var profile = CreateUserDefinedProfile();
@@ -309,6 +490,21 @@ public sealed class InterfaceProfileActivationExecutorStubTests
         };
     }
 
+    private static InterfaceProfileDefinition CreateNonUserDefinedProfile()
+    {
+        return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().Metadata with
+            {
+                Id = "interface-non-userdefined",
+                Name = "Nicht UserDefined Schnittstelle",
+                IsBuiltIn = false,
+                IsUserDefined = false
+            },
+            IsActive = false
+        };
+    }
+
     private static InterfaceProfileActivationEvaluationResult Evaluation(
         InterfaceProfileActivationStatus status,
         bool canActivate,
@@ -414,5 +610,196 @@ public sealed class InterfaceProfileActivationExecutorStubTests
                         : InterfaceProfileActivationSeverity.Warning)
             },
             MissingRequirements: Array.Empty<InterfaceProfileActivationPlanReason>());
+    }
+
+    private sealed class RecordingActivationProfileStore : IInterfaceProfileActivationProfileStore
+    {
+        private readonly IReadOnlyList<InterfaceProfileDefinition> _profiles;
+
+        public RecordingActivationProfileStore(params InterfaceProfileDefinition[] profiles)
+        {
+            _profiles = profiles;
+        }
+
+        public int LoadCallCount { get; private set; }
+
+        public int SaveCallCount { get; private set; }
+
+        public InterfaceProfileActivationProfileSaveRequest? LastSaveRequest { get; private set; }
+
+        public InterfaceProfileActivationProfileLoadResult LoadFreshUserDefinedProfile(string profileId)
+        {
+            LoadCallCount++;
+
+            if (string.IsNullOrWhiteSpace(profileId))
+            {
+                return LoadResult(
+                    InterfaceProfileActivationProfileStoreStatus.NotAvailable,
+                    success: false,
+                    profile: null,
+                    requestedProfileId: profileId,
+                    "Schnittstellenprofil-ID fehlt.");
+            }
+
+            var profile = _profiles.FirstOrDefault(item =>
+                string.Equals(item.Metadata.Id, profileId, StringComparison.OrdinalIgnoreCase));
+
+            if (profile is null)
+            {
+                return LoadResult(
+                    InterfaceProfileActivationProfileStoreStatus.NotFound,
+                    success: false,
+                    profile: null,
+                    requestedProfileId: profileId,
+                    "Schnittstellenprofil wurde nicht gefunden.");
+            }
+
+            if (profile.Metadata.IsBuiltIn)
+            {
+                return LoadResult(
+                    InterfaceProfileActivationProfileStoreStatus.BuiltInBlocked,
+                    success: false,
+                    profile,
+                    requestedProfileId: profileId,
+                    "BuiltIn-Schnittstellenprofile sind gesperrt.");
+            }
+
+            if (!profile.Metadata.IsUserDefined)
+            {
+                return LoadResult(
+                    InterfaceProfileActivationProfileStoreStatus.NonUserDefinedBlocked,
+                    success: false,
+                    profile,
+                    requestedProfileId: profileId,
+                    "Schnittstellenprofil ist nicht UserDefined.");
+            }
+
+            return LoadResult(
+                InterfaceProfileActivationProfileStoreStatus.LoadedUserDefined,
+                success: true,
+                profile,
+                requestedProfileId: profileId,
+                "UserDefined-Schnittstellenprofil geladen.");
+        }
+
+        public InterfaceProfileActivationProfileSaveResult SaveUserDefinedProfile(
+            InterfaceProfileActivationProfileSaveRequest request)
+        {
+            SaveCallCount++;
+            LastSaveRequest = request;
+
+            var profile = request.Profile;
+            var preconditions = SavePreconditions(request);
+            if (profile is null)
+            {
+                return SaveResult(
+                    InterfaceProfileActivationProfileStoreStatus.NotAvailable,
+                    profile,
+                    wouldSave: false,
+                    success: false,
+                    "Kein Profil uebergeben.",
+                    preconditions);
+            }
+
+            if (profile.Metadata.IsBuiltIn)
+            {
+                return SaveResult(
+                    InterfaceProfileActivationProfileStoreStatus.BuiltInBlocked,
+                    profile,
+                    wouldSave: false,
+                    success: false,
+                    "BuiltIn blockiert.",
+                    preconditions);
+            }
+
+            if (!profile.Metadata.IsUserDefined)
+            {
+                return SaveResult(
+                    InterfaceProfileActivationProfileStoreStatus.NonUserDefinedBlocked,
+                    profile,
+                    wouldSave: false,
+                    success: false,
+                    "UserDefined erforderlich.",
+                    preconditions);
+            }
+
+            if (!request.FinalReEvaluationCompleted)
+            {
+                return SaveResult(
+                    InterfaceProfileActivationProfileStoreStatus.MissingCapability,
+                    profile,
+                    wouldSave: false,
+                    success: false,
+                    "Finale Re-Evaluation fehlt.",
+                    preconditions);
+            }
+
+            return SaveResult(
+                InterfaceProfileActivationProfileStoreStatus.SaveWouldBeAllowed,
+                profile,
+                wouldSave: true,
+                success: true,
+                "ValidateOnly wuerde speichern, hat aber nicht gespeichert.",
+                preconditions);
+        }
+
+        private static InterfaceProfileActivationProfileLoadResult LoadResult(
+            InterfaceProfileActivationProfileStoreStatus status,
+            bool success,
+            InterfaceProfileDefinition? profile,
+            string requestedProfileId,
+            string message)
+        {
+            return new InterfaceProfileActivationProfileLoadResult(
+                status,
+                success,
+                profile,
+                profile?.Metadata.Id ?? requestedProfileId,
+                profile?.Metadata.Name ?? string.Empty,
+                profile is not null,
+                profile?.Metadata.IsUserDefined == true,
+                profile?.Metadata.IsBuiltIn == true,
+                message,
+                Array.Empty<InterfaceProfileActivationExecutorPrecondition>());
+        }
+
+        private static InterfaceProfileActivationProfileSaveResult SaveResult(
+            InterfaceProfileActivationProfileStoreStatus status,
+            InterfaceProfileDefinition? profile,
+            bool wouldSave,
+            bool success,
+            string message,
+            IReadOnlyList<InterfaceProfileActivationExecutorPrecondition> preconditions)
+        {
+            return new InterfaceProfileActivationProfileSaveResult(
+                status,
+                success,
+                profile?.Metadata.Id ?? string.Empty,
+                profile?.Metadata.Name ?? string.Empty,
+                wouldSave,
+                WasSaved: false,
+                ProfileChanged: false,
+                profile?.Metadata.IsUserDefined == true,
+                profile?.Metadata.IsBuiltIn == true,
+                message,
+                preconditions);
+        }
+
+        private static IReadOnlyList<InterfaceProfileActivationExecutorPrecondition> SavePreconditions(
+            InterfaceProfileActivationProfileSaveRequest request)
+        {
+            return new[]
+            {
+                new InterfaceProfileActivationExecutorPrecondition(
+                    "executor.finalReEvaluation.completed",
+                    "Finale Re-Evaluation nachgewiesen",
+                    "Produktives Speichern darf erst nach finaler Re-Evaluation erfolgen.",
+                    IsRequired: true,
+                    IsSatisfied: request.FinalReEvaluationCompleted,
+                    Severity: request.FinalReEvaluationCompleted
+                        ? InterfaceProfileActivationSeverity.Info
+                        : InterfaceProfileActivationSeverity.Blocker)
+            };
+        }
     }
 }

@@ -1,7 +1,21 @@
+using XdtDeviceBridge.Core;
+
 namespace XdtDeviceBridge.Infrastructure;
 
 public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileActivationExecutor
 {
+    private readonly IInterfaceProfileActivationProfileStore? _profileStore;
+
+    public InterfaceProfileActivationExecutorStub()
+        : this(null)
+    {
+    }
+
+    public InterfaceProfileActivationExecutorStub(IInterfaceProfileActivationProfileStore? profileStore)
+    {
+        _profileStore = profileStore;
+    }
+
     public Task<InterfaceProfileActivationExecutorResult> ExecuteAsync(
         InterfaceProfileActivationExecutorRequest request,
         CancellationToken cancellationToken = default)
@@ -9,13 +23,35 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var preconditions = CreatePreconditions(request);
-        var status = DetermineStatus(request);
+        var shouldUseStore = request.OperationMode == InterfaceProfileActivationExecutorOperationMode.ValidateOnly &&
+            _profileStore is not null;
+        var loadResult = shouldUseStore
+            ? _profileStore!.LoadFreshUserDefinedProfile(request.EffectiveInterfaceProfileId)
+            : null;
+        var effectiveProfile = loadResult?.Profile ?? request.Profile;
+        var saveDryRunResult = shouldUseStore && effectiveProfile is not null
+            ? _profileStore!.SaveUserDefinedProfile(new InterfaceProfileActivationProfileSaveRequest(
+                Profile: effectiveProfile,
+                Source: request.Source,
+                RequestedAtUtc: request.RequestedAtUtc,
+                ExpectedConfigurationFingerprint: request.ExpectedConfigurationFingerprint,
+                OperationMode: InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
+                FinalReEvaluationCompleted: false))
+            : null;
+
+        var preconditions = CreatePreconditions(
+            request,
+            effectiveProfile,
+            loadResult,
+            saveDryRunResult,
+            _profileStore is not null,
+            shouldUseStore);
+        var status = DetermineStatus(request, effectiveProfile, loadResult, shouldUseStore);
 
         return Task.FromResult(new InterfaceProfileActivationExecutorResult(
             Status: status,
             Success: false,
-            Message: CreateMessage(status),
+            Message: CreateMessage(status, loadResult, saveDryRunResult, shouldUseStore),
             Preconditions: preconditions,
             ExecutedSteps: Array.Empty<InterfaceProfileActivationPlanStep>(),
             NotExecutedSteps: request.ActivationPlan?.PlannedSteps ?? Array.Empty<InterfaceProfileActivationPlanStep>(),
@@ -33,10 +69,31 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
     }
 
     private static InterfaceProfileActivationExecutorStatus DetermineStatus(
-        InterfaceProfileActivationExecutorRequest request)
+        InterfaceProfileActivationExecutorRequest request,
+        InterfaceProfileDefinition? effectiveProfile,
+        InterfaceProfileActivationProfileLoadResult? loadResult,
+        bool shouldUseStore)
     {
+        if (shouldUseStore && loadResult is not null)
+        {
+            if (string.IsNullOrWhiteSpace(request.EffectiveInterfaceProfileId) ||
+                loadResult.Status is InterfaceProfileActivationProfileStoreStatus.NotAvailable or
+                    InterfaceProfileActivationProfileStoreStatus.NotFound or
+                    InterfaceProfileActivationProfileStoreStatus.Failed)
+            {
+                return InterfaceProfileActivationExecutorStatus.NotAvailable;
+            }
+
+            if (loadResult.Status is InterfaceProfileActivationProfileStoreStatus.BuiltInBlocked or
+                InterfaceProfileActivationProfileStoreStatus.NonUserDefinedBlocked or
+                InterfaceProfileActivationProfileStoreStatus.UserDefinedRequired)
+            {
+                return InterfaceProfileActivationExecutorStatus.Blocked;
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(request.EffectiveInterfaceProfileId) ||
-            request.Profile is null ||
+            effectiveProfile is null ||
             request.EvaluationResult is null ||
             request.GuardResult is null ||
             request.ActivationPlan is null)
@@ -44,8 +101,8 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             return InterfaceProfileActivationExecutorStatus.NotAvailable;
         }
 
-        if (request.Profile.Metadata.IsBuiltIn ||
-            !request.Profile.Metadata.IsUserDefined ||
+        if (effectiveProfile.Metadata.IsBuiltIn ||
+            !effectiveProfile.Metadata.IsUserDefined ||
             request.EvaluationResult.ActivationStatus == InterfaceProfileActivationStatus.Blocked ||
             request.EvaluationResult.Blockers.Count > 0 ||
             request.GuardResult.Decision == InterfaceProfileActivationGuardDecision.Blocked ||
@@ -86,13 +143,19 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
     }
 
     private static IReadOnlyList<InterfaceProfileActivationExecutorPrecondition> CreatePreconditions(
-        InterfaceProfileActivationExecutorRequest request)
+        InterfaceProfileActivationExecutorRequest request,
+        InterfaceProfileDefinition? effectiveProfile,
+        InterfaceProfileActivationProfileLoadResult? loadResult,
+        InterfaceProfileActivationProfileSaveResult? saveDryRunResult,
+        bool hasProfileStore,
+        bool shouldUseStore)
     {
-        var profile = request.Profile;
+        var profile = effectiveProfile;
         var evaluation = request.EvaluationResult;
         var guard = request.GuardResult;
         var plan = request.ActivationPlan;
         var effectiveProfileId = request.EffectiveInterfaceProfileId;
+        var freshLoadSucceeded = loadResult?.Success == true;
 
         var preconditions = new List<InterfaceProfileActivationExecutorPrecondition>
         {
@@ -104,15 +167,19 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                 InterfaceProfileActivationSeverity.Blocker),
             Precondition(
                 "executor.freshReload.missing",
-                "Frisches Laden nicht angebunden",
-                "Der Request kann Zielprofil- und Preview-Kontext tragen; der Stub hat aber keinen Loader/Profilkatalog für eine finale frische Ladung.",
-                isSatisfied: false,
+                hasProfileStore ? "Frisches Laden ueber Store moeglich" : "Frisches Laden nicht angebunden",
+                hasProfileStore
+                    ? "Im ValidateOnly-Modus kann der Stub ein Zielprofil ueber den angebundenen Store frisch laden; fuer produktive Ausfuehrung bleibt eine finale Re-Evaluation Pflicht."
+                    : "Der Request kann Zielprofil- und Preview-Kontext tragen; der Stub hat aber keinen Loader/Profilkatalog fuer eine finale frische Ladung.",
+                freshLoadSucceeded,
                 InterfaceProfileActivationSeverity.Blocker),
             Precondition(
                 "executor.storeContext.missing",
-                "Store-Kontext nicht angebunden",
-                "Der Request enthält bewusst keine konkrete Store-Service-Referenz; ein produktiver Executor muss Loader/Store sicher per Konstruktor oder bestehendem Muster erhalten.",
-                isSatisfied: false,
+                hasProfileStore ? "Store-Kontext angebunden" : "Store-Kontext nicht angebunden",
+                hasProfileStore
+                    ? "Ein IInterfaceProfileActivationProfileStore ist am Stub angebunden; produktives Speichern bleibt trotzdem deaktiviert."
+                    : "Der Request enthaelt bewusst keine konkrete Store-Service-Referenz; ein produktiver Executor muss Loader/Store sicher per Konstruktor oder bestehendem Muster erhalten.",
+                hasProfileStore,
                 InterfaceProfileActivationSeverity.Blocker),
             Precondition(
                 "executor.safePersistence.missing",
@@ -188,6 +255,11 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                     InterfaceProfileActivationPlanStatus.ReadyWithAcceptedWarnings)
         };
 
+        if (shouldUseStore)
+        {
+            preconditions.AddRange(CreateStorePreconditions(loadResult, saveDryRunResult));
+        }
+
         if (evaluation?.ActivationStatus == InterfaceProfileActivationStatus.ReadyWithWarnings ||
             guard?.Decision is InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation or
                 InterfaceProfileActivationGuardDecision.AllowedWithWarnings ||
@@ -209,6 +281,60 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         return preconditions;
     }
 
+    private static IReadOnlyList<InterfaceProfileActivationExecutorPrecondition> CreateStorePreconditions(
+        InterfaceProfileActivationProfileLoadResult? loadResult,
+        InterfaceProfileActivationProfileSaveResult? saveDryRunResult)
+    {
+        var finalReEvaluationCompleted = saveDryRunResult?.Preconditions.Any(precondition =>
+            precondition.Code == "executor.finalReEvaluation.completed" &&
+            precondition.IsSatisfied) == true;
+
+        return new[]
+        {
+            Precondition(
+                "store.freshLoad.attempted",
+                "Frisches Laden versucht",
+                "ValidateOnly hat den angebundenen ActivationProfileStore fuer eine frische Profilladung verwendet.",
+                loadResult is not null,
+                InterfaceProfileActivationSeverity.Info),
+            Precondition(
+                "store.profile.found",
+                "Profil im Store gefunden",
+                "Das Zielprofil muss im Profilkatalog bzw. Store gefunden werden.",
+                loadResult?.Found == true),
+            Precondition(
+                "store.profile.userDefined",
+                "Store-Profil ist UserDefined",
+                "Nur UserDefined-Schnittstellenprofile duerfen spaeter produktiv gespeichert werden.",
+                loadResult?.IsUserDefined == true),
+            Precondition(
+                "store.profile.notBuiltIn",
+                "Store-Profil ist nicht BuiltIn",
+                "BuiltIn-Schnittstellenprofile bleiben auch ueber den Store strikt gesperrt.",
+                loadResult?.Found == true &&
+                loadResult.IsBuiltIn == false),
+            Precondition(
+                "store.saveDryRun.checked",
+                "Save-DryRun geprueft",
+                "Der Store wurde nur fuer eine nicht-produktive Save-Vorpruefung verwendet.",
+                saveDryRunResult is not null,
+                InterfaceProfileActivationSeverity.Info),
+            Precondition(
+                "store.saveDryRun.finalReEvaluation.completed",
+                "Finale Re-Evaluation fuer Save-DryRun nachgewiesen",
+                "Der Stub weist weiterhin aus, dass eine echte finale Re-Evaluation vor produktivem Speichern fehlt.",
+                finalReEvaluationCompleted),
+            Precondition(
+                "store.saveDryRun.notPersisted",
+                "Save-DryRun hat nicht gespeichert",
+                "Der Store-DryRun darf keine JSON-Datei schreiben und kein Profil veraendern.",
+                saveDryRunResult is not null &&
+                !saveDryRunResult.WasSaved &&
+                !saveDryRunResult.ProfileChanged,
+                InterfaceProfileActivationSeverity.Info)
+        };
+    }
+
     private static IReadOnlyList<string> CreateMissingCapabilities(
         IEnumerable<InterfaceProfileActivationExecutorPrecondition> preconditions)
     {
@@ -221,8 +347,44 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             .ToList();
     }
 
-    private static string CreateMessage(InterfaceProfileActivationExecutorStatus status)
+    private static string CreateMessage(
+        InterfaceProfileActivationExecutorStatus status,
+        InterfaceProfileActivationProfileLoadResult? loadResult,
+        InterfaceProfileActivationProfileSaveResult? saveDryRunResult,
+        bool shouldUseStore)
     {
+        if (shouldUseStore && loadResult is not null)
+        {
+            if (loadResult.Status == InterfaceProfileActivationProfileStoreStatus.NotFound)
+            {
+                return "ActivationExecutor ValidateOnly nicht ausgefuehrt: Das Zielprofil wurde im Store nicht gefunden. Es wurde nichts aktiviert oder gespeichert.";
+            }
+
+            if (loadResult.Status is InterfaceProfileActivationProfileStoreStatus.BuiltInBlocked or
+                InterfaceProfileActivationProfileStoreStatus.NonUserDefinedBlocked or
+                InterfaceProfileActivationProfileStoreStatus.UserDefinedRequired)
+            {
+                return $"ActivationExecutor ValidateOnly blockiert: {loadResult.Message} Es wurde nichts aktiviert oder gespeichert.";
+            }
+
+            if (loadResult.Status is InterfaceProfileActivationProfileStoreStatus.NotAvailable or
+                InterfaceProfileActivationProfileStoreStatus.Failed)
+            {
+                return $"ActivationExecutor ValidateOnly nicht verfuegbar: {loadResult.Message} Es wurde nichts aktiviert oder gespeichert.";
+            }
+
+            if (status == InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted)
+            {
+                var saveDetail = saveDryRunResult?.Status == InterfaceProfileActivationProfileStoreStatus.MissingCapability
+                    ? " Der Save-DryRun bleibt wegen fehlender finaler Re-Evaluation blockiert."
+                    : string.Empty;
+
+                return "ActivationExecutor ValidateOnly erfolgreich: Das Zielprofil wurde frisch geladen und als UserDefined erkannt; produktive Aktivierung und Speicherung bleiben nicht implementiert." +
+                    saveDetail +
+                    " Es wurde nichts aktiviert oder gespeichert.";
+            }
+        }
+
         return status switch
         {
             InterfaceProfileActivationExecutorStatus.NotAvailable =>

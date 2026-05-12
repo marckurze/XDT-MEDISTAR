@@ -923,6 +923,8 @@ Konservative Entscheidung fuer die erste technische Stufe:
 - Es wird noch kein produktiver Backend-Executor gebaut.
 - `InterfaceProfileActivationExecutorStub` implementiert `IInterfaceProfileActivationExecutor` defensiv.
 - Der Stub bewertet die uebergebenen Preconditions, liefert sinnvolle Statuswerte und benennt fehlende Voraussetzungen jetzt praeziser, etwa fehlende Zielprofil-ID, fehlenden Loader/Store-Kontext, erforderliches frisches Laden und erforderliche finale Re-Evaluation.
+- Optional kann der Stub im `ValidateOnly`-Modus einen `IInterfaceProfileActivationProfileStore` verwenden: Dann wird das Zielprofil frisch geladen, `NotFound`, BuiltIn und Nicht-UserDefined werden ueber den Store bewertet und ein Save-DryRun bleibt ohne finale Re-Evaluation blockiert.
+- Diese Store-Anbindung ist weiterhin nicht produktiv. Sie setzt kein `IsActive`, ruft keine produktive Speichermethode auf und ist nicht mit UI-Flows verbunden.
 - Er setzt `IsActive` nicht, speichert nichts, aendert kein Profil, startet keine Verarbeitung und fuehrt keine Datei-/Ordneroperation aus.
 - Der vorbereitete `InterfaceProfileActivationProfileStoreStub` speichert ebenfalls nichts. Selbst ein formal UserDefined-faehiger SaveRequest endet mit `SaveNotImplemented`.
 - Der vorbereitete `InterfaceProfileActivationProfileCatalogStore` ist die erste echte Projektstruktur-Anbindung, aber ebenfalls nicht produktiv speichernd: UserDefined-Save wird nur als `SaveWouldBeAllowed`/DryRun gemeldet, wenn finale Re-Evaluation nachgewiesen ist.
