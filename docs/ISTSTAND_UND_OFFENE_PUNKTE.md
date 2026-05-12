@@ -1,6 +1,6 @@
 # Iststand und offene Punkte
 
-Stand: 2026-05-11
+Stand: 2026-05-12
 
 Basis dieses Abgleichs:
 
@@ -11,6 +11,8 @@ Basis dieses Abgleichs:
 ## 1. Kurzfazit
 
 Die Dokumentation passt grundsaetzlich zum aktuellen Projektstand. README, Roadmap, Projektueberblick und Architektur beschreiben den stabilen Kern mit MEDISTAR und NIDEK ARK1S, die manuell gestartete periodische Automatik, XDT-Anhaenge fuer AIS, den Baukasten-Testexport und den sicheren Templatepaket-Import weitgehend zutreffend.
+
+Neue Arbeitsleitlinie: Der Aktivierungsassistent wird vorerst nicht weiter ausgebaut. Der Produktwert liegt nun zuerst in fertigen Geraeteprofilen und Templatepaketen, damit Anwender den Baukasten moeglichst selten brauchen.
 
 Kritische Abweichungen, bei denen die Dokumentation eine produktiv fertige Funktion behauptet, die im Code eindeutig fehlt, wurden nicht gefunden. Es gibt aber kleinere Unschaerfen:
 
@@ -27,10 +29,12 @@ Besonders stabil wirken aktuell:
 - BuiltIn/UserDefined-Profiltrennung
 - sichere Templatepaket-Importpipeline bis UserDefined-Uebernahme
 - Datei- und Paketlogik fuer stabile AIS-/Geraete-/XDT-Anhangdateien
+- neue kompakte Geraete-/Template-Matrix als Prioritaetenbasis
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 - V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
+- fertige, auslieferbare Templatepakete fuer diese vorbereiteten Geraeteprofile
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
 - UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
@@ -101,6 +105,8 @@ Der Baukasten `Test & Vorschau` kann:
 - Testexport erstellen
 
 Beim Baukasten-Testexport wird der Anhang physisch in den gewaehlt Testordner kopiert, waehrend `6305` in der XDT-Datei den simulierten Zielpfad aus dem Schnittstellenprofil verwendet. Exportprofile und BuiltIn-Profile werden dadurch nicht veraendert.
+
+Der Baukasten ist nicht der gewuenschte Standardweg fuer Anwender. Standard soll ein fertiges Geraeteprofil plus fertiges Templatepaket sein; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
 ### Schnittstellenprofile
 
@@ -179,7 +185,7 @@ Sicherheitsgrenzen:
 - keine automatische 6330-Zeilentypautomatik
 - keine harte Lizenzsperre
 
-Die offene V1-Entscheidung ist wieder knapp: final bestaetigen, dass `IsActive` das einzige Aktivierungsflag ist, konkrete sichere UserDefined-Store-Methode festlegen, produktiven Executor mit frischem Laden + Evaluation + Guard direkt vor Speicherung bauen und eine einfache UI-Position fuer `Profil aktivieren` definieren.
+Die offene V1-Entscheidung bleibt bewusst geparkt: Eine spaetere Aktivierung muesste `IsActive` als Schreibpunkt, eine sichere UserDefined-Store-Methode, frisches Laden sowie finale Evaluation + Guard direkt vor Speicherung klaeren. Fuer die naechsten Schritte hat diese Arbeit keine Prioritaet gegenueber fertigen Geraeteprofilen und Templatepaketen.
 
 Die zuletzt bestaetigte technische Absicherung dieses Standes:
 
@@ -294,6 +300,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - TOPCON CL300
 - TOPCON KR800
 - TOPCON TRK2P
+- fertige Templatepaket-Dateien fuer vorbereitete Geraeteprofile
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
 - Geraete-Datei-Explorer
 - weitere AIS-Systeme ausser MEDISTAR
@@ -317,7 +324,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | Paket-Wartelogik | Roadmap, Projektueberblick und E2E-Testplan beschreiben zweistufige Logik. | `AutoImportPackageStateService` und Coordinator bilden die Logik ab. | passt | Praktischen E2E-Testplan ausfuehren. |
 | XDT-Anhaenge | Dokumentation beschreibt sichere automatische Vorbereitung und Linkausgabe `6302` bis `6305`. | Services, Coordinator, ManualProcessor und Testexport enthalten diese Logik. | passt | In Architektur fruehere "nur vorbereitet"-Formulierungen glaetten. |
 | Baukasten Test & Vorschau | Projektueberblick beschreibt Dateiauswahl, simulierten 6305-Pfad und Testexport. | `BuilderTestExportService` und UI enthalten diese Funktion. | passt | Keine Aenderung noetig. |
-| Templatepaket-Import | Roadmap/Projektueberblick beschreiben Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl und UserDefined-Uebernahme. | Entsprechende Services, UI-Glue und E2E-nahe Tests vorhanden. | passt | ReplaceExisting und Aktivierungsassistent weiter als offen fuehren. |
+| Templatepaket-Import | Roadmap/Projektueberblick beschreiben Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl und UserDefined-Uebernahme. | Entsprechende Services, UI-Glue und E2E-nahe Tests vorhanden. | passt | ReplaceExisting offen fuehren; Aktivierungsassistent vorerst parken. |
 | MEDISTAR/NIDEK ARK1S | Als validierter Kernworkflow beschrieben. | BuiltIn-Profile, Parser, Mapping und Tests vorhanden. | passt | Als stabilen Kern beibehalten. |
 | V2-Geraeteprofile | Als vorbereitet, nicht produktiv validiert beschrieben. | BuiltIn-Profile und Beispiel-Doku vorhanden; keine Praxisvalidierung behauptet. | passt | Pro Geraet Validierungsplan abarbeiten. |
 | Lizenzsystem | Anzeige, Lizenzdatei, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige und Karenzzeitservices; keine harte Durchsetzung. | passt | Signatur und Sperrregeln separat spezifizieren. |
@@ -336,9 +343,10 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | --- | --- | --- | --- | --- | --- | --- |
 | hoch | E2E-Testplan praktisch weiter ausfuehren | Testplan, Durchfuehrungsschritte und Protokollvorlage sind vorhanden; MEDISTAR + ARK1S + Pflicht-XDT-Anhang wurde am 2026-05-11 praktisch bestanden dokumentiert. | Weitere manuelle Praxisprotokolle fuer die restlichen Testfaelle fehlen, insbesondere optionale Anhaenge, Mehrfachanhaenge, instabile Dateien und nicht unterstuetzte Dateien. | Restliche Faelle aus `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` abarbeiten. | Nicht getestete Randfaelle koennen im Praxisbetrieb auffallen. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
 | hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Pflicht-Anhang vorhanden/fehlt und MEDISTAR-Linkaufruf sind praktisch validiert. | Breitere Praxisabnahme mit optionalem Anhang, Mehrfachanhang, Archiv-/Fehlerablage und Wartezeiten. | Naechsten Praxislauf fuer optionale Anhaenge und Mehrfachanhang-Sicherheit protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in noch nicht getesteten Varianten auffallen. | E2E-Testplan, Testanhaenge |
-| hoch | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht pruefen Abhaengigkeiten, Ordner, XDT-Anhang-Konfiguration, Lizenzhinweise und BuiltIn/UserDefined-Schutz read-only. Der Dialog `Aktivierung vorbereiten` ist als scrollbares Preview-Fenster umgesetzt und auf die V1-Informationen reduziert. Ein defensiver `InterfaceProfileActivationExecutorStub` bewertet ValidateOnly-Preconditions und kann optional frisch laden, fuehrt aber nichts aus. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Schlanke V1 finalisieren: `IsActive` als Schreibpunkt bestaetigen, sichere UserDefined-Store-Methode festlegen, produktiven Executor separat spezifizieren. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | TemplateImport Executor, Profilkatalog, InterfaceProfileActivationEvaluationService, InterfaceProfileActivationGuardService |
+| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sechs Geraete vorhanden; praktisch validiert ist MEDISTAR + NIDEK ARK1S. Matrix ist in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` dokumentiert. | Fertige auslieferbare Templatepakete fehlen; fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | Zuerst ARK1S-Templatepaket ableiten, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
+| mittel | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht sind read-only vorhanden. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Vorerst parken; nur als Sicherheits-/Regressionsstand beibehalten. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | Profilkatalog, Evaluation, Guard |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
-| mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach Aktivierungsassistent als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
+| mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach konkreter Profil-/Templatepaket-Arbeit als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
 | mittel | Manuelle Zielnamen-/ID-Bearbeitung im Templateimport | Automatische Kopienamen vorhanden. | UI zum Bearbeiten vorgeschlagener Namen/IDs. | Nur ergaenzen, wenn Anwenderfeedback Bedarf zeigt. | Importnamen koennen weniger sprechend sein. | Importplan, SelectionService |
 | mittel | Geraete-Datei-Explorer | Noch kein vollstaendiger Explorer. | Datei anzeigen, SourcePaths untersuchen, Messwerte markieren, Kandidaten fuer Exportregeln uebernehmen. | Kleinen read-only Explorer fuer XML/Geraetedateien bauen. | Neue Geraeteprofile bleiben Codex-/Entwickleraufgabe. | XmlDeviceParser, PlaceholderDisplayHelper |
 | mittel | Profil-Assistent fuer unbekannte Geraete | Noch offen. | Gefuehrtes Erstellen von Geraete-, Export- und Schnittstellenprofilen. | Nach Geraete-Datei-Explorer planen. | Skalierung auf neue Geraete bleibt langsam. | Geraete-Datei-Explorer, ProfileCatalog |
@@ -379,23 +387,28 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - Archiv-/Fehlerablage im Praxisablauf pruefen.
 - MEDISTAR-Testimport der `6302` bis `6305`-Links dokumentieren.
 
-### Phase 3: Template-/Profil-Baukasten
+### Phase 3: Fertige Geraeteprofile und Templatepakete
+
+- `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste nutzen.
+- MEDISTAR + NIDEK ARK1S stabil halten und daraus ein erstes offizielles Templatepaket ableiten.
+- NIDEK LM7/LM7P als naechstes Geraet anhand repraesentativer Dateien validieren.
+- NT530P und TOPCON-Profile erst nach Datenlage priorisieren.
+- Baukasten schlank halten; keine neue Assistentenarchitektur, solange fertige Profile und Pakete fehlen.
+
+### Phase 4: Geparkter Aktivierungsassistent
 
 - Read-only Aktivierungsassistent ist praktisch in der UI sichtgeprueft und fuer den Vorschau-Status abgenommen; Pruefung, Guard und V1-Preview bleiben ohne produktive Wirkung.
-- V1-Spezifikation aus `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich final abnehmen: `Ready` ohne Warnungen, UserDefined, nicht BuiltIn, frisches Laden, finale Evaluation + Guard und sichere UserDefined-Speicherung.
-- Produktive `ActivationExecutor`-Implementierung erst nach Entscheidung zu `IsActive` als Schreibpunkt und konkreter Store-Methode planen; Deaktivierung, Audit, Rollen und Warnungsbestaetigung bleiben spaetere Nicht-V1-Themen.
+- Produktive Aktivierung vorerst nicht weiter ausbauen.
 - `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Regressionscheck fuer spaetere UI-Aenderungen weiterfuehren.
-- Finale Sicherheitspruefung und erneuten Build-/Testlauf direkt vor einer spaeteren echten Aktivierung einplanen.
-- Optional spaeter ReplaceExisting fuer UserDefined mit Backup/Bestaetigung.
 - AIS-/MEDISTAR-Default-Exporttemplates nicht umsetzen, bis ein neues Fachkonzept vorliegt.
 
-### Phase 4: Geraete-Datei-Explorer / Profil-Assistent
+### Phase 5: Geraete-Datei-Explorer / Profil-Assistent
 
 - Read-only Explorer fuer Geraetedateien und SourcePaths.
 - Uebernahme erkannter Messwerte in Exportregel-Entwurf.
 - Gefuehrter Profil-Assistent fuer neue Geraete.
 
-### Phase 5: Weitere Geraete validieren
+### Phase 6: Weitere Geraete validieren
 
 - LM7/LM7P
 - NT530P
@@ -403,14 +416,14 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - TOPCON KR800
 - TOPCON TRK2P
 
-### Phase 6: Lizenzierung haerten
+### Phase 7: Lizenzierung haerten
 
 - Digitale Signaturpruefung.
 - Manipulationsschutz.
 - Klare Sperrregeln und Karenzlogik.
 - Optional spaeter Online-Lizenzierung.
 
-### Phase 7: Installer / Deployment
+### Phase 8: Installer / Deployment
 
 - Installer/Updateprozess.
 - Support- und Installationsdokumentation.
@@ -437,18 +450,18 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
 
-**Restliche E2E-Testfaelle praktisch ausfuehren und protokollieren.**
+**Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S ableiten und dokumentieren.**
 
 Konkreter Umfang:
 
 - keine Produktivlogik aendern
-- keine Profile oder BuiltIns aendern
-- ein synthetisches Testdatenpaket bzw. konkrete synthetische Dateien fuer die noch offenen Varianten bereitstellen
-- die noch nicht protokollierten Faelle aus `docs/END_TO_END_TESTPLAN.md` praktisch Schritt fuer Schritt abarbeiten
-- Ergebnisse in `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` dokumentieren
+- keine BuiltIn-Profile ueberschreiben
+- vorhandene ARK1S-Profile, Exportregeln und Testdaten als Referenz nutzen
+- klaeren, ob das Paket als Datei ins Repository soll oder zunaechst als erzeugbares Artefakt dokumentiert wird
+- danach LM7/LM7P-Dateien sammeln und gegen `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` validieren
 - danach Build und Tests ausfuehren
 
-Das ist der beste naechste Schritt, weil die Kernlogik bereits umfangreich testseitig abgesichert ist, aber die praktische Abnahme der automatischen Paket- und Anhanglogik noch als groesste Restunsicherheit bleibt.
+Das ist der beste naechste Schritt, weil es den Baukasten vom Normalweg zum Rueckfallwerkzeug macht und den validierten Kernworkflow in ein wiederverwendbares Anwenderpaket ueberfuehrt.
 
 ## 10. Keine Aenderungen an Code
 

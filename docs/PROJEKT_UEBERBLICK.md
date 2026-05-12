@@ -1,6 +1,6 @@
 # Projektueberblick XdtDeviceBridge / XDT Verwaltung
 
-Stand: 2026-05-09
+Stand: 2026-05-12
 
 Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Sessions und Projektplanung. Sie trennt aktuellen Iststand, validierten Kernworkflow, vorbereitete Bausteine und Zielbild.
 
@@ -22,6 +22,8 @@ Es gibt bewusst:
 - keinen Autostart
 - keinen `FileSystemWatcher`
 - keine Verarbeitung beim App-Start
+
+Aktuelle Entwicklungsleitlinie: Fertige Geraeteprofile und Templatepakete haben Vorrang vor weiterer Aktivierungs- oder Assistentenarchitektur. Der Baukasten bleibt Werkzeug fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen, nicht der normale Bedienweg.
 
 ## 2. Aktuelle Version
 
@@ -96,7 +98,7 @@ Der alte manuelle Testbereich ist nicht entfernt. Er bleibt als eingeklappter Be
 
 ## 6. Tab Profile & Templates
 
-Der Tab `Profile & Templates` ist der Baukastenbereich.
+Der Tab `Profile & Templates` ist der Profil- und Templatebereich. Der spaetere Standardweg soll ein fertiges Geraeteprofil plus fertiges Templatepaket sein; der Baukasten ist der Rueckfall- und Testbereich.
 
 Er enthaelt:
 
@@ -121,7 +123,7 @@ Der Bereich `Test & Vorschau` erlaubt:
 
 ## 7. Baukasten `Test & Vorschau`
 
-Der Baukasten dient dem manuellen Testen von Profilen, Exportregeln und XDT-Anhang-Konfigurationen.
+Der Baukasten dient dem manuellen Testen von Profilen, Exportregeln und XDT-Anhang-Konfigurationen. Er soll schlank bleiben und nicht zum normalen Bedienweg fuer Standardgeraete werden.
 
 Wichtige Rollen:
 
@@ -181,11 +183,10 @@ Aktivierungsassistent aktueller Stand:
 - Im Tab `Schnittstellenprofile` gibt es den Bereich `Pruefung vor Aktivierung`.
 - Die Pruefung zeigt Status, Aktivierbarkeit, Blocker-/Warnungs-/Hinweiszaehler, strukturierte Ordnerpruefung, strukturierte XDT-Anhang-Konfiguration und die eingeklappte Tabelle `Alle Pruefpunkte`.
 - Der Button `Aktivierung vorbereiten` oeffnet einen reinen OK-/Vorschaudialog.
-- Der Dialog zeigt Aktivierungsbewertung, technische Guard-Entscheidung, Warnungsbestaetigungsvorschau und `InterfaceProfileActivationPlan`.
-- Die Service-Kette ist: `InterfaceProfileActivationEvaluationService` -> `InterfaceProfileActivationGuardService` -> `InterfaceProfileActivationWarningConfirmationService` -> `InterfaceProfileActivationPlanService` -> `InterfaceProfileActivationPreparationPreviewService`.
-- Ein Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor` ist vorhanden, aber nicht implementiert und nicht an die UI angebunden.
-- Die offenen fachlichen Entscheidungen vor produktiver Aktivierung sind in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` dokumentiert.
-- Der Stand ist rein lesend: kein Aktivieren-Button, keine automatische Aktivierung, keine produktive Warnungsbestaetigung, keine produktive Executor-Implementierung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled`, keine Profil-Speicherung und keine Datei-/Ordneroperationen.
+- Der Dialog zeigt nur noch V1-relevante Vorschauinformationen: Bewertung, technische Guard-Entscheidung, `Aktivierbar nach V1`, Blocker, Warnungen, Hinweise und Sicherheitshinweis.
+- Die Service-Kette ist: `InterfaceProfileActivationEvaluationService` -> `InterfaceProfileActivationGuardService` -> `InterfaceProfileActivationPreparationPreviewService`.
+- Ein defensiver `InterfaceProfileActivationExecutorStub` und ein read-only/ValidateOnly-naher ProfileStore-Adapter sind vorhanden, aber nicht an die UI angebunden und nicht produktiv aktivierend.
+- Der Stand ruht vorerst: kein Aktivieren-Button, keine automatische Aktivierung, keine produktive Warnungsbestaetigung, keine produktive Executor-Implementierung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled`, keine Profil-Speicherung und keine Datei-/Ordneroperationen.
 - BuiltIn-Profile bleiben geschuetzt; die spaetere Aktivierung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet.
 - Die Layout-Ueberlagerung unterhalb `Ordnerbereinigung` wurde behoben; `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` sind wieder getrennt lesbar.
 
@@ -373,6 +374,8 @@ Vorbereitet, aber noch nicht produktiv validiert:
 
 Wichtig: Diese V2-/BuiltIn-Profile sind vorbereitet und konfigurierbar, aber nicht im gleichen Sinne praktisch validiert wie MEDISTAR + NIDEK ARK1S.
 
+Die kompakte Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Aktuelle Prioritaet ist, aus dem validierten ARK1S-Workflow ein erstes offizielles Templatepaket abzuleiten und danach LM7/LM7P anhand repraesentativer Dateien praktisch nutzbar zu machen.
+
 ## 16. Lizenzsystem
 
 Das Lizenzsystem ist vorbereitet, aber nicht hart durchgesetzt.
@@ -425,6 +428,7 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 - `docs/ARCHITEKTUR.md`: Architektur und Bausteine.
 - `docs/PFLICHTENHEFT.md`: Anforderungen und Zielbild.
 - `docs/GERAETE_BEISPIELE.md`: Geraetebeispiele, SourcePaths und Interface-Manual-Auswertungen.
+- `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`: kompakte Matrix zu Geraeteprofilen, Templates, Validierungsstand und naechsten Prioritaeten.
 - `docs/END_TO_END_TESTPLAN.md`: manueller und automatisierter Testplan fuer AIS-/Geraete-/XDT-Anhang-Verarbeitung.
 - `docs/PROJEKT_UEBERBLICK.md`: diese kompakte Uebergabedatei.
 
@@ -432,15 +436,13 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 
 An `docs/ROADMAP.md` orientierte naechste Schritte:
 
-1. Restliche E2E-Testfaelle praktisch ausfuehren und protokollieren.
-2. Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
-3. `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich abnehmen oder anpassen.
-4. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
-5. Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung und Warnungsbestaetigung spezifizieren.
-6. Geraete-Datei-Explorer / Profil-Assistent vorbereiten.
-7. V2-Geraeteprofile produktiv validieren.
-8. Lizenzsignatur und spaetere Lizenzdurchsetzung planen.
-9. Installer / Deployment vorbereiten.
+1. Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S aus dem validierten Workflow ableiten.
+2. LM7/LM7P-Dateien sammeln und gegen die dokumentierten SourcePaths validieren.
+3. Wenn die Datenlage reicht: fertiges LM7/LM7P-Geraeteprofil plus Templatepaket vorbereiten.
+4. Danach NT530P oder TOPCON CL300/KR800/TRK2P nach Datenlage priorisieren.
+5. Baukasten schlank halten und nur fuer Sonderfaelle, Tests und Vorschau erweitern.
+6. Aktivierungsassistent vorerst als read-only Regressionsstand ruhen lassen.
+7. Restliche E2E-Testfaelle praktisch ausfuehren und protokollieren.
 
 ## 20. Kompakter Starttext fuer neuen Chat
 
@@ -455,7 +457,7 @@ Praktisch validiert ist MEDISTAR + NIDEK ARK1S: AIS-GDT/XDT einlesen, NIDEK ARK1
 
 Die Haupt-Tabs sind Verarbeitung, Profile & Templates, Schnittstellenprofile und Lizenz. Verarbeitung ist der Betriebsbereich mit Schnittstellen-Monitor, aktiven Schnittstellenprofilen, manuell startbarer Ueberwachung, automatischer Verarbeitung per Haken, Paketstatus und Monitoring-Ereignissen.
 
-Profile & Templates ist der Baukastenbereich. Dort gibt es Test & Vorschau: AIS-Datei laden, Geraetedatei laden, XDT-Anhang einlesen, Messwerte pruefen, Gesamtexport-Vorschau XDT und Testexport erstellen. Das Schnittstellenprofil dient als Testkontext, das Exportprofil steuert normale Ergebnisfelder.
+Profile & Templates ist der Profil- und Templatebereich. Standardziel ist fertiges Geraeteprofil plus fertiges Templatepaket; der Baukasten Test & Vorschau bleibt fuer Sonderfaelle, Tests und kundenspezifische Anpassungen.
 
 XDT-Anhaenge fuer AIS sind fuer den validierten MEDISTAR/ARK1S-Pflicht-Anhang-Praxislauf praktisch bestaetigt. Unterstuetzt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT. Externe Linkfelder sind 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung optional und 6305 vollstaendiger Dateipfad. XDT-Längenpraefixe erzeugt der XdtExportBuilder zentral, nicht die UI.
 
@@ -469,15 +471,15 @@ Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verar
 
 Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben werden, UserDefined-Profile werden separat gespeichert. Templatepaket-Export/Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
 
-Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> WarningConfirmation -> ActivationPlan -> PreparationPreview. Angezeigt werden Status, Aktivierbarkeit, Ordnerpruefung, XDT-Anhang-Konfiguration, Guard-Entscheidung, spaeter erforderliche Warnungsbestaetigung und beschreibende PlannedSteps. Ein Interface-/Model-Skelett fuer einen spaeteren ActivationExecutor beschreibt Request, Result, Preconditions und Statuswerte, hat aber keine produktive Implementierung und keine UI-Anbindung. Die offenen Fachentscheidungen stehen in docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung und keine Datei-/Ordneroperation. Die Layout-Ueberlagerung unterhalb Ordnerbereinigung wurde behoben.
+Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet und ruht vorerst. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> PreparationPreview. Angezeigt werden V1-relevante Vorschauinformationen: Status, Aktivierbarkeit nach V1, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung und keine Datei-/Ordneroperation.
 
-Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P.
+Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten.
 
 Lizenzsystem: InstallationInfo, Lizenzanfrage, Lizenzimport, Statusanzeige, Bewertung lizenzpflichtiger aktiver Schnittstellenprofile und Karenzzeitmodell sind vorbereitet. Es gibt noch keine harte Lizenzsperre, keine Online-Lizenzierung und keine produktive Signaturpruefung.
 
 Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale Ordnerleerung, Exportordner nicht bereinigen, instabile Dateien nicht verarbeiten, mehrere XDT-Anhaenge nicht automatisch zuordnen, keine medizinische Bewertung, BuiltIns nicht ueberschreiben.
 
-Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
+Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: restliche E2E-Testfaelle praktisch ausfuehren, aktuellen read-only Aktivierungsassistenten in der UI pruefen, docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md fachlich abnehmen oder anpassen, UI-Konzept fuer spaetere Warnungsbestaetigung ohne Speicherung spezifizieren, produktive ActivationExecutor-Implementierung erst nach Fachentscheidung zu Preconditions/Audit/Rollen/Speicherung planen, Profil-Assistent/Geraete-Datei-Explorer vorbereiten, V2-Geraeteprofile validieren, Lizenzsignatur planen, Installer/Deployment vorbereiten.
+Naechste sinnvolle Schritte: erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S ableiten, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
 ```

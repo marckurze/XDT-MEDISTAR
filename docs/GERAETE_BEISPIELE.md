@@ -6,6 +6,8 @@ Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern versch
 
 Hinweis zum Stand `0.1.0-prototype`: V2-Geräteprofile für die hier beschriebenen Geräte sind teilweise vorbereitet bzw. als BuiltIn-Profile vorhanden. Produktiv/praktisch validiert ist weiterhin nur der Workflow MEDISTAR + NIDEK ARK1S. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und müssen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
 
+Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
+
 ## 2. Übersicht erkannter Geräte
 
 | Hersteller | Gerät | Gerätetyp | beobachtete Dateiformate | Untersuchungsarten | Zusatzdateien | MEDISTAR-Zielbild | spätere Profilrelevanz |
@@ -958,12 +960,12 @@ Wichtig für die spätere Parser- und Profil-Logik:
 
 Empfohlene Reihenfolge für spätere Umsetzung:
 
-1. ARK1S stabil halten.
-2. LM7 als zweites Geräteprofil vorbereiten, weil es ähnliche refraktive Ergebniszeilen nutzt.
+1. ARK1S stabil halten und aus dem validierten Workflow ein erstes offizielles Templatepaket ableiten.
+2. LM7/LM7P als naechstes fertiges Profil-/Templatepaket vorbereiten, sofern repraesentative Dateien die dokumentierten SourcePaths bestaetigen.
 3. NT530P untersuchen, weil dort Tonometrie, Pachymetrie und Geräte-Dateianhänge/externe AIS-Links relevant werden.
-4. TOPCON CL300 als erstes JOIA-/Namespace-XML-Profil vorbereiten.
-5. TOPCON KR800 wegen Mehruntersuchungsdateien.
-6. TOPCON TRK2P wegen Tonometrie/CCT.
+4. TOPCON CL300, KR800 und TRK2P nach vorhandener Datenlage priorisieren; ohne belastbare Beispieldateien keine fachlichen Werte oder Templates erfinden.
+
+Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
 ## 12.1 Geräteanhänge / externe Dokumente
 
