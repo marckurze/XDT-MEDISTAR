@@ -20,6 +20,7 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
     private readonly TemplatePackageImportValidator _validator = new();
     private readonly TemplatePackageImportConflictAnalyzer _analyzer = new();
     private readonly TemplatePackageImportPlanBuilder _planBuilder = new();
+    private readonly TemplatePackageImportSelectionService _selectionService = new();
     private readonly TemplatePackageImportDryRunService _dryRunService = new();
     private readonly TemplatePackageImportPreviewService _previewService = new();
     private readonly TemplatePackageImportExecutor _executor = new();
@@ -110,7 +111,8 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
 
         var validation = _validator.Validate(importResult);
         var analysis = _analyzer.Analyze(importResult, existingCatalog);
-        var plan = _planBuilder.Build(analysis, Timestamp);
+        var basePlan = _planBuilder.Build(analysis, Timestamp);
+        var plan = _selectionService.Apply(basePlan, CreateCopySelections(basePlan));
         var dryRun = _dryRunService.Preview(importResult, plan, existingCatalog);
         var execution = _executor.Execute(importResult, plan, dryRun, paths, Timestamp, "Tests");
         var loadedCatalog = _catalogService.Load(paths);
@@ -125,6 +127,7 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
             Assert.False(decision.IsBlocking);
         });
 
+        Assert.All(basePlan.ProfilePlans, profilePlan => Assert.Equal(TemplatePackageImportAction.Skip, profilePlan.PlannedAction));
         Assert.False(plan.HasBlockingItems);
         Assert.Equal(4, plan.PlannedImportAsCopy);
         Assert.Equal(0, plan.PlannedReplaceExisting);
@@ -183,12 +186,15 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
         Assert.True(preview.DryRunResult.Success);
         Assert.Empty(preview.DryRunResult.BlockingItems);
         Assert.Equal(4, preview.Display.Rows.Count);
-        Assert.Equal(3, preview.Display.DependencyRows.Count);
-        Assert.Equal(4, preview.DryRunResult.WouldImportAsCopy);
+        Assert.Empty(preview.Display.DependencyRows);
+        Assert.Equal(0, preview.DryRunResult.WouldImportAsCopy);
+        Assert.Equal(4, preview.DryRunResult.WouldSkip);
         Assert.Equal(0, preview.DryRunResult.WouldReplaceExisting);
         Assert.All(preview.Display.Rows, row =>
         {
-            Assert.Equal(TemplatePackageImportAction.ImportAsCopy, row.SelectedAction);
+            Assert.Equal(TemplatePackageImportAction.Skip, row.SelectedAction);
+            Assert.False(row.IsTargetNameEditable);
+            Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ImportAsCopy);
             Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.Skip);
         });
     }
@@ -296,5 +302,19 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
                 .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
                 .ToArray()
             : Array.Empty<string>();
+    }
+
+    private static IReadOnlyList<TemplatePackageImportUserSelection> CreateCopySelections(TemplatePackageImportPlan plan)
+    {
+        return plan.ProfilePlans
+            .Select(profilePlan => new TemplatePackageImportUserSelection(
+                ProfileKind: profilePlan.ProfileKind,
+                ImportedProfileId: profilePlan.ImportedProfileId,
+                SelectedAction: TemplatePackageImportAction.ImportAsCopy,
+                TargetProfileId: null,
+                TargetProfileName: null,
+                IsValid: true,
+                ValidationMessage: null))
+            .ToList();
     }
 }

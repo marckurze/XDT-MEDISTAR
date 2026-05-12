@@ -157,6 +157,9 @@ public sealed class TemplatePackageImportDryRunService
         LocalProfileIndex localProfiles)
     {
         if (profilePlan.ProfileKind != ProfileKind.InterfaceProfile
+            || profilePlan.PlannedAction is TemplatePackageImportAction.Skip
+                or TemplatePackageImportAction.KeepExisting
+                or TemplatePackageImportAction.Blocked
             || importedProfiles.FindInterfaceProfile(profilePlan.ImportedProfileId) is not { } interfaceProfile)
         {
             return Array.Empty<TemplatePackageImportDependencyRemap>();

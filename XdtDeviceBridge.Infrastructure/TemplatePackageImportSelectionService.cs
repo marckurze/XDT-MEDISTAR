@@ -58,11 +58,20 @@ public sealed class TemplatePackageImportSelectionService
             };
         }
 
+        if (selection is { IsValid: false })
+        {
+            return CreateBlockedPlan(
+                profilePlan,
+                string.IsNullOrWhiteSpace(selection.ValidationMessage)
+                    ? "Auswahl ist ungueltig."
+                    : selection.ValidationMessage);
+        }
+
         var selectedAction = selection?.SelectedAction ?? profilePlan.PlannedAction;
         return selectedAction switch
         {
             TemplatePackageImportAction.ImportAsNew => CreateImportAsNewPlan(profilePlan),
-            TemplatePackageImportAction.ImportAsCopy => CreateImportAsCopyPlan(profilePlan, reservedIds, reservedNames),
+            TemplatePackageImportAction.ImportAsCopy => CreateImportAsCopyPlan(profilePlan, selection, reservedIds, reservedNames),
             TemplatePackageImportAction.KeepExisting => CreateKeepExistingPlan(profilePlan),
             TemplatePackageImportAction.Skip => CreateSkipPlan(profilePlan),
             TemplatePackageImportAction.Blocked => CreateBlockedPlan(profilePlan, "Profile remains blocked by user selection."),
@@ -92,11 +101,17 @@ public sealed class TemplatePackageImportSelectionService
 
     private static TemplatePackageImportProfilePlan CreateImportAsCopyPlan(
         TemplatePackageImportProfilePlan profilePlan,
+        TemplatePackageImportUserSelection? selection,
         Dictionary<ProfileKind, HashSet<string>> reservedIds,
         Dictionary<ProfileKind, HashSet<string>> reservedNames)
     {
+        var proposedName = ResolveCopyTargetName(profilePlan, selection, reservedNames);
+        if (proposedName.BlockingMessage is not null)
+        {
+            return CreateBlockedPlan(profilePlan, proposedName.BlockingMessage);
+        }
+
         var proposedId = CreateUniqueId(profilePlan, reservedIds);
-        var proposedName = CreateUniqueName(profilePlan, reservedNames);
 
         return profilePlan with
         {
@@ -105,9 +120,40 @@ public sealed class TemplatePackageImportSelectionService
             RequiresUserDecision = true,
             RequiresRename = true,
             ProposedProfileId = proposedId,
-            ProposedProfileName = proposedName,
+            ProposedProfileName = proposedName.Value,
             Message = "Profile will be imported as a safe UserDefined copy."
         };
+    }
+
+    private static CopyTargetNameResolution ResolveCopyTargetName(
+        TemplatePackageImportProfilePlan profilePlan,
+        TemplatePackageImportUserSelection? selection,
+        Dictionary<ProfileKind, HashSet<string>> reservedNames)
+    {
+        var requestedName = selection?.TargetProfileName;
+        if (requestedName is null)
+        {
+            return new CopyTargetNameResolution(CreateUniqueName(profilePlan, reservedNames), null);
+        }
+
+        var trimmedName = requestedName.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedName))
+        {
+            return new CopyTargetNameResolution(
+                null,
+                "Zielname darf nicht leer sein. Bitte einen eindeutigen Namen fuer die Kopie eingeben.");
+        }
+
+        var names = GetReservedSet(profilePlan.ProfileKind, reservedNames);
+        if (names.Contains(trimmedName))
+        {
+            return new CopyTargetNameResolution(
+                null,
+                $"Zielname '{trimmedName}' ist bereits vorhanden. Bitte einen eindeutigen Namen fuer die Kopie eingeben.");
+        }
+
+        names.Add(trimmedName);
+        return new CopyTargetNameResolution(trimmedName, null);
     }
 
     private static TemplatePackageImportProfilePlan CreateKeepExistingPlan(TemplatePackageImportProfilePlan profilePlan)
@@ -282,4 +328,8 @@ public sealed class TemplatePackageImportSelectionService
     {
         return $"{profileKind}:{profileId}";
     }
+
+    private sealed record CopyTargetNameResolution(
+        string? Value,
+        string? BlockingMessage);
 }

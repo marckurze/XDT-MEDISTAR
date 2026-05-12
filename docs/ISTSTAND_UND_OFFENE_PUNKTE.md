@@ -95,7 +95,7 @@ Der Tab `Profile & Templates` enthaelt:
 - Exportprofil-Entwurf
 - Templatepaket Export/Import
 - Importvalidierung, Konfliktanalyse, Importplan, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme
-- stabilisierte Importvorschau fuer Templatepakete; Fehler werden als Status angezeigt, und waehrend der Vorschau kann kein zweiter Import parallel gestartet werden
+- stabilisierte und verstaendlichere Importvorschau fuer Templatepakete; Fehler werden als Status angezeigt, waehrend der Vorschau kann kein zweiter Import parallel gestartet werden, Konflikte starten sicher mit `Ueberspringen`, und Zielnamen fuer bewusst gewaehlte Kopien sind editierbar
 - Baukastenbereich `Test & Vorschau`
 
 Der Baukasten `Test & Vorschau` kann:
@@ -292,7 +292,7 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | Baukasten-Testexport mit simuliertem 6305-Zielpfad | testseitig validiert | `BuilderTestExportServiceTests` |
 | Automatische Paketlogik AIS -> Geraet -> XDT-Anhang | testseitig validiert | `AutoImportPackageStateServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `AttachmentPackageDecisionServiceTests` |
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
-| ARK1S-Referenzpaket Export/Import | reproduzierbar testseitig validiert, inklusive UI-nahem Importvorschau-Pfad | `MedistarNidekArk1sTemplatePackageTests` |
+| ARK1S-Referenzpaket Export/Import | reproduzierbar testseitig validiert, inklusive UI-nahem Importvorschau-Pfad und sicherem Konfliktstandard `Ueberspringen` | `MedistarNidekArk1sTemplatePackageTests` |
 | BuiltIn/UserDefined-Schutz | testseitig validiert | `ProfileCatalogServiceTests`, TemplateImport-Tests |
 
 Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link: Pflicht-Anhang vorhanden, Pflicht-Anhang fehlt/Fehlerfall und MEDISTAR-Livesystem-Linkaufruf sind bestanden. Noch offen ist die vollstaendige manuelle Praxisabnahme der weiteren Faelle aus `docs/END_TO_END_TESTPLAN.md`. Fuer die weitere Durchfuehrung steht die ausfuellbare Vorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` bereit.
@@ -328,7 +328,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | Paket-Wartelogik | Roadmap, Projektueberblick und E2E-Testplan beschreiben zweistufige Logik. | `AutoImportPackageStateService` und Coordinator bilden die Logik ab. | passt | Praktischen E2E-Testplan ausfuehren. |
 | XDT-Anhaenge | Dokumentation beschreibt sichere automatische Vorbereitung und Linkausgabe `6302` bis `6305`. | Services, Coordinator, ManualProcessor und Testexport enthalten diese Logik. | passt | In Architektur fruehere "nur vorbereitet"-Formulierungen glaetten. |
 | Baukasten Test & Vorschau | Projektueberblick beschreibt Dateiauswahl, simulierten 6305-Pfad und Testexport. | `BuilderTestExportService` und UI enthalten diese Funktion. | passt | Keine Aenderung noetig. |
-| Templatepaket-Import | Roadmap/Projektueberblick beschreiben Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl und UserDefined-Uebernahme. | Entsprechende Services, UI-Glue, stabilisierte Preview-Erstellung und E2E-nahe Tests vorhanden. | passt | Praktischen App-Import erneut pruefen; ReplaceExisting offen fuehren; Aktivierungsassistent vorerst parken. |
+| Templatepaket-Import | Roadmap/Projektueberblick beschreiben Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl und UserDefined-Uebernahme. | Entsprechende Services, UI-Glue, stabilisierte Preview-Erstellung, sicherer Default `Ueberspringen`, editierbare Kopie-Zielnamen und E2E-nahe Tests vorhanden. | passt | Praktischen App-Import erneut pruefen; ReplaceExisting offen fuehren; Aktivierungsassistent vorerst parken. |
 | MEDISTAR/NIDEK ARK1S | Als validierter Kernworkflow beschrieben. | BuiltIn-Profile, Parser, Mapping und Tests vorhanden. | passt | Als stabilen Kern beibehalten. |
 | V2-Geraeteprofile | Als vorbereitet, nicht produktiv validiert beschrieben. | BuiltIn-Profile und Beispiel-Doku vorhanden; keine Praxisvalidierung behauptet. | passt | Pro Geraet Validierungsplan abarbeiten. |
 | Lizenzsystem | Anzeige, Lizenzdatei, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige und Karenzzeitservices; keine harte Durchsetzung. | passt | Signatur und Sperrregeln separat spezifizieren. |

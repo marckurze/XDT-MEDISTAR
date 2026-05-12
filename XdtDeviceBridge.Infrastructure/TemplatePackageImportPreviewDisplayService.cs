@@ -80,8 +80,9 @@ public sealed class TemplatePackageImportPreviewDisplayService
             availableActions: availableActions,
             isActionSelectionEnabled: !item.IsBlocking && availableActions.Count > 1,
             plannedAction: FormatAction(item.PlannedAction, plan?.ExistingProfileSource),
-            targetProfileName: DisplayOrDash(item.TargetProfileName),
+            targetProfileName: DisplayTargetName(item.TargetProfileName, item.PlannedAction),
             targetProfileId: DisplayOrDash(item.TargetProfileId),
+            isTargetNameEditable: !item.IsBlocking && item.PlannedAction == TemplatePackageImportAction.ImportAsCopy,
             conflict: FormatConflict(conflict, plan?.ExistingProfileSource),
             status: status,
             message: item.Message);
@@ -151,8 +152,8 @@ public sealed class TemplatePackageImportPreviewDisplayService
                 DependencyKind: FormatDependencyKind(remap.DependencyKind),
                 OriginalProfileName: DisplayOrDash(remap.OriginalProfileName),
                 OriginalProfileId: DisplayOrDash(remap.OriginalProfileId),
-                TargetProfileName: DisplayOrDash(remap.TargetProfileName),
-                TargetProfileId: DisplayOrDash(remap.TargetProfileId),
+                TargetProfileName: DisplayDependencyTarget(remap.TargetProfileName, remap.Resolution),
+                TargetProfileId: DisplayDependencyTarget(remap.TargetProfileId, remap.Resolution),
                 Resolution: FormatResolution(remap.Resolution),
                 Status: remap.Resolution is TemplatePackageImportDependencyResolution.Missing
                     or TemplatePackageImportDependencyResolution.Blocked
@@ -215,6 +216,11 @@ public sealed class TemplatePackageImportPreviewDisplayService
         if (dryRunResult.WouldImportAsCopy > 0)
         {
             yield return $"{dryRunResult.WouldImportAsCopy} Profil(e) würden als Kopie importiert.";
+        }
+
+        if (dryRunResult.WouldSkip > 0)
+        {
+            yield return $"{dryRunResult.WouldSkip} Profil(e) bleiben vorerst übersprungen. Bei Konflikten ist das der sichere Standard; Kopien müssen bewusst ausgewählt werden.";
         }
 
         if (analysisResult.ConflictingProfiles > 0)
@@ -331,7 +337,7 @@ public sealed class TemplatePackageImportPreviewDisplayService
             TemplatePackageImportDependencyResolution.LocalExisting => "lokal vorhanden",
             TemplatePackageImportDependencyResolution.ImportedAsNew => "aus Paket neu importiert",
             TemplatePackageImportDependencyResolution.ImportedAsCopy => "aus Paket als Kopie importiert",
-            TemplatePackageImportDependencyResolution.Missing => "fehlt",
+            TemplatePackageImportDependencyResolution.Missing => "nicht aufgelöst",
             TemplatePackageImportDependencyResolution.Blocked => "blockiert",
             _ => resolution.ToString()
         };
@@ -345,5 +351,28 @@ public sealed class TemplatePackageImportPreviewDisplayService
     private static string DisplayOrDash(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? "-" : value;
+    }
+
+    private static string DisplayTargetName(string? value, TemplatePackageImportAction plannedAction)
+    {
+        if (plannedAction == TemplatePackageImportAction.ImportAsCopy)
+        {
+            return value ?? "";
+        }
+
+        return DisplayOrDash(value);
+    }
+
+    private static string DisplayDependencyTarget(
+        string? value,
+        TemplatePackageImportDependencyResolution resolution)
+    {
+        if (resolution is TemplatePackageImportDependencyResolution.Missing
+            or TemplatePackageImportDependencyResolution.Blocked)
+        {
+            return "Nicht aufgelöst";
+        }
+
+        return DisplayOrDash(value);
     }
 }

@@ -129,6 +129,8 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Aus der Analyse wird ein Importplan erzeugt.
 - Der Dry-Run und die UI-Importvorschau zeigen geplante Aktionen, Ziel-IDs/Zielnamen, Abhängigkeiten und Warnungen.
 - Die WPF-Importvorschau ist stabilisiert: Vorschau-Erstellung laeuft ueber einen testbaren Preview-Service, parallele Importvorschauen werden verhindert, und rekursive Auswahlereignisse werden ignoriert.
+- Bei Konflikten und BuiltIn-Schutz ist `Überspringen` der sichere Standard; `Als Kopie importieren` wird nur nach bewusster Benutzerwahl ausgefuehrt.
+- Zielnamen fuer bewusst gewaehlte Kopien sind in der Vorschau editierbar; leere oder doppelte Namen blockieren die Uebernahme.
 - Sichere Benutzeraktionen sind möglich:
   - `Neu importieren`
   - `Als Kopie importieren`

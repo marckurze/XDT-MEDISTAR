@@ -32,27 +32,26 @@ public sealed class TemplatePackageImportPreviewDisplayServiceTests
                 "export-imported",
                 "Export",
                 conflictType: TemplatePackageImportConflictType.BuiltInProtected,
-                plannedAction: TemplatePackageImportAction.ImportAsCopy,
+                plannedAction: TemplatePackageImportAction.Skip,
                 existingSource: TemplatePackageImportExistingProfileSource.BuiltIn,
                 requiresUserDecision: true,
-                requiresRename: true,
-                proposedId: "export-imported-copy",
-                proposedName: "Export (Import)",
                 message: "BuiltIn profile is protected."),
             Item(
                 ProfileKind.ExportProfile,
                 "export-imported",
                 "Export",
-                plannedAction: TemplatePackageImportAction.ImportAsCopy,
-                targetId: "export-imported-copy",
-                targetName: "Export (Import)",
+                plannedAction: TemplatePackageImportAction.Skip,
+                wouldWrite: false,
+                wouldSkip: true,
                 message: "BuiltIn profile is protected."));
 
         var row = Assert.Single(display.Rows);
         Assert.Equal("BuiltIn geschützt", row.Conflict);
-        Assert.Equal("Als Kopie importieren", row.PlannedAction);
+        Assert.Equal("Überspringen", row.PlannedAction);
+        Assert.Equal(TemplatePackageImportAction.Skip, row.SelectedAction);
         Assert.Equal("Warnung", row.Status);
         Assert.DoesNotContain("Bestehendes ersetzen", row.PlannedAction);
+        Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ImportAsCopy);
         Assert.Contains("BuiltIn", row.Message);
     }
 
@@ -116,7 +115,8 @@ public sealed class TemplatePackageImportPreviewDisplayServiceTests
         var dependency = Assert.Single(display.DependencyRows);
         Assert.Equal("Blockiert", row.Status);
         Assert.Equal("Fehlende Abhängigkeit", row.Conflict);
-        Assert.Equal("fehlt", dependency.Resolution);
+        Assert.Equal("nicht aufgelöst", dependency.Resolution);
+        Assert.Equal("Nicht aufgelöst", dependency.TargetProfileName);
         Assert.Equal("Blockiert", dependency.Status);
         Assert.True(display.Summary.HasBlockingItems);
     }
@@ -223,6 +223,28 @@ public sealed class TemplatePackageImportPreviewDisplayServiceTests
         Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.KeepExisting);
         Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.Skip);
         Assert.DoesNotContain(row.AvailableActions, action => action.Action == TemplatePackageImportAction.ReplaceExisting);
+    }
+
+    [Fact]
+    public void Create_ShouldAllowTargetNameEditingOnlyForCopyRows()
+    {
+        var display = CreateDisplay(
+            new[]
+            {
+                Plan(ProfileKind.DeviceProfile, "device-copy", "Device", plannedAction: TemplatePackageImportAction.ImportAsCopy, requiresUserDecision: true, requiresRename: true, proposedId: "device-copy-import", proposedName: "Device (Import)"),
+                Plan(ProfileKind.AisProfile, "ais-skip", "AIS", plannedAction: TemplatePackageImportAction.Skip, requiresUserDecision: true)
+            },
+            new[]
+            {
+                Item(ProfileKind.DeviceProfile, "device-copy", "Device", plannedAction: TemplatePackageImportAction.ImportAsCopy, targetId: "device-copy-import", targetName: "Device (Import)"),
+                Item(ProfileKind.AisProfile, "ais-skip", "AIS", plannedAction: TemplatePackageImportAction.Skip, wouldWrite: false, wouldSkip: true)
+            });
+
+        var copyRow = Assert.Single(display.Rows, row => row.ImportedProfileId == "device-copy");
+        var skipRow = Assert.Single(display.Rows, row => row.ImportedProfileId == "ais-skip");
+        Assert.True(copyRow.IsTargetNameEditable);
+        Assert.Equal("Device (Import)", copyRow.TargetProfileName);
+        Assert.False(skipRow.IsTargetNameEditable);
     }
 
     [Fact]

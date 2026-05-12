@@ -72,7 +72,10 @@ public sealed class TemplatePackageImportEndToEndTests
         _catalogService.SaveNewAisProfile(paths, builtInProfile);
         var importResult = CreateImportResult(aisProfiles: new[] { CreateAisProfile("ais-builtin", "BuiltIn AIS") });
 
-        var result = RunImportFlow(paths, importResult);
+        var result = RunImportFlow(
+            paths,
+            importResult,
+            new[] { Selection(ProfileKind.AisProfile, "ais-builtin", TemplatePackageImportAction.ImportAsCopy) });
 
         var plan = Assert.Single(result.Plan.ProfilePlans);
         Assert.Equal(TemplatePackageImportAction.ImportAsCopy, plan.PlannedAction);

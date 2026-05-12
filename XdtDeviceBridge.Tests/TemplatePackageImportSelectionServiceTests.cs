@@ -34,20 +34,20 @@ public sealed class TemplatePackageImportSelectionServiceTests
     }
 
     [Fact]
-    public void Apply_ShouldPlanCopyForBuiltInConflictAndAllowSkip()
+    public void Apply_ShouldKeepBuiltInConflictSkippedByDefaultAndAllowConsciousCopy()
     {
         var plan = CreatePlan(Plan(
             ProfileKind.DeviceProfile,
             "device-imported",
             "Device",
             conflictType: TemplatePackageImportConflictType.BuiltInProtected,
-            plannedAction: TemplatePackageImportAction.ImportAsCopy,
+            plannedAction: TemplatePackageImportAction.Skip,
             existingSource: TemplatePackageImportExistingProfileSource.BuiltIn,
             existingId: "device-builtin",
             existingName: "BuiltIn Device"));
 
         var skipped = _service.Apply(plan, new[] { Selection(ProfileKind.DeviceProfile, "device-imported", TemplatePackageImportAction.Skip) });
-        var copied = _service.Apply(plan, Array.Empty<TemplatePackageImportUserSelection>());
+        var copied = _service.Apply(plan, new[] { Selection(ProfileKind.DeviceProfile, "device-imported", TemplatePackageImportAction.ImportAsCopy) });
 
         Assert.Equal(TemplatePackageImportAction.Skip, Assert.Single(skipped.ProfilePlans).PlannedAction);
         var copiedPlan = Assert.Single(copied.ProfilePlans);
@@ -130,6 +130,85 @@ public sealed class TemplatePackageImportSelectionServiceTests
 
         Assert.Contains(updated.ProfilePlans, item => item.ProposedProfileName == "Device (Import)");
         Assert.Contains(updated.ProfilePlans, item => item.ProposedProfileName == "Device (Import 2)");
+    }
+
+    [Fact]
+    public void Apply_ShouldUseEditedTargetNameForCopy()
+    {
+        var plan = CreatePlan(Plan(
+            ProfileKind.DeviceProfile,
+            "device-imported",
+            "Device",
+            conflictType: TemplatePackageImportConflictType.BuiltInProtected,
+            plannedAction: TemplatePackageImportAction.Skip,
+            existingSource: TemplatePackageImportExistingProfileSource.BuiltIn,
+            existingId: "device-builtin",
+            existingName: "BuiltIn Device"));
+
+        var updated = _service.Apply(plan, new[]
+        {
+            Selection(
+                ProfileKind.DeviceProfile,
+                "device-imported",
+                TemplatePackageImportAction.ImportAsCopy,
+                targetProfileName: "Meine ARK1S Kopie")
+        });
+
+        var item = Assert.Single(updated.ProfilePlans);
+        Assert.Equal(TemplatePackageImportAction.ImportAsCopy, item.PlannedAction);
+        Assert.Equal("Meine ARK1S Kopie", item.ProposedProfileName);
+        Assert.False(item.IsBlocking);
+    }
+
+    [Fact]
+    public void Apply_ShouldBlockCopyWithEmptyTargetName()
+    {
+        var plan = CreatePlan(Plan(
+            ProfileKind.DeviceProfile,
+            "device-imported",
+            "Device",
+            plannedAction: TemplatePackageImportAction.Skip));
+
+        var updated = _service.Apply(plan, new[]
+        {
+            Selection(
+                ProfileKind.DeviceProfile,
+                "device-imported",
+                TemplatePackageImportAction.ImportAsCopy,
+                targetProfileName: "")
+        });
+
+        var item = Assert.Single(updated.ProfilePlans);
+        Assert.Equal(TemplatePackageImportAction.Blocked, item.PlannedAction);
+        Assert.True(item.IsBlocking);
+        Assert.Contains("Zielname", item.Message);
+    }
+
+    [Fact]
+    public void Apply_ShouldBlockCopyWithExistingTargetName()
+    {
+        var plan = CreatePlan(Plan(
+            ProfileKind.DeviceProfile,
+            "device-imported",
+            "Device",
+            plannedAction: TemplatePackageImportAction.Skip,
+            existingId: "device-existing",
+            existingName: "Existing Device",
+            existingSource: TemplatePackageImportExistingProfileSource.UserDefined));
+
+        var updated = _service.Apply(plan, new[]
+        {
+            Selection(
+                ProfileKind.DeviceProfile,
+                "device-imported",
+                TemplatePackageImportAction.ImportAsCopy,
+                targetProfileName: "Existing Device")
+        });
+
+        var item = Assert.Single(updated.ProfilePlans);
+        Assert.Equal(TemplatePackageImportAction.Blocked, item.PlannedAction);
+        Assert.True(item.IsBlocking);
+        Assert.Contains("bereits vorhanden", item.Message);
     }
 
     [Fact]
@@ -239,14 +318,15 @@ public sealed class TemplatePackageImportSelectionServiceTests
     private static TemplatePackageImportUserSelection Selection(
         ProfileKind profileKind,
         string importedId,
-        TemplatePackageImportAction action)
+        TemplatePackageImportAction action,
+        string? targetProfileName = null)
     {
         return new TemplatePackageImportUserSelection(
             ProfileKind: profileKind,
             ImportedProfileId: importedId,
             SelectedAction: action,
             TargetProfileId: null,
-            TargetProfileName: null,
+            TargetProfileName: targetProfileName,
             IsValid: true,
             ValidationMessage: null);
     }

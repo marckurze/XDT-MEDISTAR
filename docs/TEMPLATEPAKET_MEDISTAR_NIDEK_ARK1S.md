@@ -94,7 +94,8 @@ Wichtige Sicherheitsgrenze: Das Referenzpaket enthaelt keine Live-Pfade. Ordner 
 Beim Import muessen die bestehenden Sicherheitsregeln gelten:
 
 - BuiltIn-Profile werden nicht ueberschrieben.
-- Import erfolgt als UserDefined-Kopie oder sicherer Importplan.
+- Konflikte und BuiltIn-geschuetzte Profile stehen in der Vorschau zunaechst auf `Ueberspringen`.
+- Import als UserDefined-Kopie erfolgt nur nach bewusster Auswahl; der vorgeschlagene Zielname kann geaendert werden.
 - Importierte Schnittstellenprofile werden nicht automatisch aktiv.
 - `IsAttachmentProcessingEnabled` wird bei importierten Schnittstellenprofilen deaktiviert.
 - `IsActive` bleibt aus.
@@ -123,6 +124,7 @@ Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
 - XDT-Anhang-Linkeinstellungen fuer `6302`, `6303`, optional `6304` und `6305`
 - keine offensichtlichen Live-Pfade, Kundenmarker oder Patientendatenmarker
 - UI-nahe Importvorschau kehrt zurueck und schreibt keine Profile
+- Konfliktstandard ist `Ueberspringen`; `Als Kopie importieren` wird erst durch Benutzerentscheidung aktiv
 - Import gegen vorhandene BuiltIn-Profile nur als UserDefined-Kopie
 - importiertes Schnittstellenprofil bleibt inaktiv
 - `IsAttachmentProcessingEnabled` bleibt nach Import deaktiviert
@@ -131,4 +133,4 @@ Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
 
 1. Ablage- und Release-Regel fuer offizielle Templatepaket-ZIP-Dateien festlegen.
 2. Danach das Artefakt z. B. unter `template-packages/medistar-nidek-ark1s-v1.templatepackage.zip` reproduzierbar erzeugen.
-3. Praktische App-Abnahme wiederholen: Paket in der UI importieren, stabile Importvorschau pruefen, keine automatische Aktivierung.
+3. Praktische App-Abnahme wiederholen: Paket in der UI importieren, bewusst Kopien auswaehlen, Zielnamen pruefen, stabile Importvorschau pruefen, keine automatische Aktivierung.

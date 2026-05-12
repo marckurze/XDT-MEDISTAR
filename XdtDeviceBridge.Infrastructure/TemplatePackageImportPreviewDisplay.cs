@@ -34,6 +34,7 @@ public sealed class TemplatePackageImportPreviewRow
         string plannedAction,
         string targetProfileName,
         string targetProfileId,
+        bool isTargetNameEditable,
         string conflict,
         string status,
         string message)
@@ -48,6 +49,7 @@ public sealed class TemplatePackageImportPreviewRow
         PlannedAction = plannedAction;
         TargetProfileName = targetProfileName;
         TargetProfileId = targetProfileId;
+        IsTargetNameEditable = isTargetNameEditable;
         Conflict = conflict;
         Status = status;
         Message = message;
@@ -69,9 +71,11 @@ public sealed class TemplatePackageImportPreviewRow
 
     public string PlannedAction { get; }
 
-    public string TargetProfileName { get; }
+    public string TargetProfileName { get; set; }
 
     public string TargetProfileId { get; }
+
+    public bool IsTargetNameEditable { get; }
 
     public string Conflict { get; }
 

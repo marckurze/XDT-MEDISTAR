@@ -3665,6 +3665,18 @@ public partial class MainWindow : Window
 
     private void TemplatePackageImportActionComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
+        UpdateTemplatePackageImportPreviewFromUserInput(
+            "Importvorschau wurde anhand der Benutzerentscheidung aktualisiert. Noch keine Importübernahme ausgeführt.");
+    }
+
+    private void TemplatePackageImportTargetNameTextBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        UpdateTemplatePackageImportPreviewFromUserInput(
+            "Importvorschau wurde anhand des Zielnamens aktualisiert. Noch keine Importübernahme ausgeführt.");
+    }
+
+    private void UpdateTemplatePackageImportPreviewFromUserInput(string statusText)
+    {
         if (_updatingTemplatePackageImportPreview
             || _isTemplatePackageImportPreviewBusy
             || _lastTemplatePackageImportResult is null
@@ -3695,7 +3707,7 @@ public partial class MainWindow : Window
                 updatedPlan,
                 dryRunResult);
             UpdateTemplatePackageImportExecuteButton(dryRunResult);
-            TemplatePackageImportExecutionResultTextBox.Text = "Importvorschau wurde anhand der Benutzerentscheidung aktualisiert. Noch keine Importübernahme ausgeführt.";
+            TemplatePackageImportExecutionResultTextBox.Text = statusText;
         }
         catch (Exception ex)
         {
@@ -3911,9 +3923,17 @@ public partial class MainWindow : Window
                 ImportedProfileId: row.ImportedProfileId,
                 SelectedAction: row.SelectedAction,
                 TargetProfileId: null,
-                TargetProfileName: null,
-                IsValid: true,
-                ValidationMessage: null))
+                TargetProfileName: row.SelectedAction == TemplatePackageImportAction.ImportAsCopy && row.IsTargetNameEditable
+                    ? row.TargetProfileName
+                    : null,
+                IsValid: row.SelectedAction != TemplatePackageImportAction.ImportAsCopy
+                    || !row.IsTargetNameEditable
+                    || !string.IsNullOrWhiteSpace(row.TargetProfileName),
+                ValidationMessage: row.SelectedAction == TemplatePackageImportAction.ImportAsCopy
+                    && row.IsTargetNameEditable
+                    && string.IsNullOrWhiteSpace(row.TargetProfileName)
+                        ? "Zielname darf nicht leer sein."
+                        : null))
             .ToList();
     }
 
@@ -3925,7 +3945,7 @@ public partial class MainWindow : Window
                 .Where(row => row.IsActionSelectionEnabled)
                 .OrderBy(row => row.ProfileKindValue)
                 .ThenBy(row => row.ImportedProfileId, StringComparer.OrdinalIgnoreCase)
-                .Select(row => $"{row.ProfileKindValue}:{row.ImportedProfileId}:{row.SelectedAction}"));
+                .Select(row => $"{row.ProfileKindValue}:{row.ImportedProfileId}:{row.SelectedAction}:{(row.IsTargetNameEditable ? row.TargetProfileName : "")}"));
     }
 
     private static string CreateTemplatePackageImportSelectionSignature(IEnumerable<TemplatePackageImportUserSelection> selections)
@@ -3935,7 +3955,7 @@ public partial class MainWindow : Window
             selections
                 .OrderBy(selection => selection.ProfileKind)
                 .ThenBy(selection => selection.ImportedProfileId, StringComparer.OrdinalIgnoreCase)
-                .Select(selection => $"{selection.ProfileKind}:{selection.ImportedProfileId}:{selection.SelectedAction}"));
+                .Select(selection => $"{selection.ProfileKind}:{selection.ImportedProfileId}:{selection.SelectedAction}:{selection.TargetProfileName ?? ""}"));
     }
 
     private void RefreshProfileUiAfterCatalogChange(ProfileCatalog catalog)
@@ -3965,10 +3985,10 @@ public partial class MainWindow : Window
 
         if (result.ImportedProfiles.Count > 0)
         {
-            builder.AppendLine("Geschriebene Profile:");
+            builder.AppendLine("Importierte Profile:");
             foreach (var item in result.ImportedProfiles)
             {
-                builder.AppendLine($"- {item.ProfileKind}: {item.TargetProfileName} ({item.TargetProfileId}) - {item.Message}");
+                builder.AppendLine($"- {FormatProfileKindForUser(item.ProfileKind)}: {item.TargetProfileName} ({item.TargetProfileId}) - {GetProfileLocationHint(item.ProfileKind)}");
             }
             builder.AppendLine();
         }
@@ -4003,11 +4023,36 @@ public partial class MainWindow : Window
             builder.AppendLine();
         }
 
-        builder.AppendLine("Importierte Schnittstellenprofile wurden deaktiviert und müssen vor Aktivierung geprüft werden.");
+        builder.AppendLine("Importierte AIS-, Geräte- und Exportprofile finden Sie im Tab Profile & Templates.");
+        builder.AppendLine("Importierte Schnittstellenprofile finden Sie im Tab Schnittstellenprofile.");
+        builder.AppendLine("Importierte Schnittstellenprofile wurden nicht automatisch aktiviert.");
+        builder.AppendLine("XDT-Anhang-Ordner und Felder 6302/6303/6304/6305 vor späterer Nutzung prüfen.");
         builder.AppendLine("BuiltIn-Profile wurden nicht überschrieben.");
         builder.Append("ReplaceExisting wird in diesem Schritt noch nicht unterstützt.");
 
         return builder.ToString();
+    }
+
+    private static string FormatProfileKindForUser(ProfileKind profileKind)
+    {
+        return profileKind switch
+        {
+            ProfileKind.AisProfile => "AIS-Profil",
+            ProfileKind.DeviceProfile => "Geräteprofil",
+            ProfileKind.ExportProfile => "Exportprofil",
+            ProfileKind.InterfaceProfile => "Schnittstellenprofil",
+            _ => profileKind.ToString()
+        };
+    }
+
+    private static string GetProfileLocationHint(ProfileKind profileKind)
+    {
+        return profileKind switch
+        {
+            ProfileKind.InterfaceProfile => "sichtbar im Tab Schnittstellenprofile",
+            ProfileKind.AisProfile or ProfileKind.DeviceProfile or ProfileKind.ExportProfile => "sichtbar im Tab Profile & Templates",
+            _ => "sichtbar in der Profilverwaltung"
+        };
     }
 
     private static string FormatTemplatePackageImportPreviewMessages(TemplatePackageImportPreviewDisplay display)

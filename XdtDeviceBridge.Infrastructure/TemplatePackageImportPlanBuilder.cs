@@ -100,12 +100,10 @@ public sealed class TemplatePackageImportPlanBuilder
         return decision.ConflictType switch
         {
             TemplatePackageImportConflictType.None => TemplatePackageImportAction.ImportAsNew,
-            TemplatePackageImportConflictType.BuiltInProtected => TemplatePackageImportAction.ImportAsCopy,
-            TemplatePackageImportConflictType.SameIdExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => TemplatePackageImportAction.ImportAsCopy,
-            TemplatePackageImportConflictType.SameNameExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => TemplatePackageImportAction.ImportAsCopy,
-            TemplatePackageImportConflictType.SameIdExists => TemplatePackageImportAction.ImportAsCopy,
-            TemplatePackageImportConflictType.SameNameExists => TemplatePackageImportAction.ImportAsCopy,
-            TemplatePackageImportConflictType.VersionMismatch => TemplatePackageImportAction.ImportAsCopy,
+            TemplatePackageImportConflictType.BuiltInProtected => TemplatePackageImportAction.Skip,
+            TemplatePackageImportConflictType.SameIdExists => TemplatePackageImportAction.Skip,
+            TemplatePackageImportConflictType.SameNameExists => TemplatePackageImportAction.Skip,
+            TemplatePackageImportConflictType.VersionMismatch => TemplatePackageImportAction.Skip,
             TemplatePackageImportConflictType.UnsafeFolderPath => TemplatePackageImportAction.ImportAsNew,
             TemplatePackageImportConflictType.MissingDependency => TemplatePackageImportAction.Blocked,
             TemplatePackageImportConflictType.InvalidProfile => TemplatePackageImportAction.Blocked,
@@ -122,6 +120,7 @@ public sealed class TemplatePackageImportPlanBuilder
     {
         return action == TemplatePackageImportAction.Blocked
             || action == TemplatePackageImportAction.ImportAsCopy
+            || action == TemplatePackageImportAction.Skip
             || decision.ConflictType == TemplatePackageImportConflictType.UnsafeFolderPath
             || decision.ConflictType == TemplatePackageImportConflictType.VersionMismatch;
     }
@@ -133,11 +132,12 @@ public sealed class TemplatePackageImportPlanBuilder
         return decision.ConflictType switch
         {
             TemplatePackageImportConflictType.None => "Profile can be imported as new.",
-            TemplatePackageImportConflictType.BuiltInProtected => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. The imported profile is planned as a copy.",
-            TemplatePackageImportConflictType.SameIdExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. The imported profile is planned as a copy.",
-            TemplatePackageImportConflictType.SameNameExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. The imported profile is planned as a copy.",
-            TemplatePackageImportConflictType.SameIdExists => "A local UserDefined profile with the same Id exists. Safe default is import as copy; replacing can be decided later by the user.",
-            TemplatePackageImportConflictType.SameNameExists => "A local UserDefined profile with the same name exists. Safe default is import as copy; replacing can be decided later by the user.",
+            TemplatePackageImportConflictType.BuiltInProtected => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. Safe default is skip; choose import as copy consciously if needed.",
+            TemplatePackageImportConflictType.SameIdExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. Safe default is skip; choose import as copy consciously if needed.",
+            TemplatePackageImportConflictType.SameNameExists when decision.ExistingProfileSource == TemplatePackageImportExistingProfileSource.BuiltIn => $"BuiltIn profile '{decision.ExistingProfileName}' is protected. Safe default is skip; choose import as copy consciously if needed.",
+            TemplatePackageImportConflictType.SameIdExists => "A local profile with the same Id exists. Safe default is skip; choose import as copy consciously if needed.",
+            TemplatePackageImportConflictType.SameNameExists => "A local profile with the same name exists. Safe default is skip; choose import as copy consciously if needed.",
+            TemplatePackageImportConflictType.VersionMismatch => "A local profile with a different version exists. Safe default is skip; choose import as copy consciously if needed.",
             TemplatePackageImportConflictType.UnsafeFolderPath => "Folder paths must be reviewed before productive activation. The profile is only planned for import and must not be activated automatically.",
             TemplatePackageImportConflictType.MissingDependency => decision.Message,
             TemplatePackageImportConflictType.InvalidProfile => decision.Message,

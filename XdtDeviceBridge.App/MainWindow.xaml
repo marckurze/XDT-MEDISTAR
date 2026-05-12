@@ -572,17 +572,30 @@
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
                                             <DataGridTextColumn Header="Geplante Aktion" Binding="{Binding PlannedAction}" MinWidth="160" Width="160" IsReadOnly="True"/>
-                                            <DataGridTextColumn Header="Zielname" Binding="{Binding TargetProfileName}" MinWidth="220" Width="220" IsReadOnly="True"/>
+                                            <DataGridTemplateColumn Header="Zielname" MinWidth="220" Width="220">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBox Text="{Binding TargetProfileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                 IsEnabled="{Binding IsTargetNameEditable}"
+                                                                 BorderThickness="0"
+                                                                 Padding="2"
+                                                                 LostFocus="TemplatePackageImportTargetNameTextBox_LostFocus"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
                                             <DataGridTextColumn Header="Ziel-ID" Binding="{Binding TargetProfileId}" MinWidth="180" Width="180" IsReadOnly="True"/>
                                             <DataGridTextColumn Header="Konflikt" Binding="{Binding Conflict}" MinWidth="150" Width="150" IsReadOnly="True"/>
                                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="90" Width="90" IsReadOnly="True"/>
                                             <DataGridTextColumn Header="Meldung" Binding="{Binding Message}" MinWidth="320" Width="*" IsReadOnly="True"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
-                                    <TextBlock Grid.Row="3"
-                                               Text="Abhängigkeitsauflösung für Schnittstellenprofile"
-                                               FontWeight="Bold"
-                                               Margin="0,0,0,4"/>
+                                    <StackPanel Grid.Row="3" Margin="0,0,0,4">
+                                        <TextBlock Text="Abhängigkeitsauflösung für Schnittstellenprofile"
+                                                   FontWeight="Bold"/>
+                                        <TextBlock Text="Schnittstellenprofile verknüpfen AIS-, Geräte- und Exportprofile. Diese Tabelle zeigt, auf welche Zielprofile die Verweise nach dem Import zeigen. Fehlende Zielprofile müssen vor einer späteren Nutzung behoben werden."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
                                     <DataGrid Grid.Row="4"
                                               x:Name="TemplatePackageImportDependencyPreviewGrid"
                                               AutoGenerateColumns="False"

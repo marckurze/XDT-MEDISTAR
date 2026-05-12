@@ -29,7 +29,7 @@ public sealed class TemplatePackageImportPlanBuilderTests
     }
 
     [Fact]
-    public void Build_ShouldPlanCopyForBuiltInConflict()
+    public void Build_ShouldPlanSkipForBuiltInConflict()
     {
         var plan = _builder.Build(
             CreateAnalysis(Decision(
@@ -44,16 +44,18 @@ public sealed class TemplatePackageImportPlanBuilderTests
             GeneratedAt);
 
         var profilePlan = Assert.Single(plan.ProfilePlans);
-        Assert.Equal(TemplatePackageImportAction.ImportAsCopy, profilePlan.PlannedAction);
-        Assert.True(profilePlan.RequiresRename);
+        Assert.Equal(TemplatePackageImportAction.Skip, profilePlan.PlannedAction);
+        Assert.False(profilePlan.RequiresRename);
         Assert.True(profilePlan.RequiresUserDecision);
         Assert.False(profilePlan.IsBlocking);
         Assert.NotEqual(TemplatePackageImportAction.ReplaceExisting, profilePlan.PlannedAction);
+        Assert.Null(profilePlan.ProposedProfileId);
+        Assert.Null(profilePlan.ProposedProfileName);
         Assert.Contains("BuiltIn", profilePlan.Message);
     }
 
     [Fact]
-    public void Build_ShouldPlanCopyForUserDefinedConflict()
+    public void Build_ShouldPlanSkipForUserDefinedConflict()
     {
         var plan = _builder.Build(
             CreateAnalysis(Decision(
@@ -68,9 +70,9 @@ public sealed class TemplatePackageImportPlanBuilderTests
             GeneratedAt);
 
         var profilePlan = Assert.Single(plan.ProfilePlans);
-        Assert.Equal(TemplatePackageImportAction.ImportAsCopy, profilePlan.PlannedAction);
+        Assert.Equal(TemplatePackageImportAction.Skip, profilePlan.PlannedAction);
         Assert.True(profilePlan.RequiresUserDecision);
-        Assert.True(profilePlan.RequiresRename);
+        Assert.False(profilePlan.RequiresRename);
         Assert.False(profilePlan.IsBlocking);
         Assert.NotEqual(TemplatePackageImportAction.ReplaceExisting, profilePlan.PlannedAction);
     }
@@ -142,7 +144,7 @@ public sealed class TemplatePackageImportPlanBuilderTests
     }
 
     [Fact]
-    public void Build_ShouldCreateProposedCopyName()
+    public void Build_ShouldNotPreselectCopyNameForConflict()
     {
         var plan = _builder.Build(
             CreateAnalysis(Decision(
@@ -157,11 +159,12 @@ public sealed class TemplatePackageImportPlanBuilderTests
             GeneratedAt);
 
         var profilePlan = Assert.Single(plan.ProfilePlans);
-        Assert.Equal("MEDISTAR (Import)", profilePlan.ProposedProfileName);
+        Assert.Equal(TemplatePackageImportAction.Skip, profilePlan.PlannedAction);
+        Assert.Null(profilePlan.ProposedProfileName);
     }
 
     [Fact]
-    public void Build_ShouldCreateNumberedCopyNameWhenImportNameAlreadyExists()
+    public void Build_ShouldNotPreselectNumberedCopyNameWhenImportNameAlreadyExists()
     {
         var plan = _builder.Build(
             CreateAnalysis(
@@ -181,11 +184,12 @@ public sealed class TemplatePackageImportPlanBuilderTests
             GeneratedAt);
 
         var profilePlan = Assert.Single(plan.ProfilePlans, item => item.ImportedProfileName == "MEDISTAR");
-        Assert.Equal("MEDISTAR (Import 2)", profilePlan.ProposedProfileName);
+        Assert.Equal(TemplatePackageImportAction.Skip, profilePlan.PlannedAction);
+        Assert.Null(profilePlan.ProposedProfileName);
     }
 
     [Fact]
-    public void Build_ShouldCreateNonCollidingProposedId()
+    public void Build_ShouldNotPreselectCopyIdForConflict()
     {
         var plan = _builder.Build(
             CreateAnalysis(
@@ -205,10 +209,8 @@ public sealed class TemplatePackageImportPlanBuilderTests
             GeneratedAt);
 
         var profilePlan = Assert.Single(plan.ProfilePlans, item => item.ImportedProfileId == "device-existing");
-        Assert.Equal("device-existing-import-2", profilePlan.ProposedProfileId);
-        Assert.DoesNotContain(plan.ProfilePlans, item =>
-            item != profilePlan
-            && string.Equals(item.ImportedProfileId, profilePlan.ProposedProfileId, StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(TemplatePackageImportAction.Skip, profilePlan.PlannedAction);
+        Assert.Null(profilePlan.ProposedProfileId);
     }
 
     [Fact]
@@ -238,10 +240,10 @@ public sealed class TemplatePackageImportPlanBuilderTests
 
         Assert.Equal(3, plan.TotalProfiles);
         Assert.Equal(1, plan.PlannedImportAsNew);
-        Assert.Equal(1, plan.PlannedImportAsCopy);
+        Assert.Equal(0, plan.PlannedImportAsCopy);
         Assert.Equal(0, plan.PlannedReplaceExisting);
         Assert.Equal(0, plan.PlannedKeepExisting);
-        Assert.Equal(0, plan.PlannedSkip);
+        Assert.Equal(1, plan.PlannedSkip);
         Assert.Equal(1, plan.PlannedBlocked);
     }
 
