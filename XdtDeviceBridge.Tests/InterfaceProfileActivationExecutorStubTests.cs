@@ -170,6 +170,9 @@ public sealed class InterfaceProfileActivationExecutorStubTests
         Assert.True(result.RequiresFreshLoad);
         Assert.True(result.RequiresSafeUserDefinedStore);
         Assert.True(result.RequiresFinalReEvaluation);
+        Assert.False(result.FreshLoadPerformed);
+        Assert.False(result.FinalReEvaluationPerformed);
+        Assert.False(result.SaveDryRunPerformed);
         Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.freshReload.missing");
         Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.storeContext.missing");
         Assert.Contains(result.MissingCapabilities ?? Array.Empty<string>(), item => item == "executor.safePersistence.missing");
@@ -197,6 +200,8 @@ public sealed class InterfaceProfileActivationExecutorStubTests
         Assert.False(result.Success);
         Assert.False(result.Saved);
         Assert.False(result.ProfileChanged);
+        Assert.True(result.FreshLoadPerformed);
+        Assert.True(result.RequiresFinalReEvaluation);
         Assert.Contains(result.Preconditions, item => item.Code == "profile.id.present" && !item.IsSatisfied);
         Assert.Contains(result.Preconditions, item => item.Code == "store.freshLoad.attempted" && item.IsSatisfied);
         Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.checked" && !item.IsSatisfied);
@@ -237,11 +242,11 @@ public sealed class InterfaceProfileActivationExecutorStubTests
 
         Assert.Equal(InterfaceProfileActivationExecutorStatus.Blocked, result.Status);
         Assert.Equal(1, store.LoadCallCount);
-        Assert.Equal(1, store.SaveCallCount);
+        Assert.Equal(0, store.SaveCallCount);
         Assert.False(result.Success);
         Assert.False(result.Saved);
         Assert.Contains(result.Preconditions, item => item.Code == "store.profile.notBuiltIn" && !item.IsSatisfied);
-        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.notPersisted" && item.IsSatisfied);
+        Assert.False(result.SaveDryRunPerformed);
     }
 
     [Fact]
@@ -258,11 +263,11 @@ public sealed class InterfaceProfileActivationExecutorStubTests
 
         Assert.Equal(InterfaceProfileActivationExecutorStatus.Blocked, result.Status);
         Assert.Equal(1, store.LoadCallCount);
-        Assert.Equal(1, store.SaveCallCount);
+        Assert.Equal(0, store.SaveCallCount);
         Assert.False(result.Success);
         Assert.False(result.Saved);
         Assert.Contains(result.Preconditions, item => item.Code == "store.profile.userDefined" && !item.IsSatisfied);
-        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.notPersisted" && item.IsSatisfied);
+        Assert.False(result.SaveDryRunPerformed);
     }
 
     [Fact]
@@ -292,7 +297,7 @@ public sealed class InterfaceProfileActivationExecutorStubTests
 
         Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
         Assert.Equal(1, store.LoadCallCount);
-        Assert.Equal(1, store.SaveCallCount);
+        Assert.Equal(0, store.SaveCallCount);
         Assert.False(result.Success);
         Assert.False(result.ProfileChanged);
         Assert.False(result.Saved);
@@ -301,18 +306,127 @@ public sealed class InterfaceProfileActivationExecutorStubTests
         Assert.False(result.WasPersisted);
         Assert.False(result.WasProfileChanged);
         Assert.Contains("frisch geladen", result.Message);
+        Assert.True(result.FreshLoadPerformed);
+        Assert.False(result.FinalReEvaluationPerformed);
+        Assert.True(result.RequiresFinalReEvaluation);
+        Assert.False(result.SaveDryRunPerformed);
+        Assert.True(result.SaveDryRunBlocked);
         Assert.Contains(result.Preconditions, item => item.Code == "store.profile.userDefined" && item.IsSatisfied);
         Assert.Contains(result.Preconditions, item => item.Code == "store.profile.notBuiltIn" && item.IsSatisfied);
-        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.checked" && item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "executor.finalEvaluationService.missing" && !item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.checked" && !item.IsSatisfied);
         Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.finalReEvaluation.completed" && !item.IsSatisfied);
-        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.notPersisted" && item.IsSatisfied);
-        Assert.NotNull(store.LastSaveRequest);
-        Assert.False(store.LastSaveRequest.FinalReEvaluationCompleted);
-        Assert.Equal(InterfaceProfileActivationExecutorOperationMode.ValidateOnly, store.LastSaveRequest.OperationMode);
+        Assert.Null(store.LastSaveRequest);
         Assert.Equal(originalId, profile.Metadata.Id);
         Assert.Equal(originalName, profile.Metadata.Name);
         Assert.Equal(originalIsActive, profile.IsActive);
         Assert.Equal(originalAttachmentEnabled, profile.FolderOptions.IsAttachmentProcessingEnabled);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStoreAndFinalServices_ShouldSimulateReadyReEvaluationAndSaveDryRun()
+    {
+        var context = CreateFinalEvaluationContext(isLicenseRequired: false);
+        var profile = context.Profile;
+        var originalIsActive = profile.IsActive;
+        var originalAttachmentEnabled = profile.FolderOptions.IsAttachmentProcessingEnabled;
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = CreateExecutorWithFinalServices(store, context.Catalog);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            Profile = null,
+            EvaluationResult = null,
+            GuardResult = null,
+            WarningConfirmationResult = null,
+            ActivationPlan = null
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(1, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.False(result.ProfileChanged);
+        Assert.False(result.ProcessingStarted);
+        Assert.True(result.FreshLoadPerformed);
+        Assert.True(result.FinalReEvaluationPerformed);
+        Assert.True(result.GuardRechecked);
+        Assert.True(result.WarningConfirmationRechecked);
+        Assert.True(result.ActivationPlanRecreated);
+        Assert.True(result.SaveDryRunPerformed);
+        Assert.False(result.SaveDryRunBlocked);
+        Assert.False(result.RequiresFinalReEvaluation);
+        Assert.NotNull(store.LastSaveRequest);
+        Assert.True(store.LastSaveRequest.FinalReEvaluationCompleted);
+        Assert.Equal(InterfaceProfileActivationExecutorOperationMode.ValidateOnly, store.LastSaveRequest.OperationMode);
+        Assert.False(profile.IsActive);
+        Assert.Equal(originalIsActive, profile.IsActive);
+        Assert.Equal(originalAttachmentEnabled, profile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Contains(result.Preconditions, item => item.Code == "executor.finalEvaluation.performed" && item.IsSatisfied);
+        Assert.Contains(result.Preconditions, item => item.Code == "store.saveDryRun.notPersisted" && item.IsSatisfied);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStoreAndFinalServices_ShouldRequireWarningConfirmationWithoutAcceptance()
+    {
+        var context = CreateFinalEvaluationContext(isLicenseRequired: true);
+        var profile = context.Profile;
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = CreateExecutorWithFinalServices(store, context.Catalog);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            Profile = null,
+            EvaluationResult = null,
+            GuardResult = null,
+            WarningConfirmationResult = null,
+            ActivationPlan = null,
+            WarningsAccepted = false
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.RequiresWarningConfirmation, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(0, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.True(result.FinalReEvaluationPerformed);
+        Assert.False(result.SaveDryRunPerformed);
+        Assert.True(result.SaveDryRunBlocked);
+        Assert.False(profile.IsActive);
+        Assert.Contains(result.Preconditions, item => item.Code == "warnings.accepted" && !item.IsSatisfied);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithStoreAndFinalServices_ShouldAllowAcceptedWarningsOnlyAsDryRun()
+    {
+        var context = CreateFinalEvaluationContext(isLicenseRequired: true);
+        var profile = context.Profile;
+        var store = new RecordingActivationProfileStore(profile);
+        var executor = CreateExecutorWithFinalServices(store, context.Catalog);
+
+        var result = await executor.ExecuteAsync(CreateReadyRequest(profile) with
+        {
+            Profile = null,
+            EvaluationResult = null,
+            GuardResult = null,
+            WarningConfirmationResult = null,
+            ActivationPlan = null,
+            WarningsAccepted = true,
+            ConfirmedWarningCodes = new[] { "license.required" }
+        });
+
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.Equal(1, store.LoadCallCount);
+        Assert.Equal(1, store.SaveCallCount);
+        Assert.False(result.Success);
+        Assert.False(result.Saved);
+        Assert.False(result.ProfileChanged);
+        Assert.True(result.FinalReEvaluationPerformed);
+        Assert.True(result.SaveDryRunPerformed);
+        Assert.False(result.SaveDryRunBlocked);
+        Assert.False(profile.IsActive);
+        Assert.Contains(result.Preconditions, item => item.Code == "warnings.accepted" && item.IsSatisfied);
     }
 
     [Fact]
@@ -505,6 +619,86 @@ public sealed class InterfaceProfileActivationExecutorStubTests
         };
     }
 
+    private static InterfaceProfileActivationExecutorStub CreateExecutorWithFinalServices(
+        IInterfaceProfileActivationProfileStore store,
+        ProfileCatalog catalog)
+    {
+        return new InterfaceProfileActivationExecutorStub(
+            store,
+            new InterfaceProfileActivationEvaluationService(),
+            new InterfaceProfileActivationGuardService(),
+            new InterfaceProfileActivationWarningConfirmationService(),
+            new InterfaceProfileActivationPlanService(),
+            catalog);
+    }
+
+    private static FinalEvaluationTestContext CreateFinalEvaluationContext(bool isLicenseRequired)
+    {
+        var folders = CreateFinalEvaluationFolders();
+        var aisProfile = DefaultAisProfiles.CreateMedistarDefault();
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault();
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().Metadata with
+            {
+                Id = isLicenseRequired
+                    ? "interface-userdefined-final-warning"
+                    : "interface-userdefined-final-ready",
+                Name = isLicenseRequired
+                    ? "UserDefined finale Warnung"
+                    : "UserDefined finale Ready",
+                IsBuiltIn = false,
+                IsUserDefined = true
+            },
+            AisProfileId = aisProfile.Metadata.Id,
+            DeviceProfileId = deviceProfile.Metadata.Id,
+            ExportProfileId = exportProfile.Metadata.Id,
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
+            {
+                AisImportFolder = folders.AisImportFolder,
+                DeviceImportFolder = folders.DeviceImportFolder,
+                ExportFolder = folders.ExportFolder,
+                ArchiveFolder = folders.ArchiveFolder,
+                ErrorFolder = folders.ErrorFolder,
+                ArchiveProcessedFiles = false,
+                MoveFailedFilesToErrorFolder = false,
+                AttachmentImportFolder = string.Empty,
+                AttachmentExportFolder = string.Empty,
+                IsAttachmentProcessingEnabled = false,
+                AttachmentRequirementMode = AttachmentRequirementMode.Optional,
+                AttachmentWaitTimeoutSeconds = 30,
+                AttachmentFileStabilityWaitSeconds = 2
+            },
+            IsActive = false,
+            IsLicenseRequired = isLicenseRequired
+        };
+        var catalog = new ProfileCatalog(
+            AisProfiles: new[] { aisProfile },
+            DeviceProfiles: new[] { deviceProfile },
+            ExportProfiles: new[] { exportProfile },
+            InterfaceProfiles: new[] { profile });
+
+        return new FinalEvaluationTestContext(profile, catalog);
+    }
+
+    private static FinalEvaluationFolders CreateFinalEvaluationFolders()
+    {
+        var baseFolder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
+        var aisImport = Path.Combine(baseFolder, "ais-import");
+        var deviceImport = Path.Combine(baseFolder, "device-import");
+        var export = Path.Combine(baseFolder, "export");
+        var archive = Path.Combine(baseFolder, "archive");
+        var error = Path.Combine(baseFolder, "error");
+        Directory.CreateDirectory(aisImport);
+        Directory.CreateDirectory(deviceImport);
+        Directory.CreateDirectory(export);
+        Directory.CreateDirectory(archive);
+        Directory.CreateDirectory(error);
+
+        return new FinalEvaluationFolders(aisImport, deviceImport, export, archive, error);
+    }
+
     private static InterfaceProfileActivationEvaluationResult Evaluation(
         InterfaceProfileActivationStatus status,
         bool canActivate,
@@ -611,6 +805,17 @@ public sealed class InterfaceProfileActivationExecutorStubTests
             },
             MissingRequirements: Array.Empty<InterfaceProfileActivationPlanReason>());
     }
+
+    private sealed record FinalEvaluationTestContext(
+        InterfaceProfileDefinition Profile,
+        ProfileCatalog Catalog);
+
+    private sealed record FinalEvaluationFolders(
+        string AisImportFolder,
+        string DeviceImportFolder,
+        string ExportFolder,
+        string ArchiveFolder,
+        string ErrorFolder);
 
     private sealed class RecordingActivationProfileStore : IInterfaceProfileActivationProfileStore
     {

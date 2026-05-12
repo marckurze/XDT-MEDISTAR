@@ -17,4 +17,11 @@ public sealed record InterfaceProfileActivationExecutorResult(
     bool RequiresSafeUserDefinedStore = true,
     bool RequiresFinalReEvaluation = true,
     bool IsValidationOnly = true,
-    IReadOnlyList<string>? MissingCapabilities = null);
+    IReadOnlyList<string>? MissingCapabilities = null,
+    bool FreshLoadPerformed = false,
+    bool FinalReEvaluationPerformed = false,
+    bool GuardRechecked = false,
+    bool WarningConfirmationRechecked = false,
+    bool ActivationPlanRecreated = false,
+    bool SaveDryRunPerformed = false,
+    bool SaveDryRunBlocked = false);
