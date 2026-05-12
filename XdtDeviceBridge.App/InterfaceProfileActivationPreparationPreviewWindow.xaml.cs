@@ -12,16 +12,9 @@ public partial class InterfaceProfileActivationPreparationPreviewWindow : Window
         DataContext = preview;
 
         SetSectionVisibility(GuardMessageTextBlock, !string.IsNullOrWhiteSpace(preview.GuardMessage));
-        SetSectionVisibility(WarningConfirmationItemsSection, preview.WarningConfirmationItems.Count > 0);
-        SetSectionVisibility(
-            ActivationPlanMissingRequirementsSection,
-            preview.ActivationPlanMissingRequirements.Count > 0);
-        SetSectionVisibility(
-            ActivationPlanReasonsSection,
-            preview.ActivationPlanReasons.Count > 0
-            && preview.WarningConfirmationItems.Count == 0
-            && preview.ActivationPlanMissingRequirements.Count == 0);
-        SetSectionVisibility(ActivationPlanStepsSection, preview.ActivationPlanSteps.Count > 0);
+        SetSectionVisibility(BlockersSection, preview.ImportantBlockers.Count > 0);
+        SetSectionVisibility(WarningsSection, preview.ImportantWarnings.Count > 0);
+        SetSectionVisibility(InfosSection, preview.ImportantInfos.Count > 0);
     }
 
     private static void SetSectionVisibility(FrameworkElement section, bool isVisible)

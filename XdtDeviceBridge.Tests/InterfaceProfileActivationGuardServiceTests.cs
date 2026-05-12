@@ -53,40 +53,22 @@ public sealed class InterfaceProfileActivationGuardServiceTests
     }
 
     [Fact]
-    public void ValidateActivationRequest_ShouldRequireWarningConfirmationForReadyWithWarnings()
+    public void ValidateActivationRequest_ShouldBlockReadyWithWarningsForV1()
     {
         var evaluation = Evaluation(
             InterfaceProfileActivationStatus.ReadyWithWarnings,
             canActivate: true,
-            Check(InterfaceProfileActivationSeverity.Warning, "license.required", "Lizenzstatus prüfen."));
+            Check(InterfaceProfileActivationSeverity.Warning, "license.required", "Lizenzstatus pruefen."));
 
         var result = _service.ValidateActivationRequest(new InterfaceProfileActivationRequest(
             Profile: CreateUserDefinedProfile(),
-            EvaluationResult: evaluation,
-            WarningsAccepted: false));
+            EvaluationResult: evaluation));
 
         Assert.False(result.CanProceed);
-        Assert.Equal(InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation, result.Decision);
+        Assert.Equal(InterfaceProfileActivationGuardDecision.Blocked, result.Decision);
+        Assert.Contains(result.BlockerReasons, reason => reason.Code == "guard.evaluation.warningNotAllowedInV1");
         Assert.Contains(result.WarningReasons, reason => reason.Code == "license.required");
-        Assert.Contains("Warnungen", result.Message);
-    }
-
-    [Fact]
-    public void ValidateActivationRequest_ShouldAllowReadyWithWarningsWhenWarningsAccepted()
-    {
-        var evaluation = Evaluation(
-            InterfaceProfileActivationStatus.ReadyWithWarnings,
-            canActivate: true,
-            Check(InterfaceProfileActivationSeverity.Warning, "license.required", "Lizenzstatus prüfen."));
-
-        var result = _service.ValidateActivationRequest(new InterfaceProfileActivationRequest(
-            Profile: CreateUserDefinedProfile(),
-            EvaluationResult: evaluation,
-            WarningsAccepted: true));
-
-        Assert.True(result.CanProceed);
-        Assert.Equal(InterfaceProfileActivationGuardDecision.AllowedWithWarnings, result.Decision);
-        Assert.Contains(result.WarningReasons, reason => reason.Code == "license.required");
+        Assert.Contains("blockierenden Punkte", result.Message);
     }
 
     [Fact]
@@ -159,13 +141,12 @@ public sealed class InterfaceProfileActivationGuardServiceTests
         var evaluation = Evaluation(
             InterfaceProfileActivationStatus.ReadyWithWarnings,
             canActivate: true,
-            Check(InterfaceProfileActivationSeverity.Warning, "license.required", "Lizenzstatus prüfen."),
+            Check(InterfaceProfileActivationSeverity.Warning, "license.required", "Lizenzstatus pruefen."),
             Check(InterfaceProfileActivationSeverity.Info, "attachment.disabled", "Anhangverarbeitung deaktiviert."));
 
         var result = _service.ValidateActivationRequest(new InterfaceProfileActivationRequest(
             Profile: CreateUserDefinedProfile(),
-            EvaluationResult: evaluation,
-            WarningsAccepted: true));
+            EvaluationResult: evaluation));
 
         Assert.Single(result.WarningReasons);
         Assert.Single(result.InfoReasons);

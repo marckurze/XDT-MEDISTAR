@@ -32,7 +32,7 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 - V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
-- Aktivierungsassistent fuer importierte Schnittstellenprofile; erste read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau, technische Guard-Schicht, internes Modell fuer spaetere Warnungsbestaetigung und rein lesender ActivationPlan-Service sind vorhanden, inklusive strukturierter Ordner- und XDT-Anhang-Detailanzeige sowie rein lesender Guard-Entscheidung, Warnungsbestaetigungsvorschau und ActivationPlan-Anzeige im Dialog `Aktivierung vorbereiten`; produktive Aktivierung bleibt offen
+- Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
 - UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
 - Praktische Windows-Sichtpruefung: Der Bereich `Pruefung vor Aktivierung` und der scrollbare Dialog `Aktivierung vorbereiten` sind fuer den aktuellen Vorschau-Status abgenommen; Lesbarkeit, Abschnittsgliederung, reduzierte Redundanz und Sicherheitshinweis wurden positiv bewertet.
 - Lizenzsignatur, harte Lizenzdurchsetzung und Installer/Deployment
@@ -129,82 +129,62 @@ Aktuelle Felder und Konzepte:
 
 ### Aktivierungsassistent fuer importierte Schnittstellenprofile - Uebergabestand
 
-Der Aktivierungsassistent ist als sicherer Vorbereitungsstand vorhanden. Er bewertet und visualisiert importierte beziehungsweise UserDefined-Schnittstellenprofile, fuehrt aber keine produktive Aktivierung aus. Es gibt keinen produktiven Aktivieren-Button, keine automatische Aktivierung, keine Profiländerung und keine Speicherung. Der `InterfaceProfileActivationExecutorStub` ist nur eine defensive Backend-Stufe ohne produktive Wirkung.
+Der Aktivierungsassistent ist als schlanke V1-Vorschau vorhanden. Er bewertet und visualisiert importierte beziehungsweise UserDefined-Schnittstellenprofile, fuehrt aber keine produktive Aktivierung aus. Es gibt keinen produktiven Aktivieren-Button, keine automatische Aktivierung, keine Profiländerung und keine Speicherung.
 
-Im Tab `Schnittstellenprofile` gibt es den Bereich `Pruefung vor Aktivierung`. Er zeigt:
+Im Tab `Schnittstellenprofile` gibt es den Bereich `Pruefung vor Aktivierung` mit Gesamtstatus, Aktivierbarkeit, Zaehlern, strukturierter Ordnerpruefung, strukturierter XDT-Anhang-Konfiguration, Tabelle `Alle Pruefpunkte` sowie den Buttons `Pruefung aktualisieren` und `Aktivierung vorbereiten`.
 
-- Gesamtstatus und grundsaetzliche Aktivierbarkeit
-- Zaehler fuer Blocker, Warnungen und Hinweise
-- strukturierte Ordnerpruefung
-- strukturierte XDT-Anhang-Konfiguration
-- eingeklappte Tabelle `Alle Pruefpunkte`
-- Button `Pruefung aktualisieren`
-- Button `Aktivierung vorbereiten`
+Der Dialog `Aktivierung vorbereiten` ist ein reines, scrollbares Preview-Fenster mit OK-/Schliessen-Aktion. Er zeigt nur noch V1-relevante Informationen:
 
-Der Dialog `Aktivierung vorbereiten` ist ein reines, scrollbares Preview-Fenster mit OK-/Schliessen-Aktion. Er zeigt die Aktivierungsbewertung, die technische Guard-Entscheidung, die Warnungsbestaetigungsvorschau und den `InterfaceProfileActivationPlan` kompakt gegliedert. Bestaetigungspflichtige Warnungen werden zentral im Abschnitt Warnungsbestaetigung angezeigt; Guard und Aktivierungsplan wiederholen diese Liste nicht vollstaendig. PlannedSteps werden nur kurz beschrieben und nicht ausgefuehrt.
+- Profilname
+- Status
+- `Aktivierbar nach V1`
+- technische Guard-Entscheidung
+- Blocker
+- Warnungen
+- Hinweise
+- Sicherheitshinweis
 
-Die fachliche Service-Kette lautet:
+Die fachliche Service-Kette lautet jetzt:
 
 ```text
 InterfaceProfileActivationEvaluationService
 => InterfaceProfileActivationGuardService
-=> InterfaceProfileActivationWarningConfirmationService
-=> InterfaceProfileActivationPlanService
 => InterfaceProfileActivationPreparationPreviewService / UI-Vorschau
 ```
 
-Die Bausteine haben folgende Rollen:
+V1-Regel:
 
-- `InterfaceProfileActivationEvaluationService`: bewertet Profilgrunddaten, BuiltIn-/UserDefined-Schutz, Abhaengigkeiten, Ordner, XDT-Anhang-Konfiguration und Lizenzhinweise.
-- `InterfaceProfileActivationGuardService`: prueft, ob eine spaetere Aktivierungsanforderung technisch weitergehen duerfte.
-- `InterfaceProfileActivationWarningConfirmationService`: bereitet nur im Speicher vor, welche Warnungen spaeter bewusst bestaetigt werden muessten.
-- `InterfaceProfileActivationPlanService`: fasst Bewertung, Guard und Warnungsbestaetigung zu einem rein beschreibenden Plan zusammen.
-- `InterfaceProfileActivationPreparationPreviewService`: bereitet die lesbare Dialogzusammenfassung auf.
+- `Ready` ohne Blocker und ohne Warnungen kann spaeter grundsaetzlich aktivierbar sein.
+- `ReadyWithWarnings` wird angezeigt, aber in V1 nicht produktiv aktiviert.
+- `Blocked`, `Unknown` und nicht eindeutig bewertete Zustaende werden nie aktiviert.
+- BuiltIn wird nie direkt veraendert.
+- Aktivierung bleibt auf UserDefined-Schnittstellenprofile begrenzt.
 
-Aktuelle Statuswerte:
+Der `InterfaceProfileActivationExecutorStub` bleibt eine defensive Backend-Stufe ohne produktive Wirkung. Im `ValidateOnly`-Modus kann er optional frisch ueber den ActivationProfileStore laden und Evaluation + Guard simulieren. Save bleibt DryRun, `IsActive` wird nicht gesetzt, es wird nichts gespeichert und keine Verarbeitung gestartet. `Activate` ist weiterhin nicht produktiv implementiert.
 
-- Evaluation: `NotEvaluated`, `Ready`, `ReadyWithWarnings`, `Blocked`, `Unknown`
-- Guard: `Allowed`, `AllowedWithWarnings`, `RequiresWarningConfirmation`, `Blocked`, `Unknown`
-- WarningConfirmation: `NotAvailable`, `MissingEvaluation`, `Blocked`, `NoWarnings`, `ConfirmationRequired`, `Unknown`
-- ActivationPlan: `NotAvailable`, `Blocked`, `RequiresWarningConfirmation`, `Ready`, `ReadyWithAcceptedWarnings`, `Unknown`
+Bewusst entfernt beziehungsweise nicht mehr V1-Bestandteil sind produktive Warnungsbestaetigung, `ActivationPlan`-/PlannedSteps-Architektur, Deaktivierungsmodus, Fingerprint-/Audit-/Rollen-Kontext und `ReadyWithWarnings` als Produktivpfad.
 
 Sicherheitsgrenzen:
 
 - keine echte Aktivierung
 - kein Aktivieren-Button
-- keine automatische Aktivierung
+- keine Warnungsbestaetigung
 - keine Aenderung an `IsActive`
 - keine Aenderung an `IsAttachmentProcessingEnabled`
 - keine Profiländerung und keine Speicherung
 - keine Änderung an BuiltIn-Profilen
-- keine produktive Warnungsbestaetigung und keine dauerhafte Speicherung einer Warnungsbestaetigung
-- keine produktive `ActivationExecutor`-Implementierung; nur defensiver Backend-Stub ohne Speicherung
 - keine Datei-/Ordneroperationen
 - keine produktive Verarbeitung
 - keine neue MEDISTAR-/AIS-Exporttemplate-Default-Logik
 - keine automatische 6330-Zeilentypautomatik
 - keine harte Lizenzsperre
 
-BuiltIn-Profile bleiben geschützt. Eine direkte BuiltIn-Aktivierung oder BuiltIn-Aenderung wird konservativ blockiert; die Aktivierungsvorbereitung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet. Importierte Schnittstellenprofile bleiben weiterhin inaktiv, bis eine spaetere echte Aktivierung bewusst umgesetzt und fachlich freigegeben wird.
-
-Ordner und XDT-Anhang-Konfiguration werden angezeigt und bewertet, aber nicht ausgefuehrt. Es werden keine Ordner angelegt und keine Dateien erzeugt, kopiert, verschoben oder geloescht. Die Linkfelder `6302`, `6303`, `6304` und `6305` werden nur als Konfiguration geprüft und angezeigt. XDT-Laengenpraefixe bleiben ausschliesslich Aufgabe des `XdtExportBuilder`.
-
-Als naechste technische Leitplanke existiert ein Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor`: `IInterfaceProfileActivationExecutor`, `InterfaceProfileActivationExecutorRequest`, `InterfaceProfileActivationExecutorResult`, `InterfaceProfileActivationExecutorStatus` und `InterfaceProfileActivationExecutorPrecondition`. Der Request kann inzwischen Zielprofil-ID/-Name, OperationMode, Preview-Kontext, erwartete Statuswerte, optionalen Fingerprint und Warnungsbestaetigungsdaten transportieren; das Result kann fehlendes frisches Laden, fehlende sichere UserDefined-Speicherung und erforderliche finale Re-Evaluation ausdruecken. Fuer den spaeteren Loader-/Store-Rand ist zusaetzlich `IInterfaceProfileActivationProfileStore` mit Load-/Save-Resultmodellen vorbereitet. `InterfaceProfileActivationProfileStoreStub` arbeitet nur in-memory; `InterfaceProfileActivationProfileCatalogStore` kann ueber `ProfileCatalogService`/`AppDataPaths` frisch laden und BuiltIn/UserDefined bewerten. Beide speichern weiterhin nichts; der Catalog-Adapter fuehrt Save nur als ValidateOnly/DryRun aus und ruft `SaveInterfaceProfileDefinition` nicht auf. Zusaetzlich gibt es mit `InterfaceProfileActivationExecutorStub` eine defensive Backend-Implementierung, die nur Preconditions bewertet und Statuswerte wie `ReadyButNotExecuted`, `Blocked`, `RequiresWarningConfirmation`, `NotImplemented` oder `NotAvailable` zurueckgibt. Der Stub kann im `ValidateOnly`-Modus optional den ActivationProfileStore zum frischen Laden sowie die finale Pruefkette aus Evaluation, Guard, Warnungsbestaetigung und ActivationPlan simulieren, sofern die Services und ein `ProfileCatalog` injiziert wurden. Save-DryRun bleibt an diese nicht-produktive finale Pruefung gebunden. Der Stub bleibt nicht-produktiv: Er ist nicht in UI-Flows registriert, setzt `IsActive` nicht, speichert nichts und startet keine Verarbeitung.
-
-Ein produktiver Executor duerfte erst implementiert werden, wenn fachlich entschieden ist, ob `ReadyWithWarnings` nach Bestaetigung aktivierbar ist, wie Warnungsbestaetigungen gespeichert oder auditiert werden, ob `IsAttachmentProcessingEnabled` beim Aktivieren veraendert wird, welches Aktivierungsflag gespeichert wird, welche finalen Pruefungen direkt vor dem Speichern laufen, ob ein Audit-/Logeintrag erzeugt wird, welche Benutzerrolle aktivieren darf und welche UI den Prozess fuehrt.
-
-Die offenen fachlichen Entscheidungen sind in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` gebuendelt und dort inzwischen kompakter priorisiert. Die V1-Linie lautet knapp: UserDefined ja, BuiltIn nein, `Ready` ja, `ReadyWithWarnings` nur nach bewusster Bestaetigung, `Blocked`/`Unknown` nein, finale Re-Evaluation Pflicht, keine Sofortverarbeitung, `IsAttachmentProcessingEnabled` bleibt separat, Deaktivierung ist keine Loeschung/Dateioperation und laufende oder wartende Pakete duerfen nicht stillschweigend veraendert werden. `IsActive` ist der naheliegende Kandidat fuer das Aktivierungsflag, aber ein produktiver Executor braucht weiterhin finale Re-Evaluation, sichere produktive UserDefined-Speicherung und spaetere Freigabe des derzeit nur dry-run-faehigen Catalog-Adapters.
-
-Statische Pruefung und praktische Windows-Sichtpruefung des aktuellen Aktivierungsassistenten sind in `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` dokumentiert. Die WPF-Oberflaeche wurde in der Codex-Umgebung nicht praktisch bedient; XAML, Codebehind und Preview-Services wurden statisch darauf geprueft, dass der Dialog Vorschau bleibt und keine Aktivierung, Warnungsbestaetigung, Speicherung, Datei-/Ordneroperation oder Verarbeitung ausloest. Der scrollbare Dialog `Aktivierung vorbereiten` wurde durch den Benutzer auf Windows praktisch sichtgeprueft und fuer den aktuellen Vorschau-Status abgenommen.
+Die offene V1-Entscheidung ist wieder knapp: final bestaetigen, dass `IsActive` das einzige Aktivierungsflag ist, konkrete sichere UserDefined-Store-Methode festlegen, produktiven Executor mit frischem Laden + Evaluation + Guard direkt vor Speicherung bauen und eine einfache UI-Position fuer `Profil aktivieren` definieren.
 
 Die zuletzt bestaetigte technische Absicherung dieses Standes:
 
 - `dotnet build XdtDeviceBridge.sln` erfolgreich, `0` Warnungen, `0` Fehler
-- `dotnet test XdtDeviceBridge.sln` erfolgreich, `962` Tests bestanden, `0` fehlgeschlagen, `0` uebersprungen
-
-Offen bleiben die echte produktive Aktivierung und Deaktivierung, die finale technische Bestaetigung des Aktivierungsflags, die konkrete Repository-/Store-Methode mit frischem Laden, eine bewusste Warnungsbestaetigungs-UI, eine moegliche auditierbare Speicherung einer Warnungsbestaetigung, eine produktive `ActivationExecutor`-Implementierung beziehungsweise ein Deaktivierungspfad, konkrete Paketstatus-Erkennung, Umgang mit Altbestand/Fingerprint, Umgang mit laufenden/wartenden Paketen und die finale fachliche Freigabe der V1-Linie.
-
-Empfohlener naechster Schritt: Noch nicht produktiv aktivieren oder deaktivieren. Als naechstes sollten der konkrete Feldname fuer das Aktivierungsflag, die produktive Store-Methode, das Audit-/Warnungsbestaetigungsmodell und die Paketregel fuer Aktivierung/Deaktivierung fachlich final freigegeben werden, insbesondere ob Deaktivierung bei laufenden oder wartenden Paketen blockiert. Eine produktive Executor-Implementierung bleibt danach ein separater, fachlich freizugebender Schritt.
+- `dotnet test XdtDeviceBridge.sln` erfolgreich, `913` Tests bestanden, `0` fehlgeschlagen, `0` uebersprungen
 
 ### Lizenz
 
@@ -319,8 +299,8 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - weitere AIS-Systeme ausser MEDISTAR
 - AIS-/MEDISTAR-Exporttemplate-Default-Konzept mit Feldkennungen je Untersuchungsart: bewusst zurueckgestellt, neues Fachkonzept erforderlich
 - automatische MEDISTAR `6330`-Default-Zusatzzeilen: bewusst zurueckgestellt
-- produktive Aktivierung importierter Schnittstellenprofile; die aktuelle Pruefung, Guard-Schicht, Warnungsbestaetigungsvorschau und ActivationPlan-Anzeige sind rein lesend vorbereitet
-- bewusste Warnungsbestaetigung mit UI, moegliche dauerhafte Speicherung, finale Sicherheitspruefung und produktive `ActivationExecutor`-Implementierung
+- produktive Aktivierung importierter Schnittstellenprofile; die aktuelle Pruefung, Guard-Schicht und V1-Preview sind rein lesend vorbereitet
+- produktive `ActivationExecutor`-Implementierung mit frischem Laden, finaler Evaluation + Guard und sicherer UserDefined-Speicherung
 - ReplaceExisting fuer bestehende UserDefined-Profile
 - digitale Lizenzsignatur
 - produktive Lizenzsperre
@@ -356,7 +336,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | --- | --- | --- | --- | --- | --- | --- |
 | hoch | E2E-Testplan praktisch weiter ausfuehren | Testplan, Durchfuehrungsschritte und Protokollvorlage sind vorhanden; MEDISTAR + ARK1S + Pflicht-XDT-Anhang wurde am 2026-05-11 praktisch bestanden dokumentiert. | Weitere manuelle Praxisprotokolle fuer die restlichen Testfaelle fehlen, insbesondere optionale Anhaenge, Mehrfachanhaenge, instabile Dateien und nicht unterstuetzte Dateien. | Restliche Faelle aus `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` abarbeiten. | Nicht getestete Randfaelle koennen im Praxisbetrieb auffallen. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
 | hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Pflicht-Anhang vorhanden/fehlt und MEDISTAR-Linkaufruf sind praktisch validiert. | Breitere Praxisabnahme mit optionalem Anhang, Mehrfachanhang, Archiv-/Fehlerablage und Wartezeiten. | Naechsten Praxislauf fuer optionale Anhaenge und Mehrfachanhang-Sicherheit protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in noch nicht getesteten Varianten auffallen. | E2E-Testplan, Testanhaenge |
-| hoch | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht fuer importierte Schnittstellenprofile pruefen Abhaengigkeiten, Ordner, XDT-Anhang-Konfiguration, Lizenzhinweise, BuiltIn/UserDefined-Schutz und Warnungsbestaetigung read-only. Der Dialog `Aktivierung vorbereiten` ist als scrollbares Preview-Fenster umgesetzt und zeigt Guard-Entscheidung, spaeter erforderliche Warnungsbestaetigung und ActivationPlan rein lesend an; ein internes Warning-Confirmation-Modell stellt bestaetigungspflichtige Warnungen ohne Speicherung bereit. Die praktische Sichtpruefung des Dialogs wurde fuer den Vorschau-Status abgenommen. Der `InterfaceProfileActivationPlanService` fasst diese Ergebnisse zu einem rein beschreibenden Aktivierungsplan mit PlannedSteps zusammen. Ein defensiver `InterfaceProfileActivationExecutorStub` bewertet Preconditions, fuehrt aber nichts aus. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Frisches Laden, sichere UserDefined-Speicherung und UI-Konzept fuer echte Warnungsbestaetigung separat spezifizieren; weiterhin keine automatische Aktivierung. | Importierte Profile bleiben zwar sicher, aber fuer Anwender noch nicht komfortabel produktiv nutzbar. | TemplateImport Executor, Profilkatalog, InterfaceProfileActivationEvaluationService, InterfaceProfileActivationGuardService |
+| hoch | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht pruefen Abhaengigkeiten, Ordner, XDT-Anhang-Konfiguration, Lizenzhinweise und BuiltIn/UserDefined-Schutz read-only. Der Dialog `Aktivierung vorbereiten` ist als scrollbares Preview-Fenster umgesetzt und auf die V1-Informationen reduziert. Ein defensiver `InterfaceProfileActivationExecutorStub` bewertet ValidateOnly-Preconditions und kann optional frisch laden, fuehrt aber nichts aus. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Schlanke V1 finalisieren: `IsActive` als Schreibpunkt bestaetigen, sichere UserDefined-Store-Methode festlegen, produktiven Executor separat spezifizieren. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | TemplateImport Executor, Profilkatalog, InterfaceProfileActivationEvaluationService, InterfaceProfileActivationGuardService |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
 | mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach Aktivierungsassistent als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
 | mittel | Manuelle Zielnamen-/ID-Bearbeitung im Templateimport | Automatische Kopienamen vorhanden. | UI zum Bearbeiten vorgeschlagener Namen/IDs. | Nur ergaenzen, wenn Anwenderfeedback Bedarf zeigt. | Importnamen koennen weniger sprechend sein. | Importplan, SelectionService |
@@ -401,12 +381,11 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 ### Phase 3: Template-/Profil-Baukasten
 
-- Read-only Aktivierungsassistent ist praktisch in der UI sichtgeprueft und fuer den Vorschau-Status abgenommen; Pruefung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan bleiben ohne produktive Wirkung.
-- V1-Spezifikation aus `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich final abnehmen: Aktivierungsflag, UserDefined-Persistenz mit frischem Laden, Aenderungsschutz, Warnungsbestaetigung/Audit, Deaktivierungslinie, Paketregel fuer laufende/wartende Pakete und finale Re-Evaluation.
-- UI-Konzept fuer spaetere bewusste Warnungsbestaetigung ohne sofortige Speicherung entwerfen.
-- Produktive `ActivationExecutor`-Implementierung und Deaktivierungspfad erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung, Warnungsbestaetigung, Deaktivierungsregeln, Paketstatus-Erkennung, frischer Profilkatalog-Ladung und konkreter Store-Methode planen; Entscheidungsgrundlage: `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`.
+- Read-only Aktivierungsassistent ist praktisch in der UI sichtgeprueft und fuer den Vorschau-Status abgenommen; Pruefung, Guard und V1-Preview bleiben ohne produktive Wirkung.
+- V1-Spezifikation aus `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich final abnehmen: `Ready` ohne Warnungen, UserDefined, nicht BuiltIn, frisches Laden, finale Evaluation + Guard und sichere UserDefined-Speicherung.
+- Produktive `ActivationExecutor`-Implementierung erst nach Entscheidung zu `IsActive` als Schreibpunkt und konkreter Store-Methode planen; Deaktivierung, Audit, Rollen und Warnungsbestaetigung bleiben spaetere Nicht-V1-Themen.
 - `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Regressionscheck fuer spaetere UI-Aenderungen weiterfuehren.
-- Finale Sicherheitspruefung, Audit-/Logeintrag und erneuten Build-/Testlauf direkt vor einer spaeteren echten Aktivierung einplanen.
+- Finale Sicherheitspruefung und erneuten Build-/Testlauf direkt vor einer spaeteren echten Aktivierung einplanen.
 - Optional spaeter ReplaceExisting fuer UserDefined mit Backup/Bestaetigung.
 - AIS-/MEDISTAR-Default-Exporttemplates nicht umsetzen, bis ein neues Fachkonzept vorliegt.
 

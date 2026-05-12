@@ -6,8 +6,6 @@ public sealed record InterfaceProfileActivationProfileSaveRequest(
     InterfaceProfileDefinition? Profile,
     string Source = "ActivationExecutor",
     DateTimeOffset? RequestedAtUtc = null,
-    string? ExpectedConfigurationFingerprint = null,
-    bool AllowOverwriteExistingUserDefined = false,
     InterfaceProfileActivationExecutorOperationMode OperationMode =
         InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
     bool FinalReEvaluationCompleted = false);

@@ -7,8 +7,6 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
     private readonly IInterfaceProfileActivationProfileStore? _profileStore;
     private readonly InterfaceProfileActivationEvaluationService? _evaluationService;
     private readonly InterfaceProfileActivationGuardService? _guardService;
-    private readonly InterfaceProfileActivationWarningConfirmationService? _warningConfirmationService;
-    private readonly InterfaceProfileActivationPlanService? _activationPlanService;
     private readonly ProfileCatalog? _finalEvaluationCatalog;
 
     public InterfaceProfileActivationExecutorStub()
@@ -21,8 +19,6 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             profileStore,
             evaluationService: null,
             guardService: null,
-            warningConfirmationService: null,
-            activationPlanService: null,
             finalEvaluationCatalog: null)
     {
     }
@@ -31,15 +27,11 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         IInterfaceProfileActivationProfileStore? profileStore,
         InterfaceProfileActivationEvaluationService? evaluationService,
         InterfaceProfileActivationGuardService? guardService,
-        InterfaceProfileActivationWarningConfirmationService? warningConfirmationService,
-        InterfaceProfileActivationPlanService? activationPlanService,
         ProfileCatalog? finalEvaluationCatalog)
     {
         _profileStore = profileStore;
         _evaluationService = evaluationService;
         _guardService = guardService;
-        _warningConfirmationService = warningConfirmationService;
-        _activationPlanService = activationPlanService;
         _finalEvaluationCatalog = finalEvaluationCatalog;
     }
 
@@ -50,33 +42,29 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var shouldUseStore = request.OperationMode == InterfaceProfileActivationExecutorOperationMode.ValidateOnly &&
-            _profileStore is not null;
+        if (request.OperationMode == InterfaceProfileActivationExecutorOperationMode.Activate)
+        {
+            return Task.FromResult(CreateNonProductiveActivateResult(request));
+        }
+
+        var shouldUseStore = _profileStore is not null;
         var loadResult = shouldUseStore
             ? _profileStore!.LoadFreshUserDefinedProfile(request.EffectiveInterfaceProfileId)
             : null;
         var effectiveProfile = loadResult?.Profile ?? request.Profile;
-        var finalValidation = CreateFinalValidationContext(
-            request,
-            effectiveProfile,
-            loadResult,
-            shouldUseStore);
-
+        var finalValidation = CreateFinalValidationContext(effectiveProfile, loadResult, shouldUseStore);
         var evaluation = finalValidation.EvaluationResult ?? request.EvaluationResult;
         var guard = finalValidation.GuardResult ?? request.GuardResult;
-        var warningConfirmation = finalValidation.WarningConfirmationResult ?? request.WarningConfirmationResult;
-        var plan = finalValidation.ActivationPlan ?? request.ActivationPlan;
+        var canRunSaveDryRun = CanRunSaveDryRun(effectiveProfile, finalValidation);
         var saveDryRunBlocked = shouldUseStore &&
             effectiveProfile is not null &&
             loadResult?.Success == true &&
-            !CanRunSaveDryRun(request, effectiveProfile, finalValidation);
-        var saveDryRunResult = shouldUseStore &&
-            CanRunSaveDryRun(request, effectiveProfile, finalValidation)
+            !canRunSaveDryRun;
+        var saveDryRunResult = canRunSaveDryRun
             ? _profileStore!.SaveUserDefinedProfile(new InterfaceProfileActivationProfileSaveRequest(
                 Profile: effectiveProfile,
                 Source: request.Source,
                 RequestedAtUtc: request.RequestedAtUtc,
-                ExpectedConfigurationFingerprint: request.ExpectedConfigurationFingerprint,
                 OperationMode: InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
                 FinalReEvaluationCompleted: true))
             : null;
@@ -86,12 +74,10 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             effectiveProfile,
             evaluation,
             guard,
-            warningConfirmation,
-            plan,
             loadResult,
             saveDryRunResult,
             finalValidation,
-            _profileStore is not null,
+            hasProfileStore: _profileStore is not null,
             shouldUseStore,
             saveDryRunBlocked);
         var status = DetermineStatus(
@@ -99,7 +85,6 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             effectiveProfile,
             evaluation,
             guard,
-            plan,
             loadResult,
             shouldUseStore);
 
@@ -108,30 +93,59 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             Success: false,
             Message: CreateMessage(status, loadResult, saveDryRunResult, finalValidation, shouldUseStore, saveDryRunBlocked),
             Preconditions: preconditions,
-            ExecutedSteps: Array.Empty<InterfaceProfileActivationPlanStep>(),
-            NotExecutedSteps: plan?.PlannedSteps ?? Array.Empty<InterfaceProfileActivationPlanStep>(),
             ProfileChanged: false,
             Saved: false,
             ProcessingStarted: false,
-            WasExecuted: false,
-            WasPersisted: false,
-            WasProfileChanged: false,
             RequiresFreshLoad: loadResult?.Success != true,
             RequiresSafeUserDefinedStore: true,
-            RequiresFinalReEvaluation: !finalValidation.IsComplete,
-            IsValidationOnly: request.OperationMode == InterfaceProfileActivationExecutorOperationMode.ValidateOnly,
+            RequiresFinalEvaluation: !finalValidation.IsComplete,
+            IsValidationOnly: true,
             MissingCapabilities: CreateMissingCapabilities(preconditions),
             FreshLoadPerformed: loadResult is not null,
-            FinalReEvaluationPerformed: finalValidation.IsComplete,
+            FinalEvaluationPerformed: finalValidation.EvaluationPerformed,
             GuardRechecked: finalValidation.GuardRechecked,
-            WarningConfirmationRechecked: finalValidation.WarningConfirmationRechecked,
-            ActivationPlanRecreated: finalValidation.ActivationPlanRecreated,
             SaveDryRunPerformed: saveDryRunResult is not null,
             SaveDryRunBlocked: saveDryRunBlocked));
     }
 
+    private InterfaceProfileActivationExecutorResult CreateNonProductiveActivateResult(
+        InterfaceProfileActivationExecutorRequest request)
+    {
+        var preconditions = new[]
+        {
+            Precondition(
+                "executor.nonProductiveStub",
+                "Defensive Executor-Stufe",
+                "Diese Implementierung ist absichtlich nicht produktiv und fuehrt keine Aktivierung aus.",
+                isSatisfied: false),
+            Precondition(
+                "operation.activate.notImplemented",
+                "Produktive Aktivierung nicht implementiert",
+                "Der Activate-Modus ist in V1-Vorbereitung bewusst nicht an UI, Speicherung oder Verarbeitung angebunden.",
+                isSatisfied: false),
+            Precondition(
+                "profile.id.present",
+                "Zielprofil-ID vorhanden",
+                "Ein spaeterer Executor muss das Zielprofil eindeutig frisch laden koennen.",
+                !string.IsNullOrWhiteSpace(request.EffectiveInterfaceProfileId))
+        };
+
+        return new InterfaceProfileActivationExecutorResult(
+            Status: InterfaceProfileActivationExecutorStatus.NotImplemented,
+            Success: false,
+            Message: "Produktive Aktivierung ist nicht implementiert. Es wurde nichts aktiviert, gespeichert oder verarbeitet.",
+            Preconditions: preconditions,
+            ProfileChanged: false,
+            Saved: false,
+            ProcessingStarted: false,
+            RequiresFreshLoad: true,
+            RequiresSafeUserDefinedStore: true,
+            RequiresFinalEvaluation: true,
+            IsValidationOnly: false,
+            MissingCapabilities: CreateMissingCapabilities(preconditions));
+    }
+
     private FinalValidationContext CreateFinalValidationContext(
-        InterfaceProfileActivationExecutorRequest request,
         InterfaceProfileDefinition? effectiveProfile,
         InterfaceProfileActivationProfileLoadResult? loadResult,
         bool shouldUseStore)
@@ -145,8 +159,6 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         var canRunFinalValidation =
             _evaluationService is not null &&
             _guardService is not null &&
-            _warningConfirmationService is not null &&
-            _activationPlanService is not null &&
             _finalEvaluationCatalog is not null;
 
         if (!canRunFinalValidation)
@@ -154,12 +166,8 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             return new FinalValidationContext(
                 EvaluationResult: null,
                 GuardResult: null,
-                WarningConfirmationResult: null,
-                ActivationPlan: null,
                 EvaluationPerformed: false,
                 GuardRechecked: false,
-                WarningConfirmationRechecked: false,
-                ActivationPlanRecreated: false,
                 Preconditions: preconditions,
                 IsComplete: false);
         }
@@ -168,22 +176,7 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         var guard = _guardService!.ValidateActivationRequest(new InterfaceProfileActivationRequest(
             effectiveProfile,
             evaluation,
-            request.WarningsAccepted,
-            Context: "ExecutorValidateOnlyFinalReEvaluation"));
-        var warningConfirmation = _warningConfirmationService!.PrepareWarningConfirmation(
-            new InterfaceProfileActivationWarningConfirmationRequest(
-                effectiveProfile,
-                evaluation,
-                guard,
-                EvaluatedAt: request.RequestedAtUtc ?? request.RequestedAt ?? request.PreviewCreatedAtUtc,
-                Source: "ExecutorValidateOnlyFinalReEvaluation"));
-        var plan = _activationPlanService!.CreatePlan(new InterfaceProfileActivationPlanRequest(
-            effectiveProfile,
-            evaluation,
-            guard,
-            warningConfirmation,
-            request.WarningsAccepted,
-            Context: "ExecutorValidateOnlyFinalReEvaluation"));
+            Context: "ExecutorValidateOnlyFinalEvaluation"));
 
         preconditions.AddRange(new[]
         {
@@ -198,30 +191,14 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                 "Guard erneut ausgefuehrt",
                 "ValidateOnly hat die technische Schutzpruefung erneut auf Basis der frischen Bewertung ausgefuehrt.",
                 isSatisfied: true,
-                InterfaceProfileActivationSeverity.Info),
-            Precondition(
-                "executor.finalWarningConfirmation.performed",
-                "Warnungsbestaetigung erneut bewertet",
-                "ValidateOnly hat die Warnungsbestaetigungsvorschau erneut aus der frischen Bewertung abgeleitet.",
-                isSatisfied: true,
-                InterfaceProfileActivationSeverity.Info),
-            Precondition(
-                "executor.finalActivationPlan.performed",
-                "Aktivierungsplan erneut erzeugt",
-                "ValidateOnly hat den Aktivierungsplan erneut aus frischer Bewertung, Guard und Warnungsvorschau erzeugt.",
-                isSatisfied: true,
                 InterfaceProfileActivationSeverity.Info)
         });
 
         return new FinalValidationContext(
             evaluation,
             guard,
-            warningConfirmation,
-            plan,
             EvaluationPerformed: true,
             GuardRechecked: true,
-            WarningConfirmationRechecked: true,
-            ActivationPlanRecreated: true,
             Preconditions: preconditions,
             IsComplete: true);
     }
@@ -233,7 +210,7 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             Precondition(
                 "executor.finalEvaluationService.missing",
                 "Finaler Bewertungsservice verfuegbar",
-                "ValidateOnly benoetigt den Aktivierungsbewertungsservice fuer eine frische finale Re-Evaluation.",
+                "ValidateOnly benoetigt den Aktivierungsbewertungsservice fuer eine frische finale Bewertung.",
                 _evaluationService is not null),
             Precondition(
                 "executor.finalProfileCatalog.missing",
@@ -244,22 +221,11 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                 "executor.finalGuardService.missing",
                 "Finaler Guard-Service verfuegbar",
                 "ValidateOnly benoetigt den Guard-Service fuer eine erneute technische Schutzpruefung.",
-                _guardService is not null),
-            Precondition(
-                "executor.finalWarningConfirmationService.missing",
-                "Finaler Warnungsbestaetigungsservice verfuegbar",
-                "ValidateOnly benoetigt den Warnungsbestaetigungsservice fuer eine erneute Warnungsvorschau.",
-                _warningConfirmationService is not null),
-            Precondition(
-                "executor.finalActivationPlanService.missing",
-                "Finaler ActivationPlan-Service verfuegbar",
-                "ValidateOnly benoetigt den ActivationPlan-Service fuer einen neu erzeugten Aktivierungsplan.",
-                _activationPlanService is not null)
+                _guardService is not null)
         };
     }
 
     private static bool CanRunSaveDryRun(
-        InterfaceProfileActivationExecutorRequest request,
         InterfaceProfileDefinition? effectiveProfile,
         FinalValidationContext finalValidation)
     {
@@ -268,29 +234,16 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             !effectiveProfile.Metadata.IsUserDefined ||
             !finalValidation.IsComplete ||
             finalValidation.EvaluationResult is null ||
-            finalValidation.GuardResult is null ||
-            finalValidation.ActivationPlan is null)
+            finalValidation.GuardResult is null)
         {
             return false;
         }
 
-        if (finalValidation.EvaluationResult.Blockers.Count > 0 ||
-            finalValidation.ActivationPlan.Blockers.Count > 0)
-        {
-            return false;
-        }
-
-        if (finalValidation.EvaluationResult.ActivationStatus == InterfaceProfileActivationStatus.Ready &&
+        return finalValidation.EvaluationResult.ActivationStatus == InterfaceProfileActivationStatus.Ready &&
+            finalValidation.EvaluationResult.Blockers.Count == 0 &&
+            finalValidation.EvaluationResult.Warnings.Count == 0 &&
             finalValidation.GuardResult.Decision == InterfaceProfileActivationGuardDecision.Allowed &&
-            finalValidation.ActivationPlan.PlanStatus == InterfaceProfileActivationPlanStatus.Ready)
-        {
-            return true;
-        }
-
-        return finalValidation.EvaluationResult.ActivationStatus == InterfaceProfileActivationStatus.ReadyWithWarnings &&
-            request.WarningsAccepted &&
-            finalValidation.GuardResult.Decision == InterfaceProfileActivationGuardDecision.AllowedWithWarnings &&
-            finalValidation.ActivationPlan.PlanStatus == InterfaceProfileActivationPlanStatus.ReadyWithAcceptedWarnings;
+            finalValidation.GuardResult.CanProceed;
     }
 
     private static InterfaceProfileActivationExecutorStatus DetermineStatus(
@@ -298,7 +251,6 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         InterfaceProfileDefinition? effectiveProfile,
         InterfaceProfileActivationEvaluationResult? evaluation,
         InterfaceProfileActivationGuardResult? guard,
-        InterfaceProfileActivationPlan? plan,
         InterfaceProfileActivationProfileLoadResult? loadResult,
         bool shouldUseStore)
     {
@@ -323,8 +275,7 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         if (string.IsNullOrWhiteSpace(request.EffectiveInterfaceProfileId) ||
             effectiveProfile is null ||
             evaluation is null ||
-            guard is null ||
-            plan is null)
+            guard is null)
         {
             return InterfaceProfileActivationExecutorStatus.NotAvailable;
         }
@@ -333,36 +284,22 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             !effectiveProfile.Metadata.IsUserDefined ||
             evaluation.ActivationStatus == InterfaceProfileActivationStatus.Blocked ||
             evaluation.Blockers.Count > 0 ||
-            guard.Decision == InterfaceProfileActivationGuardDecision.Blocked ||
-            plan.PlanStatus == InterfaceProfileActivationPlanStatus.Blocked)
+            evaluation.Warnings.Count > 0 ||
+            guard.Decision == InterfaceProfileActivationGuardDecision.Blocked)
         {
             return InterfaceProfileActivationExecutorStatus.Blocked;
         }
 
         if (evaluation.ActivationStatus is InterfaceProfileActivationStatus.Unknown or
                 InterfaceProfileActivationStatus.NotEvaluated ||
-            guard.Decision == InterfaceProfileActivationGuardDecision.Unknown ||
-            plan.PlanStatus is InterfaceProfileActivationPlanStatus.Unknown or
-                InterfaceProfileActivationPlanStatus.NotAvailable)
+            guard.Decision == InterfaceProfileActivationGuardDecision.Unknown)
         {
             return InterfaceProfileActivationExecutorStatus.NotAvailable;
         }
 
-        if (evaluation.ActivationStatus == InterfaceProfileActivationStatus.ReadyWithWarnings &&
-            (!request.WarningsAccepted ||
-             guard.Decision == InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation ||
-             plan.PlanStatus == InterfaceProfileActivationPlanStatus.RequiresWarningConfirmation))
-        {
-            return InterfaceProfileActivationExecutorStatus.RequiresWarningConfirmation;
-        }
-
-        if (request.OperationMode == InterfaceProfileActivationExecutorOperationMode.Deactivate)
-        {
-            return InterfaceProfileActivationExecutorStatus.NotImplemented;
-        }
-
-        if (plan.PlanStatus is InterfaceProfileActivationPlanStatus.Ready or
-            InterfaceProfileActivationPlanStatus.ReadyWithAcceptedWarnings)
+        if (evaluation.ActivationStatus == InterfaceProfileActivationStatus.Ready &&
+            guard.Decision == InterfaceProfileActivationGuardDecision.Allowed &&
+            guard.CanProceed)
         {
             return InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted;
         }
@@ -375,8 +312,6 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
         InterfaceProfileDefinition? effectiveProfile,
         InterfaceProfileActivationEvaluationResult? evaluation,
         InterfaceProfileActivationGuardResult? guard,
-        InterfaceProfileActivationWarningConfirmationResult? warningConfirmation,
-        InterfaceProfileActivationPlan? plan,
         InterfaceProfileActivationProfileLoadResult? loadResult,
         InterfaceProfileActivationProfileSaveResult? saveDryRunResult,
         FinalValidationContext finalValidation,
@@ -393,40 +328,35 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                 "executor.nonProductiveStub",
                 "Defensive Executor-Stufe",
                 "Diese Implementierung ist absichtlich nicht produktiv und fuehrt keine Aktivierung aus.",
-                isSatisfied: false,
-                InterfaceProfileActivationSeverity.Blocker),
+                isSatisfied: false),
             Precondition(
                 "executor.freshReload.missing",
                 hasProfileStore ? "Frisches Laden ueber Store moeglich" : "Frisches Laden nicht angebunden",
                 hasProfileStore
-                    ? "Im ValidateOnly-Modus kann der Stub ein Zielprofil ueber den angebundenen Store frisch laden; fuer produktive Ausfuehrung bleibt eine finale Re-Evaluation Pflicht."
-                    : "Der Request kann Zielprofil- und Preview-Kontext tragen; der Stub hat aber keinen Loader/Profilkatalog fuer eine finale frische Ladung.",
-                freshLoadSucceeded,
-                InterfaceProfileActivationSeverity.Blocker),
+                    ? "Im ValidateOnly-Modus kann der Stub ein Zielprofil ueber den angebundenen Store frisch laden."
+                    : "Der Stub hat keinen Loader/Profilkatalog fuer eine finale frische Ladung.",
+                freshLoadSucceeded),
             Precondition(
                 "executor.storeContext.missing",
                 hasProfileStore ? "Store-Kontext angebunden" : "Store-Kontext nicht angebunden",
                 hasProfileStore
-                    ? "Ein IInterfaceProfileActivationProfileStore ist am Stub angebunden; produktives Speichern bleibt trotzdem deaktiviert."
-                    : "Der Request enthaelt bewusst keine konkrete Store-Service-Referenz; ein produktiver Executor muss Loader/Store sicher per Konstruktor oder bestehendem Muster erhalten.",
-                hasProfileStore,
-                InterfaceProfileActivationSeverity.Blocker),
+                    ? "Ein IInterfaceProfileActivationProfileStore ist am Stub angebunden; produktives Speichern bleibt deaktiviert."
+                    : "Ein produktiver Executor muss Loader/Store sicher erhalten.",
+                hasProfileStore),
             Precondition(
                 "executor.safePersistence.missing",
                 "Sichere UserDefined-Speicherung nicht produktiv angebunden",
                 "Eine produktive Speicherung des UserDefined-Schnittstellenprofils ist in dieser Executor-Stufe nicht angebunden.",
-                isSatisfied: false,
-                InterfaceProfileActivationSeverity.Blocker),
+                isSatisfied: false),
             Precondition(
-                "executor.finalReEvaluation.required",
-                "Finale Re-Evaluation vorbereitet",
-                "Preview-Daten im Request sind nur Kontext; ValidateOnly kann die finale Pruefstrecke nur bei angebundenen Services simulieren.",
-                finalValidation.IsComplete,
-                InterfaceProfileActivationSeverity.Blocker),
+                "executor.finalEvaluation.required",
+                "Finale Bewertung vorbereitet",
+                "ValidateOnly kann die finale Bewertung nur bei angebundenem Bewertungsservice, Guard-Service und Profilkatalog simulieren.",
+                finalValidation.IsComplete),
             Precondition(
                 "operation.mode.modeled",
                 "Ausfuehrungsmodus modelliert",
-                "Der Request unterscheidet ValidateOnly, Activate und Deactivate, ohne daraus im Stub produktive Aktionen abzuleiten.",
+                "Der Request unterscheidet ValidateOnly und Activate, ohne daraus im Stub produktive Aktionen abzuleiten.",
                 Enum.IsDefined(typeof(InterfaceProfileActivationExecutorOperationMode), request.OperationMode),
                 InterfaceProfileActivationSeverity.Info),
             Precondition(
@@ -463,11 +393,12 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                     : "Eine aktuelle Aktivierungsbewertung muss vorliegen.",
                 evaluation is not null),
             Precondition(
-                "evaluation.activatable",
-                "Bewertung aktivierbar",
-                "Die Bewertung muss Ready oder ReadyWithWarnings sein.",
-                evaluation?.ActivationStatus is InterfaceProfileActivationStatus.Ready or
-                    InterfaceProfileActivationStatus.ReadyWithWarnings),
+                "evaluation.readyWithoutWarnings",
+                "Bewertung ist Ready ohne Warnungen",
+                "V1 aktiviert spaeter nur Ready ohne Blocker und ohne Warnungen.",
+                evaluation?.ActivationStatus == InterfaceProfileActivationStatus.Ready &&
+                evaluation.Blockers.Count == 0 &&
+                evaluation.Warnings.Count == 0),
             Precondition(
                 "guard.present",
                 finalValidation.GuardRechecked ? "Finale Guard-Entscheidung vorhanden" : "Guard-Entscheidung vorhanden",
@@ -478,23 +409,9 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             Precondition(
                 "guard.allowed",
                 "Guard erlaubt Aktivierung",
-                "Der Guard muss Allowed oder AllowedWithWarnings liefern.",
-                guard?.Decision is InterfaceProfileActivationGuardDecision.Allowed or
-                    InterfaceProfileActivationGuardDecision.AllowedWithWarnings),
-            Precondition(
-                "warningConfirmation.present",
-                finalValidation.WarningConfirmationRechecked
-                    ? "Finale Warnungsbestaetigungsvorschau vorhanden"
-                    : "Warnungsbestaetigungskontext vorhanden",
-                "ValidateOnly soll die Warnungsbestaetigungsvorschau aus der frischen Bewertung ableiten koennen.",
-                warningConfirmation is not null,
-                InterfaceProfileActivationSeverity.Info),
-            Precondition(
-                "plan.ready",
-                finalValidation.ActivationPlanRecreated ? "Finaler Aktivierungsplan bereit" : "Aktivierungsplan bereit",
-                "Der Aktivierungsplan muss Ready oder ReadyWithAcceptedWarnings sein.",
-                plan?.PlanStatus is InterfaceProfileActivationPlanStatus.Ready or
-                    InterfaceProfileActivationPlanStatus.ReadyWithAcceptedWarnings)
+                "Der Guard muss Allowed liefern.",
+                guard?.Decision == InterfaceProfileActivationGuardDecision.Allowed &&
+                guard.CanProceed)
         };
 
         preconditions.AddRange(finalValidation.Preconditions);
@@ -508,31 +425,13 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                 saveDryRunBlocked));
         }
 
-        if (evaluation?.ActivationStatus == InterfaceProfileActivationStatus.ReadyWithWarnings ||
-            guard?.Decision is InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation or
-                InterfaceProfileActivationGuardDecision.AllowedWithWarnings ||
-            plan?.PlanStatus is InterfaceProfileActivationPlanStatus.RequiresWarningConfirmation or
-                InterfaceProfileActivationPlanStatus.ReadyWithAcceptedWarnings)
-        {
-            preconditions.Add(Precondition(
-                "warnings.accepted",
-                "Warnungen bewusst bestaetigt",
-                "ReadyWithWarnings darf nur nach bewusster Warnungsbestaetigung weitergehen.",
-                request.WarningsAccepted &&
-                guard?.Decision == InterfaceProfileActivationGuardDecision.AllowedWithWarnings &&
-                plan?.PlanStatus == InterfaceProfileActivationPlanStatus.ReadyWithAcceptedWarnings &&
-                warningConfirmation?.Status ==
-                    InterfaceProfileActivationWarningConfirmationStatus.ConfirmationRequired,
-                InterfaceProfileActivationSeverity.Warning));
-        }
-
         return preconditions;
     }
 
     private static IReadOnlyList<InterfaceProfileActivationExecutorPrecondition> CreateStorePreconditions(
         InterfaceProfileActivationProfileLoadResult? loadResult,
         InterfaceProfileActivationProfileSaveResult? saveDryRunResult,
-        bool finalReEvaluationCompleted,
+        bool finalEvaluationCompleted,
         bool saveDryRunBlocked)
     {
         return new[]
@@ -574,10 +473,10 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
                     ? InterfaceProfileActivationSeverity.Blocker
                     : InterfaceProfileActivationSeverity.Info),
             Precondition(
-                "store.saveDryRun.finalReEvaluation.completed",
-                "Finale Re-Evaluation fuer Save-DryRun nachgewiesen",
+                "store.saveDryRun.finalEvaluation.completed",
+                "Finale Bewertung fuer Save-DryRun nachgewiesen",
                 "Der Store-DryRun darf nur nach frischer finaler ValidateOnly-Pruefung freigegeben werden.",
-                finalReEvaluationCompleted),
+                finalEvaluationCompleted),
             Precondition(
                 "store.saveDryRun.notPersisted",
                 "Save-DryRun hat nicht gespeichert",
@@ -632,8 +531,8 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             if (status == InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted)
             {
                 var finalDetail = finalValidation.IsComplete
-                    ? " Die finale ValidateOnly-Pruefkette wurde simuliert."
-                    : " Die finale ValidateOnly-Pruefkette ist wegen fehlender Services noch nicht vollstaendig moeglich.";
+                    ? " Die finale V1-Pruefkette wurde simuliert."
+                    : " Die finale V1-Pruefkette ist wegen fehlender Services noch nicht vollstaendig moeglich.";
                 var saveDetail = saveDryRunResult is not null
                     ? " Der Save-DryRun wurde geprueft und hat nicht gespeichert."
                     : saveDryRunBlocked
@@ -652,11 +551,9 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             InterfaceProfileActivationExecutorStatus.NotAvailable =>
                 "ActivationExecutor nicht ausgefuehrt: Zielprofil-ID, Profil oder erforderliche aktuelle Pruefgrundlage fehlt.",
             InterfaceProfileActivationExecutorStatus.Blocked =>
-                "ActivationExecutor nicht ausgefuehrt: Aktivierung ist blockiert.",
-            InterfaceProfileActivationExecutorStatus.RequiresWarningConfirmation =>
-                "ActivationExecutor nicht ausgefuehrt: Warnungen muessen vor einer produktiven Aktivierung bewusst bestaetigt werden.",
+                "ActivationExecutor nicht ausgefuehrt: V1 erlaubt nur Ready ohne Warnungen fuer UserDefined-Profile.",
             InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted =>
-                "ActivationExecutor ist defensiv nicht-produktiv: Die fachlichen Voraussetzungen wirken erfuellbar, aber produktive Speicherung ist nicht angebunden. Es wurde nichts aktiviert oder gespeichert.",
+                "ActivationExecutor ist defensiv nicht-produktiv: Die V1-Voraussetzungen wirken erfuellbar, aber produktive Speicherung ist nicht angebunden. Es wurde nichts aktiviert oder gespeichert.",
             _ =>
                 "ActivationExecutor ist noch nicht produktiv implementiert. Es wurde nichts aktiviert oder gespeichert."
         };
@@ -681,12 +578,8 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
     private sealed record FinalValidationContext(
         InterfaceProfileActivationEvaluationResult? EvaluationResult,
         InterfaceProfileActivationGuardResult? GuardResult,
-        InterfaceProfileActivationWarningConfirmationResult? WarningConfirmationResult,
-        InterfaceProfileActivationPlan? ActivationPlan,
         bool EvaluationPerformed,
         bool GuardRechecked,
-        bool WarningConfirmationRechecked,
-        bool ActivationPlanRecreated,
         IReadOnlyList<InterfaceProfileActivationExecutorPrecondition> Preconditions,
         bool IsComplete)
     {
@@ -695,12 +588,8 @@ public sealed class InterfaceProfileActivationExecutorStub : IInterfaceProfileAc
             return new FinalValidationContext(
                 EvaluationResult: null,
                 GuardResult: null,
-                WarningConfirmationResult: null,
-                ActivationPlan: null,
                 EvaluationPerformed: false,
                 GuardRechecked: false,
-                WarningConfirmationRechecked: false,
-                ActivationPlanRecreated: false,
                 Preconditions: Array.Empty<InterfaceProfileActivationExecutorPrecondition>(),
                 IsComplete: false);
         }

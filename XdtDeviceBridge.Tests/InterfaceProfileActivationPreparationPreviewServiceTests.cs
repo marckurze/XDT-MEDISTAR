@@ -8,186 +8,108 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
     private readonly InterfaceProfileActivationPreparationPreviewService _service = new();
 
     [Fact]
-    public void Create_ShouldSummarizeBlockedProfile()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Blocked,
-            CanActivate: false,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing"),
-                Check(InterfaceProfileActivationSeverity.Blocker, "XDT-Anhang Exportordner fehlt.", "attachment.folder.export.missing"),
-                Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-
-        var preview = _service.Create(profile, result);
-
-        Assert.Equal("Blockiert", preview.StatusText);
-        Assert.Equal("Nein", preview.CanActivateText);
-        Assert.Equal(2, preview.BlockerCount);
-        Assert.Contains("kann aktuell nicht aktiviert werden", preview.SummaryMessage);
-        Assert.Contains(preview.ImportantBlockers, item => item.Contains("AIS-Importordner"));
-        Assert.Contains("keine Änderungen gespeichert", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_ShouldSummarizeReadyWithWarningsProfile()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.ReadyWithWarnings,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required"),
-                Check(InterfaceProfileActivationSeverity.Info, "XDT-Anhang-Automatik ist deaktiviert.", "attachment.disabled")
-            });
-
-        var preview = _service.Create(profile, result);
-
-        Assert.Equal("Aktivierbar mit Warnungen", preview.StatusText);
-        Assert.Equal("Ja", preview.CanActivateText);
-        Assert.Equal(0, preview.BlockerCount);
-        Assert.Equal(1, preview.WarningCount);
-        Assert.Contains("Warnungen", preview.SummaryMessage);
-        Assert.Contains(preview.ImportantWarnings, item => item.Contains("Lizenzstatus"));
-    }
-
-    [Fact]
-    public void Create_ShouldSummarizeReadyProfile()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Ready,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Info, "AIS-Profil ist vorhanden.", "dependency.ais.ok")
-            });
-
-        var preview = _service.Create(profile, result);
-
-        Assert.Equal("Aktivierbar", preview.StatusText);
-        Assert.Equal("Ja", preview.CanActivateText);
-        Assert.Empty(preview.ImportantBlockers);
-        Assert.Empty(preview.ImportantWarnings);
-        Assert.Contains("grundsätzlich aktivierbar", preview.SummaryMessage);
-        Assert.Contains("nichts aktiviert", preview.MessageText);
-    }
-
-    [Fact]
     public void CreateEmpty_ShouldReturnNoProfileHint()
     {
         var preview = _service.CreateEmpty();
 
         Assert.Equal("-", preview.ProfileName);
         Assert.Equal("Nicht bewertet", preview.StatusText);
-        Assert.Equal("Nein", preview.CanActivateText);
+        Assert.Equal("Nein", preview.V1CanActivateText);
         Assert.Equal("Nicht eindeutig", preview.GuardDecisionText);
         Assert.Equal("Nein", preview.GuardCanProceedText);
-        Assert.Equal("nicht verfügbar", preview.WarningConfirmationStatusText);
-        Assert.Equal(0, preview.WarningConfirmationItemCount);
-        Assert.Equal("nicht verfügbar", preview.ActivationPlanStatusText);
-        Assert.Equal("Nein", preview.ActivationPlanCanExecuteLaterText);
         Assert.Contains("Bitte wählen", preview.SummaryMessage);
+        Assert.Contains("nichts gespeichert", preview.SafetyNotice);
+        Assert.Contains("nichts aktiviert", preview.SafetyNotice);
     }
 
     [Fact]
-    public void Create_WithBlockedGuard_ShouldShowTechnicalProtectionDecision()
+    public void Create_WithReadyAndAllowedGuard_ShouldShowV1Activatable()
     {
         var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Blocked,
-            CanActivate: false,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing")
-            });
-        var guardResult = Guard(
-            canProceed: false,
-            InterfaceProfileActivationGuardDecision.Blocked,
-            blockers: new[]
-            {
-                GuardReason(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing")
-            },
-            message: "Schutzprüfung: Aktivierung blockiert. Bitte beheben Sie zuerst die blockierenden Punkte.");
-
-        var preview = _service.Create(profile, result, guardResult);
-
-        Assert.Equal("Blockiert", preview.GuardDecisionText);
-        Assert.Equal("Nein", preview.GuardCanProceedText);
-        Assert.Contains(preview.GuardReasons, item => item.Contains("AIS-Importordner"));
-        Assert.Contains("Technische Schutzprüfung", preview.MessageText);
-        Assert.Contains("Entscheidung: Blockiert", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_WithReadyGuard_ShouldShowTechnicalAllowedDecision()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
+        var result = Result(
             InterfaceProfileActivationStatus.Ready,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Info, "AIS-Profil ist vorhanden.", "dependency.ais.ok")
-            });
+            canActivate: true,
+            Check(InterfaceProfileActivationSeverity.Info, "AIS-Profil ist vorhanden.", "dependency.ais.ok"));
         var guardResult = Guard(
             canProceed: true,
             InterfaceProfileActivationGuardDecision.Allowed,
-            message: "Schutzprüfung: Eine spätere Aktivierung wäre technisch zulässig.");
+            message: "Schutzprüfung: Eine spätere V1-Aktivierung wäre technisch zulässig.");
 
         var preview = _service.Create(profile, result, guardResult);
 
+        Assert.Equal("Ready", preview.StatusText);
+        Assert.Equal("Ja", preview.V1CanActivateText);
         Assert.Equal("Technisch zulässig", preview.GuardDecisionText);
         Assert.Equal("Ja", preview.GuardCanProceedText);
-        Assert.Contains("Technisch freigegeben: Ja", preview.MessageText);
-        Assert.Contains("keine Änderungen gespeichert", preview.MessageText);
-        Assert.Contains("nichts aktiviert", preview.MessageText);
+        Assert.Contains("nach V1 grundsätzlich aktivierbar", preview.SummaryMessage);
+        Assert.Contains("Aktivierbar nach V1: Ja", preview.MessageText);
+        Assert.DoesNotContain("Warnungsbestätigung", preview.MessageText);
+        Assert.DoesNotContain("Aktivierungsplan", preview.MessageText);
     }
 
     [Fact]
-    public void Create_WithReadyWithWarningsGuard_ShouldRequireWarningConfirmationReadOnly()
+    public void Create_WithReadyWithoutGuard_ShouldStayNotV1Activatable()
     {
         var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
+        var result = Result(
+            InterfaceProfileActivationStatus.Ready,
+            canActivate: true,
+            Check(InterfaceProfileActivationSeverity.Info, "AIS-Profil ist vorhanden.", "dependency.ais.ok"));
+
+        var preview = _service.Create(profile, result);
+
+        Assert.Equal("Ready", preview.StatusText);
+        Assert.Equal("Nein", preview.V1CanActivateText);
+        Assert.Contains("technische Voraussetzung fehlt", preview.SummaryMessage);
+    }
+
+    [Fact]
+    public void Create_WithReadyWithWarnings_ShouldShowWarningsButNotV1Activatable()
+    {
+        var profile = CreateProfile();
+        var result = Result(
             InterfaceProfileActivationStatus.ReadyWithWarnings,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
+            canActivate: true,
+            Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required"),
+            Check(InterfaceProfileActivationSeverity.Info, "XDT-Anhang-Automatik ist deaktiviert.", "attachment.disabled"));
         var guardResult = Guard(
             canProceed: false,
-            InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation,
+            InterfaceProfileActivationGuardDecision.Blocked,
+            blockers: new[]
+            {
+                GuardReason(
+                    InterfaceProfileActivationSeverity.Blocker,
+                    "ReadyWithWarnings wird in V1 nicht produktiv aktiviert.",
+                    "guard.evaluation.warningNotAllowedInV1")
+            },
             warnings: new[]
             {
-                GuardReason(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            },
-            message: "Schutzprüfung: Warnungen müssten vor einer späteren Aktivierung bewusst bestätigt werden.");
+                GuardReason(
+                    InterfaceProfileActivationSeverity.Warning,
+                    "Lizenzstatus sollte vor Aktivierung geprüft werden.",
+                    "license.required")
+            });
 
         var preview = _service.Create(profile, result, guardResult);
 
-        Assert.Equal("Warnungsbestätigung erforderlich", preview.GuardDecisionText);
-        Assert.Equal("Nein", preview.GuardCanProceedText);
-        Assert.Contains(preview.GuardReasons, item => item.Contains("Lizenzstatus"));
-        Assert.Contains("Warnungsbestätigung erforderlich", preview.MessageText);
-        Assert.Contains("Technisch freigegeben: Nein", preview.MessageText);
-        Assert.Contains("keine Änderungen gespeichert", preview.MessageText);
+        Assert.Equal("ReadyWithWarnings", preview.StatusText);
+        Assert.Equal("Nein", preview.V1CanActivateText);
+        Assert.Equal(1, preview.WarningCount);
+        Assert.Contains(preview.ImportantWarnings, item => item.Contains("Lizenzstatus"));
+        Assert.Contains("wird in V1 nicht aktiviert", preview.SummaryMessage);
+        Assert.Contains("Aktivierbar nach V1: Nein", preview.MessageText);
+        Assert.DoesNotContain("bestätigt", preview.MessageText);
     }
 
     [Fact]
-    public void Create_WithBlockedActivationPlan_ShouldShowBlockedPlanPreview()
+    public void Create_WithBlockedEvaluation_ShouldShowBlockers()
     {
         var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
+        var result = Result(
             InterfaceProfileActivationStatus.Blocked,
-            CanActivate: false,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing")
-            });
+            canActivate: false,
+            Check(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing"),
+            Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required"));
         var guardResult = Guard(
             canProceed: false,
             InterfaceProfileActivationGuardDecision.Blocked,
@@ -195,423 +117,77 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
             {
                 GuardReason(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing")
             });
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: false,
-            InterfaceProfileActivationWarningConfirmationStatus.Blocked);
-        var plan = ActivationPlan(
-            InterfaceProfileActivationPlanStatus.Blocked,
-            canExecuteLater: false,
-            blockers: new[]
-            {
-                PlanReason(InterfaceProfileActivationSeverity.Blocker, "folder.aisImport.missing", "AIS-Importordner fehlt.")
-            },
-            missingRequirements: new[]
-            {
-                PlanReason(InterfaceProfileActivationSeverity.Blocker, "folder.aisImport.missing", "AIS-Importordner fehlt.")
-            },
-            steps: new[]
-            {
-                PlanStep("resolve.blockers", "Blocker beheben", "Blockierende Prüfpunkte müssen zuerst behoben werden.", isBlocked: true)
-            },
-            message: "Aktivierungsplan blockiert. Bitte beheben Sie zuerst die blockierenden Punkte.");
 
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation, plan);
+        var preview = _service.Create(profile, result, guardResult);
 
-        Assert.Equal("blockiert", preview.ActivationPlanStatusText);
-        Assert.Equal("Nein", preview.ActivationPlanCanExecuteLaterText);
-        Assert.Contains(preview.ActivationPlanMissingRequirements, item => item.Contains("AIS-Importordner"));
-        Assert.Contains(preview.ActivationPlanReasons, item => item.Contains("AIS-Importordner"));
-        Assert.Contains("Aktivierungsplan:", preview.MessageText);
-        Assert.Contains("Fehlende Voraussetzungen:", preview.MessageText);
+        Assert.Equal("Blocked", preview.StatusText);
+        Assert.Equal("Nein", preview.V1CanActivateText);
+        Assert.Equal(1, preview.BlockerCount);
+        Assert.Contains(preview.ImportantBlockers, item => item.Contains("AIS-Importordner"));
+        Assert.Contains("Dieses Profil kann nicht aktiviert werden.", preview.SummaryMessage);
     }
 
     [Fact]
-    public void Create_WithRequiresWarningConfirmationPlan_ShouldShowPlanWarningConfirmationRequired()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.ReadyWithWarnings,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-        var guardResult = Guard(
-            canProceed: false,
-            InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation,
-            warnings: new[]
-            {
-                GuardReason(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: true,
-            InterfaceProfileActivationWarningConfirmationStatus.ConfirmationRequired,
-            warnings: new[]
-            {
-                WarningItem("Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-        var plan = ActivationPlan(
-            InterfaceProfileActivationPlanStatus.RequiresWarningConfirmation,
-            canExecuteLater: false,
-            warnings: new[]
-            {
-                PlanReason(InterfaceProfileActivationSeverity.Warning, "license.required", "Lizenzstatus sollte vor Aktivierung geprüft werden.")
-            },
-            steps: new[]
-            {
-                PlanStep("warnings.confirm", "Warnungen bestätigen", "Vor einer späteren echten Aktivierung müssten die aufgeführten Warnungen bewusst bestätigt werden.", isBlocked: true),
-                PlanStep("activate.profile", "Profil aktivieren", "Das Schnittstellenprofil würde bei einer späteren echten Aktivierung als aktiv markiert.", isBlocked: true)
-            },
-            message: "Vor einer späteren Aktivierung müssen Warnungen bewusst bestätigt werden.");
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation, plan);
-
-        Assert.Equal("Warnungsbestätigung erforderlich", preview.ActivationPlanStatusText);
-        Assert.Equal("Nein", preview.ActivationPlanCanExecuteLaterText);
-        Assert.Equal("Siehe Abschnitt Warnungsbestätigung.", preview.ActivationPlanMessage);
-        Assert.Empty(preview.ActivationPlanReasons);
-        Assert.Contains("Warnungen prüfen und bestätigen", preview.ActivationPlanSteps);
-        Assert.Contains("Profil aktivieren", preview.ActivationPlanSteps);
-        Assert.Equal(1, CountOccurrences(preview.MessageText, "Lizenzstatus"));
-        Assert.DoesNotContain("Wichtigste Plan-Gründe:", preview.MessageText);
-        Assert.Contains("Geplante spätere Schritte:", preview.MessageText);
-        Assert.Contains("Diese Schritte wurden in diesem Schritt nicht ausgeführt.", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_WithReadyActivationPlan_ShouldShowReadyPlanAndPlannedSteps()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Ready,
-            CanActivate: true,
-            Checks: Array.Empty<InterfaceProfileActivationCheckResult>());
-        var guardResult = Guard(
-            canProceed: true,
-            InterfaceProfileActivationGuardDecision.Allowed);
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: false,
-            InterfaceProfileActivationWarningConfirmationStatus.NoWarnings,
-            message: "Es sind keine Warnungen vorhanden, die bestätigt werden müssen.");
-        var plan = ActivationPlan(
-            InterfaceProfileActivationPlanStatus.Ready,
-            canExecuteLater: true,
-            steps: new[]
-            {
-                PlanStep("activate.profile", "Profil aktivieren", "Das Schnittstellenprofil würde bei einer späteren echten Aktivierung als aktiv markiert."),
-                PlanStep("save.profile", "Profiländerung speichern", "Die Profiländerung würde bei einer späteren echten Aktivierung gespeichert.")
-            },
-            message: "Eine spätere Aktivierung wäre technisch vorbereitet.");
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation, plan);
-
-        Assert.Equal("vorbereitet", preview.ActivationPlanStatusText);
-        Assert.Equal("Ja", preview.ActivationPlanCanExecuteLaterText);
-        Assert.Contains(preview.ActivationPlanSteps, item => item.Contains("Profil aktivieren"));
-        Assert.Contains(preview.ActivationPlanSteps, item => item.Contains("Profiländerung speichern"));
-        Assert.Contains("Spätere Aktivierung laut Plan möglich: Ja", preview.MessageText);
-        Assert.Contains("nichts aktiviert", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_WithUnknownActivationPlan_ShouldShowPlanUnavailableState()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Unknown,
-            CanActivate: false,
-            Checks: Array.Empty<InterfaceProfileActivationCheckResult>());
-        var guardResult = Guard(
-            canProceed: false,
-            InterfaceProfileActivationGuardDecision.Unknown);
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: false,
-            InterfaceProfileActivationWarningConfirmationStatus.Unknown,
-            message: "Die Aktivierungsbewertung ist nicht eindeutig.");
-        var plan = ActivationPlan(
-            InterfaceProfileActivationPlanStatus.Unknown,
-            canExecuteLater: false,
-            message: "Aktivierungsplan ist nicht eindeutig.");
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation, plan);
-
-        Assert.Equal("nicht eindeutig", preview.ActivationPlanStatusText);
-        Assert.Equal("Nein", preview.ActivationPlanCanExecuteLaterText);
-        Assert.Contains("nicht eindeutig", preview.ActivationPlanMessage);
-        Assert.Contains("Aktivierungsplan:", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_WithReadyWithWarnings_ShouldShowWarningConfirmationPreview()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.ReadyWithWarnings,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required"),
-                Check(InterfaceProfileActivationSeverity.Info, "XDT-Anhang-Automatik ist deaktiviert.", "attachment.disabled")
-            });
-        var guardResult = Guard(
-            canProceed: false,
-            InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation,
-            warnings: new[]
-            {
-                GuardReason(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: true,
-            InterfaceProfileActivationWarningConfirmationStatus.ConfirmationRequired,
-            warnings: new[]
-            {
-                WarningItem("Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            },
-            message: "Vor einer späteren Aktivierung müssen diese Warnungen bewusst bestätigt werden.");
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation);
-
-        Assert.Equal("erforderlich", preview.WarningConfirmationStatusText);
-        Assert.Equal(1, preview.WarningConfirmationItemCount);
-        Assert.Contains(preview.WarningConfirmationItems, item => item.Contains("Lizenzstatus"));
-        Assert.Contains("Warnungsbestätigung:", preview.MessageText);
-        Assert.Contains("Folgende Warnungen", preview.MessageText);
-        Assert.Contains("Diese Warnungen wurden in diesem Schritt nicht bestätigt.", preview.MessageText);
-        Assert.DoesNotContain(preview.WarningConfirmationItems, item => item.Contains("XDT-Anhang-Automatik"));
-    }
-
-    [Fact]
-    public void Create_WithReadyWithoutWarnings_ShouldShowWarningConfirmationNotRequired()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Ready,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Info, "AIS-Profil ist vorhanden.", "dependency.ais.ok")
-            });
-        var guardResult = Guard(
-            canProceed: true,
-            InterfaceProfileActivationGuardDecision.Allowed);
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: false,
-            InterfaceProfileActivationWarningConfirmationStatus.NoWarnings,
-            message: "Es sind keine Warnungen vorhanden, die bestätigt werden müssen.");
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation);
-
-        Assert.Equal("nicht erforderlich", preview.WarningConfirmationStatusText);
-        Assert.Equal(0, preview.WarningConfirmationItemCount);
-        Assert.Empty(preview.WarningConfirmationItems);
-        Assert.Contains("Es sind keine Warnungen vorhanden", preview.MessageText);
-        Assert.DoesNotContain("Folgende Warnungen", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_WithBlockedEvaluation_ShouldShowWarningConfirmationNotPossible()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Blocked,
-            CanActivate: false,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing"),
-                Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-        var guardResult = Guard(
-            canProceed: false,
-            InterfaceProfileActivationGuardDecision.Blocked,
-            blockers: new[]
-            {
-                GuardReason(InterfaceProfileActivationSeverity.Blocker, "AIS-Importordner fehlt.", "folder.aisImport.missing")
-            });
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: false,
-            InterfaceProfileActivationWarningConfirmationStatus.Blocked,
-            warnings: new[]
-            {
-                WarningItem("Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            },
-            message: "Warnungen können erst bestätigt werden, wenn keine Blocker mehr vorhanden sind.");
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation);
-
-        Assert.Equal("nicht möglich", preview.WarningConfirmationStatusText);
-        Assert.Equal(1, preview.WarningConfirmationItemCount);
-        Assert.Contains("keine Blocker mehr vorhanden", preview.WarningConfirmationMessage);
-        Assert.Contains("Vorhandene Warnungen", preview.MessageText);
-        Assert.Contains("nicht bestätigt", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_WithUnknownEvaluation_ShouldShowWarningConfirmationUnavailable()
-    {
-        var profile = CreateProfile();
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Unknown,
-            CanActivate: false,
-            Checks: Array.Empty<InterfaceProfileActivationCheckResult>());
-        var guardResult = Guard(
-            canProceed: false,
-            InterfaceProfileActivationGuardDecision.Unknown);
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: false,
-            InterfaceProfileActivationWarningConfirmationStatus.Unknown,
-            message: "Die Aktivierungsbewertung ist nicht eindeutig.");
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation);
-
-        Assert.Equal("nicht verfügbar", preview.WarningConfirmationStatusText);
-        Assert.Equal(0, preview.WarningConfirmationItemCount);
-        Assert.Contains("nicht eindeutig", preview.WarningConfirmationMessage);
-        Assert.Contains("Warnungsbestätigung:", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_ShouldNotMutateProfile()
+    public void Create_WithBuiltInProfile_ShouldNotBeV1Activatable()
     {
         var profile = CreateProfile() with
         {
-            IsActive = true,
+            Metadata = CreateProfile().Metadata with
+            {
+                IsBuiltIn = true,
+                IsUserDefined = false
+            }
+        };
+        var result = Result(InterfaceProfileActivationStatus.Ready, canActivate: true);
+        var guardResult = Guard(canProceed: true, InterfaceProfileActivationGuardDecision.Allowed);
+
+        var preview = _service.Create(profile, result, guardResult);
+
+        Assert.Equal("Nein", preview.V1CanActivateText);
+    }
+
+    [Fact]
+    public void Create_ShouldLimitImportantLists()
+    {
+        var profile = CreateProfile();
+        var checks = Enumerable.Range(1, 8)
+            .Select(index => Check(
+                InterfaceProfileActivationSeverity.Warning,
+                $"Warnung {index}",
+                $"warning.{index}"))
+            .ToArray();
+        var result = Result(InterfaceProfileActivationStatus.ReadyWithWarnings, canActivate: true, checks);
+
+        var preview = _service.Create(profile, result);
+
+        Assert.Equal(8, preview.WarningCount);
+        Assert.Equal(5, preview.ImportantWarnings.Count);
+    }
+
+    [Fact]
+    public void Create_ShouldNotMutateProfileOrActivateIt()
+    {
+        var profile = CreateProfile() with
+        {
+            IsActive = false,
             FolderOptions = CreateProfile().FolderOptions with
             {
-                IsAttachmentProcessingEnabled = true
+                IsAttachmentProcessingEnabled = false
             }
         };
         var originalId = profile.Metadata.Id;
         var originalName = profile.Metadata.Name;
         var originalIsActive = profile.IsActive;
         var originalAttachmentEnabled = profile.FolderOptions.IsAttachmentProcessingEnabled;
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.ReadyWithWarnings,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Warning, "Profil ist bereits aktiv.", "profile.active")
-            });
-
-        _ = _service.Create(profile, result);
-
-        Assert.Equal(originalId, profile.Metadata.Id);
-        Assert.Equal(originalName, profile.Metadata.Name);
-        Assert.Equal(originalIsActive, profile.IsActive);
-        Assert.Equal(originalAttachmentEnabled, profile.FolderOptions.IsAttachmentProcessingEnabled);
-    }
-
-    [Fact]
-    public void Create_WithGuard_ShouldNotMutateProfileOrActivateIt()
-    {
-        var profile = CreateProfile() with
-        {
-            IsActive = false,
-            FolderOptions = CreateProfile().FolderOptions with
-            {
-                IsAttachmentProcessingEnabled = false
-            }
-        };
-        var originalId = profile.Metadata.Id;
-        var originalName = profile.Metadata.Name;
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Ready,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Info, "Profil wirkt aktivierbar.", "profile.ready")
-            });
-        var guardResult = Guard(
-            canProceed: true,
-            InterfaceProfileActivationGuardDecision.Allowed,
-            message: "Schutzprüfung: Eine spätere Aktivierung wäre technisch zulässig.");
+        var result = Result(InterfaceProfileActivationStatus.Ready, canActivate: true);
+        var guardResult = Guard(canProceed: true, InterfaceProfileActivationGuardDecision.Allowed);
 
         _ = _service.Create(profile, result, guardResult);
 
         Assert.Equal(originalId, profile.Metadata.Id);
         Assert.Equal(originalName, profile.Metadata.Name);
-        Assert.False(profile.IsActive);
-        Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
-    }
-
-    [Fact]
-    public void Create_WithActivationPlanPreview_ShouldNotMutateProfileOrExecuteSteps()
-    {
-        var profile = CreateProfile() with
-        {
-            IsActive = false,
-            FolderOptions = CreateProfile().FolderOptions with
-            {
-                IsAttachmentProcessingEnabled = false
-            }
-        };
-        var originalId = profile.Metadata.Id;
-        var originalName = profile.Metadata.Name;
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.Ready,
-            CanActivate: true,
-            Checks: Array.Empty<InterfaceProfileActivationCheckResult>());
-        var guardResult = Guard(
-            canProceed: true,
-            InterfaceProfileActivationGuardDecision.Allowed);
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: false,
-            InterfaceProfileActivationWarningConfirmationStatus.NoWarnings);
-        var plan = ActivationPlan(
-            InterfaceProfileActivationPlanStatus.Ready,
-            canExecuteLater: true,
-            steps: new[]
-            {
-                PlanStep("activate.profile", "Profil aktivieren", "Das Schnittstellenprofil würde bei einer späteren echten Aktivierung als aktiv markiert.")
-            });
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation, plan);
-
-        Assert.Equal(originalId, profile.Metadata.Id);
-        Assert.Equal(originalName, profile.Metadata.Name);
-        Assert.False(profile.IsActive);
-        Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
-        Assert.Contains("Diese Schritte wurden in diesem Schritt nicht ausgeführt.", preview.MessageText);
-    }
-
-    [Fact]
-    public void Create_WithWarningConfirmationPreview_ShouldNotMutateProfileOrConfirmWarnings()
-    {
-        var profile = CreateProfile() with
-        {
-            IsActive = false,
-            FolderOptions = CreateProfile().FolderOptions with
-            {
-                IsAttachmentProcessingEnabled = false
-            }
-        };
-        var originalId = profile.Metadata.Id;
-        var originalName = profile.Metadata.Name;
-        var result = new InterfaceProfileActivationEvaluationResult(
-            InterfaceProfileActivationStatus.ReadyWithWarnings,
-            CanActivate: true,
-            Checks: new[]
-            {
-                Check(InterfaceProfileActivationSeverity.Warning, "Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-        var guardResult = Guard(
-            canProceed: false,
-            InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation);
-        var warningConfirmation = WarningConfirmation(
-            canRequestConfirmation: true,
-            InterfaceProfileActivationWarningConfirmationStatus.ConfirmationRequired,
-            warnings: new[]
-            {
-                WarningItem("Lizenzstatus sollte vor Aktivierung geprüft werden.", "license.required")
-            });
-
-        var preview = _service.Create(profile, result, guardResult, warningConfirmation);
-
-        Assert.Equal(originalId, profile.Metadata.Id);
-        Assert.Equal(originalName, profile.Metadata.Name);
-        Assert.False(profile.IsActive);
-        Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
-        Assert.Contains("keine Warnungen bestätigt", preview.SafetyNotice);
-        Assert.Contains("keine Warnungen bestätigt", preview.MessageText);
+        Assert.Equal(originalIsActive, profile.IsActive);
+        Assert.Equal(originalAttachmentEnabled, profile.FolderOptions.IsAttachmentProcessingEnabled);
     }
 
     private static InterfaceProfileDefinition CreateProfile()
@@ -627,6 +203,14 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
             },
             IsActive = false
         };
+    }
+
+    private static InterfaceProfileActivationEvaluationResult Result(
+        InterfaceProfileActivationStatus status,
+        bool canActivate,
+        params InterfaceProfileActivationCheckResult[] checks)
+    {
+        return new InterfaceProfileActivationEvaluationResult(status, canActivate, checks);
     }
 
     private static InterfaceProfileActivationCheckResult Check(
@@ -668,98 +252,5 @@ public sealed class InterfaceProfileActivationPreparationPreviewServiceTests
             severity,
             code,
             message);
-    }
-
-    private static InterfaceProfileActivationWarningConfirmationResult WarningConfirmation(
-        bool canRequestConfirmation,
-        InterfaceProfileActivationWarningConfirmationStatus status,
-        IReadOnlyList<InterfaceProfileActivationWarningConfirmationItem>? warnings = null,
-        IReadOnlyList<InterfaceProfileActivationWarningConfirmationReason>? blockers = null,
-        string message = "Vor einer späteren Aktivierung müssen diese Warnungen bewusst bestätigt werden.")
-    {
-        return new InterfaceProfileActivationWarningConfirmationResult(
-            canRequestConfirmation,
-            status,
-            "interface-userdefined",
-            "Importierte Schnittstelle",
-            warnings ?? Array.Empty<InterfaceProfileActivationWarningConfirmationItem>(),
-            blockers ?? Array.Empty<InterfaceProfileActivationWarningConfirmationReason>(),
-            message);
-    }
-
-    private static InterfaceProfileActivationWarningConfirmationItem WarningItem(
-        string title,
-        string code)
-    {
-        return new InterfaceProfileActivationWarningConfirmationItem(
-            Area: "Test",
-            Code: code,
-            Title: title,
-            Detail: null,
-            Severity: InterfaceProfileActivationSeverity.Warning,
-            IsRequiredForActivation: true);
-    }
-
-    private static InterfaceProfileActivationPlan ActivationPlan(
-        InterfaceProfileActivationPlanStatus status,
-        bool canExecuteLater,
-        IReadOnlyList<InterfaceProfileActivationPlanReason>? blockers = null,
-        IReadOnlyList<InterfaceProfileActivationPlanReason>? warnings = null,
-        IReadOnlyList<InterfaceProfileActivationPlanReason>? infos = null,
-        IReadOnlyList<InterfaceProfileActivationPlanStep>? steps = null,
-        IReadOnlyList<InterfaceProfileActivationPlanReason>? missingRequirements = null,
-        string message = "Aktivierungsplan-Testmeldung.")
-    {
-        return new InterfaceProfileActivationPlan(
-            status,
-            canExecuteLater,
-            IsPreviewOnly: true,
-            ProfileId: "interface-userdefined",
-            ProfileName: "Importierte Schnittstelle",
-            SummaryMessage: message,
-            Blockers: blockers ?? Array.Empty<InterfaceProfileActivationPlanReason>(),
-            Warnings: warnings ?? Array.Empty<InterfaceProfileActivationPlanReason>(),
-            Infos: infos ?? Array.Empty<InterfaceProfileActivationPlanReason>(),
-            PlannedSteps: steps ?? Array.Empty<InterfaceProfileActivationPlanStep>(),
-            MissingRequirements: missingRequirements ?? Array.Empty<InterfaceProfileActivationPlanReason>());
-    }
-
-    private static InterfaceProfileActivationPlanReason PlanReason(
-        InterfaceProfileActivationSeverity severity,
-        string code,
-        string message)
-    {
-        return new InterfaceProfileActivationPlanReason(
-            severity,
-            code,
-            message);
-    }
-
-    private static InterfaceProfileActivationPlanStep PlanStep(
-        string code,
-        string title,
-        string description,
-        bool isBlocked = false)
-    {
-        return new InterfaceProfileActivationPlanStep(
-            code,
-            title,
-            description,
-            WouldExecuteLater: true,
-            IsBlocked: isBlocked,
-            Severity: InterfaceProfileActivationSeverity.Info);
-    }
-
-    private static int CountOccurrences(string text, string value)
-    {
-        var count = 0;
-        var index = 0;
-        while ((index = text.IndexOf(value, index, StringComparison.Ordinal)) >= 0)
-        {
-            count++;
-            index += value.Length;
-        }
-
-        return count;
     }
 }

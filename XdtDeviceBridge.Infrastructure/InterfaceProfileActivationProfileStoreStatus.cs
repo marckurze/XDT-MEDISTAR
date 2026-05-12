@@ -8,12 +8,8 @@ public enum InterfaceProfileActivationProfileStoreStatus
     NonUserDefinedBlocked,
     UserDefinedRequired,
     LoadedUserDefined,
-    ValidateOnly,
-    SaveBlocked,
     SaveNotImplemented,
     SaveWouldBeAllowed,
-    WouldSave,
-    Saved,
     MissingCapability,
     Failed
 }

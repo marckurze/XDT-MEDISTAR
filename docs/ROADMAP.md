@@ -136,16 +136,15 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Der Aktivierungsassistent ist als reine Vorschau vorbereitet, aber noch nicht produktiv aktivierend.
 - Im Tab `Schnittstellenprofile` gibt es den Bereich `Pruefung vor Aktivierung` mit Status, Aktivierbarkeit, Blocker-/Warnungs-/Hinweiszaehlern, strukturierter Ordnerpruefung, strukturierter XDT-Anhang-Konfiguration und eingeklappter Tabelle `Alle Pruefpunkte`.
-- Der Button `Aktivierung vorbereiten` oeffnet ein reines scrollbares Preview-Fenster mit OK-/Schliessen-Aktion. Es zeigt Aktivierungsbewertung, technische Guard-Entscheidung, Warnungsbestaetigungsvorschau und `InterfaceProfileActivationPlan`.
-- Die Service-Kette lautet: `InterfaceProfileActivationEvaluationService` -> `InterfaceProfileActivationGuardService` -> `InterfaceProfileActivationWarningConfirmationService` -> `InterfaceProfileActivationPlanService` -> `InterfaceProfileActivationPreparationPreviewService`.
-- `ReadyWithWarnings` bleibt konservativ: Ohne bewusste Warnungsbestaetigung meldet der Guard `RequiresWarningConfirmation` und der Plan bleibt nicht ausfuehrbar.
-- PlannedSteps im ActivationPlan beschreiben nur spaetere Aktionen. Sie aktivieren nichts, speichern nichts und starten keine Verarbeitung.
+- Der Button `Aktivierung vorbereiten` oeffnet ein reines scrollbares Preview-Fenster mit OK-/Schliessen-Aktion. Es zeigt nur noch V1-relevante Informationen: Bewertung, technische Guard-Entscheidung, `Aktivierbar nach V1`, Blocker, Warnungen, Hinweise und Sicherheitshinweis.
+- Die Service-Kette lautet: `InterfaceProfileActivationEvaluationService` -> `InterfaceProfileActivationGuardService` -> `InterfaceProfileActivationPreparationPreviewService`.
+- `ReadyWithWarnings` wird angezeigt, aber in V1 nicht produktiv aktiviert.
 - Ein Interface-/Model-Skelett fuer einen spaeteren `ActivationExecutor` ist vorhanden: Request, Result, Preconditions, Statuswerte und `IInterfaceProfileActivationExecutor`.
-- `InterfaceProfileActivationExecutorRequest` kann inzwischen Zielprofil-ID/-Name, `OperationMode`, Preview-/Statuskontext, optionalen Fingerprint und Warnungsbestaetigungsdaten transportieren; `InterfaceProfileActivationExecutorResult` kann fehlendes frisches Laden, fehlende sichere UserDefined-Speicherung, erforderliche finale Re-Evaluation und einzelne nicht-produktive ValidateOnly-Schritte ausdruecken.
+- `InterfaceProfileActivationExecutorRequest` traegt nur noch den V1-noetigen Kontext: Zielprofil-ID/-Name, `OperationMode`, Quelle/Zeitpunkt sowie Preview-Evaluation/-Guard als Kontext.
 - Eine executor-nahe Store-/Loader-Abstraktion ist vorbereitet: `IInterfaceProfileActivationProfileStore` mit Load-/Save-Resultmodellen, nicht-produktivem In-Memory-Stub und `InterfaceProfileActivationProfileCatalogStore` gegen `ProfileCatalogService`/`AppDataPaths`. Der Catalog-Adapter kann frisch laden, Save bleibt ValidateOnly/DryRun und speichert nichts.
-- `InterfaceProfileActivationExecutorStub` ist als defensive Backend-Stufe vorhanden. Er bewertet Preconditions und liefert Statuswerte; im `ValidateOnly`-Modus kann er optional den ActivationProfileStore fuer frisches Laden und eine nicht-produktive finale Pruefkette aus Evaluation, Guard, Warnungsbestaetigung und ActivationPlan nutzen. Save bleibt DryRun, `IsActive` wird nicht gesetzt, es wird nichts gespeichert, keine Verarbeitung gestartet und keine UI angebunden.
-- Es gibt keine produktive Executor-Implementierung, keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled` und keine Datei-/Ordneroperationen.
-- Die fachliche Entscheidungsgrundlage fuer eine spaetere produktive Aktivierung und Deaktivierung liegt in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`; dort ist die V1-Linie inzwischen kompakt priorisiert: wenige klare UI-Schritte, UserDefined/BuiltIn-Schutz, Warnungsbestaetigung nur bei Bedarf, finale Re-Evaluation, keine Sofortverarbeitung und keine stillschweigende Paketveraenderung.
+- `InterfaceProfileActivationExecutorStub` ist als defensive Backend-Stufe vorhanden. Er bewertet Preconditions und liefert Statuswerte; im `ValidateOnly`-Modus kann er optional den ActivationProfileStore fuer frisches Laden und eine nicht-produktive finale Pruefkette aus Evaluation + Guard nutzen. Save bleibt DryRun, `IsActive` wird nicht gesetzt, es wird nichts gespeichert, keine Verarbeitung gestartet und keine UI angebunden.
+- Es gibt keine produktive Executor-Implementierung, keinen Aktivieren-Button, keine Warnungsbestaetigung, keine Aenderung an `IsActive` oder `IsAttachmentProcessingEnabled` und keine Datei-/Ordneroperationen.
+- Die fachliche Entscheidungsgrundlage liegt in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md`: V1 bleibt schlank und erlaubt spaeter nur `Ready` ohne Warnungen fuer frisch geladene UserDefined-Profile, niemals BuiltIn.
 - Statische Pruefung und praktische Windows-Sichtpruefung des Dialogs sind in `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` dokumentiert; der aktuelle Vorschau-Dialog ist visuell abgenommen.
 - BuiltIn-Profile bleiben direkt geschuetzt; die spaetere Aktivierung ist auf kontrollierte UserDefined-Schnittstellenprofile ausgerichtet.
 - Die zuletzt behobene Layout-Ueberlagerung unterhalb `Ordnerbereinigung` ist Teil des aktuellen UI-Stands und darf bei weiteren Arbeiten nicht zurueckfallen.
@@ -182,8 +181,8 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 - `ReplaceExisting` für UserDefined-Profile.
 - Freie Konfliktlösungs-/Bearbeitungsdialoge.
 - Manuelle Zielnamen-/ID-Bearbeitung in der UI.
-- Produktive Aktivierung und Deaktivierung importierter Schnittstellenprofile; Pruefung, Guard, Warnungsbestaetigungsvorschau und ActivationPlan sind nur read-only vorbereitet.
-- Bewusste Warnungsbestaetigung mit UI, moegliche dauerhafte Speicherung, finale Sicherheitspruefung, frisches Laden und produktive `ActivationExecutor`-Implementierung.
+- Produktive Aktivierung importierter Schnittstellenprofile; Pruefung, Guard und V1-Preview sind nur read-only vorbereitet.
+- Produktiver `ActivationExecutor` mit frischem Laden, finaler Evaluation + Guard und sicherer UserDefined-Speicherung.
 - Vollständiger Profil-Assistent für unbekannte Geräte.
 - Digitale Lizenzsignatur.
 - Online-Lizenzierung.
@@ -225,10 +224,9 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 - Aktuellen read-only Aktivierungsassistenten praktisch in der UI pruefen.
 - Statisches UI-Pruefprotokoll `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Basis verwenden.
 - Kompakte V1-Linie aus `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich abnehmen oder anpassen; Ziel bleibt eine kurze Benutzerfuehrung ohne Verwaltungsmonster.
-- UX fuer eine spaetere bewusste Warnungsbestaetigung entscheiden, weiterhin ohne produktive Speicherung.
-- Produktive `ActivationExecutor`-Implementierung und Deaktivierungspfad erst nach Fachentscheidung zu Preconditions, Audit, Rollen, Speicherung, Warnungsbestaetigung, Aktivierungsflag, produktiver Freigabe des derzeit dry-run-faehigen `ProfileCatalogService`-/`AppDataPaths`-Adapters, frischem Laden, konkreter Store-Methode, Paketstatus-Erkennung und Umgang mit laufenden/wartenden Paketen planen.
-- Finale Sicherheitspruefung direkt vor Ausfuehrung, Audit-/Logeintrag und erneuten Build-/Testlauf fuer eine spaetere echte Aktivierung einplanen.
-- Fachlich freigeben, ob die dokumentierte V1-Linie gilt: `ReadyWithWarnings` nur nach bewusster Bestaetigung, Aktivierungsstatus am UserDefined-Schnittstellenprofil, Aktivierung ohne Sofortverarbeitung, Deaktivierung verhindert neue Paketstarts, Deaktivierung nur als Status-/Konfigurationsentscheidung, `IsAttachmentProcessingEnabled` bleibt separat und finale Re-Evaluation ist Pflicht.
+- Produktive `ActivationExecutor`-Implementierung erst nach Fachentscheidung zu `IsActive` als Schreibpunkt, konkreter Store-Methode, frischem Laden und finaler Evaluation + Guard planen.
+- Finale Sicherheitspruefung direkt vor Ausfuehrung und erneuten Build-/Testlauf fuer eine spaetere echte Aktivierung einplanen.
+- Fachlich freigeben, dass V1 nur `Ready` ohne Warnungen aktiviert; `ReadyWithWarnings`, Deaktivierung, Audit, Rollenmodell und Paketstatus-Sonderfaelle bleiben spaetere Themen.
 - Optional spätere manuelle Zielnamen-/ID-Bearbeitung für ImportAsCopy planen.
 - Optional späteres `ReplaceExisting` für UserDefined-Profile separat spezifizieren.
 
@@ -266,8 +264,8 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 3. Version für den nächsten Meilenstein nur vorbereiten, aber erst nach E2E-Abnahme erhöhen.
 4. Read-only Aktivierungsassistent als visuell abgenommen fuehren und `docs/UI_PRUEFPROTOKOLL_AKTIVIERUNGSASSISTENT.md` als Regressionscheck weiterverwenden.
 5. Kompakte V1-Linie in `docs/AKTIVIERUNG_ENTSCHEIDUNGSNOTIZ.md` fachlich entscheiden.
-6. Konkretes Aktivierungsflag, echte Loader-/Store-Anbindung, frische Profilkatalog-Ladung, Store-Methode, Audit-Mindestmodell, Aenderungsschutz, Paketstatus-Erkennung und Deaktivierungsregeln fuer laufende/wartende Pakete final festlegen.
-7. UI-Konzept fuer spaetere Warnungsbestaetigung ohne dauerhafte Speicherung spezifizieren.
+6. Konkretes Aktivierungsflag, echte Loader-/Store-Anbindung, frische Profilkatalog-Ladung und Store-Methode final festlegen.
+7. Warnungsbestaetigung, Audit, Deaktivierung und Paketstatus-Regeln nur bei spaeterem Bedarf separat spezifizieren.
 8. Produktive `ActivationExecutor`-Implementierung separat spezifizieren, bevor sie gebaut wird.
 9. Optionales `ReplaceExisting` für UserDefined-Profile gesondert konzipieren, aber BuiltIn-Schutz unverändert lassen.
 10. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.

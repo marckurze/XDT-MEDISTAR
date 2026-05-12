@@ -79,8 +79,6 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
     private readonly InterfaceProfileActivationGuardService _interfaceProfileActivationGuardService = new();
-    private readonly InterfaceProfileActivationWarningConfirmationService _interfaceProfileActivationWarningConfirmationService = new();
-    private readonly InterfaceProfileActivationPlanService _interfaceProfileActivationPlanService = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
@@ -762,29 +760,11 @@ public partial class MainWindow : Window
                 new InterfaceProfileActivationRequest(
                     profile,
                     result,
-                    WarningsAccepted: false,
-                    Context: "PreviewOnly"));
-            var warningConfirmationResult = _interfaceProfileActivationWarningConfirmationService.PrepareWarningConfirmation(
-                new InterfaceProfileActivationWarningConfirmationRequest(
-                    profile,
-                    result,
-                    guardResult,
-                    EvaluatedAt: null,
-                    Source: "PreviewOnly"));
-            var activationPlan = _interfaceProfileActivationPlanService.CreatePlan(
-                new InterfaceProfileActivationPlanRequest(
-                    profile,
-                    result,
-                    guardResult,
-                    warningConfirmationResult,
-                    WarningsAccepted: false,
                     Context: "PreviewOnly"));
             preview = _interfaceProfileActivationPreparationPreviewService.Create(
                 profile,
                 result,
-                guardResult,
-                warningConfirmationResult,
-                activationPlan);
+                guardResult);
             ShowInterfaceActivationPreparationPreview(preview);
         }
         catch (Exception ex)

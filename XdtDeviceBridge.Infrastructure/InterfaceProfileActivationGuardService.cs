@@ -46,17 +46,16 @@ public sealed class InterfaceProfileActivationGuardService
                 warnings,
                 infos),
 
-            InterfaceProfileActivationStatus.ReadyWithWarnings when request.WarningsAccepted => CreateResult(
-                true,
-                InterfaceProfileActivationGuardDecision.AllowedWithWarnings,
-                blockers,
-                warnings,
-                infos),
-
             InterfaceProfileActivationStatus.ReadyWithWarnings => CreateResult(
                 false,
-                InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation,
-                blockers,
+                InterfaceProfileActivationGuardDecision.Blocked,
+                new List<InterfaceProfileActivationGuardReason>(blockers)
+                {
+                    Blocker(
+                        "guard.evaluation.warningNotAllowedInV1",
+                        "ReadyWithWarnings wird in V1 nicht produktiv aktiviert.",
+                        "Warnungen werden angezeigt, aber nicht bestätigt oder übergangen.")
+                },
                 warnings,
                 infos),
 
@@ -156,11 +155,7 @@ public sealed class InterfaceProfileActivationGuardService
         return decision switch
         {
             InterfaceProfileActivationGuardDecision.Allowed =>
-                "Schutzprüfung: Eine spätere Aktivierung wäre technisch zulässig.",
-            InterfaceProfileActivationGuardDecision.AllowedWithWarnings =>
-                "Schutzprüfung: Eine spätere Aktivierung wäre nach bewusst bestätigten Warnungen technisch zulässig.",
-            InterfaceProfileActivationGuardDecision.RequiresWarningConfirmation =>
-                "Schutzprüfung: Warnungen müssten vor einer späteren Aktivierung bewusst bestätigt werden.",
+                "Schutzprüfung: Eine spätere V1-Aktivierung wäre technisch zulässig.",
             InterfaceProfileActivationGuardDecision.Blocked =>
                 "Schutzprüfung: Aktivierung blockiert. Bitte beheben Sie zuerst die blockierenden Punkte.",
             InterfaceProfileActivationGuardDecision.Unknown =>
