@@ -119,7 +119,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 ### Schnittstellenprofile und Templatepakete
 
 - Die kompakte Geraete-/Template-Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`.
-- Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; der technische Export-/Import-Testweg erzeugt die ZIP temporaer mit `TemplatePackageExporter` und prueft sie mit `TemplatePackageImporter`. Eine dauerhaft abgelegte ZIP-Paketdatei bleibt bis zur Release-Regel offen.
+- Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; der technische Export-/Import-Testweg erzeugt die ZIP temporaer mit `TemplatePackageExporter`, prueft sie mit `TemplatePackageImporter` und deckt den UI-nahen Importvorschau-Pfad ab. Eine dauerhaft abgelegte ZIP-Paketdatei bleibt bis zur Release-Regel offen.
 - BuiltIn-Profile werden nicht überschrieben.
 - UserDefined-Profile werden separat gespeichert.
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
@@ -128,6 +128,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Konflikte werden analysiert: gleiche ID, gleicher Name, BuiltIn-Schutz, UserDefined-Konflikte, fehlende Abhängigkeiten und prüfpflichtige Ordner-/XDT-Anhang-Einstellungen.
 - Aus der Analyse wird ein Importplan erzeugt.
 - Der Dry-Run und die UI-Importvorschau zeigen geplante Aktionen, Ziel-IDs/Zielnamen, Abhängigkeiten und Warnungen.
+- Die WPF-Importvorschau ist stabilisiert: Vorschau-Erstellung laeuft ueber einen testbaren Preview-Service, parallele Importvorschauen werden verhindert, und rekursive Auswahlereignisse werden ignoriert.
 - Sichere Benutzeraktionen sind möglich:
   - `Neu importieren`
   - `Als Kopie importieren`
@@ -179,7 +180,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Baukasten-Testexport für XDT-Datei plus umbenannten XDT-Anhang ist testseitig abgesichert.
 - Externe AIS-Linkfelder `6302`, `6303`, optional `6304` und `6305` sind fachlich anhand des MEDISTAR-Beispiels und technisch im Baukasten-/Testpfad belegt.
 - Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Dependency-Remapping.
-- MEDISTAR + NIDEK ARK1S ist als Referenzpaket reproduzierbar testseitig export-/importgeprueft; die ZIP wird dabei nur im temporaeren Testordner erzeugt.
+- MEDISTAR + NIDEK ARK1S ist als Referenzpaket reproduzierbar testseitig export-/importgeprueft; die ZIP wird dabei nur im temporaeren Testordner erzeugt, und die App-Importvorschau ist gegen den zuvor beobachteten Freeze abgesichert.
 
 Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.
 
@@ -280,7 +281,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 ## 6. Empfohlene nächste kleine Codex-Schritte
 
-1. ARK1S-Referenzpaket praktisch in der App importieren und danach Ablage/Release-Regel fuer das offizielle ZIP-Artefakt festlegen.
+1. ARK1S-Referenzpaket praktisch erneut in der App importieren, stabile Importvorschau bestaetigen und danach Ablage/Release-Regel fuer das offizielle ZIP-Artefakt festlegen.
 2. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
 3. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 4. Fuer LM7/LM7P ein fertiges Profil-/Templatepaket vorbereiten, wenn die Datenlage reicht.

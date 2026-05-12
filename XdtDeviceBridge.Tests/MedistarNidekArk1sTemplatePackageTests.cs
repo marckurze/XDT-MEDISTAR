@@ -21,6 +21,7 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
     private readonly TemplatePackageImportConflictAnalyzer _analyzer = new();
     private readonly TemplatePackageImportPlanBuilder _planBuilder = new();
     private readonly TemplatePackageImportDryRunService _dryRunService = new();
+    private readonly TemplatePackageImportPreviewService _previewService = new();
     private readonly TemplatePackageImportExecutor _executor = new();
 
     [Fact]
@@ -160,6 +161,38 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
         AssertReferenceAttachmentLinkSettings(importedInterface.FolderOptions);
     }
 
+    [Fact]
+    public void ImportPreviewService_ShouldCreateUiPreviewForReferencePackageWithoutWritingProfiles()
+    {
+        var zipPath = ExportReferencePackage();
+        var paths = CreateAppDataPaths();
+        _catalogService.EnsureDefaultProfiles(paths);
+        var existingCatalog = _catalogService.Load(paths);
+        var filesBefore = GetProfileFiles(paths);
+
+        var preview = _previewService.Create(zipPath, existingCatalog);
+
+        var filesAfter = GetProfileFiles(paths);
+        Assert.Equal(filesBefore, filesAfter);
+        Assert.DoesNotContain(filesAfter, path => path.Contains("-import", StringComparison.OrdinalIgnoreCase));
+
+        Assert.DoesNotContain(
+            preview.ValidationResult.Issues,
+            issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Error);
+        Assert.True(preview.AnalysisResult.Success);
+        Assert.True(preview.DryRunResult.Success);
+        Assert.Empty(preview.DryRunResult.BlockingItems);
+        Assert.Equal(4, preview.Display.Rows.Count);
+        Assert.Equal(3, preview.Display.DependencyRows.Count);
+        Assert.Equal(4, preview.DryRunResult.WouldImportAsCopy);
+        Assert.Equal(0, preview.DryRunResult.WouldReplaceExisting);
+        Assert.All(preview.Display.Rows, row =>
+        {
+            Assert.Equal(TemplatePackageImportAction.ImportAsCopy, row.SelectedAction);
+            Assert.Contains(row.AvailableActions, action => action.Action == TemplatePackageImportAction.Skip);
+        });
+    }
+
     private string ExportReferencePackage()
     {
         var zipPath = CreateTempZipPath();
@@ -254,5 +287,14 @@ public sealed class MedistarNidekArk1sTemplatePackageTests
     {
         var baseFolder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
         return new AppDataPathProvider().GetPaths(baseFolder);
+    }
+
+    private static string[] GetProfileFiles(AppDataPaths paths)
+    {
+        return Directory.Exists(paths.ProfilesFolder)
+            ? Directory.GetFiles(paths.ProfilesFolder, "*.json", SearchOption.AllDirectories)
+                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+            : Array.Empty<string>();
     }
 }

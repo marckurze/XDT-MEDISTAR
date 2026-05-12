@@ -21,6 +21,10 @@
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
+### Behoben
+
+- Templatepaket-Importvorschau in der WPF-App stabilisiert: Paketlesen und Vorschau-Erstellung laufen nun ueber einen UI-nah testbaren Preview-Service, der Import-Button ist waehrend der Vorschau gesperrt, und unveraenderte ComboBox-Auswahlereignisse bauen die Vorschau nicht erneut rekursiv auf.
+
 ### Dokumentation
 
 - Geraete-/Template-Matrix ergaenzt: BuiltIn-Geraeteprofile, MEDISTAR-Exportprofile, vorhandene Testdaten, Templatepaket-Luecken und V1-Prioritaeten fuer konkrete Geraete-/Templatearbeit sind kompakt dokumentiert.

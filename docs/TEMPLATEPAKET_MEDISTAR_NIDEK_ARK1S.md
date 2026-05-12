@@ -26,9 +26,9 @@ exports/<export-profile-id>.json
 interfaces/<interface-profile-id>.json
 ```
 
-Der vorhandene `TemplatePackageImporter` liest genau diese Struktur wieder ein. Export, Import, Validierung, Konfliktanalyse, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme sind testseitig abgesichert.
+Der vorhandene `TemplatePackageImporter` liest genau diese Struktur wieder ein. Export, Import, Validierung, Konfliktanalyse, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme sind testseitig abgesichert. Die App-Importvorschau nutzt dafuer einen schlanken Preview-Service, damit der UI-Pfad dieselbe pruefbare Importstrecke verwendet.
 
-Der Test `MedistarNidekArk1sTemplatePackageTests` erzeugt das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und liest es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, enthaltene Profile, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft.
+Der Test `MedistarNidekArk1sTemplatePackageTests` erzeugt das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und liest es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, enthaltene Profile, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen, der UI-nahe Preview-Pfad und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft.
 
 Aktuell wird weiterhin keine manuell zusammengebaute ZIP-Datei eingecheckt. Ein dauerhaftes Release-Artefakt soll erst entstehen, wenn der Ablageort und der Release-Schritt fuer Templatepakete festgelegt sind.
 
@@ -122,6 +122,7 @@ Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
 - genau die vier Referenzprofile fuer MEDISTAR + NIDEK ARK1S
 - XDT-Anhang-Linkeinstellungen fuer `6302`, `6303`, optional `6304` und `6305`
 - keine offensichtlichen Live-Pfade, Kundenmarker oder Patientendatenmarker
+- UI-nahe Importvorschau kehrt zurueck und schreibt keine Profile
 - Import gegen vorhandene BuiltIn-Profile nur als UserDefined-Kopie
 - importiertes Schnittstellenprofil bleibt inaktiv
 - `IsAttachmentProcessingEnabled` bleibt nach Import deaktiviert
@@ -130,4 +131,4 @@ Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
 
 1. Ablage- und Release-Regel fuer offizielle Templatepaket-ZIP-Dateien festlegen.
 2. Danach das Artefakt z. B. unter `template-packages/medistar-nidek-ark1s-v1.templatepackage.zip` reproduzierbar erzeugen.
-3. Praktische App-Abnahme: Paket in der UI importieren, Importvorschau pruefen, keine automatische Aktivierung.
+3. Praktische App-Abnahme wiederholen: Paket in der UI importieren, stabile Importvorschau pruefen, keine automatische Aktivierung.

@@ -40,12 +40,9 @@ public partial class MainWindow : Window
     private readonly AppDataPathProvider _appDataPathProvider = new();
     private readonly ProfileCatalogService _profileCatalogService = new();
     private readonly TemplatePackageExporter _templatePackageExporter = new();
-    private readonly TemplatePackageImporter _templatePackageImporter = new();
-    private readonly TemplatePackageImportValidator _templatePackageImportValidator = new();
-    private readonly TemplatePackageImportConflictAnalyzer _templatePackageImportConflictAnalyzer = new();
-    private readonly TemplatePackageImportPlanBuilder _templatePackageImportPlanBuilder = new();
     private readonly TemplatePackageImportDryRunService _templatePackageImportDryRunService = new();
     private readonly TemplatePackageImportPreviewDisplayService _templatePackageImportPreviewDisplayService = new();
+    private readonly TemplatePackageImportPreviewService _templatePackageImportPreviewService = new();
     private readonly TemplatePackageImportExecutor _templatePackageImportExecutor = new();
     private readonly TemplatePackageImportSelectionService _templatePackageImportSelectionService = new();
     private readonly InstallationInfoProvider _installationInfoProvider = new();
@@ -116,6 +113,8 @@ public partial class MainWindow : Window
     private TemplatePackageImportPlan? _lastTemplatePackageImportPlan;
     private TemplatePackageImportDryRunResult? _lastTemplatePackageImportDryRunResult;
     private bool _updatingTemplatePackageImportPreview;
+    private bool _isTemplatePackageImportPreviewBusy;
+    private string _lastTemplatePackageImportSelectionSignature = string.Empty;
 
     public MainWindow()
     {
@@ -3612,8 +3611,13 @@ public partial class MainWindow : Window
             InterfaceProfiles: catalog.InterfaceProfiles);
     }
 
-    private void ImportTemplatePackage_Click(object sender, RoutedEventArgs e)
+    private async void ImportTemplatePackage_Click(object sender, RoutedEventArgs e)
     {
+        if (_isTemplatePackageImportPreviewBusy)
+        {
+            return;
+        }
+
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
             Filter = "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
@@ -3627,34 +3631,42 @@ public partial class MainWindow : Window
 
         try
         {
-            var importResult = _templatePackageImporter.Import(dialog.FileName);
-            var validationResult = _templatePackageImportValidator.Validate(importResult);
+            SetTemplatePackageImportPreviewBusy(true);
+            ShowTemplatePackageImportPreviewLoading();
+
             var existingCatalog = _profileCatalog ?? CreateEmptyProfileCatalog();
-            var analysisResult = _templatePackageImportConflictAnalyzer.Analyze(importResult, existingCatalog);
-            var importPlan = _templatePackageImportPlanBuilder.Build(analysisResult);
-            var dryRunResult = _templatePackageImportDryRunService.Preview(importResult, importPlan, existingCatalog);
-            _lastTemplatePackageImportResult = importResult;
-            _lastTemplatePackageImportValidationResult = validationResult;
-            _lastTemplatePackageImportAnalysisResult = analysisResult;
-            _lastTemplatePackageImportBasePlan = importPlan;
-            _lastTemplatePackageImportPlan = importPlan;
-            _lastTemplatePackageImportDryRunResult = dryRunResult;
-            ShowTemplatePackageImportPreview(validationResult, analysisResult, importPlan, dryRunResult);
-            UpdateTemplatePackageImportExecuteButton(dryRunResult);
+            var previewResult = await Task.Run(() => _templatePackageImportPreviewService.Create(dialog.FileName, existingCatalog));
+
+            _lastTemplatePackageImportResult = previewResult.ImportResult;
+            _lastTemplatePackageImportValidationResult = previewResult.ValidationResult;
+            _lastTemplatePackageImportAnalysisResult = previewResult.AnalysisResult;
+            _lastTemplatePackageImportBasePlan = previewResult.BasePlan;
+            _lastTemplatePackageImportPlan = previewResult.Plan;
+            _lastTemplatePackageImportDryRunResult = previewResult.DryRunResult;
+            ShowTemplatePackageImportPreview(previewResult.Display);
+            UpdateTemplatePackageImportExecuteButton(previewResult.DryRunResult);
             TemplatePackageImportExecutionResultTextBox.Text = "Noch keine Importübernahme ausgeführt.";
-            ShowTemplatePackageImportResult(importResult, validationResult);
+            ShowTemplatePackageImportResult(previewResult.ImportResult, previewResult.ValidationResult);
             AppendProfileMessage("Templatepaket-Importvorschau wurde aktualisiert. Es wurde nichts gespeichert.");
         }
         catch (Exception ex)
         {
             ClearTemplatePackageImportExecutionState();
+            ShowTemplatePackageImportPreviewFailure(
+                "Das Templatepaket konnte nicht für die Vorschau gelesen werden. Es wurden keine Änderungen vorgenommen.",
+                ex.Message);
             AppendProfileMessage($"Templatepaket konnte nicht importiert oder geprüft werden: {ex.Message}");
+        }
+        finally
+        {
+            SetTemplatePackageImportPreviewBusy(false);
         }
     }
 
     private void TemplatePackageImportActionComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (_updatingTemplatePackageImportPreview
+            || _isTemplatePackageImportPreviewBusy
             || _lastTemplatePackageImportResult is null
             || _lastTemplatePackageImportValidationResult is null
             || _lastTemplatePackageImportAnalysisResult is null
@@ -3666,6 +3678,12 @@ public partial class MainWindow : Window
         try
         {
             var selections = GetTemplatePackageImportUserSelections();
+            var selectionSignature = CreateTemplatePackageImportSelectionSignature(selections);
+            if (string.Equals(selectionSignature, _lastTemplatePackageImportSelectionSignature, StringComparison.Ordinal))
+            {
+                return;
+            }
+
             var updatedPlan = _templatePackageImportSelectionService.Apply(_lastTemplatePackageImportBasePlan, selections);
             var existingCatalog = _profileCatalog ?? CreateEmptyProfileCatalog();
             var dryRunResult = _templatePackageImportDryRunService.Preview(_lastTemplatePackageImportResult, updatedPlan, existingCatalog);
@@ -3688,6 +3706,12 @@ public partial class MainWindow : Window
 
     private void ExecuteTemplatePackageImport_Click(object sender, RoutedEventArgs e)
     {
+        if (_isTemplatePackageImportPreviewBusy)
+        {
+            AppendProfileMessage("Templatepaket-Importvorschau läuft noch. Bitte kurz warten.");
+            return;
+        }
+
         if (_lastTemplatePackageImportResult is null
             || _lastTemplatePackageImportPlan is null
             || _lastTemplatePackageImportDryRunResult is null)
@@ -3777,19 +3801,27 @@ public partial class MainWindow : Window
         TemplatePackageImportPlan importPlan,
         TemplatePackageImportDryRunResult dryRunResult)
     {
+        var display = _templatePackageImportPreviewDisplayService.Create(
+            validationResult,
+            analysisResult,
+            importPlan,
+            dryRunResult);
+
+        ShowTemplatePackageImportPreview(display);
+    }
+
+    private void ShowTemplatePackageImportPreview(TemplatePackageImportPreviewDisplay display)
+    {
         _updatingTemplatePackageImportPreview = true;
         try
         {
-            var display = _templatePackageImportPreviewDisplayService.Create(
-                validationResult,
-                analysisResult,
-                importPlan,
-                dryRunResult);
-
             TemplatePackageImportPreviewSummaryText.Text = display.Summary.SummaryText;
             TemplatePackageImportPreviewMessagesTextBox.Text = FormatTemplatePackageImportPreviewMessages(display);
+            TemplatePackageImportPreviewGrid.ItemsSource = null;
+            TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
             TemplatePackageImportPreviewGrid.ItemsSource = display.Rows;
             TemplatePackageImportDependencyPreviewGrid.ItemsSource = display.DependencyRows;
+            _lastTemplatePackageImportSelectionSignature = CreateTemplatePackageImportSelectionSignature(display.Rows);
         }
         finally
         {
@@ -3799,7 +3831,12 @@ public partial class MainWindow : Window
 
     private void UpdateTemplatePackageImportExecuteButton(TemplatePackageImportDryRunResult dryRunResult)
     {
-        ExecuteTemplatePackageImportButton.IsEnabled = dryRunResult.Items.Any(item =>
+        ExecuteTemplatePackageImportButton.IsEnabled = !_isTemplatePackageImportPreviewBusy && CanExecuteTemplatePackageImport(dryRunResult);
+    }
+
+    private static bool CanExecuteTemplatePackageImport(TemplatePackageImportDryRunResult dryRunResult)
+    {
+        return dryRunResult.Items.Any(item =>
             item.WouldWrite
             && !item.IsBlocking
             && item.PlannedAction is TemplatePackageImportAction.ImportAsNew or TemplatePackageImportAction.ImportAsCopy);
@@ -3813,7 +3850,55 @@ public partial class MainWindow : Window
         _lastTemplatePackageImportBasePlan = null;
         _lastTemplatePackageImportPlan = null;
         _lastTemplatePackageImportDryRunResult = null;
+        _lastTemplatePackageImportSelectionSignature = string.Empty;
         ExecuteTemplatePackageImportButton.IsEnabled = false;
+    }
+
+    private void SetTemplatePackageImportPreviewBusy(bool isBusy)
+    {
+        _isTemplatePackageImportPreviewBusy = isBusy;
+        ImportTemplatePackageButton.IsEnabled = !isBusy;
+        ExecuteTemplatePackageImportButton.IsEnabled = !isBusy
+            && _lastTemplatePackageImportDryRunResult is not null
+            && CanExecuteTemplatePackageImport(_lastTemplatePackageImportDryRunResult);
+    }
+
+    private void ShowTemplatePackageImportPreviewLoading()
+    {
+        _updatingTemplatePackageImportPreview = true;
+        try
+        {
+            TemplatePackageImportPreviewSummaryText.Text = "Templatepaket wird für die Vorschau gelesen...";
+            TemplatePackageImportPreviewMessagesTextBox.Text = "Bitte warten. Es wurde noch nichts gespeichert.";
+            TemplatePackageImportPreviewGrid.ItemsSource = null;
+            TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
+            TemplatePackageImportExecutionResultTextBox.Text = "Importvorschau wird erstellt. Noch keine Importübernahme ausgeführt.";
+            _lastTemplatePackageImportSelectionSignature = string.Empty;
+        }
+        finally
+        {
+            _updatingTemplatePackageImportPreview = false;
+        }
+    }
+
+    private void ShowTemplatePackageImportPreviewFailure(string summary, string detail)
+    {
+        _updatingTemplatePackageImportPreview = true;
+        try
+        {
+            TemplatePackageImportPreviewSummaryText.Text = summary;
+            TemplatePackageImportPreviewMessagesTextBox.Text = string.IsNullOrWhiteSpace(detail)
+                ? "Es wurden keine Änderungen vorgenommen."
+                : $"{detail}{Environment.NewLine}{Environment.NewLine}Es wurden keine Änderungen vorgenommen.";
+            TemplatePackageImportPreviewGrid.ItemsSource = null;
+            TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
+            TemplatePackageImportExecutionResultTextBox.Text = summary;
+            _lastTemplatePackageImportSelectionSignature = string.Empty;
+        }
+        finally
+        {
+            _updatingTemplatePackageImportPreview = false;
+        }
     }
 
     private IReadOnlyList<TemplatePackageImportUserSelection> GetTemplatePackageImportUserSelections()
@@ -3830,6 +3915,27 @@ public partial class MainWindow : Window
                 IsValid: true,
                 ValidationMessage: null))
             .ToList();
+    }
+
+    private static string CreateTemplatePackageImportSelectionSignature(IEnumerable<TemplatePackageImportPreviewRow> rows)
+    {
+        return string.Join(
+            "|",
+            rows
+                .Where(row => row.IsActionSelectionEnabled)
+                .OrderBy(row => row.ProfileKindValue)
+                .ThenBy(row => row.ImportedProfileId, StringComparer.OrdinalIgnoreCase)
+                .Select(row => $"{row.ProfileKindValue}:{row.ImportedProfileId}:{row.SelectedAction}"));
+    }
+
+    private static string CreateTemplatePackageImportSelectionSignature(IEnumerable<TemplatePackageImportUserSelection> selections)
+    {
+        return string.Join(
+            "|",
+            selections
+                .OrderBy(selection => selection.ProfileKind)
+                .ThenBy(selection => selection.ImportedProfileId, StringComparer.OrdinalIgnoreCase)
+                .Select(selection => $"{selection.ProfileKind}:{selection.ImportedProfileId}:{selection.SelectedAction}"));
     }
 
     private void RefreshProfileUiAfterCatalogChange(ProfileCatalog catalog)
