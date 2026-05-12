@@ -108,7 +108,7 @@ Er enthaelt:
 - Exportprofile
 - Exportregeln
 - Platzhalter
-- Templatepaket-Export
+- Templatepaket-Export per ausgewaehltem Schnittstellenprofil
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
 - Baukastenbereich `Test & Vorschau`
 
@@ -470,11 +470,11 @@ Optionaler XDT-Anhang bedeutet: Wenn genau ein stabiler Anhang rechtzeitig kommt
 
 Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden.
 
-Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben werden, UserDefined-Profile werden separat gespeichert. Templatepaket-Export/Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
+Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben werden, UserDefined-Profile werden separat gespeichert. Templatepaket-Export erfolgt selektiv auf Basis eines Schnittstellenprofils und nimmt nur benoetigte AIS-/Geraete-/Export-Abhaengigkeiten auf. Templatepaket-Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
 
 Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet und ruht vorerst. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> PreparationPreview. Angezeigt werden V1-relevante Vorschauinformationen: Status, Aktivierbarkeit nach V1, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung und keine Datei-/Ordneroperation.
 
-Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten. Die Vorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` beschreibt das erste ARK1S-Referenzpaket; der Testweg erzeugt und prueft die Paket-ZIP temporaer ueber Exporter/Importer.
+Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten. Die Vorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` beschreibt das erste ARK1S-Referenzpaket; der Testweg erzeugt und prueft die Paket-ZIP temporaer ueber den selektiven Exporter/Importer-Pfad.
 
 Lizenzsystem: InstallationInfo, Lizenzanfrage, Lizenzimport, Statusanzeige, Bewertung lizenzpflichtiger aktiver Schnittstellenprofile und Karenzzeitmodell sind vorbereitet. Es gibt noch keine harte Lizenzsperre, keine Online-Lizenzierung und keine produktive Signaturpruefung.
 
@@ -482,5 +482,5 @@ Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale 
 
 Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: ARK1S-Paket in der App importieren und als spaeteres ZIP-Release-Artefakt festlegen, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
+Naechste sinnvolle Schritte: ARK1S-Paket in der App selektiv exportieren, erneut importieren und als spaeteres ZIP-Release-Artefakt festlegen, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
 ```

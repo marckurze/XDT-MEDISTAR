@@ -10,14 +10,14 @@ Ziel dieser Matrix ist eine schlanke Priorisierung: Anwender sollen moeglichst f
 - BuiltIn-Geraeteprofile existieren fuer NIDEK ARK1S, NIDEK LM7, NIDEK NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
 - BuiltIn-MEDISTAR-Exportprofile existieren fuer dieselben sechs Geraete.
 - Ein fertiges BuiltIn-Schnittstellenprofil existiert aktuell nur fuer `MEDISTAR + NIDEK ARK1S`.
-- Die Templatepaket-Infrastruktur ist vorhanden und testseitig abgesichert. Fuer MEDISTAR + NIDEK ARK1S gibt es die offizielle Paketvorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; Export, ZIP-Struktur, Import/DryRun und sicherer UserDefined-Import sind jetzt reproduzierbar im Test geprueft. Ein dauerhaftes ZIP-Release-Artefakt ist noch nicht eingecheckt.
+- Die Templatepaket-Infrastruktur ist vorhanden und testseitig abgesichert. Fuer MEDISTAR + NIDEK ARK1S gibt es die offizielle Paketvorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; der Export erfolgt selektiv aus dem Schnittstellenprofil und nimmt nur die benoetigten Abhaengigkeiten auf. ZIP-Struktur, Import/DryRun und sicherer UserDefined-Import sind reproduzierbar im Test geprueft. Ein dauerhaftes ZIP-Release-Artefakt ist noch nicht eingecheckt.
 - Repository-Testdaten enthalten `nidek-ark1s-sample.xml` sowie generische GDT-Beispiele; fuer LM7/LM7P, NT530P und TOPCON liegen im Repository keine vollstaendigen Geraete-Beispieldateien.
 
 ## Matrix
 
 | Hersteller | Geraet | Typ | Status | Parser/Reader | Geraeteprofil | Tests | Templatepaket | AIS-Ziel | XDT-Anhang | Naechste sinnvolle Massnahme | Risiko / Unsicherheit |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| NIDEK | ARK1S | Autorefraktor | produktiv validiert | `XmlDeviceParser`, ARK1S-Testdatei | BuiltIn `device-nidek-ark1s-default` plus altes Standardprofil | Core-/Pipeline-, DeviceProfile-, ExportProfile-, ARK1S-TemplatePackage-Tests | offizielle Vorlage vorhanden; Export/Import reproduzierbar testgeprueft; ZIP-Release-Artefakt noch offen | MEDISTAR | validiert fuer externen Link | Release-Ablage fuer ZIP-Artefakt festlegen und praktische App-Importabnahme durchfuehren | Nicht durch neue Profil-/Templatearbeit regressieren |
+| NIDEK | ARK1S | Autorefraktor | produktiv validiert | `XmlDeviceParser`, ARK1S-Testdatei | BuiltIn `device-nidek-ark1s-default` plus altes Standardprofil | Core-/Pipeline-, DeviceProfile-, ExportProfile-, selektive ARK1S-TemplatePackage-Tests | offizielle Vorlage vorhanden; selektiver Export/Import reproduzierbar testgeprueft; ZIP-Release-Artefakt noch offen | MEDISTAR | validiert fuer externen Link | Release-Ablage fuer ZIP-Artefakt festlegen und praktische App-Importabnahme durchfuehren | Nicht durch neue Profil-/Templatearbeit regressieren |
 | NIDEK | LM7/LM7P | Lensmeter | vorbereitet / dokumentiert | XML-SourcePaths dokumentiert; Parser generisch XML | BuiltIn `device-nidek-lm7-default` | Definitionen und Exportprofil testseitig validiert | fehlt | MEDISTAR | optional / nicht geraetespezifisch validiert | Repraesentative LM7/LM7P-Dateien ins Testdatenkonzept bringen und fertiges Paket bauen | Linkes Auge, PD, Prisma-Notation und `Sphare`/`Sphere`-Variante brauchen Praxisabgleich |
 | NIDEK | NT530P | Tonometer / Pachymeter | vorbereitet / dokumentiert | XML-SourcePaths dokumentiert; Anhangbezug fachlich relevant | BuiltIn `device-nidek-nt530p-default` | Definitionen und Exportprofil testseitig validiert | fehlt | MEDISTAR | ja, wegen JPG-/Bildverweisen relevant, aber nicht produktiv validiert | Nach LM7 Datenlage pruefen: echte XML/JPG-Beispiele, Anhangfall und MEDISTAR-Ausgabe validieren | Attachment-Zuordnung, korrigierter IOP und Pachymetrieausgabe koennen fachlich abweichen |
 | TOPCON | CL300 | Lensmeter | vorbereitet / dokumentiert | JOIA/Ophthalmology-XML; Namespace-Normalisierung noch Risiko | BuiltIn `device-topcon-cl300-default` | Definitionen und Exportprofil testseitig validiert | fehlt | MEDISTAR | eher nein / optional | Echte CL300-Dateien sammeln und Namespace-/Measure-Pfade pruefen | Parser-Namespace-Verhalten und Prisma/Additionswerte sind noch nicht produktiv bestaetigt |
@@ -32,7 +32,7 @@ Ziel dieser Matrix ist eine schlanke Priorisierung: Anwender sollen moeglichst f
 
 ## Luecken fuer direkte Nutzung ohne Baukasten
 
-- Fertige Templatepaket-Dateien fehlen noch; fuer ARK1S sind Vorlage und technischer Export-/Import-Testweg vorhanden.
+- Fertige Templatepaket-Dateien fehlen noch; fuer ARK1S sind Vorlage, selektiver Export und technischer Export-/Import-Testweg vorhanden.
 - Fuer alle vorbereiteten Geraete ausser ARK1S fehlen Repository-Testdaten oder praktische Abnahmeprotokolle.
 - Ein BuiltIn-Schnittstellenprofil existiert nur fuer MEDISTAR + NIDEK ARK1S.
 - Bei TOPCON ist Namespace-/JOIA-Verhalten noch gezielt mit echten Dateien zu pruefen.

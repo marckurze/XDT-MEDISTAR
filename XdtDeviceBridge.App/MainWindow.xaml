@@ -504,19 +504,39 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <WrapPanel Grid.Row="0">
+                            <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="Templatepaket-Export"
+                                           FontWeight="Bold"
+                                           Margin="0,0,0,4"/>
+                                <DockPanel LastChildFill="True">
+                                    <TextBlock Text="Paketbasis:"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"/>
+                                    <ComboBox x:Name="TemplatePackageExportInterfaceProfileComboBox"
+                                              MinWidth="360"
+                                              DisplayMemberPath="Metadata.Name"
+                                              SelectionChanged="TemplatePackageExportInterfaceProfileComboBox_SelectionChanged"/>
+                                </DockPanel>
+                                <TextBlock x:Name="TemplatePackageExportSelectionHintText"
+                                           Text="Bitte ein Schnittstellenprofil als Paketbasis wählen."
+                                           Foreground="DimGray"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <WrapPanel Grid.Row="1">
                                 <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,8" Click="ExportTemplatePackage_Click"/>
                                 <Button x:Name="ImportTemplatePackageButton" Content="Templatepaket importieren" Width="190" Margin="0,0,16,8" Click="ImportTemplatePackage_Click"/>
                                 <Button Content="Neues AIS anlegen" Width="160" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
                                 <Button Content="Neues Gerät anlegen" Width="170" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
                                 <Button Content="Neues Exportprofil anlegen" Width="200" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
                             </WrapPanel>
-                            <TextBlock Grid.Row="1"
+                            <TextBlock Grid.Row="2"
                                        Text="Neue Geräte- und AIS-Profile werden später über einen Profil-Assistenten erstellt."
                                        Foreground="DimGray"
                                        TextWrapping="Wrap"/>
-                            <GroupBox Grid.Row="2"
+                            <GroupBox Grid.Row="3"
                                       Header="Templatepaket-Importvorschau"
                                       Margin="0,8,0,0">
                                 <Grid Margin="8">

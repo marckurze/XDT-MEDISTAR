@@ -120,6 +120,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Die kompakte Geraete-/Template-Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`.
 - Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; der technische Export-/Import-Testweg erzeugt die ZIP temporaer mit `TemplatePackageExporter`, prueft sie mit `TemplatePackageImporter` und deckt den UI-nahen Importvorschau-Pfad ab. Eine dauerhaft abgelegte ZIP-Paketdatei bleibt bis zur Release-Regel offen.
+- Der Templatepaket-Export ist auf eine schlanke V1-Auswahl umgestellt: Der Benutzer waehlt ein Schnittstellenprofil als Paketbasis, und das Paket enthaelt nur dieses Schnittstellenprofil plus referenziertes AIS-, Geraete- und Exportprofil.
 - BuiltIn-Profile werden nicht überschrieben.
 - UserDefined-Profile werden separat gespeichert.
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.

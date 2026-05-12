@@ -40,6 +40,7 @@ public partial class MainWindow : Window
     private readonly AppDataPathProvider _appDataPathProvider = new();
     private readonly ProfileCatalogService _profileCatalogService = new();
     private readonly TemplatePackageExporter _templatePackageExporter = new();
+    private readonly TemplatePackageExportSelectionService _templatePackageExportSelectionService = new();
     private readonly TemplatePackageImportDryRunService _templatePackageImportDryRunService = new();
     private readonly TemplatePackageImportPreviewDisplayService _templatePackageImportPreviewDisplayService = new();
     private readonly TemplatePackageImportPreviewService _templatePackageImportPreviewService = new();
@@ -155,6 +156,7 @@ public partial class MainWindow : Window
             InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
             ProfileBaseFolderText.Text = paths.BaseFolder;
             ShowProfileNameColumns(catalog);
+            InitializeTemplatePackageExportSelection(catalog);
             InitializeExportRulesView(catalog);
             InitializeInterfaceProfileConfiguration(catalog);
             InitializeAttachmentDiagnosticProfiles(catalog);
@@ -170,6 +172,8 @@ public partial class MainWindow : Window
             _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
             ClearProfileNameColumns();
+            TemplatePackageExportInterfaceProfileComboBox.ItemsSource = null;
+            TemplatePackageExportSelectionHintText.Text = "Keine Profile geladen.";
             ExportProfileComboBox.ItemsSource = null;
             InterfaceProfileComboBox.ItemsSource = null;
             BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
@@ -725,6 +729,28 @@ public partial class MainWindow : Window
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         ShowInterfaceProfileForSelectedProfile();
+    }
+
+    private void InitializeTemplatePackageExportSelection(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
+    {
+        var interfaceProfiles = catalog.InterfaceProfiles
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        TemplatePackageExportInterfaceProfileComboBox.ItemsSource = interfaceProfiles;
+        if (interfaceProfiles.Count == 0)
+        {
+            TemplatePackageExportInterfaceProfileComboBox.SelectedIndex = -1;
+            TemplatePackageExportSelectionHintText.Text = "Keine Schnittstellenprofile für den Templatepaket-Export geladen.";
+            return;
+        }
+
+        var selectedProfile = string.IsNullOrWhiteSpace(selectedInterfaceProfileId)
+            ? null
+            : interfaceProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedInterfaceProfileId, StringComparison.Ordinal));
+
+        TemplatePackageExportInterfaceProfileComboBox.SelectedItem = selectedProfile ?? interfaceProfiles[0];
+        UpdateTemplatePackageExportSelectionHint();
     }
 
     private void RefreshInterfaceActivationPreview_Click(object sender, RoutedEventArgs e)
@@ -1376,6 +1402,7 @@ public partial class MainWindow : Window
         ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
         InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
         ShowProfileNameColumns(catalog);
+        InitializeTemplatePackageExportSelection(catalog, selectedInterfaceProfileId);
         InitializeExportRulesView(catalog, selectedExportProfileId);
         InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
         InitializeAttachmentDiagnosticProfiles(catalog, selectedInterfaceProfileId);
@@ -3549,10 +3576,30 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (TemplatePackageExportInterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedInterfaceProfile)
+        {
+            AppendProfileMessage("Templatepaket kann nicht exportiert werden, weil kein Schnittstellenprofil als Paketbasis ausgewählt ist.");
+            return;
+        }
+
+        var selection = _templatePackageExportSelectionService.CreateForInterfaceProfile(
+            _profileCatalog,
+            selectedInterfaceProfile.Metadata.Id,
+            DateTimeOffset.UtcNow);
+        if (!selection.Success || selection.Request is null)
+        {
+            AppendProfileMessage(selection.ErrorMessage ?? "Templatepaket kann nicht exportiert werden.");
+            foreach (var message in selection.Messages)
+            {
+                AppendProfileMessage($"[Templatepaket-Export] {message}");
+            }
+            return;
+        }
+
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
-            FileName = "XdtDeviceBridge_MEDISTAR_NIDEK_ARK1S_Template.zip",
+            FileName = selection.SuggestedFileName,
             DefaultExt = ".zip",
             AddExtension = true,
             OverwritePrompt = true
@@ -3565,9 +3612,9 @@ public partial class MainWindow : Window
 
         try
         {
-            var request = CreateTemplatePackageExportRequest(_profileCatalog, DateTime.UtcNow);
-            _templatePackageExporter.Export(dialog.FileName, request);
+            _templatePackageExporter.Export(dialog.FileName, selection.Request);
             AppendProfileMessage($"Templatepaket erfolgreich exportiert: {dialog.FileName}");
+            AppendProfileMessage(FormatTemplatePackageExportSelection(selection.Request));
         }
         catch (Exception ex)
         {
@@ -3575,40 +3622,42 @@ public partial class MainWindow : Window
         }
     }
 
-    private static TemplatePackageExportRequest CreateTemplatePackageExportRequest(ProfileCatalog catalog, DateTime createdAtUtc)
+    private void TemplatePackageExportInterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        var includedProfiles = catalog.AisProfiles.Select(profile => profile.Metadata)
-            .Concat(catalog.DeviceProfiles.Select(profile => profile.Metadata))
-            .Concat(catalog.ExportProfiles.Select(profile => profile.Metadata))
-            .Concat(catalog.InterfaceProfiles.Select(profile => profile.Metadata))
-            .ToArray();
+        UpdateTemplatePackageExportSelectionHint();
+    }
 
-        var package = new TemplatePackage(
-            Metadata: new ProfileMetadata(
-                Id: "package-medistar-nidek-ark1s",
-                Name: "MEDISTAR + NIDEK ARK1S",
-                ProfileKind: ProfileKind.TemplatePackage,
-                Description: "Validated MEDISTAR/NIDEK ARK1S template package",
-                Vendor: "XdtDeviceBridge",
-                Product: "MEDISTAR/NIDEK ARK1S",
-                Version: "1.0.0",
-                CreatedAt: new DateTimeOffset(createdAtUtc),
-                UpdatedAt: new DateTimeOffset(createdAtUtc),
-                CreatedBy: Environment.UserName,
-                IsBuiltIn: false,
-                IsUserDefined: true),
-            IncludedProfiles: includedProfiles,
-            PackageFormatVersion: "1.0",
-            CreatedAt: createdAtUtc,
-            CreatedBy: Environment.UserName,
-            Description: "Validated MEDISTAR/NIDEK ARK1S template package");
+    private void UpdateTemplatePackageExportSelectionHint()
+    {
+        if (_profileCatalog is null)
+        {
+            TemplatePackageExportSelectionHintText.Text = "Keine Profile geladen.";
+            return;
+        }
 
-        return new TemplatePackageExportRequest(
-            Package: package,
-            AisProfiles: catalog.AisProfiles,
-            DeviceProfiles: catalog.DeviceProfiles,
-            ExportProfiles: catalog.ExportProfiles,
-            InterfaceProfiles: catalog.InterfaceProfiles);
+        if (TemplatePackageExportInterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedInterfaceProfile)
+        {
+            TemplatePackageExportSelectionHintText.Text = "Bitte ein Schnittstellenprofil als Paketbasis wählen.";
+            return;
+        }
+
+        var selection = _templatePackageExportSelectionService.CreateForInterfaceProfile(
+            _profileCatalog,
+            selectedInterfaceProfile.Metadata.Id,
+            DateTimeOffset.UtcNow);
+
+        TemplatePackageExportSelectionHintText.Text = selection.Success && selection.Request is not null
+            ? $"Enthält: AIS '{selection.Request.AisProfiles[0].Metadata.Name}', Gerät '{selection.Request.DeviceProfiles[0].Metadata.Name}', Exportprofil '{selection.Request.ExportProfiles[0].Metadata.Name}' und Schnittstellenprofil '{selection.Request.InterfaceProfiles[0].Metadata.Name}'."
+            : selection.ErrorMessage ?? "Templatepaket kann mit der aktuellen Auswahl nicht exportiert werden.";
+    }
+
+    private static string FormatTemplatePackageExportSelection(TemplatePackageExportRequest request)
+    {
+        return "Exportinhalt: "
+            + $"AIS '{request.AisProfiles[0].Metadata.Name}', "
+            + $"Gerät '{request.DeviceProfiles[0].Metadata.Name}', "
+            + $"Exportprofil '{request.ExportProfiles[0].Metadata.Name}', "
+            + $"Schnittstellenprofil '{request.InterfaceProfiles[0].Metadata.Name}'.";
     }
 
     private async void ImportTemplatePackage_Click(object sender, RoutedEventArgs e)
@@ -3978,6 +4027,7 @@ public partial class MainWindow : Window
         ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
         InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
         ShowProfileNameColumns(catalog);
+        InitializeTemplatePackageExportSelection(catalog);
         InitializeExportRulesView(catalog);
         InitializeInterfaceProfileConfiguration(catalog);
         InitializeAttachmentDiagnosticProfiles(catalog);

@@ -28,7 +28,9 @@ interfaces/<interface-profile-id>.json
 
 Der vorhandene `TemplatePackageImporter` liest genau diese Struktur wieder ein. Export, Import, Validierung, Konfliktanalyse, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme sind testseitig abgesichert. Die App-Importvorschau nutzt dafuer einen schlanken Preview-Service, damit der UI-Pfad dieselbe pruefbare Importstrecke verwendet.
 
-Der Test `MedistarNidekArk1sTemplatePackageTests` erzeugt das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und liest es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, enthaltene Profile, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen, der UI-nahe Preview-Pfad und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft. Die Vorschau zeigt bei uebersprungenen Schnittstellenprofilen jetzt einen deutschen Leerhinweis statt einer unverstaendlich leeren Abhaengigkeitstabelle.
+Der App-Export nutzt jetzt eine Schnittstellenprofil-Auswahl als Paketbasis. Fuer MEDISTAR + NIDEK ARK1S wird das vorhandene Schnittstellenprofil `interface-medistar-nidek-ark1s-default` gewaehlt; der Export nimmt automatisch nur das referenzierte MEDISTAR-AIS-Profil, das NIDEK-ARK1S-Geraeteprofil, das passende MEDISTAR-Exportprofil und dieses Schnittstellenprofil auf. Ein Vollkatalog-Export aller vorbereiteten Geraete ist nicht mehr der Standardweg.
+
+Die Tests erzeugen das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und lesen es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, selektiver Paketinhalt, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen, der UI-nahe Preview-Pfad und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft. Die Vorschau zeigt bei uebersprungenen Schnittstellenprofilen jetzt einen deutschen Leerhinweis statt einer unverstaendlich leeren Abhaengigkeitstabelle.
 
 Aktuell wird weiterhin keine manuell zusammengebaute ZIP-Datei eingecheckt. Ein dauerhaftes Release-Artefakt soll erst entstehen, wenn der Ablageort und der Release-Schritt fuer Templatepakete festgelegt sind.
 
@@ -122,6 +124,9 @@ Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
 
 - `package.json` und die Ordner `ais/`, `devices/`, `exports/`, `interfaces/`
 - genau die vier Referenzprofile fuer MEDISTAR + NIDEK ARK1S
+- keine nicht benoetigten LM7/LM7P-, NT530P- oder TOPCON-Profile
+- fehlende AIS-, Geraete- oder Exportprofil-Abhaengigkeiten blockieren den Export vor dem Schreiben der ZIP
+- der vorgeschlagene Dateiname ist `medistar-nidek-ark1s-v1.templatepackage.zip`
 - XDT-Anhang-Linkeinstellungen fuer `6302`, `6303`, optional `6304` und `6305`
 - keine offensichtlichen Live-Pfade, Kundenmarker oder Patientendatenmarker
 - UI-nahe Importvorschau kehrt zurueck und schreibt keine Profile
