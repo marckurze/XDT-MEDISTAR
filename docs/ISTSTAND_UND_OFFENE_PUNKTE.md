@@ -30,11 +30,12 @@ Besonders stabil wirken aktuell:
 - sichere Templatepaket-Importpipeline bis UserDefined-Uebernahme
 - Datei- und Paketlogik fuer stabile AIS-/Geraete-/XDT-Anhangdateien
 - neue kompakte Geraete-/Template-Matrix als Prioritaetenbasis
+- offizielle Paketvorlage fuer MEDISTAR + NIDEK ARK1S
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 - V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
-- fertige, auslieferbare Templatepakete fuer diese vorbereiteten Geraeteprofile
+- fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S ist die Vorlage vorhanden
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
 - UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
@@ -343,7 +344,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | --- | --- | --- | --- | --- | --- | --- |
 | hoch | E2E-Testplan praktisch weiter ausfuehren | Testplan, Durchfuehrungsschritte und Protokollvorlage sind vorhanden; MEDISTAR + ARK1S + Pflicht-XDT-Anhang wurde am 2026-05-11 praktisch bestanden dokumentiert. | Weitere manuelle Praxisprotokolle fuer die restlichen Testfaelle fehlen, insbesondere optionale Anhaenge, Mehrfachanhaenge, instabile Dateien und nicht unterstuetzte Dateien. | Restliche Faelle aus `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` abarbeiten. | Nicht getestete Randfaelle koennen im Praxisbetrieb auffallen. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
 | hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Pflicht-Anhang vorhanden/fehlt und MEDISTAR-Linkaufruf sind praktisch validiert. | Breitere Praxisabnahme mit optionalem Anhang, Mehrfachanhang, Archiv-/Fehlerablage und Wartezeiten. | Naechsten Praxislauf fuer optionale Anhaenge und Mehrfachanhang-Sicherheit protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in noch nicht getesteten Varianten auffallen. | E2E-Testplan, Testanhaenge |
-| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sechs Geraete vorhanden; praktisch validiert ist MEDISTAR + NIDEK ARK1S. Matrix ist in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` dokumentiert. | Fertige auslieferbare Templatepakete fehlen; fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | Zuerst ARK1S-Templatepaket ableiten, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
+| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sechs Geraete vorhanden; praktisch validiert ist MEDISTAR + NIDEK ARK1S. Matrix und ARK1S-Paketvorlage sind dokumentiert. | Reproduzierbar erzeugtes ARK1S-ZIP-Artefakt fehlt; fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | ARK1S-Vorlage mit `TemplatePackageExporter` als ZIP erzeugen, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
 | mittel | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht sind read-only vorhanden. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Vorerst parken; nur als Sicherheits-/Regressionsstand beibehalten. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | Profilkatalog, Evaluation, Guard |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
 | mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach konkreter Profil-/Templatepaket-Arbeit als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
@@ -390,7 +391,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 ### Phase 3: Fertige Geraeteprofile und Templatepakete
 
 - `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste nutzen.
-- MEDISTAR + NIDEK ARK1S stabil halten und daraus ein erstes offizielles Templatepaket ableiten.
+- MEDISTAR + NIDEK ARK1S stabil halten und die vorhandene Paketvorlage als reproduzierbares ZIP-Artefakt erzeugen.
 - NIDEK LM7/LM7P als naechstes Geraet anhand repraesentativer Dateien validieren.
 - NT530P und TOPCON-Profile erst nach Datenlage priorisieren.
 - Baukasten schlank halten; keine neue Assistentenarchitektur, solange fertige Profile und Pakete fehlen.
@@ -450,14 +451,15 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
 
-**Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S ableiten und dokumentieren.**
+**Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S als reproduzierbares ZIP-Artefakt erzeugen.**
 
 Konkreter Umfang:
 
 - keine Produktivlogik aendern
 - keine BuiltIn-Profile ueberschreiben
-- vorhandene ARK1S-Profile, Exportregeln und Testdaten als Referenz nutzen
-- klaeren, ob das Paket als Datei ins Repository soll oder zunaechst als erzeugbares Artefakt dokumentiert wird
+- vorhandene ARK1S-Paketvorlage als Spezifikation nutzen
+- Paket mit dem vorhandenen `TemplatePackageExporter` erzeugen
+- Paket mit `TemplatePackageImporter` testweise einlesen
 - danach LM7/LM7P-Dateien sammeln und gegen `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` validieren
 - danach Build und Tests ausfuehren
 

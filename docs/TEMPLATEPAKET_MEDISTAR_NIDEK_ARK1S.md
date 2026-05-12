@@ -1,0 +1,124 @@
+# Templatepaket MEDISTAR + NIDEK ARK1S
+
+Stand: 2026-05-12
+
+Status: offizielle V1-Paketvorlage, noch keine eingecheckte ZIP-Paketdatei
+
+## Zweck
+
+Dieses Dokument beschreibt das erste wiederverwendbare Referenzpaket fuer den praktisch validierten Workflow:
+
+```text
+MEDISTAR + NIDEK ARK1S
+```
+
+Der Workflow ist praktisch validiert, inklusive XDT-Anhang-Link ueber `6302`, `6303`, optional `6304` und `6305`. Das Paket soll Anwendern spaeter einen fertigen Startpunkt geben, damit der Baukasten nur fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen gebraucht wird.
+
+## Vorhandene Paketstruktur
+
+Das bestehende Projektformat fuer Templatepakete ist eine ZIP-Datei. Der vorhandene `TemplatePackageExporter` schreibt:
+
+```text
+package.json
+ais/<ais-profile-id>.json
+devices/<device-profile-id>.json
+exports/<export-profile-id>.json
+interfaces/<interface-profile-id>.json
+```
+
+Der vorhandene `TemplatePackageImporter` liest genau diese Struktur wieder ein. Export, Import, Validierung, Konfliktanalyse, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme sind testseitig abgesichert.
+
+Aktuell gibt es noch keinen gepflegten Repository-Schritt, der ein versioniertes ZIP-Artefakt reproduzierbar aus den BuiltIn-Profilen erzeugt. Deshalb wird in diesem Schritt bewusst keine manuell zusammengebaute ZIP-Datei eingecheckt. Diese Vorlage definiert das Paket exakt im vorhandenen Format; die echte Paketdatei soll im naechsten kleinen Schritt mit dem bestehenden `TemplatePackageExporter` reproduzierbar erzeugt werden.
+
+## Paketmetadaten
+
+Vorgeschlagene Metadaten fuer die spaetere Paketdatei:
+
+| Feld | Wert |
+| --- | --- |
+| Paket-ID | `package-medistar-nidek-ark1s-v1` |
+| Name | `MEDISTAR + NIDEK ARK1S Referenzpaket V1` |
+| Profilart | `TemplatePackage` |
+| Paketformat | `1.0` |
+| Version | `1.0.0` |
+| Hersteller / Ersteller | `XdtDeviceBridge` |
+| Produkt | `MEDISTAR/NIDEK ARK1S` |
+
+Beschreibung:
+
+```text
+Offizielles V1-Referenzpaket fuer den praktisch validierten Workflow MEDISTAR + NIDEK ARK1S. Enthaelt keine Kunden-/Patientendaten und keine Live-Pfade.
+```
+
+## Enthaltene Profile
+
+| Profilart | Profil-ID | Name | Status |
+| --- | --- | --- | --- |
+| AIS-Profil | `ais-medistar-default` | `MEDISTAR` | BuiltIn vorhanden |
+| Geraeteprofil | `device-nidek-ark1s-default` | `NIDEK ARK1S` | BuiltIn vorhanden, praktisch validierter Referenzworkflow |
+| Exportprofil | `export-medistar-nidek-ark1s-default` | `MEDISTAR + NIDEK ARK1S Export` | BuiltIn vorhanden |
+| Schnittstellenprofil | `interface-medistar-nidek-ark1s-default` | `MEDISTAR + NIDEK ARK1S` | BuiltIn vorhanden, inaktiv |
+
+## Fachlicher Umfang
+
+Das Paket bildet den validierten ARK1S-Standard ab:
+
+- MEDISTAR-GDT/XDT-Eingang
+- NIDEK-ARK1S-XML-Eingang
+- MEDISTAR-kompatibler XDT-Export
+- `8000 = 6310`
+- Patientendatenfelder, insbesondere `3000`, `3101`, `3102`, `3103`
+- `8402` Untersuchungsart aus AIS
+- `6228` Ergebniszeilen fuer rechts/links
+- vorbereitete XDT-Anhang-Linkfelder `6302`, `6303`, optional `6304`, `6305`
+
+Die praktische Validierung des Anhang-Links ist dokumentiert in `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`.
+
+## XDT-Anhang-Konfiguration
+
+Die vorhandene Schnittstellenprofil-Struktur enthaelt die Linkfeld-Vorlagen:
+
+| XDT-Feld | Bedeutung | Vorhandener Standard |
+| --- | --- | --- |
+| `6302` | Dokumentname / Anzeige in Karteikarte | `Datei` |
+| `6303` | Dateiformat | `{ExtensionUpperWithoutDot}` |
+| `6304` | Beschreibung, optional | leer |
+| `6305` | vollstaendiger Dateipfad / Pfadtemplate | `{Attachment.TargetFullPath}` |
+
+Wichtige Sicherheitsgrenze: Das Referenzpaket enthaelt keine Live-Pfade. Ordner fuer AIS-Import, Geraete-Import, Export, Archiv, Fehlerablage sowie XDT-Anhang-Import/-Export muessen nach dem Import anwenderspezifisch gesetzt und geprueft werden.
+
+## Import- und Sicherheitserwartung
+
+Beim Import muessen die bestehenden Sicherheitsregeln gelten:
+
+- BuiltIn-Profile werden nicht ueberschrieben.
+- Import erfolgt als UserDefined-Kopie oder sicherer Importplan.
+- Importierte Schnittstellenprofile werden nicht automatisch aktiv.
+- `IsAttachmentProcessingEnabled` wird bei importierten Schnittstellenprofilen deaktiviert.
+- `IsActive` bleibt aus.
+- Ordnerpfade muessen vor produktiver Nutzung geprueft werden.
+- Aktivierungslogik bleibt getrennt und wird durch das Paket nicht ausgefuehrt.
+- Es wird keine Verarbeitung gestartet.
+- Es werden keine Dateien kopiert, verschoben, geloescht oder erzeugt.
+
+## Keine Kundendaten
+
+Diese Vorlage und die spaetere Paketdatei duerfen nicht enthalten:
+
+- Patientendaten
+- Kundendaten
+- Praxisnamen
+- Live-System-Pfade
+- echte Serverfreigaben
+- echte Export-/Archiv-/Fehlerordner
+
+## Naechster kleiner Schritt
+
+1. Einen reproduzierbaren Erzeugungsweg fuer die Paketdatei definieren, der den vorhandenen `TemplatePackageExporter` nutzt.
+2. ZIP-Artefakt z. B. unter `template-packages/medistar-nidek-ark1s-v1.templatepackage.zip` erzeugen.
+3. Test ergaenzen, der das Paket mit `TemplatePackageImporter` einliest und prueft:
+   - erwartete vier Profile enthalten
+   - keine Live-Pfade enthalten
+   - Schnittstellenprofil inaktiv
+   - XDT-Anhang-Automatik nach Import nicht automatisch produktiv aktiv
+4. Build und Tests ausfuehren.

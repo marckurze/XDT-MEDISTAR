@@ -119,6 +119,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 ### Schnittstellenprofile und Templatepakete
 
 - Die kompakte Geraete-/Template-Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`.
+- Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; eine reproduzierbar erzeugte ZIP-Paketdatei ist der naechste kleine Schritt.
 - BuiltIn-Profile werden nicht überschrieben.
 - UserDefined-Profile werden separat gespeichert.
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
@@ -188,7 +189,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 - TOPCON CL300.
 - TOPCON KR800.
 - TOPCON TRK2P.
-- Fertige, auslieferbare Geraete-Templatepakete fuer diese vorbereiteten Profile.
+- Fertige, auslieferbare Geraete-Templatepakete als ZIP-Artefakte. Fuer ARK1S ist die Vorlage bereits dokumentiert.
 - `ReplaceExisting` für UserDefined-Profile.
 - Freie Konfliktlösungs-/Bearbeitungsdialoge.
 - Manuelle Zielnamen-/ID-Bearbeitung in der UI.
@@ -233,7 +234,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 ### Phase 2: Fertige Geraeteprofile und Templatepakete
 
 - MEDISTAR + NIDEK ARK1S als stabilen Referenzworkflow schuetzen.
-- Aus dem validierten ARK1S-Workflow ein eindeutig dokumentiertes erstes Templatepaket ableiten.
+- Aus der dokumentierten ARK1S-Paketvorlage ein reproduzierbar erzeugtes ZIP-Templatepaket ableiten.
 - NIDEK LM7/LM7P mit repraesentativen XML-Dateien validieren und als naechstes fertiges Profil-/Templatepaket vorbereiten.
 - NIDEK NT530P oder TOPCON-Profile nur dann priorisieren, wenn belastbare Beispiel- und Testdaten vorliegen.
 
@@ -278,7 +279,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 ## 6. Empfohlene nächste kleine Codex-Schritte
 
-1. Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S aus dem validierten Workflow ableiten.
+1. Erste offizielle ARK1S-Paketvorlage mit dem vorhandenen `TemplatePackageExporter` reproduzierbar als ZIP-Artefakt erzeugen.
 2. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
 3. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 4. Fuer LM7/LM7P ein fertiges Profil-/Templatepaket vorbereiten, wenn die Datenlage reicht.

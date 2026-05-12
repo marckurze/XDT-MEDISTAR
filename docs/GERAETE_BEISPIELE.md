@@ -960,7 +960,7 @@ Wichtig für die spätere Parser- und Profil-Logik:
 
 Empfohlene Reihenfolge für spätere Umsetzung:
 
-1. ARK1S stabil halten und aus dem validierten Workflow ein erstes offizielles Templatepaket ableiten.
+1. ARK1S stabil halten und die offizielle Paketvorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` als reproduzierbares ZIP-Templatepaket erzeugen.
 2. LM7/LM7P als naechstes fertiges Profil-/Templatepaket vorbereiten, sofern repraesentative Dateien die dokumentierten SourcePaths bestaetigen.
 3. NT530P untersuchen, weil dort Tonometrie, Pachymetrie und Geräte-Dateianhänge/externe AIS-Links relevant werden.
 4. TOPCON CL300, KR800 und TRK2P nach vorhandener Datenlage priorisieren; ohne belastbare Beispieldateien keine fachlichen Werte oder Templates erfinden.

@@ -374,7 +374,7 @@ Vorbereitet, aber noch nicht produktiv validiert:
 
 Wichtig: Diese V2-/BuiltIn-Profile sind vorbereitet und konfigurierbar, aber nicht im gleichen Sinne praktisch validiert wie MEDISTAR + NIDEK ARK1S.
 
-Die kompakte Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Aktuelle Prioritaet ist, aus dem validierten ARK1S-Workflow ein erstes offizielles Templatepaket abzuleiten und danach LM7/LM7P anhand repraesentativer Dateien praktisch nutzbar zu machen.
+Die kompakte Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Die erste offizielle Paketvorlage fuer den validierten ARK1S-Workflow steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`. Aktuelle Prioritaet ist, daraus ein reproduzierbar erzeugtes ZIP-Templatepaket abzuleiten und danach LM7/LM7P anhand repraesentativer Dateien praktisch nutzbar zu machen.
 
 ## 16. Lizenzsystem
 
@@ -429,6 +429,7 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 - `docs/PFLICHTENHEFT.md`: Anforderungen und Zielbild.
 - `docs/GERAETE_BEISPIELE.md`: Geraetebeispiele, SourcePaths und Interface-Manual-Auswertungen.
 - `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`: kompakte Matrix zu Geraeteprofilen, Templates, Validierungsstand und naechsten Prioritaeten.
+- `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`: offizielle Vorlage fuer das erste ARK1S-Referenzpaket im bestehenden Templatepaket-Format.
 - `docs/END_TO_END_TESTPLAN.md`: manueller und automatisierter Testplan fuer AIS-/Geraete-/XDT-Anhang-Verarbeitung.
 - `docs/PROJEKT_UEBERBLICK.md`: diese kompakte Uebergabedatei.
 
@@ -436,7 +437,7 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 
 An `docs/ROADMAP.md` orientierte naechste Schritte:
 
-1. Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S aus dem validierten Workflow ableiten.
+1. ARK1S-Paketvorlage mit dem vorhandenen `TemplatePackageExporter` als reproduzierbare ZIP-Paketdatei erzeugen.
 2. LM7/LM7P-Dateien sammeln und gegen die dokumentierten SourcePaths validieren.
 3. Wenn die Datenlage reicht: fertiges LM7/LM7P-Geraeteprofil plus Templatepaket vorbereiten.
 4. Danach NT530P oder TOPCON CL300/KR800/TRK2P nach Datenlage priorisieren.
@@ -473,13 +474,13 @@ Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn
 
 Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet und ruht vorerst. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> PreparationPreview. Angezeigt werden V1-relevante Vorschauinformationen: Status, Aktivierbarkeit nach V1, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung und keine Datei-/Ordneroperation.
 
-Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten.
+Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten. Die Vorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` beschreibt das erste ARK1S-Referenzpaket.
 
 Lizenzsystem: InstallationInfo, Lizenzanfrage, Lizenzimport, Statusanzeige, Bewertung lizenzpflichtiger aktiver Schnittstellenprofile und Karenzzeitmodell sind vorbereitet. Es gibt noch keine harte Lizenzsperre, keine Online-Lizenzierung und keine produktive Signaturpruefung.
 
 Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale Ordnerleerung, Exportordner nicht bereinigen, instabile Dateien nicht verarbeiten, mehrere XDT-Anhaenge nicht automatisch zuordnen, keine medizinische Bewertung, BuiltIns nicht ueberschreiben.
 
-Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
+Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S ableiten, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
+Naechste sinnvolle Schritte: ARK1S-Paketvorlage reproduzierbar als ZIP erzeugen, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
 ```
