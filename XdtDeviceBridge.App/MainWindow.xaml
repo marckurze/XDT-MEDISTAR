@@ -740,22 +740,30 @@
                                            Margin="0,0,8,8"
                                            ToolTip="Legt fest, wie AIS-Daten und Gerätewerte in eine Rückgabedatei geschrieben werden."/>
                                 <Grid Grid.Row="0" Grid.Column="1" Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ComboBox Grid.Column="0"
-                                              x:Name="ExportProfileComboBox"
-                                              DisplayMemberPath="Metadata.Name"
-                                              MinWidth="360"
+                                     <Grid.ColumnDefinitions>
+                                         <ColumnDefinition Width="*"/>
+                                         <ColumnDefinition Width="Auto"/>
+                                         <ColumnDefinition Width="Auto"/>
+                                     </Grid.ColumnDefinitions>
+                                     <ComboBox Grid.Column="0"
+                                               x:Name="ExportProfileComboBox"
+                                               DisplayMemberPath="Metadata.Name"
+                                               MinWidth="360"
                                               Margin="0,0,8,0"
                                               ToolTip="Legt fest, wie AIS-Daten und Gerätewerte in eine Rückgabedatei geschrieben werden."
                                               SelectionChanged="ExportProfileComboBox_SelectionChanged"/>
-                                    <Button Grid.Column="1"
-                                            Content="Neue Exportregel"
-                                            Width="150"
-                                            Click="AddDraftExportRule_Click"/>
-                                </Grid>
+                                     <Button Grid.Column="1"
+                                             Content="Neue Exportregel"
+                                             Width="150"
+                                             Margin="0,0,8,0"
+                                             Click="AddDraftExportRule_Click"/>
+                                     <Button Grid.Column="2"
+                                             x:Name="DeleteExportProfileButton"
+                                             Content="Exportprofil löschen"
+                                             Width="160"
+                                             Click="DeleteSelectedExportProfile_Click"
+                                             ToolTip="Löscht nur UserDefined-Exportprofile, wenn sie von keinem Schnittstellenprofil verwendet werden."/>
+                                 </Grid>
                                 <TextBlock Grid.Row="1"
                                            Grid.Column="0"
                                            Grid.ColumnSpan="2"
@@ -824,15 +832,22 @@
                                               VerticalAlignment="Center"
                                               ResizeDirection="Rows"
                                               ShowsPreview="True"/>
-                                <DockPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
-                                    <Button DockPanel.Dock="Right"
-                                            Content="Entwurf als neues Exportprofil speichern"
-                                            Width="260"
-                                            Margin="8,0,0,0"
-                                            Click="SaveDraftAsNewExportProfile_Click"
-                                            ToolTip="Speichert den aktuellen Entwurf als neues benutzerdefiniertes Exportprofil. Das ausgewählte Originalprofil wird nicht überschrieben."/>
-                                    <TextBlock DockPanel.Dock="Left"
-                                               Text="Neuer Profilname:"
+                                 <DockPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                     <Button DockPanel.Dock="Right"
+                                             Content="Entwurf als neues Exportprofil speichern"
+                                             Width="260"
+                                             Margin="8,0,0,0"
+                                             Click="SaveDraftAsNewExportProfile_Click"
+                                             ToolTip="Speichert den aktuellen Entwurf als neues benutzerdefiniertes Exportprofil. Das ausgewählte Originalprofil wird nicht überschrieben."/>
+                                     <Button DockPanel.Dock="Right"
+                                             x:Name="RemoveExportRuleButton"
+                                             Content="Exportregel entfernen"
+                                             Width="170"
+                                             Margin="8,0,0,0"
+                                             Click="RemoveSelectedExportRule_Click"
+                                             ToolTip="Entfernt eine ausgewählte Regel nur aus einem UserDefined-Exportprofil."/>
+                                     <TextBlock DockPanel.Dock="Left"
+                                                Text="Neuer Profilname:"
                                                FontWeight="Bold"
                                                VerticalAlignment="Center"
                                                Margin="0,0,8,0"/>

@@ -72,6 +72,25 @@ public sealed class ProfileCatalogService
         _repository.SaveExportProfileDefinition(filePath, profile);
     }
 
+    public void SaveExportProfileDefinition(AppDataPaths paths, ExportProfileDefinition profile, bool overwriteExisting)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        ArgumentNullException.ThrowIfNull(profile);
+
+        if (profile.Metadata.IsBuiltIn)
+        {
+            throw new InvalidOperationException("Built-in export profiles cannot be overwritten.");
+        }
+
+        var filePath = CreateProfilePath(GetExportsFolder(paths), profile.Metadata.Id);
+        if (!overwriteExisting && File.Exists(filePath))
+        {
+            throw new InvalidOperationException($"Export profile already exists and will not be overwritten: {profile.Metadata.Id}");
+        }
+
+        _repository.SaveExportProfileDefinition(filePath, profile);
+    }
+
     public void SaveNewAisProfile(AppDataPaths paths, AisProfile profile)
     {
         ArgumentNullException.ThrowIfNull(paths);
@@ -137,6 +156,35 @@ public sealed class ProfileCatalogService
         if (profile.Metadata.IsBuiltIn)
         {
             throw new InvalidOperationException("Built-in interface profiles cannot be deleted.");
+        }
+
+        File.Delete(filePath);
+        return true;
+    }
+
+    public bool DeleteExportProfile(AppDataPaths paths, string exportProfileId)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        EnsureExportProfileId(exportProfileId);
+
+        var exportsFolder = GetExportsFolder(paths);
+        var filePath = CreateProfilePath(exportsFolder, exportProfileId);
+        EnsureExportPathStaysInFolder(exportsFolder, filePath);
+
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+
+        var profile = _repository.LoadExportProfileDefinition(filePath);
+        if (profile.Metadata.IsBuiltIn)
+        {
+            throw new InvalidOperationException("Built-in export profiles cannot be deleted.");
+        }
+
+        if (!profile.Metadata.IsUserDefined)
+        {
+            throw new InvalidOperationException("Only user-defined export profiles can be deleted.");
         }
 
         File.Delete(filePath);
@@ -283,6 +331,21 @@ public sealed class ProfileCatalogService
         }
     }
 
+    private static void EnsureExportProfileId(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("Export profile id must not be empty.", nameof(id));
+        }
+
+        var fileName = $"{id}.json";
+        if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
+            || !string.Equals(Path.GetFileName(fileName), fileName, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Export profile id must be a safe file name.", nameof(id));
+        }
+    }
+
     private static void EnsurePathStaysInFolder(string folder, string filePath)
     {
         var fullFolder = Path.GetFullPath(folder);
@@ -294,6 +357,20 @@ public sealed class ProfileCatalogService
         if (!fullFilePath.StartsWith(folderWithSeparator, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Interface profile path must stay inside the interfaces profile folder.");
+        }
+    }
+
+    private static void EnsureExportPathStaysInFolder(string folder, string filePath)
+    {
+        var fullFolder = Path.GetFullPath(folder);
+        var fullFilePath = Path.GetFullPath(filePath);
+        var folderWithSeparator = fullFolder.EndsWith(Path.DirectorySeparatorChar)
+            ? fullFolder
+            : fullFolder + Path.DirectorySeparatorChar;
+
+        if (!fullFilePath.StartsWith(folderWithSeparator, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Export profile path must stay inside the exports profile folder.");
         }
     }
 

@@ -93,6 +93,7 @@ Der Tab `Profile & Templates` enthaelt:
 - Profiluebersicht
 - BuiltIn- und UserDefined-Profile
 - Exportprofil-Entwurf
+- sichere Wartung fuer UserDefined-Exportprofile und Exportregeln
 - Templatepaket Export/Import
 - Importvalidierung, Konfliktanalyse, Importplan, Dry-Run, Importvorschau und sichere UserDefined-Uebernahme
 - stabilisierte und verstaendlichere Importvorschau fuer Templatepakete; Fehler werden als Status angezeigt, waehrend der Vorschau kann kein zweiter Import parallel gestartet werden, Konflikte starten sicher mit `Ueberspringen`, Zielnamen fuer bewusst gewaehlte Kopien sind editierbar, und leere Abhaengigkeitstabellen zeigen einen kurzen deutschen Hinweis
@@ -110,6 +111,8 @@ Der Baukasten `Test & Vorschau` kann:
 Beim Baukasten-Testexport wird der Anhang physisch in den gewaehlt Testordner kopiert, waehrend `6305` in der XDT-Datei den simulierten Zielpfad aus dem Schnittstellenprofil verwendet. Exportprofile und BuiltIn-Profile werden dadurch nicht veraendert.
 
 Der Baukasten ist nicht der gewuenschte Standardweg fuer Anwender. Standard soll ein fertiges Geraeteprofil plus fertiges Templatepaket sein; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
+
+UserDefined-Exportprofile koennen im Tab `Profile & Templates` geloescht werden, solange kein Schnittstellenprofil sie verwendet. Exportregeln koennen aus UserDefined-Exportprofilen entfernt werden. BuiltIn-Exportprofile bleiben geschuetzt; es werden keine Schnittstellenprofile automatisch angepasst, keine Exportdateien geloescht und keine Verarbeitung gestartet.
 
 ### Schnittstellenprofile
 
@@ -328,7 +331,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | Paket-Wartelogik | Roadmap, Projektueberblick und E2E-Testplan beschreiben zweistufige Logik. | `AutoImportPackageStateService` und Coordinator bilden die Logik ab. | passt | Praktischen E2E-Testplan ausfuehren. |
 | XDT-Anhaenge | Dokumentation beschreibt sichere automatische Vorbereitung und Linkausgabe `6302` bis `6305`. | Services, Coordinator, ManualProcessor und Testexport enthalten diese Logik. | passt | In Architektur fruehere "nur vorbereitet"-Formulierungen glaetten. |
 | Baukasten Test & Vorschau | Projektueberblick beschreibt Dateiauswahl, simulierten 6305-Pfad und Testexport. | `BuilderTestExportService` und UI enthalten diese Funktion. | passt | Keine Aenderung noetig. |
-| Templatepaket-Export/-Import | Roadmap/Projektueberblick beschreiben selektiven Export, Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl und UserDefined-Uebernahme. | Export waehlt ein Schnittstellenprofil als Paketbasis und nimmt nur benoetigte Abhaengigkeiten auf; Import-Services, UI-Glue, stabilisierte Preview-Erstellung, sicherer Default `Ueberspringen`, editierbare Kopie-Zielnamen, deutscher Leerzustand fuer Abhaengigkeiten und E2E-nahe Tests sind vorhanden. | passt | Praktischen selektiven App-Export und erneuten App-Import pruefen; ReplaceExisting offen fuehren; Aktivierungsassistent vorerst parken. |
+| Templatepaket-Export/-Import und Exportprofil-Wartung | Roadmap/Projektueberblick beschreiben selektiven Export, Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl, UserDefined-Uebernahme und sichere UserDefined-Wartung. | Export waehlt ein Schnittstellenprofil als Paketbasis und nimmt nur benoetigte Abhaengigkeiten auf; Import-Services, UI-Glue, stabilisierte Preview-Erstellung, sicherer Default `Ueberspringen`, editierbare Kopie-Zielnamen, deutscher Leerzustand fuer Abhaengigkeiten und E2E-nahe Tests sind vorhanden. UserDefined-Exportprofile koennen nur unreferenziert geloescht werden; Exportregeln koennen nur aus UserDefined-Exportprofilen entfernt werden. | passt | Praktischen selektiven App-Export und erneuten App-Import pruefen; Loeschen/Entfernen mit UserDefined-Kopien testen; ReplaceExisting offen fuehren; Aktivierungsassistent vorerst parken. |
 | MEDISTAR/NIDEK ARK1S | Als validierter Kernworkflow beschrieben. | BuiltIn-Profile, Parser, Mapping und Tests vorhanden. | passt | Als stabilen Kern beibehalten. |
 | V2-Geraeteprofile | Als vorbereitet, nicht produktiv validiert beschrieben. | BuiltIn-Profile und Beispiel-Doku vorhanden; keine Praxisvalidierung behauptet. | passt | Pro Geraet Validierungsplan abarbeiten. |
 | Lizenzsystem | Anzeige, Lizenzdatei, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige und Karenzzeitservices; keine harte Durchsetzung. | passt | Signatur und Sperrregeln separat spezifizieren. |
@@ -471,4 +474,4 @@ Das ist der beste naechste Schritt, weil es den Baukasten vom Normalweg zum Ruec
 
 ## 10. Keine Produktivlogik-Aenderungen
 
-Dieser Abgleich beschreibt den aktuellen Stand. Ergaenzt wurde nur ein reproduzierbarer Testweg fuer das ARK1S-Templatepaket; Produktivlogik, UI, Profile, BuiltIn-Profile, Exportprofile und Verarbeitung wurden nicht geaendert.
+Dieser Abgleich beschreibt den aktuellen Stand. Produktivverarbeitung, Aktivierungslogik und BuiltIn-Profile bleiben unveraendert. Ergaenzt wurden reproduzierbare Templatepaket-Wege sowie schlanke UI-Funktionen fuer sichere UserDefined-Wartung im Profilbereich.

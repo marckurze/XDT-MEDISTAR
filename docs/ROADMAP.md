@@ -125,6 +125,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - UserDefined-Profile werden separat gespeichert.
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
 - Templatepaket-Export und Templatepaket-Import sind vorhanden.
+- UserDefined-Exportprofile koennen schlank gewartet werden: unreferenzierte UserDefined-Exportprofile lassen sich nach Sicherheitsabfrage loeschen, Exportregeln lassen sich nur aus UserDefined-Exportprofilen entfernen.
 - Importierte Templatepakete werden validiert.
 - Konflikte werden analysiert: gleiche ID, gleicher Name, BuiltIn-Schutz, UserDefined-Konflikte, fehlende Abhängigkeiten und prüfpflichtige Ordner-/XDT-Anhang-Einstellungen.
 - Aus der Analyse wird ein Importplan erzeugt.

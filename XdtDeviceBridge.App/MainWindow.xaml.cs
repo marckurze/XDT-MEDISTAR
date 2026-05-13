@@ -72,6 +72,8 @@ public partial class MainWindow : Window
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
+    private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
+    private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
     private readonly InterfaceProfileActivationEvaluationService _interfaceProfileActivationEvaluationService = new();
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
@@ -184,6 +186,7 @@ public partial class MainWindow : Window
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             ClearDraftRuleEditor();
+            UpdateExportProfileActionButtons();
             ClearPlaceholderTables();
             ClearInterfaceProfileEditor();
             ClearActiveInterfaceProfilesOverview("Aktive Schnittstellenprofile konnten nicht geladen werden.");
@@ -202,6 +205,7 @@ public partial class MainWindow : Window
             ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             ClearDraftRuleEditor();
+            UpdateExportProfileActionButtons();
             AppendProfileMessage("Keine Exportprofile geladen. Exportregeln können nicht angezeigt werden.");
             return;
         }
@@ -233,6 +237,7 @@ public partial class MainWindow : Window
             FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
             NewExportProfileNameTextBox.Text = string.Empty;
             ClearDraftRuleEditor();
+            UpdateExportProfileActionButtons();
             return;
         }
 
@@ -243,6 +248,7 @@ public partial class MainWindow : Window
         ExportRulesGrid.SelectedIndex = _visibleExportRules.Count > 0 ? 0 : -1;
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
+        UpdateExportProfileActionButtons();
     }
 
     private void RebuildExportRulesGrid(ExportProfileDefinition exportProfile, string? selectedRuleId = null)
@@ -272,6 +278,158 @@ public partial class MainWindow : Window
         LoadDraftFromSelectedRule();
         ShowExportRulePreviewForSelectedRule();
         ShowFullExportPreviewForSelectedProfile();
+        UpdateExportProfileActionButtons();
+    }
+
+    private void UpdateExportProfileActionButtons()
+    {
+        var exportProfileIsUserDefined = ExportProfileComboBox.SelectedItem is ExportProfileDefinition exportProfile
+            && exportProfile.Metadata.IsUserDefined
+            && !exportProfile.Metadata.IsBuiltIn;
+
+        DeleteExportProfileButton.IsEnabled = exportProfileIsUserDefined;
+        RemoveExportRuleButton.IsEnabled = exportProfileIsUserDefined
+            && ExportRulesGrid.SelectedItem is ExportRuleDefinition;
+    }
+
+    private void DeleteSelectedExportProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (_profileCatalog is null)
+        {
+            AppendProfileMessage("Exportprofil kann nicht gelöscht werden, weil keine Profile geladen sind.");
+            return;
+        }
+
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            AppendProfileMessage("Exportprofil kann nicht gelöscht werden, weil kein Exportprofil ausgewählt ist.");
+            return;
+        }
+
+        var evaluation = _exportProfileDeletionService.Evaluate(_profileCatalog, exportProfile.Metadata.Id);
+        if (!evaluation.Success)
+        {
+            AppendProfileMessage(evaluation.Message);
+            return;
+        }
+
+        var confirmation = System.Windows.MessageBox.Show(
+            this,
+            $"Exportprofil '{exportProfile.Metadata.Name}' wirklich löschen?\n\nDiese Aktion entfernt nur das UserDefined-Profil. Es werden keine Exportdateien gelöscht, keine Ordner bereinigt und keine Verarbeitung gestartet.",
+            "Exportprofil löschen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            AppendProfileMessage("Exportprofil wurde nicht gelöscht.");
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var result = _exportProfileDeletionService.Delete(_profileCatalog, paths, exportProfile.Metadata.Id);
+            if (!result.Success)
+            {
+                AppendProfileMessage(result.Message);
+                return;
+            }
+
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(catalog);
+            AppendProfileMessage(result.Message);
+            AppendProfileMessage("Es wurden keine Schnittstellenprofile verändert und keine Exportdateien gelöscht.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Exportprofil konnte nicht gelöscht werden: {ex.Message}");
+        }
+    }
+
+    private void RemoveSelectedExportRule_Click(object sender, RoutedEventArgs e)
+    {
+        if (_profileCatalog is null)
+        {
+            AppendProfileMessage("Exportregel kann nicht entfernt werden, weil keine Profile geladen sind.");
+            return;
+        }
+
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            AppendProfileMessage("Exportregel kann nicht entfernt werden, weil kein Exportprofil ausgewählt ist.");
+            return;
+        }
+
+        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition selectedRule)
+        {
+            AppendProfileMessage("Exportregel kann nicht entfernt werden, weil keine Exportregel ausgewählt ist.");
+            return;
+        }
+
+        var draftRule = _temporaryExportRules.FirstOrDefault(rule =>
+            string.Equals(rule.Id, selectedRule.Id, StringComparison.OrdinalIgnoreCase));
+        if (draftRule is not null)
+        {
+            _temporaryExportRules.Remove(draftRule);
+            RebuildExportRulesGrid(exportProfile);
+            AppendProfileMessage("Entwurfsregel entfernt. Es wurde kein Exportprofil gespeichert.");
+            return;
+        }
+
+        var evaluation = _exportRuleRemovalService.Evaluate(
+            _profileCatalog,
+            exportProfile.Metadata.Id,
+            selectedRule.Id,
+            DateTimeOffset.UtcNow);
+        if (!evaluation.Success)
+        {
+            AppendProfileMessage(evaluation.Message);
+            foreach (var issue in evaluation.Issues)
+            {
+                AppendProfileMessage($"[Exportregel entfernen] {issue}");
+            }
+
+            return;
+        }
+
+        var confirmation = System.Windows.MessageBox.Show(
+            this,
+            $"Exportregel '{selectedRule.TargetName}' wirklich entfernen?\n\nDie Änderung betrifft nur dieses UserDefined-Exportprofil. Es werden keine Exportdateien gelöscht, keine Ordner bereinigt und keine Verarbeitung gestartet.",
+            "Exportregel entfernen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            AppendProfileMessage("Exportregel wurde nicht entfernt.");
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var result = _exportRuleRemovalService.Remove(
+                _profileCatalog,
+                paths,
+                exportProfile.Metadata.Id,
+                selectedRule.Id,
+                DateTimeOffset.UtcNow);
+            if (!result.Success || result.UpdatedProfile is null)
+            {
+                AppendProfileMessage(result.Message);
+                return;
+            }
+
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(catalog, selectedExportProfileId: result.UpdatedProfile.Metadata.Id);
+            AppendProfileMessage(result.Message);
+            AppendProfileMessage("Es wurden keine anderen Profile verändert und keine Verarbeitung gestartet.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Exportregel konnte nicht entfernt werden: {ex.Message}");
+        }
     }
 
     private void AddDraftExportRule_Click(object sender, RoutedEventArgs e)
