@@ -283,13 +283,40 @@ public partial class MainWindow : Window
 
     private void UpdateExportProfileActionButtons()
     {
-        var exportProfileIsUserDefined = ExportProfileComboBox.SelectedItem is ExportProfileDefinition exportProfile
-            && exportProfile.Metadata.IsUserDefined
-            && !exportProfile.Metadata.IsBuiltIn;
+        if (_profileCatalog is null || ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
+        {
+            DeleteExportProfileButton.IsEnabled = false;
+            DeleteExportProfileButton.ToolTip = "Bitte zuerst ein Exportprofil auswählen.";
+            RemoveExportRuleButton.IsEnabled = false;
+            RemoveExportRuleButton.ToolTip = "Bitte zuerst ein Exportprofil und eine Exportregel auswählen.";
+            return;
+        }
 
-        DeleteExportProfileButton.IsEnabled = exportProfileIsUserDefined;
-        RemoveExportRuleButton.IsEnabled = exportProfileIsUserDefined
-            && ExportRulesGrid.SelectedItem is ExportRuleDefinition;
+        var deletionEvaluation = _exportProfileDeletionService.Evaluate(_profileCatalog, exportProfile.Metadata.Id);
+        DeleteExportProfileButton.IsEnabled = deletionEvaluation.Success;
+        DeleteExportProfileButton.ToolTip = deletionEvaluation.Success
+            ? "Löscht dieses UserDefined-Exportprofil. Es werden keine Exportdateien oder Ordner gelöscht."
+            : deletionEvaluation.Message;
+
+        if (exportProfile.Metadata.IsBuiltIn)
+        {
+            RemoveExportRuleButton.IsEnabled = false;
+            RemoveExportRuleButton.ToolTip = "Exportregeln in BuiltIn-Exportprofilen können nicht entfernt werden.";
+            return;
+        }
+
+        if (!exportProfile.Metadata.IsUserDefined)
+        {
+            RemoveExportRuleButton.IsEnabled = false;
+            RemoveExportRuleButton.ToolTip = "Exportregeln können nur aus UserDefined-Exportprofilen entfernt werden.";
+            return;
+        }
+
+        var hasSelectedRule = ExportRulesGrid.SelectedItem is ExportRuleDefinition;
+        RemoveExportRuleButton.IsEnabled = hasSelectedRule;
+        RemoveExportRuleButton.ToolTip = hasSelectedRule
+            ? "Entfernt die ausgewählte Exportregel aus diesem UserDefined-Exportprofil."
+            : "Bitte zuerst eine Exportregel auswählen.";
     }
 
     private void DeleteSelectedExportProfile_Click(object sender, RoutedEventArgs e)

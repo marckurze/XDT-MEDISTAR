@@ -112,7 +112,7 @@ Beim Baukasten-Testexport wird der Anhang physisch in den gewaehlt Testordner ko
 
 Der Baukasten ist nicht der gewuenschte Standardweg fuer Anwender. Standard soll ein fertiges Geraeteprofil plus fertiges Templatepaket sein; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
-UserDefined-Exportprofile koennen im Tab `Profile & Templates` geloescht werden, solange kein Schnittstellenprofil sie verwendet. Exportregeln koennen aus UserDefined-Exportprofilen entfernt werden. BuiltIn-Exportprofile bleiben geschuetzt; es werden keine Schnittstellenprofile automatisch angepasst, keine Exportdateien geloescht und keine Verarbeitung gestartet.
+UserDefined-Exportprofile koennen im Tab `Profile & Templates` geloescht werden, solange kein Schnittstellenprofil sie verwendet. Exportregeln koennen aus UserDefined-Exportprofilen entfernt werden. Die Buttons sind nach Regel-Aktionen und Profil-Aktionen gruppiert; deaktivierte Loeschaktionen zeigen per Tooltip den Schutzgrund. BuiltIn-Exportprofile bleiben geschuetzt; es werden keine Schnittstellenprofile automatisch angepasst, keine Exportdateien geloescht und keine Verarbeitung gestartet.
 
 ### Schnittstellenprofile
 
