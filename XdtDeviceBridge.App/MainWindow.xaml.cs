@@ -93,6 +93,8 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, bool> _monitoringDetailsExpandedByProfileId = new(StringComparer.OrdinalIgnoreCase);
+    private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
+    private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -140,6 +142,7 @@ public partial class MainWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         StopPeriodicScan(updateUi: false);
+        CloseAllFloatingMonitoringWindows();
         base.OnClosing(e);
     }
 
@@ -2618,6 +2621,7 @@ public partial class MainWindow : Window
     {
         _activeInterfaceProfileStatusRows.Clear();
         _interfaceMonitoringCards.Clear();
+        CloseAllFloatingMonitoringWindows();
         ActiveInterfaceProfilesStatusText.Text = message;
     }
 
@@ -2632,7 +2636,7 @@ public partial class MainWindow : Window
             {
                 var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
                 var runtimeCard = GetRuntimeMonitoringCard(row);
-                desiredCards.Add(runtimeCard with
+                var desiredCard = runtimeCard with
                 {
                     CurrentStatus = runtimeState.CurrentStatus,
                     StatusClass = runtimeState.StatusClass,
@@ -2640,9 +2644,19 @@ public partial class MainWindow : Window
                     IsScanAnimationActive = isMonitoringActive,
                     AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein",
                     IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId)
-                });
+                };
+                var floatingState = _floatingWindowStateService.GetOrCreate(row.MonitoringCard.InterfaceProfileId);
+                if (floatingState.IsDetached)
+                {
+                    ShowOrUpdateFloatingMonitoringWindow(desiredCard, floatingState);
+                    continue;
+                }
+
+                CloseFloatingMonitoringWindow(row.MonitoringCard.InterfaceProfileId);
+                desiredCards.Add(desiredCard);
             }
 
+            CloseRemovedFloatingMonitoringWindows();
             SynchronizeMonitoringCards(desiredCards);
         }
         finally
@@ -2695,6 +2709,166 @@ public partial class MainWindow : Window
         }
 
         return -1;
+    }
+
+    private void DetachMonitoringCard_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element
+            || element.DataContext is not InterfaceMonitoringCardDisplay card)
+        {
+            return;
+        }
+
+        var state = _floatingWindowStateService.Detach(card.InterfaceProfileId);
+        ShowOrUpdateFloatingMonitoringWindow(card, state);
+        RefreshInterfaceMonitoringCards();
+        AppendMonitoringEvent(
+            card.InterfaceProfileId,
+            "monitoring-card-detached",
+            $"{card.InterfaceProfileName}: Gerätekarte abgedockt.");
+    }
+
+    private void DockFloatingMonitoringCard(string interfaceProfileId)
+    {
+        var state = _floatingWindowStateService.Dock(interfaceProfileId);
+        _ = state;
+        CloseFloatingMonitoringWindow(interfaceProfileId);
+        RefreshInterfaceMonitoringCards();
+
+        var profileName = _interfaceMonitoringRuntimeCards.TryGetValue(interfaceProfileId, out var card)
+            ? card.InterfaceProfileName
+            : interfaceProfileId;
+        AppendMonitoringEvent(
+            interfaceProfileId,
+            "monitoring-card-docked",
+            $"{profileName}: Gerätekarte wieder angedockt.");
+    }
+
+    private void ShowOrUpdateFloatingMonitoringWindow(
+        InterfaceMonitoringCardDisplay card,
+        InterfaceProfileFloatingWindowState state)
+    {
+        if (!_floatingMonitoringWindows.TryGetValue(card.InterfaceProfileId, out var window))
+        {
+            window = new FloatingInterfaceProfileWindow(card.InterfaceProfileId)
+            {
+                Owner = this
+            };
+            window.DockRequested += FloatingMonitoringWindow_DockRequested;
+            window.PinChanged += FloatingMonitoringWindow_PinChanged;
+            window.PositionMemoryChanged += FloatingMonitoringWindow_PositionMemoryChanged;
+            window.PositionRememberRequested += FloatingMonitoringWindow_PositionRememberRequested;
+            _floatingMonitoringWindows[card.InterfaceProfileId] = window;
+            ApplyFloatingWindowPlacement(window, state);
+            window.Show();
+        }
+
+        window.Title = card.InterfaceProfileName;
+        window.DataContext = card;
+        window.ApplyState(state);
+        if (!window.IsVisible)
+        {
+            window.Show();
+        }
+    }
+
+    private static void ApplyFloatingWindowPlacement(
+        FloatingInterfaceProfileWindow window,
+        InterfaceProfileFloatingWindowState state)
+    {
+        if (!state.IsPositionMemoryEnabled || state.Bounds is null)
+        {
+            return;
+        }
+
+        window.WindowStartupLocation = WindowStartupLocation.Manual;
+        window.Left = state.Bounds.Left;
+        window.Top = state.Bounds.Top;
+        window.Width = Math.Max(window.MinWidth, state.Bounds.Width);
+        window.Height = Math.Max(window.MinHeight, state.Bounds.Height);
+    }
+
+    private void FloatingMonitoringWindow_DockRequested(object? sender, EventArgs e)
+    {
+        if (sender is FloatingInterfaceProfileWindow window)
+        {
+            DockFloatingMonitoringCard(window.InterfaceProfileId);
+        }
+    }
+
+    private void FloatingMonitoringWindow_PinChanged(object? sender, bool isPinned)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        var state = _floatingWindowStateService.SetPinned(window.InterfaceProfileId, isPinned);
+        window.ApplyState(state);
+    }
+
+    private void FloatingMonitoringWindow_PositionMemoryChanged(object? sender, bool isEnabled)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        var state = _floatingWindowStateService.SetPositionMemoryEnabled(window.InterfaceProfileId, isEnabled);
+        window.ApplyState(state);
+    }
+
+    private void FloatingMonitoringWindow_PositionRememberRequested(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        var bounds = window.CaptureBounds();
+        var state = _floatingWindowStateService.RememberPosition(
+            window.InterfaceProfileId,
+            bounds.Left,
+            bounds.Top,
+            bounds.Width,
+            bounds.Height);
+        window.ApplyState(state);
+    }
+
+    private void CloseFloatingMonitoringWindow(string interfaceProfileId)
+    {
+        if (!_floatingMonitoringWindows.Remove(interfaceProfileId, out var window))
+        {
+            return;
+        }
+
+        window.DockRequested -= FloatingMonitoringWindow_DockRequested;
+        window.PinChanged -= FloatingMonitoringWindow_PinChanged;
+        window.PositionMemoryChanged -= FloatingMonitoringWindow_PositionMemoryChanged;
+        window.PositionRememberRequested -= FloatingMonitoringWindow_PositionRememberRequested;
+        window.CloseWithoutDockRequest();
+    }
+
+    private void CloseRemovedFloatingMonitoringWindows()
+    {
+        var activeIds = _activeInterfaceProfileStatusRows
+            .Select(row => row.MonitoringCard.InterfaceProfileId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var interfaceProfileId in _floatingMonitoringWindows.Keys.ToArray())
+        {
+            if (!activeIds.Contains(interfaceProfileId))
+            {
+                CloseFloatingMonitoringWindow(interfaceProfileId);
+            }
+        }
+    }
+
+    private void CloseAllFloatingMonitoringWindows()
+    {
+        foreach (var interfaceProfileId in _floatingMonitoringWindows.Keys.ToArray())
+        {
+            CloseFloatingMonitoringWindow(interfaceProfileId);
+        }
     }
 
     private bool GetMonitoringDetailsExpanded(string interfaceProfileId)

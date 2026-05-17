@@ -464,6 +464,8 @@ Praktisch validiert ist MEDISTAR + NIDEK ARK1S: AIS-GDT/XDT einlesen, NIDEK ARK1
 
 Die Haupt-Tabs sind Verarbeitung, Profile & Templates, Schnittstellenprofile und Lizenz. Verarbeitung ist der Betriebsbereich mit Schnittstellen-Monitor, aktiven Schnittstellenprofilen, manuell startbarer Ueberwachung, automatischer Verarbeitung per Haken, Paketstatus und Monitoring-Ereignissen.
 
+Im Tab Verarbeitung ist die erste Grundlage fuer abdockbare Geraeteanbindungsfenster vorhanden: Jede Monitoring-Karte kann manuell als eigenes Fenster geoeffnet und wieder angedockt werden. Pin und Positionsmerken arbeiten pro Schnittstellenprofil als UI-Zustand fuer die aktuelle Sitzung. Systray-Betrieb, automatisches Abdocken bei Dateieingang, automatisches Zurueckdocken und Neustart-Persistenz sind noch nicht umgesetzt.
+
 Profile & Templates ist der Profil- und Templatebereich. Standardziel ist fertiges Geraeteprofil plus fertiges Templatepaket; der Baukasten Test & Vorschau bleibt fuer Sonderfaelle, Tests und kundenspezifische Anpassungen.
 
 XDT-Anhaenge fuer AIS sind fuer den validierten MEDISTAR/ARK1S-Pflicht-Anhang-Praxislauf praktisch bestaetigt. Unterstuetzt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT. Externe Linkfelder sind 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung optional und 6305 vollstaendiger Dateipfad. XDT-Längenpraefixe erzeugt der XdtExportBuilder zentral, nicht die UI.
@@ -488,5 +490,5 @@ Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale 
 
 Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md, docs/TEMPLATEPAKET_RELEASE_REGEL.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: Release-Regel fuer ARK1S- und AR360-ZIP-Artefakte anwenden, optional den AR360-XDT-Anhangfall separat testen, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
+Naechste sinnvolle Schritte: abdockbare Geraeteanbindungsfenster praktisch mit AR360/ARK1S testen, Release-Regel fuer ARK1S- und AR360-ZIP-Artefakte anwenden, optional den AR360-XDT-Anhangfall separat testen, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
 ```

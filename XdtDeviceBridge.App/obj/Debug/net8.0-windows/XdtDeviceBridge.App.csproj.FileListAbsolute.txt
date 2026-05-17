@@ -31,3 +31,5 @@ C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.dll
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.App.pdb
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\InterfaceProfileActivationPreparationPreviewWindow.baml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\InterfaceProfileActivationPreparationPreviewWindow.g.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\FloatingInterfaceProfileWindow.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\FloatingInterfaceProfileWindow.g.cs

@@ -23,6 +23,7 @@
 - NIDEK AR360 / AR-360A als testgestuetzten Auto-Refraktometer-Kandidaten ergaenzt: BuiltIn-Geraeteprofil, MEDISTAR-Exportprofil, Schnittstellenprofil, ARMedian-XML-Fixtures, UTF-16-Lesetest und selektiver Templatepaket-Test.
 - Praktische MEDISTAR-Validierung fuer NIDEK AR360 dokumentiert und testseitig abgesichert: `8402 = AR360`, rechte/linke `6228`-Auto-Refraktor-Zeilen, ARMedian-Achse `172` und `VD= 12.00 mm`.
 - AR360-Referenzpakettest analog zu ARK1S ergaenzt: selektiver Export, ZIP-Struktur, Importvorschau, DryRun, sichere UserDefined-Kopie, inaktive Schnittstellenprofile und deaktiviertes `IsAttachmentProcessingEnabled` werden reproduzierbar geprueft.
+- Erste Grundlage fuer abdockbare Geraeteanbindungsfenster im Tab `Verarbeitung` ergaenzt: Monitoring-Karten koennen manuell abgedockt und wieder angedockt werden; Pin und Positionsmerken sind pro Schnittstellenprofil als UI-Zustand vorbereitet.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
@@ -33,6 +34,10 @@
 - Abhaengigkeitsauflösung und Importzusammenfassung im Templatepaket-Import klarer formuliert, inklusive Hinweis auf Zielbereiche fuer importierte Profile und weiterhin fehlende automatische Aktivierung.
 - Templatepaket-Importvorschau weiter verstaendlicht: leere Abhaengigkeitsauflösung zeigt nun einen deutschen Leerzustand, sichtbare Hinweise/Warnungen sind deutsch lokalisiert und doppelte Hinweise werden reduziert.
 - Button-Anordnung im Bereich `Exportregeln` verstaendlicher gruppiert: Regel-Aktionen stehen bei der Regelliste, Exportprofil-Speichern/-Loeschen beim Profilentwurf; deaktivierte Loeschbuttons erklaeren BuiltIn- oder Referenzschutz per Tooltip.
+
+### Nicht umgesetzt
+
+- Abdockbare Geraeteanbindungsfenster starten noch nicht automatisch bei Dateieingang, es gibt noch kein Systray-Verhalten und kein automatisches Zurueckdocken.
 
 ### Dokumentation
 

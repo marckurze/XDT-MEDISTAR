@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\App.xaml
-2-124540152
+31554643721
 
-62131770459
+72099540046
 209483516507
-InterfaceProfileActivationPreparationPreviewWindow.xaml;MainWindow.xaml;
+FloatingInterfaceProfileWindow.xaml;InterfaceProfileActivationPreparationPreviewWindow.xaml;MainWindow.xaml;
 
 False
 
