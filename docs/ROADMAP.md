@@ -155,7 +155,8 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Pin setzt das Floating-Fenster pro Profil in den Vordergrund; Positionsmerken speichert Position, Groesse und Abdockstatus persistent als UI-State unter AppData.
 - Persistierte Floating-Fenster werden erst nach der sicheren MainWindow-Anzeige wiederhergestellt; falls ein Restore fehlschlaegt, wird die Karte angedockt statt die App zu blockieren.
 - Schliessen per `X` dockt sicher zurueck. Radar-/Scanbalken und `-`/`+`-Scanintervallsteuerung sind im Floating-Fenster sichtbar.
-- Noch nicht enthalten sind Systray-Betrieb, automatisches Abdocken bei Dateiempfang, automatisches Zurueckdocken und einstellbare Rueckdock-Zeit.
+- Erste automatische Oeffnung ist vorhanden: relevante Monitoring-Aktivitaet wie AIS-/Geraetedatei, Anhang-/Paketstatus oder Verarbeitungsergebnis dockt nur das betroffene Floating-Fenster ab und bringt es nach vorne.
+- Noch nicht enthalten sind Systray-Betrieb, automatisches Zurueckdocken und einstellbare Rueckdock-Zeit.
 - Die Funktion bleibt reine UI-Funktion und aendert keine Verarbeitung, keine Profile, keine Datei-/Ordnerlogik und kein Aktivierungsmodell.
 
 ### Aktivierungsassistent fuer importierte Schnittstellenprofile
@@ -299,7 +300,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 ## 6. Empfohlene nächste kleine Codex-Schritte
 
 1. Release-Regel aus `docs/TEMPLATEPAKET_RELEASE_REGEL.md` fuer ARK1S und AR360 anwenden, praktische App-Importabnahme bestaetigen und danach offizielle ZIP-Artefakte ablegen.
-2. Abdockbare Geraeteanbindungsfenster praktisch mit AR360 und ARK1S testen: Abdocken, Pin, Position merken, Neustart-Wiederherstellung, Schliessen als Andocken, Radar und `-`/`+`.
+2. Abdockbare Geraeteanbindungsfenster praktisch mit AR360 und ARK1S testen: manuelles Abdocken, Auto-Oeffnung bei Monitoring-Aktivitaet, Pin, Position merken, Neustart-Wiederherstellung, Schliessen als Andocken, Radar und `-`/`+`.
 3. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
 4. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 5. Fuer LM7/LM7P ein fertiges Profil-/Templatepaket vorbereiten, wenn die Datenlage reicht.

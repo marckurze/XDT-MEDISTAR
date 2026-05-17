@@ -24,6 +24,7 @@
 - Praktische MEDISTAR-Validierung fuer NIDEK AR360 dokumentiert und testseitig abgesichert: `8402 = AR360`, rechte/linke `6228`-Auto-Refraktor-Zeilen, ARMedian-Achse `172` und `VD= 12.00 mm`.
 - AR360-Referenzpakettest analog zu ARK1S ergaenzt: selektiver Export, ZIP-Struktur, Importvorschau, DryRun, sichere UserDefined-Kopie, inaktive Schnittstellenprofile und deaktiviertes `IsAttachmentProcessingEnabled` werden reproduzierbar geprueft.
 - Erste Grundlage fuer abdockbare Geraeteanbindungsfenster im Tab `Verarbeitung` ergaenzt: Monitoring-Karten koennen manuell abgedockt und wieder angedockt werden; Pin und Positionsmerken sind pro Schnittstellenprofil als UI-Zustand vorbereitet.
+- Erste Stufe fuer automatisches Abdocken bei Monitoring-Aktivitaet ergaenzt: AIS-/Geraete-/Anhang-/Paket- und Verarbeitungsevents oeffnen nur das betroffene Geraetefenster und nutzen einen kurzen Cooldown gegen Event-Spam.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
@@ -42,7 +43,7 @@
 
 ### Nicht umgesetzt
 
-- Abdockbare Geraeteanbindungsfenster starten noch nicht automatisch bei Dateieingang, es gibt noch kein Systray-Verhalten und kein automatisches Zurueckdocken.
+- Noch nicht enthalten sind Systray-Verhalten, automatisches Zurueckdocken und eine einstellbare Rueckdock-Zeit fuer abdockbare Geraeteanbindungsfenster.
 
 ### Dokumentation
 

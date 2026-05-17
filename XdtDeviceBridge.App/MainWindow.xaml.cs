@@ -75,6 +75,7 @@ public partial class MainWindow : Window
     private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
     private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
+    private readonly InterfaceProfileAutoDetachService _interfaceProfileAutoDetachService = new();
     private readonly InterfaceProfileActivationEvaluationService _interfaceProfileActivationEvaluationService = new();
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
@@ -2861,6 +2862,80 @@ public partial class MainWindow : Window
             InterfaceMonitoringEventSeverity.Warning);
     }
 
+    private void TryAutoDetachMonitoringCardForActivity(InterfaceMonitoringEventEntry entry)
+    {
+        if (!_floatingWindowRestoreGate.CanShowFloatingWindows)
+        {
+            return;
+        }
+
+        var row = _activeInterfaceProfileStatusRows.FirstOrDefault(item =>
+            string.Equals(item.MonitoringCard.InterfaceProfileId, entry.ScopeId, StringComparison.OrdinalIgnoreCase));
+        if (row is null)
+        {
+            return;
+        }
+
+        var currentState = _floatingWindowStateService.GetOrCreate(entry.ScopeId);
+        var decision = _interfaceProfileAutoDetachService.Evaluate(entry, currentState);
+        if (!decision.IsRelevantActivity || decision.IsSuppressedByCooldown)
+        {
+            return;
+        }
+
+        var state = currentState;
+        if (decision.ShouldDetach)
+        {
+            state = _floatingWindowStateService.Detach(entry.ScopeId);
+        }
+
+        var card = GetRuntimeMonitoringCard(row);
+        var windowWasShown = TryShowOrUpdateFloatingMonitoringWindow(card, state);
+        if (!windowWasShown)
+        {
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        if (decision.ShouldBringToFront)
+        {
+            BringFloatingMonitoringWindowToFront(entry.ScopeId, state);
+        }
+
+        if (decision.ShouldDetach)
+        {
+            RefreshInterfaceMonitoringCards();
+            AppendMessage($"{card.InterfaceProfileName}: Fenster automatisch geöffnet.");
+        }
+    }
+
+    private void BringFloatingMonitoringWindowToFront(
+        string interfaceProfileId,
+        InterfaceProfileFloatingWindowState state)
+    {
+        if (!_floatingMonitoringWindows.TryGetValue(interfaceProfileId, out var window))
+        {
+            return;
+        }
+
+        if (!window.IsVisible)
+        {
+            window.Show();
+        }
+
+        if (window.WindowState == WindowState.Minimized)
+        {
+            window.WindowState = WindowState.Normal;
+        }
+
+        window.Topmost = true;
+        _ = window.Activate();
+        if (!state.IsPinned)
+        {
+            window.Topmost = false;
+        }
+    }
+
     private static void ApplyFloatingWindowPlacement(
         FloatingInterfaceProfileWindow window,
         InterfaceProfileFloatingWindowState state)
@@ -5438,6 +5513,7 @@ public partial class MainWindow : Window
         }
 
         AppendMessage(entry.Message);
+        TryAutoDetachMonitoringCardForActivity(entry);
     }
 
     private void AppendProfileMessage(string message)
