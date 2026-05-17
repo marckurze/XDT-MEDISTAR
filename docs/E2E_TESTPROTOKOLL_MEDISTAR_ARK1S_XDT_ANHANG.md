@@ -71,8 +71,9 @@ Feststellung:
 
 - Gesamtabnahme für diesen Praxislauf: bestanden
 - Praktisch validierter Umfang: MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link über `6302`, `6303`, optional `6304` und `6305`
+- Referenzpaket-Status: erstes Referenzpaket, beschrieben in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`
 - Geprüfte Pflicht-Anhang-Fälle:
   - Pflicht-XDT-Anhang vorhanden: bestanden
   - Pflicht-XDT-Anhang fehlt: bestanden
 
-Offen bleiben weitere Testfälle aus `docs/END_TO_END_TESTPLAN.md`, weitere Geräteprofile, Installer/Deployment, Lizenzsignatur und der Aktivierungsassistent für importierte Schnittstellenprofile.
+Offen bleiben weitere Testfälle aus `docs/END_TO_END_TESTPLAN.md`, weitere Geräteprofile, Installer/Deployment, Lizenzsignatur, der Aktivierungsassistent für importierte Schnittstellenprofile und das offizielle ZIP-Artefakt nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

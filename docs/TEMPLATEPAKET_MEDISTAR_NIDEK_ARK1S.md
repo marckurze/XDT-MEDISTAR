@@ -1,8 +1,8 @@
 # Templatepaket MEDISTAR + NIDEK ARK1S
 
-Stand: 2026-05-12
+Stand: 2026-05-17
 
-Status: offizielle V1-Paketvorlage, reproduzierbar export-/importgeprueft, noch keine eingecheckte ZIP-Paketdatei
+Status: Referenzpaket 1, reproduzierbar export-/importgeprueft, noch keine eingecheckte ZIP-Paketdatei
 
 ## Zweck
 
@@ -32,7 +32,7 @@ Der App-Export nutzt jetzt eine Schnittstellenprofil-Auswahl als Paketbasis. Fue
 
 Die Tests erzeugen das Referenzpaket reproduzierbar mit dem vorhandenen `TemplatePackageExporter` in einem temporaeren Testordner und lesen es mit `TemplatePackageImporter` wieder ein. Dabei werden ZIP-Struktur, selektiver Paketinhalt, offensichtliche Live-/Kundendatenmarker, XDT-Anhang-Linkeinstellungen, der UI-nahe Preview-Pfad und der sichere Importfluss gegen einen temporaeren BuiltIn-Katalog geprueft. Die Vorschau zeigt bei uebersprungenen Schnittstellenprofilen jetzt einen deutschen Leerhinweis statt einer unverstaendlich leeren Abhaengigkeitstabelle.
 
-Aktuell wird weiterhin keine manuell zusammengebaute ZIP-Datei eingecheckt. Ein dauerhaftes Release-Artefakt soll erst entstehen, wenn der Ablageort und der Release-Schritt fuer Templatepakete festgelegt sind.
+Aktuell wird weiterhin keine manuell zusammengebaute ZIP-Datei eingecheckt. Ein dauerhaftes Release-Artefakt soll erst entstehen, wenn die kleine Freigaberegel aus `docs/TEMPLATEPAKET_RELEASE_REGEL.md` angewendet wurde.
 
 ## Paketmetadaten
 
@@ -136,8 +136,10 @@ Der automatisierte Test erzeugt die ZIP-Datei nur temporaer und prueft:
 - importiertes Schnittstellenprofil bleibt inaktiv
 - `IsAttachmentProcessingEnabled` bleibt nach Import deaktiviert
 
+Der gleichartige Referenzpaket-Status fuer MEDISTAR + NIDEK AR360 ist in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md` dokumentiert. Beide ZIPs bleiben bis zur Release-Regel temporaere Testartefakte.
+
 ## Naechster kleiner Schritt
 
-1. Ablage- und Release-Regel fuer offizielle Templatepaket-ZIP-Dateien festlegen.
+1. Freigaberegel aus `docs/TEMPLATEPAKET_RELEASE_REGEL.md` anwenden.
 2. Danach das Artefakt z. B. unter `template-packages/medistar-nidek-ark1s-v1.templatepackage.zip` reproduzierbar erzeugen.
 3. Praktische App-Abnahme wiederholen: Paket in der UI importieren, bewusst Kopien auswaehlen, Zielnamen pruefen, stabile Importvorschau pruefen, keine automatische Aktivierung.

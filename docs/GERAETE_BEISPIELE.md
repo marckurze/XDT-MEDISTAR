@@ -13,7 +13,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | Hersteller | Gerät | Gerätetyp | beobachtete Dateiformate | Untersuchungsarten | Zusatzdateien | MEDISTAR-Zielbild | spätere Profilrelevanz |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | NIDEK | AR1S | Autorefraktometer | XML | Refraktion, PD | keine im aktuellen Standardfall | zwei `6228`-Ergebniszeilen rechts/links, `8000=6310`, `8402` aus AIS | erstes validiertes Standardprofil, Referenz für Refraktionsformatierung |
-| NIDEK | AR360 / AR-360A | Autorefraktometer | NIDEK-LAN-XML, Dateiendung `.XML` | Refraktion, PD, VD | keine im aktuellen Standardfall | Auto-Refraktor-Zeilen wie ARK1S, mit ARMedian, FarPD und VD | testgestützter Profilkandidat analog ARK1S, praktische MEDISTAR-Abnahme offen |
+| NIDEK | AR360 / AR-360A | Autorefraktometer | NIDEK-LAN-XML, Dateiendung `.XML` | Refraktion, PD, VD | keine im aktuellen Standardfall | Auto-Refraktor-Zeilen wie ARK1S, mit ARMedian, FarPD und VD | praktisch validiert fuer MEDISTAR-XDT-Rueckgabe, Anhangfall offen |
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | XML oder gerätespezifisches Format aus Beispieldaten | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Prisma/PD | zweites naheliegendes Geräteprofil wegen ähnlicher refraktiver Ergebniszeilen |
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | Pachymetrie- und Tonometriezeilen, perspektivisch externer AIS-Link | wichtig für Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Protokolle |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erstes TOPCON-/JOIA-Profil mit Namespace- und Attributanforderungen |
@@ -85,13 +85,13 @@ Umsetzung:
 Beispielausgabe aus den bereitgestellten AR360-Werten:
 
 ```text
-R.:S=+ 2.00 Z=- 1.25*172 PD= 60 VD= 12.00
+R.:S=+ 2.00 Z=- 1.25*172 PD= 60 VD= 12.00 mm
 L.:S=+ 1.00 Z=- 0.75*170
 ```
 
 Hinweis zur bereitgestellten MEDISTAR-TXT: Sie dient als Zielformat. Die rechte Achse weicht von der ARMedian-Beispiel-XML ab: In der TXT steht `177`, in `R/AR/ARMedian/Axis` steht `172`; `177` stammt aus `ARList No. 1`. Fuer den Parser ist ARMedian massgeblich, daher wird `172` getestet und ausgegeben.
 
-Status: testgestützt vorbereitet, aber noch nicht praktisch im MEDISTAR-Livesystem validiert.
+Status: praktisch fuer die MEDISTAR-Auto-Refraktor-XDT-Rueckgabe validiert. `8402 = AR360` und die `6228`-Zeilen rechts/links wurden uebernommen; siehe `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md`. Der XDT-Anhang-Link wurde fuer AR360 nicht neu validiert.
 
 ## 4. NIDEK LM7
 
@@ -1143,7 +1143,7 @@ R.:S={R_Sphere:Diopter} Z={R_Cylinder:Diopter}*{R_Axis:Axis}
 L.:S={L_Sphere:Diopter} Z={L_Cylinder:Diopter}*{L_Axis:Axis}
 ```
 
-Autorefraktor-Profile müssen mindestens Sphäre, Zylinder und Achse rechts/links unterstützen. Optional relevant sind SE bzw. sphärisches Äquivalent und PD. Der validierte ARK1S-Prototyp erfüllt die Grundlogik über `6228`-Ergebniszeilen.
+Autorefraktor-Profile müssen mindestens Sphäre, Zylinder und Achse rechts/links unterstützen. Optional relevant sind SE bzw. sphärisches Äquivalent, PD und VD. MEDISTAR + NIDEK ARK1S ist Referenzpaket 1 mit praktisch validiertem XDT-Anhang-Link; MEDISTAR + NIDEK AR360 ist Referenzpaket 2 fuer die praktisch validierte Auto-Refraktor-XDT-Rueckgabe mit ARMedian-Werten. Beide Paket-ZIPs werden erst nach der Release-Regel dauerhaft abgelegt.
 
 ### 14.3 V2 - Phoropter / subjektive Refraktion
 

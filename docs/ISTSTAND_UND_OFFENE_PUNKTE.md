@@ -32,12 +32,12 @@ Besonders stabil wirken aktuell:
 - Datei- und Paketlogik fuer stabile AIS-/Geraete-/XDT-Anhangdateien
 - neue kompakte Geraete-/Template-Matrix als Prioritaetenbasis
 - offizielle Paketvorlage fuer MEDISTAR + NIDEK ARK1S inklusive reproduzierbarem Export-/Import-Testweg
-- NIDEK AR360 / AR-360A als testgestuetzter Auto-Refraktometer-Kandidat mit BuiltIn-Profilen, ARMedian-Ausgabe und selektivem Templatepaket-Pfad
+- NIDEK AR360 / AR-360A als praktisch validierter Auto-Refraktometer-Workflow fuer XDT-Rueckgabe mit BuiltIn-Profilen, ARMedian-Ausgabe und selektivem Templatepaket-Pfad
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
-- V2-Geraeteprofile fuer AR360 / AR-360A, LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
-- fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S sind Vorlage und temporaer erzeugter Export-/Import-Test vorhanden, fuer AR360 ein testgestuetzter Kandidat
+- V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
+- fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S und AR360 sind Referenzdokumentation und temporaer erzeugte Export-/Import-Tests vorhanden, offizielle ZIP-Artefakte folgen erst nach Release-Regel
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
 - UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
@@ -297,13 +297,14 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | Automatische Paketlogik AIS -> Geraet -> XDT-Anhang | testseitig validiert | `AutoImportPackageStateServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `AttachmentPackageDecisionServiceTests` |
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
 | ARK1S-Referenzpaket Export/Import | reproduzierbar testseitig validiert, inklusive UI-nahem Importvorschau-Pfad und sicherem Konfliktstandard `Ueberspringen` | `MedistarNidekArk1sTemplatePackageTests` |
+| AR360-Referenzpaket Export/Import | reproduzierbar testseitig validiert, inklusive selektivem Paketinhalt, Importvorschau, DryRun und sicherer UserDefined-Kopie | `MedistarNidekAr360TemplatePackageTests` |
 | BuiltIn/UserDefined-Schutz | testseitig validiert | `ProfileCatalogServiceTests`, TemplateImport-Tests |
 
 Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link: Pflicht-Anhang vorhanden, Pflicht-Anhang fehlt/Fehlerfall und MEDISTAR-Livesystem-Linkaufruf sind bestanden. Noch offen ist die vollstaendige manuelle Praxisabnahme der weiteren Faelle aus `docs/END_TO_END_TESTPLAN.md`. Fuer die weitere Durchfuehrung steht die ausfuellbare Vorlage `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` bereit.
 
 ## 4. Vorbereitet, aber noch nicht produktiv validiert
 
-- NIDEK AR360 / AR-360A
+- NIDEK AR360 / AR-360A: Auto-Refraktor-XDT-Rueckgabe praktisch validiert; Referenzpaket-Export/Import testseitig abgesichert; XDT-Anhangfall und offizielles ZIP-Artefakt offen
 - NIDEK LM7/LM7P
 - NIDEK NT530P
 - TOPCON CL300
@@ -352,7 +353,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | --- | --- | --- | --- | --- | --- | --- |
 | hoch | E2E-Testplan praktisch weiter ausfuehren | Testplan, Durchfuehrungsschritte und Protokollvorlage sind vorhanden; MEDISTAR + ARK1S + Pflicht-XDT-Anhang wurde am 2026-05-11 praktisch bestanden dokumentiert. | Weitere manuelle Praxisprotokolle fuer die restlichen Testfaelle fehlen, insbesondere optionale Anhaenge, Mehrfachanhaenge, instabile Dateien und nicht unterstuetzte Dateien. | Restliche Faelle aus `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` abarbeiten. | Nicht getestete Randfaelle koennen im Praxisbetrieb auffallen. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
 | hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Pflicht-Anhang vorhanden/fehlt und MEDISTAR-Linkaufruf sind praktisch validiert. | Breitere Praxisabnahme mit optionalem Anhang, Mehrfachanhang, Archiv-/Fehlerablage und Wartezeiten. | Naechsten Praxislauf fuer optionale Anhaenge und Mehrfachanhang-Sicherheit protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in noch nicht getesteten Varianten auffallen. | E2E-Testplan, Testanhaenge |
-| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sieben Geraete vorhanden; praktisch validiert ist MEDISTAR + NIDEK ARK1S. AR360 ist mit Beispielwerten testgestuetzt vorbereitet. Matrix, ARK1S-Paketvorlage, selektiver Export, reproduzierbarer Export-/Import-Test und stabilisierter App-Preview-Pfad sind vorhanden. | Dauerhaftes ARK1S-ZIP-Release-Artefakt und erneute praktische App-Export-/Importabnahme fehlen; fuer AR360 fehlt die praktische MEDISTAR-Abnahme, fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | Release-Ablage fuer ARK1S-ZIP festlegen, AR360 in der App mit echten Dateien testen und MEDISTAR-Import protokollieren, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
+| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sieben Geraete vorhanden; praktisch validiert sind MEDISTAR + NIDEK ARK1S und die AR360-Auto-Refraktor-XDT-Rueckgabe. Matrix, ARK1S-/AR360-Referenzdokumentation, selektiver Export, reproduzierbare Export-/Import-Tests und stabilisierter App-Preview-Pfad sind vorhanden. | Dauerhafte ARK1S-/AR360-ZIP-Release-Artefakte und AR360-XDT-Anhangfall fehlen; fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | Release-Regel fuer ARK1S/AR360 anwenden, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
 | mittel | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht sind read-only vorhanden. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Vorerst parken; nur als Sicherheits-/Regressionsstand beibehalten. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | Profilkatalog, Evaluation, Guard |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
 | mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach konkreter Profil-/Templatepaket-Arbeit als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
@@ -399,8 +400,8 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 ### Phase 3: Fertige Geraeteprofile und Templatepakete
 
 - `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste nutzen.
-- MEDISTAR + NIDEK ARK1S stabil halten, den reproduzierbaren Pakettest beibehalten und die App-Importabnahme fuer ein spaeteres ZIP-Release-Artefakt vorbereiten.
-- NIDEK AR360 mit echten AR360-XML-Dateien praktisch in der App pruefen und MEDISTAR-Testimport dokumentieren.
+- MEDISTAR + NIDEK ARK1S stabil halten, den reproduzierbaren Pakettest beibehalten und die App-Importabnahme fuer ein spaeteres ZIP-Release-Artefakt nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` vorbereiten.
+- NIDEK AR360 als zweiten Referenzworkflow stabil halten; den reproduzierbaren Pakettest beibehalten, offizielles ZIP-Artefakt und ggf. XDT-Anhangtest separat planen.
 - NIDEK LM7/LM7P als naechstes Geraet anhand repraesentativer Dateien validieren.
 - NT530P und TOPCON-Profile erst nach Datenlage priorisieren.
 - Baukasten schlank halten; keine neue Assistentenarchitektur, solange fertige Profile und Pakete fehlen.
@@ -460,13 +461,13 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
 
-**Erstes offizielles Templatepaket fuer MEDISTAR + NIDEK ARK1S praktisch in der App importieren und danach als Release-Artefakt festlegen.**
+**ARK1S- und AR360-Referenzpakete nach Release-Regel praktisch in der App importieren und danach als ZIP-Artefakte festlegen.**
 
 Konkreter Umfang:
 
 - keine Produktivlogik aendern
 - keine BuiltIn-Profile ueberschreiben
-- vorhandene ARK1S-Paketvorlage und `MedistarNidekArk1sTemplatePackageTests` als Spezifikation nutzen
+- vorhandene ARK1S-/AR360-Paketdokumente und `MedistarNidekArk1sTemplatePackageTests` / `MedistarNidekAr360TemplatePackageTests` als Spezifikation nutzen
 - Paket mit dem vorhandenen `TemplatePackageExporter` erzeugen
 - Paket mit `TemplatePackageImporter` testweise einlesen
 - Import in der App mit Vorschau/DryRun praktisch abnehmen

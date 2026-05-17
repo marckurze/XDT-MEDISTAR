@@ -89,7 +89,7 @@ public static class DefaultExportProfileDefinitions
                     "ResultRight",
                     ExportRuleType.Template,
                     "Device.R/AR/ARMedian/Sphere",
-                    "R.:S={Device.R/AR/ARMedian/Sphere:Diopter} Z={Device.R/AR/ARMedian/Cylinder:Diopter}*{Device.R/AR/ARMedian/Axis} PD= {Device.PD/PDList[@No='1']/FarPD:Pd} VD= {Device.VD:Raw}",
+                    "R.:S={Device.R/AR/ARMedian/Sphere:Diopter} Z={Device.R/AR/ARMedian/Cylinder:Diopter}*{Device.R/AR/ARMedian/Axis} PD= {Device.PD/PDList[@No='1']/FarPD:Pd} VD= {Device.VD:Raw} mm",
                     7,
                     true,
                     "MEDISTAR autorefractor card text for right eye; ARMedian is used."),

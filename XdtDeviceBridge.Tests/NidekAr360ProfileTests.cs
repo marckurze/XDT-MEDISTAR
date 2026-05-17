@@ -90,7 +90,7 @@ public sealed class NidekAr360ProfileTests
         Assert.Equal(
             new[]
             {
-                "R.:S=+ 2.00 Z=- 1.25*172 PD= 60 VD= 12.00",
+                "R.:S=+ 2.00 Z=- 1.25*172 PD= 60 VD= 12.00 mm",
                 "L.:S=+ 1.00 Z=- 0.75*170"
             },
             resultLines);
@@ -109,10 +109,24 @@ public sealed class NidekAr360ProfileTests
         Assert.Equal(
             new[]
             {
-                "R.:S=- 0.25 Z=- 0.00*0 PD= 56 VD= 12.00",
+                "R.:S=- 0.25 Z=- 0.00*0 PD= 56 VD= 12.00 mm",
                 "L.:S=- 0.50 Z=- 0.25*52"
             },
             resultLines);
+    }
+
+    [Fact]
+    public void XdtExportForAr360Sample_ShouldContainValidatedMedistarFields()
+    {
+        var mappingResult = MapWithAr360Export(GetAr360FixturePath("AR360.xml"));
+
+        var exportResult = new XdtExportBuilder().Build(mappingResult.Records);
+
+        Assert.Empty(exportResult.Issues);
+        Assert.Contains("0148402AR360\r\n", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("0536228R.:S=+ 2.00 Z=- 1.25*172 PD= 60 VD= 12.00 mm\r\n", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("0336228L.:S=+ 1.00 Z=- 0.75*170\r\n", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("*177", exportResult.Content, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -147,7 +161,7 @@ public sealed class NidekAr360ProfileTests
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(deviceProfile));
 
         Assert.Equal("device-nidek-ar360-default", exportProfile.SourceDeviceProfileId);
-        Assert.Contains(exportProfile.Rules, rule => rule.OutputTemplate.Contains("VD= {Device.VD:Raw}", StringComparison.Ordinal));
+        Assert.Contains(exportProfile.Rules, rule => rule.OutputTemplate.Contains("VD= {Device.VD:Raw} mm", StringComparison.Ordinal));
         Assert.Empty(ExportProfileDefinitionValidator.Validate(exportProfile));
 
         Assert.Equal("device-nidek-ar360-default", interfaceProfile.DeviceProfileId);
