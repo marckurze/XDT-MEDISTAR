@@ -229,6 +229,23 @@ public sealed class AutoImportPairProcessingCoordinator
             Results: results);
     }
 
+    public void ResetProfile(string interfaceProfileId)
+    {
+        if (string.IsNullOrWhiteSpace(interfaceProfileId))
+        {
+            return;
+        }
+
+        var keyPrefix = $"{interfaceProfileId.Trim()}|";
+        _blockedPairKeys.RemoveWhere(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase));
+        foreach (var key in _pairReadySinceUtc.Keys
+            .Where(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase))
+            .ToList())
+        {
+            _pairReadySinceUtc.Remove(key);
+        }
+    }
+
     private static AutoImportPairProcessingResult CreateProcessedResult(
         InterfaceProfileDefinition interfaceProfile,
         string pairKey,

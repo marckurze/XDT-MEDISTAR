@@ -106,6 +106,30 @@ public sealed class AutoImportPackageStateServiceTests
         Assert.Equal(AutoImportPackageStateReason.WaitingForDeviceFile, result.Reason);
     }
 
+    [Fact]
+    public void ResetProfile_ShouldClearWaitingAisStateOnlyForSelectedProfile()
+    {
+        var service = new AutoImportPackageStateService();
+        var profile = CreateProfile(deviceFileWaitTimeoutMinutes: 10);
+        var otherProfile = profile with
+        {
+            Metadata = profile.Metadata with { Id = "interface-other" }
+        };
+        var firstAis = CreateAis("first.gdt", Timestamp);
+        var secondAis = CreateAis("second.gdt", Timestamp.AddMinutes(1));
+        service.Evaluate(profile, CreateQueue(firstAis), Timestamp);
+        service.Evaluate(otherProfile, CreateQueue(firstAis), Timestamp);
+
+        service.ResetProfile(profile.Metadata.Id);
+        var resetProfileResult = service.Evaluate(profile, CreateQueue(firstAis, secondAis), Timestamp.AddMinutes(1));
+        var otherProfileResult = service.Evaluate(otherProfile, CreateQueue(firstAis, secondAis), Timestamp.AddMinutes(1));
+
+        Assert.Empty(resetProfileResult.ReplacedAisFiles);
+        Assert.Equal(AutoImportPackageStateReason.WaitingForDeviceFile, resetProfileResult.Reason);
+        Assert.Single(otherProfileResult.ReplacedAisFiles);
+        Assert.Equal(AutoImportPackageStateReason.AisFileReplaced, otherProfileResult.Reason);
+    }
+
     private static InterfaceProfileDefinition CreateProfile(int deviceFileWaitTimeoutMinutes = 10)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with

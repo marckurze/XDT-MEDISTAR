@@ -138,6 +138,12 @@
                                 Click="DockButton_Click"
                                 ToolTip="Wieder andocken"
                                 AutomationProperties.Name="Wieder andocken"/>
+                        <Button Content="↺"
+                                Style="{StaticResource FloatingSymbolButtonStyle}"
+                                Margin="4,0,0,4"
+                                Click="ResetButton_Click"
+                                ToolTip="Vorgang zurücksetzen"
+                                AutomationProperties.Name="Vorgang zurücksetzen"/>
                         <ToggleButton x:Name="PositionMemoryToggleButton"
                                       Content="📌"
                                       Style="{StaticResource FloatingSymbolToggleButtonStyle}"

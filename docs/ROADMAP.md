@@ -159,6 +159,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Bei stabil erkanntem Geraetedatei-Eingang wird der App-Content-Signalton `04_praxis_terminal_signal.wav` abgespielt; AIS-, Anhang-, Export- und Statusmeldungen bleiben stumm, ein kurzer Cooldown pro Schnittstellenprofil verhindert Sound-Spam.
 - Automatisches Zurueckandocken ist vorhanden: nach terminalem Monitoring-Abschluss startet fuer automatisch geoeffnete, nicht gepinnte Fenster eine Restlaufzeit von 5 Sekunden; neue Aktivitaet, Pin oder manuelles Andocken bricht den Countdown pro Profil ab.
 - Systray-Grundfunktion ist vorhanden: Minimieren oder `X` blendet das Hauptfenster in den Infobereich aus, Doppelklick beziehungsweise Kontextmenue `Oeffnen` stellt es wieder her, `Beenden` schliesst die App bewusst.
+- Vorgangsreset `↺` ist in angedockten Monitoring-Karten und Floating-Fenstern vorhanden: Der aktuelle Vorgang eines Schnittstellenprofils kann nach Sicherheitsabfrage verworfen werden; bekannte Dateien dieses Vorgangs werden in-memory ignoriert, Ordner und unbekannte Dateien bleiben unangetastet.
 - Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit und ein sichtbarer Countdown-Hinweis.
 - Die Funktion bleibt reine UI-Funktion und aendert keine Verarbeitung, keine Profile, keine Datei-/Ordnerlogik und kein Aktivierungsmodell.
 
@@ -303,7 +304,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 ## 6. Empfohlene nächste kleine Codex-Schritte
 
 1. Release-Regel aus `docs/TEMPLATEPAKET_RELEASE_REGEL.md` fuer ARK1S und AR360 anwenden, praktische App-Importabnahme bestaetigen und danach offizielle ZIP-Artefakte ablegen.
-2. Abdockbare Geraeteanbindungsfenster praktisch mit AR360 und ARK1S testen: Systray minimieren/wieder oeffnen/beenden, manuelles Abdocken, Auto-Oeffnung, Signalton, Auto-Zurueckandocken nach Abschluss, Pin, Position merken, Neustart-Wiederherstellung, Schliessen als Andocken, Radar und `-`/`+`.
+2. Abdockbare Geraeteanbindungsfenster praktisch mit AR360 und ARK1S testen: Reset `↺` bei falschem Vorgang, Systray minimieren/wieder oeffnen/beenden, manuelles Abdocken, Auto-Oeffnung, Signalton, Auto-Zurueckandocken nach Abschluss, Pin, Position merken, Neustart-Wiederherstellung, Schliessen als Andocken, Radar und `-`/`+`.
 3. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
 4. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 5. Fuer LM7/LM7P ein fertiges Profil-/Templatepaket vorbereiten, wenn die Datenlage reicht.

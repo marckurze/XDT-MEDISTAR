@@ -333,6 +333,55 @@ public sealed class InterfaceProfileNotificationSoundServiceTests
         }
     }
 
+    [Fact]
+    public void ResetProfile_ShouldClearCooldownAndHandledDeviceFilesOnlyForSelectedProfile()
+    {
+        var player = new FakeSoundPlayer();
+        var service = new InterfaceProfileNotificationSoundService();
+        var soundFilePath = CreateExistingSoundFile();
+        try
+        {
+            _ = service.TryPlayForDeviceFileDetected(
+                "interface-ar360",
+                @"C:\Import\Device\ar360.xml",
+                BaseTime.ToUniversalTime(),
+                BaseTime,
+                soundFilePath,
+                player);
+            _ = service.TryPlayForDeviceFileDetected(
+                "interface-ark1s",
+                @"C:\Import\Device\ark1s.xml",
+                BaseTime.ToUniversalTime(),
+                BaseTime,
+                soundFilePath,
+                player);
+
+            service.ResetProfile("interface-ar360");
+            var ar360 = service.TryPlayForDeviceFileDetected(
+                "interface-ar360",
+                @"C:\Import\Device\ar360.xml",
+                BaseTime.ToUniversalTime(),
+                BaseTime.AddSeconds(1),
+                soundFilePath,
+                player);
+            var ark1s = service.TryPlayForDeviceFileDetected(
+                "interface-ark1s",
+                @"C:\Import\Device\ark1s.xml",
+                BaseTime.ToUniversalTime(),
+                BaseTime.AddSeconds(1),
+                soundFilePath,
+                player);
+
+            Assert.True(ar360.WasPlayed);
+            Assert.False(ark1s.ShouldPlay);
+            Assert.Equal(3, player.PlayCount);
+        }
+        finally
+        {
+            File.Delete(soundFilePath);
+        }
+    }
+
     private static InterfaceMonitoringEventEntry Event(
         string scopeId,
         string eventKey,

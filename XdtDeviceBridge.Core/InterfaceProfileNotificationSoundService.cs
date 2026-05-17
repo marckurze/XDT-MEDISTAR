@@ -88,6 +88,20 @@ public sealed class InterfaceProfileNotificationSoundService
         return PlaySound(soundFilePath, player);
     }
 
+    public void ResetProfile(string interfaceProfileId)
+    {
+        var normalizedProfileId = NormalizeId(interfaceProfileId);
+        _lastSoundActivityByProfileId.Remove(normalizedProfileId);
+
+        var keyPrefix = $"{normalizedProfileId}|";
+        foreach (var key in _handledDeviceFileKeys
+            .Where(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase))
+            .ToList())
+        {
+            _handledDeviceFileKeys.Remove(key);
+        }
+    }
+
     private static bool IsSoundRelevantActivity(InterfaceMonitoringEventEntry entry)
     {
         if (string.IsNullOrWhiteSpace(entry.ScopeId)

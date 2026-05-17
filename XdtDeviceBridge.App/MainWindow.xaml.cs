@@ -64,6 +64,7 @@ public partial class MainWindow : Window
     private readonly AutoImportPairProcessingCoordinator _autoImportPairProcessingCoordinator = new();
     private readonly AutoImportPackageStateService _autoImportPackageStateService = new();
     private readonly InterfaceMonitoringCardStatusService _interfaceMonitoringCardStatusService = new();
+    private readonly InterfaceProfileMonitoringResetService _interfaceProfileMonitoringResetService = new();
     private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
     private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
     private readonly BuilderTestExportService _builderTestExportService = new();
@@ -102,6 +103,7 @@ public partial class MainWindow : Window
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, PendingImportQueue> _lastMonitoringScanQueuesByProfileId = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, bool> _monitoringDetailsExpandedByProfileId = new(StringComparer.OrdinalIgnoreCase);
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
@@ -2786,6 +2788,7 @@ public partial class MainWindow : Window
     {
         _activeInterfaceProfileStatusRows.Clear();
         _interfaceMonitoringCards.Clear();
+        _lastMonitoringScanQueuesByProfileId.Clear();
         CloseAllFloatingMonitoringWindows();
         ActiveInterfaceProfilesStatusText.Text = message;
     }
@@ -2945,6 +2948,17 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ResetMonitoringCard_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element
+            || element.DataContext is not InterfaceMonitoringCardDisplay card)
+        {
+            return;
+        }
+
+        ResetMonitoringProfile(card.InterfaceProfileId);
+    }
+
     private void DockFloatingMonitoringCard(string interfaceProfileId)
     {
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
@@ -2992,6 +3006,7 @@ public partial class MainWindow : Window
             window.PositionMemoryChanged += FloatingMonitoringWindow_PositionMemoryChanged;
             window.PositionRememberRequested += FloatingMonitoringWindow_PositionRememberRequested;
             window.ScanIntervalChangeRequested += FloatingMonitoringWindow_ScanIntervalChangeRequested;
+            window.ResetRequested += FloatingMonitoringWindow_ResetRequested;
             _floatingMonitoringWindows[card.InterfaceProfileId] = window;
             ApplyFloatingWindowPlacement(window, state);
             window.Show();
@@ -3116,6 +3131,94 @@ public partial class MainWindow : Window
             && (file.Kind == ImportFileKind.DeviceXml
                 || file.Kind == ImportFileKind.DeviceText
                 || file.Kind == ImportFileKind.DeviceCsv);
+    }
+
+    private AutoImportScanResult ApplyMonitoringResetState(AutoImportScanResult result)
+    {
+        var filtered = _interfaceProfileMonitoringResetService.Apply(result);
+        _lastMonitoringScanQueuesByProfileId[filtered.InterfaceProfileId] = filtered.Queue;
+        return filtered;
+    }
+
+    private void ResetMonitoringProfile(string interfaceProfileId)
+    {
+        var row = _activeInterfaceProfileStatusRows.FirstOrDefault(item =>
+            string.Equals(item.MonitoringCard.InterfaceProfileId, interfaceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (row is null)
+        {
+            AppendMessage("Vorgang konnte nicht zurückgesetzt werden: Schnittstellenprofil nicht gefunden.");
+            return;
+        }
+
+        Window confirmationOwner = _floatingMonitoringWindows.TryGetValue(interfaceProfileId, out var floatingWindow)
+            && floatingWindow.IsVisible
+                ? floatingWindow
+                : this;
+        var confirmation = System.Windows.MessageBox.Show(
+            confirmationOwner,
+            "Der aktuelle Vorgang für dieses Schnittstellenprofil wird verworfen und die Überwachung beginnt neu. Unbekannte Dateien und Ordner werden nicht gelöscht.\n\nBekannte Dateien dieses Vorgangs werden nicht gelöscht, sondern für die laufende App-Sitzung ignoriert, bis sie geändert oder entfernt werden.\n\nJetzt zurücksetzen?",
+            "Vorgang zurücksetzen?",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        _lastMonitoringScanQueuesByProfileId.TryGetValue(interfaceProfileId, out var currentQueue);
+        var result = _interfaceProfileMonitoringResetService.Reset(interfaceProfileId, currentQueue);
+        _autoImportPackageStateService.ResetProfile(interfaceProfileId);
+        _autoImportPairProcessingCoordinator.ResetProfile(interfaceProfileId);
+        _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfileId);
+        _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
+        _interfaceProfileAutoDetachService.ResetProfile(interfaceProfileId);
+        _interfaceProfileNotificationSoundService.ResetProfile(interfaceProfileId);
+        EnsureAutoRedockTimerState();
+
+        ResetMonitoringRuntimeCard(row, result);
+        RefreshInterfaceMonitoringCards();
+
+        var profileName = row.MonitoringCard.InterfaceProfileName;
+        AppendMonitoringEvent(
+            interfaceProfileId,
+            $"monitoring-reset:{DateTime.UtcNow.Ticks}",
+            $"{profileName}: Vorgang zurückgesetzt. Dateien wurden nicht gelöscht.");
+        foreach (var message in result.Messages.Skip(1))
+        {
+            AppendMessage($"{profileName}: {message}");
+        }
+    }
+
+    private void ResetMonitoringRuntimeCard(
+        ActiveInterfaceProfileStatusRow row,
+        InterfaceProfileMonitoringResetResult resetResult)
+    {
+        var interfaceProfileId = row.MonitoringCard.InterfaceProfileId;
+        _lastMonitoringScanQueuesByProfileId[interfaceProfileId] = new PendingImportQueue();
+        var lastScanText = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
+        var resetCard = row.MonitoringCard with
+        {
+            CurrentStatus = "Wartet auf AIS",
+            StatusClass = "Waiting",
+            LastScanText = lastScanText,
+            IsScanAnimationActive = _periodicScanCancellationTokenSource is not null,
+            AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein",
+            PatientDisplayText = "",
+            AisFileName = "",
+            DeviceFileName = "",
+            AttachmentFileName = "",
+            ExportFileName = "",
+            LastMessage = resetResult.Messages.FirstOrDefault() ?? "Vorgang zurückgesetzt.",
+            ExpectedInputs = row.MonitoringCard.ExpectedInputs,
+            IsDetailsExpanded = GetMonitoringDetailsExpanded(interfaceProfileId)
+        };
+
+        _interfaceMonitoringRuntimeCards[interfaceProfileId] = resetCard;
+        _interfaceMonitoringRuntimeStates[interfaceProfileId] = new InterfaceMonitoringRuntimeState(
+            resetCard.CurrentStatus,
+            resetCard.StatusClass,
+            resetCard.LastScanText);
     }
 
     private static string GetMonitoringNotificationSoundPath()
@@ -3266,6 +3369,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private void FloatingMonitoringWindow_ResetRequested(object? sender, EventArgs e)
+    {
+        if (sender is FloatingInterfaceProfileWindow window)
+        {
+            ResetMonitoringProfile(window.InterfaceProfileId);
+        }
+    }
+
     private void CloseFloatingMonitoringWindow(string interfaceProfileId)
     {
         if (!_floatingMonitoringWindows.Remove(interfaceProfileId, out var window))
@@ -3278,6 +3389,7 @@ public partial class MainWindow : Window
         window.PositionMemoryChanged -= FloatingMonitoringWindow_PositionMemoryChanged;
         window.PositionRememberRequested -= FloatingMonitoringWindow_PositionRememberRequested;
         window.ScanIntervalChangeRequested -= FloatingMonitoringWindow_ScanIntervalChangeRequested;
+        window.ResetRequested -= FloatingMonitoringWindow_ResetRequested;
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
         EnsureAutoRedockTimerState();
         window.CloseWithoutDockRequest();
@@ -3847,6 +3959,7 @@ public partial class MainWindow : Window
 
     private void ShowPeriodicScanResult(AutoImportScanResult result)
     {
+        result = ApplyMonitoringResetState(result);
         var profile = _profileCatalog?.InterfaceProfiles.FirstOrDefault(profile =>
             string.Equals(profile.Metadata.Id, result.InterfaceProfileId, StringComparison.Ordinal));
         var profileName = profile?.Metadata.Name ?? result.InterfaceProfileId;
@@ -4124,6 +4237,7 @@ public partial class MainWindow : Window
                     var result = await _autoImportScannerService
                         .ScanOnceAsync(profile, TimeSpan.FromMilliseconds(200))
                         .ConfigureAwait(true);
+                    result = ApplyMonitoringResetState(result);
 
                     var packageEvaluation = _autoImportPackageStateService.Evaluate(profile, result.Queue, DateTime.Now);
                     UpdateMonitoringCardFromScan(profile, result, packageEvaluation, DateTime.Now);

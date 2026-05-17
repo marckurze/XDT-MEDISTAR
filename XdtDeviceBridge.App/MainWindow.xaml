@@ -220,6 +220,13 @@
                                                                 Click="DetachMonitoringCard_Click"
                                                                 ToolTip="Fenster abdocken"
                                                                 AutomationProperties.Name="Fenster abdocken"/>
+                                                        <Button DockPanel.Dock="Right"
+                                                                Style="{StaticResource MonitoringSymbolButtonStyle}"
+                                                                Content="↺"
+                                                                Margin="8,0,0,0"
+                                                                Click="ResetMonitoringCard_Click"
+                                                                ToolTip="Vorgang zurücksetzen"
+                                                                AutomationProperties.Name="Vorgang zurücksetzen"/>
                                                         <StackPanel>
                                                             <TextBlock Text="{Binding InterfaceProfileName}"
                                                                        FontSize="11"

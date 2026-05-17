@@ -80,6 +80,16 @@ public sealed class AutoImportPackageStateService
         return CreateResult(new[] { pair }, messages, replaced, expired, AutoImportPackageStateReason.ReadyForProcessing);
     }
 
+    public void ResetProfile(string interfaceProfileId)
+    {
+        if (string.IsNullOrWhiteSpace(interfaceProfileId))
+        {
+            return;
+        }
+
+        _pendingAisByProfileId.Remove(interfaceProfileId.Trim());
+    }
+
     private PendingAisState GetOrCreatePendingAis(
         InterfaceProfileDefinition profile,
         PendingImportFile latestAisFile,

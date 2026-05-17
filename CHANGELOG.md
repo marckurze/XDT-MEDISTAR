@@ -28,6 +28,7 @@
 - Akustisches Signal bei Geraetedatei-Eingang ergaenzt: `04_praxis_terminal_signal.wav` wird als App-Content ausgeliefert, pro Schnittstellenprofil per Cooldown begrenzt und bei fehlender/defekter Sounddatei defensiv abgefangen.
 - Automatisches Zurueckandocken nach terminalem Monitoring-Abschluss ergaenzt: automatisch geoeffnete, nicht gepinnte Geraetefenster docken nach 5 Sekunden Restlaufzeit wieder an; neue Aktivitaet, Pin oder manuelles Andocken brechen den Countdown pro Schnittstellenprofil ab.
 - Systray-Grundfunktion ergaenzt: Das Hauptfenster kann per Minimieren oder `X` in den Infobereich ausgeblendet werden, waehrend Verarbeitung und Floating-Geraetefenster weiterlaufen; Doppelklick beziehungsweise Kontextmenue `Oeffnen` stellt es wieder her, `Beenden` schliesst die App bewusst.
+- Sicherer Reset fuer Geraeteanbindungsfenster ergaenzt: `↺` verwirft den aktuellen Vorgang fuer genau ein Schnittstellenprofil, bricht profilbezogene Wartezustaende ab und ignoriert bekannte Dateien dieses Vorgangs in-memory, ohne Ordner zu leeren oder unbekannte Dateien anzufassen.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 

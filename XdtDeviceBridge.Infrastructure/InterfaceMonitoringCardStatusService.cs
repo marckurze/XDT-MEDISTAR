@@ -112,6 +112,22 @@ public sealed class InterfaceMonitoringCardStatusService
         };
     }
 
+    public void ResetProfile(string interfaceProfileId)
+    {
+        if (string.IsNullOrWhiteSpace(interfaceProfileId))
+        {
+            return;
+        }
+
+        var keyPrefix = $"{interfaceProfileId.Trim()}|";
+        foreach (var key in _attachmentWaitStartedAtByPairKey.Keys
+            .Where(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase))
+            .ToList())
+        {
+            _attachmentWaitStartedAtByPairKey.Remove(key);
+        }
+    }
+
     private ExpectedInputDisplayItem UpdateInputFromScan(
         ExpectedInputDisplayItem input,
         string deviceProfileName,

@@ -27,6 +27,7 @@ public partial class FloatingInterfaceProfileWindow : Window
     public event EventHandler<bool>? PositionMemoryChanged;
     public event EventHandler? PositionRememberRequested;
     public event EventHandler<int>? ScanIntervalChangeRequested;
+    public event EventHandler? ResetRequested;
 
     public string InterfaceProfileId { get; }
 
@@ -92,6 +93,11 @@ public partial class FloatingInterfaceProfileWindow : Window
     private void DockButton_Click(object sender, RoutedEventArgs e)
     {
         DockRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ResetButton_Click(object sender, RoutedEventArgs e)
+    {
+        ResetRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void DecreaseScanIntervalButton_Click(object sender, RoutedEventArgs e)

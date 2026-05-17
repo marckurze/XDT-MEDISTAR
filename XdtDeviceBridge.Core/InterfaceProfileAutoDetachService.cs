@@ -47,6 +47,16 @@ public sealed class InterfaceProfileAutoDetachService
             ShouldBringToFront: true);
     }
 
+    public void ResetProfile(string interfaceProfileId)
+    {
+        if (string.IsNullOrWhiteSpace(interfaceProfileId))
+        {
+            return;
+        }
+
+        _lastAutoDetachActivityByProfileId.Remove(interfaceProfileId.Trim());
+    }
+
     private static bool IsRelevantForProfile(InterfaceMonitoringEventEntry entry, string interfaceProfileId)
     {
         return !string.IsNullOrWhiteSpace(entry.ScopeId)

@@ -162,6 +162,23 @@ public sealed class InterfaceProfileAutoDetachServiceTests
         Assert.True(decision.ShouldDetach);
     }
 
+    [Fact]
+    public void ResetProfile_ShouldClearCooldownOnlyForSelectedProfile()
+    {
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+        var ar360State = new InterfaceProfileFloatingWindowState("interface-ar360");
+        var ark1sState = new InterfaceProfileFloatingWindowState("interface-ark1s");
+
+        _ = autoDetachService.Evaluate(Event("interface-ar360", "scan-ais-detected", BaseTime), ar360State);
+        _ = autoDetachService.Evaluate(Event("interface-ark1s", "scan-ais-detected", BaseTime), ark1sState);
+        autoDetachService.ResetProfile("interface-ar360");
+        var ar360Decision = autoDetachService.Evaluate(Event("interface-ar360", "scan-device-detected", BaseTime.AddSeconds(1)), ar360State);
+        var ark1sDecision = autoDetachService.Evaluate(Event("interface-ark1s", "scan-device-detected", BaseTime.AddSeconds(1)), ark1sState);
+
+        Assert.False(ar360Decision.IsSuppressedByCooldown);
+        Assert.True(ark1sDecision.IsSuppressedByCooldown);
+    }
+
     private static void ApplyDecision(
         InterfaceProfileFloatingWindowStateService stateService,
         InterfaceProfileAutoDetachService autoDetachService,
