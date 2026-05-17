@@ -35,3 +35,7 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\FloatingInte
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\FloatingInterfaceProfileWindow.g.cs
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\bin\Debug\net8.0-windows\Assets\Sounds\04_praxis_terminal_signal.wav
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\XdtDeviceBridge.App_Content.g.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\NewAisProfileDialog.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\NewDeviceProfileDialog.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\NewAisProfileDialog.g.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\NewDeviceProfileDialog.g.cs

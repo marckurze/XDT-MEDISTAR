@@ -12,6 +12,7 @@ Ziel dieser Matrix ist eine schlanke Priorisierung: Anwender sollen moeglichst f
 - BuiltIn-MEDISTAR-Exportprofile existieren fuer dieselben sieben Geraete.
 - Fertige BuiltIn-Schnittstellenprofile existieren aktuell fuer `MEDISTAR + NIDEK ARK1S` und testgestuetzt fuer `MEDISTAR + NIDEK AR360`.
 - Die Templatepaket-Infrastruktur ist vorhanden und testseitig abgesichert. Fuer MEDISTAR + NIDEK ARK1S und MEDISTAR + NIDEK AR360 gibt es Referenzpaket-Dokumentation; der Export erfolgt selektiv aus dem Schnittstellenprofil und nimmt nur die benoetigten Abhaengigkeiten auf. ZIP-Struktur, Import/DryRun und sicherer UserDefined-Import sind reproduzierbar im Test geprueft. Dauerhafte ZIP-Release-Artefakte werden erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` abgelegt.
+- Fuer Sonderfaelle koennen AIS-, Geraete- und Exportprofile schlank als UserDefined aus der App angelegt werden. Das ersetzt noch keinen gefuehrten Geraete-Datei-Explorer und fuehrt keine automatische Aktivierung oder Schnittstellenprofil-Aenderung aus.
 - Repository-Testdaten enthalten `nidek-ark1s-sample.xml`, AR360-Beispielfixtures sowie generische GDT-Beispiele; fuer LM7/LM7P, NT530P und TOPCON liegen im Repository keine vollstaendigen Geraete-Beispieldateien.
 
 ## Matrix

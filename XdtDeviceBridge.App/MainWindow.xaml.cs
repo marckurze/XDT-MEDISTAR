@@ -77,6 +77,7 @@ public partial class MainWindow : Window
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
+    private readonly UserDefinedProfileCreationService _userDefinedProfileCreationService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
     private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
     private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
@@ -1689,35 +1690,174 @@ public partial class MainWindow : Window
         return profile is null ? profileId : $"{profile.Metadata.Name} ({profileId})";
     }
 
+    private void CreateNewAisProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var dialog = new NewAisProfileDialog
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = _userDefinedProfileCreationService.CreateAisProfile(
+            catalog,
+            dialog.Request,
+            DateTimeOffset.UtcNow,
+            Environment.UserName);
+        if (!result.Success || result.Profile is null)
+        {
+            AppendProfileCreationIssues("AIS-Profil wurde nicht gespeichert", result.Issues);
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.SaveNewAisProfile(paths, result.Profile);
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(updatedCatalog);
+            AppendProfileMessage($"AIS-Profil gespeichert: {result.Profile.Metadata.Name}");
+            AppendProfileMessage("Profil wurde als UserDefined gespeichert. BuiltIn-Profile wurden nicht verändert.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"AIS-Profil konnte nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
+    private void CreateNewDeviceProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var dialog = new NewDeviceProfileDialog(GetAvailableDeviceParserModes(catalog))
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = _userDefinedProfileCreationService.CreateDeviceProfile(
+            catalog,
+            dialog.Request,
+            DateTimeOffset.UtcNow,
+            Environment.UserName);
+        if (!result.Success || result.Profile is null)
+        {
+            AppendProfileCreationIssues("Geräteprofil wurde nicht gespeichert", result.Issues);
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.SaveNewDeviceProfileDefinition(paths, result.Profile);
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(updatedCatalog);
+            AppendProfileMessage($"Geräteprofil gespeichert: {result.Profile.Metadata.Name}");
+            AppendProfileMessage("Profil wurde als UserDefined gespeichert. BuiltIn-Profile wurden nicht verändert.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Geräteprofil konnte nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
+    private void CreateNewExportProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        if (catalog.ExportProfiles.Count == 0)
+        {
+            AppendProfileMessage("Neues Exportprofil kann nicht vorbereitet werden, weil kein Exportprofil als Vorlage vorhanden ist.");
+            return;
+        }
+
+        var selectedProfile = ExportProfileComboBox.SelectedItem as ExportProfileDefinition
+            ?? catalog.ExportProfiles.OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase).First();
+
+        ExportProfileComboBox.SelectedItem = selectedProfile;
+        _temporaryExportRules.Clear();
+        RebuildExportRulesGrid(selectedProfile);
+
+        NewExportProfileNameTextBox.Text = UserDefinedProfileCreationService.CreateAvailableProfileName(
+            catalog.ExportProfiles.Select(profile => profile.Metadata.Name),
+            "Neues Exportprofil");
+        ExportRulesGrid.SelectedIndex = -1;
+        ClearDraftRuleEditor();
+        ExportRulesStatusText.Text = $"Exportprofil-Entwurf vorbereitet: Vorlage '{selectedProfile.Metadata.Name}'.";
+        ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt. Neue Exportregeln können als Entwurf ergänzt werden.";
+        ShowFullExportPreviewForSelectedProfile();
+        AppendProfileMessage("Neuer Exportprofil-Entwurf vorbereitet. Regeln können ergänzt oder geändert und anschließend als UserDefined gespeichert werden.");
+    }
+
     private void SaveDraftAsNewExportProfile_Click(object sender, RoutedEventArgs e)
     {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
         if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
         {
             AppendProfileMessage("Neues Exportprofil kann nicht gespeichert werden, weil kein Exportprofil ausgewählt ist.");
             return;
         }
 
-        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition selectedRule)
-        {
-            AppendProfileMessage("Neues Exportprofil kann nicht gespeichert werden, weil keine Exportregel ausgewählt ist.");
-            return;
-        }
-
-        if (!TryCreateDraftRule(selectedRule, out var draftRule, out var draftMessage))
-        {
-            AppendProfileMessage(draftMessage);
-            return;
-        }
-
         var newProfileName = NewExportProfileNameTextBox.Text.Trim();
+        if (UserDefinedProfileCreationService.HasProfileNameOrIdConflict(
+            catalog.ExportProfiles.Select(profile => profile.Metadata),
+            newProfileName))
+        {
+            AppendProfileMessage("Es existiert bereits ein Exportprofil mit diesem Namen oder dieser ID.");
+            return;
+        }
+
+        ExportRuleDefinition? draftRule = null;
+        string? replaceRuleId = null;
+        if (ExportRulesGrid.SelectedItem is ExportRuleDefinition selectedRule)
+        {
+            if (!TryCreateDraftRule(selectedRule, out var createdDraftRule, out var draftMessage))
+            {
+                AppendProfileMessage(draftMessage);
+                return;
+            }
+
+            draftRule = createdDraftRule;
+            replaceRuleId = selectedRule.Id;
+        }
+
+        var existingExportProfileIds = catalog.ExportProfiles.Select(profile => profile.Metadata.Id).ToList();
         var draftResult = _exportProfileDraftService.CreateUserDefinedCopy(
             exportProfile,
             newProfileName,
             draftRule,
-            selectedRule.Id,
+            replaceRuleId,
             _temporaryExportRules,
             DateTimeOffset.UtcNow,
-            Environment.UserName);
+            Environment.UserName,
+            idFactory: () => UserDefinedProfileCreationService.CreateUniqueProfileId(
+                "export",
+                newProfileName,
+                existingExportProfileIds));
 
         if (!draftResult.Success || draftResult.Profile is null)
         {
@@ -1735,9 +1875,9 @@ public partial class MainWindow : Window
             var paths = _appDataPathProvider.GetDefaultUserPaths();
             _profileCatalogService.SaveNewExportProfile(paths, draftResult.Profile);
 
-            var catalog = _profileCatalogService.Load(paths);
-            _profileCatalog = catalog;
-            RefreshProfileOverview(catalog, selectedExportProfileId: draftResult.Profile.Metadata.Id);
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(updatedCatalog, selectedExportProfileId: draftResult.Profile.Metadata.Id);
 
             AppendProfileMessage($"Neues Exportprofil gespeichert: {draftResult.Profile.Metadata.Name}");
             AppendProfileMessage("Profil wurde als neues Exportprofil gespeichert. Das Originalprofil wurde nicht verändert.");
@@ -1745,6 +1885,49 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             AppendProfileMessage($"Neues Exportprofil konnte nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
+    private bool TryGetProfileCatalogForProfileAction(out ProfileCatalog catalog)
+    {
+        if (_profileCatalog is not null)
+        {
+            catalog = _profileCatalog;
+            return true;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.EnsureDefaultProfiles(paths);
+            catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            catalog = null!;
+            AppendProfileMessage($"Profile konnten nicht geladen werden: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static IReadOnlyList<string> GetAvailableDeviceParserModes(ProfileCatalog catalog)
+    {
+        return catalog.DeviceProfiles
+            .Select(profile => profile.ParserMode)
+            .Where(parserMode => !string.IsNullOrWhiteSpace(parserMode))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(parserMode => parserMode, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+    private void AppendProfileCreationIssues(string title, IReadOnlyList<string> issues)
+    {
+        AppendProfileMessage($"{title}:");
+        foreach (var issue in issues)
+        {
+            AppendProfileMessage($"[Profilanlage] {issue}");
         }
     }
 

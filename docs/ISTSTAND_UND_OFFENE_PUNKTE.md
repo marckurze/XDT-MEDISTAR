@@ -95,6 +95,7 @@ Der Tab `Profile & Templates` enthaelt:
 
 - Profiluebersicht
 - BuiltIn- und UserDefined-Profile
+- schlanke V1-Anlage fuer neue AIS-, Geraete- und Exportprofile als UserDefined; BuiltIns werden nicht ueberschrieben, es wird nichts automatisch aktiviert und keine Verarbeitung gestartet
 - Exportprofil-Entwurf
 - sichere Wartung fuer UserDefined-Exportprofile und Exportregeln
 - Templatepaket Export/Import
@@ -116,6 +117,8 @@ Beim Baukasten-Testexport wird der Anhang physisch in den gewaehlt Testordner ko
 Der Baukasten ist nicht der gewuenschte Standardweg fuer Anwender. Standard soll ein fertiges Geraeteprofil plus fertiges Templatepaket sein; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
 UserDefined-Exportprofile koennen im Tab `Profile & Templates` geloescht werden, solange kein Schnittstellenprofil sie verwendet. Exportregeln koennen aus UserDefined-Exportprofilen entfernt werden. Die Buttons sind nach Regel-Aktionen und Profil-Aktionen gruppiert; deaktivierte Loeschaktionen zeigen per Tooltip den Schutzgrund. BuiltIn-Exportprofile bleiben geschuetzt; es werden keine Schnittstellenprofile automatisch angepasst, keine Exportdateien geloescht und keine Verarbeitung gestartet.
+
+Die Anlagebuttons im Tab `Profile & Templates` sind als schlanke V1 nutzbar. Neue AIS-Profile werden ueber Name, System und Codierung als UserDefined angelegt; neue Geraeteprofile ueber Name, Hersteller, Modell, Geraetetyp und vorhandene Parserbasis. `Neues Exportprofil anlegen` bereitet den bestehenden Exportregel-Entwurf mit eindeutigem Namen vor; `Entwurf als neues Exportprofil speichern` schreibt eine UserDefined-Kopie. Name-/ID-Konflikte werden blockiert, BuiltIns bleiben unveraendert und es werden keine Schnittstellenprofile automatisch geaendert.
 
 ### Schnittstellenprofile
 
@@ -343,7 +346,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | Lizenzsystem | Anzeige, Lizenzdatei, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige und Karenzzeitservices; keine harte Durchsetzung. | passt | Signatur und Sperrregeln separat spezifizieren. |
 | Installer/Deployment | In Roadmap als offen. | Kein Installer-Projekt erkennbar. | passt | Deployment-Konzept spaeter erstellen. |
 | SQLite/JSON-Speicherung | Pflichtenheft nennt SQLite als Ziel, Projektueberblick beschreibt JSON/AppData. | Code nutzt JSON-Dateien unter LocalAppData. | unklar | Architekturentscheidung treffen: JSON bewusst beibehalten oder SQLite neu planen. |
-| Profil-Assistent | Roadmap fuehrt Assistent als offen. | Kein vollstaendiger Assistent; Profilkatalog und Entwurfsfunktionen existieren. | passt | Geraete-Datei-Explorer als naechsten vorbereitenden Schritt planen. |
+| Profil-Assistent | Roadmap fuehrt Assistent als offen. | Schlanke V1-Anlage fuer AIS-, Geraete- und Exportprofile als UserDefined ist vorhanden; kein vollstaendiger Assistent und keine Aktivierung. | passt | Geraete-Datei-Explorer als naechsten vorbereitenden Schritt planen. |
 | PDF-/EV-Dokumentenerzeugung | Als Zukunft/offen beschrieben. | Keine PDF-Erzeugung und keine MEDISTAR-interne EV-Zeile. 6302-6305-Link ist der aktuelle Weg. | passt | EV vs. strukturierter Link fachlich entscheiden. |
 | MEDISTAR-Feldkennungen / Exporttemplates | Roadmap und Pflichtenheft markieren AIS-/MEDISTAR-Default-Exporttemplates als zurueckgestellt. | Keine `AisExportTemplate`-/Default-MEDISTAR-Template-Implementierung vorhanden. | passt | Keine Umsetzung beauftragen, bis ein neues Fachkonzept vorliegt. |
 | Tests / Testabdeckung | Doku nennt automatisierte Abdeckung und E2E-nahe Templateimport-Tests. | Testprojekt enthaelt umfangreiche Service- und E2E-nahe Tests. Letzter bekannter Stand: 811 Tests gruen vor dieser Doku-Aenderung. | passt | Build/Test nach dieser Doku-Aenderung erneut ausfuehren. |
@@ -363,7 +366,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach konkreter Profil-/Templatepaket-Arbeit als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
 | mittel | Manuelle Zielnamen-/ID-Bearbeitung im Templateimport | Automatische Kopienamen vorhanden. | UI zum Bearbeiten vorgeschlagener Namen/IDs. | Nur ergaenzen, wenn Anwenderfeedback Bedarf zeigt. | Importnamen koennen weniger sprechend sein. | Importplan, SelectionService |
 | mittel | Geraete-Datei-Explorer | Noch kein vollstaendiger Explorer. | Datei anzeigen, SourcePaths untersuchen, Messwerte markieren, Kandidaten fuer Exportregeln uebernehmen. | Kleinen read-only Explorer fuer XML/Geraetedateien bauen. | Neue Geraeteprofile bleiben Codex-/Entwickleraufgabe. | XmlDeviceParser, PlaceholderDisplayHelper |
-| mittel | Profil-Assistent fuer unbekannte Geraete | Noch offen. | Gefuehrtes Erstellen von Geraete-, Export- und Schnittstellenprofilen. | Nach Geraete-Datei-Explorer planen. | Skalierung auf neue Geraete bleibt langsam. | Geraete-Datei-Explorer, ProfileCatalog |
+| mittel | Profil-Assistent fuer unbekannte Geraete | Schlanke V1-Anlage fuer AIS-, Geraete- und Exportprofile als UserDefined ist vorhanden. | Gefuehrtes Erstellen kompletter Geraete-/Export-/Schnittstellenpakete inklusive Datei-Explorer und Messwertuebernahme fehlt. | Nach Geraete-Datei-Explorer planen. | Skalierung auf neue Geraete bleibt weiterhin teilweise Entwickler-/Codex-Aufgabe. | Geraete-Datei-Explorer, ProfileCatalog |
 | mittel | NIDEK LM7/LM7P produktiv validieren | Profile und Beispiele vorbereitet. | Echte/repraesentative Dateien, Vergleich mit Praxisanforderung, Exportabnahme. | LM7-Testpaket mit synthetischen/echten Musterdateien erstellen und validieren. | Vorbereitetes Profil koennte in Details falsch mappen. | Testdaten, MEDISTAR-Anforderungen |
 | mittel | NIDEK NT530P produktiv validieren | Profile vorbereitet. | Echte Dateien fuer Tonometry/Pachymetry und ggf. Attachmentfaelle. | Geraetespezifischen E2E-Testplan ergaenzen. | Falsche oder unvollstaendige Messwertuebernahme. | Testdaten |
 | mittel | TOPCON CL300 produktiv validieren | Profile vorbereitet. | Namespace-/Dateistruktur mit echten Beispielen pruefen. | CL300-Beispieldateien sammeln und Parserpfade bestaetigen. | Vorbereitete SourcePaths koennen unvollstaendig sein. | Testdaten |
@@ -421,7 +424,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 - Read-only Explorer fuer Geraetedateien und SourcePaths.
 - Uebernahme erkannter Messwerte in Exportregel-Entwurf.
-- Gefuehrter Profil-Assistent fuer neue Geraete.
+- Die schlanke V1-Profilanlage ist vorhanden; offen bleibt ein gefuehrter Assistent fuer komplette neue Geraete mit Messwertuebernahme.
 
 ### Phase 6: Weitere Geraete validieren
 

@@ -107,6 +107,7 @@ Er enthaelt:
 - Geraeteprofile
 - Exportprofile
 - Exportregeln
+- schlanke Anlage neuer AIS-, Geraete- und Exportprofile als UserDefined
 - sichere UserDefined-Wartung fuer Exportprofile und Exportregeln
 - Platzhalter
 - Templatepaket-Export per ausgewaehltem Schnittstellenprofil
@@ -145,6 +146,8 @@ Aktueller Stand:
 - Exportprofil und BuiltIn-Profile werden nicht veraendert.
 - `Messwerte pruefen` ist standardmaessig eingeklappt.
 - `Verfuegbare Platzhalter` ist standardmaessig ausgeklappt.
+
+Neue Profile koennen im Tab `Profile & Templates` als V1-Funktion angelegt werden: AIS-Profile ueber Name, System und Codierung, Geraeteprofile ueber Name, Hersteller, Modell, Geraetetyp und vorhandene Parserbasis. Exportprofile werden ueber den vorhandenen Exportregel-Entwurf als UserDefined-Kopie vorbereitet und gespeichert. Name-/ID-Konflikte werden blockiert; BuiltIn-Profile, Schnittstellenprofile, Aktivierung und Verarbeitung bleiben unberuehrt.
 
 ## 8. Tab Schnittstellenprofile
 
@@ -334,6 +337,7 @@ UserDefined-Profile:
 - werden separat gespeichert
 - liegen unter `%LocalAppData%\XdtDeviceBridge\profiles`
 - werden JSON-basiert verwaltet
+- koennen fuer AIS, Geraete und Exportprofile schlank aus der App heraus angelegt werden
 
 Templatepakete:
 
@@ -466,7 +470,7 @@ Die Haupt-Tabs sind Verarbeitung, Profile & Templates, Schnittstellenprofile und
 
 Im Tab Verarbeitung ist die V1 der abdockbaren Geraeteanbindungsfenster praxisabgenommen; das Protokoll liegt in `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`. Jede Monitoring-Karte kann manuell als eigenes Fenster geoeffnet und wieder angedockt werden. Relevante Monitoring-Aktivitaet oeffnet automatisch nur das betroffene Floating-Fenster und bringt es nach vorne; der App-Content-Signalton `04_praxis_terminal_signal.wav` wird nur bei stabil erkanntem Geraetedatei-Eingang mit kurzem Cooldown pro Schnittstellenprofil abgespielt. AIS-, Anhang-, Export- und Statusmeldungen bleiben stumm. Nach terminalem Abschluss dockt ein automatisch geoeffnetes, nicht gepinntes Fenster nach 5 Sekunden Restlaufzeit wieder an; neue Aktivitaet, Pin oder manuelles Andocken beendet den Countdown pro Profil. Schliessen per `X` dockt Floating-Fenster sicher zurueck. Der Reset `↺` verwirft nach Sicherheitsabfrage den aktuellen Vorgang genau eines Schnittstellenprofils, bricht interne Wartezustaende ab und leert nur die AIS-/Geraete-/optionalen XDT-Anhang-Eingangsordner dieses Profils top-level; Export-, Archiv- und Fehlerordner sowie Unterordner bleiben unangetastet. Pin, Radar, `-`/`+`-Scanintervallsteuerung und Positionsmerken arbeiten pro Schnittstellenprofil; Position/Groesse und Abdockstatus werden als UI-State unter AppData gespeichert, wenn Positionsmerken aktiv ist. Beim App-Start werden gespeicherte Floating-Fenster erst nach der sicheren MainWindow-Anzeige wiederhergestellt; ein Restore-Fehler dockt die Karte sicher an. Die Systray-Grundfunktion ist vorhanden: Minimieren oder `X` am Hauptfenster blendet die App in den Infobereich aus, Doppelklick beziehungsweise `Oeffnen` stellt das Hauptfenster wieder her, `Beenden` schliesst bewusst. Die Floating-Fenster sind leicht verbreitert, damit die Symbolleiste `🗗 ↺ 📌 🔝` in einer Zeile bleibt. Autostart, Windows-Dienst, UI-Einstellung fuer Rueckdock-Zeit, sichtbarer Countdown-Hinweis, Ton-Schalter und eigenes Systray-Icon sind Komfortthemen fuer spaeteres Praxisfeedback.
 
-Profile & Templates ist der Profil- und Templatebereich. Standardziel ist fertiges Geraeteprofil plus fertiges Templatepaket; der Baukasten Test & Vorschau bleibt fuer Sonderfaelle, Tests und kundenspezifische Anpassungen.
+Profile & Templates ist der Profil- und Templatebereich. Standardziel ist fertiges Geraeteprofil plus fertiges Templatepaket; der Baukasten Test & Vorschau bleibt fuer Sonderfaelle, Tests und kundenspezifische Anpassungen. AIS-, Geraete- und Exportprofile koennen jetzt schlank als UserDefined angelegt werden; es gibt dabei keine automatische Aktivierung, keine Schnittstellenprofil-Aenderung und keine Verarbeitung.
 
 XDT-Anhaenge fuer AIS sind fuer den validierten MEDISTAR/ARK1S-Pflicht-Anhang-Praxislauf praktisch bestaetigt. Unterstuetzt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT. Externe Linkfelder sind 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung optional und 6305 vollstaendiger Dateipfad. XDT-Längenpraefixe erzeugt der XdtExportBuilder zentral, nicht die UI.
 
@@ -478,7 +482,7 @@ Optionaler XDT-Anhang bedeutet: Wenn genau ein stabiler Anhang rechtzeitig kommt
 
 Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden.
 
-Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben oder geloescht werden, UserDefined-Profile werden separat gespeichert. UserDefined-Exportprofile koennen geloescht werden, wenn kein Schnittstellenprofil sie verwendet; Exportregeln koennen nur aus UserDefined-Exportprofilen entfernt werden. Templatepaket-Export erfolgt selektiv auf Basis eines Schnittstellenprofils und nimmt nur benoetigte AIS-/Geraete-/Export-Abhaengigkeiten auf. Templatepaket-Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
+Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben oder geloescht werden, UserDefined-Profile werden separat gespeichert. Neue AIS-, Geraete- und Exportprofile koennen als UserDefined angelegt werden; Konflikte werden blockiert und es wird nichts automatisch aktiviert. UserDefined-Exportprofile koennen geloescht werden, wenn kein Schnittstellenprofil sie verwendet; Exportregeln koennen nur aus UserDefined-Exportprofilen entfernt werden. Templatepaket-Export erfolgt selektiv auf Basis eines Schnittstellenprofils und nimmt nur benoetigte AIS-/Geraete-/Export-Abhaengigkeiten auf. Templatepaket-Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
 
 Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet und ruht vorerst. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> PreparationPreview. Angezeigt werden V1-relevante Vorschauinformationen: Status, Aktivierbarkeit nach V1, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung und keine Datei-/Ordneroperation.
 

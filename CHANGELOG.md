@@ -31,6 +31,7 @@
 - Sicherer Reset fuer Geraeteanbindungsfenster angepasst: `↺` verwirft den aktuellen Vorgang fuer genau ein Schnittstellenprofil und leert nach Sicherheitsabfrage nur dessen AIS-, Geraete- und optionalen XDT-Anhang-Eingangsordner top-level; Export-, Archiv- und Fehlerordner sowie Unterordner bleiben unangetastet.
 - Floating-Geraeteanbindungsfenster leicht verbreitert und die Symbolleiste oben rechts fix horizontal gesetzt, damit `🗗 ↺ 📌 🔝` nicht umbrechen.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
+- Schlanke V1-Profilanlage im Tab `Profile & Templates` ergaenzt: `Neues AIS anlegen` und `Neues Geraet anlegen` oeffnen einfache Dialoge und speichern nur UserDefined-Profile; `Neues Exportprofil anlegen` bereitet den vorhandenen Exportregel-Entwurf als UserDefined-Kopie vor. BuiltIns bleiben geschuetzt, es erfolgt keine Aktivierung und keine Verarbeitung.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Behoben

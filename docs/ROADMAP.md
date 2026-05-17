@@ -127,6 +127,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
 - Templatepaket-Export und Templatepaket-Import sind vorhanden.
 - UserDefined-Exportprofile koennen schlank gewartet werden: unreferenzierte UserDefined-Exportprofile lassen sich nach Sicherheitsabfrage loeschen, Exportregeln lassen sich nur aus UserDefined-Exportprofilen entfernen.
+- Neue AIS-, Geraete- und Exportprofile koennen als schlanke V1 im Tab `Profile & Templates` angelegt werden. AIS/Geraet nutzen einfache Dialoge, Exportprofile den bestehenden Exportregel-Entwurf; alle neuen Profile werden als UserDefined gespeichert, BuiltIns bleiben geschuetzt und es erfolgt keine automatische Aktivierung.
 - Importierte Templatepakete werden validiert.
 - Konflikte werden analysiert: gleiche ID, gleicher Name, BuiltIn-Schutz, UserDefined-Konflikte, fehlende Abhängigkeiten und prüfpflichtige Ordner-/XDT-Anhang-Einstellungen.
 - Aus der Analyse wird ein Importplan erzeugt.
@@ -221,7 +222,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 - Manuelle Zielnamen-/ID-Bearbeitung in der UI.
 - Produktive Aktivierung importierter Schnittstellenprofile; Pruefung, Guard und V1-Preview sind nur read-only vorbereitet.
 - Produktiver `ActivationExecutor` mit frischem Laden, finaler Evaluation + Guard und sicherer UserDefined-Speicherung.
-- Vollständiger Profil-Assistent für unbekannte Geräte.
+- Vollständiger Profil-Assistent für unbekannte Geräte; die schlanke V1-Anlage von AIS-, Geraete- und Exportprofilen als UserDefined ist vorhanden, ersetzt aber noch keinen gefuehrten Datei-/Messwert-Assistenten.
 - Digitale Lizenzsignatur.
 - Online-Lizenzierung.
 - Harte produktive Lizenzdurchsetzung.
@@ -276,7 +277,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 - Unbekannte Geräte-/XML-/Textdateien analysieren.
 - SourcePaths anzeigen.
 - Feldvorschläge und Platzhalter ableiten.
-- Profilentwurf als UserDefined speichern.
+- Schlanke AIS-/Geraete-/Exportprofil-Anlage ist vorhanden; als naechster Ausbau bleibt der gefuehrte Profilentwurf mit Messwertuebernahme.
 
 ### Phase 5: Produktive Validierung vorbereiteter Geräteprofile
 
@@ -311,10 +312,11 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 3. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
 4. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 5. Fuer LM7/LM7P ein fertiges Profil-/Templatepaket vorbereiten, wenn die Datenlage reicht.
-6. Danach NIDEK NT530P oder TOPCON CL300/KR800/TRK2P anhand vorhandener Beispiel- und Testdaten priorisieren.
-7. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
-8. Read-only Aktivierungsassistent nur als geparkten Regressionsstand weiterfuehren.
-9. Lizenzsignatur- und Installer-Themen erst nach weiterem Profil-/Template-Nutzen priorisieren.
+6. Die neue schlanke Profilanlage im Live-Test mit einer UserDefined-AIS-Kopie, einem einfachen UserDefined-Geraeteprofil und einer Exportprofil-Kopie pruefen.
+7. Danach NIDEK NT530P oder TOPCON CL300/KR800/TRK2P anhand vorhandener Beispiel- und Testdaten priorisieren.
+8. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
+9. Read-only Aktivierungsassistent nur als geparkten Regressionsstand weiterfuehren.
+10. Lizenzsignatur- und Installer-Themen erst nach weiterem Profil-/Template-Nutzen priorisieren.
 
 ## 7. Risiken / offene Entscheidungen
 

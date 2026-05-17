@@ -584,12 +584,12 @@
                             <WrapPanel Grid.Row="1">
                                 <Button Content="Templatepaket exportieren" Width="190" Margin="0,0,8,8" Click="ExportTemplatePackage_Click"/>
                                 <Button x:Name="ImportTemplatePackageButton" Content="Templatepaket importieren" Width="190" Margin="0,0,16,8" Click="ImportTemplatePackage_Click"/>
-                                <Button Content="Neues AIS anlegen" Width="160" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
-                                <Button Content="Neues Gerät anlegen" Width="170" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
-                                <Button Content="Neues Exportprofil anlegen" Width="200" Margin="0,0,8,8" Click="ProfileAssistantPlaceholder_Click"/>
+                                <Button Content="Neues AIS anlegen" Width="160" Margin="0,0,8,8" Click="CreateNewAisProfile_Click"/>
+                                <Button Content="Neues Gerät anlegen" Width="170" Margin="0,0,8,8" Click="CreateNewDeviceProfile_Click"/>
+                                <Button Content="Neues Exportprofil anlegen" Width="200" Margin="0,0,8,8" Click="CreateNewExportProfile_Click"/>
                             </WrapPanel>
                             <TextBlock Grid.Row="2"
-                                       Text="Neue Geräte- und AIS-Profile werden später über einen Profil-Assistenten erstellt."
+                                       Text="Neue AIS-, Geräte- und Exportprofile werden als UserDefined angelegt. BuiltIn-Profile bleiben unverändert."
                                        Foreground="DimGray"
                                        TextWrapping="Wrap"/>
                             <GroupBox Grid.Row="3"
