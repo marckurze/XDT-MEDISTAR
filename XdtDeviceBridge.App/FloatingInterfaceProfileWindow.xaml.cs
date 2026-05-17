@@ -32,6 +32,11 @@ public partial class FloatingInterfaceProfileWindow : Window
 
     public void ApplyState(InterfaceProfileFloatingWindowState state)
     {
+        if (!string.Equals(state.InterfaceProfileId, InterfaceProfileId, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         _isUpdatingState = true;
         try
         {

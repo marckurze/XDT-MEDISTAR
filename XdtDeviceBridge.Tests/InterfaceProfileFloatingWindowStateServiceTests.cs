@@ -62,6 +62,31 @@ public sealed class InterfaceProfileFloatingWindowStateServiceTests
     }
 
     [Fact]
+    public void SetPinned_ShouldSetArk1sPinnedWithoutChangingAr360()
+    {
+        var service = new InterfaceProfileFloatingWindowStateService();
+        service.SetPinned("interface-ar360", false);
+
+        service.SetPinned("interface-ark1s", true);
+
+        Assert.False(service.GetOrCreate("interface-ar360").IsPinned);
+        Assert.True(service.GetOrCreate("interface-ark1s").IsPinned);
+    }
+
+    [Fact]
+    public void SetPinned_ShouldUnpinOnlySelectedProfile()
+    {
+        var service = new InterfaceProfileFloatingWindowStateService();
+        service.SetPinned("interface-ar360", true);
+        service.SetPinned("interface-ark1s", true);
+
+        service.SetPinned("interface-ark1s", false);
+
+        Assert.True(service.GetOrCreate("interface-ar360").IsPinned);
+        Assert.False(service.GetOrCreate("interface-ark1s").IsPinned);
+    }
+
+    [Fact]
     public void SetPositionMemoryEnabled_ShouldSetFlagOnlyForSelectedProfile()
     {
         var service = new InterfaceProfileFloatingWindowStateService();

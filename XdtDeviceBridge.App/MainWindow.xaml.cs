@@ -2830,7 +2830,6 @@ public partial class MainWindow : Window
         if (!_floatingMonitoringWindows.TryGetValue(card.InterfaceProfileId, out var window))
         {
             window = new FloatingInterfaceProfileWindow(card.InterfaceProfileId);
-            TrySetFloatingWindowOwner(window);
             window.DockRequested += FloatingMonitoringWindow_DockRequested;
             window.PinChanged += FloatingMonitoringWindow_PinChanged;
             window.PositionMemoryChanged += FloatingMonitoringWindow_PositionMemoryChanged;
@@ -2847,25 +2846,6 @@ public partial class MainWindow : Window
         if (!window.IsVisible)
         {
             window.Show();
-        }
-    }
-
-    private void TrySetFloatingWindowOwner(FloatingInterfaceProfileWindow window)
-    {
-        if (!IsLoaded
-            || !IsVisible
-            || PresentationSource.FromVisual(this) is null)
-        {
-            return;
-        }
-
-        try
-        {
-            window.Owner = this;
-        }
-        catch (InvalidOperationException)
-        {
-            // Beim App-Start kann MainWindow noch nicht owner-faehig sein. Das Floating-Fenster darf trotzdem stabil starten.
         }
     }
 

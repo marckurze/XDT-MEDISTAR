@@ -76,6 +76,30 @@ public sealed class InterfaceProfileFloatingWindowStateRepositoryTests
         Assert.Contains(loaded, state => state.InterfaceProfileId == "interface-ark1s" && !state.IsDetached && !state.IsPinned);
     }
 
+    [Fact]
+    public void SaveAndLoad_ShouldPersistPinnedStatePerProfile()
+    {
+        var paths = CreateTempPaths();
+        var ar360 = new InterfaceProfileFloatingWindowState(
+            "interface-ar360",
+            IsDetached: true,
+            IsPinned: true,
+            IsPositionMemoryEnabled: true,
+            Bounds: new InterfaceProfileFloatingWindowBounds(10, 20, 360, 240));
+        var ark1s = new InterfaceProfileFloatingWindowState(
+            "interface-ark1s",
+            IsDetached: true,
+            IsPinned: false,
+            IsPositionMemoryEnabled: true,
+            Bounds: new InterfaceProfileFloatingWindowBounds(30, 40, 420, 260));
+
+        _repository.Save(paths, new[] { ar360, ark1s });
+        var loaded = _repository.Load(paths);
+
+        Assert.Contains(loaded, state => state.InterfaceProfileId == "interface-ar360" && state.IsPinned);
+        Assert.Contains(loaded, state => state.InterfaceProfileId == "interface-ark1s" && !state.IsPinned);
+    }
+
     private AppDataPaths CreateTempPaths()
     {
         var tempRoot = Path.Combine(Path.GetTempPath(), "XdtDeviceBridge-FloatingStateTests", Guid.NewGuid().ToString("N"));

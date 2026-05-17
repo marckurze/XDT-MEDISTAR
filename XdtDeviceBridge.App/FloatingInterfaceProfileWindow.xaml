@@ -6,7 +6,7 @@
         Height="430"
         MinWidth="340"
         MinHeight="260"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style x:Key="FloatingSymbolButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="30"/>
