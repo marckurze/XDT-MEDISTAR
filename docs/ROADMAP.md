@@ -153,6 +153,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Im Tab `Verarbeitung` ist die erste manuelle Grundlage vorhanden: Monitoring-/Geraetekarten koennen pro Schnittstellenprofil abgedockt und ueber das Floating-Fenster wieder angedockt werden.
 - Pin setzt das Floating-Fenster pro Profil in den Vordergrund; Positionsmerken speichert Position, Groesse und Abdockstatus persistent als UI-State unter AppData.
+- Persistierte Floating-Fenster werden erst nach der sicheren MainWindow-Anzeige wiederhergestellt; falls ein Restore fehlschlaegt, wird die Karte angedockt statt die App zu blockieren.
 - Schliessen per `X` dockt sicher zurueck. Radar-/Scanbalken und `-`/`+`-Scanintervallsteuerung sind im Floating-Fenster sichtbar.
 - Noch nicht enthalten sind Systray-Betrieb, automatisches Abdocken bei Dateiempfang, automatisches Zurueckdocken und einstellbare Rueckdock-Zeit.
 - Die Funktion bleibt reine UI-Funktion und aendert keine Verarbeitung, keine Profile, keine Datei-/Ordnerlogik und kein Aktivierungsmodell.

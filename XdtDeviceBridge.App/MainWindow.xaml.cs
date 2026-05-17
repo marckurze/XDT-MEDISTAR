@@ -95,6 +95,7 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, bool> _monitoringDetailsExpandedByProfileId = new(StringComparer.OrdinalIgnoreCase);
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
+    private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
 
     private ProcessingPipelineResult? _lastPipelineResult;
@@ -147,6 +148,12 @@ public partial class MainWindow : Window
         SaveFloatingWindowStates();
         CloseAllFloatingMonitoringWindows();
         base.OnClosing(e);
+    }
+
+    protected override void OnContentRendered(EventArgs e)
+    {
+        base.OnContentRendered(e);
+        RestoreFloatingWindowsOnce();
     }
 
     private void InitializeProfileOverview()
@@ -2655,6 +2662,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private void RestoreFloatingWindowsOnce()
+    {
+        if (!_floatingWindowRestoreGate.MarkMainWindowReady())
+        {
+            return;
+        }
+
+        RefreshInterfaceMonitoringCards();
+    }
+
     private void RefreshInterfaceMonitoringCards()
     {
         _refreshingInterfaceMonitoringCards = true;
@@ -2676,13 +2693,19 @@ public partial class MainWindow : Window
                     IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId)
                 };
                 var floatingState = _floatingWindowStateService.GetOrCreate(row.MonitoringCard.InterfaceProfileId);
-                if (floatingState.IsDetached)
+                if (floatingState.IsDetached && _floatingWindowRestoreGate.CanShowFloatingWindows)
                 {
-                    ShowOrUpdateFloatingMonitoringWindow(desiredCard, floatingState);
-                    continue;
+                    if (TryShowOrUpdateFloatingMonitoringWindow(desiredCard, floatingState))
+                    {
+                        continue;
+                    }
                 }
 
-                CloseFloatingMonitoringWindow(row.MonitoringCard.InterfaceProfileId);
+                if (!floatingState.IsDetached)
+                {
+                    CloseFloatingMonitoringWindow(row.MonitoringCard.InterfaceProfileId);
+                }
+
                 desiredCards.Add(desiredCard);
             }
 
@@ -2751,12 +2774,20 @@ public partial class MainWindow : Window
 
         var state = _floatingWindowStateService.Detach(card.InterfaceProfileId);
         SaveFloatingWindowStates();
-        ShowOrUpdateFloatingMonitoringWindow(card, state);
+        var detached = false;
+        if (_floatingWindowRestoreGate.CanShowFloatingWindows)
+        {
+            detached = TryShowOrUpdateFloatingMonitoringWindow(card, state);
+        }
+
         RefreshInterfaceMonitoringCards();
-        AppendMonitoringEvent(
-            card.InterfaceProfileId,
-            "monitoring-card-detached",
-            $"{card.InterfaceProfileName}: Gerätekarte abgedockt.");
+        if (detached)
+        {
+            AppendMonitoringEvent(
+                card.InterfaceProfileId,
+                "monitoring-card-detached",
+                $"{card.InterfaceProfileName}: Gerätekarte abgedockt.");
+        }
     }
 
     private void DockFloatingMonitoringCard(string interfaceProfileId)
@@ -2776,16 +2807,30 @@ public partial class MainWindow : Window
             $"{profileName}: Gerätekarte wieder angedockt.");
     }
 
+    private bool TryShowOrUpdateFloatingMonitoringWindow(
+        InterfaceMonitoringCardDisplay card,
+        InterfaceProfileFloatingWindowState state)
+    {
+        try
+        {
+            ShowOrUpdateFloatingMonitoringWindow(card, state);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            HandleFloatingWindowRestoreFailure(card, ex);
+            return false;
+        }
+    }
+
     private void ShowOrUpdateFloatingMonitoringWindow(
         InterfaceMonitoringCardDisplay card,
         InterfaceProfileFloatingWindowState state)
     {
         if (!_floatingMonitoringWindows.TryGetValue(card.InterfaceProfileId, out var window))
         {
-            window = new FloatingInterfaceProfileWindow(card.InterfaceProfileId)
-            {
-                Owner = this
-            };
+            window = new FloatingInterfaceProfileWindow(card.InterfaceProfileId);
+            TrySetFloatingWindowOwner(window);
             window.DockRequested += FloatingMonitoringWindow_DockRequested;
             window.PinChanged += FloatingMonitoringWindow_PinChanged;
             window.PositionMemoryChanged += FloatingMonitoringWindow_PositionMemoryChanged;
@@ -2803,6 +2848,37 @@ public partial class MainWindow : Window
         {
             window.Show();
         }
+    }
+
+    private void TrySetFloatingWindowOwner(FloatingInterfaceProfileWindow window)
+    {
+        if (!IsLoaded
+            || !IsVisible
+            || PresentationSource.FromVisual(this) is null)
+        {
+            return;
+        }
+
+        try
+        {
+            window.Owner = this;
+        }
+        catch (InvalidOperationException)
+        {
+            // Beim App-Start kann MainWindow noch nicht owner-faehig sein. Das Floating-Fenster darf trotzdem stabil starten.
+        }
+    }
+
+    private void HandleFloatingWindowRestoreFailure(InterfaceMonitoringCardDisplay card, Exception ex)
+    {
+        _floatingWindowStateService.Dock(card.InterfaceProfileId);
+        SaveFloatingWindowStates();
+        CloseFloatingMonitoringWindow(card.InterfaceProfileId);
+        AppendMonitoringEvent(
+            card.InterfaceProfileId,
+            "floating-window-restore-failed",
+            $"{card.InterfaceProfileName}: Abgedocktes Fenster konnte nicht wiederhergestellt werden und wurde angedockt angezeigt. {ex.Message}",
+            InterfaceMonitoringEventSeverity.Warning);
     }
 
     private static void ApplyFloatingWindowPlacement(

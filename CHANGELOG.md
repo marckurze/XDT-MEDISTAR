@@ -29,6 +29,7 @@
 
 ### Behoben
 
+- Startfehler bei persistent abgedockten Geraeteanbindungsfenstern behoben: Floating-Fenster werden erst nach der sicheren MainWindow-Anzeige wiederhergestellt, `Owner` wird defensiv gesetzt, und ein Restore-Fehler dockt die Karte statt App-Abbruch sicher an.
 - Floating-Geraeteanbindungsfenster stabilisiert: Schliessen per `X` dockt sicher zurueck, ohne rekursives `Close()`, Radar-/Scanbalken ist im Floating-Fenster sichtbar, und die Scanintervall-Buttons `-`/`+` sind dort ebenfalls verfuegbar.
 - Templatepaket-Importvorschau in der WPF-App stabilisiert: Paketlesen und Vorschau-Erstellung laufen nun ueber einen UI-nah testbaren Preview-Service, der Import-Button ist waehrend der Vorschau gesperrt, und unveraenderte ComboBox-Auswahlereignisse bauen die Vorschau nicht erneut rekursiv auf.
 - Templatepaket-Importvorschau benutzerfreundlicher gemacht: Konflikte und BuiltIn-Schutz starten nun mit `Ueberspringen` als sicherem Standard, `Als Kopie importieren` muss bewusst gewaehlt werden, Zielnamen fuer Kopien sind editierbar und leere/doppelte Zielnamen blockieren die Uebernahme verstaendlich.
