@@ -26,6 +26,7 @@
 - Erste Grundlage fuer abdockbare Geraeteanbindungsfenster im Tab `Verarbeitung` ergaenzt: Monitoring-Karten koennen manuell abgedockt und wieder angedockt werden; Pin und Positionsmerken sind pro Schnittstellenprofil als UI-Zustand vorbereitet.
 - Erste Stufe fuer automatisches Abdocken bei Monitoring-Aktivitaet ergaenzt: AIS-/Geraete-/Anhang-/Paket- und Verarbeitungsevents oeffnen nur das betroffene Geraetefenster und nutzen einen kurzen Cooldown gegen Event-Spam.
 - Akustisches Signal bei relevanter Datei-/Monitoring-Aktivitaet ergaenzt: `04_praxis_terminal_signal.wav` wird als App-Content ausgeliefert, pro Schnittstellenprofil per Cooldown begrenzt und bei fehlender/defekter Sounddatei defensiv abgefangen.
+- Automatisches Zurueckandocken nach terminalem Monitoring-Abschluss ergaenzt: automatisch geoeffnete, nicht gepinnte Geraetefenster docken nach 5 Sekunden Restlaufzeit wieder an; neue Aktivitaet, Pin oder manuelles Andocken brechen den Countdown pro Schnittstellenprofil ab.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
@@ -44,7 +45,7 @@
 
 ### Nicht umgesetzt
 
-- Noch nicht enthalten sind Systray-Verhalten, automatisches Zurueckdocken und eine einstellbare Rueckdock-Zeit fuer abdockbare Geraeteanbindungsfenster.
+- Noch nicht enthalten sind Systray-Verhalten, UI-Einstellung fuer die Rueckdock-Zeit und ein sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungsfenster.
 
 ### Dokumentation
 

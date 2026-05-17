@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using XdtDeviceBridge.Core;
 using XdtDeviceBridge.Infrastructure;
 using WinForms = System.Windows.Forms;
@@ -79,6 +80,7 @@ public partial class MainWindow : Window
     private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
     private readonly InterfaceProfileAutoDetachService _interfaceProfileAutoDetachService = new();
+    private readonly InterfaceProfileAutoRedockService _interfaceProfileAutoRedockService = new();
     private readonly InterfaceProfileNotificationSoundService _interfaceProfileNotificationSoundService = new(isEnabled: MonitoringNotificationSoundEnabled);
     private readonly IInterfaceProfileNotificationSoundPlayer _interfaceProfileNotificationSoundPlayer = new WavInterfaceProfileNotificationSoundPlayer();
     private readonly InterfaceProfileActivationEvaluationService _interfaceProfileActivationEvaluationService = new();
@@ -103,6 +105,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
+    private readonly DispatcherTimer _autoRedockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -144,6 +147,7 @@ public partial class MainWindow : Window
         InterfaceActivationPreviewAttachmentChecksGrid.ItemsSource = _interfaceProfileActivationAttachmentRows;
         InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
+        _autoRedockTimer.Tick += AutoRedockTimer_Tick;
         SyncBuilderTestPreviewArea();
         InitializeProfileOverview();
         InitializeLicenseOverview();
@@ -152,6 +156,7 @@ public partial class MainWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         StopPeriodicScan(updateUi: false);
+        _autoRedockTimer.Stop();
         SaveFloatingWindowStates();
         CloseAllFloatingMonitoringWindows();
         base.OnClosing(e);
@@ -2799,6 +2804,8 @@ public partial class MainWindow : Window
 
     private void DockFloatingMonitoringCard(string interfaceProfileId)
     {
+        _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
+        EnsureAutoRedockTimerState();
         var state = _floatingWindowStateService.Dock(interfaceProfileId);
         _ = state;
         SaveFloatingWindowStates();
@@ -2858,6 +2865,8 @@ public partial class MainWindow : Window
 
     private void HandleFloatingWindowRestoreFailure(InterfaceMonitoringCardDisplay card, Exception ex)
     {
+        _interfaceProfileAutoRedockService.NotifyDocked(card.InterfaceProfileId);
+        EnsureAutoRedockTimerState();
         _floatingWindowStateService.Dock(card.InterfaceProfileId);
         SaveFloatingWindowStates();
         CloseFloatingMonitoringWindow(card.InterfaceProfileId);
@@ -2893,6 +2902,7 @@ public partial class MainWindow : Window
         if (decision.ShouldDetach)
         {
             state = _floatingWindowStateService.Detach(entry.ScopeId);
+            _interfaceProfileAutoRedockService.MarkAutoDetached(entry.ScopeId, state, entry.Timestamp);
         }
 
         var card = GetRuntimeMonitoringCard(row);
@@ -2915,6 +2925,20 @@ public partial class MainWindow : Window
         }
     }
 
+    private void TryUpdateAutoRedockForActivity(InterfaceMonitoringEventEntry entry)
+    {
+        var row = _activeInterfaceProfileStatusRows.FirstOrDefault(item =>
+            string.Equals(item.MonitoringCard.InterfaceProfileId, entry.ScopeId, StringComparison.OrdinalIgnoreCase));
+        if (row is null)
+        {
+            return;
+        }
+
+        var floatingState = _floatingWindowStateService.GetOrCreate(entry.ScopeId);
+        _ = _interfaceProfileAutoRedockService.RecordMonitoringEvent(entry, floatingState);
+        EnsureAutoRedockTimerState();
+    }
+
     private void TryPlayNotificationSoundForActivity(InterfaceMonitoringEventEntry entry)
     {
         var result = _interfaceProfileNotificationSoundService.TryPlay(
@@ -2935,6 +2959,46 @@ public partial class MainWindow : Window
     private static string GetMonitoringNotificationSoundPath()
     {
         return Path.Combine(AppContext.BaseDirectory, MonitoringNotificationSoundRelativePath);
+    }
+
+    private void AutoRedockTimer_Tick(object? sender, EventArgs e)
+    {
+        var now = DateTime.Now;
+        foreach (var interfaceProfileId in _floatingMonitoringWindows.Keys.ToArray())
+        {
+            var state = _floatingWindowStateService.GetOrCreate(interfaceProfileId);
+            var decision = _interfaceProfileAutoRedockService.EvaluateDue(interfaceProfileId, state, now);
+            if (!decision.ShouldRedockNow)
+            {
+                continue;
+            }
+
+            var profileName = _interfaceMonitoringRuntimeCards.TryGetValue(interfaceProfileId, out var card)
+                ? card.InterfaceProfileName
+                : interfaceProfileId;
+            AppendMessage($"{profileName}: Fenster automatisch angedockt.");
+            DockFloatingMonitoringCard(interfaceProfileId);
+        }
+
+        EnsureAutoRedockTimerState();
+    }
+
+    private void EnsureAutoRedockTimerState()
+    {
+        if (_interfaceProfileAutoRedockService.HasPendingCountdowns)
+        {
+            if (!_autoRedockTimer.IsEnabled)
+            {
+                _autoRedockTimer.Start();
+            }
+
+            return;
+        }
+
+        if (_autoRedockTimer.IsEnabled)
+        {
+            _autoRedockTimer.Stop();
+        }
     }
 
     private void BringFloatingMonitoringWindowToFront(
@@ -2997,6 +3061,8 @@ public partial class MainWindow : Window
 
         var state = _floatingWindowStateService.SetPinned(window.InterfaceProfileId, isPinned);
         SaveFloatingWindowStates();
+        _ = _interfaceProfileAutoRedockService.NotifyPinnedChanged(window.InterfaceProfileId, isPinned, state, DateTime.Now);
+        EnsureAutoRedockTimerState();
         window.ApplyState(state);
     }
 
@@ -3050,6 +3116,8 @@ public partial class MainWindow : Window
         window.PositionMemoryChanged -= FloatingMonitoringWindow_PositionMemoryChanged;
         window.PositionRememberRequested -= FloatingMonitoringWindow_PositionRememberRequested;
         window.ScanIntervalChangeRequested -= FloatingMonitoringWindow_ScanIntervalChangeRequested;
+        _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
+        EnsureAutoRedockTimerState();
         window.CloseWithoutDockRequest();
     }
 
@@ -5543,6 +5611,7 @@ public partial class MainWindow : Window
         AppendMessage(entry.Message);
         TryPlayNotificationSoundForActivity(entry);
         TryAutoDetachMonitoringCardForActivity(entry);
+        TryUpdateAutoRedockForActivity(entry);
     }
 
     private void AppendProfileMessage(string message)
