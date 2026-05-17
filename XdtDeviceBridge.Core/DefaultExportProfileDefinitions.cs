@@ -54,6 +54,58 @@ public static class DefaultExportProfileDefinitions
             });
     }
 
+    public static ExportProfileDefinition CreateMedistarNidekAr360Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 17, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-nidek-ar360-default",
+                Name: "MEDISTAR + NIDEK AR360 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and NIDEK AR360 / AR-360A autorefractor LAN XML files.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK AR360",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-nidek-ar360-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6228",
+                    "ResultRight",
+                    ExportRuleType.Template,
+                    "Device.R/AR/ARMedian/Sphere",
+                    "R.:S={Device.R/AR/ARMedian/Sphere:Diopter} Z={Device.R/AR/ARMedian/Cylinder:Diopter}*{Device.R/AR/ARMedian/Axis} PD= {Device.PD/PDList[@No='1']/FarPD:Pd} VD= {Device.VD:Raw}",
+                    7,
+                    true,
+                    "MEDISTAR autorefractor card text for right eye; ARMedian is used."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6228",
+                    "ResultLeft",
+                    ExportRuleType.Template,
+                    "Device.L/AR/ARMedian/Sphere",
+                    "L.:S={Device.L/AR/ARMedian/Sphere:Diopter} Z={Device.L/AR/ARMedian/Cylinder:Diopter}*{Device.L/AR/ARMedian/Axis}",
+                    8,
+                    true,
+                    "MEDISTAR autorefractor card text for left eye; ARMedian is used.")
+            });
+    }
+
     public static ExportProfileDefinition CreateMedistarNidekLm7Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);

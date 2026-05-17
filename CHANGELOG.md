@@ -20,6 +20,7 @@
 - Reproduzierbaren Testweg fuer das MEDISTAR + NIDEK ARK1S Referenz-Templatepaket ergaenzt: `TemplatePackageExporter` erzeugt die ZIP temporaer, `TemplatePackageImporter` liest sie wieder ein, und der sichere Importfluss schuetzt BuiltIns und importiert nur inaktive UserDefined-Kopien.
 - Selektiven Templatepaket-Export ergaenzt: Im Tab `Profile & Templates` wird ein Schnittstellenprofil als Paketbasis gewaehlt; exportiert werden nur dieses Schnittstellenprofil und die benoetigten AIS-, Geraete- und Exportprofile.
 - Schlanke Bedienfunktionen fuer Exportprofil-Wartung ergaenzt: UserDefined-Exportprofile koennen geloescht werden, wenn kein Schnittstellenprofil sie verwendet; Exportregeln koennen nur aus UserDefined-Exportprofilen entfernt werden. BuiltIns bleiben gesperrt.
+- NIDEK AR360 / AR-360A als testgestuetzten Auto-Refraktometer-Kandidaten ergaenzt: BuiltIn-Geraeteprofil, MEDISTAR-Exportprofil, Schnittstellenprofil, ARMedian-XML-Fixtures, UTF-16-Lesetest und selektiver Templatepaket-Test.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
@@ -34,6 +35,7 @@
 ### Dokumentation
 
 - Geraete-/Template-Matrix ergaenzt: BuiltIn-Geraeteprofile, MEDISTAR-Exportprofile, vorhandene Testdaten, Templatepaket-Luecken und V1-Prioritaeten fuer konkrete Geraete-/Templatearbeit sind kompakt dokumentiert.
+- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md` dokumentiert; ARMedian ist fuer AR360 massgeblich, die abweichende Achse aus der bereitgestellten MEDISTAR-TXT wird nicht kuenstlich uebernommen.
 - Projektleitlinie geschaerft: fertige Geraeteprofile und Templatepakete haben Vorrang vor Baukasten-Nutzung; der Aktivierungsassistent ruht bis auf Weiteres als read-only vorbereiteter Stand.
 - Offizielle Paketvorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` fuer das erste Referenzpaket MEDISTAR + NIDEK ARK1S ergaenzt; sie nutzt das bestehende ZIP-Templatepaket-Format, enthaelt keine Kunden-/Patientendaten und keine Live-Pfade.
 - ARK1S-Paketvorlage dokumentiert jetzt den automatisierten Export-/Import-Testweg; die ZIP wird weiterhin nicht manuell eingecheckt und bleibt bis zur Release-Regel ein temporaeres Testartefakt.

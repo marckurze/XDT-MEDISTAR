@@ -120,6 +120,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Die kompakte Geraete-/Template-Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`.
 - Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; der technische Export-/Import-Testweg erzeugt die ZIP temporaer mit `TemplatePackageExporter`, prueft sie mit `TemplatePackageImporter` und deckt den UI-nahen Importvorschau-Pfad ab. Eine dauerhaft abgelegte ZIP-Paketdatei bleibt bis zur Release-Regel offen.
+- `MEDISTAR + NIDEK AR360` ist als testgestuetzter Templatepaket-Kandidat vorbereitet: BuiltIn-Geraeteprofil, Exportprofil und Schnittstellenprofil sind vorhanden; ARMedian, FarPD, VD und UTF-16-XML werden testseitig geprueft. Die praktische MEDISTAR-Abnahme fehlt noch.
 - Der Templatepaket-Export ist auf eine schlanke V1-Auswahl umgestellt: Der Benutzer waehlt ein Schnittstellenprofil als Paketbasis, und das Paket enthaelt nur dieses Schnittstellenprofil plus referenziertes AIS-, Geraete- und Exportprofil.
 - BuiltIn-Profile werden nicht überschrieben.
 - UserDefined-Profile werden separat gespeichert.
@@ -190,6 +191,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 ## 3. Was ist vorbereitet, aber noch nicht produktiv validiert?
 
+- NIDEK AR360 / AR-360A LAN/XML mit ARMedian, FarPD und VD.
 - NIDEK LM7/LM7P LAN/XML.
 - NIDEK NT530P.
 - TOPCON CL300.
@@ -241,6 +243,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 
 - MEDISTAR + NIDEK ARK1S als stabilen Referenzworkflow schuetzen.
 - Die dokumentierte ARK1S-Paketvorlage und den reproduzierbaren Export-/Import-Testweg als Grundlage fuer ein spaeteres ZIP-Release-Artefakt nutzen.
+- NIDEK AR360 mit echten XML-Dateien in der App exportieren/importieren und per MEDISTAR-Testimport praktisch abnehmen.
 - NIDEK LM7/LM7P mit repraesentativen XML-Dateien validieren und als naechstes fertiges Profil-/Templatepaket vorbereiten.
 - NIDEK NT530P oder TOPCON-Profile nur dann priorisieren, wenn belastbare Beispiel- und Testdaten vorliegen.
 

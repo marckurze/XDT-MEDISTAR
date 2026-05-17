@@ -13,6 +13,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | Hersteller | Gerät | Gerätetyp | beobachtete Dateiformate | Untersuchungsarten | Zusatzdateien | MEDISTAR-Zielbild | spätere Profilrelevanz |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | NIDEK | AR1S | Autorefraktometer | XML | Refraktion, PD | keine im aktuellen Standardfall | zwei `6228`-Ergebniszeilen rechts/links, `8000=6310`, `8402` aus AIS | erstes validiertes Standardprofil, Referenz für Refraktionsformatierung |
+| NIDEK | AR360 / AR-360A | Autorefraktometer | NIDEK-LAN-XML, Dateiendung `.XML` | Refraktion, PD, VD | keine im aktuellen Standardfall | Auto-Refraktor-Zeilen wie ARK1S, mit ARMedian, FarPD und VD | testgestützter Profilkandidat analog ARK1S, praktische MEDISTAR-Abnahme offen |
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | XML oder gerätespezifisches Format aus Beispieldaten | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Prisma/PD | zweites naheliegendes Geräteprofil wegen ähnlicher refraktiver Ergebniszeilen |
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | Pachymetrie- und Tonometriezeilen, perspektivisch externer AIS-Link | wichtig für Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Protokolle |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erstes TOPCON-/JOIA-Profil mit Namespace- und Attributanforderungen |
@@ -54,6 +55,43 @@ V1 L.:S=+ 0.00 Z=- 0.50* 63                              PD=61
 ```
 
 Status: bereits im Prototyp erfolgreich validiert.
+
+## 3.1 NIDEK AR360 / AR-360A
+
+Gerätetyp: Autorefraktometer
+
+Dateiformat: NIDEK-LAN-XML, Dateiname beliebig, Dateiendung `.XML`.
+
+Relevante SourcePaths:
+
+- `Company`
+- `ModelName`
+- `VD`
+- `R/AR/ARMedian/Sphere`
+- `R/AR/ARMedian/Cylinder`
+- `R/AR/ARMedian/Axis`
+- `L/AR/ARMedian/Sphere`
+- `L/AR/ARMedian/Cylinder`
+- `L/AR/ARMedian/Axis`
+- `PD/PDList[@No='1']/FarPD`
+
+Umsetzung:
+
+- BuiltIn-Geräteprofil `device-nidek-ar360-default`
+- BuiltIn-Exportprofil `export-medistar-nidek-ar360-default`
+- BuiltIn-Schnittstellenprofil `interface-medistar-nidek-ar360-default`
+- MEDISTAR-Ausgabe nutzt `ARMedian`; `ARList`, `TrialLens` und `ContactLens` werden fuer die Auto-Refraktor-Zeilen nicht verwendet.
+
+Beispielausgabe aus den bereitgestellten AR360-Werten:
+
+```text
+R.:S=+ 2.00 Z=- 1.25*172 PD= 60 VD= 12.00
+L.:S=+ 1.00 Z=- 0.75*170
+```
+
+Hinweis zur bereitgestellten MEDISTAR-TXT: Sie dient als Zielformat. Die rechte Achse weicht von der ARMedian-Beispiel-XML ab: In der TXT steht `177`, in `R/AR/ARMedian/Axis` steht `172`; `177` stammt aus `ARList No. 1`. Fuer den Parser ist ARMedian massgeblich, daher wird `172` getestet und ausgegeben.
+
+Status: testgestützt vorbereitet, aber noch nicht praktisch im MEDISTAR-Livesystem validiert.
 
 ## 4. NIDEK LM7
 

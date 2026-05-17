@@ -120,3 +120,5 @@ C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.deps.json
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.runtimeconfig.json
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.dll
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Tests.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Nidek\AR360\AR360.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Nidek\AR360\CGU7L.xml

@@ -30,7 +30,33 @@ public sealed class TemplatePackageExportSelectionServiceTests
 
         Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("lm7", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("nt530", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("ar360", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("topcon", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.Package.IncludedProfiles, profile => profile.Id.Contains("topcon", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void CreateForAr360InterfaceProfile_ShouldIncludeOnlyAr360AndDependencies()
+    {
+        var result = _service.CreateForInterfaceProfile(
+            CreateDefaultCatalog(),
+            "interface-medistar-nidek-ar360-default",
+            Timestamp);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(result.Request);
+        var request = result.Request!;
+        Assert.Equal("medistar-nidek-ar360-v1.templatepackage.zip", result.SuggestedFileName);
+        Assert.Equal("ais-medistar-default", Assert.Single(request.AisProfiles).Metadata.Id);
+        Assert.Equal("device-nidek-ar360-default", Assert.Single(request.DeviceProfiles).Metadata.Id);
+        Assert.Equal("export-medistar-nidek-ar360-default", Assert.Single(request.ExportProfiles).Metadata.Id);
+        Assert.Equal("interface-medistar-nidek-ar360-default", Assert.Single(request.InterfaceProfiles).Metadata.Id);
+
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("ark1s", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("lm7", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("nt530", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("topcon", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.Package.IncludedProfiles, profile => profile.Id.Contains("ark1s", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(request.Package.IncludedProfiles, profile => profile.Id.Contains("topcon", StringComparison.OrdinalIgnoreCase));
     }
 
@@ -194,6 +220,7 @@ public sealed class TemplatePackageExportSelectionServiceTests
             DeviceProfiles: new[]
             {
                 DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
+                DefaultDeviceProfileDefinitions.CreateNidekAr360Default(),
                 DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
                 DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(),
                 DefaultDeviceProfileDefinitions.CreateTopconCl300Default(),
@@ -203,13 +230,18 @@ public sealed class TemplatePackageExportSelectionServiceTests
             ExportProfiles: new[]
             {
                 DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+                DefaultExportProfileDefinitions.CreateMedistarNidekAr360Default(),
                 DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default(),
                 DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault(),
                 DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default(),
                 DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default(),
                 DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault()
             },
-            InterfaceProfiles: new[] { DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() });
+            InterfaceProfiles: new[]
+            {
+                DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default()
+            });
     }
 
     private static string CreateTempZipPath()

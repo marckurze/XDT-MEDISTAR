@@ -41,6 +41,48 @@ public static class DefaultDeviceProfileDefinitions
             CanContainMultipleExaminationTypes: false);
     }
 
+    public static DeviceProfileDefinition CreateNidekAr360Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 17, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-nidek-ar360-default",
+                Name: "NIDEK AR360",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for NIDEK AR360 / AR-360A LAN XML autorefractor measurement files.",
+                Vendor: "NIDEK",
+                Product: "AR360 / AR-360A",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: "AR-360A",
+            DeviceType: "Autorefractor",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("ar360-company", "Company", "Company", "Common", string.Empty, string.Empty, true, "NIDEK LAN XML company field."),
+                new DeviceMeasurementDefinition("ar360-model-name", "ModelName", "ModelName", "Common", string.Empty, string.Empty, true, "NIDEK LAN XML model name field; expected AR-360A."),
+                new DeviceMeasurementDefinition("ar360-date", "Date", "Date", "Common", string.Empty, string.Empty, false, "NIDEK LAN XML measurement date."),
+                new DeviceMeasurementDefinition("ar360-time", "Time", "Time", "Common", string.Empty, string.Empty, false, "NIDEK LAN XML measurement time."),
+                new DeviceMeasurementDefinition("ar360-patient-no", "Patient No.", "Patient/No.", "Common", string.Empty, string.Empty, false, "NIDEK LAN XML patient number; not exported to MEDISTAR."),
+                new DeviceMeasurementDefinition("ar360-vd", "VD", "VD", "ARMedian", string.Empty, "mm", false, "Vertex distance from NIDEK AR360 LAN XML."),
+                new DeviceMeasurementDefinition("ar360-r-sphere", "R Sphere", "R/AR/ARMedian/Sphere", "ARMedian", "R", "dpt", true, "Right eye sphere from ARMedian."),
+                new DeviceMeasurementDefinition("ar360-r-cylinder", "R Cylinder", "R/AR/ARMedian/Cylinder", "ARMedian", "R", "dpt", true, "Right eye cylinder from ARMedian."),
+                new DeviceMeasurementDefinition("ar360-r-axis", "R Axis", "R/AR/ARMedian/Axis", "ARMedian", "R", "deg", true, "Right eye axis from ARMedian."),
+                new DeviceMeasurementDefinition("ar360-l-sphere", "L Sphere", "L/AR/ARMedian/Sphere", "ARMedian", "L", "dpt", true, "Left eye sphere from ARMedian."),
+                new DeviceMeasurementDefinition("ar360-l-cylinder", "L Cylinder", "L/AR/ARMedian/Cylinder", "ARMedian", "L", "dpt", true, "Left eye cylinder from ARMedian."),
+                new DeviceMeasurementDefinition("ar360-l-axis", "L Axis", "L/AR/ARMedian/Axis", "ARMedian", "L", "deg", true, "Left eye axis from ARMedian."),
+                new DeviceMeasurementDefinition("ar360-far-pd", "FarPD", "PD/PDList[@No='1']/FarPD", "PDList", string.Empty, "mm", false, "Far pupillary distance from NIDEK AR360 LAN XML.")
+            },
+            SupportedExaminationTypes: new[] { "Refraktion", "AR", "PD" },
+            CanContainMultipleExaminationTypes: false);
+    }
+
     public static DeviceProfileDefinition CreateNidekLm7Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);

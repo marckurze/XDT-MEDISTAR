@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Data>
+  <Company>NIDEK</Company>
+  <ModelName>AR-360A</ModelName>
+  <Date>2026-05-17</Date>
+  <Time>10:05:00</Time>
+  <Patient>
+    <No.>0002</No.>
+  </Patient>
+  <VD>12.00</VD>
+  <R>
+    <AR>
+      <ARMedian>
+        <Sphere>-0.25</Sphere>
+        <Cylinder>-0.00</Cylinder>
+        <Axis>0</Axis>
+      </ARMedian>
+    </AR>
+  </R>
+  <L>
+    <AR>
+      <ARMedian>
+        <Sphere>-0.50</Sphere>
+        <Cylinder>-0.25</Cylinder>
+        <Axis>52</Axis>
+      </ARMedian>
+    </AR>
+  </L>
+  <PD>
+    <PDList No="1">
+      <FarPD>56</FarPD>
+    </PDList>
+  </PD>
+</Data>

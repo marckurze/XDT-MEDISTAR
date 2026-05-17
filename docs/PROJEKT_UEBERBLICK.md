@@ -367,6 +367,7 @@ Praktisch validiert:
 
 Vorbereitet, aber noch nicht produktiv validiert:
 
+- NIDEK AR360 / AR-360A
 - NIDEK LM7/LM7P
 - NIDEK NT530P
 - TOPCON CL300
@@ -375,7 +376,7 @@ Vorbereitet, aber noch nicht produktiv validiert:
 
 Wichtig: Diese V2-/BuiltIn-Profile sind vorbereitet und konfigurierbar, aber nicht im gleichen Sinne praktisch validiert wie MEDISTAR + NIDEK ARK1S.
 
-Die kompakte Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Die erste offizielle Paketvorlage fuer den validierten ARK1S-Workflow steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`. Der technische Testweg erzeugt das ARK1S-Paket reproduzierbar temporaer mit `TemplatePackageExporter`, liest es mit `TemplatePackageImporter` wieder ein und prueft den sicheren UserDefined-Import. Aktuelle Prioritaet ist die praktische App-Importabnahme und danach LM7/LM7P anhand repraesentativer Dateien.
+Die kompakte Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Die erste offizielle Paketvorlage fuer den validierten ARK1S-Workflow steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`. Fuer AR360 gibt es den Kandidaten `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md`; er nutzt ARMedian, FarPD und VD aus den bereitgestellten Beispielwerten, ist aber noch nicht praktisch in MEDISTAR abgenommen. Der technische Testweg erzeugt das ARK1S-Paket reproduzierbar temporaer mit `TemplatePackageExporter`, liest es mit `TemplatePackageImporter` wieder ein und prueft den sicheren UserDefined-Import. Aktuelle Prioritaet ist die praktische App-Importabnahme fuer ARK1S/AR360 und danach LM7/LM7P anhand repraesentativer Dateien.
 
 ## 16. Lizenzsystem
 
@@ -431,6 +432,7 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 - `docs/GERAETE_BEISPIELE.md`: Geraetebeispiele, SourcePaths und Interface-Manual-Auswertungen.
 - `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`: kompakte Matrix zu Geraeteprofilen, Templates, Validierungsstand und naechsten Prioritaeten.
 - `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`: offizielle Vorlage fuer das erste ARK1S-Referenzpaket im bestehenden Templatepaket-Format; der Export-/Import-Testweg ist automatisiert abgesichert.
+- `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md`: schlanker Kandidat fuer MEDISTAR + NIDEK AR360 / AR-360A; praktische Abnahme offen.
 - `docs/END_TO_END_TESTPLAN.md`: manueller und automatisierter Testplan fuer AIS-/Geraete-/XDT-Anhang-Verarbeitung.
 - `docs/PROJEKT_UEBERBLICK.md`: diese kompakte Uebergabedatei.
 
@@ -475,7 +477,7 @@ Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn
 
 Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet und ruht vorerst. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> PreparationPreview. Angezeigt werden V1-relevante Vorschauinformationen: Status, Aktivierbarkeit nach V1, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung und keine Datei-/Ordneroperation.
 
-Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten. Die Vorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` beschreibt das erste ARK1S-Referenzpaket; der Testweg erzeugt und prueft die Paket-ZIP temporaer ueber den selektiven Exporter/Importer-Pfad.
+Vorbereitete, aber nicht produktiv validierte Geraeteprofile: NIDEK AR360 / AR-360A, NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800, TOPCON TRK2P. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten. Die Vorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` beschreibt das erste ARK1S-Referenzpaket; `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md` beschreibt den AR360-Kandidaten. Der Testweg erzeugt und prueft die Paket-ZIP temporaer ueber den selektiven Exporter/Importer-Pfad.
 
 Lizenzsystem: InstallationInfo, Lizenzanfrage, Lizenzimport, Statusanzeige, Bewertung lizenzpflichtiger aktiver Schnittstellenprofile und Karenzzeitmodell sind vorbereitet. Es gibt noch keine harte Lizenzsperre, keine Online-Lizenzierung und keine produktive Signaturpruefung.
 
@@ -483,5 +485,5 @@ Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale 
 
 Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: ARK1S-Paket in der App selektiv exportieren, erneut importieren und als spaeteres ZIP-Release-Artefakt festlegen, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
+Naechste sinnvolle Schritte: ARK1S-Paket in der App selektiv exportieren, erneut importieren und als spaeteres ZIP-Release-Artefakt festlegen, AR360 mit echten XML-Dateien und MEDISTAR-Testimport praktisch abnehmen, LM7/LM7P-Dateien validieren, daraus ein fertiges LM7/LM7P-Paket vorbereiten, danach NT530P oder TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
 ```

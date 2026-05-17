@@ -229,6 +229,7 @@ public sealed class ProfileCatalogService
         return new[]
         {
             DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekAr360Default(),
             DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
             DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(),
             DefaultDeviceProfileDefinitions.CreateTopconCl300Default(),
@@ -242,6 +243,7 @@ public sealed class ProfileCatalogService
         return new[]
         {
             DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekAr360Default(),
             DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default(),
             DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault(),
             DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default(),
@@ -254,7 +256,8 @@ public sealed class ProfileCatalogService
     {
         return new[]
         {
-            DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault()
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default()
         };
     }
 
