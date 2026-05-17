@@ -5,6 +5,7 @@ public sealed class InterfaceProfileNotificationSoundService
     public static readonly TimeSpan DefaultCooldown = TimeSpan.FromSeconds(2);
 
     private readonly Dictionary<string, DateTime> _lastSoundActivityByProfileId = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _handledDeviceFileKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly TimeSpan _cooldown;
 
     public InterfaceProfileNotificationSoundService(TimeSpan? cooldown = null, bool isEnabled = true)
@@ -14,6 +15,48 @@ public sealed class InterfaceProfileNotificationSoundService
     }
 
     public bool IsEnabled { get; }
+
+    public InterfaceProfileNotificationSoundResult TryPlayForDeviceFileDetected(
+        string interfaceProfileId,
+        string deviceFilePath,
+        DateTime deviceFileDetectedAtUtc,
+        DateTime timestamp,
+        string soundFilePath,
+        IInterfaceProfileNotificationSoundPlayer player)
+    {
+        ArgumentNullException.ThrowIfNull(player);
+
+        if (!IsEnabled)
+        {
+            return new InterfaceProfileNotificationSoundResult(
+                ShouldPlay: false,
+                WasPlayed: false,
+                IsSuppressedByCooldown: false);
+        }
+
+        var normalizedProfileId = NormalizeId(interfaceProfileId);
+        var normalizedDeviceFilePath = NormalizePath(deviceFilePath);
+        var deviceFileKey = $"{normalizedProfileId}|{normalizedDeviceFilePath}|{deviceFileDetectedAtUtc.ToUniversalTime().Ticks}";
+        if (!_handledDeviceFileKeys.Add(deviceFileKey))
+        {
+            return new InterfaceProfileNotificationSoundResult(
+                ShouldPlay: false,
+                WasPlayed: false,
+                IsSuppressedByCooldown: false);
+        }
+
+        if (_lastSoundActivityByProfileId.TryGetValue(normalizedProfileId, out var previousActivity)
+            && timestamp - previousActivity < _cooldown)
+        {
+            return new InterfaceProfileNotificationSoundResult(
+                ShouldPlay: true,
+                WasPlayed: false,
+                IsSuppressedByCooldown: true);
+        }
+
+        _lastSoundActivityByProfileId[normalizedProfileId] = timestamp;
+        return PlaySound(soundFilePath, player);
+    }
 
     public InterfaceProfileNotificationSoundResult TryPlay(
         InterfaceMonitoringEventEntry entry,
@@ -31,7 +74,8 @@ public sealed class InterfaceProfileNotificationSoundService
                 IsSuppressedByCooldown: false);
         }
 
-        if (_lastSoundActivityByProfileId.TryGetValue(entry.ScopeId, out var previousActivity)
+        var normalizedProfileId = NormalizeId(entry.ScopeId);
+        if (_lastSoundActivityByProfileId.TryGetValue(normalizedProfileId, out var previousActivity)
             && entry.Timestamp - previousActivity < _cooldown)
         {
             return new InterfaceProfileNotificationSoundResult(
@@ -40,7 +84,31 @@ public sealed class InterfaceProfileNotificationSoundService
                 IsSuppressedByCooldown: true);
         }
 
-        _lastSoundActivityByProfileId[entry.ScopeId] = entry.Timestamp;
+        _lastSoundActivityByProfileId[normalizedProfileId] = entry.Timestamp;
+        return PlaySound(soundFilePath, player);
+    }
+
+    private static bool IsSoundRelevantActivity(InterfaceMonitoringEventEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.ScopeId)
+            || string.Equals(entry.ScopeId, "monitoring", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var eventKey = entry.EventKey.Trim();
+        if (string.Equals(eventKey, "scan-device-detected", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static InterfaceProfileNotificationSoundResult PlaySound(
+        string soundFilePath,
+        IInterfaceProfileNotificationSoundPlayer player)
+    {
         if (string.IsNullOrWhiteSpace(soundFilePath) || !File.Exists(soundFilePath))
         {
             return new InterfaceProfileNotificationSoundResult(
@@ -68,40 +136,23 @@ public sealed class InterfaceProfileNotificationSoundService
         }
     }
 
-    private static bool IsSoundRelevantActivity(InterfaceMonitoringEventEntry entry)
+    private static string NormalizeId(string interfaceProfileId)
     {
-        if (string.IsNullOrWhiteSpace(entry.ScopeId)
-            || string.Equals(entry.ScopeId, "monitoring", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(interfaceProfileId))
         {
-            return false;
+            throw new ArgumentException("Schnittstellenprofil-ID fehlt.", nameof(interfaceProfileId));
         }
 
-        var eventKey = entry.EventKey.Trim();
-        if (string.Equals(eventKey, "scan-ais-detected", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(eventKey, "scan-device-detected", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(eventKey, "scan-ready-pair", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        if (eventKey.StartsWith("scan-message:", StringComparison.OrdinalIgnoreCase)
-            || eventKey.StartsWith("pair:", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(eventKey, "package-state", StringComparison.OrdinalIgnoreCase))
-        {
-            return ContainsAttachmentArrivalMessage(entry.Message);
-        }
-
-        return false;
+        return interfaceProfileId.Trim();
     }
 
-    private static bool ContainsAttachmentArrivalMessage(string message)
+    private static string NormalizePath(string deviceFilePath)
     {
-        return ContainsAny(message, "XDT-Anhang", "Anhang", "Anhangdatei", "Anhänge")
-            && ContainsAny(message, "erkannt", "gefunden", "vorbereitet", "Linkfelder");
-    }
+        if (string.IsNullOrWhiteSpace(deviceFilePath))
+        {
+            throw new ArgumentException("Gerätedateipfad fehlt.", nameof(deviceFilePath));
+        }
 
-    private static bool ContainsAny(string text, params string[] fragments)
-    {
-        return fragments.Any(fragment => text.Contains(fragment, StringComparison.OrdinalIgnoreCase));
+        return deviceFilePath.Trim();
     }
 }

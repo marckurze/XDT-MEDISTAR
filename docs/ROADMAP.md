@@ -156,7 +156,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Persistierte Floating-Fenster werden erst nach der sicheren MainWindow-Anzeige wiederhergestellt; falls ein Restore fehlschlaegt, wird die Karte angedockt statt die App zu blockieren.
 - Schliessen per `X` dockt sicher zurueck. Radar-/Scanbalken und `-`/`+`-Scanintervallsteuerung sind im Floating-Fenster sichtbar.
 - Erste automatische Oeffnung ist vorhanden: relevante Monitoring-Aktivitaet wie AIS-/Geraetedatei, Anhang-/Paketstatus oder Verarbeitungsergebnis dockt nur das betroffene Floating-Fenster ab und bringt es nach vorne.
-- Bei relevanter Dateiaktivitaet wird der App-Content-Signalton `04_praxis_terminal_signal.wav` abgespielt; ein kurzer Cooldown pro Schnittstellenprofil verhindert Sound-Spam.
+- Bei stabil erkanntem Geraetedatei-Eingang wird der App-Content-Signalton `04_praxis_terminal_signal.wav` abgespielt; AIS-, Anhang-, Export- und Statusmeldungen bleiben stumm, ein kurzer Cooldown pro Schnittstellenprofil verhindert Sound-Spam.
 - Automatisches Zurueckandocken ist vorhanden: nach terminalem Monitoring-Abschluss startet fuer automatisch geoeffnete, nicht gepinnte Fenster eine Restlaufzeit von 5 Sekunden; neue Aktivitaet, Pin oder manuelles Andocken bricht den Countdown pro Profil ab.
 - Noch nicht enthalten sind Systray-Betrieb, UI-Einstellung fuer die Rueckdock-Zeit und ein sichtbarer Countdown-Hinweis.
 - Die Funktion bleibt reine UI-Funktion und aendert keine Verarbeitung, keine Profile, keine Datei-/Ordnerlogik und kein Aktivierungsmodell.

@@ -2939,21 +2939,40 @@ public partial class MainWindow : Window
         EnsureAutoRedockTimerState();
     }
 
-    private void TryPlayNotificationSoundForActivity(InterfaceMonitoringEventEntry entry)
+    private void TryPlayNotificationSoundForDeviceFiles(AutoImportScanResult result)
     {
-        var result = _interfaceProfileNotificationSoundService.TryPlay(
-            entry,
-            GetMonitoringNotificationSoundPath(),
-            _interfaceProfileNotificationSoundPlayer);
-
-        if (!_notificationSoundFailureReported
-            && !result.WasPlayed
-            && !result.IsSuppressedByCooldown
-            && !string.IsNullOrWhiteSpace(result.Message))
+        foreach (var deviceFile in result.Queue.GetAll().Where(IsStableDeviceImportFile))
         {
-            _notificationSoundFailureReported = true;
-            AppendMessage(result.Message);
+            var soundResult = _interfaceProfileNotificationSoundService.TryPlayForDeviceFileDetected(
+                result.InterfaceProfileId,
+                deviceFile.FilePath,
+                deviceFile.DetectedAtUtc,
+                DateTime.Now,
+                GetMonitoringNotificationSoundPath(),
+                _interfaceProfileNotificationSoundPlayer);
+
+            if (!_notificationSoundFailureReported
+                && !soundResult.WasPlayed
+                && !soundResult.IsSuppressedByCooldown
+                && !string.IsNullOrWhiteSpace(soundResult.Message))
+            {
+                _notificationSoundFailureReported = true;
+                AppendMessage(soundResult.Message);
+            }
+
+            if (soundResult.ShouldPlay)
+            {
+                break;
+            }
         }
+    }
+
+    private static bool IsStableDeviceImportFile(PendingImportFile file)
+    {
+        return file.Status == PendingImportFileStatus.Stable
+            && (file.Kind == ImportFileKind.DeviceXml
+                || file.Kind == ImportFileKind.DeviceText
+                || file.Kind == ImportFileKind.DeviceCsv);
     }
 
     private static string GetMonitoringNotificationSoundPath()
@@ -5542,6 +5561,8 @@ public partial class MainWindow : Window
 
     private void RecordScanMonitoringEvents(string profileName, AutoImportScanResult result)
     {
+        TryPlayNotificationSoundForDeviceFiles(result);
+
         if (result.AisFilesDetected > 0)
         {
             AppendMonitoringEvent(
@@ -5609,7 +5630,6 @@ public partial class MainWindow : Window
         }
 
         AppendMessage(entry.Message);
-        TryPlayNotificationSoundForActivity(entry);
         TryAutoDetachMonitoringCardForActivity(entry);
         TryUpdateAutoRedockForActivity(entry);
     }
