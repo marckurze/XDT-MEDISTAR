@@ -58,6 +58,7 @@
 - E2E-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md` ergaenzt; die dokumentierte Ausgabe ist anonymisiert und enthaelt keine Kunden-/Patientendaten oder Live-Pfade.
 - ARK1S und AR360 als stabile Referenzpakete in Matrix und Paketdokumenten markiert; offizielle ZIP-Artefakte werden erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
 - Kleine Release-Regel fuer offizielle Templatepaket-ZIPs dokumentiert, inklusive selektivem Exporttest, Import-/DryRun-Test, Praxis-App-Importpruefung, BuiltIn-Schutz und Daten-/Pfadpruefung.
+- Praxisabnahme `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md` ergänzt: Systray, manuelles und automatisches Abdocken, Auto-Zurueckandocken, Pin/Position, Signalton, Reset und Sicherheitsgrenzen der Geraeteanbindungsfenster sind als V1-Funktionsblock abgenommen.
 - Projektleitlinie geschaerft: fertige Geraeteprofile und Templatepakete haben Vorrang vor Baukasten-Nutzung; der Aktivierungsassistent ruht bis auf Weiteres als read-only vorbereiteter Stand.
 - Offizielle Paketvorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` fuer das erste Referenzpaket MEDISTAR + NIDEK ARK1S ergaenzt; sie nutzt das bestehende ZIP-Templatepaket-Format, enthaelt keine Kunden-/Patientendaten und keine Live-Pfade.
 - ARK1S-Paketvorlage dokumentiert jetzt den automatisierten Export-/Import-Testweg; die ZIP wird weiterhin nicht manuell eingecheckt und bleibt bis zur Release-Regel ein temporaeres Testartefakt.

@@ -151,6 +151,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 ### Abdockbare Geraeteanbindungsfenster
 
+- Status: V1 praxisabgenommen, siehe `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`.
 - Im Tab `Verarbeitung` ist die erste manuelle Grundlage vorhanden: Monitoring-/Geraetekarten koennen pro Schnittstellenprofil abgedockt und ueber das Floating-Fenster wieder angedockt werden.
 - Pin setzt das Floating-Fenster pro Profil in den Vordergrund; Positionsmerken speichert Position, Groesse und Abdockstatus persistent als UI-State unter AppData.
 - Persistierte Floating-Fenster werden erst nach der sicheren MainWindow-Anzeige wiederhergestellt; falls ein Restore fehlschlaegt, wird die Karte angedockt statt die App zu blockieren.
@@ -161,7 +162,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Systray-Grundfunktion ist vorhanden: Minimieren oder `X` blendet das Hauptfenster in den Infobereich aus, Doppelklick beziehungsweise Kontextmenue `Oeffnen` stellt es wieder her, `Beenden` schliesst die App bewusst.
 - Vorgangsreset `↺` ist in angedockten Monitoring-Karten und Floating-Fenstern vorhanden: Der aktuelle Vorgang eines Schnittstellenprofils kann nach Sicherheitsabfrage verworfen werden; AIS-, Geraete- und optionaler XDT-Anhang-Eingangsordner dieses Profils werden top-level geleert, Export-, Archiv- und Fehlerordner sowie Unterordner bleiben unangetastet.
 - Floating-Fenster sind leicht verbreitert; die Symbolleiste `🗗 ↺ 📌 🔝` bleibt horizontal.
-- Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit und ein sichtbarer Countdown-Hinweis.
+- Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit, sichtbarer Countdown-Hinweis, UI-Schalter fuer Signalton und ein ggf. eigenes Systray-Icon.
 - Die Funktion bleibt UI-/Reset-Funktion und aendert keine Verarbeitung ausserhalb des explizit bestaetigten Resets, keine Profile und kein Aktivierungsmodell.
 
 ### Aktivierungsassistent fuer importierte Schnittstellenprofile
@@ -202,8 +203,9 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Abhängigkeitszuordnung.
 - MEDISTAR + NIDEK ARK1S ist als Referenzpaket reproduzierbar testseitig export-/importgeprueft; die ZIP wird dabei nur im temporaeren Testordner erzeugt, und die App-Importvorschau ist gegen den zuvor beobachteten Freeze abgesichert.
 - MEDISTAR + NIDEK AR360 ist als zweites Referenzpaket reproduzierbar testseitig export-/importgeprueft und fuer Auto-Refraktor-XDT-Rueckgabe praktisch validiert; das Protokoll steht in `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md`.
+- Geraeteanbindungsfenster V1 sind fuer AR360/ARK1S praxisabgenommen: Systray, Floating-Fenster, Pin/Position, Auto-Oeffnung, Auto-Zurueckandocken, Signalton und Reset sind dokumentiert in `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`.
 
-Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.
+Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md` und `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.
 
 ## 3. Was ist vorbereitet, aber noch nicht produktiv validiert?
 
@@ -305,7 +307,7 @@ Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`. Die voll
 ## 6. Empfohlene nächste kleine Codex-Schritte
 
 1. Release-Regel aus `docs/TEMPLATEPAKET_RELEASE_REGEL.md` fuer ARK1S und AR360 anwenden, praktische App-Importabnahme bestaetigen und danach offizielle ZIP-Artefakte ablegen.
-2. Abdockbare Geraeteanbindungsfenster praktisch mit AR360 und ARK1S testen: Reset `↺` bei falschem Vorgang, Systray minimieren/wieder oeffnen/beenden, manuelles Abdocken, Auto-Oeffnung, Signalton, Auto-Zurueckandocken nach Abschluss, Pin, Position merken, Neustart-Wiederherstellung, Schliessen als Andocken, Radar und `-`/`+`.
+2. Geraeteanbindungsfenster V1 als abgenommenen Block beibehalten; Komfortthemen wie Rueckdock-Zeit-UI, Countdown-Hinweis, Ton-Schalter oder eigenes Systray-Icon nur nach Praxisfeedback priorisieren.
 3. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
 4. LM7/LM7P-Beispieldateien gegen die dokumentierten SourcePaths testen.
 5. Fuer LM7/LM7P ein fertiges Profil-/Templatepaket vorbereiten, wenn die Datenlage reicht.
