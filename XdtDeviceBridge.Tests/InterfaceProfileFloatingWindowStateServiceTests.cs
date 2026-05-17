@@ -40,6 +40,17 @@ public sealed class InterfaceProfileFloatingWindowStateServiceTests
     }
 
     [Fact]
+    public void Dock_ShouldBeIdempotent()
+    {
+        var service = new InterfaceProfileFloatingWindowStateService();
+
+        service.Dock("interface-ar360");
+        var state = service.Dock("interface-ar360");
+
+        Assert.False(state.IsDetached);
+    }
+
+    [Fact]
     public void SetPinned_ShouldSetPinnedOnlyForSelectedProfile()
     {
         var service = new InterfaceProfileFloatingWindowStateService();
@@ -83,5 +94,25 @@ public sealed class InterfaceProfileFloatingWindowStateServiceTests
 
         Assert.False(service.GetOrCreate("interface-ar360").IsDetached);
         Assert.True(service.GetOrCreate("interface-ark1s").IsDetached);
+    }
+
+    [Fact]
+    public void ReplaceAll_ShouldRestorePersistentState()
+    {
+        var service = new InterfaceProfileFloatingWindowStateService();
+        var expected = new InterfaceProfileFloatingWindowState(
+            " interface-ar360 ",
+            IsDetached: true,
+            IsPinned: true,
+            IsPositionMemoryEnabled: true,
+            Bounds: new InterfaceProfileFloatingWindowBounds(10, 20, 360, 240));
+
+        service.ReplaceAll(new[] { expected });
+
+        var state = service.GetOrCreate("interface-ar360");
+        Assert.True(state.IsDetached);
+        Assert.True(state.IsPinned);
+        Assert.True(state.IsPositionMemoryEnabled);
+        Assert.Equal(new InterfaceProfileFloatingWindowBounds(10, 20, 360, 240), state.Bounds);
     }
 }

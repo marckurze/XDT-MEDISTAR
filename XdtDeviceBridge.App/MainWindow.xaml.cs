@@ -79,6 +79,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
     private readonly InterfaceProfileActivationGuardService _interfaceProfileActivationGuardService = new();
+    private readonly InterfaceProfileFloatingWindowStateRepository _floatingWindowStateRepository = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
     private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
@@ -124,6 +125,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        LoadFloatingWindowStates();
         DraftRuleTypeComboBox.ItemsSource = Enum.GetValues<ExportRuleType>();
         AisPlaceholdersGrid.ItemsSource = _aisPlaceholderRows;
         DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
@@ -142,6 +144,7 @@ public partial class MainWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         StopPeriodicScan(updateUi: false);
+        SaveFloatingWindowStates();
         CloseAllFloatingMonitoringWindows();
         base.OnClosing(e);
     }
@@ -2625,6 +2628,33 @@ public partial class MainWindow : Window
         ActiveInterfaceProfilesStatusText.Text = message;
     }
 
+    private void LoadFloatingWindowStates()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _floatingWindowStateService.ReplaceAll(_floatingWindowStateRepository.Load(paths));
+        }
+        catch
+        {
+            // UI-Zustand ist optional; ein defekter State darf den App-Start nicht blockieren.
+            _floatingWindowStateService.ReplaceAll(Array.Empty<InterfaceProfileFloatingWindowState>());
+        }
+    }
+
+    private void SaveFloatingWindowStates()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _floatingWindowStateRepository.Save(paths, _floatingWindowStateService.GetAll());
+        }
+        catch (Exception ex)
+        {
+            AppendMessage($"Fensterpositionen konnten nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
     private void RefreshInterfaceMonitoringCards()
     {
         _refreshingInterfaceMonitoringCards = true;
@@ -2720,6 +2750,7 @@ public partial class MainWindow : Window
         }
 
         var state = _floatingWindowStateService.Detach(card.InterfaceProfileId);
+        SaveFloatingWindowStates();
         ShowOrUpdateFloatingMonitoringWindow(card, state);
         RefreshInterfaceMonitoringCards();
         AppendMonitoringEvent(
@@ -2732,6 +2763,7 @@ public partial class MainWindow : Window
     {
         var state = _floatingWindowStateService.Dock(interfaceProfileId);
         _ = state;
+        SaveFloatingWindowStates();
         CloseFloatingMonitoringWindow(interfaceProfileId);
         RefreshInterfaceMonitoringCards();
 
@@ -2758,6 +2790,7 @@ public partial class MainWindow : Window
             window.PinChanged += FloatingMonitoringWindow_PinChanged;
             window.PositionMemoryChanged += FloatingMonitoringWindow_PositionMemoryChanged;
             window.PositionRememberRequested += FloatingMonitoringWindow_PositionRememberRequested;
+            window.ScanIntervalChangeRequested += FloatingMonitoringWindow_ScanIntervalChangeRequested;
             _floatingMonitoringWindows[card.InterfaceProfileId] = window;
             ApplyFloatingWindowPlacement(window, state);
             window.Show();
@@ -2804,6 +2837,7 @@ public partial class MainWindow : Window
         }
 
         var state = _floatingWindowStateService.SetPinned(window.InterfaceProfileId, isPinned);
+        SaveFloatingWindowStates();
         window.ApplyState(state);
     }
 
@@ -2815,6 +2849,7 @@ public partial class MainWindow : Window
         }
 
         var state = _floatingWindowStateService.SetPositionMemoryEnabled(window.InterfaceProfileId, isEnabled);
+        SaveFloatingWindowStates();
         window.ApplyState(state);
     }
 
@@ -2832,7 +2867,16 @@ public partial class MainWindow : Window
             bounds.Top,
             bounds.Width,
             bounds.Height);
+        SaveFloatingWindowStates();
         window.ApplyState(state);
+    }
+
+    private void FloatingMonitoringWindow_ScanIntervalChangeRequested(object? sender, int deltaSeconds)
+    {
+        if (sender is FloatingInterfaceProfileWindow { DataContext: InterfaceMonitoringCardDisplay card })
+        {
+            ChangeMonitoringScanInterval(card, deltaSeconds);
+        }
     }
 
     private void CloseFloatingMonitoringWindow(string interfaceProfileId)
@@ -2846,6 +2890,7 @@ public partial class MainWindow : Window
         window.PinChanged -= FloatingMonitoringWindow_PinChanged;
         window.PositionMemoryChanged -= FloatingMonitoringWindow_PositionMemoryChanged;
         window.PositionRememberRequested -= FloatingMonitoringWindow_PositionRememberRequested;
+        window.ScanIntervalChangeRequested -= FloatingMonitoringWindow_ScanIntervalChangeRequested;
         window.CloseWithoutDockRequest();
     }
 
@@ -3127,6 +3172,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        ChangeMonitoringScanInterval(card, deltaSeconds);
+    }
+
+    private void ChangeMonitoringScanInterval(InterfaceMonitoringCardDisplay card, int deltaSeconds)
+    {
         if (_profileCatalog is null)
         {
             AppendMonitoringEvent(

@@ -67,8 +67,13 @@
                         Background="#082116"
                         Padding="6"
                         Margin="0,0,0,8">
-                    <Grid Height="54"
-                          ClipToBounds="True">
+                    <Grid x:Name="FloatingMonitoringRadarSurface"
+                          Height="54"
+                          ClipToBounds="True"
+                          Loaded="FloatingMonitoringRadar_Loaded"
+                          Unloaded="FloatingMonitoringRadar_Unloaded"
+                          DataContextChanged="FloatingMonitoringRadar_DataContextChanged"
+                          SizeChanged="FloatingMonitoringRadar_SizeChanged">
                         <Grid.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                 <GradientStop Color="#08291D" Offset="0"/>
@@ -96,6 +101,30 @@
                             <Border Grid.Column="1" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.45"/>
                             <Border Grid.Column="2" BorderBrush="#1F6B46" BorderThickness="0,0,1,0" Opacity="0.35"/>
                         </Grid>
+                        <Rectangle x:Name="FloatingRadarScanBar"
+                                   Height="46"
+                                   Width="17"
+                                   RadiusX="3"
+                                   RadiusY="3"
+                                   HorizontalAlignment="Left"
+                                   VerticalAlignment="Center"
+                                   Opacity="0.58">
+                            <Rectangle.RenderTransform>
+                                <TranslateTransform/>
+                            </Rectangle.RenderTransform>
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#002417" Offset="0"/>
+                                    <GradientStop Color="#10B981" Offset="0.38"/>
+                                    <GradientStop Color="#BBF7D0" Offset="0.52"/>
+                                    <GradientStop Color="#10B981" Offset="0.66"/>
+                                    <GradientStop Color="#002417" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <Border BorderBrush="#5EEA92"
+                                BorderThickness="1"
+                                Opacity="0.32"/>
                         <TextBlock Text="{Binding CurrentStatus}"
                                    Foreground="#BBF7D0"
                                    FontWeight="Bold"
@@ -112,8 +141,23 @@
                 </Border>
 
                 <WrapPanel Margin="0,0,0,8">
+                    <Button Content="−"
+                            Width="24"
+                            Height="22"
+                            Padding="0"
+                            Margin="0,0,4,4"
+                            Click="DecreaseScanIntervalButton_Click"
+                            ToolTip="Scanintervall um 1 Sekunde verringern"/>
                     <TextBlock Text="{Binding ScanIntervalText, StringFormat=Intervall: {0}}"
-                               Margin="0,0,12,4"/>
+                               VerticalAlignment="Center"
+                               Margin="0,2,4,4"/>
+                    <Button Content="+"
+                            Width="24"
+                            Height="22"
+                            Padding="0"
+                            Margin="0,0,12,4"
+                            Click="IncreaseScanIntervalButton_Click"
+                            ToolTip="Scanintervall um 1 Sekunde erhöhen"/>
                     <TextBlock Text="{Binding LastScanText, StringFormat=Letzter Scan: {0}}"
                                Margin="0,0,12,4"/>
                     <TextBlock Text="{Binding AutomaticProcessingText, StringFormat=Automatik: {0}}"

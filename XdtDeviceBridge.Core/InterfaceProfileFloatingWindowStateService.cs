@@ -4,6 +4,28 @@ public sealed class InterfaceProfileFloatingWindowStateService
 {
     private readonly Dictionary<string, InterfaceProfileFloatingWindowState> _states = new(StringComparer.OrdinalIgnoreCase);
 
+    public IReadOnlyList<InterfaceProfileFloatingWindowState> GetAll()
+    {
+        return _states.Values
+            .OrderBy(state => state.InterfaceProfileId, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    public void ReplaceAll(IEnumerable<InterfaceProfileFloatingWindowState> states)
+    {
+        ArgumentNullException.ThrowIfNull(states);
+
+        _states.Clear();
+        foreach (var state in states)
+        {
+            var normalizedId = NormalizeId(state.InterfaceProfileId);
+            _states[normalizedId] = state with
+            {
+                InterfaceProfileId = normalizedId
+            };
+        }
+    }
+
     public InterfaceProfileFloatingWindowState GetOrCreate(string interfaceProfileId)
     {
         var normalizedId = NormalizeId(interfaceProfileId);
