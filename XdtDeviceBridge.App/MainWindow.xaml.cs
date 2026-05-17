@@ -83,6 +83,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileAutoRedockService _interfaceProfileAutoRedockService = new();
     private readonly InterfaceProfileNotificationSoundService _interfaceProfileNotificationSoundService = new(isEnabled: MonitoringNotificationSoundEnabled);
     private readonly IInterfaceProfileNotificationSoundPlayer _interfaceProfileNotificationSoundPlayer = new WavInterfaceProfileNotificationSoundPlayer();
+    private readonly TrayWindowStateService _trayWindowStateService = new();
     private readonly InterfaceProfileActivationEvaluationService _interfaceProfileActivationEvaluationService = new();
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
@@ -106,6 +107,8 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _autoRedockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private WinForms.NotifyIcon? _trayIcon;
+    private WinForms.ContextMenuStrip? _trayContextMenu;
 
     private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
@@ -148,6 +151,7 @@ public partial class MainWindow : Window
         InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         _autoRedockTimer.Tick += AutoRedockTimer_Tick;
+        InitializeTrayIcon();
         SyncBuilderTestPreviewArea();
         InitializeProfileOverview();
         InitializeLicenseOverview();
@@ -155,17 +159,156 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(CancelEventArgs e)
     {
+        if (_trayWindowStateService.ShouldCancelClose())
+        {
+            e.Cancel = true;
+            MinimizeMainWindowToTray();
+            return;
+        }
+
         StopPeriodicScan(updateUi: false);
         _autoRedockTimer.Stop();
         SaveFloatingWindowStates();
         CloseAllFloatingMonitoringWindows();
+        DisposeTrayIcon();
         base.OnClosing(e);
+    }
+
+    protected override void OnStateChanged(EventArgs e)
+    {
+        base.OnStateChanged(e);
+        if (WindowState == WindowState.Minimized)
+        {
+            MinimizeMainWindowToTray();
+        }
     }
 
     protected override void OnContentRendered(EventArgs e)
     {
         base.OnContentRendered(e);
         RestoreFloatingWindowsOnce();
+    }
+
+    private void InitializeTrayIcon()
+    {
+        var openItem = new WinForms.ToolStripMenuItem("Öffnen");
+        openItem.Click += TrayOpenMenuItem_Click;
+        var exitItem = new WinForms.ToolStripMenuItem("Beenden");
+        exitItem.Click += TrayExitMenuItem_Click;
+
+        _trayContextMenu = new WinForms.ContextMenuStrip();
+        _trayContextMenu.Items.Add(openItem);
+        _trayContextMenu.Items.Add(exitItem);
+
+        _trayIcon = new WinForms.NotifyIcon
+        {
+            Text = "XdtDeviceBridge - XDT Verwaltung",
+            Icon = System.Drawing.SystemIcons.Application,
+            ContextMenuStrip = _trayContextMenu,
+            Visible = true
+        };
+        _trayIcon.MouseDoubleClick += TrayIcon_MouseDoubleClick;
+    }
+
+    private void MinimizeMainWindowToTray()
+    {
+        var decision = _trayWindowStateService.MinimizeToTray();
+        if (_trayIcon is null)
+        {
+            ShowInTaskbar = true;
+            WindowState = WindowState.Minimized;
+            return;
+        }
+
+        if (decision.ShouldHideWindow)
+        {
+            ShowInTaskbar = false;
+            Hide();
+        }
+
+        if (decision.ShouldShowHint)
+        {
+            ShowTrayHint();
+        }
+    }
+
+    private void RestoreMainWindowFromTray()
+    {
+        var decision = _trayWindowStateService.RestoreFromTray();
+        if (!decision.ShouldShowWindow)
+        {
+            return;
+        }
+
+        ShowInTaskbar = true;
+        if (!IsVisible)
+        {
+            Show();
+        }
+
+        WindowState = WindowState.Normal;
+        _ = Activate();
+    }
+
+    private void RequestApplicationExit()
+    {
+        var decision = _trayWindowStateService.RequestExit();
+        if (!decision.ShouldExit)
+        {
+            return;
+        }
+
+        if (_trayIcon is not null)
+        {
+            _trayIcon.Visible = false;
+        }
+
+        Close();
+    }
+
+    private void ShowTrayHint()
+    {
+        const string message = "XdtDeviceBridge läuft im Infobereich weiter. Über das Symbol neben der Uhr kann das Fenster wieder geöffnet oder die App beendet werden.";
+        try
+        {
+            _trayIcon?.ShowBalloonTip(4000, "XdtDeviceBridge", message, WinForms.ToolTipIcon.Info);
+        }
+        catch
+        {
+            AppendMessage(message);
+        }
+    }
+
+    private void DisposeTrayIcon()
+    {
+        if (_trayIcon is not null)
+        {
+            _trayIcon.MouseDoubleClick -= TrayIcon_MouseDoubleClick;
+            _trayIcon.Visible = false;
+            _trayIcon.Dispose();
+            _trayIcon = null;
+        }
+
+        _trayContextMenu?.Dispose();
+        _trayContextMenu = null;
+    }
+
+    private void TrayIcon_MouseDoubleClick(object? sender, WinForms.MouseEventArgs e)
+    {
+        if (e.Button == WinForms.MouseButtons.Left)
+        {
+            Dispatcher.BeginInvoke((Action)RestoreMainWindowFromTray);
+        }
+    }
+
+    private void TrayOpenMenuItem_Click(object? sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke((Action)RestoreMainWindowFromTray);
+    }
+
+    private void TrayExitMenuItem_Click(object? sender, EventArgs e)
+    {
+        Dispatcher.BeginInvoke((Action)RequestApplicationExit);
     }
 
     private void InitializeProfileOverview()
