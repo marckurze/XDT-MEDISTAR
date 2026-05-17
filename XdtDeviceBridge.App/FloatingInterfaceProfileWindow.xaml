@@ -7,6 +7,33 @@
         MinWidth="340"
         MinHeight="260"
         WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <Style x:Key="FloatingSymbolButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="FloatingSymbolToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="#BBF7D0"/>
+                    <Setter Property="BorderBrush" Value="#16A34A"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Border BorderBrush="#22C55E"
             BorderThickness="1"
             CornerRadius="8"
@@ -35,29 +62,30 @@
                                    Foreground="#46685A"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
-                    <WrapPanel DockPanel.Dock="Right"
-                               HorizontalAlignment="Right">
-                        <ToggleButton x:Name="PinToggleButton"
-                                      Content="Pin"
-                                      MinWidth="44"
-                                      Height="24"
-                                      Margin="4,0,0,4"
-                                      ToolTip="Fenster im Vordergrund halten"
-                                      Checked="PinToggleButton_Changed"
-                                      Unchecked="PinToggleButton_Changed"/>
+                     <WrapPanel DockPanel.Dock="Right"
+                                HorizontalAlignment="Right">
+                        <Button Content="🗗"
+                                Style="{StaticResource FloatingSymbolButtonStyle}"
+                                Margin="4,0,0,4"
+                                Click="DockButton_Click"
+                                ToolTip="Wieder andocken"
+                                AutomationProperties.Name="Wieder andocken"/>
                         <ToggleButton x:Name="PositionMemoryToggleButton"
-                                      Content="Position merken"
-                                      MinWidth="102"
-                                      Height="24"
+                                      Content="📌"
+                                      Style="{StaticResource FloatingSymbolToggleButtonStyle}"
                                       Margin="4,0,0,4"
-                                      ToolTip="Position und Größe für diese Sitzung merken"
+                                      ToolTip="Position merken"
+                                      AutomationProperties.Name="Position merken"
                                       Checked="PositionMemoryToggleButton_Changed"
                                       Unchecked="PositionMemoryToggleButton_Changed"/>
-                        <Button Content="Andocken"
-                                Height="24"
-                                MinWidth="74"
-                                Margin="4,0,0,4"
-                                Click="DockButton_Click"/>
+                        <ToggleButton x:Name="PinToggleButton"
+                                      Content="🔝"
+                                      Style="{StaticResource FloatingSymbolToggleButtonStyle}"
+                                      Margin="4,0,0,4"
+                                      ToolTip="Immer im Vordergrund"
+                                      AutomationProperties.Name="Immer im Vordergrund"
+                                      Checked="PinToggleButton_Changed"
+                                      Unchecked="PinToggleButton_Changed"/>
                     </WrapPanel>
                 </DockPanel>
 

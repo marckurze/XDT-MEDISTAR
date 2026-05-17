@@ -100,6 +100,15 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
+                                    <Style x:Key="MonitoringSymbolButtonStyle" TargetType="Button">
+                                        <Setter Property="Width" Value="30"/>
+                                        <Setter Property="Height" Value="28"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="FontSize" Value="14"/>
+                                        <Setter Property="FontFamily" Value="Segoe UI Symbol, Segoe UI Emoji"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    </Style>
                                 </Grid.Resources>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -170,13 +179,12 @@
                                                 <StackPanel>
                                                     <DockPanel Margin="0,0,0,5">
                                                         <Button DockPanel.Dock="Right"
-                                                                Content="Abdocken"
-                                                                Height="22"
-                                                                MinWidth="72"
-                                                                Padding="6,0"
+                                                                Style="{StaticResource MonitoringSymbolButtonStyle}"
+                                                                Content="🗗"
                                                                 Margin="8,0,0,0"
                                                                 Click="DetachMonitoringCard_Click"
-                                                                ToolTip="Diese Gerätekarte als eigenes Fenster öffnen"/>
+                                                                ToolTip="Fenster abdocken"
+                                                                AutomationProperties.Name="Fenster abdocken"/>
                                                         <StackPanel>
                                                             <TextBlock Text="{Binding InterfaceProfileName}"
                                                                        FontSize="11"
