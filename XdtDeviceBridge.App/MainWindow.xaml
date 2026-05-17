@@ -106,8 +106,43 @@
                                         <Setter Property="Padding" Value="0"/>
                                         <Setter Property="FontSize" Value="14"/>
                                         <Setter Property="FontFamily" Value="Segoe UI Symbol, Segoe UI Emoji"/>
+                                        <Setter Property="Foreground" Value="#14532D"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Setter Property="Cursor" Value="Hand"/>
                                         <Setter Property="VerticalContentAlignment" Value="Center"/>
                                         <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="{x:Type Button}">
+                                                    <Border x:Name="ButtonChrome"
+                                                            Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                                            CornerRadius="6">
+                                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                          Margin="{TemplateBinding Padding}"
+                                                                          RecognizesAccessKey="True"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="ButtonChrome" Property="Background" Value="#1A22C55E"/>
+                                                            <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#6634D399"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed" Value="True">
+                                                            <Setter TargetName="ButtonChrome" Property="Background" Value="#3322C55E"/>
+                                                            <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Foreground" Value="#9CA3AF"/>
+                                                            <Setter TargetName="ButtonChrome" Property="Opacity" Value="0.55"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
                                 </Grid.Resources>
                                 <Grid.RowDefinitions>
@@ -286,9 +321,7 @@
 
                                                     <WrapPanel Margin="0,0,0,6">
                                                         <Button Content="−"
-                                                                Width="24"
-                                                                Height="22"
-                                                                Padding="0"
+                                                                Style="{StaticResource MonitoringSymbolButtonStyle}"
                                                                 Margin="0,0,4,4"
                                                                 Click="DecreaseMonitoringScanInterval_Click"
                                                                 ToolTip="Scanintervall um 1 Sekunde verringern"/>
@@ -296,9 +329,7 @@
                                                                    VerticalAlignment="Center"
                                                                    Margin="0,2,4,4"/>
                                                         <Button Content="+"
-                                                                Width="24"
-                                                                Height="22"
-                                                                Padding="0"
+                                                                Style="{StaticResource MonitoringSymbolButtonStyle}"
                                                                 Margin="0,0,12,4"
                                                                 Click="IncreaseMonitoringScanInterval_Click"
                                                                 ToolTip="Scanintervall um 1 Sekunde erhöhen"/>

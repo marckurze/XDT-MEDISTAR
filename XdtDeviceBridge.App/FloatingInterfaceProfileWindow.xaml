@@ -14,8 +14,43 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol"/>
+            <Setter Property="Foreground" Value="#14532D"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="ButtonChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#1A22C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#6634D399"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#3322C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#9CA3AF"/>
+                                <Setter TargetName="ButtonChrome" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="FloatingSymbolToggleButtonStyle" TargetType="ToggleButton">
             <Setter Property="Width" Value="30"/>
@@ -23,15 +58,48 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol"/>
+            <Setter Property="Foreground" Value="#14532D"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Style.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="#BBF7D0"/>
-                    <Setter Property="BorderBrush" Value="#16A34A"/>
-                    <Setter Property="FontWeight" Value="Bold"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="ButtonChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#1A22C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#6634D399"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#3322C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#2A22C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#9CA3AF"/>
+                                <Setter TargetName="ButtonChrome" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
     <Border BorderBrush="#22C55E"
@@ -62,7 +130,7 @@
                                    Foreground="#46685A"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
-                     <WrapPanel DockPanel.Dock="Right"
+                    <WrapPanel DockPanel.Dock="Right"
                                 HorizontalAlignment="Right">
                         <Button Content="🗗"
                                 Style="{StaticResource FloatingSymbolButtonStyle}"
@@ -170,9 +238,7 @@
 
                 <WrapPanel Margin="0,0,0,8">
                     <Button Content="−"
-                            Width="24"
-                            Height="22"
-                            Padding="0"
+                            Style="{StaticResource FloatingSymbolButtonStyle}"
                             Margin="0,0,4,4"
                             Click="DecreaseScanIntervalButton_Click"
                             ToolTip="Scanintervall um 1 Sekunde verringern"/>
@@ -180,9 +246,7 @@
                                VerticalAlignment="Center"
                                Margin="0,2,4,4"/>
                     <Button Content="+"
-                            Width="24"
-                            Height="22"
-                            Padding="0"
+                            Style="{StaticResource FloatingSymbolButtonStyle}"
                             Margin="0,0,12,4"
                             Click="IncreaseScanIntervalButton_Click"
                             ToolTip="Scanintervall um 1 Sekunde erhöhen"/>
