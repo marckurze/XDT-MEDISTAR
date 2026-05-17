@@ -16,6 +16,9 @@ namespace XdtDeviceBridge.App;
 
 public partial class MainWindow : Window
 {
+    private const string MonitoringNotificationSoundRelativePath = @"Assets\Sounds\04_praxis_terminal_signal.wav";
+    private const bool MonitoringNotificationSoundEnabled = true;
+
     private static readonly HashSet<string> SupportedBuilderAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".pdf",
@@ -76,6 +79,8 @@ public partial class MainWindow : Window
     private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
     private readonly InterfaceProfileAutoDetachService _interfaceProfileAutoDetachService = new();
+    private readonly InterfaceProfileNotificationSoundService _interfaceProfileNotificationSoundService = new(isEnabled: MonitoringNotificationSoundEnabled);
+    private readonly IInterfaceProfileNotificationSoundPlayer _interfaceProfileNotificationSoundPlayer = new WavInterfaceProfileNotificationSoundPlayer();
     private readonly InterfaceProfileActivationEvaluationService _interfaceProfileActivationEvaluationService = new();
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
@@ -122,6 +127,7 @@ public partial class MainWindow : Window
     private TemplatePackageImportDryRunResult? _lastTemplatePackageImportDryRunResult;
     private bool _updatingTemplatePackageImportPreview;
     private bool _isTemplatePackageImportPreviewBusy;
+    private bool _notificationSoundFailureReported;
     private string _lastTemplatePackageImportSelectionSignature = string.Empty;
 
     public MainWindow()
@@ -2909,6 +2915,28 @@ public partial class MainWindow : Window
         }
     }
 
+    private void TryPlayNotificationSoundForActivity(InterfaceMonitoringEventEntry entry)
+    {
+        var result = _interfaceProfileNotificationSoundService.TryPlay(
+            entry,
+            GetMonitoringNotificationSoundPath(),
+            _interfaceProfileNotificationSoundPlayer);
+
+        if (!_notificationSoundFailureReported
+            && !result.WasPlayed
+            && !result.IsSuppressedByCooldown
+            && !string.IsNullOrWhiteSpace(result.Message))
+        {
+            _notificationSoundFailureReported = true;
+            AppendMessage(result.Message);
+        }
+    }
+
+    private static string GetMonitoringNotificationSoundPath()
+    {
+        return Path.Combine(AppContext.BaseDirectory, MonitoringNotificationSoundRelativePath);
+    }
+
     private void BringFloatingMonitoringWindowToFront(
         string interfaceProfileId,
         InterfaceProfileFloatingWindowState state)
@@ -5513,6 +5541,7 @@ public partial class MainWindow : Window
         }
 
         AppendMessage(entry.Message);
+        TryPlayNotificationSoundForActivity(entry);
         TryAutoDetachMonitoringCardForActivity(entry);
     }
 

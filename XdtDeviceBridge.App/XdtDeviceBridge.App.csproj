@@ -11,4 +11,9 @@
     <ProjectReference Include="..\XdtDeviceBridge.Core\XdtDeviceBridge.Core.csproj" />
     <ProjectReference Include="..\XdtDeviceBridge.Infrastructure\XdtDeviceBridge.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Sounds\04_praxis_terminal_signal.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

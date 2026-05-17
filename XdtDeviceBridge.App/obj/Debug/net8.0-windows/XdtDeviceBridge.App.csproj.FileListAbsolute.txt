@@ -33,3 +33,5 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\InterfacePro
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\InterfaceProfileActivationPreparationPreviewWindow.g.cs
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\FloatingInterfaceProfileWindow.baml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\FloatingInterfaceProfileWindow.g.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\bin\Debug\net8.0-windows\Assets\Sounds\04_praxis_terminal_signal.wav
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\XdtDeviceBridge.App_Content.g.cs
