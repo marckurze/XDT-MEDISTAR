@@ -65,6 +65,7 @@ public partial class MainWindow : Window
     private readonly AutoImportPackageStateService _autoImportPackageStateService = new();
     private readonly InterfaceMonitoringCardStatusService _interfaceMonitoringCardStatusService = new();
     private readonly InterfaceProfileMonitoringResetService _interfaceProfileMonitoringResetService = new();
+    private readonly InterfaceProfileInputFolderResetService _interfaceProfileInputFolderResetService = new();
     private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
     private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
     private readonly BuilderTestExportService _builderTestExportService = new();
@@ -3150,14 +3151,22 @@ public partial class MainWindow : Window
             return;
         }
 
+        var profile = _profileCatalog?.InterfaceProfiles.FirstOrDefault(item =>
+            string.Equals(item.Metadata.Id, interfaceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (profile is null)
+        {
+            AppendMessage("Vorgang konnte nicht zurückgesetzt werden: Schnittstellenprofil nicht gefunden.");
+            return;
+        }
+
         Window confirmationOwner = _floatingMonitoringWindows.TryGetValue(interfaceProfileId, out var floatingWindow)
             && floatingWindow.IsVisible
                 ? floatingWindow
                 : this;
         var confirmation = System.Windows.MessageBox.Show(
             confirmationOwner,
-            "Der aktuelle Vorgang für dieses Schnittstellenprofil wird verworfen und die Überwachung beginnt neu. Unbekannte Dateien und Ordner werden nicht gelöscht.\n\nBekannte Dateien dieses Vorgangs werden nicht gelöscht, sondern für die laufende App-Sitzung ignoriert, bis sie geändert oder entfernt werden.\n\nJetzt zurücksetzen?",
-            "Vorgang zurücksetzen?",
+            "Der aktuelle Vorgang für dieses Schnittstellenprofil wird verworfen. Die überwachten Eingangsordner dieses Profils werden geleert, damit falsche AIS-/Gerätedateien nicht erneut verarbeitet werden.\n\nBetroffen sind nur die Importordner dieses Schnittstellenprofils. Export-, Archiv- und Fehlerordner werden nicht geleert.\n\nJetzt zurücksetzen und leeren?",
+            "Vorgang zurücksetzen und Eingangsordner leeren?",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning,
             MessageBoxResult.No);
@@ -3167,7 +3176,8 @@ public partial class MainWindow : Window
         }
 
         _lastMonitoringScanQueuesByProfileId.TryGetValue(interfaceProfileId, out var currentQueue);
-        var result = _interfaceProfileMonitoringResetService.Reset(interfaceProfileId, currentQueue);
+        var folderResetResult = _interfaceProfileInputFolderResetService.ClearInputFolders(profile);
+        var result = _interfaceProfileMonitoringResetService.Reset(interfaceProfileId, currentQueue, folderResetResult);
         _autoImportPackageStateService.ResetProfile(interfaceProfileId);
         _autoImportPairProcessingCoordinator.ResetProfile(interfaceProfileId);
         _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfileId);
@@ -3183,7 +3193,7 @@ public partial class MainWindow : Window
         AppendMonitoringEvent(
             interfaceProfileId,
             $"monitoring-reset:{DateTime.UtcNow.Ticks}",
-            $"{profileName}: Vorgang zurückgesetzt. Dateien wurden nicht gelöscht.");
+            $"{profileName}: {result.Messages.FirstOrDefault() ?? "Vorgang zurückgesetzt."}");
         foreach (var message in result.Messages.Skip(1))
         {
             AppendMessage($"{profileName}: {message}");

@@ -4,7 +4,10 @@ public sealed class InterfaceProfileMonitoringResetService
 {
     private readonly Dictionary<string, HashSet<string>> _ignoredFileKeysByProfileId = new(StringComparer.OrdinalIgnoreCase);
 
-    public InterfaceProfileMonitoringResetResult Reset(string interfaceProfileId, PendingImportQueue? currentQueue)
+    public InterfaceProfileMonitoringResetResult Reset(
+        string interfaceProfileId,
+        PendingImportQueue? currentQueue,
+        InterfaceProfileInputFolderResetResult? inputFolderResetResult = null)
     {
         var normalizedId = NormalizeId(interfaceProfileId);
         var ignoredFiles = _ignoredFileKeysByProfileId.GetValueOrDefault(normalizedId);
@@ -28,11 +31,16 @@ public sealed class InterfaceProfileMonitoringResetService
 
         var messages = new List<string>
         {
-            "Vorgang zurückgesetzt.",
-            "Dateien im Importordner wurden nicht gelöscht. Entfernen Sie falsche Dateien bei Bedarf manuell."
+            inputFolderResetResult?.SummaryMessage ?? "Vorgang zurückgesetzt."
         };
 
-        if (ignoredFileCount > 0)
+        if (inputFolderResetResult is not null)
+        {
+            messages.AddRange(inputFolderResetResult.Messages);
+        }
+
+        if (ignoredFileCount > 0
+            && (inputFolderResetResult is null || inputFolderResetResult.FailedFileCount > 0))
         {
             messages.Add($"{ignoredFileCount} bekannte Datei(en) dieses Vorgangs werden bis zur Änderung ignoriert.");
         }
@@ -40,7 +48,8 @@ public sealed class InterfaceProfileMonitoringResetService
         return new InterfaceProfileMonitoringResetResult(
             normalizedId,
             ignoredFileCount,
-            FileOperationsPerformed: false,
+            FileOperationsPerformed: inputFolderResetResult?.FileOperationsPerformed ?? false,
+            InputFolderResetResult: inputFolderResetResult,
             Messages: messages);
     }
 

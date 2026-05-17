@@ -44,15 +44,27 @@ public sealed class InterfaceProfileMonitoringResetServiceTests
     }
 
     [Fact]
-    public void Reset_ShouldNotPerformFileOperations()
+    public void Reset_ShouldIncludeInputFolderResetSummary()
     {
         var service = new InterfaceProfileMonitoringResetService();
         var queue = CreateQueue(CreateFile(@"C:\Import\AR360\patient.gdt", ImportFileKind.AisGdt));
+        var folderResetResult = new InterfaceProfileInputFolderResetResult(
+            CandidateFolderCount: 2,
+            ProcessedFolderCount: 2,
+            DeletedFileCount: 3,
+            FailedFileCount: 0,
+            MissingFolderCount: 0,
+            SkippedFolderCount: 0,
+            ProcessedFolders: Array.Empty<string>(),
+            SkippedFolders: Array.Empty<string>(),
+            FailedFiles: Array.Empty<string>(),
+            Messages: Array.Empty<string>());
 
-        var result = service.Reset("interface-ar360", queue);
+        var result = service.Reset("interface-ar360", queue, folderResetResult);
 
-        Assert.False(result.FileOperationsPerformed);
-        Assert.Contains(result.Messages, message => message.Contains("Dateien im Importordner wurden nicht gelöscht", StringComparison.Ordinal));
+        Assert.True(result.FileOperationsPerformed);
+        Assert.Equal("Vorgang zurückgesetzt. Eingangsordner geleert: 3 Datei(en) gelöscht.", result.Messages[0]);
+        Assert.Same(folderResetResult, result.InputFolderResetResult);
     }
 
     [Fact]

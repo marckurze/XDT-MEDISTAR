@@ -159,9 +159,10 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Bei stabil erkanntem Geraetedatei-Eingang wird der App-Content-Signalton `04_praxis_terminal_signal.wav` abgespielt; AIS-, Anhang-, Export- und Statusmeldungen bleiben stumm, ein kurzer Cooldown pro Schnittstellenprofil verhindert Sound-Spam.
 - Automatisches Zurueckandocken ist vorhanden: nach terminalem Monitoring-Abschluss startet fuer automatisch geoeffnete, nicht gepinnte Fenster eine Restlaufzeit von 5 Sekunden; neue Aktivitaet, Pin oder manuelles Andocken bricht den Countdown pro Profil ab.
 - Systray-Grundfunktion ist vorhanden: Minimieren oder `X` blendet das Hauptfenster in den Infobereich aus, Doppelklick beziehungsweise Kontextmenue `Oeffnen` stellt es wieder her, `Beenden` schliesst die App bewusst.
-- Vorgangsreset `↺` ist in angedockten Monitoring-Karten und Floating-Fenstern vorhanden: Der aktuelle Vorgang eines Schnittstellenprofils kann nach Sicherheitsabfrage verworfen werden; bekannte Dateien dieses Vorgangs werden in-memory ignoriert, Ordner und unbekannte Dateien bleiben unangetastet.
+- Vorgangsreset `↺` ist in angedockten Monitoring-Karten und Floating-Fenstern vorhanden: Der aktuelle Vorgang eines Schnittstellenprofils kann nach Sicherheitsabfrage verworfen werden; AIS-, Geraete- und optionaler XDT-Anhang-Eingangsordner dieses Profils werden top-level geleert, Export-, Archiv- und Fehlerordner sowie Unterordner bleiben unangetastet.
+- Floating-Fenster sind leicht verbreitert; die Symbolleiste `🗗 ↺ 📌 🔝` bleibt horizontal.
 - Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit und ein sichtbarer Countdown-Hinweis.
-- Die Funktion bleibt reine UI-Funktion und aendert keine Verarbeitung, keine Profile, keine Datei-/Ordnerlogik und kein Aktivierungsmodell.
+- Die Funktion bleibt UI-/Reset-Funktion und aendert keine Verarbeitung ausserhalb des explizit bestaetigten Resets, keine Profile und kein Aktivierungsmodell.
 
 ### Aktivierungsassistent fuer importierte Schnittstellenprofile
 
