@@ -66,4 +66,32 @@ public sealed class InterfaceMonitoringEventDeduplicationServiceTests
 
         Assert.NotNull(next);
     }
+
+    [Fact]
+    public void ResetProfile_ShouldAllowSameProfileMessageAgain()
+    {
+        var service = new InterfaceMonitoringEventDeduplicationService();
+
+        _ = service.Record("interface-1", "scan-ais-detected:C:\\Import\\Patient.XDT|1000|200", "AIS-Datei erkannt (1).", BaseTime);
+        service.ResetProfile("interface-1");
+        var next = service.Record("interface-1", "scan-ais-detected:C:\\Import\\Patient.XDT|1000|200", "AIS-Datei erkannt (1).", BaseTime.AddSeconds(5));
+
+        Assert.NotNull(next);
+    }
+
+    [Fact]
+    public void ResetProfile_ShouldKeepOtherProfilesDeduplicated()
+    {
+        var service = new InterfaceMonitoringEventDeduplicationService();
+
+        _ = service.Record("interface-1", "scan-ais-detected", "AIS-Datei erkannt (1).", BaseTime);
+        _ = service.Record("interface-2", "scan-ais-detected", "AIS-Datei erkannt (1).", BaseTime);
+        service.ResetProfile("interface-1");
+
+        var resetProfileEntry = service.Record("interface-1", "scan-ais-detected", "AIS-Datei erkannt (1).", BaseTime.AddSeconds(5));
+        var otherProfileEntry = service.Record("interface-2", "scan-ais-detected", "AIS-Datei erkannt (1).", BaseTime.AddSeconds(5));
+
+        Assert.NotNull(resetProfileEntry);
+        Assert.Null(otherProfileEntry);
+    }
 }

@@ -256,6 +256,32 @@ public sealed class InterfaceProfileAutoDetachServiceTests
         Assert.True(lm7Decision.IsSuppressedByCooldown);
     }
 
+    [Fact]
+    public void Evaluate_ShouldDetachAgainAfterResetAndDockWithSameAisEventKey()
+    {
+        var eventDeduplicationService = new InterfaceMonitoringEventDeduplicationService();
+        var stateService = new InterfaceProfileFloatingWindowStateService();
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+        const string profileId = "interface-nt530p";
+        const string eventKey = @"scan-ais-detected:C:\Import\Patient.XDT|1000|200";
+        const string message = "MEDISTAR + NIDEK NT530P: AIS-Datei erkannt (1).";
+
+        var firstEntry = eventDeduplicationService.Record(profileId, eventKey, message, BaseTime);
+        Assert.NotNull(firstEntry);
+        ApplyDecision(stateService, autoDetachService, firstEntry);
+        Assert.True(stateService.GetOrCreate(profileId).IsDetached);
+
+        eventDeduplicationService.ResetProfile(profileId);
+        autoDetachService.ResetProfile(profileId);
+        stateService.Dock(profileId);
+
+        var secondEntry = eventDeduplicationService.Record(profileId, eventKey, message, BaseTime.AddSeconds(1));
+        Assert.NotNull(secondEntry);
+        ApplyDecision(stateService, autoDetachService, secondEntry);
+
+        Assert.True(stateService.GetOrCreate(profileId).IsDetached);
+    }
+
     private static void ApplyDecision(
         InterfaceProfileFloatingWindowStateService stateService,
         InterfaceProfileAutoDetachService autoDetachService,

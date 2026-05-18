@@ -3637,6 +3637,7 @@ public partial class MainWindow : Window
         _autoImportPackageStateService.ResetProfile(interfaceProfileId);
         _autoImportPairProcessingCoordinator.ResetProfile(interfaceProfileId);
         _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfileId);
+        _monitoringEventDeduplicationService.ResetProfile(interfaceProfileId);
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
         _interfaceProfileAutoDetachService.ResetProfile(interfaceProfileId);
         _interfaceProfileNotificationSoundService.ResetProfile(interfaceProfileId);

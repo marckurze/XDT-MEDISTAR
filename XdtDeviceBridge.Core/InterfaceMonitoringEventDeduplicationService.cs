@@ -47,4 +47,20 @@ public sealed class InterfaceMonitoringEventDeduplicationService
     {
         _lastMessagesByEventKey.Clear();
     }
+
+    public void ResetProfile(string scopeId)
+    {
+        if (string.IsNullOrWhiteSpace(scopeId))
+        {
+            return;
+        }
+
+        var normalizedScopePrefix = $"{scopeId.Trim()}|";
+        foreach (var key in _lastMessagesByEventKey.Keys
+            .Where(key => key.StartsWith(normalizedScopePrefix, StringComparison.OrdinalIgnoreCase))
+            .ToList())
+        {
+            _lastMessagesByEventKey.Remove(key);
+        }
+    }
 }
