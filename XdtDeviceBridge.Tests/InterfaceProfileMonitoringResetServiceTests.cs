@@ -84,6 +84,20 @@ public sealed class InterfaceProfileMonitoringResetServiceTests
         Assert.Equal(0, filtered.ReadyPairs);
     }
 
+    [Fact]
+    public void Apply_ShouldClearIgnoredFilesAfterEmptyScan()
+    {
+        var service = new InterfaceProfileMonitoringResetService();
+        var queue = CreateQueue(CreateFile(@"C:\Import\AR360\patient.gdt", ImportFileKind.AisGdt));
+
+        _ = service.Reset("interface-ar360", queue);
+        _ = service.Apply(CreateResult("interface-ar360", CreateQueue()));
+        var afterNewFileArrives = service.Apply(CreateResult("interface-ar360", queue));
+
+        Assert.Single(afterNewFileArrives.Queue.GetAll());
+        Assert.Equal(1, afterNewFileArrives.AisFilesDetected);
+    }
+
     private static AutoImportScanResult CreateResult(string interfaceProfileId, PendingImportQueue queue)
     {
         return new AutoImportScanResult(

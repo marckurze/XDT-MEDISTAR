@@ -4643,6 +4643,9 @@ public partial class MainWindow : Window
 
             if (result.Success)
             {
+                _lastMonitoringScanQueuesByProfileId[interfaceProfile.Metadata.Id] = new PendingImportQueue();
+                _autoImportPackageStateService.ResetProfile(interfaceProfile.Metadata.Id);
+                _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfile.Metadata.Id);
                 UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
                 AppendPairMonitoringEvent(
                     interfaceProfile,

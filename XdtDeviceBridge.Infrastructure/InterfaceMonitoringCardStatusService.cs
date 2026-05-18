@@ -91,10 +91,15 @@ public sealed class InterfaceMonitoringCardStatusService
         var lastMessage = attachmentStatus?.Message
             ?? processingResult.Messages.LastOrDefault()
             ?? processingResult.Status;
+        if (processingResult.Success)
+        {
+            ResetProfile(card.InterfaceProfileId);
+        }
 
         var updatedInputs = card.ExpectedInputs
             .Select(input => UpdateInputFromProcessing(input, processingResult, attachmentStatus, patient))
             .ToList();
+        var clearProcessedInputs = processingResult.Success;
 
         return card with
         {
@@ -102,8 +107,8 @@ public sealed class InterfaceMonitoringCardStatusService
             StatusClass = statusClass,
             AutomaticProcessingText = automaticProcessingEnabled ? "Ja" : "Nein",
             PatientDisplayText = CreatePatientDisplay(patient),
-            AisFileName = Path.GetFileName(processingResult.AisFilePath),
-            DeviceFileName = Path.GetFileName(processingResult.DeviceFilePath),
+            AisFileName = clearProcessedInputs ? "" : Path.GetFileName(processingResult.AisFilePath),
+            DeviceFileName = clearProcessedInputs ? "" : Path.GetFileName(processingResult.DeviceFilePath),
             AttachmentFileName = attachmentStatus?.TargetFileName ?? FileNameOrEmpty(attachmentStatus?.SourcePath),
             ExportFileName = exportFileName,
             LastSuccessfulExportText = processingResult.Success ? timestamp.ToString("dd.MM.yyyy HH:mm:ss") : card.LastSuccessfulExportText,
@@ -156,7 +161,16 @@ public sealed class InterfaceMonitoringCardStatusService
     {
         return input.Key switch
         {
-            "ais" => input with
+            "ais" => processingResult.Success
+                ? input with
+                {
+                    Name = "AIS-Patientendatei",
+                    Status = "erwartet",
+                    StatusClass = "Waiting",
+                    Detail = input.FolderPath,
+                    DisplayDetail = ""
+                }
+                : input with
             {
                 Name = patient is null ? "AIS-Patientendatei" : CreatePatientMainText(patient, Path.GetFileName(processingResult.AisFilePath)),
                 Status = patient is null ? "gefunden" : "",
@@ -164,7 +178,16 @@ public sealed class InterfaceMonitoringCardStatusService
                 Detail = JoinDetails(CreatePatientDisplay(patient, Path.GetFileName(processingResult.AisFilePath)), processingResult.AisFilePath),
                 DisplayDetail = patient is null ? Path.GetFileName(processingResult.AisFilePath) : ""
             },
-            "device" => input with
+            "device" => processingResult.Success
+                ? input with
+                {
+                    Name = "Geräte-Datei",
+                    Status = "erwartet",
+                    StatusClass = "Neutral",
+                    Detail = input.FolderPath,
+                    DisplayDetail = ""
+                }
+                : input with
             {
                 Name = "Empfangen",
                 Status = "",

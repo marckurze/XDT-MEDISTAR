@@ -22,7 +22,7 @@ public sealed class InterfaceProfileMonitoringResetService
         {
             foreach (var file in currentQueue.GetAll())
             {
-                if (ignoredFiles.Add(CreateFileKey(file)))
+                if (ignoredFiles.Add(ImportFileFingerprint.Create(file)))
                 {
                     ignoredFileCount++;
                 }
@@ -64,10 +64,21 @@ public sealed class InterfaceProfileMonitoringResetService
             return result;
         }
 
-        var filteredQueue = new PendingImportQueue();
-        foreach (var file in result.Queue.GetAll())
+        var currentFiles = result.Queue.GetAll();
+        var currentFileKeys = currentFiles
+            .Select(ImportFileFingerprint.Create)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        ignoredFiles.RemoveWhere(ignoredFileKey => !currentFileKeys.Contains(ignoredFileKey));
+        if (ignoredFiles.Count == 0)
         {
-            if (!ignoredFiles.Contains(CreateFileKey(file)))
+            _ignoredFileKeysByProfileId.Remove(normalizedId);
+            return result;
+        }
+
+        var filteredQueue = new PendingImportQueue();
+        foreach (var file in currentFiles)
+        {
+            if (!ignoredFiles.Contains(ImportFileFingerprint.Create(file)))
             {
                 filteredQueue.AddOrUpdate(file);
             }
@@ -88,7 +99,7 @@ public sealed class InterfaceProfileMonitoringResetService
     {
         var normalizedId = NormalizeId(interfaceProfileId);
         return _ignoredFileKeysByProfileId.TryGetValue(normalizedId, out var ignoredFiles)
-            && ignoredFiles.Contains(CreateFileKey(file));
+            && ignoredFiles.Contains(ImportFileFingerprint.Create(file));
     }
 
     private static string NormalizeId(string interfaceProfileId)
@@ -99,11 +110,6 @@ public sealed class InterfaceProfileMonitoringResetService
         }
 
         return interfaceProfileId.Trim();
-    }
-
-    private static string CreateFileKey(PendingImportFile file)
-    {
-        return $"{file.FilePath.Trim()}|{file.DetectedAtUtc.ToUniversalTime().Ticks}";
     }
 
     private static bool IsAisFile(PendingImportFile file)

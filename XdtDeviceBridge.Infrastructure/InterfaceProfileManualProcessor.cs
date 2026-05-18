@@ -243,13 +243,40 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         DateTime processedAtUtc,
         List<string> messages)
     {
-        if (!interfaceProfile.FolderOptions.ArchiveProcessedFiles)
+        var options = interfaceProfile.FolderOptions;
+        var removeAisFromImportFolder = options.ClearAisImportFolderBeforeProcessing;
+        var removeDeviceFromImportFolder = options.ClearDeviceImportFolderBeforeProcessing;
+        if (!options.ArchiveProcessedFiles
+            && !removeAisFromImportFolder
+            && !removeDeviceFromImportFolder)
         {
             messages.Add("Archivierung ist für dieses Schnittstellenprofil deaktiviert.");
             return null;
         }
 
-        if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ArchiveFolder))
+        if (!options.ArchiveProcessedFiles)
+        {
+            var removedFiles = new List<string>();
+            var issues = new List<string>();
+            RemoveKnownProcessedFileIfRequested(aisFilePath, removeAisFromImportFolder, removedFiles, issues);
+            RemoveKnownProcessedFileIfRequested(deviceFilePath, removeDeviceFromImportFolder, removedFiles, issues);
+
+            if (removedFiles.Count > 0)
+            {
+                messages.Add("Bekannte verarbeitete Importdateien wurden aus dem Importordner entfernt:");
+                messages.AddRange(removedFiles);
+            }
+
+            if (issues.Count > 0)
+            {
+                messages.Add("Entfernen bekannter verarbeiteter Importdateien mit Fehlern abgeschlossen.");
+                messages.AddRange(issues);
+            }
+
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(options.ArchiveFolder))
         {
             var archiveResult = new ProcessedFileArchiveResult(
                 ArchivedFiles: Array.Empty<string>(),
@@ -261,14 +288,32 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 
         try
         {
-            var moveFiles = interfaceProfile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move;
-            var archiveResult = _processedFileArchiveService.ArchiveProcessedFiles(
-                interfaceProfile.FolderOptions.ArchiveFolder,
+            var moveAllFiles = options.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move;
+            var archivedFiles = new List<string>();
+            var issues = new List<string>();
+            ArchiveKnownProcessedFile(
+                options.ArchiveFolder,
                 interfaceProfile.Metadata.Name,
                 aisFilePath,
-                deviceFilePath,
+                "AIS",
                 processedAtUtc,
-                moveFiles);
+                moveAllFiles || removeAisFromImportFolder,
+                archivedFiles,
+                issues);
+            ArchiveKnownProcessedFile(
+                options.ArchiveFolder,
+                interfaceProfile.Metadata.Name,
+                deviceFilePath,
+                "Device",
+                processedAtUtc,
+                moveAllFiles || removeDeviceFromImportFolder,
+                archivedFiles,
+                issues);
+
+            var archiveResult = new ProcessedFileArchiveResult(
+                ArchivedFiles: archivedFiles,
+                Issues: issues,
+                HasErrors: issues.Count > 0);
 
             if (archiveResult.HasErrors)
             {
@@ -277,9 +322,9 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 return archiveResult;
             }
 
-            messages.Add(moveFiles
-                ? "Importdateien wurden ins Archiv verschoben:"
-                : "Importdateien wurden ins Archiv kopiert. Originale bleiben erhalten:");
+            messages.Add(CreateArchiveSuccessMessage(
+                moveAllFiles,
+                removeAisFromImportFolder || removeDeviceFromImportFolder));
             messages.AddRange(archiveResult.ArchivedFiles);
             return archiveResult;
         }
@@ -292,6 +337,67 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             messages.Add($"Archivierung fehlgeschlagen: {ex.Message}");
             return archiveResult;
         }
+    }
+
+    private void ArchiveKnownProcessedFile(
+        string archiveFolder,
+        string interfaceProfileName,
+        string sourceFilePath,
+        string category,
+        DateTime processedAtUtc,
+        bool moveFile,
+        List<string> archivedFiles,
+        List<string> issues)
+    {
+        var result = _processedFileArchiveService.ArchiveProcessedFile(
+            archiveFolder,
+            interfaceProfileName,
+            sourceFilePath,
+            category,
+            processedAtUtc,
+            moveFile);
+        archivedFiles.AddRange(result.ArchivedFiles);
+        issues.AddRange(result.Issues);
+    }
+
+    private static void RemoveKnownProcessedFileIfRequested(
+        string sourceFilePath,
+        bool shouldRemove,
+        List<string> removedFiles,
+        List<string> issues)
+    {
+        if (!shouldRemove)
+        {
+            return;
+        }
+
+        if (!File.Exists(sourceFilePath))
+        {
+            issues.Add($"Quelldatei fehlt: {sourceFilePath}");
+            return;
+        }
+
+        try
+        {
+            File.Delete(sourceFilePath);
+            removedFiles.Add(sourceFilePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            issues.Add($"Entfernen fehlgeschlagen für {sourceFilePath}: {ex.Message}");
+        }
+    }
+
+    private static string CreateArchiveSuccessMessage(bool moveAllFiles, bool hasRemoveImportFolderOption)
+    {
+        if (moveAllFiles)
+        {
+            return "Importdateien wurden ins Archiv verschoben:";
+        }
+
+        return hasRemoveImportFolderOption
+            ? "Importdateien wurden gemäß Profilregel archiviert; zu entfernende Importdateien wurden verschoben:"
+            : "Importdateien wurden ins Archiv kopiert. Originale bleiben erhalten:";
     }
 
     private FailedFileCopyResult? CopyFailedFilesIfEnabled(

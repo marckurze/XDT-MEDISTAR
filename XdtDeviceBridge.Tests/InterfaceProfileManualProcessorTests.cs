@@ -230,6 +230,64 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
+    public void Process_ShouldMoveKnownFilesWhenRemoveOptionsAreEnabled()
+    {
+        var exportFolder = CreateTempFolder();
+        var archiveFolder = CreateTempFolder();
+        var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
+        var deviceFilePath = CopyTestDataToTemp("nidek-ark1s-sample.xml", "device.xml");
+        var interfaceProfile = CreateInterfaceProfile(
+            exportFolder,
+            archiveFolder: archiveFolder,
+            archiveProcessedFiles: true,
+            archiveProcessedFileMode: ArchiveProcessedFileMode.Copy,
+            clearAisImportFolderBeforeProcessing: true,
+            clearDeviceImportFolderBeforeProcessing: true);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 6, 1, 12, 0, 0));
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.ArchiveResult);
+        Assert.False(result.ArchiveResult.HasErrors);
+        Assert.False(File.Exists(aisFilePath));
+        Assert.False(File.Exists(deviceFilePath));
+        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
+        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
+        Assert.Contains("Importdateien wurden gemäß Profilregel archiviert; zu entfernende Importdateien wurden verschoben:", result.Messages);
+    }
+
+    [Fact]
+    public void Process_ShouldRemoveKnownFilesWithoutArchiveWhenRemoveOptionsAreEnabled()
+    {
+        var exportFolder = CreateTempFolder();
+        var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
+        var deviceFilePath = CopyTestDataToTemp("nidek-ark1s-sample.xml", "device.xml");
+        var interfaceProfile = CreateInterfaceProfile(
+            exportFolder,
+            archiveProcessedFiles: false,
+            clearAisImportFolderBeforeProcessing: true,
+            clearDeviceImportFolderBeforeProcessing: true);
+
+        var result = _processor.Process(
+            interfaceProfile,
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 6, 1, 12, 0, 0));
+
+        Assert.True(result.Success);
+        Assert.Null(result.ArchiveResult);
+        Assert.False(File.Exists(aisFilePath));
+        Assert.False(File.Exists(deviceFilePath));
+        Assert.Contains("Bekannte verarbeitete Importdateien wurden aus dem Importordner entfernt:", result.Messages);
+    }
+
+    [Fact]
     public void Process_ShouldKeepExportFileWhenArchivingFails()
     {
         var exportFolder = CreateTempFolder();
@@ -337,7 +395,9 @@ public sealed class InterfaceProfileManualProcessorTests
         bool archiveProcessedFiles = false,
         ArchiveProcessedFileMode archiveProcessedFileMode = ArchiveProcessedFileMode.Copy,
         string errorFolder = "",
-        bool moveFailedFilesToErrorFolder = true)
+        bool moveFailedFilesToErrorFolder = true,
+        bool clearAisImportFolderBeforeProcessing = false,
+        bool clearDeviceImportFolderBeforeProcessing = false)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
         {
@@ -355,7 +415,9 @@ public sealed class InterfaceProfileManualProcessorTests
                 ArchiveProcessedFiles = archiveProcessedFiles,
                 ArchiveProcessedFileMode = archiveProcessedFileMode,
                 ErrorFolder = errorFolder,
-                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder
+                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder,
+                ClearAisImportFolderBeforeProcessing = clearAisImportFolderBeforeProcessing,
+                ClearDeviceImportFolderBeforeProcessing = clearDeviceImportFolderBeforeProcessing
             },
             IsActive = true
         };

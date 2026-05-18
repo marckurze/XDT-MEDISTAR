@@ -66,6 +66,40 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_ShouldProcessNewFileVersionWithSameName()
+    {
+        var processor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = new AutoImportPairProcessingCoordinator(processor);
+        var profile = CreateInterfaceProfile();
+        var exportProfile = CreateExportProfile();
+        var firstPair = CreatePair("patient.gdt", "device.xml", detectedAtUtc: Timestamp);
+        var changedPair = CreatePair("patient.gdt", "device.xml", detectedAtUtc: Timestamp.AddMinutes(1));
+
+        coordinator.ProcessReadyPairs(profile, exportProfile, new[] { firstPair }, true, Timestamp);
+        var second = coordinator.ProcessReadyPairs(profile, exportProfile, new[] { changedPair }, true, Timestamp.AddMinutes(1));
+
+        Assert.Equal(2, processor.CallCount);
+        Assert.Equal(1, second.ProcessedCount);
+        Assert.True(Assert.Single(second.Results).Success);
+    }
+
+    [Fact]
+    public void ResetProfile_ShouldClearProcessedPairStateForSelectedProfile()
+    {
+        var processor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = new AutoImportPairProcessingCoordinator(processor);
+        var profile = CreateInterfaceProfile();
+        var pair = CreatePair("patient.gdt", "device.xml");
+
+        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
+        coordinator.ResetProfile(profile.Metadata.Id);
+        var second = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(1));
+
+        Assert.Equal(2, processor.CallCount);
+        Assert.True(Assert.Single(second.Results).Success);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_ShouldProcessDifferentPairs()
     {
         var processor = new FakeManualProcessor(CreateSuccessResult());

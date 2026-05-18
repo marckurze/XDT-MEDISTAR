@@ -132,7 +132,8 @@ public sealed class AutoImportPairProcessingCoordinator
         {
             var pairKey = CreatePairKey(interfaceProfile.Metadata.Id, pair.AisFile.FilePath, pair.DeviceFile.FilePath);
             var pairInstanceKey = CreatePairInstanceKey(interfaceProfile.Metadata.Id, pair);
-            if (_processedPairKeys.Contains(pairKey))
+            var processedPairKey = CreateProcessedPairKey(interfaceProfile.Metadata.Id, pair);
+            if (_processedPairKeys.Contains(processedPairKey))
             {
                 var duplicateResult = _duplicateImportFileHandler.HandleAlreadyProcessedPair(
                     interfaceProfile,
@@ -196,13 +197,13 @@ public sealed class AutoImportPairProcessingCoordinator
                     pair.DeviceFile.FilePath,
                     timestamp,
                     attachmentGate.AttachmentPreparation);
-                _processedPairKeys.Add(pairKey);
+                _processedPairKeys.Add(processedPairKey);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
                 results.Add(CreateProcessedResult(interfaceProfile, pairInstanceKey, pair, processingResult, processingResult.AttachmentStatus));
             }
             catch (Exception ex)
             {
-                _processedPairKeys.Add(pairKey);
+                _processedPairKeys.Add(processedPairKey);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
                 results.Add(new AutoImportPairProcessingResult(
                     PairKey: pairInstanceKey,
@@ -237,6 +238,8 @@ public sealed class AutoImportPairProcessingCoordinator
         }
 
         var keyPrefix = $"{interfaceProfileId.Trim()}|";
+        _processedPairKeys.RemoveWhere(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase));
+        _processingPairKeys.RemoveWhere(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase));
         _blockedPairKeys.RemoveWhere(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase));
         foreach (var key in _pairReadySinceUtc.Keys
             .Where(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase))
@@ -666,6 +669,17 @@ public sealed class AutoImportPairProcessingCoordinator
             CreatePairKey(interfaceProfileId, pair.AisFile.FilePath, pair.DeviceFile.FilePath),
             pair.AisFile.DetectedAtUtc.Ticks.ToString(),
             pair.DeviceFile.DetectedAtUtc.Ticks.ToString());
+    }
+
+    private static string CreateProcessedPairKey(string interfaceProfileId, PendingImportPair pair)
+    {
+        return string.Join(
+            "|",
+            interfaceProfileId,
+            "ais",
+            ImportFileFingerprint.Create(pair.AisFile),
+            "device",
+            ImportFileFingerprint.Create(pair.DeviceFile));
     }
 
     private sealed record AttachmentGateDecision(

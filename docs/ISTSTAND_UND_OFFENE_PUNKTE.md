@@ -35,7 +35,7 @@ Besonders stabil wirken aktuell:
 - offizielle Paketvorlage fuer MEDISTAR + NIDEK ARK1S inklusive reproduzierbarem Export-/Import-Testweg
 - NIDEK AR360 / AR-360A als praktisch validierter Auto-Refraktometer-Workflow fuer XDT-Rueckgabe mit BuiltIn-Profilen, ARMedian-Ausgabe und selektivem Templatepaket-Pfad
 - NIDEK LM7 / LM-7P als praktisch validierter Lensmeter-Referenzkandidat mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade, MEDISTAR-Praxisprotokoll und selektivem Templatepaket-Test
-- NIDEK NT530P / NT-530P als direkt nutzbarer testseitiger MEDISTAR-Kandidat mit echter UTF-16-XML-Fixture, `6220`-Pachymetrie, `6205`-Tonometrie, BuiltIn-Schnittstellenprofil und selektivem Templatepaket-Test
+- NIDEK NT530P / NT-530P als direkt nutzbarer testseitiger MEDISTAR-Kandidat mit echter UTF-16-XML-Fixture, `6220`-Pachymetrie, `6205`-Tonometrie, BuiltIn-Schnittstellenprofil, selektivem Templatepaket-Test und korrigiertem Nachlauf nach erfolgreichem Mehrfachanhang-Export
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
@@ -255,6 +255,7 @@ Weitere Regeln:
 - optionaler XDT-Anhang: mehrere stabile Anhaenge werden uebernommen; nach Timeout ohne stabile Anhaenge Export ohne Anhang
 - verpflichtender XDT-Anhang: nach Timeout Blockade/Fehler
 - mehrere vorhandene, aber noch instabile Anhaenge: warten; nach Timeout greift die optionale beziehungsweise verpflichtende Anhangregel
+- nach erfolgreichem Export mit Anhaengen wird das Paket terminal abgeschlossen; die Monitoring-Karte wird auf den naechsten Vorgang zurueckgesetzt und zeigt keinen alten Timeout-Status fuer bereits uebertragene Anhaenge.
 
 ### Dateistabilitaet
 
@@ -271,10 +272,11 @@ Weitere Regeln:
 ### Archivierung und Fehlerablage
 
 - Bekannte erfolgreich verarbeitete AIS-/Geraetedateien koennen nach Profiloption archiviert werden.
-- Archivmodus `Copy` oder `Move`.
+- Archivmodus `Copy` oder `Move`; ist die Profiloption `aus Importordner entfernen` aktiv, werden genau diese bekannten verarbeiteten AIS-/Geraetedateien aus dem Importordner entfernt beziehungsweise ins Archiv verschoben.
 - Fehlerablage kopiert bekannte betroffene Dateien in den Fehlerordner und schreibt `error.txt`.
 - Unbekannte Dateien werden nicht geloescht oder verschoben.
 - Exportordner werden nicht pauschal bereinigt.
+- Reset-/Duplikatsperren arbeiten dateiversionsbezogen: Eine neu geschriebene Datei mit gleichem Namen wird anhand geaenderter Dateiversion wieder erkannt.
 
 ### Sicherheitsentscheidungen
 
@@ -303,7 +305,7 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | MEDISTAR-kompatibler XDT-Export | testseitig validiert | `XdtExportBuilderTests`, `CorePipelineEndToEndTests`, ARK1S-bezogene Tests |
 | XDT-Laengenpraefixe | testseitig validiert | `XdtExportBuilderTests`, Linkfeld-Adapter-Tests |
 | XDT-Anhang-Linkfelder `6302` bis `6305` | praktisch fuer MEDISTAR + ARK1S Pflicht-Anhang und testseitig validiert | Praxisprotokoll, Attachment-, Coordinator-, ManualProcessor- und BuilderTestExport-Tests |
-| XDT-Mehrfachanhaenge | testseitig validiert | `AttachmentAutoCandidateSelectionServiceTests`, `AttachmentPackageDecisionServiceTests`, `AutoImportPairProcessingCoordinatorTests` |
+| XDT-Mehrfachanhaenge | testseitig validiert, inklusive Paketabschluss/Nachlauf | `AttachmentAutoCandidateSelectionServiceTests`, `AttachmentPackageDecisionServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `InterfaceMonitoringCardStatusServiceTests` |
 | Baukasten-Testexport mit simuliertem 6305-Zielpfad | testseitig validiert | `BuilderTestExportServiceTests` |
 | Automatische Paketlogik AIS -> Geraet -> XDT-Anhang | testseitig validiert | `AutoImportPackageStateServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `AttachmentPackageDecisionServiceTests` |
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
@@ -375,7 +377,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | mittel | Geraete-Datei-Explorer | Noch kein vollstaendiger Explorer. | Datei anzeigen, SourcePaths untersuchen, Messwerte markieren, Kandidaten fuer Exportregeln uebernehmen. | Kleinen read-only Explorer fuer XML/Geraetedateien bauen. | Neue Geraeteprofile bleiben Codex-/Entwickleraufgabe. | XmlDeviceParser, PlaceholderDisplayHelper |
 | mittel | Profil-Assistent fuer unbekannte Geraete | Schlanke V1-Anlage fuer AIS-, Geraete- und Exportprofile als UserDefined ist vorhanden. | Gefuehrtes Erstellen kompletter Geraete-/Export-/Schnittstellenpakete inklusive Datei-Explorer und Messwertuebernahme fehlt. | Nach Geraete-Datei-Explorer planen. | Skalierung auf neue Geraete bleibt weiterhin teilweise Entwickler-/Codex-Aufgabe. | Geraete-Datei-Explorer, ProfileCatalog |
 | mittel | NIDEK LM7/LM7P produktiv validieren | Echte LM7-XML-Fixture, Parseralias fuer `Sphare`/`Sphere`, MEDISTAR-Lensmeter-Ausgabe, BuiltIn-Schnittstellenprofil, Templatepaket-Kandidat, Reparatur alter persistierter BuiltIn-Exportpfade und praktische MEDISTAR-Abnahme sind vorhanden. | Weitere Prisma-/PD-Dateien, separat validierter XDT-Anhang-Link und offizielles ZIP-Artefakt fehlen. | Prisma-/PD-Beispielfaelle sammeln und danach ueber ZIP-Release nach Regel entscheiden. | Vorbereitetes Profil koennte bei Prisma/PD-Sonderfaellen noch abweichen. | Testdaten, MEDISTAR-Anforderungen |
-| mittel | NIDEK NT530P produktiv validieren | Echte UTF-16-XML-Fixture, Parserwerte, Header-/Einzelzeilen fuer `6205` Tonometrie und `6220` Pachymetrie, BuiltIn-Geraete-/Export-/Schnittstellenprofil und selektiver Templatepaket-Test sind vorhanden. | Praktische MEDISTAR-Abnahme fuer die korrigierte Karteikarten-Darstellung und optionalen JPG-Mehrfachanhangfall fehlt. | Geraetespezifischen E2E-Testlauf mit MEDISTAR durchfuehren und protokollieren. | Karteikarten-Darstellung oder Attachment-Erwartung koennte fachlich abweichen. | Testdaten, MEDISTAR-Anforderungen |
+| mittel | NIDEK NT530P produktiv validieren | Echte UTF-16-XML-Fixture, Parserwerte, Header-/Einzelzeilen fuer `6205` Tonometrie und `6220` Pachymetrie, BuiltIn-Geraete-/Export-/Schnittstellenprofil, selektiver Templatepaket-Test, Mehrfachanhang-Linkfelder und korrigierter Nachlauf/Monitoring-Reset sind vorhanden. | Praktische MEDISTAR-Nachpruefung fuer den kompletten JPG-Mehrfachanhanglauf nach Nachlauf-Fix fehlt. | Geraetespezifischen E2E-Testlauf mit MEDISTAR erneut durchfuehren und protokollieren. | Karteikarten-Darstellung, Ordnernachlauf oder Attachment-Erwartung koennte fachlich abweichen. | Testdaten, MEDISTAR-Anforderungen |
 | mittel | TOPCON CL300 produktiv validieren | Profile vorbereitet. | Namespace-/Dateistruktur mit echten Beispielen pruefen. | CL300-Beispieldateien sammeln und Parserpfade bestaetigen. | Vorbereitete SourcePaths koennen unvollstaendig sein. | Testdaten |
 | mittel | TOPCON KR800 produktiv validieren | Profile vorbereitet. | REF/KM/SBJ-Strukturen mit echten Daten pruefen. | KR800-Testdaten auswerten und Exportregeln validieren. | Mehruntersuchungsdaten koennen falsch gruppiert werden. | Testdaten |
 | mittel | TOPCON TRK2P produktiv validieren | Profile vorbereitet. | TM/CCT/IOP-Strukturen und Einheiten pruefen. | TRK2P-Testdaten auswerten und Exportregeln validieren. | IOP/CCT-Ausgabe koennte fachlich unpassend sein. | Testdaten |

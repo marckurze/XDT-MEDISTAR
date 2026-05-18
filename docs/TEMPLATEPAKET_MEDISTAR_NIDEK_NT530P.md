@@ -30,15 +30,15 @@ Das Exportprofil nutzt keine `6228`-Geraetewertzeilen fuer NT530P.
 
 Der fruehere Zusatz `/ EV:{000000003B} NT-530P Messung` wird nicht mehr erzeugt.
 
-Die Werte stammen aus der XML. Benutzerbeispiele dienen nur als Formatvorlage und werden nicht als Messwerte uebernommen.
+Die Werte stammen aus der XML. Benutzerbeispiele dienen nur als Formatvorlage und werden nicht als Messwerte uebernommen. Nach erfolgreichem Export mit JPG-Mehrfachanhaengen wird das Paket terminal abgeschlossen; bekannte AIS-/Geraetedateien werden gemaess Profilregel nachbehandelt und die Monitoring-Karte bleibt nicht auf alten Eingangsdaten oder einem falschen Anhang-Timeout stehen.
 
 ## Testabdeckung
 
-`NidekNt530PProfileTests` prueft Erkennung, UTF-16-Fixture, Tonometrie-/Pachymetriewerte, JPG-Klassifizierung, berechnete mehrzeilige MEDISTAR-Werte, `6220`/`6205`-Export, fehlende `6228`-Ausgabe, BuiltIn-Profile und Reparatur alter persistierter BuiltIn-NT530P-Exportprofile. `MedistarNidekNt530PTemplatePackageTests` prueft den selektiven Templatepaket-Export und -Import temporaer im Testordner. Das Paket enthaelt nur MEDISTAR, NIDEK NT530P, das passende Exportprofil und das Schnittstellenprofil; ARK1S-, AR360-, LM7- und TOPCON-Profile sind nicht enthalten.
+`NidekNt530PProfileTests` prueft Erkennung, UTF-16-Fixture, Tonometrie-/Pachymetriewerte, JPG-Klassifizierung, berechnete mehrzeilige MEDISTAR-Werte, `6220`/`6205`-Export, fehlende `6228`-Ausgabe, BuiltIn-Profile und Reparatur alter persistierter BuiltIn-NT530P-Exportprofile. `AutoImportPairProcessingCoordinatorTests`, `InterfaceProfileManualProcessorTests`, `InterfaceMonitoringCardStatusServiceTests` und `InterfaceProfileMonitoringResetServiceTests` sichern Mehrfachanhang-Linkfelder, Paketabschluss/Nachlauf, neutrale Monitoring-Karten nach Erfolg und dateiversionsbezogene Reset-/Duplikatsperren ab. `MedistarNidekNt530PTemplatePackageTests` prueft den selektiven Templatepaket-Export und -Import temporaer im Testordner. Das Paket enthaelt nur MEDISTAR, NIDEK NT530P, das passende Exportprofil und das Schnittstellenprofil; ARK1S-, AR360-, LM7- und TOPCON-Profile sind nicht enthalten.
 
 ## Offen
 
-- Praktische MEDISTAR-Validierung mit echtem Importlauf.
-- Fachliche Abnahme der korrigierten mehrzeiligen Tonometrie-/Pachymetrie-Darstellung in der Karteikarte.
-- XDT-Anhang-Link fuer NT530P-JPG-Aufnahmen praktisch validieren; die generische Mehrfachanhang-Mechanik ist testseitig abgesichert.
+- Praktische MEDISTAR-Nachpruefung des kompletten Importlaufs nach Nachlauf-Fix.
+- Fachliche Abnahme der korrigierten mehrzeiligen Tonometrie-/Pachymetrie-Darstellung in der Karteikarte bleibt zu protokollieren.
+- XDT-Anhang-Link fuer NT530P-JPG-Aufnahmen inklusive Ordnernachlauf und neutralem Kartenstatus praktisch validieren; die generische Mehrfachanhang-Mechanik ist testseitig abgesichert.
 - Offizielles ZIP-Artefakt erst nach Release-Regel und App-Abnahme ablegen.

@@ -284,7 +284,12 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         Assert.Equal("Success", updated.StatusClass);
         Assert.Equal("result.xdt", updated.ExportFileName);
         Assert.Equal("4701-1.pdf", updated.AttachmentFileName);
+        Assert.Equal("", updated.AisFileName);
+        Assert.Equal("", updated.DeviceFileName);
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "erwartet" && input.DisplayDetail == "");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Status == "erwartet" && input.DisplayDetail == "");
         Assert.Contains(updated.ExpectedInputs, input => input.Key == "attachment" && input.Name == "PDF Empfangen" && input.Status == "" && input.StatusClass == "Success");
+        Assert.DoesNotContain(updated.ExpectedInputs, input => input.Key == "attachment" && input.DisplayDetail == "Timeout erreicht");
     }
 
     [Fact]

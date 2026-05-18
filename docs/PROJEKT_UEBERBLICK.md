@@ -225,6 +225,7 @@ Technische Grundsaetze:
 - Automatische XDT-Anhang-Verarbeitung ist nur unter Sicherheitsbedingungen erlaubt.
 - Mehrere stabile unterstuetzte Anhaenge werden stabil sortiert und einzeln verarbeitet.
 - Instabile Anhaenge werden nicht verarbeitet, nicht verschoben und nicht verlinkt.
+- Nach erfolgreichem Export mit Anhaengen wird der Vorgang terminal abgeschlossen; bekannte AIS-/Geraetedateien werden gemaess Profilregel nachbehandelt und alte Eingangsanzeigen/Timeouts werden nicht als aktiver Kartenstatus beibehalten.
 - Exportprofile werden durch XDT-Anhang-Test und Testexport nicht dauerhaft veraendert.
 - MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link ist fuer den Pflicht-Anhang-Praxislauf praktisch validiert; weitere Geraete/AIS und Mehrfachanhang-Livelaeufe bleiben separat zu pruefen.
 
@@ -312,6 +313,8 @@ Fuer produktionsnahe Nutzung ist `Move` oft sinnvoll, damit Importordner nach er
 Aktuelle Grundsaetze:
 
 - Nur bekannte verarbeitete AIS-/Geraetedateien werden gemaess Profiloption archiviert.
+- Wenn die Profiloption `aus Importordner entfernen` aktiv ist, werden nur diese bekannten verarbeiteten AIS-/Geraetedateien entfernt beziehungsweise ins Archiv verschoben.
+- Reset- und Duplikatsperren verwenden eine Dateiversion statt nur den Pfad; neu geschriebene Dateien mit gleichem Namen werden wieder erkannt.
 - Keine unbekannten Dateien werden geloescht.
 - Keine Ordner werden pauschal geleert.
 - Der Exportordner wird nicht bereinigt.
@@ -375,7 +378,7 @@ Vorbereitet, aber noch nicht produktiv validiert:
 
 - NIDEK AR360 / AR-360A: Auto-Refraktor-XDT-Rueckgabe praktisch validiert; XDT-Anhangfall und offizielles ZIP-Artefakt offen
 - NIDEK LM7/LM7P: praktisch validierter Lensmeter-Referenzkandidat mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade, MEDISTAR-Praxisprotokoll und selektivem Templatepaket-Test
-- NIDEK NT530P: testseitig direkt nutzbarer Tonometrie-/Pachymetrie-Kandidat mit echter XML-Fixture, korrigiertem mehrzeiligem `6205`-/`6220`-Export und selektivem Templatepaket-Test; praktische MEDISTAR-Abnahme offen
+- NIDEK NT530P: testseitig direkt nutzbarer Tonometrie-/Pachymetrie-Kandidat mit echter XML-Fixture, korrigiertem mehrzeiligem `6205`-/`6220`-Export, Mehrfachanhang-Linkfeldern, korrigiertem Nachlauf/Monitoring-Reset und selektivem Templatepaket-Test; praktische MEDISTAR-Nachpruefung offen
 - TOPCON CL300
 - TOPCON KR800
 - TOPCON TRK2P
@@ -481,11 +484,11 @@ XDT-Anhaenge fuer AIS sind fuer den validierten MEDISTAR/ARK1S-Pflicht-Anhang-Pr
 
 Im Baukasten kann ein XDT-Anhang aus beliebigem Speicherort gewaehlt werden. Vorschau und Test-XDT simulieren aber den Schnittstellenprofil-Zielpfad: 6305 zeigt auf XDT-Anhang Exportordner plus erzeugten Dateinamen. Der Testexport schreibt XDT-Datei und umbenannten Anhang physisch in einen frei gewaehlten Testordner, ohne Exportprofile oder BuiltIns zu veraendern.
 
-Die automatische Paketlogik ist zweistufig: Phase 1 AIS-Datei wartet auf stabile Geraetedatei, Default 10 Minuten. Eine neue AIS-Datei ersetzt eine aeltere wartende AIS-Datei. Phase 2 startet erst nach vollstaendigem AIS-/Geraete-Paar: optionaler oder verpflichtender XDT-Anhang wartet bis Default 30 Sekunden.
+Die automatische Paketlogik ist zweistufig: Phase 1 AIS-Datei wartet auf stabile Geraetedatei, Default 10 Minuten. Eine neue AIS-Datei ersetzt eine aeltere wartende AIS-Datei. Phase 2 startet erst nach vollstaendigem AIS-/Geraete-Paar: optionaler oder verpflichtender XDT-Anhang wartet bis Default 30 Sekunden. Nach erfolgreichem Export mit einem oder mehreren Anhaengen ist der Vorgang terminal abgeschlossen; die Monitoring-Karte geht auf den naechsten Vorgang zurueck und zeigt keinen alten Anhang-Timeout als aktiven Endzustand.
 
 Optionaler XDT-Anhang bedeutet: Wenn ein oder mehrere stabile unterstuetzte Anhaenge rechtzeitig kommen, Export mit je eigener 6302-6305-Linkfeldgruppe; wenn keiner kommt, Export ohne Anhang nach Timeout. Pflicht bedeutet: ohne stabilen unterstuetzten Anhang blockiert die Verarbeitung oder geht in Fehlerstatus.
 
-Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden.
+Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden. Reset-/Duplikatsperren unterscheiden neue Dateien mit gleichem Namen anhand ihrer Dateiversion, damit ein neuer MEDISTAR-Auftrag nicht bis zum App-Neustart blockiert bleibt.
 
 Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben oder geloescht werden, UserDefined-Profile werden separat gespeichert. Neue AIS-, Geraete- und Exportprofile koennen als UserDefined angelegt werden; Konflikte werden blockiert und es wird nichts automatisch aktiviert. UserDefined-Exportprofile koennen geloescht werden, wenn kein Schnittstellenprofil sie verwendet; Exportregeln koennen nur aus UserDefined-Exportprofilen entfernt werden. Templatepaket-Export erfolgt selektiv auf Basis eines Schnittstellenprofils und nimmt nur benoetigte AIS-/Geraete-/Export-Abhaengigkeiten auf. Templatepaket-Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
 

@@ -267,16 +267,16 @@ Ablauf:
 
 Erwartung optional:
 
-- Export ohne Anhang oder Warnstatus gemäß aktueller Spezifikation.
-- Keine Datei wird automatisch ausgewählt.
-- Keine Anhangdatei wird verschoben.
-- Keine `6302` bis `6305`, wenn keine eindeutige Zuordnung möglich ist.
+- Wenn alle unterstützten Anhänge stabil sind, wird jede Datei einzeln übertragen.
+- Export enthält je Anhang eine eigene `6302`/`6303`/optional `6304`/`6305`-Gruppe.
+- Reihenfolge ist stabil nach Dateiname.
+- Nach erfolgreichem Export werden bekannte AIS-/Gerätedateien gemäß Profilregel nachbehandelt.
+- Die Monitoring-Karte zeigt danach keinen alten Eingang und keinen falschen Anhang-Timeout als aktiven Endzustand.
 
 Erwartung Pflicht:
 
-- Keine Exportdatei.
-- Fehler/Blockade wegen mehrerer unterstützter Anhänge.
-- Keine Anhangdatei wird verschoben.
+- Wenn alle unterstützten Anhänge stabil sind, gilt derselbe Erfolgsfall wie optional.
+- Wenn mindestens ein unterstützter Anhang noch instabil ist, wird weiter gewartet; nach Timeout greift die Pflicht-Fehlerlogik.
 
 ### Testfall 7: Instabile XDT-Anhangdatei
 
@@ -375,6 +375,8 @@ Allgemeine erwartete Ergebnisse über alle Testfälle:
 - Keine unbekannten Dateien werden gelöscht, verschoben oder verändert.
 - Keine Mehrfachanhang-Heuristik anhand XML-Verweisen oder Patientenbezug.
 - Mehrere stabile unterstützte Anhänge im Anhang-Importordner werden stabil sortiert und einzeln übergeben.
+- Nach erfolgreichem Export mit Anhängen bleiben Monitoring-Karten nicht auf alten AIS-/Geräte-Eingängen oder falschem Anhang-Timeout stehen.
+- Reset-/Duplikatsperren blockieren neu geschriebene Dateien mit gleichem Namen nicht dauerhaft.
 - Exportordner wird nicht pauschal bereinigt.
 
 Ein einzelner Testfall gilt als bestanden, wenn:
@@ -503,6 +505,7 @@ Aktuell relevante automatisierte Tests:
 | Optionaler Anhang Timeout | `ProcessReadyPairs_AttachmentShouldSkipWhenScannerFindsNoSupportedCandidate` |
 | Pflicht-Anhang Timeout | `ProcessReadyPairs_RequiredAttachmentShouldBlockAfterTimeout` |
 | Mehrere Anhänge optional/Pflicht-Entscheidung | `AttachmentPackageDecisionServiceTests`, `ProcessReadyPairs_AttachmentShouldPrepareMultipleSupportedCandidates`, `ProcessReadyPairs_RequiredAttachmentShouldPrepareMultipleSupportedCandidates` |
+| Nachlauf/Monitoring nach erfolgreichem Mehrfachanhang | `InterfaceProfileManualProcessorTests`, `InterfaceMonitoringCardStatusServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `InterfaceProfileMonitoringResetServiceTests` |
 | Instabiler Anhang | `ProcessReadyPairs_AttachmentShouldSkipUnstableSupportedCandidate`, `AttachmentAutoCandidateSelectionServiceTests`, `AttachmentImportFolderScannerServiceTests` |
 | AIS wartet auf Gerätedatei | `AutoImportPackageStateServiceTests.Evaluate_ShouldWaitForDeviceFileWhenOnlyAisFileExists` |
 | Gerätedatei kommt später | `AutoImportPackageStateServiceTests.Evaluate_ShouldReturnReadyPairWhenDeviceFileArrivesWithinTimeout` |
@@ -556,9 +559,10 @@ Der automatische AIS-/Geräte-/XDT-Anhang-Ablauf gilt für diesen Prototyp als a
 - Optionaler Anhang innerhalb Timeout korrekt mit `6302` bis `6305` exportiert wird.
 - Optionaler Anhang nach Timeout weggelassen wird.
 - Pflicht-Anhang nach Timeout blockiert.
-- Mehrere unterstützte Anhänge niemals automatisch ausgewählt werden.
+- Mehrere stabile unterstützte Anhänge einzeln, sortiert und mit eigenen Linkfeldgruppen übertragen werden.
 - Instabile Dateien niemals verschoben, verlinkt oder verarbeitet werden.
 - Neue AIS-Datei ältere wartende AIS-Datei ersetzt.
+- Neue Dateien mit gleichem Namen nach Reset/erfolgreichem Nachlauf wieder erkannt werden.
 
 Teilabnahme:
 
