@@ -6293,7 +6293,7 @@ public partial class MainWindow : Window
         {
             AppendMonitoringEvent(
                 result.InterfaceProfileId,
-                "scan-ais-detected",
+                MonitoringActivityEventKeyBuilder.CreateAisDetectedKey(result.Queue),
                 $"{profileName}: AIS-Datei erkannt ({result.AisFilesDetected}).");
         }
 
@@ -6301,7 +6301,7 @@ public partial class MainWindow : Window
         {
             AppendMonitoringEvent(
                 result.InterfaceProfileId,
-                "scan-device-detected",
+                MonitoringActivityEventKeyBuilder.CreateDeviceDetectedKey(result.Queue),
                 $"{profileName}: Gerätedatei erkannt ({result.DeviceFilesDetected}).");
         }
 
@@ -6309,7 +6309,7 @@ public partial class MainWindow : Window
         {
             AppendMonitoringEvent(
                 result.InterfaceProfileId,
-                "scan-ready-pair",
+                MonitoringActivityEventKeyBuilder.CreateReadyPairKey(result.Queue),
                 $"{profileName}: AIS-/Geräte-Paar vollständig ({result.ReadyPairs}).");
         }
 

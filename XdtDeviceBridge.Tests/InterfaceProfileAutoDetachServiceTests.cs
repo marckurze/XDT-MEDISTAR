@@ -115,6 +115,57 @@ public sealed class InterfaceProfileAutoDetachServiceTests
     }
 
     [Fact]
+    public void Evaluate_ShouldAllowLaterActivityAfterAutoRedockWithSameFileNameNewVersion()
+    {
+        var stateService = new InterfaceProfileFloatingWindowStateService();
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+
+        ApplyDecision(
+            stateService,
+            autoDetachService,
+            Event("interface-nt530p", @"scan-device-detected:C:\Import\NIDEK NT530P.xml|1000|2048", BaseTime));
+        stateService.Dock("interface-nt530p");
+        ApplyDecision(
+            stateService,
+            autoDetachService,
+            Event("interface-nt530p", @"scan-device-detected:C:\Import\NIDEK NT530P.xml|2000|2048", BaseTime.AddSeconds(10)));
+
+        Assert.True(stateService.GetOrCreate("interface-nt530p").IsDetached);
+    }
+
+    [Fact]
+    public void Evaluate_ShouldTreatVersionedScanEventsAsRelevantActivity()
+    {
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+        var state = new InterfaceProfileFloatingWindowState("interface-lm7");
+
+        var decision = autoDetachService.Evaluate(
+            Event("interface-lm7", @"scan-ready-pair:C:\Import\Patient.XDT|1000|100+C:\Import\NIDEK LM7.xml|1000|200", BaseTime),
+            state);
+
+        Assert.True(decision.IsRelevantActivity);
+        Assert.True(decision.ShouldDetach);
+        Assert.True(decision.ShouldBringToFront);
+    }
+
+    [Fact]
+    public void Evaluate_ShouldNotDetachTwiceWhenWindowAlreadyDetachedForNewVersion()
+    {
+        var stateService = new InterfaceProfileFloatingWindowStateService();
+        stateService.Detach("interface-nt530p");
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+
+        var decision = autoDetachService.Evaluate(
+            Event("interface-nt530p", @"scan-device-detected:C:\Import\NIDEK NT530P.xml|2000|2048", BaseTime),
+            stateService.GetOrCreate("interface-nt530p"));
+
+        Assert.True(decision.IsRelevantActivity);
+        Assert.False(decision.ShouldDetach);
+        Assert.True(decision.ShouldBringToFront);
+        Assert.True(stateService.GetOrCreate("interface-nt530p").IsDetached);
+    }
+
+    [Fact]
     public void Evaluate_ShouldIgnoreGlobalMonitoringEvents()
     {
         var autoDetachService = new InterfaceProfileAutoDetachService();
@@ -177,6 +228,32 @@ public sealed class InterfaceProfileAutoDetachServiceTests
 
         Assert.False(ar360Decision.IsSuppressedByCooldown);
         Assert.True(ark1sDecision.IsSuppressedByCooldown);
+    }
+
+    [Fact]
+    public void ResetProfile_ShouldAllowNewActivityWithSameFileNameImmediatelyForSelectedProfile()
+    {
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+        var nt530pState = new InterfaceProfileFloatingWindowState("interface-nt530p");
+        var lm7State = new InterfaceProfileFloatingWindowState("interface-lm7");
+
+        _ = autoDetachService.Evaluate(
+            Event("interface-nt530p", @"scan-device-detected:C:\Import\device.xml|1000|100", BaseTime),
+            nt530pState);
+        _ = autoDetachService.Evaluate(
+            Event("interface-lm7", @"scan-device-detected:C:\Import\device.xml|1000|100", BaseTime),
+            lm7State);
+        autoDetachService.ResetProfile("interface-nt530p");
+
+        var nt530pDecision = autoDetachService.Evaluate(
+            Event("interface-nt530p", @"scan-device-detected:C:\Import\device.xml|2000|100", BaseTime.AddSeconds(1)),
+            nt530pState);
+        var lm7Decision = autoDetachService.Evaluate(
+            Event("interface-lm7", @"scan-device-detected:C:\Import\device.xml|2000|100", BaseTime.AddSeconds(1)),
+            lm7State);
+
+        Assert.False(nt530pDecision.IsSuppressedByCooldown);
+        Assert.True(lm7Decision.IsSuppressedByCooldown);
     }
 
     private static void ApplyDecision(

@@ -92,6 +92,29 @@ public sealed class InterfaceProfileAutoRedockServiceTests
     }
 
     [Fact]
+    public void RecordMonitoringEvent_VersionedNewActivityShouldCancelRunningCountdown()
+    {
+        var service = new InterfaceProfileAutoRedockService();
+        var floatingState = DetachedState("interface-nt530p");
+        service.MarkAutoDetached("interface-nt530p", floatingState, BaseTime);
+        _ = service.RecordMonitoringEvent(
+            Event("interface-nt530p", "pair:patient-device:status", "MEDISTAR + NIDEK NT530P: automatisch verarbeitet. Exportdatei: out.gdt", BaseTime),
+            floatingState);
+
+        var openDecision = service.RecordMonitoringEvent(
+            Event(
+                "interface-nt530p",
+                @"scan-device-detected:C:\Import\NIDEK NT530P.xml|2000|2048",
+                "MEDISTAR + NIDEK NT530P: Gerätedatei erkannt (1).",
+                BaseTime.AddSeconds(2)),
+            floatingState);
+
+        Assert.True(openDecision.IsOpenActivity);
+        Assert.True(openDecision.DidCancelCountdown);
+        Assert.False(service.HasPendingCountdowns);
+    }
+
+    [Fact]
     public void RecordMonitoringEvent_PinnedWindowShouldNotStartCountdown()
     {
         var service = new InterfaceProfileAutoRedockService();

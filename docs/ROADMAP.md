@@ -162,6 +162,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Persistierte Floating-Fenster werden erst nach der sicheren MainWindow-Anzeige wiederhergestellt; falls ein Restore fehlschlaegt, wird die Karte angedockt statt die App zu blockieren.
 - Schliessen per `X` dockt sicher zurueck. Radar-/Scanbalken und `-`/`+`-Scanintervallsteuerung sind im Floating-Fenster sichtbar.
 - Erste automatische Oeffnung ist vorhanden: relevante Monitoring-Aktivitaet wie AIS-/Geraetedatei, Anhang-/Paketstatus oder Verarbeitungsergebnis dockt nur das betroffene Floating-Fenster ab und bringt es nach vorne.
+- Wiederholte Durchlaeufe sind abgesichert: neue Dateiversionen mit gleichem Namen erzeugen erneut einen profilbezogenen AutoDetach-Impuls; identische Scan-Wiederholungen bleiben weiterhin gegen Spam dedupliziert.
 - Bei stabil erkanntem Geraetedatei-Eingang wird der App-Content-Signalton `04_praxis_terminal_signal.wav` abgespielt; AIS-, Anhang-, Export- und Statusmeldungen bleiben stumm, ein kurzer Cooldown pro Schnittstellenprofil verhindert Sound-Spam.
 - Automatisches Zurueckandocken ist vorhanden: nach terminalem Monitoring-Abschluss startet fuer automatisch geoeffnete, nicht gepinnte Fenster eine Restlaufzeit von 5 Sekunden; neue Aktivitaet, Pin oder manuelles Andocken bricht den Countdown pro Profil ab.
 - Systray-Grundfunktion ist vorhanden: Minimieren oder `X` blendet das Hauptfenster in den Infobereich aus, Doppelklick beziehungsweise Kontextmenue `Oeffnen` stellt es wieder her, `Beenden` schliesst die App bewusst.

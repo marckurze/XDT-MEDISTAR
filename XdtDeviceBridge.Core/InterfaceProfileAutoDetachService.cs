@@ -67,9 +67,9 @@ public sealed class InterfaceProfileAutoDetachService
     private static bool IsRelevantActivity(InterfaceMonitoringEventEntry entry)
     {
         var eventKey = entry.EventKey.Trim();
-        if (string.Equals(eventKey, "scan-ais-detected", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(eventKey, "scan-device-detected", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(eventKey, "scan-ready-pair", StringComparison.OrdinalIgnoreCase)
+        if (IsEventKeyOrVersionedKey(eventKey, "scan-ais-detected")
+            || IsEventKeyOrVersionedKey(eventKey, "scan-device-detected")
+            || IsEventKeyOrVersionedKey(eventKey, "scan-ready-pair")
             || string.Equals(eventKey, "package-state", StringComparison.OrdinalIgnoreCase)
             || string.Equals(eventKey, "automatic-processing-export-profile-missing", StringComparison.OrdinalIgnoreCase)
             || eventKey.StartsWith("pair:", StringComparison.OrdinalIgnoreCase))
@@ -84,6 +84,12 @@ public sealed class InterfaceProfileAutoDetachService
 
         return entry.Severity != InterfaceMonitoringEventSeverity.Info
             || ContainsAny(entry.Message, "AIS", "Gerät", "Geraet", "XDT-Anhang", "Anhang", "warte", "wartet", "Timeout", "Fehler", "blockiert");
+    }
+
+    private static bool IsEventKeyOrVersionedKey(string eventKey, string baseKey)
+    {
+        return string.Equals(eventKey, baseKey, StringComparison.OrdinalIgnoreCase)
+            || eventKey.StartsWith($"{baseKey}:", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool ContainsAny(string text, params string[] fragments)

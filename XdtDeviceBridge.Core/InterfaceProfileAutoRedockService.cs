@@ -244,9 +244,9 @@ public sealed class InterfaceProfileAutoRedockService
     {
         var eventKey = entry.EventKey.Trim();
         var message = entry.Message;
-        if (string.Equals(eventKey, "scan-ais-detected", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(eventKey, "scan-device-detected", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(eventKey, "scan-ready-pair", StringComparison.OrdinalIgnoreCase))
+        if (IsEventKeyOrVersionedKey(eventKey, "scan-ais-detected")
+            || IsEventKeyOrVersionedKey(eventKey, "scan-device-detected")
+            || IsEventKeyOrVersionedKey(eventKey, "scan-ready-pair"))
         {
             return true;
         }
@@ -295,6 +295,12 @@ public sealed class InterfaceProfileAutoRedockService
     private static bool ContainsAny(string text, params string[] fragments)
     {
         return fragments.Any(fragment => text.Contains(fragment, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsEventKeyOrVersionedKey(string eventKey, string baseKey)
+    {
+        return string.Equals(eventKey, baseKey, StringComparison.OrdinalIgnoreCase)
+            || eventKey.StartsWith($"{baseKey}:", StringComparison.OrdinalIgnoreCase);
     }
 
     private static InterfaceProfileAutoRedockDecision Empty()
