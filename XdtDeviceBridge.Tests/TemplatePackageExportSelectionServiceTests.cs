@@ -61,6 +61,32 @@ public sealed class TemplatePackageExportSelectionServiceTests
     }
 
     [Fact]
+    public void CreateForLm7InterfaceProfile_ShouldIncludeOnlyLm7AndDependencies()
+    {
+        var result = _service.CreateForInterfaceProfile(
+            CreateDefaultCatalog(),
+            "interface-medistar-nidek-lm7-default",
+            Timestamp);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(result.Request);
+        var request = result.Request!;
+        Assert.Equal("medistar-nidek-lm7-v1.templatepackage.zip", result.SuggestedFileName);
+        Assert.Equal("ais-medistar-default", Assert.Single(request.AisProfiles).Metadata.Id);
+        Assert.Equal("device-nidek-lm7-default", Assert.Single(request.DeviceProfiles).Metadata.Id);
+        Assert.Equal("export-medistar-nidek-lm7-default", Assert.Single(request.ExportProfiles).Metadata.Id);
+        Assert.Equal("interface-medistar-nidek-lm7-default", Assert.Single(request.InterfaceProfiles).Metadata.Id);
+
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("ark1s", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("ar360", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("nt530", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.DeviceProfiles, profile => profile.Metadata.Id.Contains("topcon", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.Package.IncludedProfiles, profile => profile.Id.Contains("ark1s", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.Package.IncludedProfiles, profile => profile.Id.Contains("ar360", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(request.Package.IncludedProfiles, profile => profile.Id.Contains("topcon", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void ExportedSelectedPackage_ShouldContainOnlyRequiredZipEntries()
     {
         var result = _service.CreateForInterfaceProfile(
@@ -240,7 +266,8 @@ public sealed class TemplatePackageExportSelectionServiceTests
             InterfaceProfiles: new[]
             {
                 DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
-                DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default()
+                DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default()
             });
     }
 

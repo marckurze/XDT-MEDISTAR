@@ -136,8 +136,12 @@ Analysierte Beispieldateien:
 
 - `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK LM7\MEDISTAR Eintrag Lensmeter.txt`
 - `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK LM7\RKT\TXT\LM7.XML`
+- `XdtDeviceBridge.Tests\TestData\Devices\Nidek\LM7\NIDEK LM7.xml`
+- `XdtDeviceBridge.Tests\TestData\Devices\Nidek\LM7\NIDEK_LM_Stylesheet.xsl`
 
-Im Repository selbst wurden keine LM7-Beispieldateien gefunden. Die lokale Datei `LM7.XML` ist ein XML-Fragment ohne XML-Deklaration und ohne vollständigen Root-Knoten. Das Fragment enthält aktuell nur den Knoten `R` für das rechte Auge. Linkes Auge und PD sind im vorliegenden XML-Fragment nicht enthalten und müssen deshalb weiterhin anhand weiterer Beispieldateien validiert werden.
+Aktualisierung 2026-05-18: Im Repository liegt jetzt eine echte originale LM7-LAN-XML-Datei als Testfixture. Sie enthaelt `Common/Company=NIDEK`, `Common/ModelName=LM-7`, `Version=NIDEK_V1.00`, `Measure type="LM"`, rechts `Sphare=6.25`, `Cylinder=-3.25`, `Axis=3` und links `Sphare=6.50`, `Cylinder=-2.75`, `Axis=170`, `ADD=1.50`, `NearSphare=8.00`. Die fruehere Datei `LM7.XML` bleibt als historisches Fragment dokumentiert; die praktische Parser- und Exportabsicherung nutzt die vollstaendige Fixture `NIDEK LM7.xml`.
+
+Wichtig: Die Datei `NIDEK_LM_Stylesheet.xsl` ist nur ein Anzeige-Stylesheet des Geraets. Sie wird als `Unknown` klassifiziert und darf nicht als Messwertdatei verarbeitet werden.
 
 Beobachtete XML-Struktur:
 
@@ -191,6 +195,15 @@ Zusätzlich beobachtete Felder:
 - `R/UVTransmittance`
 
 Die Beziehung zwischen `Prism`/`PrismBase` und den getrennten Komponenten `PrismX`/`PrismY` muss fachlich noch validiert werden. Für das spätere LM7-Profil sind `PrismX` und `PrismY` besonders relevant, weil sie der MEDISTAR-Beispielausgabe mit horizontaler und vertikaler Prisma-Komponente nahekommen.
+
+Für die echte Fixture `NIDEK LM7.xml` erzeugt das BuiltIn-Exportprofil derzeit diese MEDISTAR-kompatiblen Lensmeter-Zeilen:
+
+```text
+R.:S=+ 6.25 Z=- 3.25*  3
+L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50
+```
+
+Leere optionale Werte werden nicht ausgegeben: rechts kein `A=`, kein `A2=`, kein Prisma und kein PD. Die Werte aus `MEDISTAR Eintrag.txt` dienen nur als Formatvorlage und werden nicht als Messwerte fuer die echte XML-Datei verwendet.
 
 ## 4.2 NIDEK LM-7/LM-7P – LAN/XML-Schnittstelle laut Interface Manual
 

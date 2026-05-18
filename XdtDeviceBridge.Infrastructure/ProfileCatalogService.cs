@@ -257,7 +257,8 @@ public sealed class ProfileCatalogService
         return new[]
         {
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
-            DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default()
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default()
         };
     }
 

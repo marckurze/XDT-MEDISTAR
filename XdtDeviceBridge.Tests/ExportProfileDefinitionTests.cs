@@ -170,13 +170,13 @@ public sealed class ExportProfileDefinitionTests
         var rightTemplate = profile.Rules.Single(rule => rule.TargetName == "LensmeterResultRight").OutputTemplate;
         var leftTemplate = profile.Rules.Single(rule => rule.TargetName == "LensmeterResultLeft").OutputTemplate;
 
-        Assert.Contains("P=", rightTemplate);
-        Assert.Contains("PD=", rightTemplate);
-        Assert.Contains("P=", leftTemplate);
-        Assert.Contains("Device.Measure[@Type='LM']/LM/R/Sphere:Diopter", rightTemplate);
-        Assert.Contains("Device.Measure[@Type='LM']/LM/R/PrismX/@base:Raw", rightTemplate);
-        Assert.Contains("Device.Measure[@Type='LM']/PD/Distance:Pd", rightTemplate);
-        Assert.Contains("Device.Measure[@Type='LM']/LM/L/Sphere:Diopter", leftTemplate);
+        var rightRule = profile.Rules.Single(rule => rule.TargetName == "LensmeterResultRight");
+        var leftRule = profile.Rules.Single(rule => rule.TargetName == "LensmeterResultLeft");
+
+        Assert.Equal("{value}", rightTemplate);
+        Assert.Equal("{value}", leftTemplate);
+        Assert.Equal("Device.Measure[@Type='LM']/LM/R/MedistarLine", rightRule.SourcePath);
+        Assert.Equal("Device.Measure[@Type='LM']/LM/L/MedistarLine", leftRule.SourcePath);
         Assert.DoesNotContain("Device.R/LM/Median", rightTemplate);
         Assert.DoesNotContain("Device.L/LM/Median", leftTemplate);
     }

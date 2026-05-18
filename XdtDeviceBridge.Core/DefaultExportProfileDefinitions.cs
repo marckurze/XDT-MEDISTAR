@@ -140,21 +140,21 @@ public static class DefaultExportProfileDefinitions
                     "6228",
                     "LensmeterResultRight",
                     ExportRuleType.Template,
-                    null,
-                    "R.:S={Device.Measure[@Type='LM']/LM/R/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/R/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/R/Axis:Axis} P={Device.Measure[@Type='LM']/LM/R/PrismX:Prism} {Device.Measure[@Type='LM']/LM/R/PrismX/@base:Raw} {Device.Measure[@Type='LM']/LM/R/PrismY:Prism} {Device.Measure[@Type='LM']/LM/R/PrismY/@base:Raw}           PD={Device.Measure[@Type='LM']/PD/Distance:Pd}",
+                    "Device.Measure[@Type='LM']/LM/R/MedistarLine",
+                    "{value}",
                     7,
                     true,
-                    "MEDISTAR lensmeter card text for right eye."),
+                    "MEDISTAR lensmeter card text for right eye; optional additions, prism and PD are included only when present."),
                 new ExportRuleDefinition(
                     "8",
                     "6228",
                     "LensmeterResultLeft",
                     ExportRuleType.Template,
-                    null,
-                    "L.:S={Device.Measure[@Type='LM']/LM/L/Sphere:Diopter} Z={Device.Measure[@Type='LM']/LM/L/Cylinder:Diopter}*{Device.Measure[@Type='LM']/LM/L/Axis:Axis} P={Device.Measure[@Type='LM']/LM/L/PrismX:Prism} {Device.Measure[@Type='LM']/LM/L/PrismX/@base:Raw} {Device.Measure[@Type='LM']/LM/L/PrismY:Prism} {Device.Measure[@Type='LM']/LM/L/PrismY/@base:Raw}",
+                    "Device.Measure[@Type='LM']/LM/L/MedistarLine",
+                    "{value}",
                     8,
                     true,
-                    "MEDISTAR lensmeter card text for left eye.")
+                    "MEDISTAR lensmeter card text for left eye; optional additions and prism are included only when present.")
             });
     }
 

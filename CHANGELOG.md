@@ -33,6 +33,8 @@
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Schlanke V1-Profilanlage im Tab `Profile & Templates` ergaenzt: `Neues AIS anlegen` und `Neues Geraet anlegen` oeffnen einfache Dialoge und speichern nur UserDefined-Profile; `Neues Exportprofil anlegen` bereitet den vorhandenen Exportregel-Entwurf als UserDefined-Kopie vor. BuiltIns bleiben geschuetzt, es erfolgt keine Aktivierung und keine Verarbeitung.
 - Dialoge fuer `Neues AIS anlegen` und `Neues Geraet anlegen` verstaendlicher gemacht: kurze Hilfetexte erklaeren Profilname, AIS-System, Codierung, Hersteller, Modell, Geraetetyp und Parserbasis; `Generisch` wird als anderer AIS-Kontext beziehungsweise interner Fallback erklaert.
+- NIDEK LM7 / LM-7P als praktisch nutzbaren Lensmeter-Kandidaten ergaenzt: echte `NIDEK LM7.xml`-Fixture, `Sphare`/`Sphere`-Alias, berechnete MEDISTAR-`6228`-Lensmeterzeilen, BuiltIn-Schnittstellenprofil und selektiver LM7-Templatepaket-Test.
+- `NIDEK_LM_Stylesheet.xsl` wird als Anzeige-Stylesheet ignoriert und nicht als Geraetedatei klassifiziert.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Behoben
@@ -57,6 +59,7 @@
 ### Dokumentation
 
 - Geraete-/Template-Matrix ergaenzt: BuiltIn-Geraeteprofile, MEDISTAR-Exportprofile, vorhandene Testdaten, Templatepaket-Luecken und V1-Prioritaeten fuer konkrete Geraete-/Templatearbeit sind kompakt dokumentiert.
+- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md` dokumentiert; praktische MEDISTAR-Abnahme und offizielles ZIP-Artefakt bleiben offen.
 - Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md` dokumentiert; ARMedian ist fuer AR360 massgeblich, die abweichende Achse aus der bereitgestellten MEDISTAR-TXT wird nicht kuenstlich uebernommen.
 - E2E-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md` ergaenzt; die dokumentierte Ausgabe ist anonymisiert und enthaelt keine Kunden-/Patientendaten oder Live-Pfade.
 - ARK1S und AR360 als stabile Referenzpakete in Matrix und Paketdokumenten markiert; offizielle ZIP-Artefakte werden erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.

@@ -131,28 +131,28 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
 
-        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal", "R/PrismX");
-        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal-base", "R/PrismX/@base");
-        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical", "R/PrismY");
-        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical-base", "R/PrismY/@base");
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-horizontal");
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-horizontal-base");
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-vertical");
-        Assert.Contains(profile.Measurements, m => m.Id == "lm7-l-prism-vertical-base");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-prism-x", "Measure[@Type='LM']/LM/R/PrismX");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-prism-x-base", "Measure[@Type='LM']/LM/R/PrismX/@base");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-prism-y", "Measure[@Type='LM']/LM/R/PrismY");
+        AssertOptionalMeasurement(profile, "lm7-lan-r-prism-y-base", "Measure[@Type='LM']/LM/R/PrismY/@base");
+        AssertOptionalMeasurement(profile, "lm7-lan-l-prism-x", "Measure[@Type='LM']/LM/L/PrismX");
+        AssertOptionalMeasurement(profile, "lm7-lan-l-prism-x-base", "Measure[@Type='LM']/LM/L/PrismX/@base");
+        AssertOptionalMeasurement(profile, "lm7-lan-l-prism-y", "Measure[@Type='LM']/LM/L/PrismY");
+        AssertOptionalMeasurement(profile, "lm7-lan-l-prism-y-base", "Measure[@Type='LM']/LM/L/PrismY/@base");
     }
 
     [Fact]
-    public void CreateNidekLm7Default_ShouldUseValidatedRightSourcePaths()
+    public void CreateNidekLm7Default_ShouldKeepLegacyFragmentPathsOptional()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekLm7Default();
 
-        AssertRequiredMeasurement(profile, "lm7-r-sphere", "R/Sphare");
-        AssertRequiredMeasurement(profile, "lm7-r-cylinder", "R/Cylinder");
-        AssertRequiredMeasurement(profile, "lm7-r-axis", "R/Axis");
-        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal", "R/PrismX");
-        AssertRequiredMeasurement(profile, "lm7-r-prism-horizontal-base", "R/PrismX/@base");
-        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical", "R/PrismY");
-        AssertRequiredMeasurement(profile, "lm7-r-prism-vertical-base", "R/PrismY/@base");
+        AssertOptionalMeasurement(profile, "lm7-r-sphere", "R/Sphare");
+        AssertOptionalMeasurement(profile, "lm7-r-cylinder", "R/Cylinder");
+        AssertOptionalMeasurement(profile, "lm7-r-axis", "R/Axis");
+        AssertOptionalMeasurement(profile, "lm7-r-prism-horizontal", "R/PrismX");
+        AssertOptionalMeasurement(profile, "lm7-r-prism-horizontal-base", "R/PrismX/@base");
+        AssertOptionalMeasurement(profile, "lm7-r-prism-vertical", "R/PrismY");
+        AssertOptionalMeasurement(profile, "lm7-r-prism-vertical-base", "R/PrismY/@base");
     }
 
     [Fact]
@@ -183,6 +183,8 @@ public sealed class DeviceProfileDefinitionTests
         AssertOptionalMeasurement(profile, "lm7-lan-pd-distance", "Measure[@Type='LM']/PD/Distance");
         AssertOptionalMeasurement(profile, "lm7-lan-pd-distance-r", "Measure[@Type='LM']/PD/DistanceR");
         AssertOptionalMeasurement(profile, "lm7-lan-pd-distance-l", "Measure[@Type='LM']/PD/DistanceL");
+        AssertOptionalMeasurement(profile, "lm7-medistar-r-line", "Measure[@Type='LM']/LM/R/MedistarLine");
+        AssertOptionalMeasurement(profile, "lm7-medistar-l-line", "Measure[@Type='LM']/LM/L/MedistarLine");
         Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "R/Sphare");
     }
 

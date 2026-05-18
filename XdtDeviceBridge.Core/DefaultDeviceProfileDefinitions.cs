@@ -107,13 +107,13 @@ public static class DefaultDeviceProfileDefinitions
             ParserMode: "Xml",
             Measurements: new[]
             {
-                new DeviceMeasurementDefinition("lm7-r-sphere", "R Sphere", "R/Sphare", "LM", "R", "dpt", true, "Right lens sphere from validated LM7 sample XML."),
-                new DeviceMeasurementDefinition("lm7-r-cylinder", "R Cylinder", "R/Cylinder", "LM", "R", "dpt", true, "Right lens cylinder from validated LM7 sample XML."),
-                new DeviceMeasurementDefinition("lm7-r-axis", "R Axis", "R/Axis", "LM", "R", "deg", true, "Right lens axis from validated LM7 sample XML."),
-                new DeviceMeasurementDefinition("lm7-r-prism-horizontal", "R PrismHorizontal", "R/PrismX", "LM", "R", "prism dpt", true, "Right horizontal prism from validated LM7 sample XML."),
-                new DeviceMeasurementDefinition("lm7-r-prism-horizontal-base", "R PrismHorizontalBase", "R/PrismX/@base", "LM", "R", string.Empty, true, "Right horizontal prism base direction from validated LM7 sample XML."),
-                new DeviceMeasurementDefinition("lm7-r-prism-vertical", "R PrismVertical", "R/PrismY", "LM", "R", "prism dpt", true, "Right vertical prism from validated LM7 sample XML."),
-                new DeviceMeasurementDefinition("lm7-r-prism-vertical-base", "R PrismVerticalBase", "R/PrismY/@base", "LM", "R", string.Empty, true, "Right vertical prism base direction from validated LM7 sample XML."),
+                new DeviceMeasurementDefinition("lm7-r-sphere", "R Sphere", "R/Sphare", "LM", "R", "dpt", false, "Legacy right lens sphere path from an early LM7 XML fragment."),
+                new DeviceMeasurementDefinition("lm7-r-cylinder", "R Cylinder", "R/Cylinder", "LM", "R", "dpt", false, "Legacy right lens cylinder path from an early LM7 XML fragment."),
+                new DeviceMeasurementDefinition("lm7-r-axis", "R Axis", "R/Axis", "LM", "R", "deg", false, "Legacy right lens axis path from an early LM7 XML fragment."),
+                new DeviceMeasurementDefinition("lm7-r-prism-horizontal", "R PrismHorizontal", "R/PrismX", "LM", "R", "prism dpt", false, "Legacy right horizontal prism path from an early LM7 XML fragment."),
+                new DeviceMeasurementDefinition("lm7-r-prism-horizontal-base", "R PrismHorizontalBase", "R/PrismX/@base", "LM", "R", string.Empty, false, "Legacy right horizontal prism base path from an early LM7 XML fragment."),
+                new DeviceMeasurementDefinition("lm7-r-prism-vertical", "R PrismVertical", "R/PrismY", "LM", "R", "prism dpt", false, "Legacy right vertical prism path from an early LM7 XML fragment."),
+                new DeviceMeasurementDefinition("lm7-r-prism-vertical-base", "R PrismVerticalBase", "R/PrismY/@base", "LM", "R", string.Empty, false, "Legacy right vertical prism base path from an early LM7 XML fragment."),
                 new DeviceMeasurementDefinition("lm7-l-sphere", "L Sphere", "L/Sphare", "LM", "L", "dpt", false, "Left lens sphere, noch zu validieren."),
                 new DeviceMeasurementDefinition("lm7-l-cylinder", "L Cylinder", "L/Cylinder", "LM", "L", "dpt", false, "Left lens cylinder, noch zu validieren."),
                 new DeviceMeasurementDefinition("lm7-l-axis", "L Axis", "L/Axis", "LM", "L", "deg", false, "Left lens axis, noch zu validieren."),
@@ -196,7 +196,9 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("lm7-lan-pd-distance-l", "PD DistanceL", "Measure[@Type='LM']/PD/DistanceL", "PD", "L", "mm", false, "LM7 LAN XML left far pupillary distance."),
                 new DeviceMeasurementDefinition("lm7-lan-pd-near", "PD Near", "Measure[@Type='LM']/PD/Near", "PD", string.Empty, "mm", false, "LM7 LAN XML near pupillary distance."),
                 new DeviceMeasurementDefinition("lm7-lan-pd-near-r", "PD NearR", "Measure[@Type='LM']/PD/NearR", "PD", "R", "mm", false, "LM7 LAN XML right near pupillary distance."),
-                new DeviceMeasurementDefinition("lm7-lan-pd-near-l", "PD NearL", "Measure[@Type='LM']/PD/NearL", "PD", "L", "mm", false, "LM7 LAN XML left near pupillary distance.")
+                new DeviceMeasurementDefinition("lm7-lan-pd-near-l", "PD NearL", "Measure[@Type='LM']/PD/NearL", "PD", "L", "mm", false, "LM7 LAN XML left near pupillary distance."),
+                new DeviceMeasurementDefinition("lm7-medistar-r-line", "R MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/R/MedistarLine", "LM", "R", string.Empty, false, "Computed MEDISTAR lensmeter line for right lens; optional values are omitted when absent."),
+                new DeviceMeasurementDefinition("lm7-medistar-l-line", "L MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/L/MedistarLine", "LM", "L", string.Empty, false, "Computed MEDISTAR lensmeter line for left lens; optional values are omitted when absent.")
             },
             SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
             CanContainMultipleExaminationTypes: false);

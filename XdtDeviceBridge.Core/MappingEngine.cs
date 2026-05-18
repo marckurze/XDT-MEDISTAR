@@ -11,7 +11,7 @@ public sealed class MappingEngine
     {
         var issues = new List<MappingIssue>();
         var records = new List<ExportFieldRecord>();
-        var measurementMap = measurements.ToDictionary(m => m.SourcePath, m => m.Value, StringComparer.OrdinalIgnoreCase);
+        var measurementMap = CreateMeasurementMap(measurements);
 
         foreach (var rule in rules.Where(r => r.IsEnabled).OrderBy(r => r.SortOrder))
         {
@@ -107,6 +107,22 @@ public sealed class MappingEngine
 
             return string.Empty;
         });
+    }
+
+    private static Dictionary<string, string> CreateMeasurementMap(IEnumerable<MeasurementValue> measurements)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var measurement in measurements)
+        {
+            if (string.IsNullOrWhiteSpace(measurement.SourcePath))
+            {
+                continue;
+            }
+
+            map.TryAdd(measurement.SourcePath, measurement.Value);
+        }
+
+        return map;
     }
 
     private static (string SourceToken, string? Format) SplitFormatToken(string token)

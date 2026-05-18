@@ -75,4 +75,41 @@ public static class DefaultInterfaceProfileDefinitions
             IsLicenseRequired: true,
             Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK AR360 profile candidate.");
     }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekLm7Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 18, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-nidek-lm7-default",
+                Name: "MEDISTAR + NIDEK LM7",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for MEDISTAR and NIDEK LM7 / LM-7P.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK LM7",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-nidek-lm7-default",
+            ExportProfileId: "export-medistar-nidek-lm7-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK LM7 lensmeter profile candidate.");
+    }
 }

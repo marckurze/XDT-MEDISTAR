@@ -34,11 +34,12 @@ Besonders stabil wirken aktuell:
 - neue kompakte Geraete-/Template-Matrix als Prioritaetenbasis
 - offizielle Paketvorlage fuer MEDISTAR + NIDEK ARK1S inklusive reproduzierbarem Export-/Import-Testweg
 - NIDEK AR360 / AR-360A als praktisch validierter Auto-Refraktometer-Workflow fuer XDT-Rueckgabe mit BuiltIn-Profilen, ARMedian-Ausgabe und selektivem Templatepaket-Pfad
+- NIDEK LM7 / LM-7P als praktisch nutzbarer Lensmeter-Kandidat mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe und selektivem Templatepaket-Test
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
-- V2-Geraeteprofile fuer LM7/LM7P, NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
-- fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S und AR360 sind Referenzdokumentation und temporaer erzeugte Export-/Import-Tests vorhanden, offizielle ZIP-Artefakte folgen erst nach Release-Regel
+- V2-Geraeteprofile fuer NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P
+- fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S, AR360 und LM7 sind Referenz-/Kandidatendokumentation und temporaer erzeugte Export-/Import-Tests vorhanden, offizielle ZIP-Artefakte folgen erst nach Release-Regel
 - UI-Einstellung fuer die Rueckdock-Zeit und sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungen
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
@@ -303,6 +304,7 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
 | ARK1S-Referenzpaket Export/Import | reproduzierbar testseitig validiert, inklusive UI-nahem Importvorschau-Pfad und sicherem Konfliktstandard `Ueberspringen` | `MedistarNidekArk1sTemplatePackageTests` |
 | AR360-Referenzpaket Export/Import | reproduzierbar testseitig validiert, inklusive selektivem Paketinhalt, Importvorschau, DryRun und sicherer UserDefined-Kopie | `MedistarNidekAr360TemplatePackageTests` |
+| LM7-Templatepaket-Kandidat Export/Import | reproduzierbar testseitig validiert; echte LM7-XML-Fixture, Stylesheet-Ignoriertest, MEDISTAR-Lensmeterzeilen und selektiver Paketinhalt sind abgesichert | `NidekLm7ProfileTests`, `MedistarNidekLm7TemplatePackageTests` |
 | Abdockbare Geraeteanbindungsfenster V1 | praktisch abgenommen und testseitig fuer State, Persistenz, verzoegerte Wiederherstellung, Auto-Abdocken, Auto-Zurueckandocken, akustisches Signal nur bei Geraetedatei-Eingang, Systray-Fensterzustand und sicheren Vorgangsreset inklusive profilbezogener Eingangsordner-Leerung abgesichert | `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`, `InterfaceProfileFloatingWindowStateServiceTests`, `InterfaceProfileFloatingWindowStateRepositoryTests`, `InterfaceProfileFloatingWindowRestoreGateTests`, `InterfaceProfileAutoDetachServiceTests`, `InterfaceProfileAutoRedockServiceTests`, `InterfaceProfileNotificationSoundServiceTests`, `TrayWindowStateServiceTests`, `InterfaceProfileMonitoringResetServiceTests`, `InterfaceProfileInputFolderResetServiceTests` |
 | BuiltIn/UserDefined-Schutz | testseitig validiert | `ProfileCatalogServiceTests`, TemplateImport-Tests |
 
@@ -311,7 +313,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 ## 4. Vorbereitet, aber noch nicht produktiv validiert
 
 - NIDEK AR360 / AR-360A: Auto-Refraktor-XDT-Rueckgabe praktisch validiert; Referenzpaket-Export/Import testseitig abgesichert; XDT-Anhangfall und offizielles ZIP-Artefakt offen
-- NIDEK LM7/LM7P
+- NIDEK LM7/LM7P: echte XML-Fixture und Templatepaket-Kandidat testseitig vorbereitet; praktische MEDISTAR-Abnahme offen
 - NIDEK NT530P
 - TOPCON CL300
 - TOPCON KR800
@@ -359,7 +361,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | --- | --- | --- | --- | --- | --- | --- |
 | hoch | E2E-Testplan praktisch weiter ausfuehren | Testplan, Durchfuehrungsschritte und Protokollvorlage sind vorhanden; MEDISTAR + ARK1S + Pflicht-XDT-Anhang wurde am 2026-05-11 praktisch bestanden dokumentiert. | Weitere manuelle Praxisprotokolle fuer die restlichen Testfaelle fehlen, insbesondere optionale Anhaenge, Mehrfachanhaenge, instabile Dateien und nicht unterstuetzte Dateien. | Restliche Faelle aus `docs/END_TO_END_TESTPLAN.md` mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` abarbeiten. | Nicht getestete Randfaelle koennen im Praxisbetrieb auffallen. | Testdaten, lokale Ordner, ARK1S-Beispieldateien |
 | hoch | Produktive Stabilisierung MEDISTAR + ARK1S + XDT-Anhang | Pflicht-Anhang vorhanden/fehlt und MEDISTAR-Linkaufruf sind praktisch validiert. | Breitere Praxisabnahme mit optionalem Anhang, Mehrfachanhang, Archiv-/Fehlerablage und Wartezeiten. | Naechsten Praxislauf fuer optionale Anhaenge und Mehrfachanhang-Sicherheit protokollieren. | Unerwartete Timing- oder Bedienfaelle koennen in noch nicht getesteten Varianten auffallen. | E2E-Testplan, Testanhaenge |
-| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sieben Geraete vorhanden; praktisch validiert sind MEDISTAR + NIDEK ARK1S und die AR360-Auto-Refraktor-XDT-Rueckgabe. Matrix, ARK1S-/AR360-Referenzdokumentation, selektiver Export, reproduzierbare Export-/Import-Tests und stabilisierter App-Preview-Pfad sind vorhanden. | Dauerhafte ARK1S-/AR360-ZIP-Release-Artefakte und AR360-XDT-Anhangfall fehlen; fuer LM7/LM7P, NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | Release-Regel fuer ARK1S/AR360 anwenden, dann LM7/LM7P mit repraesentativen Dateien validieren. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
+| hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer sieben Geraete vorhanden; praktisch validiert sind MEDISTAR + NIDEK ARK1S und die AR360-Auto-Refraktor-XDT-Rueckgabe. LM7/LM7P ist mit echter XML-Fixture, MEDISTAR-Lensmeter-Ausgabe und selektivem Templatepaket-Kandidaten testseitig vorbereitet. Matrix, Referenz-/Kandidatendokumentation, selektiver Export, reproduzierbare Export-/Import-Tests und stabilisierter App-Preview-Pfad sind vorhanden. | Dauerhafte ARK1S-/AR360-/LM7-ZIP-Release-Artefakte, AR360-XDT-Anhangfall und LM7-MEDISTAR-Praxisabnahme fehlen; fuer NT530P und TOPCON fehlen Repository-Testdaten/Praxisabnahmen. | Release-Regel fuer ARK1S/AR360 anwenden, LM7 in MEDISTAR live pruefen, danach ZIP-Release-Entscheidung treffen. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
 | mittel | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht sind read-only vorhanden. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Vorerst parken; nur als Sicherheits-/Regressionsstand beibehalten. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | Profilkatalog, Evaluation, Guard |
 | niedrig | Geraeteanbindungsfenster V1 ausbauen | V1 ist praktisch abgenommen: Systray, manuelles Abdocken/Andocken, Auto-Oeffnung, Auto-Zurueckandocken, Signalton nur bei Geraetedatei, Reset, Pin/TopMost, Positionsmerken, Radar und Buttonlayout funktionieren fuer AR360/ARK1S getrennt. | Komfortthemen fehlen bewusst: Autostart, Windows-Dienst, UI-Einstellung fuer Rueckdock-Zeit, sichtbarer Countdown-Hinweis, UI-Schalter fuer Signalton und ggf. eigenes Systray-Icon. | V1 beibehalten; Komfortthemen nur nach weiterem Praxisfeedback priorisieren. | Reset leert nur die AIS-/Geraete-/optionalen XDT-Anhang-Eingangsordner des gewaehlten Schnittstellenprofils top-level; Export-, Archiv- und Fehlerordner sowie Unterordner bleiben unangetastet. | `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`, Verarbeitungstab, Monitoring-Karten |
 | hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
@@ -367,7 +369,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | mittel | Manuelle Zielnamen-/ID-Bearbeitung im Templateimport | Automatische Kopienamen vorhanden. | UI zum Bearbeiten vorgeschlagener Namen/IDs. | Nur ergaenzen, wenn Anwenderfeedback Bedarf zeigt. | Importnamen koennen weniger sprechend sein. | Importplan, SelectionService |
 | mittel | Geraete-Datei-Explorer | Noch kein vollstaendiger Explorer. | Datei anzeigen, SourcePaths untersuchen, Messwerte markieren, Kandidaten fuer Exportregeln uebernehmen. | Kleinen read-only Explorer fuer XML/Geraetedateien bauen. | Neue Geraeteprofile bleiben Codex-/Entwickleraufgabe. | XmlDeviceParser, PlaceholderDisplayHelper |
 | mittel | Profil-Assistent fuer unbekannte Geraete | Schlanke V1-Anlage fuer AIS-, Geraete- und Exportprofile als UserDefined ist vorhanden. | Gefuehrtes Erstellen kompletter Geraete-/Export-/Schnittstellenpakete inklusive Datei-Explorer und Messwertuebernahme fehlt. | Nach Geraete-Datei-Explorer planen. | Skalierung auf neue Geraete bleibt weiterhin teilweise Entwickler-/Codex-Aufgabe. | Geraete-Datei-Explorer, ProfileCatalog |
-| mittel | NIDEK LM7/LM7P produktiv validieren | Profile und Beispiele vorbereitet. | Echte/repraesentative Dateien, Vergleich mit Praxisanforderung, Exportabnahme. | LM7-Testpaket mit synthetischen/echten Musterdateien erstellen und validieren. | Vorbereitetes Profil koennte in Details falsch mappen. | Testdaten, MEDISTAR-Anforderungen |
+| mittel | NIDEK LM7/LM7P produktiv validieren | Echte LM7-XML-Fixture, Parseralias fuer `Sphare`/`Sphere`, MEDISTAR-Lensmeter-Ausgabe, BuiltIn-Schnittstellenprofil und Templatepaket-Kandidat sind testseitig vorhanden. | Praktische MEDISTAR-Abnahme, weitere Prisma-/PD-Dateien und offizielles ZIP-Artefakt fehlen. | LM7-Live-Test in MEDISTAR mit echter XML-Datei ausfuehren und Ergebnis protokollieren. | Vorbereitetes Profil koennte bei Prisma/PD-Sonderfaellen noch abweichen. | Testdaten, MEDISTAR-Anforderungen |
 | mittel | NIDEK NT530P produktiv validieren | Profile vorbereitet. | Echte Dateien fuer Tonometry/Pachymetry und ggf. Attachmentfaelle. | Geraetespezifischen E2E-Testplan ergaenzen. | Falsche oder unvollstaendige Messwertuebernahme. | Testdaten |
 | mittel | TOPCON CL300 produktiv validieren | Profile vorbereitet. | Namespace-/Dateistruktur mit echten Beispielen pruefen. | CL300-Beispieldateien sammeln und Parserpfade bestaetigen. | Vorbereitete SourcePaths koennen unvollstaendig sein. | Testdaten |
 | mittel | TOPCON KR800 produktiv validieren | Profile vorbereitet. | REF/KM/SBJ-Strukturen mit echten Daten pruefen. | KR800-Testdaten auswerten und Exportregeln validieren. | Mehruntersuchungsdaten koennen falsch gruppiert werden. | Testdaten |
@@ -409,7 +411,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste nutzen.
 - MEDISTAR + NIDEK ARK1S stabil halten, den reproduzierbaren Pakettest beibehalten und die App-Importabnahme fuer ein spaeteres ZIP-Release-Artefakt nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` vorbereiten.
 - NIDEK AR360 als zweiten Referenzworkflow stabil halten; den reproduzierbaren Pakettest beibehalten, offizielles ZIP-Artefakt und ggf. XDT-Anhangtest separat planen.
-- NIDEK LM7/LM7P als naechstes Geraet anhand repraesentativer Dateien validieren.
+- NIDEK LM7/LM7P in MEDISTAR praktisch abnehmen; testseitiger Kandidat und Templatepaket-Dokumentation sind vorhanden.
 - NT530P und TOPCON-Profile erst nach Datenlage priorisieren.
 - Baukasten schlank halten; keine neue Assistentenarchitektur, solange fertige Profile und Pakete fehlen.
 
@@ -478,11 +480,11 @@ Konkreter Umfang:
 - Paket mit dem vorhandenen `TemplatePackageExporter` erzeugen
 - Paket mit `TemplatePackageImporter` testweise einlesen
 - Import in der App mit Vorschau/DryRun praktisch abnehmen
-- danach LM7/LM7P-Dateien sammeln und gegen `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` validieren
+- danach LM7/LM7P-Live-Test in MEDISTAR protokollieren und Prisma-/PD-Beispielfaelle sammeln
 - danach Build und Tests ausfuehren
 
 Das ist der beste naechste Schritt, weil es den Baukasten vom Normalweg zum Rueckfallwerkzeug macht und den validierten Kernworkflow in ein wiederverwendbares Anwenderpaket ueberfuehrt.
 
 ## 10. Keine Produktivlogik-Aenderungen
 
-Dieser Abgleich beschreibt den aktuellen Stand. Produktivverarbeitung, Aktivierungslogik und BuiltIn-Profile bleiben unveraendert. Ergaenzt wurden reproduzierbare Templatepaket-Wege sowie schlanke UI-Funktionen fuer sichere UserDefined-Wartung im Profilbereich.
+Dieser Abgleich beschreibt den aktuellen Stand. Produktivverarbeitung und Aktivierungslogik bleiben unveraendert; die validierten ARK1S-/AR360-BuiltIns bleiben geschuetzt. Fuer LM7 wurde das vorbereitete BuiltIn gezielt zum testbaren Lensmeter-Kandidaten ergaenzt. Ergaenzt wurden reproduzierbare Templatepaket-Wege sowie schlanke UI-Funktionen fuer sichere UserDefined-Wartung im Profilbereich.
