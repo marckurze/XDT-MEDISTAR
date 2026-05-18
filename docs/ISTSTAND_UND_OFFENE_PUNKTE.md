@@ -121,6 +121,8 @@ UserDefined-Exportprofile koennen im Tab `Profile & Templates` geloescht werden,
 
 Die Anlagebuttons im Tab `Profile & Templates` sind als schlanke V1 nutzbar. Neue AIS-Profile werden ueber Name, System und Codierung als UserDefined angelegt; Hilfetexte erklaeren MEDISTAR gegenueber `Generisch / anderes AIS` sowie Windows-1252 als typischen GDT/XDT-Fall. Neue Geraeteprofile werden ueber Name, Hersteller, Modell, Geraetetyp und vorhandene Parserbasis angelegt; Hilfetexte erklaeren Geraetetyp als fachliche Kategorie und Parserbasis als vorhandene Leselogik ohne neue Parser. `Neues Exportprofil anlegen` startet sichtbar einen leeren Entwurf, setzt einen eindeutigen Namen und schreibt erst bei bewusstem Speichern eine UserDefined-Kopie. Name-/ID-Konflikte werden blockiert, BuiltIns bleiben unveraendert und es werden keine Schnittstellenprofile automatisch geaendert.
 
+UserDefined-Profile koennen als V1 gezielt umbenannt werden: AIS-, Geraete-, Export- und Schnittstellenprofile aendern dabei nur ihren sichtbaren Namen. Technische IDs, Referenzen, Exportregeln, Ordnerpfade, XDT-Anhang-Einstellungen und Aktivierungsstatus bleiben unveraendert. BuiltIn-Profile sind gegen Umbenennung gesperrt. Templatepaket-ZIP-Dateien werden nicht als App-Objekte verwaltet; ihre Benennung bleibt Dateiname/Release-Regel, waehrend Importvorschau-Zielnamen weiterhin in der bestehenden Vorschau bearbeitet werden.
+
 ### Schnittstellenprofile
 
 Schnittstellenprofile verbinden AIS-Profil, Geraeteprofil, Exportprofil, Ordner und XDT-Anhang-Einstellungen.

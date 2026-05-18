@@ -106,6 +106,30 @@ public sealed class ProfileCatalogService
         _repository.SaveAisProfile(filePath, profile);
     }
 
+    public void SaveAisProfile(AppDataPaths paths, AisProfile profile, bool overwriteExisting)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        ArgumentNullException.ThrowIfNull(profile);
+
+        if (profile.Metadata.IsBuiltIn)
+        {
+            throw new InvalidOperationException("Built-in AIS profiles cannot be overwritten.");
+        }
+
+        if (!profile.Metadata.IsUserDefined)
+        {
+            throw new InvalidOperationException("Only user-defined AIS profiles can be overwritten.");
+        }
+
+        var filePath = CreateProfilePath(GetAisFolder(paths), profile.Metadata.Id);
+        if (!overwriteExisting && File.Exists(filePath))
+        {
+            throw new InvalidOperationException($"AIS profile already exists and will not be overwritten: {profile.Metadata.Id}");
+        }
+
+        _repository.SaveAisProfile(filePath, profile);
+    }
+
     public void SaveNewDeviceProfileDefinition(AppDataPaths paths, DeviceProfileDefinition profile)
     {
         ArgumentNullException.ThrowIfNull(paths);
@@ -113,6 +137,30 @@ public sealed class ProfileCatalogService
 
         var filePath = CreateProfilePath(GetDevicesFolder(paths), profile.Metadata.Id);
         if (File.Exists(filePath))
+        {
+            throw new InvalidOperationException($"Device profile already exists and will not be overwritten: {profile.Metadata.Id}");
+        }
+
+        _repository.SaveDeviceProfileDefinition(filePath, profile);
+    }
+
+    public void SaveDeviceProfileDefinition(AppDataPaths paths, DeviceProfileDefinition profile, bool overwriteExisting)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        ArgumentNullException.ThrowIfNull(profile);
+
+        if (profile.Metadata.IsBuiltIn)
+        {
+            throw new InvalidOperationException("Built-in device profiles cannot be overwritten.");
+        }
+
+        if (!profile.Metadata.IsUserDefined)
+        {
+            throw new InvalidOperationException("Only user-defined device profiles can be overwritten.");
+        }
+
+        var filePath = CreateProfilePath(GetDevicesFolder(paths), profile.Metadata.Id);
+        if (!overwriteExisting && File.Exists(filePath))
         {
             throw new InvalidOperationException($"Device profile already exists and will not be overwritten: {profile.Metadata.Id}");
         }

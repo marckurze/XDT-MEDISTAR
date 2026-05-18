@@ -78,6 +78,7 @@ public partial class MainWindow : Window
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
     private readonly UserDefinedProfileCreationService _userDefinedProfileCreationService = new();
+    private readonly UserDefinedProfileRenameService _userDefinedProfileRenameService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
     private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
     private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
@@ -331,6 +332,7 @@ public partial class MainWindow : Window
             InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
             ProfileBaseFolderText.Text = paths.BaseFolder;
             ShowProfileNameColumns(catalog);
+            InitializeProfileRenameSelectors(catalog);
             InitializeTemplatePackageExportSelection(catalog);
             InitializeExportRulesView(catalog);
             InitializeInterfaceProfileConfiguration(catalog);
@@ -347,6 +349,9 @@ public partial class MainWindow : Window
             _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
             ClearProfileNameColumns();
+            AisProfileRenameComboBox.ItemsSource = null;
+            DeviceProfileRenameComboBox.ItemsSource = null;
+            UpdateProfileRenameActionButtons();
             TemplatePackageExportInterfaceProfileComboBox.ItemsSource = null;
             TemplatePackageExportSelectionHintText.Text = "Keine Profile geladen.";
             ExportProfileComboBox.ItemsSource = null;
@@ -464,12 +469,24 @@ public partial class MainWindow : Window
     {
         if (_profileCatalog is null || ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
         {
+            RenameExportProfileButton.IsEnabled = false;
+            RenameExportProfileButton.ToolTip = "Bitte zuerst ein Exportprofil auswählen.";
             DeleteExportProfileButton.IsEnabled = false;
             DeleteExportProfileButton.ToolTip = "Bitte zuerst ein Exportprofil auswählen.";
             RemoveExportRuleButton.IsEnabled = false;
             RemoveExportRuleButton.ToolTip = "Bitte zuerst ein Exportprofil und eine Exportregel auswählen.";
             return;
         }
+
+        var renameEvaluation = _userDefinedProfileRenameService.Evaluate(
+            _profileCatalog,
+            UserDefinedProfileRenameKind.ExportProfile,
+            exportProfile.Metadata.Id,
+            exportProfile.Metadata.Name);
+        RenameExportProfileButton.IsEnabled = exportProfile.Metadata.IsUserDefined && !exportProfile.Metadata.IsBuiltIn;
+        RenameExportProfileButton.ToolTip = RenameExportProfileButton.IsEnabled
+            ? "Ändert nur den sichtbaren Namen dieses UserDefined-Exportprofils."
+            : renameEvaluation.Message;
 
         var deletionEvaluation = _exportProfileDeletionService.Evaluate(_profileCatalog, exportProfile.Metadata.Id);
         DeleteExportProfileButton.IsEnabled = deletionEvaluation.Success;
@@ -938,6 +955,7 @@ public partial class MainWindow : Window
         {
             InterfaceProfileComboBox.SelectedIndex = -1;
             ClearInterfaceProfileEditor();
+            UpdateProfileRenameActionButtons();
             return;
         }
 
@@ -1096,6 +1114,7 @@ public partial class MainWindow : Window
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         ShowInterfaceProfileForSelectedProfile();
+        UpdateProfileRenameActionButtons();
     }
 
     private void InitializeTemplatePackageExportSelection(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
@@ -1788,6 +1807,148 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ProfileRenameSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        UpdateProfileRenameActionButtons();
+    }
+
+    private void RenameAisProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (AisProfileRenameComboBox.SelectedItem is not AisProfile profile)
+        {
+            AppendProfileMessage("AIS-Profil kann nicht umbenannt werden, weil kein Profil ausgewählt ist.");
+            return;
+        }
+
+        RenameProfile(
+            UserDefinedProfileRenameKind.AisProfile,
+            profile.Metadata.Id,
+            profile.Name,
+            selectedAisProfileId: profile.Metadata.Id);
+    }
+
+    private void RenameDeviceProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (DeviceProfileRenameComboBox.SelectedItem is not DeviceProfileDefinition profile)
+        {
+            AppendProfileMessage("Geräteprofil kann nicht umbenannt werden, weil kein Profil ausgewählt ist.");
+            return;
+        }
+
+        RenameProfile(
+            UserDefinedProfileRenameKind.DeviceProfile,
+            profile.Metadata.Id,
+            profile.Metadata.Name,
+            selectedDeviceProfileId: profile.Metadata.Id);
+    }
+
+    private void RenameSelectedExportProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition profile)
+        {
+            AppendProfileMessage("Exportprofil kann nicht umbenannt werden, weil kein Profil ausgewählt ist.");
+            return;
+        }
+
+        RenameProfile(
+            UserDefinedProfileRenameKind.ExportProfile,
+            profile.Metadata.Id,
+            profile.Metadata.Name,
+            selectedExportProfileId: profile.Metadata.Id);
+    }
+
+    private void RenameSelectedInterfaceProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
+        {
+            AppendProfileMessage("Schnittstellenprofil kann nicht umbenannt werden, weil kein Profil ausgewählt ist.");
+            return;
+        }
+
+        RenameProfile(
+            UserDefinedProfileRenameKind.InterfaceProfile,
+            profile.Metadata.Id,
+            profile.Metadata.Name,
+            selectedInterfaceProfileId: profile.Metadata.Id);
+    }
+
+    private void RenameProfile(
+        UserDefinedProfileRenameKind kind,
+        string profileId,
+        string currentName,
+        string? selectedAisProfileId = null,
+        string? selectedDeviceProfileId = null,
+        string? selectedExportProfileId = null,
+        string? selectedInterfaceProfileId = null)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var evaluation = _userDefinedProfileRenameService.Evaluate(catalog, kind, profileId, currentName);
+        if (!evaluation.Success && evaluation.Issues.Count > 0)
+        {
+            AppendProfileMessage(evaluation.Message);
+            System.Windows.MessageBox.Show(
+                this,
+                evaluation.Message,
+                "Profil umbenennen",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var dialog = new RenameProfileDialog(currentName)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var result = _userDefinedProfileRenameService.Rename(
+                catalog,
+                paths,
+                kind,
+                profileId,
+                dialog.NewName);
+            if (!result.Success)
+            {
+                AppendProfileMessage(result.Message);
+                System.Windows.MessageBox.Show(
+                    this,
+                    result.Message,
+                    "Profil umbenennen",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(
+                updatedCatalog,
+                selectedExportProfileId,
+                selectedInterfaceProfileId,
+                selectedAisProfileId,
+                selectedDeviceProfileId);
+
+            AppendProfileMessage(result.NoChange
+                ? result.Message
+                : $"Profilname geändert: {result.OldName} → {result.NewName}");
+            AppendProfileMessage("Nur der sichtbare Name wurde geändert. IDs, Referenzen und Einstellungen bleiben unverändert.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Profil konnte nicht umbenannt werden: {ex.Message}");
+        }
+    }
+
     private void CreateNewExportProfile_Click(object sender, RoutedEventArgs e)
     {
         if (!TryGetProfileCatalogForProfileAction(out var catalog))
@@ -1948,13 +2109,16 @@ public partial class MainWindow : Window
     private void RefreshProfileOverview(
         ProfileCatalog catalog,
         string? selectedExportProfileId = null,
-        string? selectedInterfaceProfileId = null)
+        string? selectedInterfaceProfileId = null,
+        string? selectedAisProfileId = null,
+        string? selectedDeviceProfileId = null)
     {
         AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
         DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
         ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
         InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
         ShowProfileNameColumns(catalog);
+        InitializeProfileRenameSelectors(catalog, selectedAisProfileId, selectedDeviceProfileId);
         InitializeTemplatePackageExportSelection(catalog, selectedInterfaceProfileId);
         InitializeExportRulesView(catalog, selectedExportProfileId);
         InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
@@ -2758,6 +2922,101 @@ public partial class MainWindow : Window
         DeviceProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.DeviceProfiles.Select(profile => profile.Metadata.Name));
         ExportProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.ExportProfiles.Select(profile => profile.Metadata.Name));
         InterfaceProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.InterfaceProfiles.Select(profile => profile.Metadata.Name));
+    }
+
+    private void InitializeProfileRenameSelectors(
+        ProfileCatalog catalog,
+        string? selectedAisProfileId = null,
+        string? selectedDeviceProfileId = null)
+    {
+        var aisProfiles = catalog.AisProfiles
+            .OrderBy(profile => profile.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        AisProfileRenameComboBox.ItemsSource = aisProfiles;
+        AisProfileRenameComboBox.SelectedItem = SelectProfileById(
+            aisProfiles,
+            selectedAisProfileId,
+            profile => profile.Metadata.Id);
+
+        var deviceProfiles = catalog.DeviceProfiles
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        DeviceProfileRenameComboBox.ItemsSource = deviceProfiles;
+        DeviceProfileRenameComboBox.SelectedItem = SelectProfileById(
+            deviceProfiles,
+            selectedDeviceProfileId,
+            profile => profile.Metadata.Id);
+
+        UpdateProfileRenameActionButtons();
+    }
+
+    private static TProfile? SelectProfileById<TProfile>(
+        IReadOnlyList<TProfile> profiles,
+        string? profileId,
+        Func<TProfile, string> getId)
+    {
+        if (profiles.Count == 0)
+        {
+            return default;
+        }
+
+        if (!string.IsNullOrWhiteSpace(profileId))
+        {
+            var selectedProfile = profiles.FirstOrDefault(profile =>
+                string.Equals(getId(profile), profileId, StringComparison.Ordinal));
+            if (selectedProfile is not null)
+            {
+                return selectedProfile;
+            }
+        }
+
+        return profiles[0];
+    }
+
+    private void UpdateProfileRenameActionButtons()
+    {
+        UpdateProfileRenameButton(
+            RenameAisProfileButton,
+            AisProfileRenameComboBox.SelectedItem is AisProfile aisProfile ? aisProfile.Metadata : null,
+            "AIS-Profil");
+        UpdateProfileRenameButton(
+            RenameDeviceProfileButton,
+            DeviceProfileRenameComboBox.SelectedItem is DeviceProfileDefinition deviceProfile ? deviceProfile.Metadata : null,
+            "Geräteprofil");
+        UpdateProfileRenameButton(
+            RenameInterfaceProfileButton,
+            InterfaceProfileComboBox.SelectedItem is InterfaceProfileDefinition interfaceProfile ? interfaceProfile.Metadata : null,
+            "Schnittstellenprofil");
+    }
+
+    private static void UpdateProfileRenameButton(
+        System.Windows.Controls.Button button,
+        ProfileMetadata? metadata,
+        string profileKindLabel)
+    {
+        if (metadata is null)
+        {
+            button.IsEnabled = false;
+            button.ToolTip = $"Bitte zuerst ein {profileKindLabel} auswählen.";
+            return;
+        }
+
+        if (metadata.IsBuiltIn)
+        {
+            button.IsEnabled = false;
+            button.ToolTip = "BuiltIn-Profile können nicht umbenannt werden.";
+            return;
+        }
+
+        if (!metadata.IsUserDefined)
+        {
+            button.IsEnabled = false;
+            button.ToolTip = "Nur UserDefined-Profile können umbenannt werden.";
+            return;
+        }
+
+        button.IsEnabled = true;
+        button.ToolTip = $"Ändert nur den sichtbaren Namen dieses UserDefined-{profileKindLabel}s.";
     }
 
     private void ClearProfileNameColumns()

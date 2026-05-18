@@ -33,6 +33,7 @@
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Schlanke V1-Profilanlage im Tab `Profile & Templates` ergaenzt: `Neues AIS anlegen` und `Neues Geraet anlegen` oeffnen einfache Dialoge und speichern nur UserDefined-Profile; `Neues Exportprofil anlegen` bereitet den vorhandenen Exportregel-Entwurf als UserDefined-Kopie vor. BuiltIns bleiben geschuetzt, es erfolgt keine Aktivierung und keine Verarbeitung.
 - Dialoge fuer `Neues AIS anlegen` und `Neues Geraet anlegen` verstaendlicher gemacht: kurze Hilfetexte erklaeren Profilname, AIS-System, Codierung, Hersteller, Modell, Geraetetyp und Parserbasis; `Generisch` wird als anderer AIS-Kontext beziehungsweise interner Fallback erklaert.
+- Sichere Umbenennung fuer UserDefined-Profile ergaenzt: AIS-, Geraete-, Export- und Schnittstellenprofile koennen ihren sichtbaren Namen aendern, waehrend technische IDs, Referenzen, Ordner, Exportregeln und XDT-Anhang-Einstellungen unveraendert bleiben; BuiltIns bleiben gesperrt.
 - NIDEK LM7 / LM-7P als praktisch nutzbaren Lensmeter-Kandidaten ergaenzt: echte `NIDEK LM7.xml`-Fixture, `Sphare`/`Sphere`-Alias, berechnete MEDISTAR-`6228`-Lensmeterzeilen, BuiltIn-Schnittstellenprofil und selektiver LM7-Templatepaket-Test.
 - `NIDEK_LM_Stylesheet.xsl` wird als Anzeige-Stylesheet ignoriert und nicht als Geraetedatei klassifiziert.
 - Praktische MEDISTAR-Validierung fuer NIDEK LM7 dokumentiert: AIS- und echte LM7-XML-Datei wurden verarbeitet, MEDISTAR uebernimmt `8402` aus AIS sowie die rechten/linken `6228`-Lensmeterzeilen ohne leere Prisma-/PD-/ADD-Fragmente.
@@ -67,6 +68,7 @@
 - E2E-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md` ergaenzt; die LM7-Lensmeter-Rueckgabe ist anonymisiert dokumentiert und enthaelt keine Kunden-/Patientendaten oder Live-Pfade.
 - ARK1S und AR360 als stabile Referenzpakete in Matrix und Paketdokumenten markiert; offizielle ZIP-Artefakte werden erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
 - Kleine Release-Regel fuer offizielle Templatepaket-ZIPs dokumentiert, inklusive selektivem Exporttest, Import-/DryRun-Test, Praxis-App-Importpruefung, BuiltIn-Schutz und Daten-/Pfadpruefung.
+- Profilumbenennung dokumentiert: Templatepaket-ZIP-Dateien werden weiterhin ueber Dateinamen/Release-Regel versioniert; fuer Importvorschau-Zielnamen bleibt die bestehende Vorschau-Bearbeitung massgeblich, es wurde keine separate Templatepaket-Verwaltung eingefuehrt.
 - Praxisabnahme `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md` ergänzt: Systray, manuelles und automatisches Abdocken, Auto-Zurueckandocken, Pin/Position, Signalton, Reset und Sicherheitsgrenzen der Geraeteanbindungsfenster sind als V1-Funktionsblock abgenommen.
 - Projektleitlinie geschaerft: fertige Geraeteprofile und Templatepakete haben Vorrang vor Baukasten-Nutzung; der Aktivierungsassistent ruht bis auf Weiteres als read-only vorbereiteter Stand.
 - Offizielle Paketvorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` fuer das erste Referenzpaket MEDISTAR + NIDEK ARK1S ergaenzt; sie nutzt das bestehende ZIP-Templatepaket-Format, enthaelt keine Kunden-/Patientendaten und keine Live-Pfade.

@@ -149,6 +149,8 @@ Aktueller Stand:
 
 Neue Profile koennen im Tab `Profile & Templates` als V1-Funktion angelegt werden: AIS-Profile ueber Name, System und Codierung, Geraeteprofile ueber Name, Hersteller, Modell, Geraetetyp und vorhandene Parserbasis. Die Dialoge enthalten kurze Hilfetexte, damit MEDISTAR/Generisch, Windows-1252, Geraetetyp und Parserbasis verstaendlich bleiben. Exportprofile werden sichtbar als leerer Entwurf mit eindeutigem Namen vorbereitet und erst nach bewusstem Speichern als UserDefined geschrieben. Name-/ID-Konflikte werden blockiert; BuiltIn-Profile, Schnittstellenprofile, Aktivierung und Verarbeitung bleiben unberuehrt.
 
+UserDefined-Profile koennen umbenannt werden, ohne ihre technische Funktion zu veraendern. Unterstuetzt sind AIS-, Geraete-, Export- und Schnittstellenprofile; geaendert wird nur der sichtbare Name. IDs, Referenzen, Ordnerpfade, Exportregeln, XDT-Anhang-Einstellungen, Aktivierungsstatus und Verarbeitung bleiben unveraendert. BuiltIn-Profile bleiben gegen Umbenennung geschuetzt. Templatepaket-ZIP-Dateien werden nicht als eigene App-Objekte verwaltet; Paketbenennung erfolgt weiterhin ueber Dateiname und Release-Regel.
+
 ## 8. Tab Schnittstellenprofile
 
 Ein Schnittstellenprofil verknuepft AIS-Profil, Geraeteprofil, Exportprofil, Ordner, Archivierung, Fehlerablage, Automatik- und XDT-Anhang-Einstellungen.

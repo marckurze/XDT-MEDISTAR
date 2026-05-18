@@ -561,6 +561,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Row="0" Margin="0,0,0,8">
                                 <TextBlock Text="Templatepaket-Export"
@@ -588,11 +589,52 @@
                                 <Button Content="Neues Gerät anlegen" Width="170" Margin="0,0,8,8" Click="CreateNewDeviceProfile_Click"/>
                                 <Button Content="Neues Exportprofil anlegen" Width="200" Margin="0,0,8,8" Click="CreateNewExportProfile_Click"/>
                             </WrapPanel>
-                            <TextBlock Grid.Row="2"
+                            <GroupBox Grid.Row="2"
+                                      Header="Profile umbenennen"
+                                      Margin="0,8,0,0">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0"
+                                               Text="Umbenannt wird nur der sichtbare Name von UserDefined-Profilen. Technische IDs, Verknüpfungen und Einstellungen bleiben unverändert."
+                                               Foreground="DimGray"
+                                               TextWrapping="Wrap"
+                                               Margin="0,0,0,8"/>
+                                    <WrapPanel Grid.Row="1">
+                                        <TextBlock Text="AIS:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,8"/>
+                                        <ComboBox x:Name="AisProfileRenameComboBox"
+                                                  DisplayMemberPath="Name"
+                                                  MinWidth="220"
+                                                  Margin="0,0,8,8"
+                                                  SelectionChanged="ProfileRenameSelector_SelectionChanged"/>
+                                        <Button x:Name="RenameAisProfileButton"
+                                                Content="AIS-Profil umbenennen"
+                                                Width="180"
+                                                Margin="0,0,16,8"
+                                                Click="RenameAisProfile_Click"
+                                                ToolTipService.ShowOnDisabled="True"/>
+                                        <TextBlock Text="Gerät:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,8"/>
+                                        <ComboBox x:Name="DeviceProfileRenameComboBox"
+                                                  DisplayMemberPath="Metadata.Name"
+                                                  MinWidth="220"
+                                                  Margin="0,0,8,8"
+                                                  SelectionChanged="ProfileRenameSelector_SelectionChanged"/>
+                                        <Button x:Name="RenameDeviceProfileButton"
+                                                Content="Geräteprofil umbenennen"
+                                                Width="200"
+                                                Margin="0,0,0,8"
+                                                Click="RenameDeviceProfile_Click"
+                                                ToolTipService.ShowOnDisabled="True"/>
+                                    </WrapPanel>
+                                </Grid>
+                            </GroupBox>
+                            <TextBlock Grid.Row="3"
                                        Text="Neue AIS-, Geräte- und Exportprofile werden als UserDefined angelegt. BuiltIn-Profile bleiben unverändert."
                                        Foreground="DimGray"
                                        TextWrapping="Wrap"/>
-                            <GroupBox Grid.Row="3"
+                            <GroupBox Grid.Row="4"
                                       Header="Templatepaket-Importvorschau"
                                       Margin="0,8,0,0">
                                 <Grid Margin="8">
@@ -896,6 +938,14 @@
                                              Margin="8,0,0,0"
                                              Click="SaveDraftAsNewExportProfile_Click"
                                              ToolTip="Speichert den aktuellen Entwurf als neues benutzerdefiniertes Exportprofil. Das ausgewählte Originalprofil wird nicht überschrieben."/>
+                                      <Button DockPanel.Dock="Right"
+                                              x:Name="RenameExportProfileButton"
+                                              Content="Exportprofil umbenennen"
+                                              Width="190"
+                                              Margin="8,0,0,0"
+                                              Click="RenameSelectedExportProfile_Click"
+                                              ToolTip="Ändert nur den sichtbaren Namen eines UserDefined-Exportprofils."
+                                              ToolTipService.ShowOnDisabled="True"/>
                                       <Button DockPanel.Dock="Right"
                                               x:Name="DeleteExportProfileButton"
                                               Content="Exportprofil löschen"
@@ -1475,6 +1525,13 @@
                                             Width="210"
                                             Margin="0,0,8,8"
                                             Click="RemoveInterfaceProfile_Click"/>
+                                    <Button x:Name="RenameInterfaceProfileButton"
+                                            Content="Schnittstellenprofil umbenennen"
+                                            Width="250"
+                                            Margin="0,0,8,8"
+                                            Click="RenameSelectedInterfaceProfile_Click"
+                                            ToolTip="Ändert nur den sichtbaren Namen eines UserDefined-Schnittstellenprofils."
+                                            ToolTipService.ShowOnDisabled="True"/>
                                     <Button Content="Speichern"
                                             Width="220"
                                             Margin="0,0,0,8"
