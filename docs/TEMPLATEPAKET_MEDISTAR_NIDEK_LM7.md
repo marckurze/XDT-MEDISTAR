@@ -1,6 +1,6 @@
 # Templatepaket MEDISTAR + NIDEK LM7
 
-Dieses Dokument beschreibt den Templatepaket-Kandidaten fuer `MEDISTAR + NIDEK LM7` / `LM-7P`. Die technische Verarbeitung ist mit einer echten LM7-XML-Fixture abgesichert; eine praktische MEDISTAR-Abnahme steht noch aus. Ein offizielles ZIP-Artefakt wird erst nach der Release-Regel in `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
+Dieses Dokument beschreibt den Templatepaket-Kandidaten fuer `MEDISTAR + NIDEK LM7` / `LM-7P`. Die technische Verarbeitung ist mit einer echten LM7-XML-Fixture abgesichert; die Lensmeter-XDT-Rueckgabe wurde praktisch in MEDISTAR validiert und in `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md` dokumentiert. Ein offizielles ZIP-Artefakt wird erst nach der Release-Regel in `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
 
 ## Enthaltene Profile
 
@@ -31,12 +31,14 @@ Optionale Werte werden nur ausgegeben, wenn sie vorhanden sind: `ADD` als `A=`, 
 
 Hinweis zum Live-Preview-Fix: Falls lokal bereits ein aelteres BuiltIn-Exportprofil `MEDISTAR + NIDEK LM7 Export` mit `Device.R/LM/Median/...`-Platzhaltern gespeichert war, wird genau dieses BuiltIn beim Katalogstart auf die berechneten `MedistarLine`-Pfade repariert. Dadurch werden die LM7-Werte im Vorschau-/Exportpfad wieder aufgeloest; UserDefined-Profile bleiben unveraendert.
 
+Die praktische MEDISTAR-Validierung bestaetigt diesen Pfad: AIS-Datei und echte LM7-XML wurden eingelesen, die Exportdatei wurde erzeugt, und MEDISTAR hat die anonymisiert dokumentierten `V0`-Lensmeter-Zeilen uebernommen. `8402` stammt aus AIS/MEDISTAR; keine Werte aus `MEDISTAR Eintrag.txt` wurden als Messwerte verwendet.
+
 ## Testabdeckung
 
 `NidekLm7ProfileTests` prueft Erkennung, echte XML-Werte, `Sphare`/`Sphere`-Alias, MEDISTAR-Ausgabe, BuiltIn-Profile, Parser-/Exportpfad-Paritaet und den reparierten persistierten Live-Katalogpfad. `MedistarNidekLm7TemplatePackageTests` prueft den selektiven Templatepaket-Export und -Import temporaer im Testordner. Das Paket enthaelt nur MEDISTAR, NIDEK LM7, das passende Exportprofil und das Schnittstellenprofil; ARK1S-, AR360-, NT530P- und TOPCON-Profile sind nicht enthalten.
 
 ## Offen
 
-- Praktische MEDISTAR-Abnahme mit echter LM7-Datei.
 - Weitere Dateien fuer Prisma- und PD-Faelle sammeln.
+- XDT-Anhang-Link fuer LM7 bei Bedarf separat praktisch validieren.
 - Offizielles ZIP-Artefakt erst nach Release-Regel und App-Abnahme ablegen.

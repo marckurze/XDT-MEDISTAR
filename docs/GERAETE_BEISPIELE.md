@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: V2-Geräteprofile für die hier beschriebenen Geräte sind teilweise vorbereitet bzw. als BuiltIn-Profile vorhanden. Produktiv/praktisch validiert ist weiterhin nur der Workflow MEDISTAR + NIDEK ARK1S. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und müssen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe und MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -14,7 +14,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | NIDEK | AR1S | Autorefraktometer | XML | Refraktion, PD | keine im aktuellen Standardfall | zwei `6228`-Ergebniszeilen rechts/links, `8000=6310`, `8402` aus AIS | erstes validiertes Standardprofil, Referenz für Refraktionsformatierung |
 | NIDEK | AR360 / AR-360A | Autorefraktometer | NIDEK-LAN-XML, Dateiendung `.XML` | Refraktion, PD, VD | keine im aktuellen Standardfall | Auto-Refraktor-Zeilen wie ARK1S, mit ARMedian, FarPD und VD | praktisch validiert fuer MEDISTAR-XDT-Rueckgabe, Anhangfall offen |
-| NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | XML oder gerätespezifisches Format aus Beispieldaten | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Prisma/PD | zweites naheliegendes Geräteprofil wegen ähnlicher refraktiver Ergebniszeilen |
+| NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | NIDEK-LAN-XML | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Addition; Prisma/PD datenabhaengig | praktisch validierter Referenzkandidat fuer Lensmeter-XDT-Rueckgabe |
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | Pachymetrie- und Tonometriezeilen, perspektivisch externer AIS-Link | wichtig für Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Protokolle |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erstes TOPCON-/JOIA-Profil mit Namespace- und Attributanforderungen |
 | TOPCON | KR800 | Autorefraktometer / Keratometer | Ophthalmology-/JOIA-XML | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | getrennte Ergebniszeilen für Refraktion, Keratometrie und optional subjektive Daten | relevant für Mehruntersuchungsdateien und Measure-Type-Selektion |
@@ -206,6 +206,16 @@ L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50
 Leere optionale Werte werden nicht ausgegeben: rechts kein `A=`, kein `A2=`, kein Prisma und kein PD. Die Werte aus `MEDISTAR Eintrag.txt` dienen nur als Formatvorlage und werden nicht als Messwerte fuer die echte XML-Datei verwendet.
 
 Praxisfix 2026-05-18: Die manuelle Exportvorschau zeigte zunaechst nicht aufgeloeste LM7-Platzhalter wie `Device.R/LM/Median/Sphere`, weil ein bereits gespeichertes BuiltIn-Exportprofil noch die alten Median-Pfade enthielt. Der Katalog repariert dieses konkrete BuiltIn jetzt beim Start auf die berechneten Parser-Pfade `Measure[@Type='LM']/LM/R/MedistarLine` und `Measure[@Type='LM']/LM/L/MedistarLine`. UserDefined-Profile werden dabei nicht veraendert. Die praktische MEDISTAR-Abnahme soll mit dem reparierten Live-/Preview-Pfad erneut geprueft werden.
+
+Praxisvalidierung 2026-05-18: Der reparierte Live-/Preview-Pfad wurde praktisch in MEDISTAR bestaetigt. AIS-Datei und echte NIDEK-LM7-XML wurden eingelesen, die XDT-Rueckgabe wurde erzeugt, und MEDISTAR uebernahm anonymisiert dokumentiert:
+
+```text
+V0 XD:<LM7-Untersuchungsart aus AIS>
+V0 R.:S=+ 6.25 Z=- 3.25*  3
+V0 L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50
+```
+
+Damit ist MEDISTAR + NIDEK LM7 fuer die Lensmeter-XDT-Rueckgabe praktisch validiert. Prisma-/PD-Faelle bleiben offen, bis dafuer echte LM7-Dateien vorliegen. Das Protokoll steht in `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md`.
 
 ## 4.2 NIDEK LM-7/LM-7P – LAN/XML-Schnittstelle laut Interface Manual
 
@@ -1014,7 +1024,7 @@ Wichtig für die spätere Parser- und Profil-Logik:
 Empfohlene Reihenfolge für spätere Umsetzung:
 
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
-2. LM7/LM7P als naechstes fertiges Profil-/Templatepaket vorbereiten, sofern repraesentative Dateien die dokumentierten SourcePaths bestaetigen.
+2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P untersuchen, weil dort Tonometrie, Pachymetrie und Geräte-Dateianhänge/externe AIS-Links relevant werden.
 4. TOPCON CL300, KR800 und TRK2P nach vorhandener Datenlage priorisieren; ohne belastbare Beispieldateien keine fachlichen Werte oder Templates erfinden.
 

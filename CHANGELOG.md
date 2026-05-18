@@ -35,6 +35,7 @@
 - Dialoge fuer `Neues AIS anlegen` und `Neues Geraet anlegen` verstaendlicher gemacht: kurze Hilfetexte erklaeren Profilname, AIS-System, Codierung, Hersteller, Modell, Geraetetyp und Parserbasis; `Generisch` wird als anderer AIS-Kontext beziehungsweise interner Fallback erklaert.
 - NIDEK LM7 / LM-7P als praktisch nutzbaren Lensmeter-Kandidaten ergaenzt: echte `NIDEK LM7.xml`-Fixture, `Sphare`/`Sphere`-Alias, berechnete MEDISTAR-`6228`-Lensmeterzeilen, BuiltIn-Schnittstellenprofil und selektiver LM7-Templatepaket-Test.
 - `NIDEK_LM_Stylesheet.xsl` wird als Anzeige-Stylesheet ignoriert und nicht als Geraetedatei klassifiziert.
+- Praktische MEDISTAR-Validierung fuer NIDEK LM7 dokumentiert: AIS- und echte LM7-XML-Datei wurden verarbeitet, MEDISTAR uebernimmt `8402` aus AIS sowie die rechten/linken `6228`-Lensmeterzeilen ohne leere Prisma-/PD-/ADD-Fragmente.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Behoben
@@ -60,9 +61,10 @@
 ### Dokumentation
 
 - Geraete-/Template-Matrix ergaenzt: BuiltIn-Geraeteprofile, MEDISTAR-Exportprofile, vorhandene Testdaten, Templatepaket-Luecken und V1-Prioritaeten fuer konkrete Geraete-/Templatearbeit sind kompakt dokumentiert.
-- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md` dokumentiert; praktische MEDISTAR-Abnahme und offizielles ZIP-Artefakt bleiben offen.
+- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md` dokumentiert; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Faelle und offizielles ZIP-Artefakt bleiben offen.
 - Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md` dokumentiert; ARMedian ist fuer AR360 massgeblich, die abweichende Achse aus der bereitgestellten MEDISTAR-TXT wird nicht kuenstlich uebernommen.
 - E2E-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md` ergaenzt; die dokumentierte Ausgabe ist anonymisiert und enthaelt keine Kunden-/Patientendaten oder Live-Pfade.
+- E2E-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md` ergaenzt; die LM7-Lensmeter-Rueckgabe ist anonymisiert dokumentiert und enthaelt keine Kunden-/Patientendaten oder Live-Pfade.
 - ARK1S und AR360 als stabile Referenzpakete in Matrix und Paketdokumenten markiert; offizielle ZIP-Artefakte werden erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
 - Kleine Release-Regel fuer offizielle Templatepaket-ZIPs dokumentiert, inklusive selektivem Exporttest, Import-/DryRun-Test, Praxis-App-Importpruefung, BuiltIn-Schutz und Daten-/Pfadpruefung.
 - Praxisabnahme `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md` ergänzt: Systray, manuelles und automatisches Abdocken, Auto-Zurueckandocken, Pin/Position, Signalton, Reset und Sicherheitsgrenzen der Geraeteanbindungsfenster sind als V1-Funktionsblock abgenommen.

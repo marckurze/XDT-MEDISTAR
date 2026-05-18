@@ -204,14 +204,15 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Sicherer Templatepaket-Importfluss ist E2E-nah testseitig abgesichert: Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme und Abhängigkeitszuordnung.
 - MEDISTAR + NIDEK ARK1S ist als Referenzpaket reproduzierbar testseitig export-/importgeprueft; die ZIP wird dabei nur im temporaeren Testordner erzeugt, und die App-Importvorschau ist gegen den zuvor beobachteten Freeze abgesichert.
 - MEDISTAR + NIDEK AR360 ist als zweites Referenzpaket reproduzierbar testseitig export-/importgeprueft und fuer Auto-Refraktor-XDT-Rueckgabe praktisch validiert; das Protokoll steht in `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md`.
+- MEDISTAR + NIDEK LM7 ist als Lensmeter-Referenzkandidat reproduzierbar testseitig export-/importgeprueft und fuer Lensmeter-XDT-Rueckgabe praktisch validiert; das Protokoll steht in `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md`.
 - Geraeteanbindungsfenster V1 sind fuer AR360/ARK1S praxisabgenommen: Systray, Floating-Fenster, Pin/Position, Auto-Oeffnung, Auto-Zurueckandocken, Signalton und Reset sind dokumentiert in `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`.
 
-Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md` und `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.
+Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md`, `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md` und `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`. Die vollständige Abarbeitung aller weiteren Testfälle aus `docs/END_TO_END_TESTPLAN.md` bleibt als separater Schritt offen.
 
 ## 3. Was ist vorbereitet, aber noch nicht produktiv validiert?
 
 - NIDEK AR360 / AR-360A LAN/XML ist fuer Auto-Refraktor-XDT-Rueckgabe praktisch validiert; offen bleiben AR360-XDT-Anhangfall und offizielles ZIP-Release-Artefakt.
-- NIDEK LM7/LM7P LAN/XML ist mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade und Templatepaket-Kandidat testseitig vorbereitet; praktische MEDISTAR-Abnahme offen.
+- NIDEK LM7/LM7P LAN/XML ist mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade und Templatepaket-Kandidat testseitig vorbereitet; die Lensmeter-XDT-Rueckgabe ist praktisch in MEDISTAR validiert.
 - NIDEK NT530P.
 - TOPCON CL300.
 - TOPCON KR800.
@@ -263,7 +264,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 - MEDISTAR + NIDEK ARK1S als stabilen Referenzworkflow und Referenzpaket 1 schuetzen.
 - Die dokumentierte ARK1S-Paketvorlage und den reproduzierbaren Export-/Import-Testweg als Grundlage fuer ein spaeteres ZIP-Release-Artefakt nutzen.
 - NIDEK AR360 als zweiten Referenzworkflow und Referenzpaket 2 stabil halten; offizielle ZIP-Ablage und ggf. separaten XDT-Anhangtest planen.
-- NIDEK LM7/LM7P in MEDISTAR live erneut pruefen; der testseitige Profil-/Templatepaket-Kandidat und der reparierte Live-/Preview-Pfad sind vorbereitet.
+- NIDEK LM7/LM7P als dritten Referenzkandidaten stabil halten; der testseitige Profil-/Templatepaket-Kandidat, der reparierte Live-/Preview-Pfad und das MEDISTAR-Praxisprotokoll sind vorhanden.
 - NIDEK NT530P oder TOPCON-Profile nur dann priorisieren, wenn belastbare Beispiel- und Testdaten vorliegen.
 
 ### Phase 3: Baukasten schlank halten
@@ -281,7 +282,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 
 ### Phase 5: Produktive Validierung vorbereiteter Geräteprofile
 
-- LM7/LM7P mit der echten LAN/XML-Fixture ist testseitig validiert; alte persistierte BuiltIn-LM7-Exportprofile werden auf die passenden `MedistarLine`-Parserpfade repariert. Naechster Schritt ist die praktische MEDISTAR-Abnahme inklusive Prisma-/PD-Sonderfaellen.
+- LM7/LM7P mit der echten LAN/XML-Fixture ist testseitig und praktisch fuer die Lensmeter-XDT-Rueckgabe validiert; alte persistierte BuiltIn-LM7-Exportprofile werden auf die passenden `MedistarLine`-Parserpfade repariert. Naechster Schritt sind weitere Prisma-/PD-Sonderfaelle.
 - NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P mit echten Gerätedateien testen.
 - Manuelle Exportprofile je Gerät gegen AIS-Anforderungen prüfen.
 - AIS-/MEDISTAR-Default-Exporttemplates bleiben bewusst zurückgestellt, bis ein neues Fachkonzept vorliegt.
@@ -310,8 +311,8 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 1. Release-Regel aus `docs/TEMPLATEPAKET_RELEASE_REGEL.md` fuer ARK1S und AR360 anwenden, praktische App-Importabnahme bestaetigen und danach offizielle ZIP-Artefakte ablegen.
 2. Geraeteanbindungsfenster V1 als abgenommenen Block beibehalten; Komfortthemen wie Rueckdock-Zeit-UI, Countdown-Hinweis, Ton-Schalter oder eigenes Systray-Icon nur nach Praxisfeedback priorisieren.
 3. `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` als Arbeitsliste fuer Geraete-/Templatepakete fortfuehren.
-4. LM7/LM7P-Live-Test in MEDISTAR mit der echten XML-Datei nach dem Mappingfix erneut protokollieren.
-5. Fuer LM7/LM7P weitere Prisma-/PD-Beispielfaelle sammeln und danach ueber ein offizielles ZIP-Artefakt nach Release-Regel entscheiden.
+4. LM7/LM7P als praktisch validierten Referenzkandidaten beibehalten und weitere Prisma-/PD-Beispielfaelle sammeln.
+5. Fuer LM7/LM7P danach ueber ein offizielles ZIP-Artefakt nach Release-Regel entscheiden.
 6. Die neue schlanke Profilanlage im Live-Test mit einer UserDefined-AIS-Kopie, einem einfachen UserDefined-Geraeteprofil und einer Exportprofil-Kopie pruefen.
 7. Danach NIDEK NT530P oder TOPCON CL300/KR800/TRK2P anhand vorhandener Beispiel- und Testdaten priorisieren.
 8. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
