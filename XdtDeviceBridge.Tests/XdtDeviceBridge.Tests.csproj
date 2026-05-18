@@ -40,5 +40,8 @@
     <None Update="TestData\Devices\Nidek\LM7\NIDEK_LM_Stylesheet.xsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\Devices\Nidek\NT530P\NIDEK_NT530P.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

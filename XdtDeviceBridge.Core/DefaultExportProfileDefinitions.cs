@@ -160,16 +160,16 @@ public static class DefaultExportProfileDefinitions
 
     public static ExportProfileDefinition CreateMedistarNidekNt530PDefault()
     {
-        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+        var timestamp = new DateTimeOffset(2026, 5, 18, 12, 0, 0, TimeSpan.Zero);
 
         return new ExportProfileDefinition(
             Metadata: new ProfileMetadata(
                 Id: "export-medistar-nidek-nt530p-default",
                 Name: "MEDISTAR + NIDEK NT530P Export",
                 ProfileKind: ProfileKind.ExportProfile,
-                Description: "Default export profile definition for MEDISTAR and NIDEK NT530P. EV-/Attachment-Erweiterung wird später ergänzt.",
+                Description: "Default export profile definition for MEDISTAR and NIDEK NT-530P tonometry and pachymetry XML files.",
                 Vendor: "XdtDeviceBridge",
-                Product: "MEDISTAR/NIDEK NT530P",
+                Product: "MEDISTAR/NIDEK NT-530P",
                 Version: "1.0.0",
                 CreatedAt: timestamp,
                 UpdatedAt: timestamp,
@@ -189,34 +189,24 @@ public static class DefaultExportProfileDefinitions
                 new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
                 new ExportRuleDefinition(
                     "7",
-                    "6228",
-                    "PachymetryRight",
+                    "6220",
+                    "PachymetryResult",
                     ExportRuleType.Template,
-                    null,
-                    "PR: {Device.Data/R/PACHY/PACHYList[@No='1']/Thickness:Pachy} {Device.Data/R/PACHY/PACHYList[@No='2']/Thickness:Pachy} {Device.Data/R/PACHY/PACHYList[@No='3']/Thickness:Pachy} [{Device.Data/R/PACHY/PACHYAverage/Thickness:Pachy}] µm",
+                    "Device.Measure[@Type='NT530P']/Pachy/MedistarLine",
+                    "{value}",
                     7,
                     true,
-                    "MEDISTAR pachymetry card text for right eye; EV/attachment image export is not implemented yet."),
+                    "MEDISTAR pachymetry line for NIDEK NT-530P; micrometers are converted to millimeters."),
                 new ExportRuleDefinition(
                     "8",
-                    "6228",
-                    "PachymetryLeft",
+                    "6205",
+                    "TonometryResult",
                     ExportRuleType.Template,
-                    null,
-                    "PL: {Device.Data/L/PACHY/PACHYList[@No='1']/Thickness:Pachy} {Device.Data/L/PACHY/PACHYList[@No='2']/Thickness:Pachy} {Device.Data/L/PACHY/PACHYList[@No='3']/Thickness:Pachy} [{Device.Data/L/PACHY/PACHYAverage/Thickness:Pachy}] µm",
+                    "Device.Measure[@Type='NT530P']/Tono/MedistarLine",
+                    "{value}",
                     8,
                     true,
-                    "MEDISTAR pachymetry card text for left eye; EV/attachment image export is not implemented yet."),
-                new ExportRuleDefinition(
-                    "9",
-                    "6228",
-                    "TonometryBothEyes",
-                    ExportRuleType.Template,
-                    null,
-                    "R = {Device.Data/R/NT/NTList[@No='1']/mmHg:Iop} {Device.Data/R/NT/NTList[@No='2']/mmHg:Iop} {Device.Data/R/NT/NTList[@No='3']/mmHg:Iop} [{Device.Data/R/NT/NTAverage/mmHg:Iop}] // L = {Device.Data/L/NT/NTList[@No='1']/mmHg:Iop} {Device.Data/L/NT/NTList[@No='2']/mmHg:Iop} {Device.Data/L/NT/NTList[@No='3']/mmHg:Iop} [{Device.Data/L/NT/NTAverage/mmHg:Iop}] mmHg {Device.Data/Time:Raw}",
-                    9,
-                    true,
-                    "MEDISTAR tonometry card text; EV/attachment image export is not implemented yet.")
+                    "MEDISTAR tonometry line for NIDEK NT-530P; optional fragments are included only when values are present.")
             });
     }
 

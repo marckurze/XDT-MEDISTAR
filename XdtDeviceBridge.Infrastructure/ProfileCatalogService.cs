@@ -9,6 +9,7 @@ public sealed class ProfileCatalogService
     private const string ExportsFolderName = "exports";
     private const string InterfacesFolderName = "interfaces";
     private const string Lm7DefaultExportProfileId = "export-medistar-nidek-lm7-default";
+    private const string Nt530PDefaultExportProfileId = "export-medistar-nidek-nt530p-default";
 
     private readonly ProfileFileRepository _repository;
 
@@ -309,7 +310,8 @@ public sealed class ProfileCatalogService
         {
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default(),
-            DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default()
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekNt530PDefault()
         };
     }
 
@@ -356,7 +358,8 @@ public sealed class ProfileCatalogService
 
     private void RepairBuiltInExportProfileIfNeeded(string folder, ExportProfileDefinition defaultProfile)
     {
-        if (!string.Equals(defaultProfile.Metadata.Id, Lm7DefaultExportProfileId, StringComparison.Ordinal))
+        if (!string.Equals(defaultProfile.Metadata.Id, Lm7DefaultExportProfileId, StringComparison.Ordinal)
+            && !string.Equals(defaultProfile.Metadata.Id, Nt530PDefaultExportProfileId, StringComparison.Ordinal))
         {
             return;
         }
@@ -373,12 +376,18 @@ public sealed class ProfileCatalogService
             return;
         }
 
-        if (!NeedsLm7ExportProfileRepair(existingProfile))
+        if (!NeedsBuiltInExportProfileRepair(existingProfile))
         {
             return;
         }
 
         _repository.SaveExportProfileDefinition(filePath, defaultProfile);
+    }
+
+    private static bool NeedsBuiltInExportProfileRepair(ExportProfileDefinition profile)
+    {
+        return NeedsLm7ExportProfileRepair(profile)
+            || NeedsNt530PExportProfileRepair(profile);
     }
 
     private static bool NeedsLm7ExportProfileRepair(ExportProfileDefinition profile)
@@ -398,6 +407,25 @@ public sealed class ProfileCatalogService
         return !string.IsNullOrWhiteSpace(value)
             && (value.Contains("Device.R/LM/Median/", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("Device.L/LM/Median/", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool NeedsNt530PExportProfileRepair(ExportProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, Nt530PDefaultExportProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return profile.Rules.Any(rule =>
+            string.Equals(rule.TargetFieldCode, "6228", StringComparison.Ordinal)
+            || ContainsLegacyNt530PPath(rule.SourcePath)
+            || ContainsLegacyNt530PPath(rule.OutputTemplate));
+    }
+
+    private static bool ContainsLegacyNt530PPath(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("Device.Data/", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GetProfileId<TProfile>(TProfile profile)

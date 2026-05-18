@@ -15,7 +15,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | NIDEK | AR1S | Autorefraktometer | XML | Refraktion, PD | keine im aktuellen Standardfall | zwei `6228`-Ergebniszeilen rechts/links, `8000=6310`, `8402` aus AIS | erstes validiertes Standardprofil, Referenz für Refraktionsformatierung |
 | NIDEK | AR360 / AR-360A | Autorefraktometer | NIDEK-LAN-XML, Dateiendung `.XML` | Refraktion, PD, VD | keine im aktuellen Standardfall | Auto-Refraktor-Zeilen wie ARK1S, mit ARMedian, FarPD und VD | praktisch validiert fuer MEDISTAR-XDT-Rueckgabe, Anhangfall offen |
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | NIDEK-LAN-XML | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Addition; Prisma/PD datenabhaengig | praktisch validierter Referenzkandidat fuer Lensmeter-XDT-Rueckgabe |
-| NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | Pachymetrie- und Tonometriezeilen, perspektivisch externer AIS-Link | wichtig für Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Protokolle |
+| NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | `6220` Pachymetrie und `6205` Tonometrie; keine `6228`-Geraetewerte | testseitig direkt nutzbarer MEDISTAR-Kandidat, praktische MEDISTAR-Validierung offen |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erstes TOPCON-/JOIA-Profil mit Namespace- und Attributanforderungen |
 | TOPCON | KR800 | Autorefraktometer / Keratometer | Ophthalmology-/JOIA-XML | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | getrennte Ergebniszeilen für Refraktion, Keratometrie und optional subjektive Daten | relevant für Mehruntersuchungsdateien und Measure-Type-Selektion |
 | TOPCON | TRK2P | Tonometer / Refraktions-Keratometer je nach Dateninhalt | Ophthalmology-/JOIA-XML | `TM`, `CCT` | keine zwingend erkennbar | Tonometrie- und Pachymetrieausgabe | relevant für Tonometrie/CCT-Kombination und JOIA-Parserlogik |
@@ -47,7 +47,7 @@ Validierter aktueller Prototyp:
 - `6228` Ergebnis rechts
 - `6228` Ergebnis links
 
-Beispielausgabe MEDISTAR:
+Formatbeispiel MEDISTAR:
 
 ```text
 V1 R.:S=- 0.25 Z=- 0.25* 49                              PD=61
@@ -463,6 +463,15 @@ Y  PR: Gemessen = 12.7 mmHg; Korrigiert = 12.3 mmHg; ...
 P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51
 ```
 
+Die echte Repository-Fixture `NIDEK_NT530P.xml` erzeugt daraus testseitig:
+
+```text
+6220 RA: 0.596   // LA: 0.596
+6205 PR: 596 [596] µm PL: 591 600 [596] µm PR: Gemessen = 18.0 mmHg; Korrigiert = 16.2 mmHg Y  PR: Param1 = 550um; Param2 = 0.0400; CCT = 596um Y  PL: Gemessen = 18.0 mmHg; Korrigiert = 16.2 mmHg Y  PL: Param1 = 550um; Param2 = 0.0400; CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07 / EV:{000000003B} NT-530P Messung
+```
+
+Die Beispielwerte aus der Beschreibung bleiben Formatbeispiele. Messwerte fuer Tests und Export stammen aus der echten XML-Datei.
+
 Zusatzdateien:
 
 - JPG-Dateien können mitgeliefert werden
@@ -471,29 +480,26 @@ Zusatzdateien:
 Ableitung:
 
 - mehrere Ergebniszeilen erforderlich
-- manuelle Pachymetrie-Ausgaberegel
-- manuelle Tonometrie-Ausgaberegel
+- Pachymetrie ueber MEDISTAR-Feldkennung `6220`
+- Tonometrie ueber MEDISTAR-Feldkennung `6205`
 - korrigierter IOP optional
 - Geräte-Dateianhang-/externe-AIS-Link-Verknüpfung relevant
 - optionale PDF-Erzeugung sinnvoll
 
-Spätere Profilanforderung:
+Profilanforderung:
 
 - `DeviceProfileDefinition` mit mehreren Untersuchungsarten
-- `ExportProfileDefinition` mit mehreren `6228`-Regeln oder MEDISTAR-spezifischen Zielzeilen
+- `ExportProfileDefinition` mit `6220`/`6205`, keine `6228`-Geraetewertzeilen fuer NT530P
 - `AttachmentDefinition` / `DocumentExportRule`
 - externer AIS-Link über `6302` bis `6305` relevant; keine automatische Default-Template-Ableitung
 
 ## 5.1 NIDEK NT530P – erkannte SourcePaths und Attachments
 
-Analysierte lokale Beispieldateien:
+Analysierte Beispieldatei:
 
-- `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK NT530P\Medistar Eintrag NT530P Tonometer.txt`
-- `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK NT530P\RKT\TXT\NTP_              _20220404141453.xml`
-- `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK NT530P\RKT\TXT\NTP_              _20220406071353.xml`
-- `C:\Users\MarcK\Downloads\Geraeteanbindungen\NIDEK NT530P\RKT\JPG\NTP_              _20220406071353RP1.jpg`
+- `XdtDeviceBridge.Tests/TestData/Devices/Nidek/NT530P/NIDEK_NT530P.xml`
 
-Im lokalen Beispielordner wurden mehrere NT530P-XML-Dateien und zahlreiche JPG-Begleitdateien gefunden. Die XML-Dateien verwenden eine XML-Deklaration mit `encoding="UTF-16"` und eine einfache NIDEK-Struktur mit Root-Knoten `Data`.
+Die NT530P-XML-Datei verwendet `encoding="UTF-16"` und eine einfache NIDEK-Struktur mit Root-Knoten `Data`. Der Parser stellt die Messwertpfade ohne Root-Praefix bereit, z. B. `R/NT/...` statt `Data/R/NT/...`.
 
 Beobachtete Basisstruktur:
 
@@ -518,46 +524,44 @@ Erkannte SourcePaths für Messwerte:
 
 | Messwert | Erkannter SourcePath | Beispielwert | Status / Hinweis |
 |---|---|---:|---|
-| Tonometrie rechts, Einzelwert 1 | `Data/R/NT/NTList[@No='1']/mmHg` | `19` | erkannt |
-| Tonometrie rechts, Einzelwert 2 | `Data/R/NT/NTList[@No='2']/mmHg` | `19` | erkannt |
-| Tonometrie rechts, Einzelwert 3 | `Data/R/NT/NTList[@No='3']/mmHg` | `20` | erkannt |
-| Tonometrie rechts, Mittelwert | `Data/R/NT/NTAverage/mmHg` | `19.3` | erkannt |
-| Tonometrie links, Einzelwert 1 | `Data/L/NT/NTList[@No='1']/mmHg` | `28` | erkannt |
-| Tonometrie links, Einzelwert 2 | `Data/L/NT/NTList[@No='2']/mmHg` | `29` | erkannt |
-| Tonometrie links, Einzelwert 3 | `Data/L/NT/NTList[@No='3']/mmHg` | `28` | erkannt |
-| Tonometrie links, Mittelwert | `Data/L/NT/NTAverage/mmHg` | `28.3` | erkannt |
-| korrigierter IOP rechts, gemessen | `Data/R/NT/CorrectedIOP/Measured/mmHg` | `19.3` | erkannt |
-| korrigierter IOP rechts, korrigiert | `Data/R/NT/CorrectedIOP/Corrected/mmHg` | `19.0` | erkannt |
-| korrigierter IOP rechts, CCT | `Data/R/NT/CorrectedIOP/CCT` | `557um` | erkannt; Einheit ist im Wert enthalten |
-| korrigierter IOP links, gemessen | `Data/L/NT/CorrectedIOP/Measured/mmHg` | `28.3` | erkannt |
-| korrigierter IOP links, korrigiert | `Data/L/NT/CorrectedIOP/Corrected/mmHg` | `27.9` | erkannt |
-| korrigierter IOP links, CCT | `Data/L/NT/CorrectedIOP/CCT` | `560um` | erkannt; Einheit ist im Wert enthalten |
-| Pachymetrie rechts, Einzelwert 1 | `Data/R/PACHY/PACHYList[@No='1']/Thickness` | `564` | erkannt |
-| Pachymetrie rechts, Einzelwert 2 | `Data/R/PACHY/PACHYList[@No='2']/Thickness` | `550` | erkannt |
-| Pachymetrie rechts, Mittelwert | `Data/R/PACHY/PACHYAverage/Thickness` | `557` | erkannt |
-| Pachymetrie links, Einzelwert 1 | `Data/L/PACHY/PACHYList[@No='1']/Thickness` | `560` | erkannt |
-| Pachymetrie links, weitere Einzelwerte | `Data/L/PACHY/PACHYList[@No='2']/Thickness` usw. | - | noch zu validieren; im analysierten Beispiel links nur ein Einzelwert vorhanden |
-| Pachymetrie links, Mittelwert | `Data/L/PACHY/PACHYAverage/Thickness` | `560` | erkannt |
-| Messdatum | `Data/Date` | `2022/04/06` | erkannt |
-| Messzeit | `Data/Time` | `07:13:53` | erkannt |
+| Tonometrie rechts, Einzelwert 1 | `R/NT/NTList[@No='1']/mmHg` | `16` | erkannt |
+| Tonometrie rechts, Einzelwert 2 | `R/NT/NTList[@No='2']/mmHg` | `20` | erkannt |
+| Tonometrie rechts, Mittelwert | `R/NT/NTAverage/mmHg` | `18.0` | erkannt |
+| Tonometrie links, Einzelwert 1 | `L/NT/NTList[@No='1']/mmHg` | `18` | erkannt |
+| Tonometrie links, Mittelwert | `L/NT/NTAverage/mmHg` | `18.0` | erkannt |
+| korrigierter IOP rechts, gemessen | `R/NT/CorrectedIOP/Measured/mmHg` | `18.0` | erkannt |
+| korrigierter IOP rechts, korrigiert | `R/NT/CorrectedIOP/Corrected/mmHg` | `16.2` | erkannt |
+| korrigierter IOP rechts, CCT | `R/NT/CorrectedIOP/CCT` | `596um` | erkannt; Einheit ist im Wert enthalten |
+| korrigierter IOP links, gemessen | `L/NT/CorrectedIOP/Measured/mmHg` | `18.0` | erkannt |
+| korrigierter IOP links, korrigiert | `L/NT/CorrectedIOP/Corrected/mmHg` | `16.2` | erkannt |
+| korrigierter IOP links, CCT | `L/NT/CorrectedIOP/CCT` | `596um` | erkannt; Einheit ist im Wert enthalten |
+| Pachymetrie rechts, Einzelwert 1 | `R/PACHY/PACHYList[@No='1']/Thickness` | `596` | erkannt |
+| Pachymetrie rechts, Mittelwert | `R/PACHY/PACHYAverage/Thickness` | `596` | erkannt |
+| Pachymetrie links, Einzelwert 1 | `L/PACHY/PACHYList[@No='1']/Thickness` | `591` | erkannt |
+| Pachymetrie links, Einzelwert 2 | `L/PACHY/PACHYList[@No='2']/Thickness` | `600` | erkannt |
+| Pachymetrie links, Mittelwert | `L/PACHY/PACHYAverage/Thickness` | `596` | erkannt |
+| MEDISTAR Pachymetrie | `Measure[@Type='NT530P']/Pachy/MedistarLine` | `RA: 0.596   // LA: 0.596` | berechnet fuer `6220` |
+| MEDISTAR Tonometrie | `Measure[@Type='NT530P']/Tono/MedistarLine` | siehe oben | berechnet fuer `6205` |
+| Messdatum | `Date` | `2026/05/18` | erkannt |
+| Messzeit | `Time` | `12:07:19` | erkannt |
 
 Zusätzlich beobachtete Felder:
 
-- `Data/Company`
-- `Data/ModelName`
-- `Data/ROMVersion`
-- `Data/Version`
-- `Data/Patient/No.`
-- `Data/Patient/ID`
-- `Data/Comment`
-- `Data/R/NT/NTList[@No='...']/kPa`
-- `Data/L/NT/NTList[@No='...']/kPa`
-- `Data/R/NT/NTAverage/kPa`
-- `Data/L/NT/NTAverage/kPa`
-- `Data/R/NT/CorrectedIOP/Param1`
-- `Data/R/NT/CorrectedIOP/Param2`
-- `Data/L/NT/CorrectedIOP/Param1`
-- `Data/L/NT/CorrectedIOP/Param2`
+- `Company`
+- `ModelName`
+- `ROMVersion`
+- `Version`
+- `Patient/No.`
+- `Patient/ID`
+- `Comment`
+- `R/NT/NTList[@No='...']/kPa`
+- `L/NT/NTList[@No='...']/kPa`
+- `R/NT/NTAverage/kPa`
+- `L/NT/NTAverage/kPa`
+- `R/NT/CorrectedIOP/Param1`
+- `R/NT/CorrectedIOP/Param2`
+- `L/NT/CorrectedIOP/Param1`
+- `L/NT/CorrectedIOP/Param2`
 
 Die kPa-Werte und Parameterfelder sind vorhanden, aber für die MEDISTAR-Beispielausgabe noch nicht als primäre Zielfelder validiert.
 
@@ -565,13 +569,10 @@ Erkannte Bild-/JPG-Verweise:
 
 | Attachment | Erkannter SourcePath | Beispielwert | Status / Hinweis |
 |---|---|---|---|
-| Pachymetrie-Bild rechts | `Data/R/PACHY/PACHYImage` | `NTP_              _20220406071353RP1.jpg` | erkannt; Datei im lokalen JPG-Ordner vorhanden |
-| Pachymetrie-Bild links | `Data/L/PACHY/PACHYImage` | `NTP_              _20220406071353LP1.jpg` | erkannt; in diesem Beispiel verweist XML auf die Datei, die lokale Datei fehlt jedoch |
-| Pachymetrie-Bild bei Messfehler | `Data/R/PACHY/PACHYImage` | `NTP_              _20220404141453RP1.jpg` | erkannt; Beispiel enthält zusätzlich `Data/R/PACHY/PACHYAverage/Error = ALM` |
+| Pachymetrie-Bild rechts | `R/PACHY/PACHYImage` | `NTP_              _20260518120719RP1.jpg` | erkannt; JPG wird nicht als Messwertdatei geparst |
+| Pachymetrie-Bild links | `L/PACHY/PACHYImage` | `NTP_              _20260518120719LP1.jpg` | erkannt; JPG wird nicht als Messwertdatei geparst |
 
-Die XML-Dateien verweisen direkt über den Textinhalt von `PACHYImage` auf JPG-Dateinamen. Die zugehörigen Dateien liegen im lokalen Beispielordner unter `RKT\JPG`. Der Dateiname enthält denselben Messzeitstempel wie die XML-Datei sowie eine Augen-/Bildkennung wie `RP1` oder `LP1`.
-
-Bei einer lokalen Stichprobe wurden 65 XML-Dateien und 84 JPG-Dateien gefunden. Aus den XML-Dateien wurden 122 `PACHYImage`-Verweise erkannt; davon waren 84 als JPG-Datei lokal vorhanden und 38 nicht vorhanden. Daraus folgt für die spätere Attachment-Logik:
+Die XML-Dateien verweisen direkt über den Textinhalt von `PACHYImage` auf JPG-Dateinamen. Der Dateiname enthält denselben Messzeitstempel wie die XML-Datei sowie eine Augen-/Bildkennung wie `RP1` oder `LP1`. Daraus folgt für die spätere Attachment-Logik:
 
 - XML-Verweise auf JPG-Dateien müssen gegen den konfigurierten Bildordner geprüft werden.
 - Fehlende JPG-Dateien müssen protokolliert werden.
@@ -1025,7 +1026,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
-3. NT530P untersuchen, weil dort Tonometrie, Pachymetrie und Geräte-Dateianhänge/externe AIS-Links relevant werden.
+3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
 4. TOPCON CL300, KR800 und TRK2P nach vorhandener Datenlage priorisieren; ohne belastbare Beispieldateien keine fachlichen Werte oder Templates erfinden.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.

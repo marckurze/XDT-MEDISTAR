@@ -216,7 +216,7 @@ public sealed class DeviceProfileDefinitionTests
         var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
 
         Assert.Equal("NIDEK", profile.Manufacturer);
-        Assert.Equal("NT530P", profile.Model);
+        Assert.Equal("NT-530P", profile.Model);
         Assert.Contains("Tonometer", profile.DeviceType);
         Assert.Contains("Pachymeter", profile.DeviceType);
         Assert.Equal("Xml", profile.ParserMode);
@@ -232,14 +232,12 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
 
-        AssertRequiredMeasurement(profile, "nt530p-r-iop-1", "Data/R/NT/NTList[@No='1']/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-r-iop-2", "Data/R/NT/NTList[@No='2']/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-r-iop-3", "Data/R/NT/NTList[@No='3']/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-r-iop-average", "Data/R/NT/NTAverage/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-l-iop-1", "Data/L/NT/NTList[@No='1']/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-l-iop-2", "Data/L/NT/NTList[@No='2']/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-l-iop-3", "Data/L/NT/NTList[@No='3']/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-l-iop-average", "Data/L/NT/NTAverage/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-r-iop-1", "R/NT/NTList[@No='1']/mmHg");
+        AssertOptionalMeasurement(profile, "nt530p-r-iop-2", "R/NT/NTList[@No='2']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-r-iop-average", "R/NT/NTAverage/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-l-iop-1", "L/NT/NTList[@No='1']/mmHg");
+        AssertOptionalMeasurement(profile, "nt530p-l-iop-2", "L/NT/NTList[@No='2']/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-l-iop-average", "L/NT/NTAverage/mmHg");
     }
 
     [Fact]
@@ -247,12 +245,14 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
 
-        AssertOptionalMeasurement(profile, "nt530p-r-corrected-iop-corrected", "Data/R/NT/CorrectedIOP/Corrected/mmHg");
-        AssertOptionalMeasurement(profile, "nt530p-l-corrected-iop-corrected", "Data/L/NT/CorrectedIOP/Corrected/mmHg");
-        AssertRequiredMeasurement(profile, "nt530p-r-pachy-average", "Data/R/PACHY/PACHYAverage/Thickness");
-        AssertRequiredMeasurement(profile, "nt530p-l-pachy-average", "Data/L/PACHY/PACHYAverage/Thickness");
-        AssertRequiredMeasurement(profile, "nt530p-measurement-date", "Data/Date");
-        AssertRequiredMeasurement(profile, "nt530p-measurement-time", "Data/Time");
+        AssertOptionalMeasurement(profile, "nt530p-r-corrected-iop-corrected", "R/NT/CorrectedIOP/Corrected/mmHg");
+        AssertOptionalMeasurement(profile, "nt530p-l-corrected-iop-corrected", "L/NT/CorrectedIOP/Corrected/mmHg");
+        AssertRequiredMeasurement(profile, "nt530p-r-pachy-average", "R/PACHY/PACHYAverage/Thickness");
+        AssertRequiredMeasurement(profile, "nt530p-l-pachy-average", "L/PACHY/PACHYAverage/Thickness");
+        AssertRequiredMeasurement(profile, "nt530p-measurement-date", "Date");
+        AssertRequiredMeasurement(profile, "nt530p-measurement-time", "Time");
+        AssertRequiredMeasurement(profile, "nt530p-pachy-medistar-line", "Measure[@Type='NT530P']/Pachy/MedistarLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-medistar-line", "Measure[@Type='NT530P']/Tono/MedistarLine");
     }
 
     [Fact]
@@ -260,8 +260,8 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault();
 
-        AssertOptionalMeasurement(profile, "nt530p-r-pachy-image", "Data/R/PACHY/PACHYImage");
-        AssertOptionalMeasurement(profile, "nt530p-l-pachy-image", "Data/L/PACHY/PACHYImage");
+        AssertOptionalMeasurement(profile, "nt530p-r-pachy-image", "R/PACHY/PACHYImage");
+        AssertOptionalMeasurement(profile, "nt530p-l-pachy-image", "L/PACHY/PACHYImage");
     }
 
     [Fact]

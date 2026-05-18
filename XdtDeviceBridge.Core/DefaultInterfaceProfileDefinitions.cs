@@ -112,4 +112,41 @@ public static class DefaultInterfaceProfileDefinitions
             IsLicenseRequired: true,
             Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK LM7 lensmeter profile candidate.");
     }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekNt530PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 18, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-nidek-nt530p-default",
+                Name: "MEDISTAR + NIDEK NT530P",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for MEDISTAR and NIDEK NT-530P.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK NT-530P",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-nidek-nt530p-default",
+            ExportProfileId: "export-medistar-nidek-nt530p-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK NT-530P tonometry and pachymetry profile candidate.");
+    }
 }

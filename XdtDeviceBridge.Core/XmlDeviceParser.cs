@@ -7,7 +7,7 @@ public sealed class XmlDeviceParser
 {
     private static readonly HashSet<string> KnownGroups = new(StringComparer.OrdinalIgnoreCase)
     {
-        "ARMedian", "ARList", "TrialLens", "ContactLens", "PDList", "LM", "PD"
+        "ARMedian", "ARList", "TrialLens", "ContactLens", "PDList", "LM", "PD", "NT", "PACHY", "CorrectedIOP"
     };
 
     public DeviceParseResult ParseFile(string path)
@@ -35,6 +35,7 @@ public sealed class XmlDeviceParser
             }
 
             AddNidekLm7MedistarLines(document.Root, measurements);
+            AddNidekNt530PMedistarLines(document.Root, measurements);
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or IOException or UnauthorizedAccessException)
         {
@@ -246,6 +247,283 @@ public sealed class XmlDeviceParser
         AddLensmeterLine(measurements, "L", FindChild(lm, "L"), null);
     }
 
+    private static void AddNidekNt530PMedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Data", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var company = GetChildValue(root, "Company");
+        var modelName = GetChildValue(root, "ModelName");
+        if (!string.Equals(company, "NIDEK", StringComparison.OrdinalIgnoreCase)
+            || !IsNidekNt530PModel(modelName))
+        {
+            return;
+        }
+
+        var right = FindChild(root, "R");
+        var left = FindChild(root, "L");
+        var time = GetChildValue(root, "Time");
+
+        var pachyLine = BuildNt530PPachyMedistarLine(right, left);
+        if (!string.IsNullOrWhiteSpace(pachyLine))
+        {
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='NT530P']/Pachy/MedistarLine",
+                "NT530P MEDISTAR Pachymetrie-Zeile",
+                pachyLine,
+                null,
+                null,
+                "PACHY");
+        }
+
+        var tonoLine = BuildNt530PTonoMedistarLine(right, left, time);
+        if (!string.IsNullOrWhiteSpace(tonoLine))
+        {
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='NT530P']/Tono/MedistarLine",
+                "NT530P MEDISTAR Tonometrie-Zeile",
+                tonoLine,
+                null,
+                null,
+                "NT");
+        }
+    }
+
+    private static bool IsNidekNt530PModel(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "NT530P", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? BuildNt530PPachyMedistarLine(XElement? right, XElement? left)
+    {
+        var parts = new List<string>();
+        var rightAverage = GetNt530PPachyAverage(right);
+        var leftAverage = GetNt530PPachyAverage(left);
+        if (!string.IsNullOrWhiteSpace(rightAverage))
+        {
+            parts.Add($"RA: {FormatMicrometersAsMillimeters(rightAverage)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(leftAverage))
+        {
+            parts.Add($"LA: {FormatMicrometersAsMillimeters(leftAverage)}");
+        }
+
+        return parts.Count == 0 ? null : string.Join("   // ", parts);
+    }
+
+    private static string? BuildNt530PTonoMedistarLine(XElement? right, XElement? left, string? time)
+    {
+        var parts = new List<string>();
+
+        var rightPachy = BuildNt530PPachyListSegment("PR", right);
+        if (!string.IsNullOrWhiteSpace(rightPachy))
+        {
+            parts.Add(rightPachy);
+        }
+
+        var leftPachy = BuildNt530PPachyListSegment("PL", left);
+        if (!string.IsNullOrWhiteSpace(leftPachy))
+        {
+            parts.Add(leftPachy);
+        }
+
+        var correctedParts = new List<string>();
+        AddNt530PCorrectedIopSegments(correctedParts, "PR", right);
+        AddNt530PCorrectedIopSegments(correctedParts, "PL", left);
+        if (correctedParts.Count > 0)
+        {
+            parts.Add(string.Join(" Y  ", correctedParts));
+        }
+
+        var tonometryList = BuildNt530PTonometryListSegment(right, left);
+        if (!string.IsNullOrWhiteSpace(tonometryList))
+        {
+            parts.Add($"P  {tonometryList}");
+        }
+
+        var formattedTime = FormatNt530PTime(time);
+        if (!string.IsNullOrWhiteSpace(formattedTime))
+        {
+            parts.Add($"{formattedTime} / EV:{{000000003B}} NT-530P Messung");
+        }
+        else if (parts.Count > 0)
+        {
+            parts.Add("EV:{000000003B} NT-530P Messung");
+        }
+
+        return parts.Count == 0 ? null : string.Join(" ", parts);
+    }
+
+    private static string? BuildNt530PPachyListSegment(string label, XElement? eyeElement)
+    {
+        var pachy = eyeElement is null ? null : FindChild(eyeElement, "PACHY");
+        if (pachy is null)
+        {
+            return null;
+        }
+
+        var values = FindChildren(pachy, "PACHYList")
+            .Select(element => GetChildValue(element, "Thickness"))
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!)
+            .ToList();
+        var average = GetNt530PPachyAverage(eyeElement);
+
+        if (values.Count == 0 && string.IsNullOrWhiteSpace(average))
+        {
+            return null;
+        }
+
+        var valuePart = values.Count == 0 ? string.Empty : string.Join(" ", values.Select(FormatPlainNumber));
+        var averagePart = string.IsNullOrWhiteSpace(average) ? string.Empty : $"[{FormatPlainNumber(average)}]";
+        return $"{label}: {string.Join(" ", new[] { valuePart, averagePart }.Where(part => !string.IsNullOrWhiteSpace(part)))} µm";
+    }
+
+    private static void AddNt530PCorrectedIopSegments(List<string> parts, string label, XElement? eyeElement)
+    {
+        var nt = eyeElement is null ? null : FindChild(eyeElement, "NT");
+        var correctedIop = nt is null ? null : FindChild(nt, "CorrectedIOP");
+        if (correctedIop is null)
+        {
+            return;
+        }
+
+        var measured = GetChildValue(FindChild(correctedIop, "Measured") ?? new XElement("Measured"), "mmHg");
+        var corrected = GetChildValue(FindChild(correctedIop, "Corrected") ?? new XElement("Corrected"), "mmHg");
+        if (!string.IsNullOrWhiteSpace(measured) || !string.IsNullOrWhiteSpace(corrected))
+        {
+            var measuredPart = string.IsNullOrWhiteSpace(measured) ? null : $"Gemessen = {FormatOneDecimal(measured)} mmHg";
+            var correctedPart = string.IsNullOrWhiteSpace(corrected) ? null : $"Korrigiert = {FormatOneDecimal(corrected)} mmHg";
+            parts.Add($"{label}: {string.Join("; ", new[] { measuredPart, correctedPart }.Where(part => !string.IsNullOrWhiteSpace(part)))}");
+        }
+
+        var param1 = GetChildValue(correctedIop, "Param1");
+        var param2 = GetChildValue(correctedIop, "Param2");
+        var cct = GetChildValue(correctedIop, "CCT");
+        var parameterParts = new[]
+            {
+                string.IsNullOrWhiteSpace(param1) ? null : $"Param1 = {param1}",
+                string.IsNullOrWhiteSpace(param2) ? null : $"Param2 = {param2}",
+                string.IsNullOrWhiteSpace(cct) ? null : $"CCT = {cct}"
+            }
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .ToList();
+        if (parameterParts.Count > 0)
+        {
+            parts.Add($"{label}: {string.Join("; ", parameterParts)}");
+        }
+    }
+
+    private static string? BuildNt530PTonometryListSegment(XElement? right, XElement? left)
+    {
+        var parts = new List<string>();
+        var rightSegment = BuildNt530PEyeTonometryList("R", right);
+        var leftSegment = BuildNt530PEyeTonometryList("L", left);
+        if (!string.IsNullOrWhiteSpace(rightSegment))
+        {
+            parts.Add(rightSegment);
+        }
+
+        if (!string.IsNullOrWhiteSpace(leftSegment))
+        {
+            parts.Add(leftSegment);
+        }
+
+        return parts.Count == 0 ? null : $"{string.Join(" // ", parts)} mmHg";
+    }
+
+    private static string? BuildNt530PEyeTonometryList(string label, XElement? eyeElement)
+    {
+        var nt = eyeElement is null ? null : FindChild(eyeElement, "NT");
+        if (nt is null)
+        {
+            return null;
+        }
+
+        var values = FindChildren(nt, "NTList")
+            .Select(element => GetChildValue(element, "mmHg"))
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!)
+            .ToList();
+        var average = GetChildValue(FindChild(nt, "NTAverage") ?? new XElement("NTAverage"), "mmHg");
+        if (values.Count == 0 && string.IsNullOrWhiteSpace(average))
+        {
+            return null;
+        }
+
+        var valuePart = values.Count == 0 ? string.Empty : string.Join(" ", values.Select(FormatPlainNumber));
+        var averagePart = string.IsNullOrWhiteSpace(average) ? string.Empty : $"[{FormatOneDecimal(average)}]";
+        return $"{label} = {string.Join(" ", new[] { valuePart, averagePart }.Where(part => !string.IsNullOrWhiteSpace(part)))}";
+    }
+
+    private static string? GetNt530PPachyAverage(XElement? eyeElement)
+    {
+        var pachy = eyeElement is null ? null : FindChild(eyeElement, "PACHY");
+        return pachy is null ? null : GetChildValue(FindChild(pachy, "PACHYAverage") ?? new XElement("PACHYAverage"), "Thickness");
+    }
+
+    private static string FormatMicrometersAsMillimeters(string value)
+    {
+        if (!TryParseDecimal(value, out var micrometers))
+        {
+            return value.Trim();
+        }
+
+        return (micrometers / 1000m).ToString("0.000", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatPlainNumber(string value)
+    {
+        if (!TryParseDecimal(value, out var number))
+        {
+            return value.Trim();
+        }
+
+        return number % 1 == 0
+            ? number.ToString("0", CultureInfo.InvariantCulture)
+            : number.ToString("0.#", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatOneDecimal(string value)
+    {
+        if (!TryParseDecimal(value, out var number))
+        {
+            return value.Trim();
+        }
+
+        return number.ToString("0.0", CultureInfo.InvariantCulture);
+    }
+
+    private static string? FormatNt530PTime(string? value)
+    {
+        var trimmed = value?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return null;
+        }
+
+        if (TimeSpan.TryParse(trimmed, CultureInfo.InvariantCulture, out var time))
+        {
+            return $"{time.Hours:00}:{time.Minutes:00}";
+        }
+
+        return trimmed.Length >= 5 ? trimmed[..5] : trimmed;
+    }
+
+    private static bool TryParseDecimal(string value, out decimal number)
+    {
+        var normalized = value.Trim()
+            .Replace("um", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("µm", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return decimal.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out number);
+    }
+
     private static bool IsNidekLm7Model(string? modelName)
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
@@ -393,6 +671,12 @@ public sealed class XmlDeviceParser
     {
         return element.Elements()
             .FirstOrDefault(child => string.Equals(child.Name.LocalName, name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<XElement> FindChildren(XElement element, string name)
+    {
+        return element.Elements()
+            .Where(child => string.Equals(child.Name.LocalName, name, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string? GetChildValue(XElement element, params string[] names)

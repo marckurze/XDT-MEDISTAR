@@ -212,7 +212,7 @@ public sealed class ExportProfileDefinitionTests
         Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
         Assert.Equal("device-nidek-nt530p-default", profile.SourceDeviceProfileId);
         Assert.Equal("Windows-1252", profile.OutputEncoding);
-        Assert.Equal(9, profile.Rules.Count);
+        Assert.Equal(8, profile.Rules.Count);
     }
 
     [Fact]
@@ -247,25 +247,28 @@ public sealed class ExportProfileDefinitionTests
     }
 
     [Fact]
-    public void CreateMedistarNidekNt530PDefault_ShouldContainMultipleResultRulesFor6228()
+    public void CreateMedistarNidekNt530PDefault_ShouldContainPachyAndTonoResultRulesWithout6228()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
-        var resultRules = profile.Rules
-            .Where(rule => rule.TargetFieldCode == "6228" && rule.RuleType == ExportRuleType.Template)
-            .ToList();
+        var pachyRule = Assert.Single(profile.Rules, rule => rule.TargetFieldCode == "6220");
+        var tonoRule = Assert.Single(profile.Rules, rule => rule.TargetFieldCode == "6205");
 
-        Assert.Equal(3, resultRules.Count);
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("mmHg"));
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("µm"));
+        Assert.Equal(ExportRuleType.Template, pachyRule.RuleType);
+        Assert.Equal("Device.Measure[@Type='NT530P']/Pachy/MedistarLine", pachyRule.SourcePath);
+        Assert.Equal("{value}", pachyRule.OutputTemplate);
+        Assert.Equal(ExportRuleType.Template, tonoRule.RuleType);
+        Assert.Equal("Device.Measure[@Type='NT530P']/Tono/MedistarLine", tonoRule.SourcePath);
+        Assert.Equal("{value}", tonoRule.OutputTemplate);
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228");
     }
 
     [Fact]
-    public void CreateMedistarNidekNt530PDefault_ShouldDescribeFutureEvAttachmentExtension()
+    public void CreateMedistarNidekNt530PDefault_ShouldDocumentPachyAndTonoFieldCodes()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
 
-        Assert.Contains("EV", profile.Metadata.Description);
-        Assert.Contains("Attachment", profile.Metadata.Description);
+        Assert.Contains("tonometry", profile.Metadata.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("pachymetry", profile.Metadata.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
