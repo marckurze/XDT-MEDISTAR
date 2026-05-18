@@ -115,6 +115,23 @@ public sealed class NidekLm7ProfileTests
     }
 
     [Fact]
+    public void ParserMeasurements_ShouldExposePathsUsedByLm7ExportProfile()
+    {
+        var parseResult = _parser.ParseFile(GetLm7FixturePath("NIDEK LM7.xml"));
+        var sourcePaths = parseResult.Measurements
+            .Select(measurement => measurement.SourcePath)
+            .ToHashSet(StringComparer.Ordinal);
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+
+        foreach (var rule in exportProfile.Rules.Where(rule => rule.TargetFieldCode == "6228"))
+        {
+            Assert.False(string.IsNullOrWhiteSpace(rule.SourcePath));
+            Assert.StartsWith("Device.", rule.SourcePath, StringComparison.Ordinal);
+            Assert.Contains(rule.SourcePath![7..], sourcePaths);
+        }
+    }
+
+    [Fact]
     public void XdtExportForLm7Sample_ShouldUseAisExaminationType()
     {
         var mappingResult = MapWithLm7Export(GetLm7FixturePath("NIDEK LM7.xml"));
@@ -127,6 +144,35 @@ public sealed class NidekLm7ProfileTests
         Assert.Contains("6228L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("MEDISTAR Eintrag", exportResult.Content, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("- 6.25 Z=- 3.25* 32", exportResult.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PersistedLegacyLm7BuiltInExport_ShouldBeRepairedBeforePreviewExport()
+    {
+        var paths = CreateAppDataPaths();
+        var catalogService = new ProfileCatalogService();
+        catalogService.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyLm7ExportProfile() },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        catalogService.EnsureDefaultProfiles(paths);
+        var exportProfile = catalogService.Load(paths).ExportProfiles.Single(profile => profile.Metadata.Id == "export-medistar-nidek-lm7-default");
+        var measurements = _parser.ParseFile(GetLm7FixturePath("NIDEK LM7.xml")).Measurements;
+        var mappingResult = _mappingEngine.Map(CreatePatientData(), measurements, _mappingAdapter.Adapt(exportProfile));
+        var exportResult = new XdtExportBuilder().Build(mappingResult.Records);
+
+        Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
+        Assert.Empty(exportResult.Issues);
+        Assert.Contains("8402LM7", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=+ 6.25 Z=- 3.25*  3", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("R.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("L.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("P=              PD=", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("P=", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("PD=", exportResult.Content, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -193,6 +239,12 @@ public sealed class NidekLm7ProfileTests
         return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Nidek", "LM7", fileName);
     }
 
+    private static AppDataPaths CreateAppDataPaths()
+    {
+        var baseFolder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
+        return new AppDataPathProvider().GetPaths(baseFolder);
+    }
+
     private static string CreateTempFolder()
     {
         var folder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
@@ -205,5 +257,38 @@ public sealed class NidekLm7ProfileTests
         var path = Path.Combine(CreateTempFolder(), "lm7-canonical.xml");
         File.WriteAllText(path, content);
         return path;
+    }
+
+    private static ExportProfileDefinition CreateLegacyLm7ExportProfile()
+    {
+        var current = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+        return current with
+        {
+            Rules = current.Rules.Take(6)
+                .Concat(new[]
+                {
+                    new ExportRuleDefinition(
+                        "7",
+                        "6228",
+                        "LensmeterResultRight",
+                        ExportRuleType.Template,
+                        null,
+                        "R.:S={Device.R/LM/Median/Sphere:Diopter} Z={Device.R/LM/Median/Cylinder:Diopter}*{Device.R/LM/Median/Axis:Axis} P={Device.R/LM/Median/PrismHorizontal:Prism} {Device.R/LM/Median/PrismHorizontalBase:Raw} {Device.R/LM/Median/PrismVertical:Prism} {Device.R/LM/Median/PrismVerticalBase:Raw}              PD={Device.PD/Distance:Pd}",
+                        7,
+                        true,
+                        "Legacy LM7 right lensmeter template with unresolved median paths."),
+                    new ExportRuleDefinition(
+                        "8",
+                        "6228",
+                        "LensmeterResultLeft",
+                        ExportRuleType.Template,
+                        null,
+                        "L.:S={Device.L/LM/Median/Sphere:Diopter} Z={Device.L/LM/Median/Cylinder:Diopter}*{Device.L/LM/Median/Axis:Axis} P={Device.L/LM/Median/PrismHorizontal:Prism} {Device.L/LM/Median/PrismHorizontalBase:Raw} {Device.L/LM/Median/PrismVertical:Prism} {Device.L/LM/Median/PrismVerticalBase:Raw}",
+                        8,
+                        true,
+                        "Legacy LM7 left lensmeter template with unresolved median paths.")
+                })
+                .ToArray()
+        };
     }
 }

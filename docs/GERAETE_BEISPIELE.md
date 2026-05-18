@@ -205,6 +205,8 @@ L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50
 
 Leere optionale Werte werden nicht ausgegeben: rechts kein `A=`, kein `A2=`, kein Prisma und kein PD. Die Werte aus `MEDISTAR Eintrag.txt` dienen nur als Formatvorlage und werden nicht als Messwerte fuer die echte XML-Datei verwendet.
 
+Praxisfix 2026-05-18: Die manuelle Exportvorschau zeigte zunaechst nicht aufgeloeste LM7-Platzhalter wie `Device.R/LM/Median/Sphere`, weil ein bereits gespeichertes BuiltIn-Exportprofil noch die alten Median-Pfade enthielt. Der Katalog repariert dieses konkrete BuiltIn jetzt beim Start auf die berechneten Parser-Pfade `Measure[@Type='LM']/LM/R/MedistarLine` und `Measure[@Type='LM']/LM/L/MedistarLine`. UserDefined-Profile werden dabei nicht veraendert. Die praktische MEDISTAR-Abnahme soll mit dem reparierten Live-/Preview-Pfad erneut geprueft werden.
+
 ## 4.2 NIDEK LM-7/LM-7P – LAN/XML-Schnittstelle laut Interface Manual
 
 Grundlage dieser Ergänzung ist die fachlich-technische Auswertung des NIDEK-Interface-Manuals für LM-7/LM-7P, Kapitel 6 `LAN COMMUNICATION`, insbesondere Abschnitt 6.4 `Data Format` mit den XML-Definitionen für `NIDEK_V1.00` und `NIDEK_V1.01`.

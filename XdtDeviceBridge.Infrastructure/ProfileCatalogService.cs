@@ -8,6 +8,7 @@ public sealed class ProfileCatalogService
     private const string DevicesFolderName = "devices";
     private const string ExportsFolderName = "exports";
     private const string InterfacesFolderName = "interfaces";
+    private const string Lm7DefaultExportProfileId = "export-medistar-nidek-lm7-default";
 
     private readonly ProfileFileRepository _repository;
 
@@ -205,9 +206,11 @@ public sealed class ProfileCatalogService
             SaveDefaultIfMissing(GetDevicesFolder(paths), profile, _repository.SaveDeviceProfileDefinition);
         }
 
+        var exportsFolder = GetExportsFolder(paths);
         foreach (var profile in CreateDefaultExportProfiles())
         {
-            SaveDefaultIfMissing(GetExportsFolder(paths), profile, _repository.SaveExportProfileDefinition);
+            SaveDefaultIfMissing(exportsFolder, profile, _repository.SaveExportProfileDefinition);
+            RepairBuiltInExportProfileIfNeeded(exportsFolder, profile);
         }
 
         foreach (var profile in CreateDefaultInterfaceProfiles())
@@ -301,6 +304,52 @@ public sealed class ProfileCatalogService
         }
 
         saveProfile(filePath, profile);
+    }
+
+    private void RepairBuiltInExportProfileIfNeeded(string folder, ExportProfileDefinition defaultProfile)
+    {
+        if (!string.Equals(defaultProfile.Metadata.Id, Lm7DefaultExportProfileId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var filePath = CreateProfilePath(folder, defaultProfile.Metadata.Id);
+        if (!File.Exists(filePath))
+        {
+            return;
+        }
+
+        var existingProfile = _repository.LoadExportProfileDefinition(filePath);
+        if (!existingProfile.Metadata.IsBuiltIn || existingProfile.Metadata.IsUserDefined)
+        {
+            return;
+        }
+
+        if (!NeedsLm7ExportProfileRepair(existingProfile))
+        {
+            return;
+        }
+
+        _repository.SaveExportProfileDefinition(filePath, defaultProfile);
+    }
+
+    private static bool NeedsLm7ExportProfileRepair(ExportProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, Lm7DefaultExportProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return profile.Rules.Any(rule =>
+            ContainsLegacyLm7MedianPath(rule.SourcePath)
+            || ContainsLegacyLm7MedianPath(rule.OutputTemplate));
+    }
+
+    private static bool ContainsLegacyLm7MedianPath(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && (value.Contains("Device.R/LM/Median/", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("Device.L/LM/Median/", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string GetProfileId<TProfile>(TProfile profile)

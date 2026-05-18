@@ -29,9 +29,11 @@ L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50
 
 Optionale Werte werden nur ausgegeben, wenn sie vorhanden sind: `ADD` als `A=`, `ADD2` als `A2=`, Prisma aus `PrismX`/`PrismY` mit Basisrichtung und Gesamt-PD aus `PD/Distance`. Leere Werte werden nicht mit `0` aufgefuellt.
 
+Hinweis zum Live-Preview-Fix: Falls lokal bereits ein aelteres BuiltIn-Exportprofil `MEDISTAR + NIDEK LM7 Export` mit `Device.R/LM/Median/...`-Platzhaltern gespeichert war, wird genau dieses BuiltIn beim Katalogstart auf die berechneten `MedistarLine`-Pfade repariert. Dadurch werden die LM7-Werte im Vorschau-/Exportpfad wieder aufgeloest; UserDefined-Profile bleiben unveraendert.
+
 ## Testabdeckung
 
-`NidekLm7ProfileTests` prueft Erkennung, echte XML-Werte, `Sphare`/`Sphere`-Alias, MEDISTAR-Ausgabe und BuiltIn-Profile. `MedistarNidekLm7TemplatePackageTests` prueft den selektiven Templatepaket-Export und -Import temporaer im Testordner. Das Paket enthaelt nur MEDISTAR, NIDEK LM7, das passende Exportprofil und das Schnittstellenprofil; ARK1S-, AR360-, NT530P- und TOPCON-Profile sind nicht enthalten.
+`NidekLm7ProfileTests` prueft Erkennung, echte XML-Werte, `Sphare`/`Sphere`-Alias, MEDISTAR-Ausgabe, BuiltIn-Profile, Parser-/Exportpfad-Paritaet und den reparierten persistierten Live-Katalogpfad. `MedistarNidekLm7TemplatePackageTests` prueft den selektiven Templatepaket-Export und -Import temporaer im Testordner. Das Paket enthaelt nur MEDISTAR, NIDEK LM7, das passende Exportprofil und das Schnittstellenprofil; ARK1S-, AR360-, NT530P- und TOPCON-Profile sind nicht enthalten.
 
 ## Offen
 

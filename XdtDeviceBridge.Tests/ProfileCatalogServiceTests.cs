@@ -129,6 +129,47 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyLm7BuiltInExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyLm7ExportProfile(isBuiltIn: true) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-nidek-lm7-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => rule.SourcePath == "Device.Measure[@Type='LM']/LM/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.SourcePath == "Device.Measure[@Type='LM']/LM/L/MedistarLine");
+        Assert.DoesNotContain(profile.Rules, rule => ContainsLegacyLm7MedianPath(rule.SourcePath));
+        Assert.DoesNotContain(profile.Rules, rule => ContainsLegacyLm7MedianPath(rule.OutputTemplate));
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldNotRepairUserDefinedLm7ExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyLm7ExportProfile(isBuiltIn: false) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-nidek-lm7-default");
+        Assert.False(profile.Metadata.IsBuiltIn);
+        Assert.True(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => ContainsLegacyLm7MedianPath(rule.OutputTemplate));
+    }
+
+    [Fact]
     public void Load_ShouldReadAllExpectedProfilesAfterEnsureDefaultProfiles()
     {
         var paths = CreateAppDataPaths();
@@ -396,6 +437,51 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("export-medistar-topcon-cl300-default", ids);
         Assert.Contains("export-medistar-topcon-kr800-default", ids);
         Assert.Contains("export-medistar-topcon-trk2p-default", ids);
+    }
+
+    private static ExportProfileDefinition CreateLegacyLm7ExportProfile(bool isBuiltIn)
+    {
+        var current = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Rules = current.Rules.Take(6)
+                .Concat(new[]
+                {
+                    new ExportRuleDefinition(
+                        "7",
+                        "6228",
+                        "LensmeterResultRight",
+                        ExportRuleType.Template,
+                        null,
+                        "R.:S={Device.R/LM/Median/Sphere:Diopter} Z={Device.R/LM/Median/Cylinder:Diopter}*{Device.R/LM/Median/Axis:Axis} P={Device.R/LM/Median/PrismHorizontal:Prism} {Device.R/LM/Median/PrismHorizontalBase:Raw} {Device.R/LM/Median/PrismVertical:Prism} {Device.R/LM/Median/PrismVerticalBase:Raw}              PD={Device.PD/Distance:Pd}",
+                        7,
+                        true,
+                        "Legacy LM7 right lensmeter template with unresolved median paths."),
+                    new ExportRuleDefinition(
+                        "8",
+                        "6228",
+                        "LensmeterResultLeft",
+                        ExportRuleType.Template,
+                        null,
+                        "L.:S={Device.L/LM/Median/Sphere:Diopter} Z={Device.L/LM/Median/Cylinder:Diopter}*{Device.L/LM/Median/Axis:Axis} P={Device.L/LM/Median/PrismHorizontal:Prism} {Device.L/LM/Median/PrismHorizontalBase:Raw} {Device.L/LM/Median/PrismVertical:Prism} {Device.L/LM/Median/PrismVerticalBase:Raw}",
+                        8,
+                        true,
+                        "Legacy LM7 left lensmeter template with unresolved median paths.")
+                })
+                .ToArray()
+        };
+    }
+
+    private static bool ContainsLegacyLm7MedianPath(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && (value.Contains("Device.R/LM/Median/", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("Device.L/LM/Median/", StringComparison.OrdinalIgnoreCase));
     }
 
     private static ProfileMetadata CreateUserExportMetadata(string id)
