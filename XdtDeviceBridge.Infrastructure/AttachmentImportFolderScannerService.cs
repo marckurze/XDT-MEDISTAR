@@ -71,8 +71,8 @@ public sealed class AttachmentImportFolderScannerService : IAttachmentImportFold
             var candidates = directoryInfo
                 .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
                 .Select(file => CreateCandidate(file, stabilityDuration: null))
-                .OrderBy(candidate => candidate.LastWriteTimeUtc)
-                .ThenBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(candidate => candidate.LastWriteTimeUtc)
                 .ThenBy(candidate => candidate.FullPath, FilePathComparer)
                 .ToList();
 
@@ -117,8 +117,8 @@ public sealed class AttachmentImportFolderScannerService : IAttachmentImportFold
             var candidates = directoryInfo
                 .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
                 .Select(file => CreateCandidate(file, stabilityDuration))
-                .OrderBy(candidate => candidate.LastWriteTimeUtc)
-                .ThenBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(candidate => candidate.LastWriteTimeUtc)
                 .ThenBy(candidate => candidate.FullPath, FilePathComparer)
                 .ToList();
 

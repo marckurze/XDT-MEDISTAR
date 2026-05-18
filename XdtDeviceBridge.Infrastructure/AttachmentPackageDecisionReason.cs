@@ -10,6 +10,7 @@ public enum AttachmentPackageDecisionReason
     AttachmentRequiredTimeoutBlock,
     AttachmentNotStableWait,
     SingleAttachmentReady,
+    MultipleAttachmentsReady,
     MultipleAttachmentsAmbiguous,
     MissingPatientNumber,
     MissingAttachmentFolders,

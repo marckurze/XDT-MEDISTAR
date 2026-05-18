@@ -38,6 +38,7 @@
 - `NIDEK_LM_Stylesheet.xsl` wird als Anzeige-Stylesheet ignoriert und nicht als Geraetedatei klassifiziert.
 - Praktische MEDISTAR-Validierung fuer NIDEK LM7 dokumentiert: AIS- und echte LM7-XML-Datei wurden verarbeitet, MEDISTAR uebernimmt `8402` aus AIS sowie die rechten/linken `6228`-Lensmeterzeilen ohne leere Prisma-/PD-/ADD-Fragmente.
 - NIDEK NT530P / NT-530P als direkt nutzbaren MEDISTAR-Kandidaten ergaenzt: echte UTF-16-XML-Fixture, Parserwerte fuer Tonometrie, korrigierten IOP und Pachymetrie, berechnete MEDISTAR-Zeilen fuer `6220` und `6205`, BuiltIn-Schnittstellenprofil und selektiver NT530P-Templatepaket-Test. JPG-Dateien werden nicht als Messwertdateien verarbeitet und bleiben fuer spaetere XDT-Anhang-Validierung relevant.
+- XDT-Mehrfachanhaenge im Automatiklauf ergaenzt: mehrere stabile unterstuetzte Anhangdateien werden sortiert einzeln per bestehender Copy/Move- und Kollisionslogik uebertragen und erzeugen je Datei eine eigene `6302`/`6303`/optional `6304`/`6305`-Linkfeldgruppe.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Behoben
@@ -48,6 +49,7 @@
 - Symbol- und Scanintervall-Buttons in Geraeteanbindungsfenstern optisch beruhigt: transparente Button-Templates ersetzen die graue Standard-WPF-Fläche; Hover, Pressed und aktive Toggle-Zustaende bleiben sichtbar.
 - Pin/TopMost fuer Floating-Geraeteanbindungsfenster getrennt: Floating-Fenster verwenden keinen gemeinsamen WPF-Owner mehr, und `ApplyState` nimmt nur den State der eigenen Schnittstellenprofil-ID an. AR360 und ARK1S koennen unabhaengig gepinnt werden.
 - Soundausloesung fuer Geraeteanbindungsfenster korrigiert: Der Signalton haengt nicht mehr an deduplizierten Monitoring-Textmeldungen, wird nur noch bei stabil erkannter Geraetedatei gespielt und funktioniert bei spaeteren Durchlaeufen erneut.
+- NT530P-MEDISTAR-Ausgabe korrigiert: `6205` beginnt mit `Tonometrie`, `6220` mit `Pachymetrie`, die Tonometrie wird in mehrere Feldzeilen aufgeteilt, und der alte Zusatz `/ EV:{000000003B} NT-530P Messung` entfaellt.
 - LM7-Live-Export korrigiert: alte persistierte BuiltIn-Exportprofile mit `Device.R/LM/Median/...`-Pfaden werden beim Katalogstart gezielt auf die Parser-Pfade `Device.Measure[@Type='LM']/LM/R/MedistarLine` und `Device.Measure[@Type='LM']/LM/L/MedistarLine` repariert; leere Prisma-/PD-/ADD-Fragmente erscheinen dadurch nicht mehr im LM7-Export.
 - Templatepaket-Importvorschau in der WPF-App stabilisiert: Paketlesen und Vorschau-Erstellung laufen nun ueber einen UI-nah testbaren Preview-Service, der Import-Button ist waehrend der Vorschau gesperrt, und unveraenderte ComboBox-Auswahlereignisse bauen die Vorschau nicht erneut rekursiv auf.
 - Templatepaket-Importvorschau benutzerfreundlicher gemacht: Konflikte und BuiltIn-Schutz starten nun mit `Ueberspringen` als sicherem Standard, `Als Kopie importieren` muss bewusst gewaehlt werden, Zielnamen fuer Kopien sind editierbar und leere/doppelte Zielnamen blockieren die Uebernahme verstaendlich.

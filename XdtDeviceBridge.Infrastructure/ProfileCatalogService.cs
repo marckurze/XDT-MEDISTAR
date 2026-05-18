@@ -419,7 +419,15 @@ public sealed class ProfileCatalogService
         return profile.Rules.Any(rule =>
             string.Equals(rule.TargetFieldCode, "6228", StringComparison.Ordinal)
             || ContainsLegacyNt530PPath(rule.SourcePath)
-            || ContainsLegacyNt530PPath(rule.OutputTemplate));
+            || ContainsLegacyNt530PPath(rule.OutputTemplate))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.SourcePath,
+                "Device.Measure[@Type='NT530P']/Tono/HeaderLine",
+                StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.SourcePath,
+                "Device.Measure[@Type='NT530P']/Pachy/HeaderLine",
+                StringComparison.Ordinal));
     }
 
     private static bool ContainsLegacyNt530PPath(string? value)

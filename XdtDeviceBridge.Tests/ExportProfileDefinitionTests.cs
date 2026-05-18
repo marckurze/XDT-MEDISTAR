@@ -212,7 +212,7 @@ public sealed class ExportProfileDefinitionTests
         Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
         Assert.Equal("device-nidek-nt530p-default", profile.SourceDeviceProfileId);
         Assert.Equal("Windows-1252", profile.OutputEncoding);
-        Assert.Equal(8, profile.Rules.Count);
+        Assert.Equal(16, profile.Rules.Count);
     }
 
     [Fact]
@@ -250,15 +250,20 @@ public sealed class ExportProfileDefinitionTests
     public void CreateMedistarNidekNt530PDefault_ShouldContainPachyAndTonoResultRulesWithout6228()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault();
-        var pachyRule = Assert.Single(profile.Rules, rule => rule.TargetFieldCode == "6220");
-        var tonoRule = Assert.Single(profile.Rules, rule => rule.TargetFieldCode == "6205");
+        var pachyRules = profile.Rules.Where(rule => rule.TargetFieldCode == "6220").ToList();
+        var tonoRules = profile.Rules.Where(rule => rule.TargetFieldCode == "6205").ToList();
 
-        Assert.Equal(ExportRuleType.Template, pachyRule.RuleType);
-        Assert.Equal("Device.Measure[@Type='NT530P']/Pachy/MedistarLine", pachyRule.SourcePath);
-        Assert.Equal("{value}", pachyRule.OutputTemplate);
-        Assert.Equal(ExportRuleType.Template, tonoRule.RuleType);
-        Assert.Equal("Device.Measure[@Type='NT530P']/Tono/MedistarLine", tonoRule.SourcePath);
-        Assert.Equal("{value}", tonoRule.OutputTemplate);
+        Assert.Equal(2, pachyRules.Count);
+        Assert.Equal(8, tonoRules.Count);
+        Assert.All(pachyRules, rule => Assert.Equal(ExportRuleType.Template, rule.RuleType));
+        Assert.All(tonoRules, rule => Assert.Equal(ExportRuleType.Template, rule.RuleType));
+        Assert.Contains(pachyRules, rule => rule.SourcePath == "Device.Measure[@Type='NT530P']/Pachy/HeaderLine");
+        Assert.Contains(pachyRules, rule => rule.SourcePath == "Device.Measure[@Type='NT530P']/Pachy/MedistarLine");
+        Assert.Contains(tonoRules, rule => rule.SourcePath == "Device.Measure[@Type='NT530P']/Tono/HeaderLine");
+        Assert.Contains(tonoRules, rule => rule.SourcePath == "Device.Measure[@Type='NT530P']/Tono/PachyRightLine");
+        Assert.Contains(tonoRules, rule => rule.SourcePath == "Device.Measure[@Type='NT530P']/Tono/PachyLeftLine");
+        Assert.Contains(tonoRules, rule => rule.SourcePath == "Device.Measure[@Type='NT530P']/Tono/TonoListLine");
+        Assert.All(pachyRules.Concat(tonoRules), rule => Assert.Equal("{value}", rule.OutputTemplate));
         Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228");
     }
 

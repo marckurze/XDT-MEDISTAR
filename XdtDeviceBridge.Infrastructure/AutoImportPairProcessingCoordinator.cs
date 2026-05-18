@@ -377,15 +377,15 @@ public sealed class AutoImportPairProcessingCoordinator
             return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => status);
         }
 
-        if (packageDecision.CanProcessAttachment && packageDecision.SelectedCandidate is not null)
+        if (packageDecision.CanProcessAttachment && packageDecision.SelectedCandidates.Count > 0)
         {
-            var selectedCandidate = packageDecision.SelectedCandidate;
+            var selectedCandidates = packageDecision.SelectedCandidates;
             return new AttachmentGateDecision(
                 DeferredResult: null,
-                AttachmentPreparation: patient => PrepareSelectedAttachment(
+                AttachmentPreparation: patient => PrepareSelectedAttachments(
                     interfaceProfile,
                     patient,
-                    selectedCandidate,
+                    selectedCandidates,
                     timestamp));
         }
 
@@ -457,42 +457,65 @@ public sealed class AutoImportPairProcessingCoordinator
             AttachmentStatus: attachmentStatus);
     }
 
-    private AttachmentProcessingStatus PrepareSelectedAttachment(
+    private AttachmentProcessingStatus PrepareSelectedAttachments(
         InterfaceProfileDefinition interfaceProfile,
         PatientData patient,
-        AttachmentImportFileCandidate selectedCandidate,
+        IReadOnlyList<AttachmentImportFileCandidate> selectedCandidates,
         DateTime timestamp)
     {
-        var preparationResult = _attachmentPreparationService.Prepare(new AttachmentExternalLinkPreparationRequest(
-            FolderOptions: interfaceProfile.FolderOptions,
-            SourceAttachmentPath: selectedCandidate.FullPath,
-            Patient: patient,
-            ProcessingTimestamp: timestamp,
-            IsSourceStable: selectedCandidate.IsStable));
-        if (!preparationResult.Success)
+        var successfulResults = new List<AttachmentExternalLinkPreparationResult>();
+        var failedMessages = new List<string>();
+
+        foreach (var selectedCandidate in selectedCandidates
+            .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(candidate => candidate.FullPath, StringComparer.OrdinalIgnoreCase))
+        {
+            var preparationResult = _attachmentPreparationService.Prepare(new AttachmentExternalLinkPreparationRequest(
+                FolderOptions: interfaceProfile.FolderOptions,
+                SourceAttachmentPath: selectedCandidate.FullPath,
+                Patient: patient,
+                ProcessingTimestamp: timestamp,
+                IsSourceStable: selectedCandidate.IsStable));
+            if (preparationResult.Success)
+            {
+                successfulResults.Add(preparationResult);
+                continue;
+            }
+
+            failedMessages.Add($"{selectedCandidate.FileName}: {preparationResult.ErrorMessage}");
+        }
+
+        if (successfulResults.Count == 0)
         {
             return new AttachmentProcessingStatus(
                 WasAttempted: true,
                 WasSkipped: false,
                 Success: false,
                 Reason: AttachmentProcessingStatusReason.PreparationFailed,
-                Message: $"XDT-Anhang Vorbereitung fehlgeschlagen: {preparationResult.ErrorMessage}",
-                SourcePath: selectedCandidate.FullPath,
-                TargetPath: preparationResult.TargetPath,
-                TargetFileName: preparationResult.TargetFileName,
+                Message: $"XDT-Anhang Vorbereitung fehlgeschlagen: {string.Join(" ", failedMessages)}",
+                SourcePath: string.Join("; ", selectedCandidates.Select(candidate => candidate.FullPath)),
+                TargetPath: null,
+                TargetFileName: null,
                 PreparedFields: Array.Empty<ExportFieldRecord>());
         }
+
+        var fields = successfulResults.SelectMany(result => result.ExportFields).ToList();
+        var message = failedMessages.Count == 0
+            ? successfulResults.Count == 1
+                ? $"XDT-Anhang vorbereitet: {successfulResults[0].TargetPath}"
+                : $"XDT-Anhänge vorbereitet: {successfulResults.Count} Datei(en)."
+            : $"XDT-Anhänge teilweise vorbereitet: {successfulResults.Count} Datei(en), {failedMessages.Count} fehlgeschlagen.";
 
         return new AttachmentProcessingStatus(
             WasAttempted: true,
             WasSkipped: false,
             Success: true,
             Reason: AttachmentProcessingStatusReason.PreparationSucceeded,
-            Message: $"XDT-Anhang vorbereitet: {preparationResult.TargetPath}",
-            SourcePath: selectedCandidate.FullPath,
-            TargetPath: preparationResult.TargetPath,
-            TargetFileName: preparationResult.TargetFileName,
-            PreparedFields: preparationResult.ExportFields);
+            Message: message,
+            SourcePath: string.Join("; ", successfulResults.Select(result => result.SourcePath)),
+            TargetPath: string.Join("; ", successfulResults.Select(result => result.TargetPath).Where(path => !string.IsNullOrWhiteSpace(path))),
+            TargetFileName: string.Join("; ", successfulResults.Select(result => result.TargetFileName).Where(fileName => !string.IsNullOrWhiteSpace(fileName))),
+            PreparedFields: fields);
     }
 
     private AttachmentProcessingStatus PrepareAttachmentIfAllowed(
@@ -517,7 +540,7 @@ public sealed class AutoImportPairProcessingCoordinator
 
         var scanResult = _attachmentScannerService.Scan(interfaceProfile.FolderOptions);
         var selectionResult = _attachmentCandidateSelectionService.SelectCandidate(scanResult);
-        if (!selectionResult.CanProcessAutomatically || selectionResult.SelectedCandidate is null)
+        if (!selectionResult.CanProcessAutomatically || selectionResult.SelectedCandidates.Count == 0)
         {
             return selectionResult.Reason switch
             {
@@ -532,48 +555,17 @@ public sealed class AutoImportPairProcessingCoordinator
                     "XDT-Anhang noch nicht stabil / wird später erneut geprüft."),
                 AttachmentAutoCandidateSelectionReason.MultipleSupportedAttachments => SkippedStatus(
                     AttachmentProcessingStatusReason.MultipleSupportedAttachments,
-                    "XDT-Anhang übersprungen: mehrere unterstützte Anhänge gefunden, keine eindeutige Zuordnung."),
+                    "XDT-Anhang wartet: mehrere unterstützte Anhänge gefunden, aber noch nicht alle stabil."),
                 AttachmentAutoCandidateSelectionReason.MultipleStableAttachments => SkippedStatus(
                     AttachmentProcessingStatusReason.MultipleStableAttachments,
-                    "XDT-Anhang übersprungen: mehrere stabile unterstützte Anhänge gefunden, keine eindeutige Zuordnung."),
+                    "XDT-Anhang konnte trotz stabiler Mehrfachauswahl nicht vorbereitet werden."),
                 _ => SkippedStatus(
                     AttachmentProcessingStatusReason.ScanError,
                     $"XDT-Anhang übersprungen: {selectionResult.ErrorMessage ?? "keine eindeutige Auswahl möglich."}")
             };
         }
 
-        var request = new AttachmentExternalLinkPreparationRequest(
-            FolderOptions: interfaceProfile.FolderOptions,
-            SourceAttachmentPath: selectionResult.SelectedCandidate.FullPath,
-            Patient: patient!,
-            ProcessingTimestamp: timestamp,
-            IsSourceStable: selectionResult.SelectedCandidate.IsStable);
-
-        var preparationResult = _attachmentPreparationService.Prepare(request);
-        if (!preparationResult.Success)
-        {
-            return new AttachmentProcessingStatus(
-                WasAttempted: true,
-                WasSkipped: false,
-                Success: false,
-                Reason: AttachmentProcessingStatusReason.PreparationFailed,
-                Message: $"XDT-Anhang Vorbereitung fehlgeschlagen: {preparationResult.ErrorMessage}",
-                SourcePath: selectionResult.SelectedCandidate.FullPath,
-                TargetPath: preparationResult.TargetPath,
-                TargetFileName: preparationResult.TargetFileName,
-                PreparedFields: Array.Empty<ExportFieldRecord>());
-        }
-
-        return new AttachmentProcessingStatus(
-            WasAttempted: true,
-            WasSkipped: false,
-            Success: true,
-            Reason: AttachmentProcessingStatusReason.PreparationSucceeded,
-            Message: $"XDT-Anhang vorbereitet: {preparationResult.TargetPath}",
-            SourcePath: selectionResult.SelectedCandidate.FullPath,
-            TargetPath: preparationResult.TargetPath,
-            TargetFileName: preparationResult.TargetFileName,
-            PreparedFields: preparationResult.ExportFields);
+        return PrepareSelectedAttachments(interfaceProfile, patient!, selectionResult.SelectedCandidates, timestamp);
     }
 
     private static AttachmentProcessingStatus SkippedStatus(

@@ -251,8 +251,17 @@ public sealed class DeviceProfileDefinitionTests
         AssertRequiredMeasurement(profile, "nt530p-l-pachy-average", "L/PACHY/PACHYAverage/Thickness");
         AssertRequiredMeasurement(profile, "nt530p-measurement-date", "Date");
         AssertRequiredMeasurement(profile, "nt530p-measurement-time", "Time");
+        AssertRequiredMeasurement(profile, "nt530p-pachy-header-line", "Measure[@Type='NT530P']/Pachy/HeaderLine");
         AssertRequiredMeasurement(profile, "nt530p-pachy-medistar-line", "Measure[@Type='NT530P']/Pachy/MedistarLine");
-        AssertRequiredMeasurement(profile, "nt530p-tono-medistar-line", "Measure[@Type='NT530P']/Tono/MedistarLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-header-line", "Measure[@Type='NT530P']/Tono/HeaderLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-pachy-right-line", "Measure[@Type='NT530P']/Tono/PachyRightLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-pachy-left-line", "Measure[@Type='NT530P']/Tono/PachyLeftLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-measured-right-line", "Measure[@Type='NT530P']/Tono/MeasuredRightLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-corrected-right-line", "Measure[@Type='NT530P']/Tono/CorrectedRightLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-right-cct-left-measured-line", "Measure[@Type='NT530P']/Tono/RightCctLeftMeasuredLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-parameter-left-line", "Measure[@Type='NT530P']/Tono/ParameterLeftLine");
+        AssertRequiredMeasurement(profile, "nt530p-tono-list-line", "Measure[@Type='NT530P']/Tono/TonoListLine");
+        AssertOptionalMeasurement(profile, "nt530p-tono-medistar-line", "Measure[@Type='NT530P']/Tono/MedistarLine");
     }
 
     [Fact]

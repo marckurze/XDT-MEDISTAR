@@ -17,7 +17,7 @@ Dieses Dokument beschreibt den Templatepaket-Kandidaten fuer `MEDISTAR + NIDEK N
 - `Company=NIDEK` und `ModelName=NT-530P` kennzeichnen die Messdatei.
 - Die XML enthaelt `NT`-Werte fuer Tonometrie, `CorrectedIOP` und `PACHY`-Werte fuer Pachymetrie.
 - Optional koennen JPG-Aufnahmen im Ordner liegen und in `PACHYImage` referenziert werden.
-- JPG-/JPEG-Dateien werden nicht als Messwertdatei geparst; sie bleiben fuer eine spaetere XDT-Anhang-Verarbeitung relevant.
+- JPG-/JPEG-Dateien werden nicht als Messwertdatei geparst. Liegen sie als unterstuetzte XDT-Anhaenge im konfigurierten Anhang-Importordner, kann die generische Mehrfachanhang-Logik sie einzeln ueber `6302` bis `6305` uebergeben.
 
 ## MEDISTAR-Ausgabe
 
@@ -25,18 +25,20 @@ Das Exportprofil nutzt keine `6228`-Geraetewertzeilen fuer NT530P.
 
 | Feldkennung | Inhalt |
 | --- | --- |
-| `6220` | Pachymetrie, z. B. `RA: 0.596   // LA: 0.596` |
-| `6205` | Tonometrie mit Pachy-Einzelwerten, gemessenem/korrigiertem IOP, CCT, Einzelmessungen, Mittelwert, Uhrzeit und `NT-530P Messung` |
+| `6205` | Tonometrie mit Header `Tonometrie`, Pachy-Einzelwerten, gemessenem/korrigiertem IOP, CCT, Einzelmessungen, Mittelwert und Uhrzeit |
+| `6220` | Pachymetrie mit Header `Pachymetrie`, z. B. `RA: 0.596   // LA: 0.596` |
+
+Der fruehere Zusatz `/ EV:{000000003B} NT-530P Messung` wird nicht mehr erzeugt.
 
 Die Werte stammen aus der XML. Benutzerbeispiele dienen nur als Formatvorlage und werden nicht als Messwerte uebernommen.
 
 ## Testabdeckung
 
-`NidekNt530PProfileTests` prueft Erkennung, UTF-16-Fixture, Tonometrie-/Pachymetriewerte, JPG-Klassifizierung, berechnete `MedistarLine`-Werte, `6220`/`6205`-Export, fehlende `6228`-Ausgabe, BuiltIn-Profile und Reparatur alter persistierter BuiltIn-NT530P-Exportprofile. `MedistarNidekNt530PTemplatePackageTests` prueft den selektiven Templatepaket-Export und -Import temporaer im Testordner. Das Paket enthaelt nur MEDISTAR, NIDEK NT530P, das passende Exportprofil und das Schnittstellenprofil; ARK1S-, AR360-, LM7- und TOPCON-Profile sind nicht enthalten.
+`NidekNt530PProfileTests` prueft Erkennung, UTF-16-Fixture, Tonometrie-/Pachymetriewerte, JPG-Klassifizierung, berechnete mehrzeilige MEDISTAR-Werte, `6220`/`6205`-Export, fehlende `6228`-Ausgabe, BuiltIn-Profile und Reparatur alter persistierter BuiltIn-NT530P-Exportprofile. `MedistarNidekNt530PTemplatePackageTests` prueft den selektiven Templatepaket-Export und -Import temporaer im Testordner. Das Paket enthaelt nur MEDISTAR, NIDEK NT530P, das passende Exportprofil und das Schnittstellenprofil; ARK1S-, AR360-, LM7- und TOPCON-Profile sind nicht enthalten.
 
 ## Offen
 
 - Praktische MEDISTAR-Validierung mit echtem Importlauf.
-- Fachliche Abnahme der konkreten Tonometrie-/Pachymetrie-Darstellung in der Karteikarte.
-- XDT-Anhang-Link fuer NT530P-JPG-Aufnahmen separat validieren.
+- Fachliche Abnahme der korrigierten mehrzeiligen Tonometrie-/Pachymetrie-Darstellung in der Karteikarte.
+- XDT-Anhang-Link fuer NT530P-JPG-Aufnahmen praktisch validieren; die generische Mehrfachanhang-Mechanik ist testseitig abgesichert.
 - Offizielles ZIP-Artefakt erst nach Release-Regel und App-Abnahme ablegen.

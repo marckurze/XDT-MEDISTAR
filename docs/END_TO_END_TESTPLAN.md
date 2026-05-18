@@ -373,8 +373,8 @@ Allgemeine erwartete Ergebnisse über alle Testfälle:
 - Kein automatischer Start beim App-Start.
 - Keine automatische Verarbeitung ohne manuell gestartete Überwachung.
 - Keine unbekannten Dateien werden gelöscht, verschoben oder verändert.
-- Keine Mehrfachanhang-Heuristik anhand Dateiname oder Zeitstempel.
-- Mehrere unterstützte Anhänge werden nicht automatisch zugeordnet.
+- Keine Mehrfachanhang-Heuristik anhand XML-Verweisen oder Patientenbezug.
+- Mehrere stabile unterstützte Anhänge im Anhang-Importordner werden stabil sortiert und einzeln übergeben.
 - Exportordner wird nicht pauschal bereinigt.
 
 Ein einzelner Testfall gilt als bestanden, wenn:
@@ -429,12 +429,16 @@ Zu prüfen:
    - `6304` ist vorhanden, wenn eine Beschreibung gesetzt ist.
    - `6305` ist vorhanden.
    - `6305` entspricht dem erwarteten Zielpfad im XDT-Anhang Exportordner.
-4. Bei Tests ohne Anhang, deaktiviertem Anhang, optionalem Timeout, instabilem Anhang oder Mehrfachanhang prüfen:
+4. Bei Tests ohne Anhang, deaktiviertem Anhang, optionalem Timeout oder instabilem Anhang prüfen:
    - keine `6302`
    - keine `6303`
    - keine `6304`
    - keine `6305`
-5. XDT-Längenpräfixe plausibel prüfen:
+5. Bei Tests mit mehreren erfolgreichen Anhängen prüfen:
+   - je Anhang eigene `6302`/`6303`/optional `6304`/`6305`-Gruppe
+   - stabile Reihenfolge nach Dateiname
+   - keine Zusammenfassung und kein ZIP
+6. XDT-Längenpräfixe plausibel prüfen:
    - Jede Zeile beginnt mit einer Länge.
    - Danach folgt die Feldkennung.
    - Danach folgt der Feldwert.
@@ -468,8 +472,9 @@ Zu prüfen:
   - keine neue Anhang-Zieldatei.
 - Bei Pflicht-Timeout:
   - keine neue Anhang-Zieldatei.
-- Bei mehreren Anhängen:
-  - keine Datei wird automatisch verschoben.
+- Bei mehreren stabilen Anhängen:
+  - jede unterstützte Datei wird einzeln übertragen.
+  - vorhandene Zieldateien werden pro Datei kollisionssicher behandelt.
 - Bei instabiler Datei:
   - keine beschädigte oder halbe Datei wird exportiert.
 
@@ -483,7 +488,7 @@ Zu erwartende Statusmeldungen:
 - `Dateipaar vollständig, warte auf XDT-Anhang.`
 - `XDT-Anhang optional: Timeout erreicht, Export ohne Anhang.`
 - `XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.`
-- `Mehrere XDT-Anhänge gefunden: keine automatische Zuordnung.`
+- `XDT-Anhänge vorbereitet: <n> Datei(en).`
 - `XDT-Anhang ist noch nicht stabil; wird später erneut geprüft.`
 
 ## 14. Automatisierte Testabdeckung
@@ -497,7 +502,7 @@ Aktuell relevante automatisierte Tests:
 | Optionaler Anhang kommt innerhalb Timeout | `ProcessReadyPairs_OptionalAttachmentShouldWaitAndThenUseAttachmentWithinTimeout` |
 | Optionaler Anhang Timeout | `ProcessReadyPairs_AttachmentShouldSkipWhenScannerFindsNoSupportedCandidate` |
 | Pflicht-Anhang Timeout | `ProcessReadyPairs_RequiredAttachmentShouldBlockAfterTimeout` |
-| Mehrere Anhänge optional/Pflicht-Entscheidung | `AttachmentPackageDecisionServiceTests`, `ProcessReadyPairs_AttachmentShouldSkipMultipleSupportedCandidates` |
+| Mehrere Anhänge optional/Pflicht-Entscheidung | `AttachmentPackageDecisionServiceTests`, `ProcessReadyPairs_AttachmentShouldPrepareMultipleSupportedCandidates`, `ProcessReadyPairs_RequiredAttachmentShouldPrepareMultipleSupportedCandidates` |
 | Instabiler Anhang | `ProcessReadyPairs_AttachmentShouldSkipUnstableSupportedCandidate`, `AttachmentAutoCandidateSelectionServiceTests`, `AttachmentImportFolderScannerServiceTests` |
 | AIS wartet auf Gerätedatei | `AutoImportPackageStateServiceTests.Evaluate_ShouldWaitForDeviceFileWhenOnlyAisFileExists` |
 | Gerätedatei kommt später | `AutoImportPackageStateServiceTests.Evaluate_ShouldReturnReadyPairWhenDeviceFileArrivesWithinTimeout` |
@@ -510,7 +515,7 @@ Offene automatisierte Lücken:
 
 - Ein echter WPF-End-to-End-Test mit laufender UI-Überwachung wird nicht automatisiert ausgeführt.
 - Manuelle Dateisystemtests mit real langsam schreibenden Geräten bleiben Praxisabnahme.
-- Keine produktive Mehrfachanhang-Zuordnungsheuristik, daher keine Tests für automatische Auswahl aus mehreren Anhängen.
+- Keine geraetespezifische Mehrfachanhang-Zuordnungsheuristik anhand XML-Verweisen wie `PACHYImage`; die generische Auswahl mehrerer stabiler unterstuetzter Dateien ist testseitig abgedeckt.
 
 Ergänzend ist der Templatepaket-Importfluss E2E-nah automatisiert abgesichert. Die Tests prüfen Export/Import, Validierung, Konfliktanalyse, Importplan, Benutzerwahl, Dry-Run, UserDefined-Übernahme, Dependency-Remapping, BuiltIn-Schutz und deaktivierte importierte Schnittstellenprofile. Eine manuelle Importprüfung kann später in einen eigenen Abnahmeplan aufgenommen werden.
 

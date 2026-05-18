@@ -51,6 +51,7 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
         Assert.True(result.Success);
         Assert.True(result.CanProcessAutomatically);
         Assert.Same(candidate, result.SelectedCandidate);
+        Assert.Single(result.SelectedCandidates);
         Assert.Single(result.SupportedCandidates);
         Assert.Empty(result.UnsupportedCandidates);
         Assert.Equal(AttachmentAutoCandidateSelectionReason.SingleSupportedAttachment, result.Reason);
@@ -73,24 +74,27 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
     }
 
     [Fact]
-    public void SelectCandidate_ShouldBlockWhenMultipleSupportedCandidatesExist()
+    public void SelectCandidate_ShouldSelectMultipleStableSupportedCandidates()
     {
+        var image = CreateCandidate("image.jpg", isSupported: true);
+        var report = CreateCandidate("report.pdf", isSupported: true);
         var scanResult = CreateScanResult(
             success: true,
             candidates: new[]
             {
-                CreateCandidate("report.pdf", isSupported: true),
-                CreateCandidate("image.jpg", isSupported: true)
+                report,
+                image
             });
 
         var result = _service.SelectCandidate(scanResult);
 
         Assert.True(result.Success);
-        Assert.False(result.CanProcessAutomatically);
-        Assert.Null(result.SelectedCandidate);
+        Assert.True(result.CanProcessAutomatically);
+        Assert.Same(image, result.SelectedCandidate);
+        Assert.Equal(new[] { "image.jpg", "report.pdf" }, result.SelectedCandidates.Select(candidate => candidate.FileName));
         Assert.Equal(2, result.SupportedCandidates.Count);
         Assert.Equal(AttachmentAutoCandidateSelectionReason.MultipleStableAttachments, result.Reason);
-        Assert.Contains("nicht eindeutig", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Null(result.ErrorMessage);
     }
 
     [Fact]
@@ -123,13 +127,14 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
 
         Assert.True(result.CanProcessAutomatically);
         Assert.Same(supported, result.SelectedCandidate);
+        Assert.Single(result.SelectedCandidates);
         Assert.Single(result.SupportedCandidates);
         Assert.Equal(2, result.UnsupportedCandidates.Count);
         Assert.Equal(AttachmentAutoCandidateSelectionReason.SingleSupportedAttachment, result.Reason);
     }
 
     [Fact]
-    public void SelectCandidate_ShouldBlockWhenMultipleSupportedCandidatesExistEvenWithUnsupportedFiles()
+    public void SelectCandidate_ShouldSelectMultipleStableSupportedCandidatesEvenWithUnsupportedFiles()
     {
         var scanResult = CreateScanResult(
             success: true,
@@ -142,27 +147,31 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
 
         var result = _service.SelectCandidate(scanResult);
 
-        Assert.False(result.CanProcessAutomatically);
-        Assert.Null(result.SelectedCandidate);
+        Assert.True(result.CanProcessAutomatically);
+        Assert.NotNull(result.SelectedCandidate);
+        Assert.Equal(new[] { "image.png", "report.pdf" }, result.SelectedCandidates.Select(candidate => candidate.FileName));
         Assert.Equal(2, result.SupportedCandidates.Count);
         Assert.Single(result.UnsupportedCandidates);
         Assert.Equal(AttachmentAutoCandidateSelectionReason.MultipleStableAttachments, result.Reason);
     }
 
     [Fact]
-    public void SelectCandidate_ShouldKeepSelectedCandidateNullWhenSelectionIsNotUnique()
+    public void SelectCandidate_ShouldWaitWhenMultipleSupportedCandidatesAreNotAllStable()
     {
         var scanResult = CreateScanResult(
             success: true,
             candidates: new[]
             {
                 CreateCandidate("a.pdf", isSupported: true),
-                CreateCandidate("b.pdf", isSupported: true)
+                CreateCandidate("b.pdf", isSupported: true, isStable: false)
             });
 
         var result = _service.SelectCandidate(scanResult);
 
         Assert.Null(result.SelectedCandidate);
+        Assert.Empty(result.SelectedCandidates);
+        Assert.False(result.CanProcessAutomatically);
+        Assert.Equal(AttachmentAutoCandidateSelectionReason.MultipleSupportedAttachments, result.Reason);
     }
 
     [Fact]
@@ -195,6 +204,7 @@ public sealed class AttachmentAutoCandidateSelectionServiceTests
         var result = _service.SelectCandidate(CreateScanResult(success: true, candidates: new[] { candidate }));
 
         Assert.True(result.CanProcessAutomatically);
+        Assert.Single(result.SelectedCandidates);
         Assert.True(File.Exists(filePath));
         Assert.Equal("unchanged", File.ReadAllText(filePath));
         Assert.Equal(lastWrite, File.GetLastWriteTimeUtc(filePath));

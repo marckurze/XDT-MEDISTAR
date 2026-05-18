@@ -271,6 +271,14 @@ public sealed class XmlDeviceParser
         {
             AddMeasurement(
                 measurements,
+                "Measure[@Type='NT530P']/Pachy/HeaderLine",
+                "NT530P MEDISTAR Pachymetrie-Überschrift",
+                "Pachymetrie",
+                null,
+                null,
+                "PACHY");
+            AddMeasurement(
+                measurements,
                 "Measure[@Type='NT530P']/Pachy/MedistarLine",
                 "NT530P MEDISTAR Pachymetrie-Zeile",
                 pachyLine,
@@ -279,14 +287,35 @@ public sealed class XmlDeviceParser
                 "PACHY");
         }
 
-        var tonoLine = BuildNt530PTonoMedistarLine(right, left, time);
-        if (!string.IsNullOrWhiteSpace(tonoLine))
+        var tonoLines = BuildNt530PTonoMedistarLines(right, left, time);
+        if (tonoLines.Count > 0)
         {
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='NT530P']/Tono/HeaderLine",
+                "NT530P MEDISTAR Tonometrie-Überschrift",
+                "Tonometrie",
+                null,
+                null,
+                "NT");
+
+            foreach (var line in tonoLines)
+            {
+                AddMeasurement(
+                    measurements,
+                    $"Measure[@Type='NT530P']/Tono/{line.Key}",
+                    line.DisplayName,
+                    line.Value,
+                    null,
+                    null,
+                    "NT");
+            }
+
             AddMeasurement(
                 measurements,
                 "Measure[@Type='NT530P']/Tono/MedistarLine",
                 "NT530P MEDISTAR Tonometrie-Zeile",
-                tonoLine,
+                string.Join(" ", tonoLines.Select(line => line.Value)),
                 null,
                 null,
                 "NT");
@@ -317,47 +346,76 @@ public sealed class XmlDeviceParser
         return parts.Count == 0 ? null : string.Join("   // ", parts);
     }
 
-    private static string? BuildNt530PTonoMedistarLine(XElement? right, XElement? left, string? time)
+    private static IReadOnlyList<Nt530PMedistarLine> BuildNt530PTonoMedistarLines(XElement? right, XElement? left, string? time)
     {
-        var parts = new List<string>();
+        var lines = new List<Nt530PMedistarLine>();
 
         var rightPachy = BuildNt530PPachyListSegment("PR", right);
         if (!string.IsNullOrWhiteSpace(rightPachy))
         {
-            parts.Add(rightPachy);
+            lines.Add(new Nt530PMedistarLine(
+                "PachyRightLine",
+                "NT530P MEDISTAR Tonometrie Pachymetrie rechts",
+                rightPachy));
         }
 
         var leftPachy = BuildNt530PPachyListSegment("PL", left);
         if (!string.IsNullOrWhiteSpace(leftPachy))
         {
-            parts.Add(leftPachy);
+            lines.Add(new Nt530PMedistarLine(
+                "PachyLeftLine",
+                "NT530P MEDISTAR Tonometrie Pachymetrie links",
+                leftPachy));
         }
 
-        var correctedParts = new List<string>();
-        AddNt530PCorrectedIopSegments(correctedParts, "PR", right);
-        AddNt530PCorrectedIopSegments(correctedParts, "PL", left);
-        if (correctedParts.Count > 0)
+        var rightCorrected = GetNt530PCorrectedIopParts(right);
+        if (!string.IsNullOrWhiteSpace(rightCorrected.Measured))
         {
-            parts.Add(string.Join(" Y  ", correctedParts));
+            lines.Add(new Nt530PMedistarLine(
+                "MeasuredRightLine",
+                "NT530P MEDISTAR Tonometrie Messung rechts",
+                $"PR: Gemessen = {FormatOneDecimal(rightCorrected.Measured)} mmHg;"));
+        }
+
+        var rightCorrectedAndParameters = BuildNt530PRightCorrectedAndParameterLine(rightCorrected);
+        if (!string.IsNullOrWhiteSpace(rightCorrectedAndParameters))
+        {
+            lines.Add(new Nt530PMedistarLine(
+                "CorrectedRightLine",
+                "NT530P MEDISTAR Tonometrie Korrektur rechts",
+                rightCorrectedAndParameters));
+        }
+
+        var leftCorrected = GetNt530PCorrectedIopParts(left);
+        var rightCctAndLeftMeasured = BuildNt530PRightCctAndLeftMeasuredLine(rightCorrected, leftCorrected);
+        if (!string.IsNullOrWhiteSpace(rightCctAndLeftMeasured))
+        {
+            lines.Add(new Nt530PMedistarLine(
+                "RightCctLeftMeasuredLine",
+                "NT530P MEDISTAR Tonometrie CCT rechts und Messung links",
+                rightCctAndLeftMeasured));
+        }
+
+        var leftParameters = BuildNt530PLeftParameterLine(leftCorrected);
+        if (!string.IsNullOrWhiteSpace(leftParameters))
+        {
+            lines.Add(new Nt530PMedistarLine(
+                "ParameterLeftLine",
+                "NT530P MEDISTAR Tonometrie Parameter links",
+                leftParameters));
         }
 
         var tonometryList = BuildNt530PTonometryListSegment(right, left);
-        if (!string.IsNullOrWhiteSpace(tonometryList))
+        var leftCctAndTonometry = BuildNt530PLeftCctAndTonometryLine(leftCorrected, tonometryList, time);
+        if (!string.IsNullOrWhiteSpace(leftCctAndTonometry))
         {
-            parts.Add($"P  {tonometryList}");
+            lines.Add(new Nt530PMedistarLine(
+                "TonoListLine",
+                "NT530P MEDISTAR Tonometrie Einzelwerte",
+                leftCctAndTonometry));
         }
 
-        var formattedTime = FormatNt530PTime(time);
-        if (!string.IsNullOrWhiteSpace(formattedTime))
-        {
-            parts.Add($"{formattedTime} / EV:{{000000003B}} NT-530P Messung");
-        }
-        else if (parts.Count > 0)
-        {
-            parts.Add("EV:{000000003B} NT-530P Messung");
-        }
-
-        return parts.Count == 0 ? null : string.Join(" ", parts);
+        return lines;
     }
 
     private static string? BuildNt530PPachyListSegment(string label, XElement? eyeElement)
@@ -385,39 +443,118 @@ public sealed class XmlDeviceParser
         return $"{label}: {string.Join(" ", new[] { valuePart, averagePart }.Where(part => !string.IsNullOrWhiteSpace(part)))} µm";
     }
 
-    private static void AddNt530PCorrectedIopSegments(List<string> parts, string label, XElement? eyeElement)
+    private static Nt530PCorrectedIopParts GetNt530PCorrectedIopParts(XElement? eyeElement)
     {
         var nt = eyeElement is null ? null : FindChild(eyeElement, "NT");
         var correctedIop = nt is null ? null : FindChild(nt, "CorrectedIOP");
         if (correctedIop is null)
         {
-            return;
+            return new Nt530PCorrectedIopParts(null, null, null, null, null);
         }
 
         var measured = GetChildValue(FindChild(correctedIop, "Measured") ?? new XElement("Measured"), "mmHg");
         var corrected = GetChildValue(FindChild(correctedIop, "Corrected") ?? new XElement("Corrected"), "mmHg");
-        if (!string.IsNullOrWhiteSpace(measured) || !string.IsNullOrWhiteSpace(corrected))
-        {
-            var measuredPart = string.IsNullOrWhiteSpace(measured) ? null : $"Gemessen = {FormatOneDecimal(measured)} mmHg";
-            var correctedPart = string.IsNullOrWhiteSpace(corrected) ? null : $"Korrigiert = {FormatOneDecimal(corrected)} mmHg";
-            parts.Add($"{label}: {string.Join("; ", new[] { measuredPart, correctedPart }.Where(part => !string.IsNullOrWhiteSpace(part)))}");
-        }
-
         var param1 = GetChildValue(correctedIop, "Param1");
         var param2 = GetChildValue(correctedIop, "Param2");
         var cct = GetChildValue(correctedIop, "CCT");
-        var parameterParts = new[]
+
+        return new Nt530PCorrectedIopParts(measured, corrected, param1, param2, cct);
+    }
+
+    private static string? BuildNt530PRightCorrectedAndParameterLine(Nt530PCorrectedIopParts right)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(right.Corrected))
+        {
+            parts.Add($"Korrigiert = {FormatOneDecimal(right.Corrected)} mmHg");
+        }
+
+        var parameters = BuildNt530PParameterParts(right, includeCct: false);
+        if (parameters.Count > 0)
+        {
+            parts.Add($"PR: {string.Join("; ", parameters)}");
+        }
+
+        return parts.Count == 0 ? null : string.Join(" Y  ", parts) + ";";
+    }
+
+    private static string? BuildNt530PRightCctAndLeftMeasuredLine(
+        Nt530PCorrectedIopParts right,
+        Nt530PCorrectedIopParts left)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(right.Cct))
+        {
+            parts.Add($"CCT = {right.Cct}");
+        }
+
+        var leftMeasurementParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(left.Measured))
+        {
+            leftMeasurementParts.Add($"Gemessen = {FormatOneDecimal(left.Measured)} mmHg");
+        }
+
+        if (!string.IsNullOrWhiteSpace(left.Corrected))
+        {
+            leftMeasurementParts.Add($"Korrigiert = {FormatOneDecimal(left.Corrected)} mmHg");
+        }
+
+        if (leftMeasurementParts.Count > 0)
+        {
+            parts.Add($"PL: {string.Join("; ", leftMeasurementParts)}");
+        }
+
+        if (parts.Count == 0)
+        {
+            return null;
+        }
+
+        var line = string.Join(" Y  ", parts);
+        return BuildNt530PParameterParts(left, includeCct: false).Count > 0 ? $"{line} Y" : line;
+    }
+
+    private static string? BuildNt530PLeftParameterLine(Nt530PCorrectedIopParts left)
+    {
+        var parameters = BuildNt530PParameterParts(left, includeCct: false);
+        return parameters.Count == 0 ? null : $"PL: {string.Join("; ", parameters)};";
+    }
+
+    private static string? BuildNt530PLeftCctAndTonometryLine(
+        Nt530PCorrectedIopParts left,
+        string? tonometryList,
+        string? time)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(left.Cct))
+        {
+            parts.Add($"CCT = {left.Cct}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(tonometryList))
+        {
+            parts.Add($"P  {tonometryList}");
+        }
+
+        var formattedTime = FormatNt530PTime(time);
+        if (!string.IsNullOrWhiteSpace(formattedTime))
+        {
+            parts.Add(formattedTime);
+        }
+
+        return parts.Count == 0 ? null : string.Join(" ", parts);
+    }
+
+    private static List<string> BuildNt530PParameterParts(Nt530PCorrectedIopParts parts, bool includeCct)
+    {
+        return new[]
             {
-                string.IsNullOrWhiteSpace(param1) ? null : $"Param1 = {param1}",
-                string.IsNullOrWhiteSpace(param2) ? null : $"Param2 = {param2}",
-                string.IsNullOrWhiteSpace(cct) ? null : $"CCT = {cct}"
+                string.IsNullOrWhiteSpace(parts.Param1) ? null : $"Param1 = {parts.Param1}",
+                string.IsNullOrWhiteSpace(parts.Param2) ? null : $"Param2 = {parts.Param2}",
+                !includeCct || string.IsNullOrWhiteSpace(parts.Cct) ? null : $"CCT = {parts.Cct}"
             }
             .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Select(part => part!)
             .ToList();
-        if (parameterParts.Count > 0)
-        {
-            parts.Add($"{label}: {string.Join("; ", parameterParts)}");
-        }
     }
 
     private static string? BuildNt530PTonometryListSegment(XElement? right, XElement? left)
@@ -721,4 +858,13 @@ public sealed class XmlDeviceParser
     {
         return GetAttribute(element, name)?.Value;
     }
+
+    private sealed record Nt530PMedistarLine(string Key, string DisplayName, string Value);
+
+    private sealed record Nt530PCorrectedIopParts(
+        string? Measured,
+        string? Corrected,
+        string? Param1,
+        string? Param2,
+        string? Cct);
 }

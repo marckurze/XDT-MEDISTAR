@@ -461,12 +461,14 @@ public sealed class AutoImportPairProcessingCoordinatorTests
 
 
     [Fact]
-    public void ProcessReadyPairs_AttachmentShouldSkipMultipleSupportedCandidates()
+    public void ProcessReadyPairs_AttachmentShouldPrepareMultipleSupportedCandidates()
     {
+        var first = CreateAttachmentCandidate("a-report.jpg", isSupported: true);
+        var second = CreateAttachmentCandidate("b-report.jpg", isSupported: true);
         var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
         {
-            CreateAttachmentCandidate("report-1.pdf", isSupported: true),
-            CreateAttachmentCandidate("report-2.pdf", isSupported: true)
+            second,
+            first
         }));
         var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
         var coordinator = CreateCoordinator(
@@ -487,22 +489,27 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         var processed = Assert.Single(result.Results);
         Assert.True(processed.Success);
         Assert.Equal(1, scanner.CallCount);
-        Assert.Equal(0, preparationService.CallCount);
-        Assert.Equal(AttachmentProcessingStatusReason.MultipleAttachmentsAmbiguous, processed.AttachmentStatus!.Reason);
-        Assert.Contains("Mehrere unterstützte XDT-Anhänge", processed.AttachmentStatus.Message);
-        Assert.DoesNotContain("6302", processed.ManualProcessingResult!.ExportContent);
-        Assert.DoesNotContain("6303", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6304", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6305", processed.ManualProcessingResult.ExportContent);
+        Assert.Equal(2, preparationService.CallCount);
+        Assert.Equal(new[] { first.FullPath, second.FullPath }, preparationService.Requests.Select(request => request.SourceAttachmentPath));
+        Assert.Equal(AttachmentProcessingStatusReason.PreparationSucceeded, processed.AttachmentStatus!.Reason);
+        Assert.Contains("2 Datei(en)", processed.AttachmentStatus.Message);
+        Assert.Equal(2, processed.AttachmentStatus.PreparedFields.Count(field => field.FieldCode == "6302"));
+        Assert.Equal(2, processed.AttachmentStatus.PreparedFields.Count(field => field.FieldCode == "6303"));
+        Assert.Equal(2, processed.AttachmentStatus.PreparedFields.Count(field => field.FieldCode == "6304"));
+        Assert.Equal(2, processed.AttachmentStatus.PreparedFields.Count(field => field.FieldCode == "6305"));
+        Assert.Contains(@"6305C:\Export\Attachments\a-report.jpg", processed.ManualProcessingResult!.ExportContent);
+        Assert.Contains(@"6305C:\Export\Attachments\b-report.jpg", processed.ManualProcessingResult.ExportContent);
     }
 
     [Fact]
-    public void ProcessReadyPairs_RequiredAttachmentShouldBlockMultipleSupportedCandidates()
+    public void ProcessReadyPairs_RequiredAttachmentShouldPrepareMultipleSupportedCandidates()
     {
+        var first = CreateAttachmentCandidate("report-1.pdf", isSupported: true);
+        var second = CreateAttachmentCandidate("report-2.jpg", isSupported: true);
         var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
         {
-            CreateAttachmentCandidate("report-1.pdf", isSupported: true),
-            CreateAttachmentCandidate("report-2.jpg", isSupported: true)
+            first,
+            second
         }));
         var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
         var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
@@ -519,14 +526,101 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             automaticProcessingEnabled: true,
             Timestamp);
 
-        var blocked = Assert.Single(result.Results);
-        Assert.False(blocked.WasProcessed);
-        Assert.True(blocked.WasSkipped);
-        Assert.Equal("Mehrere unterstützte XDT-Anhänge gefunden; keine eindeutige Zuordnung möglich.", blocked.Status);
+        var processed = Assert.Single(result.Results);
+        Assert.True(processed.WasProcessed);
+        Assert.False(processed.WasSkipped);
+        Assert.True(processed.Success);
         Assert.Equal(1, scanner.CallCount);
+        Assert.Equal(2, preparationService.CallCount);
+        Assert.Equal(1, processor.CallCount);
+        Assert.Equal(AttachmentProcessingStatusReason.PreparationSucceeded, processed.AttachmentStatus!.Reason);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentShouldCopyMultipleFilesWithCollisionSafeTargetNames()
+    {
+        var attachmentImportFolder = CreateTempFolder();
+        var attachmentExportFolder = CreateTempFolder();
+        var firstPath = Path.Combine(attachmentImportFolder, "a.jpg");
+        var secondPath = Path.Combine(attachmentImportFolder, "b.jpg");
+        File.WriteAllText(firstPath, "first");
+        File.WriteAllText(secondPath, "second");
+        var first = CreateAttachmentCandidate(firstPath, isSupported: true);
+        var second = CreateAttachmentCandidate(secondPath, isSupported: true);
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[] { second, first }));
+        var preparationService = new AttachmentExternalLinkPreparationService();
+        var coordinator = CreateCoordinator(
+            new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253")),
+            scanner,
+            preparationService);
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: attachmentImportFolder,
+            attachmentExportFolder: attachmentExportFolder) with
+        {
+            FolderOptions = CreateInterfaceProfile().FolderOptions with
+            {
+                IsAttachmentProcessingEnabled = true,
+                AttachmentImportFolder = attachmentImportFolder,
+                AttachmentExportFolder = attachmentExportFolder,
+                AttachmentFileNameTemplate = "Bild{ExtensionUpper}",
+                AttachmentTransferMode = AttachmentTransferMode.Copy,
+                AttachmentExternalLinkDescription = "NT530P Aufnahme"
+            },
+            IsActive = true
+        };
+
+        var result = coordinator.ProcessReadyPairs(
+            profile,
+            CreateExportProfile(),
+            new[] { CreatePair("patient.gdt", "device.xml") },
+            automaticProcessingEnabled: true,
+            Timestamp);
+
+        var processed = Assert.Single(result.Results);
+        Assert.True(processed.Success);
+        Assert.Equal(2, processed.AttachmentStatus!.PreparedFields.Count(field => field.FieldCode == "6305"));
+        Assert.True(File.Exists(Path.Combine(attachmentExportFolder, "Bild.JPG")));
+        Assert.True(File.Exists(Path.Combine(attachmentExportFolder, "Bild_001.JPG")));
+        Assert.True(File.Exists(firstPath));
+        Assert.True(File.Exists(secondPath));
+        Assert.Contains($"6305{Path.Combine(attachmentExportFolder, "Bild.JPG")}", processed.ManualProcessingResult!.ExportContent);
+        Assert.Contains($"6305{Path.Combine(attachmentExportFolder, "Bild_001.JPG")}", processed.ManualProcessingResult.ExportContent);
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult!.ExportRecords.Count(record => record.FieldCode == "6302"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6303"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6304"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6305"));
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentShouldWaitWhenOneOfMultipleCandidatesIsUnstable()
+    {
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate("report-1.pdf", isSupported: true),
+            CreateAttachmentCandidate("report-2.jpg", isSupported: true, isStable: false)
+        }));
+        var preparationService = new FakeAttachmentPreparationService(CreateAttachmentPreparationResult());
+        var processor = new FakeManualProcessor(CreateSuccessResult(patientNumber: "11253"));
+        var coordinator = CreateCoordinator(processor, scanner, preparationService);
+
+        var result = coordinator.ProcessReadyPairs(
+            CreateInterfaceProfile(
+                isAttachmentProcessingEnabled: true,
+                attachmentImportFolder: @"C:\Import\Attachments",
+                attachmentExportFolder: @"C:\Export\Attachments"),
+            CreateExportProfile(),
+            new[] { CreatePair("patient.gdt", "device.xml") },
+            automaticProcessingEnabled: true,
+            Timestamp);
+
+        var waiting = Assert.Single(result.Results);
+        Assert.False(waiting.WasProcessed);
+        Assert.True(waiting.WasSkipped);
+        Assert.Equal("Dateipaar vollständig, warte auf XDT-Anhang.", waiting.Status);
         Assert.Equal(0, preparationService.CallCount);
         Assert.Equal(0, processor.CallCount);
-        Assert.Equal(AttachmentProcessingStatusReason.MultipleAttachmentsAmbiguous, blocked.AttachmentStatus!.Reason);
+        Assert.Equal(AttachmentProcessingStatusReason.AttachmentWait, waiting.AttachmentStatus!.Reason);
     }
 
     [Fact]
@@ -1323,11 +1417,49 @@ public sealed class AutoImportPairProcessingCoordinatorTests
 
         public AttachmentExternalLinkPreparationRequest? LastRequest { get; private set; }
 
+        public IReadOnlyList<AttachmentExternalLinkPreparationRequest> Requests => _requests;
+
+        private readonly List<AttachmentExternalLinkPreparationRequest> _requests = new();
+
         public AttachmentExternalLinkPreparationResult Prepare(AttachmentExternalLinkPreparationRequest? request)
         {
             CallCount++;
             LastRequest = request;
-            return _result;
+            if (request is not null)
+            {
+                _requests.Add(request);
+            }
+
+            if (!_result.Success || request is null)
+            {
+                return _result;
+            }
+
+            var targetFolder = Path.GetDirectoryName(_result.TargetPath) ?? @"C:\Export\Attachments";
+            var targetPath = Path.Combine(targetFolder, Path.GetFileName(request.SourceAttachmentPath));
+            var extension = Path.GetExtension(targetPath).TrimStart('.').ToUpperInvariant();
+            var fields = new[]
+            {
+                new ExportFieldRecord("6302", "PDF-Befund", 1),
+                new ExportFieldRecord("6303", extension == "JPEG" ? "JPG" : extension, 2),
+                new ExportFieldRecord("6304", "Messprotokoll", 3),
+                new ExportFieldRecord("6305", targetPath, 4)
+            };
+
+            return _result with
+            {
+                SourcePath = request.SourceAttachmentPath,
+                TargetPath = targetPath,
+                TargetFileName = Path.GetFileName(targetPath),
+                ExternalAisLinkFieldSet = _result.ExternalAisLinkFieldSet is null
+                    ? null
+                    : _result.ExternalAisLinkFieldSet with
+                    {
+                        FileFormat = fields[1].Value ?? string.Empty,
+                        FullPath = targetPath
+                    },
+                ExportFields = fields
+            };
         }
     }
 

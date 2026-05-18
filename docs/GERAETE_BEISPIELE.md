@@ -466,8 +466,16 @@ P  R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg 14:51
 Die echte Repository-Fixture `NIDEK_NT530P.xml` erzeugt daraus testseitig:
 
 ```text
+6205 Tonometrie
+6205 PR: 596 [596] µm
+6205 PL: 591 600 [596] µm
+6205 PR: Gemessen = 18.0 mmHg;
+6205 Korrigiert = 16.2 mmHg Y  PR: Param1 = 550um; Param2 = 0.0400;
+6205 CCT = 596um Y  PL: Gemessen = 18.0 mmHg; Korrigiert = 16.2 mmHg Y
+6205 PL: Param1 = 550um; Param2 = 0.0400;
+6205 CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07
+6220 Pachymetrie
 6220 RA: 0.596   // LA: 0.596
-6205 PR: 596 [596] µm PL: 591 600 [596] µm PR: Gemessen = 18.0 mmHg; Korrigiert = 16.2 mmHg Y  PR: Param1 = 550um; Param2 = 0.0400; CCT = 596um Y  PL: Gemessen = 18.0 mmHg; Korrigiert = 16.2 mmHg Y  PL: Param1 = 550um; Param2 = 0.0400; CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07 / EV:{000000003B} NT-530P Messung
 ```
 
 Die Beispielwerte aus der Beschreibung bleiben Formatbeispiele. Messwerte fuer Tests und Export stammen aus der echten XML-Datei.
@@ -540,8 +548,17 @@ Erkannte SourcePaths für Messwerte:
 | Pachymetrie links, Einzelwert 1 | `L/PACHY/PACHYList[@No='1']/Thickness` | `591` | erkannt |
 | Pachymetrie links, Einzelwert 2 | `L/PACHY/PACHYList[@No='2']/Thickness` | `600` | erkannt |
 | Pachymetrie links, Mittelwert | `L/PACHY/PACHYAverage/Thickness` | `596` | erkannt |
+| MEDISTAR Pachymetrie Header | `Measure[@Type='NT530P']/Pachy/HeaderLine` | `Pachymetrie` | berechnet fuer `6220` |
 | MEDISTAR Pachymetrie | `Measure[@Type='NT530P']/Pachy/MedistarLine` | `RA: 0.596   // LA: 0.596` | berechnet fuer `6220` |
-| MEDISTAR Tonometrie | `Measure[@Type='NT530P']/Tono/MedistarLine` | siehe oben | berechnet fuer `6205` |
+| MEDISTAR Tonometrie Header | `Measure[@Type='NT530P']/Tono/HeaderLine` | `Tonometrie` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie rechts Pachy | `Measure[@Type='NT530P']/Tono/PachyRightLine` | `PR: 596 [596] µm` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie links Pachy | `Measure[@Type='NT530P']/Tono/PachyLeftLine` | `PL: 591 600 [596] µm` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie rechts Messung | `Measure[@Type='NT530P']/Tono/MeasuredRightLine` | `PR: Gemessen = 18.0 mmHg;` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie rechts Korrektur | `Measure[@Type='NT530P']/Tono/CorrectedRightLine` | `Korrigiert = 16.2 mmHg ...` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie CCT/links | `Measure[@Type='NT530P']/Tono/RightCctLeftMeasuredLine` | `CCT = 596um ...` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie links Parameter | `Measure[@Type='NT530P']/Tono/ParameterLeftLine` | `PL: Param1 = 550um ...` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie Liste | `Measure[@Type='NT530P']/Tono/TonoListLine` | `CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07` | berechnet fuer `6205` |
+| MEDISTAR Tonometrie kompakt | `Measure[@Type='NT530P']/Tono/MedistarLine` | zusammengefuehrte Tonometriezeile ohne EV-Zusatz | Rueckwaertskompatibler Mappingwert, Standardexport nutzt Einzelzeilen |
 | Messdatum | `Date` | `2026/05/18` | erkannt |
 | Messzeit | `Time` | `12:07:19` | erkannt |
 
@@ -572,13 +589,13 @@ Erkannte Bild-/JPG-Verweise:
 | Pachymetrie-Bild rechts | `R/PACHY/PACHYImage` | `NTP_              _20260518120719RP1.jpg` | erkannt; JPG wird nicht als Messwertdatei geparst |
 | Pachymetrie-Bild links | `L/PACHY/PACHYImage` | `NTP_              _20260518120719LP1.jpg` | erkannt; JPG wird nicht als Messwertdatei geparst |
 
-Die XML-Dateien verweisen direkt über den Textinhalt von `PACHYImage` auf JPG-Dateinamen. Der Dateiname enthält denselben Messzeitstempel wie die XML-Datei sowie eine Augen-/Bildkennung wie `RP1` oder `LP1`. Daraus folgt für die spätere Attachment-Logik:
+Die XML-Dateien verweisen direkt über den Textinhalt von `PACHYImage` auf JPG-Dateinamen. Der Dateiname enthält denselben Messzeitstempel wie die XML-Datei sowie eine Augen-/Bildkennung wie `RP1` oder `LP1`. Die generische XDT-Anhanglogik kann mehrere stabile unterstuetzte Dateien aus dem konfigurierten Anhang-Importordner einzeln per `6302` bis `6305` uebergeben. Offen bleibt eine NT530P-spezifische fachliche Pruefung, ob und wann `PACHYImage`-Verweise als Pflichtanhaenge gelten sollen:
 
 - XML-Verweise auf JPG-Dateien müssen gegen den konfigurierten Bildordner geprüft werden.
 - Fehlende JPG-Dateien müssen protokolliert werden.
 - Ob fehlende Bilder die Verarbeitung blockieren, muss pro Profil konfigurierbar sein.
 - `PACHYImage` sollte als Attachment-SourcePath in einem späteren `AttachmentDefinition`- oder `DocumentExportRule`-Modell abbildbar sein.
-- Die genaue MEDISTAR-Übergabe als externer AIS-Link über XDT-Felder `6302`, `6303`, `6304` und `6305` bleibt weiterhin zu validieren.
+- Die genaue praktische MEDISTAR-Übergabe von NT530P-JPGs als externe AIS-Links bleibt weiterhin zu validieren.
 
 ## 6. TOPCON CL300
 

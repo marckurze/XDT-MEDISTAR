@@ -47,12 +47,14 @@ public sealed class AttachmentPackageDecisionService
 
         var supportedCandidates = scanResult.Candidates
             .Where(candidate => candidate.IsSupported)
+            .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(candidate => candidate.FullPath, StringComparer.OrdinalIgnoreCase)
             .ToList();
         var stableSupportedCandidates = supportedCandidates
             .Where(candidate => candidate.IsStable)
             .ToList();
 
-        if (supportedCandidates.Count == 1 && stableSupportedCandidates.Count == 1)
+        if (supportedCandidates.Count > 0 && stableSupportedCandidates.Count == supportedCandidates.Count)
         {
             return new AttachmentPackageDecisionResult(
                 CanProcessAttachment: true,
@@ -60,11 +62,16 @@ public sealed class AttachmentPackageDecisionService
                 ShouldWait: false,
                 ShouldBlock: false,
                 SelectedCandidate: stableSupportedCandidates[0],
-                Reason: AttachmentPackageDecisionReason.SingleAttachmentReady,
-                Message: "Genau ein stabiler unterstützter XDT-Anhang ist bereit.");
+                SelectedCandidates: stableSupportedCandidates,
+                Reason: stableSupportedCandidates.Count == 1
+                    ? AttachmentPackageDecisionReason.SingleAttachmentReady
+                    : AttachmentPackageDecisionReason.MultipleAttachmentsReady,
+                Message: stableSupportedCandidates.Count == 1
+                    ? "Genau ein stabiler unterstützter XDT-Anhang ist bereit."
+                    : $"{stableSupportedCandidates.Count} stabile unterstützte XDT-Anhänge sind bereit.");
         }
 
-        if (supportedCandidates.Count == 1 && stableSupportedCandidates.Count == 0)
+        if (supportedCandidates.Count > 0 && stableSupportedCandidates.Count < supportedCandidates.Count)
         {
             if (!hasWaitTimedOut)
             {
@@ -74,8 +81,11 @@ public sealed class AttachmentPackageDecisionService
                     ShouldWait: true,
                     ShouldBlock: false,
                     SelectedCandidate: null,
+                    SelectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                     Reason: AttachmentPackageDecisionReason.AttachmentNotStableWait,
-                    Message: "XDT-Anhang ist noch nicht stabil; wird später erneut geprüft.");
+                    Message: supportedCandidates.Count == 1
+                        ? "XDT-Anhang ist noch nicht stabil; wird später erneut geprüft."
+                        : "Mindestens ein XDT-Anhang ist noch nicht stabil; wird später erneut geprüft.");
             }
 
             if (interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required)
@@ -90,20 +100,6 @@ public sealed class AttachmentPackageDecisionService
                 "Optionaler XDT-Anhang wurde innerhalb der Wartezeit nicht stabil; Messwerte werden ohne Anhang fortgesetzt.");
         }
 
-        if (supportedCandidates.Count > 1)
-        {
-            if (interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required)
-            {
-                return Block(
-                    AttachmentPackageDecisionReason.MultipleAttachmentsAmbiguous,
-                    "Mehrere unterstützte XDT-Anhänge gefunden; keine eindeutige Zuordnung möglich.");
-            }
-
-            return ContinueWithoutAttachment(
-                AttachmentPackageDecisionReason.MultipleAttachmentsAmbiguous,
-                "Mehrere unterstützte XDT-Anhänge gefunden; Messwerte werden ohne Anhang fortgesetzt.");
-        }
-
         if (!hasWaitTimedOut)
         {
             return new AttachmentPackageDecisionResult(
@@ -112,6 +108,7 @@ public sealed class AttachmentPackageDecisionService
                 ShouldWait: true,
                 ShouldBlock: false,
                 SelectedCandidate: null,
+                SelectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                 Reason: interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required
                     ? AttachmentPackageDecisionReason.AttachmentRequiredWait
                     : AttachmentPackageDecisionReason.AttachmentOptionalWait,
@@ -140,6 +137,7 @@ public sealed class AttachmentPackageDecisionService
             ShouldWait: false,
             ShouldBlock: false,
             SelectedCandidate: null,
+            SelectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
             Reason: reason,
             Message: message);
     }
@@ -154,6 +152,7 @@ public sealed class AttachmentPackageDecisionService
             ShouldWait: false,
             ShouldBlock: true,
             SelectedCandidate: null,
+            SelectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
             Reason: reason,
             Message: message);
     }

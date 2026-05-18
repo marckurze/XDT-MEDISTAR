@@ -6,5 +6,6 @@ public sealed record AttachmentPackageDecisionResult(
     bool ShouldWait,
     bool ShouldBlock,
     AttachmentImportFileCandidate? SelectedCandidate,
+    IReadOnlyList<AttachmentImportFileCandidate> SelectedCandidates,
     AttachmentPackageDecisionReason Reason,
     string Message);

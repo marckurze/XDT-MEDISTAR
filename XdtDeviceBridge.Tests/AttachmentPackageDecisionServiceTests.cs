@@ -87,6 +87,7 @@ public sealed class AttachmentPackageDecisionServiceTests
         Assert.False(result.ShouldWait);
         Assert.False(result.ShouldBlock);
         Assert.Equal(candidate, result.SelectedCandidate);
+        Assert.Single(result.SelectedCandidates);
         Assert.Equal(AttachmentPackageDecisionReason.SingleAttachmentReady, result.Reason);
     }
 
@@ -131,7 +132,7 @@ public sealed class AttachmentPackageDecisionServiceTests
     }
 
     [Fact]
-    public void Decide_ShouldContinueWithoutAttachmentForOptionalMultipleSupportedAttachments()
+    public void Decide_ShouldProcessOptionalMultipleStableSupportedAttachments()
     {
         var result = Decide(
             CreateProfile(requirementMode: AttachmentRequirementMode.Optional),
@@ -141,13 +142,15 @@ public sealed class AttachmentPackageDecisionServiceTests
                 CreateCandidate("report-2.pdf", isSupported: true)),
             hasWaitTimedOut: false);
 
-        Assert.True(result.CanContinueWithoutAttachment);
-        Assert.False(result.CanProcessAttachment);
-        Assert.Equal(AttachmentPackageDecisionReason.MultipleAttachmentsAmbiguous, result.Reason);
+        Assert.True(result.CanProcessAttachment);
+        Assert.False(result.CanContinueWithoutAttachment);
+        Assert.Equal(2, result.SelectedCandidates.Count);
+        Assert.Equal(new[] { "report-1.pdf", "report-2.pdf" }, result.SelectedCandidates.Select(candidate => candidate.FileName));
+        Assert.Equal(AttachmentPackageDecisionReason.MultipleAttachmentsReady, result.Reason);
     }
 
     [Fact]
-    public void Decide_ShouldBlockForRequiredMultipleSupportedAttachments()
+    public void Decide_ShouldProcessRequiredMultipleStableSupportedAttachments()
     {
         var result = Decide(
             CreateProfile(requirementMode: AttachmentRequirementMode.Required),
@@ -157,8 +160,41 @@ public sealed class AttachmentPackageDecisionServiceTests
                 CreateCandidate("report-2.pdf", isSupported: true)),
             hasWaitTimedOut: false);
 
+        Assert.True(result.CanProcessAttachment);
+        Assert.False(result.ShouldBlock);
+        Assert.Equal(2, result.SelectedCandidates.Count);
+        Assert.Equal(AttachmentPackageDecisionReason.MultipleAttachmentsReady, result.Reason);
+    }
+
+    [Fact]
+    public void Decide_ShouldWaitWhenMultipleSupportedAttachmentsAreNotAllStableBeforeTimeout()
+    {
+        var result = Decide(
+            CreateProfile(requirementMode: AttachmentRequirementMode.Required),
+            CreatePatient(),
+            CreateScanResult(
+                CreateCandidate("report-1.pdf", isSupported: true, isStable: true),
+                CreateCandidate("report-2.jpg", isSupported: true, isStable: false)),
+            hasWaitTimedOut: false);
+
+        Assert.True(result.ShouldWait);
+        Assert.False(result.CanProcessAttachment);
+        Assert.Equal(AttachmentPackageDecisionReason.AttachmentNotStableWait, result.Reason);
+    }
+
+    [Fact]
+    public void Decide_ShouldBlockRequiredWhenMultipleSupportedAttachmentsAreNotAllStableAfterTimeout()
+    {
+        var result = Decide(
+            CreateProfile(requirementMode: AttachmentRequirementMode.Required),
+            CreatePatient(),
+            CreateScanResult(
+                CreateCandidate("report-1.pdf", isSupported: true, isStable: true),
+                CreateCandidate("report-2.jpg", isSupported: true, isStable: false)),
+            hasWaitTimedOut: true);
+
         Assert.True(result.ShouldBlock);
-        Assert.Equal(AttachmentPackageDecisionReason.MultipleAttachmentsAmbiguous, result.Reason);
+        Assert.Equal(AttachmentPackageDecisionReason.AttachmentRequiredTimeoutBlock, result.Reason);
     }
 
     [Fact]
@@ -197,6 +233,7 @@ public sealed class AttachmentPackageDecisionServiceTests
         Assert.True(result.CanContinueWithoutAttachment);
         Assert.False(result.CanProcessAttachment);
         Assert.Null(result.SelectedCandidate);
+        Assert.Empty(result.SelectedCandidates);
         Assert.Equal(AttachmentPackageDecisionReason.AttachmentOptionalTimeoutContinueWithoutAttachment, result.Reason);
     }
 

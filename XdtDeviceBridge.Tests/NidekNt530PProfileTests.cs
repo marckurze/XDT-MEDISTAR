@@ -86,6 +86,15 @@ public sealed class NidekNt530PProfileTests
     {
         var parseResult = _parser.ParseFile(GetNt530PFixturePath());
 
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/HeaderLine", "Tonometrie");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/PachyRightLine", "PR: 596 [596] µm");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/PachyLeftLine", "PL: 591 600 [596] µm");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/MeasuredRightLine", "PR: Gemessen = 18.0 mmHg;");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/CorrectedRightLine", "Korrigiert = 16.2 mmHg Y  PR: Param1 = 550um; Param2 = 0.0400;");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/RightCctLeftMeasuredLine", "CCT = 596um Y  PL: Gemessen = 18.0 mmHg; Korrigiert = 16.2 mmHg Y");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/ParameterLeftLine", "PL: Param1 = 550um; Param2 = 0.0400;");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Tono/TonoListLine", "CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07");
+        AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Pachy/HeaderLine", "Pachymetrie");
         AssertMeasurement(parseResult, "Measure[@Type='NT530P']/Pachy/MedistarLine", "RA: 0.596   // LA: 0.596");
         var tonoLine = Assert.Single(
             parseResult.Measurements,
@@ -96,7 +105,8 @@ public sealed class NidekNt530PProfileTests
         Assert.Contains("PL: Gemessen = 18.0 mmHg; Korrigiert = 16.2 mmHg", tonoLine, StringComparison.Ordinal);
         Assert.Contains("R = 16 20 [18.0] // L = 18 [18.0] mmHg", tonoLine, StringComparison.Ordinal);
         Assert.Contains("12:07", tonoLine, StringComparison.Ordinal);
-        Assert.Contains("NT-530P Messung", tonoLine, StringComparison.Ordinal);
+        Assert.DoesNotContain("/ EV:{000000003B}", tonoLine, StringComparison.Ordinal);
+        Assert.DoesNotContain("NT-530P Messung", tonoLine, StringComparison.Ordinal);
         Assert.DoesNotContain("Gemessen =  mmHg", tonoLine, StringComparison.Ordinal);
     }
 
@@ -106,12 +116,16 @@ public sealed class NidekNt530PProfileTests
         var result = MapWithNt530PExport();
 
         Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
-        var pachyRecord = Assert.Single(result.Records, record => record.FieldCode == "6220");
-        var tonoRecord = Assert.Single(result.Records, record => record.FieldCode == "6205");
-        Assert.Equal("RA: 0.596   // LA: 0.596", pachyRecord.Value);
-        Assert.Contains("PR: 596 [596] µm", tonoRecord.Value, StringComparison.Ordinal);
-        Assert.Contains("PL: 591 600 [596] µm", tonoRecord.Value, StringComparison.Ordinal);
-        Assert.Contains("R = 16 20 [18.0] // L = 18 [18.0] mmHg", tonoRecord.Value, StringComparison.Ordinal);
+        var tonoRecords = result.Records.Where(record => record.FieldCode == "6205").ToList();
+        var pachyRecords = result.Records.Where(record => record.FieldCode == "6220").ToList();
+        Assert.Equal(8, tonoRecords.Count);
+        Assert.Equal(2, pachyRecords.Count);
+        Assert.Contains(tonoRecords, record => record.Value == "Tonometrie");
+        Assert.Contains(tonoRecords, record => record.Value == "PR: 596 [596] µm");
+        Assert.Contains(tonoRecords, record => record.Value == "PL: 591 600 [596] µm");
+        Assert.Contains(tonoRecords, record => record.Value == "CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07");
+        Assert.Contains(pachyRecords, record => record.Value == "Pachymetrie");
+        Assert.Contains(pachyRecords, record => record.Value == "RA: 0.596   // LA: 0.596");
         Assert.DoesNotContain(result.Records, record => record.FieldCode == "6228");
     }
 
@@ -124,8 +138,14 @@ public sealed class NidekNt530PProfileTests
         Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
         Assert.Empty(exportResult.Issues);
         Assert.Contains("8402NT530P", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6220RA: 0.596   // LA: 0.596", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6205Tonometrie", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6205PR: 596 [596] µm", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6205PL: 591 600 [596] µm", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6205CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6220Pachymetrie", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6220RA: 0.596   // LA: 0.596", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("/ EV:{000000003B}", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("NT-530P Messung", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6228PR:", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6228R =", exportResult.Content, StringComparison.Ordinal);
     }
@@ -141,13 +161,19 @@ public sealed class NidekNt530PProfileTests
         Assert.Equal("NT-530P", deviceProfile.Model);
         Assert.Contains("Tonometer", deviceProfile.DeviceType);
         Assert.Contains("Pachymeter", deviceProfile.DeviceType);
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='NT530P']/Pachy/HeaderLine");
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='NT530P']/Pachy/MedistarLine");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='NT530P']/Tono/HeaderLine");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='NT530P']/Tono/PachyRightLine");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='NT530P']/Tono/TonoListLine");
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='NT530P']/Tono/MedistarLine");
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(deviceProfile));
 
         Assert.Equal("device-nidek-nt530p-default", exportProfile.SourceDeviceProfileId);
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6220" && rule.SourcePath == "Device.Measure[@Type='NT530P']/Pachy/HeaderLine");
         Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6220" && rule.SourcePath == "Device.Measure[@Type='NT530P']/Pachy/MedistarLine");
-        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='NT530P']/Tono/MedistarLine");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='NT530P']/Tono/HeaderLine");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='NT530P']/Tono/TonoListLine");
         Assert.DoesNotContain(exportProfile.Rules, rule => rule.TargetFieldCode == "6228");
         Assert.Empty(ExportProfileDefinitionValidator.Validate(exportProfile));
 
@@ -175,8 +201,9 @@ public sealed class NidekNt530PProfileTests
         var mappingResult = _mappingEngine.Map(CreatePatientData(), measurements, _mappingAdapter.Adapt(exportProfile));
 
         Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
+        Assert.Contains(mappingResult.Records, record => record.FieldCode == "6205" && record.Value == "Tonometrie");
         Assert.Contains(mappingResult.Records, record => record.FieldCode == "6220" && record.Value == "RA: 0.596   // LA: 0.596");
-        Assert.Contains(mappingResult.Records, record => record.FieldCode == "6205" && record.Value!.Contains("R = 16 20 [18.0] // L = 18 [18.0] mmHg", StringComparison.Ordinal));
+        Assert.Contains(mappingResult.Records, record => record.FieldCode == "6205" && record.Value == "CCT = 596um P  R = 16 20 [18.0] // L = 18 [18.0] mmHg 12:07");
         Assert.DoesNotContain(exportProfile.Rules, rule => rule.TargetFieldCode == "6228");
         Assert.DoesNotContain(exportProfile.Rules, rule => ContainsLegacyNt530PPath(rule.SourcePath));
         Assert.DoesNotContain(exportProfile.Rules, rule => ContainsLegacyNt530PPath(rule.OutputTemplate));

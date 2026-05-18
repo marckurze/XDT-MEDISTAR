@@ -10,6 +10,7 @@ public sealed class AttachmentAutoCandidateSelectionService
                 success: false,
                 canProcessAutomatically: false,
                 selectedCandidate: null,
+                selectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                 supportedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                 unsupportedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                 reason: AttachmentAutoCandidateSelectionReason.ScanError,
@@ -18,6 +19,8 @@ public sealed class AttachmentAutoCandidateSelectionService
 
         var supportedCandidates = scanResult.Candidates
             .Where(candidate => candidate.IsSupported)
+            .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(candidate => candidate.FullPath, StringComparer.OrdinalIgnoreCase)
             .ToList();
         var stableSupportedCandidates = supportedCandidates
             .Where(candidate => candidate.IsStable)
@@ -32,6 +35,7 @@ public sealed class AttachmentAutoCandidateSelectionService
                 success: false,
                 canProcessAutomatically: false,
                 selectedCandidate: null,
+                selectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                 supportedCandidates: supportedCandidates,
                 unsupportedCandidates: unsupportedCandidates,
                 reason: AttachmentAutoCandidateSelectionReason.ScanError,
@@ -44,62 +48,59 @@ public sealed class AttachmentAutoCandidateSelectionService
                 success: true,
                 canProcessAutomatically: false,
                 selectedCandidate: null,
+                selectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                 supportedCandidates: supportedCandidates,
                 unsupportedCandidates: unsupportedCandidates,
                 reason: AttachmentAutoCandidateSelectionReason.NoSupportedAttachment,
                 errorMessage: "Keine unterstützte XDT-Anhang-Datei gefunden.");
         }
 
-        if (supportedCandidates.Count == 1)
+        if (stableSupportedCandidates.Count == supportedCandidates.Count)
         {
-            if (stableSupportedCandidates.Count == 0)
-            {
-                return CreateResult(
-                    success: true,
-                    canProcessAutomatically: false,
-                    selectedCandidate: null,
-                    supportedCandidates: supportedCandidates,
-                    unsupportedCandidates: unsupportedCandidates,
-                    reason: AttachmentAutoCandidateSelectionReason.NoStableAttachment,
-                    errorMessage: "XDT-Anhang-Datei ist noch nicht stabil und wird später erneut geprüft.");
-            }
-
             return CreateResult(
                 success: true,
                 canProcessAutomatically: true,
                 selectedCandidate: stableSupportedCandidates[0],
+                selectedCandidates: stableSupportedCandidates,
                 supportedCandidates: supportedCandidates,
                 unsupportedCandidates: unsupportedCandidates,
-                reason: AttachmentAutoCandidateSelectionReason.SingleSupportedAttachment,
+                reason: stableSupportedCandidates.Count == 1
+                    ? AttachmentAutoCandidateSelectionReason.SingleSupportedAttachment
+                    : AttachmentAutoCandidateSelectionReason.MultipleStableAttachments,
                 errorMessage: null);
         }
 
-        if (stableSupportedCandidates.Count > 1)
+        if (stableSupportedCandidates.Count == 0)
         {
             return CreateResult(
                 success: true,
                 canProcessAutomatically: false,
                 selectedCandidate: null,
+                selectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
                 supportedCandidates: supportedCandidates,
                 unsupportedCandidates: unsupportedCandidates,
-                reason: AttachmentAutoCandidateSelectionReason.MultipleStableAttachments,
-                errorMessage: "Mehrere stabile unterstützte XDT-Anhang-Dateien gefunden. Automatische Auswahl ist nicht eindeutig.");
+                reason: AttachmentAutoCandidateSelectionReason.NoStableAttachment,
+                errorMessage: supportedCandidates.Count == 1
+                    ? "XDT-Anhang-Datei ist noch nicht stabil und wird später erneut geprüft."
+                    : "XDT-Anhang-Dateien sind noch nicht stabil und werden später erneut geprüft.");
         }
 
         return CreateResult(
             success: true,
             canProcessAutomatically: false,
             selectedCandidate: null,
+            selectedCandidates: Array.Empty<AttachmentImportFileCandidate>(),
             supportedCandidates: supportedCandidates,
             unsupportedCandidates: unsupportedCandidates,
             reason: AttachmentAutoCandidateSelectionReason.MultipleSupportedAttachments,
-            errorMessage: "Mehrere unterstützte XDT-Anhang-Dateien gefunden. Automatische Auswahl ist nicht eindeutig.");
+            errorMessage: "Mindestens eine unterstützte XDT-Anhang-Datei ist noch nicht stabil; automatische Verarbeitung wartet.");
     }
 
     private static AttachmentAutoCandidateSelectionResult CreateResult(
         bool success,
         bool canProcessAutomatically,
         AttachmentImportFileCandidate? selectedCandidate,
+        IReadOnlyList<AttachmentImportFileCandidate> selectedCandidates,
         IReadOnlyList<AttachmentImportFileCandidate> supportedCandidates,
         IReadOnlyList<AttachmentImportFileCandidate> unsupportedCandidates,
         AttachmentAutoCandidateSelectionReason reason,
@@ -109,6 +110,7 @@ public sealed class AttachmentAutoCandidateSelectionService
             Success: success,
             CanProcessAutomatically: canProcessAutomatically,
             SelectedCandidate: selectedCandidate,
+            SelectedCandidates: selectedCandidates,
             SupportedCandidates: supportedCandidates,
             UnsupportedCandidates: unsupportedCandidates,
             Reason: reason,

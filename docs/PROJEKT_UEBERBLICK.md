@@ -223,10 +223,10 @@ Technische Grundsaetze:
 - Der `XdtExportBuilder` erzeugt XDT-Längenpraefixe zentral.
 - In UI und Konfiguration werden keine manuellen Längenpraefixe gepflegt.
 - Automatische XDT-Anhang-Verarbeitung ist nur unter Sicherheitsbedingungen erlaubt.
-- Mehrere unterstuetzte Anhaenge werden nicht automatisch zugeordnet.
+- Mehrere stabile unterstuetzte Anhaenge werden stabil sortiert und einzeln verarbeitet.
 - Instabile Anhaenge werden nicht verarbeitet, nicht verschoben und nicht verlinkt.
 - Exportprofile werden durch XDT-Anhang-Test und Testexport nicht dauerhaft veraendert.
-- MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link ist fuer den Pflicht-Anhang-Praxislauf praktisch validiert; weitere Geraete/AIS und Mehrfachanhangfaelle bleiben separat zu pruefen.
+- MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link ist fuer den Pflicht-Anhang-Praxislauf praktisch validiert; weitere Geraete/AIS und Mehrfachanhang-Livelaeufe bleiben separat zu pruefen.
 
 ## 10. Paket-Wartelogik
 
@@ -252,15 +252,15 @@ AIS-Datei -> Geraetedatei -> optionaler oder verpflichtender XDT-Anhang
 
 Optionaler XDT-Anhang:
 
-- Wenn genau ein stabiler Anhang innerhalb Timeout kommt: Export mit `6302`, `6303`, optional `6304`, `6305`.
+- Wenn ein oder mehrere stabile unterstuetzte Anhaenge innerhalb Timeout kommen: Export mit `6302`, `6303`, optional `6304`, `6305` je Datei.
 - Wenn kein Anhang kommt: Export ohne Anhang nach Timeout.
-- Wenn mehrere unterstuetzte Anhaenge vorhanden sind: keine automatische Zuordnung, Warn-/Skip-Verhalten.
+- Wenn vorhandene Anhaenge noch instabil sind: weiter warten, solange die Wartezeit laeuft.
 
 Pflicht-XDT-Anhang:
 
-- Wenn genau ein stabiler Anhang kommt: Export mit `6302`, `6303`, optional `6304`, `6305`.
+- Wenn ein oder mehrere stabile unterstuetzte Anhaenge kommen: Export mit `6302`, `6303`, optional `6304`, `6305` je Datei.
 - Wenn kein Anhang kommt: Blockade/Fehler.
-- Wenn mehrere unterstuetzte Anhaenge vorhanden sind: Blockade/Fehler wegen unsicherer Zuordnung.
+- Wenn vorhandene Anhaenge noch instabil sind: weiter warten; nach Timeout Blockade/Fehler.
 
 ## 11. Dateistabilitaet
 
@@ -375,14 +375,14 @@ Vorbereitet, aber noch nicht produktiv validiert:
 
 - NIDEK AR360 / AR-360A: Auto-Refraktor-XDT-Rueckgabe praktisch validiert; XDT-Anhangfall und offizielles ZIP-Artefakt offen
 - NIDEK LM7/LM7P: praktisch validierter Lensmeter-Referenzkandidat mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade, MEDISTAR-Praxisprotokoll und selektivem Templatepaket-Test
-- NIDEK NT530P: testseitig direkt nutzbarer Tonometrie-/Pachymetrie-Kandidat mit echter XML-Fixture, `6220`/`6205`-Export und selektivem Templatepaket-Test; praktische MEDISTAR-Abnahme offen
+- NIDEK NT530P: testseitig direkt nutzbarer Tonometrie-/Pachymetrie-Kandidat mit echter XML-Fixture, korrigiertem mehrzeiligem `6205`-/`6220`-Export und selektivem Templatepaket-Test; praktische MEDISTAR-Abnahme offen
 - TOPCON CL300
 - TOPCON KR800
 - TOPCON TRK2P
 
 Wichtig: Diese V2-/BuiltIn-Profile sind vorbereitet und konfigurierbar, aber nicht im gleichen Sinne praktisch validiert wie MEDISTAR + NIDEK ARK1S.
 
-Die kompakte Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. ARK1S ist Referenzpaket 1 in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; AR360 ist Referenzpaket 2 in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md`. AR360 nutzt ARMedian, FarPD und VD und ist fuer die Auto-Refraktor-XDT-Rueckgabe praktisch in MEDISTAR validiert. LM7 ist als dritter Referenzkandidat in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md` vorbereitet und fuer die Lensmeter-XDT-Rueckgabe praktisch validiert; das Protokoll steht in `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md`. NT530P ist als Templatepaket-Kandidat in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_NT530P.md` dokumentiert und nutzt `6220`/`6205` statt `6228`. Alte persistierte BuiltIn-LM7-Exportprofile werden gezielt auf die passenden `MedistarLine`-Parserpfade repariert. Der technische Testweg erzeugt die Pakete reproduzierbar temporaer mit `TemplatePackageExporter`, liest sie mit `TemplatePackageImporter` wieder ein und prueft den sicheren UserDefined-Import. Offizielle ZIPs folgen erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.
+Die kompakte Bestandsaufnahme steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. ARK1S ist Referenzpaket 1 in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; AR360 ist Referenzpaket 2 in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md`. AR360 nutzt ARMedian, FarPD und VD und ist fuer die Auto-Refraktor-XDT-Rueckgabe praktisch in MEDISTAR validiert. LM7 ist als dritter Referenzkandidat in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md` vorbereitet und fuer die Lensmeter-XDT-Rueckgabe praktisch validiert; das Protokoll steht in `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md`. NT530P ist als Templatepaket-Kandidat in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_NT530P.md` dokumentiert und nutzt korrigierte `6205`-/`6220`-Zeilen statt `6228`. Alte persistierte BuiltIn-LM7-Exportprofile werden gezielt auf die passenden `MedistarLine`-Parserpfade repariert. Der technische Testweg erzeugt die Pakete reproduzierbar temporaer mit `TemplatePackageExporter`, liest sie mit `TemplatePackageImporter` wieder ein und prueft den sicheren UserDefined-Import. Offizielle ZIPs folgen erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.
 
 ## 16. Lizenzsystem
 
@@ -420,7 +420,7 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 - keine pauschale Ordnerleerung
 - Exportordner nicht bereinigen
 - instabile Dateien nicht verarbeiten
-- mehrere XDT-Anhaenge nicht automatisch zuordnen
+- mehrere XDT-Anhaenge nur als einzelne stabile unterstuetzte Dateien mit eigenen Linkfeldgruppen uebergeben
 - keine medizinische Bewertung
 - keine harte Lizenzsperre ohne gesonderte Spezifikation
 - keine dauerhafte Aenderung von Exportprofilen durch Baukasten-Test
@@ -440,7 +440,7 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 - `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`: Vorlage fuer Referenzpaket 1 im bestehenden Templatepaket-Format; der Export-/Import-Testweg ist automatisiert abgesichert.
 - `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md`: Vorlage fuer Referenzpaket 2 MEDISTAR + NIDEK AR360 / AR-360A; Auto-Refraktor-XDT-Rueckgabe und Export-/Import-Testweg sind abgesichert.
 - `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md`: Templatepaket-Kandidat fuer MEDISTAR + NIDEK LM7 / LM-7P; echte XML-Fixture, Export-/Import-Testweg und praktische Lensmeter-XDT-Rueckgabe sind abgesichert.
-- `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_NT530P.md`: Templatepaket-Kandidat fuer MEDISTAR + NIDEK NT530P / NT-530P; echte XML-Fixture, `6220`/`6205`-Export und Export-/Import-Testweg sind abgesichert.
+- `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_NT530P.md`: Templatepaket-Kandidat fuer MEDISTAR + NIDEK NT530P / NT-530P; echte XML-Fixture, korrigierter `6205`-/`6220`-Export und Export-/Import-Testweg sind abgesichert.
 - `docs/TEMPLATEPAKET_RELEASE_REGEL.md`: kleine Freigaberegel fuer dauerhaft abgelegte offizielle Templatepaket-ZIPs.
 - `docs/E2E_TESTPROTOKOLL_MEDISTAR_AR360.md`: anonymisiertes Praxisprotokoll fuer die AR360-XDT-Rueckgabe.
 - `docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md`: anonymisiertes Praxisprotokoll fuer die LM7-Lensmeter-XDT-Rueckgabe.
@@ -455,7 +455,7 @@ An `docs/ROADMAP.md` orientierte naechste Schritte:
 2. Optional AR360-XDT-Anhangfall separat praktisch pruefen.
 3. LM7/LM7P als praktisch validierten Referenzkandidaten beibehalten.
 4. Weitere LM7-Prisma-/PD-Faelle sammeln und danach ueber offizielles ZIP nach Release-Regel entscheiden.
-5. Danach NT530P praktisch in MEDISTAR validieren; TOPCON CL300/KR800/TRK2P nach Datenlage priorisieren.
+5. Danach NT530P praktisch in MEDISTAR mit korrigierter `6205`/`6220`-Anzeige und JPG-Mehrfachanhaengen validieren; TOPCON CL300/KR800/TRK2P nach Datenlage priorisieren.
 5. Baukasten schlank halten und nur fuer Sonderfaelle, Tests und Vorschau erweitern.
 6. Aktivierungsassistent vorerst als read-only Regressionsstand ruhen lassen.
 7. Restliche E2E-Testfaelle praktisch ausfuehren und protokollieren.
@@ -483,7 +483,7 @@ Im Baukasten kann ein XDT-Anhang aus beliebigem Speicherort gewaehlt werden. Vor
 
 Die automatische Paketlogik ist zweistufig: Phase 1 AIS-Datei wartet auf stabile Geraetedatei, Default 10 Minuten. Eine neue AIS-Datei ersetzt eine aeltere wartende AIS-Datei. Phase 2 startet erst nach vollstaendigem AIS-/Geraete-Paar: optionaler oder verpflichtender XDT-Anhang wartet bis Default 30 Sekunden.
 
-Optionaler XDT-Anhang bedeutet: Wenn genau ein stabiler Anhang rechtzeitig kommt, Export mit 6302-6305; wenn keiner kommt, Export ohne Anhang nach Timeout; mehrere Anhaenge werden nicht automatisch zugeordnet. Pflicht bedeutet: ohne eindeutigen Anhang blockiert die Verarbeitung oder geht in Fehlerstatus.
+Optionaler XDT-Anhang bedeutet: Wenn ein oder mehrere stabile unterstuetzte Anhaenge rechtzeitig kommen, Export mit je eigener 6302-6305-Linkfeldgruppe; wenn keiner kommt, Export ohne Anhang nach Timeout. Pflicht bedeutet: ohne stabilen unterstuetzten Anhang blockiert die Verarbeitung oder geht in Fehlerstatus.
 
 Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden.
 
@@ -491,13 +491,13 @@ Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn
 
 Der Aktivierungsassistent fuer importierte Schnittstellenprofile ist read-only vorbereitet und ruht vorerst. Im Tab Schnittstellenprofile gibt es Pruefung vor Aktivierung und den Vorschau-Dialog Aktivierung vorbereiten. Die Service-Kette lautet Evaluation -> Guard -> PreparationPreview. Angezeigt werden V1-relevante Vorschauinformationen: Status, Aktivierbarkeit nach V1, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis. Es gibt keinen Aktivieren-Button, keine produktive Warnungsbestaetigung, keine Speicherung, keine Profiländerung und keine Datei-/Ordneroperation.
 
-Vorbereitete, aber nicht produktiv validierte Geraeteprofile: TOPCON CL300, TOPCON KR800, TOPCON TRK2P. NIDEK NT530P ist jetzt testseitig mit echter UTF-16-XML-Datei, `6220`-Pachymetrie, `6205`-Tonometrie, BuiltIn-Schnittstellenprofil und Templatepaket-Kandidat abgesichert; die praktische MEDISTAR-Abnahme steht noch aus. NIDEK LM7/LM-7P ist testseitig mit echter XML-Datei, Stylesheet-Ignoriertest, MEDISTAR-Lensmeterzeilen, Reparatur alter persistierter BuiltIn-Exportpfade, Templatepaket-Kandidat und praktischer MEDISTAR-Abnahme abgesichert. NIDEK AR360 / AR-360A ist fuer die Auto-Refraktor-XDT-Rueckgabe praktisch validiert; offen bleiben XDT-Anhangfall und offizielles ZIP-Artefakt. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten. Die Vorlagen `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`, `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md`, `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md` und `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_NT530P.md` beschreiben die Referenzpakete beziehungsweise Kandidaten. Der Testweg erzeugt und prueft die Paket-ZIPs temporaer ueber den selektiven Exporter/Importer-Pfad; dauerhaft abgelegt werden sie erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.
+Vorbereitete, aber nicht produktiv validierte Geraeteprofile: TOPCON CL300, TOPCON KR800, TOPCON TRK2P. NIDEK NT530P ist jetzt testseitig mit echter UTF-16-XML-Datei, korrigierter mehrzeiliger `6205`-Tonometrie, `6220`-Pachymetrie, BuiltIn-Schnittstellenprofil und Templatepaket-Kandidat abgesichert; die praktische MEDISTAR-Abnahme steht noch aus. NIDEK LM7/LM-7P ist testseitig mit echter XML-Datei, Stylesheet-Ignoriertest, MEDISTAR-Lensmeterzeilen, Reparatur alter persistierter BuiltIn-Exportpfade, Templatepaket-Kandidat und praktischer MEDISTAR-Abnahme abgesichert. NIDEK AR360 / AR-360A ist fuer die Auto-Refraktor-XDT-Rueckgabe praktisch validiert; offen bleiben XDT-Anhangfall und offizielles ZIP-Artefakt. Die Matrix `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md` fuehrt Status, Tests, Templatepaket-Luecken und naechste Prioritaeten. Die Vorlagen `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`, `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md`, `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md` und `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_NT530P.md` beschreiben die Referenzpakete beziehungsweise Kandidaten. Der Testweg erzeugt und prueft die Paket-ZIPs temporaer ueber den selektiven Exporter/Importer-Pfad; dauerhaft abgelegt werden sie erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.
 
 Lizenzsystem: InstallationInfo, Lizenzanfrage, Lizenzimport, Statusanzeige, Bewertung lizenzpflichtiger aktiver Schnittstellenprofile und Karenzzeitmodell sind vorbereitet. Es gibt noch keine harte Lizenzsperre, keine Online-Lizenzierung und keine produktive Signaturpruefung.
 
-Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale Ordnerleerung, Exportordner nicht bereinigen, instabile Dateien nicht verarbeiten, mehrere XDT-Anhaenge nicht automatisch zuordnen, keine medizinische Bewertung, BuiltIns nicht ueberschreiben.
+Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale Ordnerleerung, Exportordner nicht bereinigen, instabile Dateien nicht verarbeiten, mehrere XDT-Anhaenge nur als einzelne unterstuetzte Dateien mit eigenen Linkfeldgruppen uebergeben, keine medizinische Bewertung, BuiltIns nicht ueberschreiben.
 
 Zentrale Dokumente: README.md, CHANGELOG.md, docs/ROADMAP.md, docs/ARCHITEKTUR.md, docs/PFLICHTENHEFT.md, docs/GERAETE_BEISPIELE.md, docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_AR360.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_LM7.md, docs/TEMPLATEPAKET_MEDISTAR_NIDEK_NT530P.md, docs/E2E_TESTPROTOKOLL_MEDISTAR_LM7.md, docs/TEMPLATEPAKET_RELEASE_REGEL.md, docs/PRAXISABNAHME_GERAETEFENSTER_V1.md, docs/END_TO_END_TESTPLAN.md und docs/PROJEKT_UEBERBLICK.md.
 
-Naechste sinnvolle Schritte: Geraeteanbindungsfenster V1 als abgenommenen Block beibehalten und nur Komfortthemen nach Praxisfeedback priorisieren; Release-Regel fuer ARK1S- und AR360-ZIP-Artefakte anwenden, optional den AR360-XDT-Anhangfall separat testen, fuer LM7/LM7P Prisma-/PD-Beispielfaelle sammeln und ueber ein offizielles ZIP entscheiden, danach NT530P praktisch in MEDISTAR validieren und TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
+Naechste sinnvolle Schritte: Geraeteanbindungsfenster V1 als abgenommenen Block beibehalten und nur Komfortthemen nach Praxisfeedback priorisieren; Release-Regel fuer ARK1S- und AR360-ZIP-Artefakte anwenden, optional den AR360-XDT-Anhangfall separat testen, fuer LM7/LM7P Prisma-/PD-Beispielfaelle sammeln und ueber ein offizielles ZIP entscheiden, danach NT530P praktisch in MEDISTAR mit korrigierter `6205`/`6220`-Anzeige und JPG-Mehrfachanhaengen validieren und TOPCON-Profile nach Datenlage priorisieren, Aktivierungsassistent vorerst ruhen lassen.
 ```
