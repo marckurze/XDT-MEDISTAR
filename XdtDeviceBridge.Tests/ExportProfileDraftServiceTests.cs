@@ -82,6 +82,61 @@ public sealed class ExportProfileDraftServiceTests
     }
 
     [Fact]
+    public void CreateUserDefinedCopy_ShouldCreateEmptyDraftWhenOriginalRulesAreExcluded()
+    {
+        var original = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();
+
+        var result = _service.CreateUserDefinedCopy(
+            original,
+            "Leerer Exportprofil-Entwurf",
+            draftRule: null,
+            replaceRuleId: null,
+            temporaryRules: Array.Empty<ExportRuleDefinition>(),
+            timestamp: _timestamp,
+            createdBy: "TestUser",
+            idFactory: () => "export-empty-draft",
+            includeOriginalRules: false);
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Profile!.Rules);
+        Assert.Equal(original.TargetAisProfileId, result.Profile.TargetAisProfileId);
+        Assert.Equal(original.SourceDeviceProfileId, result.Profile.SourceDeviceProfileId);
+        Assert.Equal(original.OutputEncoding, result.Profile.OutputEncoding);
+        Assert.True(original.Rules.Count > 0);
+    }
+
+    [Fact]
+    public void CreateUserDefinedCopy_ShouldAddTemporaryRulesToEmptyDraft()
+    {
+        var original = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();
+        var temporaryRule = new ExportRuleDefinition(
+            Id: "draft-rule-1",
+            TargetFieldCode: "6228",
+            TargetName: "Zusatz",
+            RuleType: ExportRuleType.Template,
+            SourcePath: null,
+            OutputTemplate: "Zusatz={AIS.LastName}",
+            SortOrder: 1,
+            IsEnabled: true,
+            Description: "temporär");
+
+        var result = _service.CreateUserDefinedCopy(
+            original,
+            "Exportprofil mit neuer Regel",
+            draftRule: null,
+            replaceRuleId: null,
+            temporaryRules: new[] { temporaryRule },
+            timestamp: _timestamp,
+            createdBy: "TestUser",
+            idFactory: () => "export-new-rule",
+            includeOriginalRules: false);
+
+        Assert.True(result.Success);
+        Assert.Single(result.Profile!.Rules);
+        Assert.Equal("draft-rule-1", result.Profile.Rules[0].Id);
+    }
+
+    [Fact]
     public void CreateUserDefinedCopy_ShouldRejectEmptyTargetFieldCode()
     {
         var original = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();

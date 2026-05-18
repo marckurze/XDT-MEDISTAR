@@ -9,7 +9,7 @@ public partial class NewAisProfileDialog : Window
     {
         InitializeComponent();
 
-        AisSystemComboBox.ItemsSource = new[] { "MEDISTAR", "Generisch" };
+        AisSystemComboBox.ItemsSource = new[] { "MEDISTAR", "Generisch / anderes AIS" };
         AisSystemComboBox.SelectedIndex = 0;
         EncodingComboBox.ItemsSource = new[] { "Windows-1252", "UTF-8" };
         EncodingComboBox.SelectedIndex = 0;

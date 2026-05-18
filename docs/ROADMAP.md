@@ -127,7 +127,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Profile werden JSON-basiert unter `%LocalAppData%\XdtDeviceBridge\profiles` verwaltet.
 - Templatepaket-Export und Templatepaket-Import sind vorhanden.
 - UserDefined-Exportprofile koennen schlank gewartet werden: unreferenzierte UserDefined-Exportprofile lassen sich nach Sicherheitsabfrage loeschen, Exportregeln lassen sich nur aus UserDefined-Exportprofilen entfernen.
-- Neue AIS-, Geraete- und Exportprofile koennen als schlanke V1 im Tab `Profile & Templates` angelegt werden. AIS/Geraet nutzen einfache Dialoge, Exportprofile den bestehenden Exportregel-Entwurf; alle neuen Profile werden als UserDefined gespeichert, BuiltIns bleiben geschuetzt und es erfolgt keine automatische Aktivierung.
+- Neue AIS-, Geraete- und Exportprofile koennen als schlanke V1 im Tab `Profile & Templates` angelegt werden. AIS/Geraet nutzen einfache Dialoge mit kurzen Hilfetexten zu System, Codierung, Geraetetyp und Parserbasis. `Neues Exportprofil anlegen` startet sichtbar einen leeren Entwurf mit eindeutigem Namen; gespeichert wird erst bewusst als UserDefined. BuiltIns bleiben geschuetzt und es erfolgt keine automatische Aktivierung.
 - Importierte Templatepakete werden validiert.
 - Konflikte werden analysiert: gleiche ID, gleicher Name, BuiltIn-Schutz, UserDefined-Konflikte, fehlende Abhängigkeiten und prüfpflichtige Ordner-/XDT-Anhang-Einstellungen.
 - Aus der Analyse wird ein Importplan erzeugt.

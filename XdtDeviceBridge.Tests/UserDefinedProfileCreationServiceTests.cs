@@ -33,6 +33,26 @@ public sealed class UserDefinedProfileCreationServiceTests
     }
 
     [Fact]
+    public void CreateAisProfile_ShouldCreateGenericOtherAisProfileWithoutMedistarDefaults()
+    {
+        var result = _service.CreateAisProfile(
+            CreateDefaultCatalog(),
+            new UserDefinedAisProfileCreationRequest("Anderes AIS", "Generisch / anderes AIS", "UTF-8"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success);
+        var profile = result.Profile!;
+        Assert.Equal("Anderes AIS", profile.Metadata.Name);
+        Assert.Equal("Generisch / anderes AIS", profile.Vendor);
+        Assert.Equal("UTF-8", profile.DefaultEncoding);
+        Assert.Empty(profile.RequiredStaticFields);
+        Assert.Empty(profile.SupportedOutputFieldCodes);
+        Assert.False(profile.SupportsResultTextField6228);
+        Assert.False(profile.RequiresExaminationType8402);
+    }
+
+    [Fact]
     public void CreateAisProfile_ShouldRejectEmptyName()
     {
         var result = _service.CreateAisProfile(
@@ -90,6 +110,20 @@ public sealed class UserDefinedProfileCreationServiceTests
         Assert.Equal("Autorefractor", profile.DeviceType);
         Assert.Equal("Xml", profile.ParserMode);
         Assert.Empty(profile.Measurements);
+    }
+
+    [Fact]
+    public void CreateDeviceProfile_ShouldUseGenericDeviceTypeWhenFieldIsEmpty()
+    {
+        var result = _service.CreateDeviceProfile(
+            CreateDefaultCatalog(),
+            new UserDefinedDeviceProfileCreationRequest("Praxis Gerät", "NIDEK", "Testmodell", "", "Xml"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success);
+        Assert.Equal("Generisch", result.Profile!.DeviceType);
+        Assert.Equal("Xml", result.Profile.ParserMode);
     }
 
     [Fact]

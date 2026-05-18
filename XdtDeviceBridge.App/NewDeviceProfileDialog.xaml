@@ -5,7 +5,7 @@
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
-    <Grid Margin="16" MinWidth="460">
+    <Grid Margin="16" MinWidth="560">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -19,22 +19,58 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Profilname:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <TextBox Grid.Row="0" Grid.Column="1" x:Name="ProfileNameTextBox" MinWidth="280" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Profilname:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+            <TextBox x:Name="ProfileNameTextBox"
+                     MinWidth="360"
+                     ToolTip="Name dieses Geräteprofils, z. B. 'NIDEK AR360 Raum 1'."/>
+            <TextBlock Text="Name dieses Geräteprofils, z. B. 'NIDEK AR360 Raum 1'."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Hersteller:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <TextBox Grid.Row="1" Grid.Column="1" x:Name="ManufacturerTextBox" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Hersteller:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,12">
+            <TextBox x:Name="ManufacturerTextBox"
+                     ToolTip="Hersteller des Geräts, z. B. NIDEK oder TOPCON."/>
+            <TextBlock Text="Hersteller des Geräts, z. B. NIDEK oder TOPCON."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Modell:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <TextBox Grid.Row="2" Grid.Column="1" x:Name="ModelTextBox" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Modell:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,12">
+            <TextBox x:Name="ModelTextBox"
+                     ToolTip="Modellbezeichnung des Geräts, z. B. AR360, ARK1S, LM7."/>
+            <TextBlock Text="Modellbezeichnung des Geräts, z. B. AR360, ARK1S, LM7."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Gerätetyp:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <TextBox Grid.Row="3" Grid.Column="1" x:Name="DeviceTypeTextBox" Text="Generisch" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Gerätetyp:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,0,0,12">
+            <TextBox x:Name="DeviceTypeTextBox"
+                     ToolTip="Fachliche Kategorie des Geräts, z. B. Auto-Refraktometer, Lensmeter oder Tonometer."/>
+            <TextBlock Text="Fachliche Kategorie des Geräts, z. B. Auto-Refraktometer, Lensmeter oder Tonometer. Bei leerem Feld wird intern 'Generisch' verwendet."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="Parserbasis:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <ComboBox Grid.Row="4" Grid.Column="1" x:Name="ParserModeComboBox" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Parserbasis:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,0,0,12">
+            <ComboBox x:Name="ParserModeComboBox"
+                      ToolTip="Legt fest, mit welcher vorhandenen Leselogik die Gerätedatei verarbeitet wird. Es werden keine neuen Parser erzeugt."/>
+            <TextBlock Text="Legt fest, mit welcher vorhandenen Leselogik die Gerätedatei verarbeitet wird. Es werden keine neuen Parser erzeugt."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
             <Button Content="Speichern" Width="110" Margin="0,0,8,0" IsDefault="True" Click="Save_Click"/>
             <Button Content="Abbrechen" Width="110" IsCancel="True"/>
         </StackPanel>

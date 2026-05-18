@@ -138,6 +138,7 @@ public partial class MainWindow : Window
     private bool _updatingTemplatePackageImportPreview;
     private bool _isTemplatePackageImportPreviewBusy;
     private bool _notificationSoundFailureReported;
+    private bool _isNewExportProfileDraftActive;
     private string _lastTemplatePackageImportSelectionSignature = string.Empty;
 
     public MainWindow()
@@ -415,6 +416,7 @@ public partial class MainWindow : Window
 
         NewExportProfileNameTextBox.Text = $"{exportProfile.Metadata.Name} - Kopie";
         _temporaryExportRules.Clear();
+        _isNewExportProfileDraftActive = false;
         RebuildExportRulesGrid(exportProfile);
         ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
         ExportRulesGrid.SelectedIndex = _visibleExportRules.Count > 0 ? 0 : -1;
@@ -426,12 +428,17 @@ public partial class MainWindow : Window
     private void RebuildExportRulesGrid(ExportProfileDefinition exportProfile, string? selectedRuleId = null)
     {
         _visibleExportRules.Clear();
-        foreach (var rule in exportProfile.Rules.Concat(_temporaryExportRules).OrderBy(rule => rule.SortOrder))
+        var baseRules = _isNewExportProfileDraftActive
+            ? Array.Empty<ExportRuleDefinition>()
+            : exportProfile.Rules;
+        foreach (var rule in baseRules.Concat(_temporaryExportRules).OrderBy(rule => rule.SortOrder))
         {
             _visibleExportRules.Add(rule);
         }
 
-        ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
+        ExportRulesStatusText.Text = _isNewExportProfileDraftActive
+            ? $"Neuer Exportprofil-Entwurf: {_visibleExportRules.Count} Entwurfsregel(n)"
+            : $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
         if (!string.IsNullOrWhiteSpace(selectedRuleId))
         {
             var selectedRule = _visibleExportRules.FirstOrDefault(rule => rule.Id == selectedRuleId);
@@ -821,7 +828,10 @@ public partial class MainWindow : Window
         ExportRuleDefinition? draftRule,
         string? replaceRuleId)
     {
-        var rules = exportProfile.Rules.Concat(_temporaryExportRules).ToList();
+        var baseRules = _isNewExportProfileDraftActive
+            ? Array.Empty<ExportRuleDefinition>()
+            : exportProfile.Rules;
+        var rules = baseRules.Concat(_temporaryExportRules).ToList();
         if (draftRule is null || string.IsNullOrWhiteSpace(replaceRuleId))
         {
             return rules;
@@ -1796,6 +1806,7 @@ public partial class MainWindow : Window
 
         ExportProfileComboBox.SelectedItem = selectedProfile;
         _temporaryExportRules.Clear();
+        _isNewExportProfileDraftActive = true;
         RebuildExportRulesGrid(selectedProfile);
 
         NewExportProfileNameTextBox.Text = UserDefinedProfileCreationService.CreateAvailableProfileName(
@@ -1803,10 +1814,12 @@ public partial class MainWindow : Window
             "Neues Exportprofil");
         ExportRulesGrid.SelectedIndex = -1;
         ClearDraftRuleEditor();
-        ExportRulesStatusText.Text = $"Exportprofil-Entwurf vorbereitet: Vorlage '{selectedProfile.Metadata.Name}'.";
-        ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt. Neue Exportregeln können als Entwurf ergänzt werden.";
-        ShowFullExportPreviewForSelectedProfile();
-        AppendProfileMessage("Neuer Exportprofil-Entwurf vorbereitet. Regeln können ergänzt oder geändert und anschließend als UserDefined gespeichert werden.");
+        ExportRulesStatusText.Text = $"Neuer Exportprofil-Entwurf vorbereitet. Technischer Kontext: {selectedProfile.Metadata.Name}.";
+        ExportRulePreviewTextBox.Text = "Leerer Exportprofil-Entwurf. Bitte Exportregeln hinzufügen oder den leeren Entwurf bewusst als UserDefined speichern.";
+        FullExportPreviewTextBox.Text = "Neuer Exportprofil-Entwurf wurde vorbereitet. Es wurde noch nichts gespeichert.";
+        NewExportProfileNameTextBox.Focus();
+        NewExportProfileNameTextBox.SelectAll();
+        AppendProfileMessage("Neuer Exportprofil-Entwurf wurde vorbereitet. Fügen Sie Exportregeln hinzu und speichern Sie den Entwurf als UserDefined-Profil.");
     }
 
     private void SaveDraftAsNewExportProfile_Click(object sender, RoutedEventArgs e)
@@ -1857,7 +1870,8 @@ public partial class MainWindow : Window
             idFactory: () => UserDefinedProfileCreationService.CreateUniqueProfileId(
                 "export",
                 newProfileName,
-                existingExportProfileIds));
+                existingExportProfileIds),
+            includeOriginalRules: !_isNewExportProfileDraftActive);
 
         if (!draftResult.Success || draftResult.Profile is null)
         {

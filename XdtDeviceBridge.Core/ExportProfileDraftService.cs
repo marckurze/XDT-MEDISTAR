@@ -10,7 +10,8 @@ public sealed class ExportProfileDraftService
         IEnumerable<ExportRuleDefinition> temporaryRules,
         DateTimeOffset timestamp,
         string? createdBy,
-        Func<string>? idFactory = null)
+        Func<string>? idFactory = null,
+        bool includeOriginalRules = true)
     {
         ArgumentNullException.ThrowIfNull(originalProfile);
         ArgumentNullException.ThrowIfNull(temporaryRules);
@@ -22,7 +23,7 @@ public sealed class ExportProfileDraftService
             issues.Add("Profilname darf nicht leer sein.");
         }
 
-        var rules = BuildRules(originalProfile.Rules, draftRule, replaceRuleId, temporaryRules);
+        var rules = BuildRules(originalProfile.Rules, draftRule, replaceRuleId, temporaryRules, includeOriginalRules);
         ValidateRulesBeforeSave(rules, issues);
 
         if (issues.Count > 0)
@@ -68,13 +69,16 @@ public sealed class ExportProfileDraftService
         IReadOnlyList<ExportRuleDefinition> originalRules,
         ExportRuleDefinition? draftRule,
         string? replaceRuleId,
-        IEnumerable<ExportRuleDefinition> temporaryRules)
+        IEnumerable<ExportRuleDefinition> temporaryRules,
+        bool includeOriginalRules)
     {
-        var effectiveRules = originalRules
-            .Select(rule => draftRule is not null && string.Equals(rule.Id, replaceRuleId, StringComparison.Ordinal)
-                ? draftRule
-                : rule)
-            .ToList();
+        var effectiveRules = includeOriginalRules
+            ? originalRules
+                .Select(rule => draftRule is not null && string.Equals(rule.Id, replaceRuleId, StringComparison.Ordinal)
+                    ? draftRule
+                    : rule)
+                .ToList()
+            : new List<ExportRuleDefinition>();
 
         var temporaryRuleList = temporaryRules.ToList();
         foreach (var temporaryRule in temporaryRuleList)

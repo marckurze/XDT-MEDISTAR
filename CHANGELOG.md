@@ -32,6 +32,7 @@
 - Floating-Geraeteanbindungsfenster leicht verbreitert und die Symbolleiste oben rechts fix horizontal gesetzt, damit `🗗 ↺ 📌 🔝` nicht umbrechen.
 - UI-Ueberlagerung im Tab `Schnittstellenprofile` unterhalb der Ordnerbereinigung behoben.
 - Schlanke V1-Profilanlage im Tab `Profile & Templates` ergaenzt: `Neues AIS anlegen` und `Neues Geraet anlegen` oeffnen einfache Dialoge und speichern nur UserDefined-Profile; `Neues Exportprofil anlegen` bereitet den vorhandenen Exportregel-Entwurf als UserDefined-Kopie vor. BuiltIns bleiben geschuetzt, es erfolgt keine Aktivierung und keine Verarbeitung.
+- Dialoge fuer `Neues AIS anlegen` und `Neues Geraet anlegen` verstaendlicher gemacht: kurze Hilfetexte erklaeren Profilname, AIS-System, Codierung, Hersteller, Modell, Geraetetyp und Parserbasis; `Generisch` wird als anderer AIS-Kontext beziehungsweise interner Fallback erklaert.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Behoben
@@ -47,6 +48,7 @@
 - Abhaengigkeitsauflösung und Importzusammenfassung im Templatepaket-Import klarer formuliert, inklusive Hinweis auf Zielbereiche fuer importierte Profile und weiterhin fehlende automatische Aktivierung.
 - Templatepaket-Importvorschau weiter verstaendlicht: leere Abhaengigkeitsauflösung zeigt nun einen deutschen Leerzustand, sichtbare Hinweise/Warnungen sind deutsch lokalisiert und doppelte Hinweise werden reduziert.
 - Button-Anordnung im Bereich `Exportregeln` verstaendlicher gruppiert: Regel-Aktionen stehen bei der Regelliste, Exportprofil-Speichern/-Loeschen beim Profilentwurf; deaktivierte Loeschbuttons erklaeren BuiltIn- oder Referenzschutz per Tooltip.
+- `Neues Exportprofil anlegen` im Tab `Profile & Templates` sichtbar repariert: Der Button startet nun einen leeren Exportprofil-Entwurf, setzt einen eindeutigen Profilnamen, zeigt eine Status-/Logmeldung und speichert weiterhin erst nach bewusstem Klick auf `Entwurf als neues Exportprofil speichern`.
 
 ### Nicht umgesetzt
 

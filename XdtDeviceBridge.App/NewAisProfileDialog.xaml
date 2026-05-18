@@ -5,7 +5,7 @@
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
-    <Grid Margin="16" MinWidth="420">
+    <Grid Margin="16" MinWidth="540">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -17,16 +17,38 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Profilname:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <TextBox Grid.Row="0" Grid.Column="1" x:Name="ProfileNameTextBox" MinWidth="260" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Profilname:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+            <TextBox x:Name="ProfileNameTextBox"
+                     MinWidth="360"
+                     ToolTip="Name dieses AIS-Profils, z. B. 'MEDISTAR Praxis Müller'."/>
+            <TextBlock Text="Name dieses AIS-Profils, z. B. 'MEDISTAR Praxis Müller'."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="AIS-System:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="AisSystemComboBox" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="AIS-System:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,12">
+            <ComboBox x:Name="AisSystemComboBox"
+                      ToolTip="MEDISTAR nutzt bekannte MEDISTAR-GDT/XDT-Strukturen. Generisch ist für andere AIS-Systeme ohne spezielle MEDISTAR-Anpassung."/>
+            <TextBlock Text="MEDISTAR nutzt bekannte MEDISTAR-GDT/XDT-Strukturen. Generisch / anderes AIS ist für Systeme ohne spezielle MEDISTAR-Anpassung."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Codierung:" FontWeight="Bold" Margin="0,0,8,8"/>
-        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="EncodingComboBox" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Codierung:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,12">
+            <ComboBox x:Name="EncodingComboBox"
+                      ToolTip="Zeichenkodierung der eingelesenen AIS-Datei. Für klassische deutsche GDT/XDT-Dateien ist Windows-1252 meist richtig."/>
+            <TextBlock Text="Zeichenkodierung der eingelesenen AIS-Datei. Für klassische deutsche GDT/XDT-Dateien ist Windows-1252 meist richtig."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
 
-        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
             <Button Content="Speichern" Width="110" Margin="0,0,8,0" IsDefault="True" Click="Save_Click"/>
             <Button Content="Abbrechen" Width="110" IsCancel="True"/>
         </StackPanel>
