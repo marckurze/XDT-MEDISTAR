@@ -1050,21 +1050,22 @@ Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile un
 
 ## 12.1 Geräteanhänge / externe Dokumente
 
-Geräte können neben Messwertdateien auch PDF, JPG, DCM, TXT oder andere Geräte-Dateianhänge erzeugen. Diese Dateien sollen künftig als verbindlicher Bestandteil des Geräteanbindungs-Baukastens erkannt, eindeutig umbenannt, in einen AIS-erreichbaren Exportordner übertragen und per externem AIS-Link übergeben werden.
+Geraete koennen neben Messwertdateien auch PDF, JPG, DCM, TXT, XML, Video- oder Audiodateien erzeugen. Fuer Workflows ohne Messwerte gibt es jetzt den V1-Kandidaten `MEDISTAR + Dokumentanhang`: Dateien werden nicht geparst, sondern als externe MEDISTAR-Anhaenge uebergeben. Ein optionaler kurzer Dokumentationstext kann ueber `6227` ausgegeben werden.
 
 Beispiele:
 
 - NIDEK NT530P kann Bild-/Protokollverweise liefern, z. B. `PACHYImage` mit zugehörigen JPG-Dateien.
 - Andere Geräte können PDF-Protokolle oder DICOM-Dateien erzeugen.
 - TOPCON- und NIDEK-XML-Dateien können perspektivisch Verweise auf externe Bild- oder Protokolldateien enthalten.
+- Reine Dokumentgeraete koennen XML, PDF, JPG, PNG, DCM, MP4, MP3 oder WAV liefern, ohne dass daraus Messwerte gelesen werden.
 
 Vorgesehener Ablauf:
 
 ```text
-Gerätedatei + Geräte-Dateianhang
-  -> GA-Dateianhang Import
-  -> XdtDeviceBridge benennt Datei eindeutig
-  -> GA-Dateianhang Export
+AIS-Datei + eine oder mehrere Dokumentdateien
+  -> Dokument-/Anhang Import
+  -> XdtDeviceBridge uebertraegt jede Datei einzeln
+  -> XDT-Anhang Export
   -> XDT-Rückgabe mit externem AIS-Link
 ```
 
@@ -1076,6 +1077,12 @@ Für MEDISTAR ist folgende Beispielstruktur über XDT-Feldkennungen zu dokumenti
 | `6303` | Dateiformat, z. B. `PDF`, `JPG`, `DCM`, `TXT` |
 | `6304` | optionale Beschreibung |
 | `6305` | vollständiger absoluter Dateipfad zur abgelegten Datei |
+
+Optionaler Dokumentationstext fuer Dokumentgeraete:
+
+| Feldkennung | Bedeutung |
+| --- | --- |
+| `6227` | kurzer Anwendertext / Dokumentationstext |
 
 Die ausgewertete Datei `XDT Übergabe externer Link.txt` zeigt zwei relevante MEDISTAR-Fälle:
 
@@ -1095,11 +1102,13 @@ Nach dem Import kann MEDISTAR daraus eine Karteikartenanzeige mit `EV:{...}` erz
 
 Wichtig:
 
-- Diese Funktion ist Zielanforderung, aber noch nicht produktiv im Stand `0.1.0-prototype` umgesetzt.
-- Ohne konfigurierte GA-Dateianhang-Ordner bleibt die normale AIS-/Gerätedatei-Verarbeitung unverändert.
-- Externe Links dürfen nur erzeugt werden, wenn der Geräte-Dateianhang erfolgreich in den Zielordner übertragen wurde.
-- Unbekannte Dateien dürfen nicht blind gelöscht oder verschoben werden.
-- Selbst erzeugte PDF-Protokolle sind ein weiterer späterer Fall; dieser Abschnitt beschreibt primär bereits vorhandene Geräteanhänge.
+- Der AttachmentOnly-Modus erzeugt keine Messwertfelder: keine `6228`, keine `6205`, keine `6220`.
+- XML-Dateien werden in diesem Modus als Anhang behandelt und nicht als Messwert-XML interpretiert.
+- MP4, MP3 und WAV sind nur Anhaenge; sie werden nicht abgespielt oder ausgewertet.
+- Ohne Dokumentationstext wird keine leere `6227`-Zeile erzeugt.
+- Externe Links duerfen nur erzeugt werden, wenn der Anhang erfolgreich in den Zielordner uebertragen wurde.
+- Unbekannte Dateien duerfen nicht blind geloescht oder verschoben werden.
+- Drag-&-Drop, Vorschaukacheln, pro-Datei-Kommentare, OCR und Bild-/DICOM-/Medienanalyse bleiben spaetere Themen.
 
 ## 13. Abgrenzung
 

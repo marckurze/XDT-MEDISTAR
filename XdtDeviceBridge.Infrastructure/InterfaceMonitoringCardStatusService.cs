@@ -31,9 +31,9 @@ public sealed class InterfaceMonitoringCardStatusService
         ArgumentNullException.ThrowIfNull(scanResult);
 
         var aisFile = FindFirstAisFile(scanResult.Queue);
-        var deviceFile = FindFirstDeviceFile(scanResult.Queue);
+        var deviceFile = FindFirstDeviceFile(scanResult.Queue, interfaceProfile.FolderOptions.IsAttachmentOnlyMode);
         var readyPair = packageEvaluation?.ReadyPairs.FirstOrDefault()
-            ?? scanResult.Queue.FindReadyPairs().FirstOrDefault();
+            ?? scanResult.Queue.FindReadyPairs(interfaceProfile.FolderOptions.IsAttachmentOnlyMode).FirstOrDefault();
         var patient = TryReadPatient(aisFile);
         var statusText = CreateScanStatusText(scanResult, packageEvaluation, interfaceProfile);
         var statusClass = CreateScanStatusClass(scanResult, packageEvaluation);
@@ -314,7 +314,7 @@ public sealed class InterfaceMonitoringCardStatusService
         }
 
         var readyPair = packageEvaluation?.ReadyPairs.FirstOrDefault()
-            ?? scanResult.Queue.FindReadyPairs().FirstOrDefault();
+            ?? scanResult.Queue.FindReadyPairs(interfaceProfile.FolderOptions.IsAttachmentOnlyMode).FirstOrDefault();
         var pairComplete = readyPair is not null
             || scanResult.ReadyPairs > 0
             || packageEvaluation?.Reason == AutoImportPackageStateReason.ReadyForProcessing;
@@ -534,15 +534,13 @@ public sealed class InterfaceMonitoringCardStatusService
     private static PendingImportFile? FindFirstAisFile(PendingImportQueue queue)
     {
         return queue.GetAll()
-            .FirstOrDefault(file => file.Kind == ImportFileKind.AisGdt || file.Kind == ImportFileKind.AisXdt);
+            .FirstOrDefault(file => file.Kind.IsAisImportFile());
     }
 
-    private static PendingImportFile? FindFirstDeviceFile(PendingImportQueue queue)
+    private static PendingImportFile? FindFirstDeviceFile(PendingImportQueue queue, bool includeAttachmentDeviceFiles)
     {
         return queue.GetAll()
-            .FirstOrDefault(file => file.Kind == ImportFileKind.DeviceXml
-                || file.Kind == ImportFileKind.DeviceText
-                || file.Kind == ImportFileKind.DeviceCsv);
+            .FirstOrDefault(file => file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles));
     }
 
     private static string CreatePatientDisplay(PatientData? patient, string fallback = "")

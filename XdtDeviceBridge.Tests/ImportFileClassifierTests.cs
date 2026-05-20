@@ -23,6 +23,12 @@ public sealed class ImportFileClassifierTests
     [InlineData("image.jpeg", ImportFileKind.AttachmentImage)]
     [InlineData("image.png", ImportFileKind.AttachmentImage)]
     [InlineData("document.pdf", ImportFileKind.AttachmentPdf)]
+    [InlineData("scan.tif", ImportFileKind.AttachmentFile)]
+    [InlineData("scan.tiff", ImportFileKind.AttachmentFile)]
+    [InlineData("dicom.dcm", ImportFileKind.AttachmentFile)]
+    [InlineData("video.mp4", ImportFileKind.AttachmentFile)]
+    [InlineData("audio.mp3", ImportFileKind.AttachmentFile)]
+    [InlineData("signal.wav", ImportFileKind.AttachmentFile)]
     [InlineData("NIDEK_LM_Stylesheet.xsl", ImportFileKind.Unknown)]
     [InlineData("unknown.dat", ImportFileKind.Unknown)]
     public void Classify_ShouldMapExtensionToExpectedKind(string fileName, ImportFileKind expectedKind)

@@ -71,10 +71,11 @@ public sealed class AutoImportScannerService : IAutoImportScanner
         }
         else
         {
+            var includeAttachmentDeviceFiles = profile.FolderOptions.IsAttachmentOnlyMode;
             var deviceScan = await ScanFolderAsync(
                 profile.FolderOptions.DeviceImportFolder,
                 stabilityDuration,
-                IsRelevantDeviceFile,
+                kind => IsRelevantDeviceFile(kind, includeAttachmentDeviceFiles),
                 queue,
                 "Geräte-Importordner",
                 cancellationToken).ConfigureAwait(false);
@@ -153,7 +154,7 @@ public sealed class AutoImportScannerService : IAutoImportScanner
             AisFilesDetected: aisFilesDetected,
             DeviceFilesDetected: deviceFilesDetected,
             FilesQueued: filesQueued,
-            ReadyPairs: queue.FindReadyPairs().Count,
+            ReadyPairs: queue.FindReadyPairs(profile.FolderOptions.IsAttachmentOnlyMode).Count,
             Messages: messages,
             Queue: queue);
     }
@@ -163,9 +164,9 @@ public sealed class AutoImportScannerService : IAutoImportScanner
         return kind is ImportFileKind.AisGdt or ImportFileKind.AisXdt;
     }
 
-    private static bool IsRelevantDeviceFile(ImportFileKind kind)
+    private static bool IsRelevantDeviceFile(ImportFileKind kind, bool includeAttachmentDeviceFiles)
     {
-        return kind is ImportFileKind.DeviceXml or ImportFileKind.DeviceText or ImportFileKind.DeviceCsv;
+        return kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
     }
 
     private sealed record FolderScanResult(

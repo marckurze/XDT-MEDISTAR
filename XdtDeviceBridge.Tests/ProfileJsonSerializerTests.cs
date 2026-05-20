@@ -71,7 +71,9 @@ public sealed class ProfileJsonSerializerTests
                 AttachmentWaitTimeoutSeconds = 45,
                 AttachmentFileStabilityWaitSeconds = 3,
                 AutoImportScanIntervalSeconds = 7,
-                DeviceFileWaitTimeoutMinutes = 12
+                DeviceFileWaitTimeoutMinutes = 12,
+                IsAttachmentOnlyMode = true,
+                ShowAttachmentDocumentationDialog = true
             }
         };
 
@@ -95,6 +97,8 @@ public sealed class ProfileJsonSerializerTests
         Assert.Contains("\"AttachmentFileStabilityWaitSeconds\": 3", json);
         Assert.Contains("\"AutoImportScanIntervalSeconds\": 7", json);
         Assert.Contains("\"DeviceFileWaitTimeoutMinutes\": 12", json);
+        Assert.Contains("\"IsAttachmentOnlyMode\": true", json);
+        Assert.Contains("\"ShowAttachmentDocumentationDialog\": true", json);
     }
 
     [Fact]

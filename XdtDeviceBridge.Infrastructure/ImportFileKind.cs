@@ -9,5 +9,6 @@ public enum ImportFileKind
     DeviceText,
     DeviceCsv,
     AttachmentImage,
-    AttachmentPdf
+    AttachmentPdf,
+    AttachmentFile
 }

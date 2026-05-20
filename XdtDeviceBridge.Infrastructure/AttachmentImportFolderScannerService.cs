@@ -18,7 +18,11 @@ public sealed class AttachmentImportFolderScannerService : IAttachmentImportFold
             ".tif",
             ".tiff",
             ".dcm",
-            ".txt"
+            ".txt",
+            ".xml",
+            ".mp4",
+            ".mp3",
+            ".wav"
         },
         StringComparer.OrdinalIgnoreCase);
 

@@ -15,16 +15,26 @@ public static class MonitoringActivityEventKeyBuilder
 
     public static string CreateDeviceDetectedKey(PendingImportQueue queue)
     {
+        return CreateDeviceDetectedKey(queue, includeAttachmentDeviceFiles: false);
+    }
+
+    public static string CreateDeviceDetectedKey(PendingImportQueue queue, bool includeAttachmentDeviceFiles)
+    {
         ArgumentNullException.ThrowIfNull(queue);
 
-        return CreateFileKey(ScanDeviceDetected, queue.GetAll().Where(IsStableDeviceFile));
+        return CreateFileKey(ScanDeviceDetected, queue.GetAll().Where(file => IsStableDeviceFile(file, includeAttachmentDeviceFiles)));
     }
 
     public static string CreateReadyPairKey(PendingImportQueue queue)
     {
+        return CreateReadyPairKey(queue, includeAttachmentDeviceFiles: false);
+    }
+
+    public static string CreateReadyPairKey(PendingImportQueue queue, bool includeAttachmentDeviceFiles)
+    {
         ArgumentNullException.ThrowIfNull(queue);
 
-        var pairKeys = queue.FindReadyPairs()
+        var pairKeys = queue.FindReadyPairs(includeAttachmentDeviceFiles)
             .Select(pair => string.Join(
                 "+",
                 ImportFileFingerprint.Create(pair.AisFile),
@@ -51,14 +61,12 @@ public static class MonitoringActivityEventKeyBuilder
     private static bool IsStableAisFile(PendingImportFile file)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.AisGdt || file.Kind == ImportFileKind.AisXdt);
+            && file.Kind.IsAisImportFile();
     }
 
-    private static bool IsStableDeviceFile(PendingImportFile file)
+    private static bool IsStableDeviceFile(PendingImportFile file, bool includeAttachmentDeviceFiles)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.DeviceXml
-                || file.Kind == ImportFileKind.DeviceText
-                || file.Kind == ImportFileKind.DeviceCsv);
+            && file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
     }
 }

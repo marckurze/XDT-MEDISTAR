@@ -3585,14 +3585,14 @@ public partial class MainWindow : Window
     private static bool IsStableDeviceImportFile(PendingImportFile file)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.DeviceXml
-                || file.Kind == ImportFileKind.DeviceText
-                || file.Kind == ImportFileKind.DeviceCsv);
+            && (file.Kind.IsMeasurementDeviceFile() || file.Kind.IsAttachmentImportFile());
     }
 
-    private AutoImportScanResult ApplyMonitoringResetState(AutoImportScanResult result)
+    private AutoImportScanResult ApplyMonitoringResetState(AutoImportScanResult result, InterfaceProfileDefinition? profile)
     {
-        var filtered = _interfaceProfileMonitoringResetService.Apply(result);
+        var filtered = _interfaceProfileMonitoringResetService.Apply(
+            result,
+            profile?.FolderOptions.IsAttachmentOnlyMode == true);
         _lastMonitoringScanQueuesByProfileId[filtered.InterfaceProfileId] = filtered.Queue;
         return filtered;
     }
@@ -4426,9 +4426,9 @@ public partial class MainWindow : Window
 
     private void ShowPeriodicScanResult(AutoImportScanResult result)
     {
-        result = ApplyMonitoringResetState(result);
         var profile = _profileCatalog?.InterfaceProfiles.FirstOrDefault(profile =>
             string.Equals(profile.Metadata.Id, result.InterfaceProfileId, StringComparison.Ordinal));
+        result = ApplyMonitoringResetState(result, profile);
         var profileName = profile?.Metadata.Name ?? result.InterfaceProfileId;
         PeriodicScanLastRunText.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
         PeriodicScanReadyPairsText.Text = result.ReadyPairs.ToString();
@@ -4441,7 +4441,7 @@ public partial class MainWindow : Window
             UpdateMonitoringCardFromScan(profile, result, packageEvaluation, timestamp);
         }
 
-        RecordScanMonitoringEvents(profileName, result);
+        RecordScanMonitoringEvents(profile, profileName, result);
 
         var automaticProcessingResult = TryProcessReadyPairsAutomatically(profile, result, packageEvaluation);
         _ = automaticProcessingResult;
@@ -4626,7 +4626,8 @@ public partial class MainWindow : Window
             readyPairs,
             automaticProcessingEnabled: true,
             timestamp,
-            isMonitoringRunning: _periodicScanCancellationTokenSource is not null);
+            isMonitoringRunning: _periodicScanCancellationTokenSource is not null,
+            attachmentOnlyDocumentationProvider: RequestAttachmentOnlyDocumentationText);
 
         foreach (var result in batchResult.Results)
         {
@@ -4674,6 +4675,39 @@ public partial class MainWindow : Window
         return batchResult;
     }
 
+    private string? RequestAttachmentOnlyDocumentationText(
+        InterfaceProfileDefinition interfaceProfile,
+        PendingImportPair pair,
+        IReadOnlyList<AttachmentImportFileCandidate> selectedCandidates)
+    {
+        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode
+            || !interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog)
+        {
+            return null;
+        }
+
+        Window? owner = _floatingMonitoringWindows.TryGetValue(interfaceProfile.Metadata.Id, out var floatingWindow)
+            && floatingWindow.IsVisible
+                ? floatingWindow
+                : IsVisible ? this : null;
+        var dialog = new DocumentAttachmentDocumentationWindow(
+            interfaceProfile.Metadata.Name,
+            selectedCandidates.Select(candidate => candidate.FileName).ToList());
+        if (owner is not null)
+        {
+            dialog.Owner = owner;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        }
+        else
+        {
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
+        return dialog.ShowDialog() == true
+            ? dialog.DocumentationText
+            : null;
+    }
+
     private async void ScanActiveProfilesOnce_Click(object sender, RoutedEventArgs e)
     {
         if (_profileCatalog is null)
@@ -4707,11 +4741,11 @@ public partial class MainWindow : Window
                     var result = await _autoImportScannerService
                         .ScanOnceAsync(profile, TimeSpan.FromMilliseconds(200))
                         .ConfigureAwait(true);
-                    result = ApplyMonitoringResetState(result);
+                    result = ApplyMonitoringResetState(result, profile);
 
                     var packageEvaluation = _autoImportPackageStateService.Evaluate(profile, result.Queue, DateTime.Now);
                     UpdateMonitoringCardFromScan(profile, result, packageEvaluation, DateTime.Now);
-                    RecordScanMonitoringEvents(profile.Metadata.Name, result);
+                    RecordScanMonitoringEvents(profile, profile.Metadata.Name, result);
                 }
                 catch (Exception ex)
                 {
@@ -6286,9 +6320,10 @@ public partial class MainWindow : Window
         AppendText(MessagesTextBox, message);
     }
 
-    private void RecordScanMonitoringEvents(string profileName, AutoImportScanResult result)
+    private void RecordScanMonitoringEvents(InterfaceProfileDefinition? profile, string profileName, AutoImportScanResult result)
     {
         TryPlayNotificationSoundForDeviceFiles(result);
+        var includeAttachmentDeviceFiles = profile?.FolderOptions.IsAttachmentOnlyMode == true;
 
         if (result.AisFilesDetected > 0)
         {
@@ -6302,7 +6337,7 @@ public partial class MainWindow : Window
         {
             AppendMonitoringEvent(
                 result.InterfaceProfileId,
-                MonitoringActivityEventKeyBuilder.CreateDeviceDetectedKey(result.Queue),
+                MonitoringActivityEventKeyBuilder.CreateDeviceDetectedKey(result.Queue, includeAttachmentDeviceFiles),
                 $"{profileName}: Gerätedatei erkannt ({result.DeviceFilesDetected}).");
         }
 
@@ -6310,7 +6345,7 @@ public partial class MainWindow : Window
         {
             AppendMonitoringEvent(
                 result.InterfaceProfileId,
-                MonitoringActivityEventKeyBuilder.CreateReadyPairKey(result.Queue),
+                MonitoringActivityEventKeyBuilder.CreateReadyPairKey(result.Queue, includeAttachmentDeviceFiles),
                 $"{profileName}: AIS-/Geräte-Paar vollständig ({result.ReadyPairs}).");
         }
 

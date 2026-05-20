@@ -112,7 +112,8 @@ public sealed class AutoImportPairProcessingCoordinator
         IEnumerable<PendingImportPair> readyPairs,
         bool automaticProcessingEnabled,
         DateTime timestamp,
-        bool isMonitoringRunning = true)
+        bool isMonitoringRunning = true,
+        Func<InterfaceProfileDefinition, PendingImportPair, IReadOnlyList<AttachmentImportFileCandidate>, string?>? attachmentOnlyDocumentationProvider = null)
     {
         ArgumentNullException.ThrowIfNull(interfaceProfile);
         ArgumentNullException.ThrowIfNull(exportProfile);
@@ -180,7 +181,8 @@ public sealed class AutoImportPairProcessingCoordinator
                 pairInstanceKey,
                 automaticProcessingEnabled,
                 isMonitoringRunning,
-                timestamp);
+                timestamp,
+                attachmentOnlyDocumentationProvider);
             if (attachmentGate.DeferredResult is not null)
             {
                 results.Add(attachmentGate.DeferredResult);
@@ -196,7 +198,8 @@ public sealed class AutoImportPairProcessingCoordinator
                     pair.AisFile.FilePath,
                     pair.DeviceFile.FilePath,
                     timestamp,
-                    attachmentGate.AttachmentPreparation);
+                    attachmentGate.AttachmentPreparation,
+                    attachmentGate.DocumentationTextProvider);
                 _processedPairKeys.Add(processedPairKey);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
                 results.Add(CreateProcessedResult(interfaceProfile, pairInstanceKey, pair, processingResult, processingResult.AttachmentStatus));
@@ -276,8 +279,10 @@ public sealed class AutoImportPairProcessingCoordinator
         string pairInstanceKey,
         bool automaticProcessingEnabled,
         bool isMonitoringRunning,
-        DateTime timestamp)
+        DateTime timestamp,
+        Func<InterfaceProfileDefinition, PendingImportPair, IReadOnlyList<AttachmentImportFileCandidate>, string?>? attachmentOnlyDocumentationProvider)
     {
+        var attachmentProfile = CreateAttachmentProcessingProfile(interfaceProfile);
         if (!interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled
             || !automaticProcessingEnabled
             || !isMonitoringRunning)
@@ -285,7 +290,7 @@ public sealed class AutoImportPairProcessingCoordinator
             return new AttachmentGateDecision(
                 DeferredResult: null,
                 AttachmentPreparation: patient => PrepareAttachmentIfAllowed(
-                    interfaceProfile,
+                    attachmentProfile,
                     patient,
                     automaticProcessingEnabled,
                     isMonitoringRunning,
@@ -304,7 +309,7 @@ public sealed class AutoImportPairProcessingCoordinator
         }
 
         var eligibility = _attachmentEligibilityService.Evaluate(
-            interfaceProfile,
+            attachmentProfile,
             patientReadResult.Patient,
             isMonitoringRunning,
             automaticProcessingEnabled);
@@ -316,11 +321,11 @@ public sealed class AutoImportPairProcessingCoordinator
             return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => status);
         }
 
-        var scanResult = _attachmentScannerService.Scan(interfaceProfile.FolderOptions);
+        var scanResult = _attachmentScannerService.Scan(attachmentProfile.FolderOptions);
         var pairReadySince = GetPairReadySince(pairInstanceKey, timestamp);
-        var hasWaitTimedOut = HasAttachmentWaitTimedOut(interfaceProfile, pairReadySince, timestamp);
+        var hasWaitTimedOut = HasAttachmentWaitTimedOut(attachmentProfile, pairReadySince, timestamp);
         var packageDecision = _attachmentPackageDecisionService.Decide(
-            interfaceProfile,
+            attachmentProfile,
             patientReadResult.Patient,
             scanResult,
             isMonitoringRunning,
@@ -383,19 +388,43 @@ public sealed class AutoImportPairProcessingCoordinator
         if (packageDecision.CanProcessAttachment && packageDecision.SelectedCandidates.Count > 0)
         {
             var selectedCandidates = packageDecision.SelectedCandidates;
+            Func<PatientData, string?>? documentationTextProvider = null;
+            if (interfaceProfile.FolderOptions.IsAttachmentOnlyMode && attachmentOnlyDocumentationProvider is not null)
+            {
+                documentationTextProvider = _ => attachmentOnlyDocumentationProvider(interfaceProfile, pair, selectedCandidates);
+            }
+
             return new AttachmentGateDecision(
                 DeferredResult: null,
                 AttachmentPreparation: patient => PrepareSelectedAttachments(
-                    interfaceProfile,
+                    attachmentProfile,
                     patient,
                     selectedCandidates,
-                    timestamp));
+                    timestamp),
+                DocumentationTextProvider: documentationTextProvider);
         }
 
         var fallbackStatus = SkippedStatus(
             AttachmentProcessingStatusReason.ScanError,
             $"XDT-Anhang übersprungen: {packageDecision.Message}");
         return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => fallbackStatus);
+    }
+
+    private static InterfaceProfileDefinition CreateAttachmentProcessingProfile(InterfaceProfileDefinition interfaceProfile)
+    {
+        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode
+            || !string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentImportFolder))
+        {
+            return interfaceProfile;
+        }
+
+        return interfaceProfile with
+        {
+            FolderOptions = interfaceProfile.FolderOptions with
+            {
+                AttachmentImportFolder = interfaceProfile.FolderOptions.DeviceImportFolder
+            }
+        };
     }
 
     private DateTime GetPairReadySince(string pairKey, DateTime timestamp)
@@ -684,5 +713,6 @@ public sealed class AutoImportPairProcessingCoordinator
 
     private sealed record AttachmentGateDecision(
         AutoImportPairProcessingResult? DeferredResult,
-        Func<PatientData, AttachmentProcessingStatus?>? AttachmentPreparation);
+        Func<PatientData, AttachmentProcessingStatus?>? AttachmentPreparation,
+        Func<PatientData, string?>? DocumentationTextProvider = null);
 }

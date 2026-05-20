@@ -21,7 +21,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         string aisFilePath,
         string deviceFilePath,
         DateTime timestamp,
-        Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null)
+        Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null,
+        Func<PatientData, string?>? documentationTextProvider = null)
     {
         ArgumentNullException.ThrowIfNull(interfaceProfile);
         ArgumentNullException.ThrowIfNull(exportProfile);
@@ -41,7 +42,9 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 exportContent: null);
         }
 
-        if (!string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
+        var isAttachmentOnlyMode = interfaceProfile.FolderOptions.IsAttachmentOnlyMode;
+        if (!isAttachmentOnlyMode
+            && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {
             return CreateFailureResult(
                 interfaceProfile,
@@ -72,24 +75,33 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 
         var patient = _patientDataMapper.Map(gdtResult.Records);
 
-        var deviceResult = _xmlDeviceParser.ParseFile(deviceFilePath);
-        issues.AddRange(deviceResult.Issues.Select(issue => new ProcessingIssue(
-            issue.Severity == DeviceParseIssueSeverity.Error ? ProcessingIssueSeverity.Error : ProcessingIssueSeverity.Warning,
-            ProcessingStage.DeviceParsing,
-            issue.Message)));
-        if (deviceResult.HasErrors)
+        var documentationText = string.Empty;
+        var deviceResult = isAttachmentOnlyMode
+            ? CreateAttachmentOnlyDeviceResult(documentationTextProvider?.Invoke(patient), out documentationText)
+            : _xmlDeviceParser.ParseFile(deviceFilePath);
+        if (!isAttachmentOnlyMode)
         {
-            return CreateFailureResult(
-                interfaceProfile,
-                aisFilePath,
-                deviceFilePath,
-                timestamp,
-                new[] { "Gerätedatei konnte nicht fehlerfrei gelesen werden." },
-                new ProcessingPipelineResult(patient, deviceResult.Measurements, [], string.Empty, issues),
-                exportContent: null);
+            issues.AddRange(deviceResult.Issues.Select(issue => new ProcessingIssue(
+                issue.Severity == DeviceParseIssueSeverity.Error ? ProcessingIssueSeverity.Error : ProcessingIssueSeverity.Warning,
+                ProcessingStage.DeviceParsing,
+                issue.Message)));
+            if (deviceResult.HasErrors)
+            {
+                return CreateFailureResult(
+                    interfaceProfile,
+                    aisFilePath,
+                    deviceFilePath,
+                    timestamp,
+                    new[] { "Gerätedatei konnte nicht fehlerfrei gelesen werden." },
+                    new ProcessingPipelineResult(patient, deviceResult.Measurements, [], string.Empty, issues),
+                    exportContent: null);
+            }
         }
 
-        var mappingRules = _mappingAdapter.Adapt(exportProfile);
+        var effectiveExportProfile = isAttachmentOnlyMode
+            ? RemoveAttachmentOnlyDocumentationRuleWhenEmpty(exportProfile, documentationText)
+            : exportProfile;
+        var mappingRules = _mappingAdapter.Adapt(effectiveExportProfile);
         var mappingResult = _mappingEngine.Map(patient, deviceResult.Measurements, mappingRules);
         issues.AddRange(mappingResult.Issues.Select(issue => new ProcessingIssue(
             issue.Severity == MappingIssueSeverity.Error ? ProcessingIssueSeverity.Error : ProcessingIssueSeverity.Warning,
@@ -164,7 +176,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             aisFilePath,
             deviceFilePath,
             timestamp.ToUniversalTime(),
-            messages);
+            messages,
+            allowMissingDeviceFile: isAttachmentOnlyMode);
 
         return new InterfaceProfileManualProcessingResult(
             Success: true,
@@ -175,6 +188,51 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             FailedFileCopyResult: null,
             Messages: messages,
             AttachmentStatus: attachmentStatus);
+    }
+
+    private static DeviceParseResult CreateAttachmentOnlyDeviceResult(
+        string? documentationText,
+        out string normalizedDocumentationText)
+    {
+        normalizedDocumentationText = documentationText?.Trim() ?? string.Empty;
+        var measurements = string.IsNullOrWhiteSpace(normalizedDocumentationText)
+            ? Array.Empty<MeasurementValue>()
+            : new[]
+            {
+                new MeasurementValue(
+                    SourcePath: "AttachmentOnly/DocumentationText",
+                    DisplayName: "Dokumentationstext",
+                    Value: normalizedDocumentationText,
+                    Unit: null,
+                    Eye: null,
+                    Group: "AttachmentOnly")
+            };
+
+        return new DeviceParseResult(measurements, Array.Empty<DeviceParseIssue>());
+    }
+
+    private static ExportProfileDefinition RemoveAttachmentOnlyDocumentationRuleWhenEmpty(
+        ExportProfileDefinition exportProfile,
+        string documentationText)
+    {
+        if (!string.IsNullOrWhiteSpace(documentationText))
+        {
+            return exportProfile;
+        }
+
+        var rules = exportProfile.Rules
+            .Where(rule => !IsAttachmentOnlyDocumentationRule(rule))
+            .ToList();
+        return exportProfile with
+        {
+            Rules = rules
+        };
+    }
+
+    private static bool IsAttachmentOnlyDocumentationRule(ExportRuleDefinition rule)
+    {
+        return string.Equals(rule.TargetFieldCode, "6227", StringComparison.Ordinal)
+            && string.Equals(rule.SourcePath, "Device.AttachmentOnly/DocumentationText", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool ShouldAppendAttachmentFields(AttachmentProcessingStatus attachmentStatus)
@@ -241,7 +299,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         string aisFilePath,
         string deviceFilePath,
         DateTime processedAtUtc,
-        List<string> messages)
+        List<string> messages,
+        bool allowMissingDeviceFile = false)
     {
         var options = interfaceProfile.FolderOptions;
         var removeAisFromImportFolder = options.ClearAisImportFolderBeforeProcessing;
@@ -258,8 +317,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         {
             var removedFiles = new List<string>();
             var issues = new List<string>();
-            RemoveKnownProcessedFileIfRequested(aisFilePath, removeAisFromImportFolder, removedFiles, issues);
-            RemoveKnownProcessedFileIfRequested(deviceFilePath, removeDeviceFromImportFolder, removedFiles, issues);
+            RemoveKnownProcessedFileIfRequested(aisFilePath, removeAisFromImportFolder, removedFiles, issues, allowMissingSourceFile: false);
+            RemoveKnownProcessedFileIfRequested(deviceFilePath, removeDeviceFromImportFolder, removedFiles, issues, allowMissingDeviceFile);
 
             if (removedFiles.Count > 0)
             {
@@ -299,7 +358,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 processedAtUtc,
                 moveAllFiles || removeAisFromImportFolder,
                 archivedFiles,
-                issues);
+                issues,
+                allowMissingSourceFile: false);
             ArchiveKnownProcessedFile(
                 options.ArchiveFolder,
                 interfaceProfile.Metadata.Name,
@@ -308,7 +368,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 processedAtUtc,
                 moveAllFiles || removeDeviceFromImportFolder,
                 archivedFiles,
-                issues);
+                issues,
+                allowMissingDeviceFile);
 
             var archiveResult = new ProcessedFileArchiveResult(
                 ArchivedFiles: archivedFiles,
@@ -347,8 +408,14 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         DateTime processedAtUtc,
         bool moveFile,
         List<string> archivedFiles,
-        List<string> issues)
+        List<string> issues,
+        bool allowMissingSourceFile = false)
     {
+        if (allowMissingSourceFile && !File.Exists(sourceFilePath))
+        {
+            return;
+        }
+
         var result = _processedFileArchiveService.ArchiveProcessedFile(
             archiveFolder,
             interfaceProfileName,
@@ -364,7 +431,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         string sourceFilePath,
         bool shouldRemove,
         List<string> removedFiles,
-        List<string> issues)
+        List<string> issues,
+        bool allowMissingSourceFile = false)
     {
         if (!shouldRemove)
         {
@@ -373,6 +441,11 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 
         if (!File.Exists(sourceFilePath))
         {
+            if (allowMissingSourceFile)
+            {
+                return;
+            }
+
             issues.Add($"Quelldatei fehlt: {sourceFilePath}");
             return;
         }

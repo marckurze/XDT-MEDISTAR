@@ -68,6 +68,21 @@ public sealed class MonitoringActivityEventKeyBuilderTests
         Assert.NotEqual(firstKey, secondKey);
     }
 
+    [Fact]
+    public void CreateReadyPairKey_ShouldIncludeAttachmentFilesForAttachmentOnlyMode()
+    {
+        var queue = Queue(
+            AisFile(@"C:\Import\Patient.XDT", BaseTime),
+            File(@"C:\Import\bild.jpg", ImportFileKind.AttachmentImage, BaseTime));
+
+        var defaultKey = MonitoringActivityEventKeyBuilder.CreateReadyPairKey(queue);
+        var attachmentOnlyKey = MonitoringActivityEventKeyBuilder.CreateReadyPairKey(queue, includeAttachmentDeviceFiles: true);
+
+        Assert.Equal("scan-ready-pair", defaultKey);
+        Assert.StartsWith("scan-ready-pair:", attachmentOnlyKey, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("bild.jpg", attachmentOnlyKey, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static PendingImportQueue Queue(params PendingImportFile[] files)
     {
         var queue = new PendingImportQueue();

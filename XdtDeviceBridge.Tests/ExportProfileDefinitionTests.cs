@@ -277,6 +277,18 @@ public sealed class ExportProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateMedistarDocumentAttachmentDefault_ShouldContainOnlyBaseAndOptionalDocumentationRules()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault();
+
+        Assert.Equal("export-medistar-document-attachment-default", profile.Metadata.Id);
+        Assert.Equal("device-document-attachment-default", profile.SourceDeviceProfileId);
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.AttachmentOnly/DocumentationText");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6228" or "6205" or "6220");
+        Assert.Empty(ExportProfileDefinitionValidator.Validate(profile));
+    }
+
+    [Fact]
     public void CreateMedistarTopconCl300Default_ShouldCreateProfile()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default();

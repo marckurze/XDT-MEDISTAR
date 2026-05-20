@@ -471,6 +471,19 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Empty(issues);
     }
 
+    [Fact]
+    public void CreateDocumentAttachmentDefault_ShouldCreateAttachmentOnlyProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault();
+
+        Assert.Equal("device-document-attachment-default", profile.Metadata.Id);
+        Assert.Equal("Generisches Dokumentgerät", profile.Metadata.Name);
+        Assert.Equal("AttachmentOnly", profile.ParserMode);
+        Assert.Equal("Dokument/Anhang", profile.DeviceType);
+        Assert.Empty(profile.Measurements);
+        Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile));
+    }
+
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);

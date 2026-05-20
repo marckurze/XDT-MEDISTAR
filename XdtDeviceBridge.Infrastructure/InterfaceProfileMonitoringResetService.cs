@@ -55,6 +55,11 @@ public sealed class InterfaceProfileMonitoringResetService
 
     public AutoImportScanResult Apply(AutoImportScanResult result)
     {
+        return Apply(result, includeAttachmentDeviceFiles: false);
+    }
+
+    public AutoImportScanResult Apply(AutoImportScanResult result, bool includeAttachmentDeviceFiles)
+    {
         ArgumentNullException.ThrowIfNull(result);
 
         var normalizedId = NormalizeId(result.InterfaceProfileId);
@@ -88,9 +93,9 @@ public sealed class InterfaceProfileMonitoringResetService
         return result with
         {
             AisFilesDetected = files.Count(IsAisFile),
-            DeviceFilesDetected = files.Count(IsDeviceFile),
+            DeviceFilesDetected = files.Count(file => IsDeviceFile(file, includeAttachmentDeviceFiles)),
             FilesQueued = files.Count,
-            ReadyPairs = filteredQueue.FindReadyPairs().Count,
+            ReadyPairs = filteredQueue.FindReadyPairs(includeAttachmentDeviceFiles).Count,
             Queue = filteredQueue
         };
     }
@@ -115,14 +120,12 @@ public sealed class InterfaceProfileMonitoringResetService
     private static bool IsAisFile(PendingImportFile file)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.AisGdt || file.Kind == ImportFileKind.AisXdt);
+            && file.Kind.IsAisImportFile();
     }
 
-    private static bool IsDeviceFile(PendingImportFile file)
+    private static bool IsDeviceFile(PendingImportFile file, bool includeAttachmentDeviceFiles)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.DeviceXml
-                || file.Kind == ImportFileKind.DeviceText
-                || file.Kind == ImportFileKind.DeviceCsv);
+            && file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
     }
 }

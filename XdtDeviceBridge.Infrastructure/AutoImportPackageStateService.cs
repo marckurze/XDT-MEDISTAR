@@ -21,7 +21,7 @@ public sealed class AutoImportPackageStateService
             .ThenBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase)
             .ToList();
         var deviceFiles = queue.GetAll()
-            .Where(IsStableDeviceFile)
+            .Where(file => IsStableDeviceFile(file, profile.FolderOptions.IsAttachmentOnlyMode))
             .OrderBy(file => file.DetectedAtUtc)
             .ThenBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase)
@@ -131,15 +131,13 @@ public sealed class AutoImportPackageStateService
     private static bool IsStableAisFile(PendingImportFile file)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.AisGdt || file.Kind == ImportFileKind.AisXdt);
+            && file.Kind.IsAisImportFile();
     }
 
-    private static bool IsStableDeviceFile(PendingImportFile file)
+    private static bool IsStableDeviceFile(PendingImportFile file, bool includeAttachmentDeviceFiles)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.DeviceXml
-                || file.Kind == ImportFileKind.DeviceText
-                || file.Kind == ImportFileKind.DeviceCsv);
+            && file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
     }
 
     private sealed record PendingAisState(PendingImportFile File, DateTime FirstSeenAtUtc);

@@ -63,6 +63,10 @@ public sealed class AttachmentImportFolderScannerServiceTests
     [InlineData("scan.tiff", ".tiff")]
     [InlineData("dicom.dcm", ".dcm")]
     [InlineData("hinweis.txt", ".txt")]
+    [InlineData("befund.xml", ".xml")]
+    [InlineData("video.mp4", ".mp4")]
+    [InlineData("audio.mp3", ".mp3")]
+    [InlineData("signal.wav", ".wav")]
     [InlineData("gross.PDF", ".pdf")]
     public void Scan_ShouldRecognizeSupportedFiles(string fileName, string expectedExtension)
     {

@@ -26,4 +26,6 @@ public sealed record InterfaceFolderOptions(
     int AttachmentWaitTimeoutSeconds = 30,
     int AttachmentFileStabilityWaitSeconds = 2,
     int AutoImportScanIntervalSeconds = 5,
-    int DeviceFileWaitTimeoutMinutes = 10);
+    int DeviceFileWaitTimeoutMinutes = 10,
+    bool IsAttachmentOnlyMode = false,
+    bool ShowAttachmentDocumentationDialog = false);

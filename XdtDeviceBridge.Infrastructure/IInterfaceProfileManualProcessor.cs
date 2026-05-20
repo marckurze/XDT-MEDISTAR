@@ -10,5 +10,6 @@ public interface IInterfaceProfileManualProcessor
         string aisFilePath,
         string deviceFilePath,
         DateTime timestamp,
-        Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null);
+        Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null,
+        Func<PatientData, string?>? documentationTextProvider = null);
 }

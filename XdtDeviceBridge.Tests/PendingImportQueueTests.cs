@@ -137,6 +137,25 @@ public sealed class PendingImportQueueTests
     }
 
     [Fact]
+    public void FindReadyPairs_ShouldIncludeAttachmentsForAttachmentOnlyMode()
+    {
+        var queue = new PendingImportQueue();
+        queue.AddOrUpdate(CreateFile(
+            "C:\\Import\\patient.gdt",
+            ImportFileKind.AisGdt,
+            status: PendingImportFileStatus.Stable));
+        queue.AddOrUpdate(CreateFile(
+            "C:\\Import\\image.jpg",
+            ImportFileKind.AttachmentImage,
+            status: PendingImportFileStatus.Stable));
+
+        var pair = Assert.Single(queue.FindReadyPairs(includeAttachmentDeviceFiles: true));
+
+        Assert.Equal("patient.gdt", pair.AisFile.FileName);
+        Assert.Equal("image.jpg", pair.DeviceFile.FileName);
+    }
+
+    [Fact]
     public void FindReadyPairs_ShouldPairFilesByFifoDetectedAtUtc()
     {
         var queue = new PendingImportQueue();

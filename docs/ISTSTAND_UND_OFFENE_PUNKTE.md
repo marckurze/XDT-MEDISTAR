@@ -38,6 +38,7 @@ Besonders stabil wirken aktuell:
 - NIDEK AR360 / AR-360A als praktisch validierter Auto-Refraktometer-Workflow fuer XDT-Rueckgabe mit BuiltIn-Profilen, ARMedian-Ausgabe und selektivem Templatepaket-Pfad
 - NIDEK LM7 / LM-7P als praktisch validierter Lensmeter-Referenzkandidat mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade, MEDISTAR-Praxisprotokoll und selektivem Templatepaket-Test
 - NIDEK NT530P / NT-530P als direkt nutzbarer testseitiger MEDISTAR-Kandidat mit echter UTF-16-XML-Fixture, `6220`-Pachymetrie, `6205`-Tonometrie, BuiltIn-Schnittstellenprofil, selektivem Templatepaket-Test und korrigiertem Nachlauf nach erfolgreichem Mehrfachanhang-Export
+- generischer AttachmentOnly-/Dokumentgeraete-V1-Kandidat `MEDISTAR + Dokumentanhang`: AIS-Datei plus stabile Dokumentdateien erzeugen optional `6227` und je Datei eigene `6302`-`6305`-Linkfelder, ohne Messwertparser und ohne `6228`/`6205`/`6220`
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
@@ -45,6 +46,7 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
 - fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S, AR360 und LM7 sind Referenz-/Kandidatendokumentation und temporaer erzeugte Export-/Import-Tests vorhanden, offizielle ZIP-Artefakte folgen erst nach Release-Regel
 - UI-Einstellung fuer die Rueckdock-Zeit und sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungen
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
+- praktische MEDISTAR-Abnahme fuer den generischen Dokumentanhang-Workflow mit mehreren Dateien und optionalem `6227`-Text
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
 - UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
 - Praktische Windows-Sichtpruefung: Der Bereich `Pruefung vor Aktivierung` und der scrollbare Dialog `Aktivierung vorbereiten` sind fuer den aktuellen Vorschau-Status abgenommen; Lesbarkeit, Abschnittsgliederung, reduzierte Redundanz und Sicherheitshinweis wurden positiv bewertet.
@@ -228,7 +230,7 @@ Eine harte produktive Lizenzsperre und digitale Signaturpruefung sind nicht akti
 Der Code enthaelt Services und Tests fuer:
 
 - Scannen unterstuetzter Anhaenge in der obersten Ebene
-- unterstuetzte Typen wie PDF, JPG/JPEG, PNG, TIF/TIFF, DCM und TXT
+- unterstuetzte Typen wie PDF, JPG/JPEG, PNG, TIF/TIFF, DCM, TXT, XML, MP4, MP3 und WAV
 - Stabilitaetspruefung vor Verarbeitung
 - automatische Auswahl eines oder mehrerer stabiler unterstuetzter Anhaenge in stabiler Dateinamen-Reihenfolge
 - Copy/Move-Transfer mit Kollisionsschutz
@@ -239,6 +241,7 @@ Der Code enthaelt Services und Tests fuer:
   - `6305` vollstaendiger Dateipfad
 - je erfolgreichem Anhang eine eigene `6302`/`6303`/optional `6304`/`6305`-Feldgruppe
 - zentrale Laengenpraefix-Erzeugung ueber `XdtExportBuilder`
+- AttachmentOnly-/Dokumentgeraete-Modus: Dokumentdateien gelten als Geraeteeingang, werden aber nur als Anhaenge uebergeben; XML ist dort kein Messwert-XML.
 
 Instabile Anhaenge werden nicht verschoben, verlinkt oder exportiert. Wenn mehrere Kandidaten vorhanden sind und mindestens einer noch instabil ist, wartet die Paketlogik bis zur Stabilitaet beziehungsweise bis zum bestehenden Timeout.
 
@@ -292,7 +295,7 @@ Weitere Regeln:
 - Keine pauschale Ordnerleerung.
 - Exportordner nicht bereinigen.
 - Instabile Dateien nicht verarbeiten.
-- Mehrere XDT-Anhaenge nicht automatisch zuordnen.
+- Mehrere XDT-Anhaenge nur als einzelne stabile unterstuetzte Dateien mit eigenen Linkfeldgruppen uebergeben.
 - Keine medizinische Bewertung.
 - Keine harte Lizenzsperre ohne gesonderte Spezifikation.
 
@@ -308,6 +311,7 @@ Belastbar validiert bzw. testseitig abgesichert sind aktuell:
 | XDT-Laengenpraefixe | testseitig validiert | `XdtExportBuilderTests`, Linkfeld-Adapter-Tests |
 | XDT-Anhang-Linkfelder `6302` bis `6305` | praktisch fuer MEDISTAR + ARK1S Pflicht-Anhang und testseitig validiert | Praxisprotokoll, Attachment-, Coordinator-, ManualProcessor- und BuilderTestExport-Tests |
 | XDT-Mehrfachanhaenge | testseitig validiert, inklusive Paketabschluss/Nachlauf | `AttachmentAutoCandidateSelectionServiceTests`, `AttachmentPackageDecisionServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `InterfaceMonitoringCardStatusServiceTests` |
+| AttachmentOnly-/Dokumentgeraete-V1 | testseitig validiert | `ImportFileClassifierTests`, `AttachmentImportFolderScannerServiceTests`, `AutoImportScannerServiceTests`, `InterfaceProfileManualProcessorTests`, `MedistarDocumentAttachmentTemplatePackageTests` |
 | Baukasten-Testexport mit simuliertem 6305-Zielpfad | testseitig validiert | `BuilderTestExportServiceTests` |
 | Automatische Paketlogik AIS -> Geraet -> XDT-Anhang | testseitig validiert | `AutoImportPackageStateServiceTests`, `AutoImportPairProcessingCoordinatorTests`, `AttachmentPackageDecisionServiceTests` |
 | Templatepaket-Importpipeline bis UserDefined-Uebernahme | E2E-nah testseitig validiert | `TemplatePackageImportEndToEndTests` und zugehoerige Service-Tests |
@@ -324,6 +328,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - NIDEK AR360 / AR-360A: Auto-Refraktor-XDT-Rueckgabe praktisch validiert; Referenzpaket-Export/Import testseitig abgesichert; XDT-Anhangfall und offizielles ZIP-Artefakt offen
 - NIDEK LM7/LM7P: Lensmeter-XDT-Rueckgabe praktisch in MEDISTAR validiert; echte XML-Fixture und Templatepaket-Kandidat testseitig vorbereitet; weitere Prisma-/PD-Dateien und offizielles ZIP-Artefakt offen
 - NIDEK NT530P: echte XML-Fixture, Parserwerte, korrigierter mehrzeiliger `6205`-/`6220`-Export mit Headern und Templatepaket-Kandidat testseitig vorhanden; praktische MEDISTAR-Abnahme offen
+- MEDISTAR + Dokumentanhang: AttachmentOnly-V1 mit optionalem `6227`, mehreren `6302`-`6305`-Anhaengen und Templatepaket-Kandidat testseitig vorhanden; praktische MEDISTAR-Abnahme offen
 - TOPCON CL300
 - TOPCON KR800
 - TOPCON TRK2P
@@ -380,6 +385,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | mittel | Profil-Assistent fuer unbekannte Geraete | Schlanke V1-Anlage fuer AIS-, Geraete- und Exportprofile als UserDefined ist vorhanden. | Gefuehrtes Erstellen kompletter Geraete-/Export-/Schnittstellenpakete inklusive Datei-Explorer und Messwertuebernahme fehlt. | Nach Geraete-Datei-Explorer planen. | Skalierung auf neue Geraete bleibt weiterhin teilweise Entwickler-/Codex-Aufgabe. | Geraete-Datei-Explorer, ProfileCatalog |
 | mittel | NIDEK LM7/LM7P produktiv validieren | Echte LM7-XML-Fixture, Parseralias fuer `Sphare`/`Sphere`, MEDISTAR-Lensmeter-Ausgabe, BuiltIn-Schnittstellenprofil, Templatepaket-Kandidat, Reparatur alter persistierter BuiltIn-Exportpfade und praktische MEDISTAR-Abnahme sind vorhanden. | Weitere Prisma-/PD-Dateien, separat validierter XDT-Anhang-Link und offizielles ZIP-Artefakt fehlen. | Prisma-/PD-Beispielfaelle sammeln und danach ueber ZIP-Release nach Regel entscheiden. | Vorbereitetes Profil koennte bei Prisma/PD-Sonderfaellen noch abweichen. | Testdaten, MEDISTAR-Anforderungen |
 | mittel | NIDEK NT530P produktiv validieren | Echte UTF-16-XML-Fixture, Parserwerte, Header-/Einzelzeilen fuer `6205` Tonometrie und `6220` Pachymetrie, BuiltIn-Geraete-/Export-/Schnittstellenprofil, selektiver Templatepaket-Test, Mehrfachanhang-Linkfelder und korrigierter Nachlauf/Monitoring-Reset sind vorhanden. | Praktische MEDISTAR-Nachpruefung fuer den kompletten JPG-Mehrfachanhanglauf nach Nachlauf-Fix fehlt. | Geraetespezifischen E2E-Testlauf mit MEDISTAR erneut durchfuehren und protokollieren. | Karteikarten-Darstellung, Ordnernachlauf oder Attachment-Erwartung koennte fachlich abweichen. | Testdaten, MEDISTAR-Anforderungen |
+| mittel | Dokumentgeraete produktiv validieren | BuiltIn `MEDISTAR + Dokumentanhang`, AttachmentOnly-Modus, optionaler `6227`-Dokumentationstext, mehrere `6302`-`6305`-Linkfeldgruppen und selektiver Templatepaket-Test sind vorhanden. | Praktischer MEDISTAR-Test mit PDF/JPG/XML/Medienanhaengen, optionalem Text und realistischen Copy/Move-Zielordnern fehlt. | Live-Test mit mehreren stabilen Dokumentdateien protokollieren; danach entscheiden, ob Drag-&-Drop oder Vorschaukacheln separat gebraucht werden. | Dokumentgeraete bleiben ohne Praxisabnahme ein technischer Kandidat. | Testanhaenge, MEDISTAR-Anforderungen |
 | mittel | TOPCON CL300 produktiv validieren | Profile vorbereitet. | Namespace-/Dateistruktur mit echten Beispielen pruefen. | CL300-Beispieldateien sammeln und Parserpfade bestaetigen. | Vorbereitete SourcePaths koennen unvollstaendig sein. | Testdaten |
 | mittel | TOPCON KR800 produktiv validieren | Profile vorbereitet. | REF/KM/SBJ-Strukturen mit echten Daten pruefen. | KR800-Testdaten auswerten und Exportregeln validieren. | Mehruntersuchungsdaten koennen falsch gruppiert werden. | Testdaten |
 | mittel | TOPCON TRK2P produktiv validieren | Profile vorbereitet. | TM/CCT/IOP-Strukturen und Einheiten pruefen. | TRK2P-Testdaten auswerten und Exportregeln validieren. | IOP/CCT-Ausgabe koennte fachlich unpassend sein. | Testdaten |
@@ -422,6 +428,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - NIDEK AR360 als zweiten Referenzworkflow stabil halten; den reproduzierbaren Pakettest beibehalten, offizielles ZIP-Artefakt und ggf. XDT-Anhangtest separat planen.
 - NIDEK LM7/LM7P als praktisch validierten Referenzkandidaten beibehalten; Prisma-/PD-Beispielfaelle und offizielles ZIP-Artefakt bleiben offen.
 - NIDEK NT530P als naechsten praktischen MEDISTAR-Testkandidaten mit korrigiertem `6205`/`6220`-Layout und optionalem JPG-Mehrfachanhang abnehmen; TOPCON-Profile erst nach Datenlage priorisieren.
+- Dokumentgeraete-V1 mit AIS-Datei, mehreren Anhaengen und optionalem `6227`-Text praktisch in MEDISTAR pruefen.
 - Baukasten schlank halten; keine neue Assistentenarchitektur, solange fertige Profile und Pakete fehlen.
 
 ### Phase 4: Geparkter Aktivierungsassistent

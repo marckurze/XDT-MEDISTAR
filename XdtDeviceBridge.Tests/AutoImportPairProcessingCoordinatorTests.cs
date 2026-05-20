@@ -1065,6 +1065,42 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.True(File.Exists(unknownFile));
     }
 
+    [Fact]
+    public void ProcessReadyPairs_AttachmentOnlyShouldUseDeviceFolderAsAttachmentImportFallback()
+    {
+        var files = CreateTempImportFiles();
+        var documentFile = Path.Combine(files.Folder, "bild.jpg");
+        File.WriteAllText(documentFile, "image");
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate(documentFile, isSupported: true)
+        }));
+        var manualProcessor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = CreateCoordinator(
+            manualProcessor,
+            scanner,
+            new FakeAttachmentPreparationService(CreateAttachmentPreparationResult()));
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: string.Empty,
+            attachmentExportFolder: CreateTempFolder(),
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true,
+            deviceImportFolder: files.Folder);
+
+        var result = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { CreatePair(files.AisFilePath, documentFile) },
+            automaticProcessingEnabled: true,
+            Timestamp,
+            attachmentOnlyDocumentationProvider: (_, _, _) => "Dokumentation");
+
+        Assert.Equal(1, result.ProcessedCount);
+        Assert.Equal(files.Folder, scanner.LastOptions?.AttachmentImportFolder);
+        Assert.Equal(1, manualProcessor.CallCount);
+    }
+
     private static PendingImportPair CreatePair(
         string aisFilePath,
         string deviceFilePath,
@@ -1105,7 +1141,9 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         string attachmentImportFolder = "",
         string attachmentExportFolder = "",
         AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
-        int attachmentWaitTimeoutSeconds = 30)
+        int attachmentWaitTimeoutSeconds = 30,
+        bool isAttachmentOnlyMode = false,
+        string deviceImportFolder = "")
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
         {
@@ -1126,7 +1164,9 @@ public sealed class AutoImportPairProcessingCoordinatorTests
                 AttachmentImportFolder = attachmentImportFolder,
                 AttachmentExportFolder = attachmentExportFolder,
                 AttachmentRequirementMode = attachmentRequirementMode,
-                AttachmentWaitTimeoutSeconds = attachmentWaitTimeoutSeconds
+                AttachmentWaitTimeoutSeconds = attachmentWaitTimeoutSeconds,
+                IsAttachmentOnlyMode = isAttachmentOnlyMode,
+                DeviceImportFolder = deviceImportFolder
             },
             IsActive = true
         };
@@ -1313,7 +1353,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             string aisFilePath,
             string deviceFilePath,
             DateTime timestamp,
-            Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null)
+            Func<PatientData, AttachmentProcessingStatus?>? attachmentPreparation = null,
+            Func<PatientData, string?>? documentationTextProvider = null)
         {
             CallCount++;
             if (!_result.Success || _result.PipelineResult?.Patient is null || attachmentPreparation is null)

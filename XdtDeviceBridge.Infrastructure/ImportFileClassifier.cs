@@ -20,6 +20,7 @@ public sealed class ImportFileClassifier
             ".csv" => (ImportFileKind.DeviceCsv, "CSV-Gerätedatei erkannt."),
             ".jpg" or ".jpeg" or ".png" => (ImportFileKind.AttachmentImage, "Bild-Anhang erkannt."),
             ".pdf" => (ImportFileKind.AttachmentPdf, "PDF-Anhang erkannt."),
+            ".tif" or ".tiff" or ".dcm" or ".mp4" or ".mp3" or ".wav" => (ImportFileKind.AttachmentFile, "Anhangdatei erkannt."),
             _ => (ImportFileKind.Unknown, "Dateityp anhand der Endung nicht bekannt.")
         };
 

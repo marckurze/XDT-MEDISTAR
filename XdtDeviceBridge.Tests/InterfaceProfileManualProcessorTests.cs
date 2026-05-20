@@ -135,6 +135,118 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
+    public void Process_AttachmentOnlyShouldCreate6227AndAttachmentFieldsWithoutMeasurementFields()
+    {
+        var targetPath1 = @"C:\GitHub\AnhangExp\bild1.jpg";
+        var targetPath2 = @"C:\GitHub\AnhangExp\befund.pdf";
+        var fields = new[]
+        {
+            new ExportFieldRecord("6302", "Datei", 1),
+            new ExportFieldRecord("6303", "JPG", 2),
+            new ExportFieldRecord("6305", targetPath1, 3),
+            new ExportFieldRecord("6302", "Datei", 4),
+            new ExportFieldRecord("6303", "PDF", 5),
+            new ExportFieldRecord("6305", targetPath2, 6)
+        };
+
+        var result = _processor.Process(
+            CreateAttachmentOnlyInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            CreateDeviceDocumentFile("bild1.jpg"),
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ => CreateAttachmentStatus(fields),
+            _ => "Bilddokumentation: vorderer Augenabschnitt.");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.NotNull(result.ExportContent);
+        Assert.Contains("6227Bilddokumentation: vorderer Augenabschnitt.", result.ExportContent);
+        Assert.Equal(2, SplitXdtLines(result.ExportContent!).Count(line => line.Contains("6302Datei", StringComparison.Ordinal)));
+        Assert.Contains("6305" + targetPath1, result.ExportContent);
+        Assert.Contains("6305" + targetPath2, result.ExportContent);
+        Assert.DoesNotContain("6228", result.ExportContent);
+        Assert.DoesNotContain("6205", result.ExportContent);
+        Assert.DoesNotContain("6220", result.ExportContent);
+        Assert.Contains(result.PipelineResult!.Measurements, measurement =>
+            measurement.SourcePath == "AttachmentOnly/DocumentationText"
+            && measurement.Value == "Bilddokumentation: vorderer Augenabschnitt.");
+    }
+
+    [Fact]
+    public void Process_AttachmentOnlyWithoutDocumentationTextShouldNotCreateEmpty6227()
+    {
+        var result = _processor.Process(
+            CreateAttachmentOnlyInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            CreateDeviceDocumentFile("befund.pdf"),
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ => CreateAttachmentStatus(new[]
+            {
+                new ExportFieldRecord("6302", "Datei", 1),
+                new ExportFieldRecord("6303", "PDF", 2),
+                new ExportFieldRecord("6305", @"C:\GitHub\AnhangExp\befund.pdf", 3)
+            }),
+            _ => "   ");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.NotNull(result.ExportContent);
+        Assert.DoesNotContain("6227", result.ExportContent);
+        Assert.DoesNotContain(result.PipelineResult!.Measurements, measurement => measurement.SourcePath == "AttachmentOnly/DocumentationText");
+    }
+
+    [Fact]
+    public void Process_AttachmentOnlyShouldTreatXmlAsAttachmentWithoutParsing()
+    {
+        var invalidXmlAttachmentPath = CreateDeviceDocumentFile("dokument.xml", "dies ist kein Messwert-XML");
+
+        var result = _processor.Process(
+            CreateAttachmentOnlyInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            invalidXmlAttachmentPath,
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ => CreateAttachmentStatus(new[]
+            {
+                new ExportFieldRecord("6302", "Datei", 1),
+                new ExportFieldRecord("6303", "XML", 2),
+                new ExportFieldRecord("6305", @"C:\GitHub\AnhangExp\dokument.xml", 3)
+            }));
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.DoesNotContain(result.PipelineResult!.Issues, issue => issue.Stage == ProcessingStage.DeviceParsing);
+        Assert.DoesNotContain("6228", result.ExportContent);
+    }
+
+    [Fact]
+    public void Process_AttachmentOnlyShouldNotReportMissingDeviceFileWhenAttachmentMoveAlreadyTransferredIt()
+    {
+        var deviceFilePath = CreateDeviceDocumentFile("bild1.jpg");
+
+        var result = _processor.Process(
+            CreateAttachmentOnlyInterfaceProfile(
+                CreateTempFolder(),
+                clearDeviceImportFolderBeforeProcessing: true),
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            deviceFilePath,
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ =>
+            {
+                File.Delete(deviceFilePath);
+                return CreateAttachmentStatus(new[]
+                {
+                    new ExportFieldRecord("6302", "Datei", 1),
+                    new ExportFieldRecord("6303", "JPG", 2),
+                    new ExportFieldRecord("6305", @"C:\GitHub\AnhangExp\bild1.jpg", 3)
+                });
+            });
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.DoesNotContain(result.Messages, message => message.Contains("Quelldatei fehlt", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void Process_ShouldReturnErrorForNonXmlDeviceFile()
     {
         var interfaceProfile = CreateInterfaceProfile(
@@ -423,6 +535,32 @@ public sealed class InterfaceProfileManualProcessorTests
         };
     }
 
+    private static InterfaceProfileDefinition CreateAttachmentOnlyInterfaceProfile(
+        string exportFolder,
+        bool clearDeviceImportFolderBeforeProcessing = false)
+    {
+        var template = DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault();
+        return template with
+        {
+            Metadata = template.Metadata with
+            {
+                Id = "interface-document-attachment-test",
+                Name = "MEDISTAR + Dokumentanhang",
+                IsBuiltIn = false,
+                IsUserDefined = true
+            },
+            FolderOptions = template.FolderOptions with
+            {
+                ExportFolder = exportFolder,
+                AttachmentExportFolder = CreateTempFolder(),
+                ClearDeviceImportFolderBeforeProcessing = clearDeviceImportFolderBeforeProcessing,
+                IsAttachmentProcessingEnabled = true,
+                IsAttachmentOnlyMode = true
+            },
+            IsActive = true
+        };
+    }
+
     private static AttachmentProcessingStatus CreateAttachmentStatus(IReadOnlyList<ExportFieldRecord> fields)
     {
         return new AttachmentProcessingStatus(
@@ -494,5 +632,13 @@ public sealed class InterfaceProfileManualProcessorTests
         var targetFilePath = Path.Combine(folder, targetFileName);
         File.Copy(GetTestDataPath(testDataFileName), targetFilePath);
         return targetFilePath;
+    }
+
+    private static string CreateDeviceDocumentFile(string fileName, string content = "attachment")
+    {
+        var folder = CreateTempFolder();
+        var filePath = Path.Combine(folder, fileName);
+        File.WriteAllText(filePath, content);
+        return filePath;
     }
 }

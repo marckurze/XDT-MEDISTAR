@@ -433,4 +433,31 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "TM", "CCT", "Tonometrie", "Pachymetrie" },
             CanContainMultipleExaminationTypes: true);
     }
+
+    public static DeviceProfileDefinition CreateDocumentAttachmentDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-document-attachment-default",
+                Name: "Generisches Dokumentgerät",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile for devices that deliver documents or files as XDT attachments without measurement parsing.",
+                Vendor: "XdtDeviceBridge",
+                Product: "Dokumentanhang",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "Generisch",
+            Model: "Dokumentanhang",
+            DeviceType: "Dokument/Anhang",
+            ParserMode: "AttachmentOnly",
+            Measurements: Array.Empty<DeviceMeasurementDefinition>(),
+            SupportedExaminationTypes: new[] { "Dokument", "Anhang" },
+            CanContainMultipleExaminationTypes: false);
+    }
 }

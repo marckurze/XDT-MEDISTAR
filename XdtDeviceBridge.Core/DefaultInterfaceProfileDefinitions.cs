@@ -149,4 +149,45 @@ public static class DefaultInterfaceProfileDefinitions
             IsLicenseRequired: true,
             Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK NT-530P tonometry and pachymetry profile candidate.");
     }
+
+    public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-document-attachment-default",
+                Name: "MEDISTAR + Dokumentanhang",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile for document-only device workflows with XDT attachment links.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/Dokumentanhang",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-document-attachment-default",
+            ExportProfileId: "export-medistar-document-attachment-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true,
+                IsAttachmentProcessingEnabled: true,
+                AttachmentRequirementMode: AttachmentRequirementMode.Required,
+                IsAttachmentOnlyMode: true,
+                ShowAttachmentDocumentationDialog: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive V1 candidate for devices that pass documents/files to MEDISTAR as attachments without measurement parsing.");
+    }
 }

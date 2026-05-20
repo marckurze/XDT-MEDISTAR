@@ -28,8 +28,13 @@ public sealed class PendingImportQueue
 
     public IReadOnlyList<PendingImportPair> FindReadyPairs()
     {
+        return FindReadyPairs(includeAttachmentDeviceFiles: false);
+    }
+
+    public IReadOnlyList<PendingImportPair> FindReadyPairs(bool includeAttachmentDeviceFiles)
+    {
         var aisFiles = SortFiles(_filesByPath.Values.Where(IsStableAisFile)).ToList();
-        var deviceFiles = SortFiles(_filesByPath.Values.Where(IsStableDeviceFile)).ToList();
+        var deviceFiles = SortFiles(_filesByPath.Values.Where(file => IsStableDeviceFile(file, includeAttachmentDeviceFiles))).ToList();
         var pairCount = Math.Min(aisFiles.Count, deviceFiles.Count);
         var pairs = new List<PendingImportPair>(pairCount);
 
@@ -57,15 +62,13 @@ public sealed class PendingImportQueue
     private static bool IsStableAisFile(PendingImportFile file)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.AisGdt || file.Kind == ImportFileKind.AisXdt);
+            && file.Kind.IsAisImportFile();
     }
 
-    private static bool IsStableDeviceFile(PendingImportFile file)
+    private static bool IsStableDeviceFile(PendingImportFile file, bool includeAttachmentDeviceFiles)
     {
         return file.Status == PendingImportFileStatus.Stable
-            && (file.Kind == ImportFileKind.DeviceXml
-                || file.Kind == ImportFileKind.DeviceText
-                || file.Kind == ImportFileKind.DeviceCsv);
+            && file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
     }
 
     private static IOrderedEnumerable<PendingImportFile> SortFiles(IEnumerable<PendingImportFile> files)
