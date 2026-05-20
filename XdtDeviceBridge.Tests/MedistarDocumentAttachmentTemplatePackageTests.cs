@@ -31,6 +31,8 @@ public sealed class MedistarDocumentAttachmentTemplatePackageTests
         Assert.True(interfaceProfile.FolderOptions.IsAttachmentOnlyMode);
         Assert.True(interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled);
         Assert.Equal(AttachmentRequirementMode.Required, interfaceProfile.FolderOptions.AttachmentRequirementMode);
+        Assert.Equal(AttachmentCompletionMode.WaitForQuietPeriod, interfaceProfile.FolderOptions.AttachmentCompletionMode);
+        Assert.Equal(10, interfaceProfile.FolderOptions.AttachmentQuietPeriodSeconds);
 
         var includedIds = importResult.Package.IncludedProfiles.Select(profile => profile.Id).ToArray();
         Assert.DoesNotContain(includedIds, id => id.Contains("ark1s", StringComparison.OrdinalIgnoreCase));

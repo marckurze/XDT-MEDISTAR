@@ -40,6 +40,7 @@
 - NIDEK NT530P / NT-530P als direkt nutzbaren MEDISTAR-Kandidaten ergaenzt: echte UTF-16-XML-Fixture, Parserwerte fuer Tonometrie, korrigierten IOP und Pachymetrie, berechnete MEDISTAR-Zeilen fuer `6220` und `6205`, BuiltIn-Schnittstellenprofil und selektiver NT530P-Templatepaket-Test. JPG-Dateien werden nicht als Messwertdateien verarbeitet und bleiben fuer spaetere XDT-Anhang-Validierung relevant.
 - XDT-Mehrfachanhaenge im Automatiklauf ergaenzt: mehrere stabile unterstuetzte Anhangdateien werden sortiert einzeln per bestehender Copy/Move- und Kollisionslogik uebertragen und erzeugen je Datei eine eigene `6302`/`6303`/optional `6304`/`6305`-Linkfeldgruppe.
 - AttachmentOnly-/Dokumentgeraete-V1 ergaenzt: Das BuiltIn-Profil `MEDISTAR + Dokumentanhang` verarbeitet AIS-Datei plus eine oder mehrere stabile Dokument-/Anhangdateien ohne Messwertparser, kann optional einen Dokumentationstext ueber `6227` ausgeben und nutzt fuer jede Datei die bestehenden `6302`/`6303`/optional `6304`/`6305`-Linkfelder. XML, MP4, MP3 und WAV werden in diesem Modus nur als Anhaenge behandelt.
+- AttachmentOnly-Abschlusslogik ergaenzt: Dokumentgeraete koennen profilbezogen entweder nach einer Wartezeit nach der letzten stabilen Datei automatisch uebertragen oder im Dialog `Dokumente uebertragen` manuell bestaetigt werden. Neue Dateien innerhalb der Wartezeit starten den Countdown neu; Drag-&-Drop, Vorschaukacheln und pro-Datei-Kommentare bleiben weiterhin offen.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Behoben
@@ -64,7 +65,7 @@
 
 ### Nicht umgesetzt
 
-- Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit und ein sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungsfenster.
+- Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit, ein sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungsfenster sowie Drag-&-Drop/Vorschaukacheln fuer Dokumentanhaenge.
 
 ### Dokumentation
 

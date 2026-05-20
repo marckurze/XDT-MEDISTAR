@@ -185,7 +185,9 @@ public static class DefaultInterfaceProfileDefinitions
                 IsAttachmentProcessingEnabled: true,
                 AttachmentRequirementMode: AttachmentRequirementMode.Required,
                 IsAttachmentOnlyMode: true,
-                ShowAttachmentDocumentationDialog: true),
+                ShowAttachmentDocumentationDialog: true,
+                AttachmentCompletionMode: AttachmentCompletionMode.WaitForQuietPeriod,
+                AttachmentQuietPeriodSeconds: 10),
             IsActive: false,
             IsLicenseRequired: true,
             Description: "Built-in inactive V1 candidate for devices that pass documents/files to MEDISTAR as attachments without measurement parsing.");

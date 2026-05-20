@@ -12,6 +12,7 @@ public sealed class AutoImportPairProcessingCoordinator
     private readonly IAttachmentExternalLinkPreparationService _attachmentPreparationService;
     private readonly IAisPatientDataReader _aisPatientDataReader;
     private readonly AttachmentPackageDecisionService _attachmentPackageDecisionService;
+    private readonly AttachmentCompletionService _attachmentCompletionService;
     private readonly TerminalBlockedImportFileHandler _terminalBlockedImportFileHandler;
     private readonly HashSet<string> _processedPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _processingPairKeys = new(StringComparer.OrdinalIgnoreCase);
@@ -80,6 +81,7 @@ public sealed class AutoImportPairProcessingCoordinator
             attachmentPreparationService,
             aisPatientDataReader,
             attachmentPackageDecisionService,
+            new AttachmentCompletionService(),
             new TerminalBlockedImportFileHandler())
     {
     }
@@ -93,6 +95,7 @@ public sealed class AutoImportPairProcessingCoordinator
         IAttachmentExternalLinkPreparationService attachmentPreparationService,
         IAisPatientDataReader aisPatientDataReader,
         AttachmentPackageDecisionService attachmentPackageDecisionService,
+        AttachmentCompletionService attachmentCompletionService,
         TerminalBlockedImportFileHandler terminalBlockedImportFileHandler)
     {
         _manualProcessor = manualProcessor ?? throw new ArgumentNullException(nameof(manualProcessor));
@@ -103,6 +106,7 @@ public sealed class AutoImportPairProcessingCoordinator
         _attachmentPreparationService = attachmentPreparationService ?? throw new ArgumentNullException(nameof(attachmentPreparationService));
         _aisPatientDataReader = aisPatientDataReader ?? throw new ArgumentNullException(nameof(aisPatientDataReader));
         _attachmentPackageDecisionService = attachmentPackageDecisionService ?? throw new ArgumentNullException(nameof(attachmentPackageDecisionService));
+        _attachmentCompletionService = attachmentCompletionService ?? throw new ArgumentNullException(nameof(attachmentCompletionService));
         _terminalBlockedImportFileHandler = terminalBlockedImportFileHandler ?? throw new ArgumentNullException(nameof(terminalBlockedImportFileHandler));
     }
 
@@ -113,7 +117,7 @@ public sealed class AutoImportPairProcessingCoordinator
         bool automaticProcessingEnabled,
         DateTime timestamp,
         bool isMonitoringRunning = true,
-        Func<InterfaceProfileDefinition, PendingImportPair, IReadOnlyList<AttachmentImportFileCandidate>, string?>? attachmentOnlyDocumentationProvider = null)
+        Func<InterfaceProfileDefinition, PendingImportPair, IReadOnlyList<AttachmentImportFileCandidate>, AttachmentOnlyConfirmationResult>? attachmentOnlyConfirmationProvider = null)
     {
         ArgumentNullException.ThrowIfNull(interfaceProfile);
         ArgumentNullException.ThrowIfNull(exportProfile);
@@ -182,7 +186,7 @@ public sealed class AutoImportPairProcessingCoordinator
                 automaticProcessingEnabled,
                 isMonitoringRunning,
                 timestamp,
-                attachmentOnlyDocumentationProvider);
+                attachmentOnlyConfirmationProvider);
             if (attachmentGate.DeferredResult is not null)
             {
                 results.Add(attachmentGate.DeferredResult);
@@ -202,12 +206,14 @@ public sealed class AutoImportPairProcessingCoordinator
                     attachmentGate.DocumentationTextProvider);
                 _processedPairKeys.Add(processedPairKey);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
+                _attachmentCompletionService.MarkCompleted(pairInstanceKey);
                 results.Add(CreateProcessedResult(interfaceProfile, pairInstanceKey, pair, processingResult, processingResult.AttachmentStatus));
             }
             catch (Exception ex)
             {
                 _processedPairKeys.Add(processedPairKey);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
+                _attachmentCompletionService.MarkCompleted(pairInstanceKey);
                 results.Add(new AutoImportPairProcessingResult(
                     PairKey: pairInstanceKey,
                     AisFilePath: pair.AisFile.FilePath,
@@ -250,6 +256,8 @@ public sealed class AutoImportPairProcessingCoordinator
         {
             _pairReadySinceUtc.Remove(key);
         }
+
+        _attachmentCompletionService.ResetProfile(interfaceProfileId);
     }
 
     private static AutoImportPairProcessingResult CreateProcessedResult(
@@ -280,7 +288,7 @@ public sealed class AutoImportPairProcessingCoordinator
         bool automaticProcessingEnabled,
         bool isMonitoringRunning,
         DateTime timestamp,
-        Func<InterfaceProfileDefinition, PendingImportPair, IReadOnlyList<AttachmentImportFileCandidate>, string?>? attachmentOnlyDocumentationProvider)
+        Func<InterfaceProfileDefinition, PendingImportPair, IReadOnlyList<AttachmentImportFileCandidate>, AttachmentOnlyConfirmationResult>? attachmentOnlyConfirmationProvider)
     {
         var attachmentProfile = CreateAttachmentProcessingProfile(interfaceProfile);
         if (!interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled
@@ -389,9 +397,91 @@ public sealed class AutoImportPairProcessingCoordinator
         {
             var selectedCandidates = packageDecision.SelectedCandidates;
             Func<PatientData, string?>? documentationTextProvider = null;
-            if (interfaceProfile.FolderOptions.IsAttachmentOnlyMode && attachmentOnlyDocumentationProvider is not null)
+            if (interfaceProfile.FolderOptions.IsAttachmentOnlyMode)
             {
-                documentationTextProvider = _ => attachmentOnlyDocumentationProvider(interfaceProfile, pair, selectedCandidates);
+                var completionDecision = _attachmentCompletionService.Decide(
+                    interfaceProfile,
+                    pairInstanceKey,
+                    selectedCandidates,
+                    timestamp.ToUniversalTime());
+                if (completionDecision.RequiresManualConfirmation)
+                {
+                    if (attachmentOnlyConfirmationProvider is null)
+                    {
+                        var status = SkippedStatus(
+                            AttachmentProcessingStatusReason.AttachmentManualConfirmationWait,
+                            completionDecision.Message);
+                        return new AttachmentGateDecision(
+                            DeferredResult: CreateDeferredResult(
+                                pairInstanceKey,
+                                pair,
+                                "Dokumentgerät: wartet auf Benutzerbestätigung.",
+                                new[] { completionDecision.Message },
+                                status),
+                            AttachmentPreparation: null);
+                    }
+
+                    var confirmationResult = attachmentOnlyConfirmationProvider(interfaceProfile, pair, completionDecision.SelectedCandidates);
+                    if (!confirmationResult.ShouldProcess)
+                    {
+                        var status = SkippedStatus(
+                            AttachmentProcessingStatusReason.AttachmentManualConfirmationWait,
+                            "Dokumentgerät: Übertragung nicht bestätigt.");
+                        return new AttachmentGateDecision(
+                            DeferredResult: CreateDeferredResult(
+                                pairInstanceKey,
+                                pair,
+                                "Dokumentgerät: wartet auf Benutzerbestätigung.",
+                                new[] { "Dokumentgerät: Übertragung wurde nicht bestätigt." },
+                                status),
+                            AttachmentPreparation: null);
+                    }
+
+                    selectedCandidates = completionDecision.SelectedCandidates;
+                    documentationTextProvider = _ => confirmationResult.DocumentationText;
+                }
+                else if (completionDecision.ShouldWait)
+                {
+                    var statusReason = completionDecision.Reason is AttachmentCompletionDecisionReason.QuietPeriodStarted
+                        or AttachmentCompletionDecisionReason.QuietPeriodRestarted
+                        or AttachmentCompletionDecisionReason.QuietPeriodWaiting
+                            ? AttachmentProcessingStatusReason.AttachmentQuietPeriodWait
+                            : AttachmentProcessingStatusReason.AttachmentWait;
+                    var status = SkippedStatus(statusReason, completionDecision.Message);
+                    return new AttachmentGateDecision(
+                        DeferredResult: CreateDeferredResult(
+                            pairInstanceKey,
+                            pair,
+                            "Dokumentgerät: wartet auf Abschluss der Dateisammlung.",
+                            new[] { completionDecision.Message },
+                            status),
+                        AttachmentPreparation: null);
+                }
+                else
+                {
+                    selectedCandidates = completionDecision.SelectedCandidates;
+                    if (interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog
+                        && attachmentOnlyConfirmationProvider is not null)
+                    {
+                        var confirmationResult = attachmentOnlyConfirmationProvider(interfaceProfile, pair, selectedCandidates);
+                        if (!confirmationResult.ShouldProcess)
+                        {
+                            var status = SkippedStatus(
+                                AttachmentProcessingStatusReason.AttachmentManualConfirmationWait,
+                                "Dokumentgerät: Dokumentation/Übertragung abgebrochen.");
+                            return new AttachmentGateDecision(
+                                DeferredResult: CreateDeferredResult(
+                                    pairInstanceKey,
+                                    pair,
+                                    "Dokumentgerät: wartet auf Benutzerbestätigung.",
+                                    new[] { "Dokumentgerät: Dokumentation/Übertragung wurde abgebrochen." },
+                                    status),
+                                AttachmentPreparation: null);
+                        }
+
+                        documentationTextProvider = _ => confirmationResult.DocumentationText;
+                    }
+                }
             }
 
             return new AttachmentGateDecision(

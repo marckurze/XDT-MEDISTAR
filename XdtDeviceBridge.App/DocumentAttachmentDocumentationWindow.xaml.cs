@@ -4,15 +4,27 @@ namespace XdtDeviceBridge.App;
 
 public partial class DocumentAttachmentDocumentationWindow : Window
 {
-    public DocumentAttachmentDocumentationWindow(string profileName, IReadOnlyList<string> fileNames)
+    private readonly bool _requiresTransferConfirmation;
+
+    public DocumentAttachmentDocumentationWindow(
+        string profileName,
+        IReadOnlyList<string> fileNames,
+        bool requiresTransferConfirmation = false)
     {
         InitializeComponent();
+        _requiresTransferConfirmation = requiresTransferConfirmation;
         ProfileNameTextBlock.Text = string.IsNullOrWhiteSpace(profileName)
             ? "Dokumentgerät"
             : profileName;
         FileNamesItemsControl.ItemsSource = fileNames.Count == 0
             ? new[] { "Keine Datei ausgewählt." }
             : fileNames;
+        if (_requiresTransferConfirmation)
+        {
+            Title = "Dokumente übertragen";
+            ApplyButton.Content = "Übertragen";
+            ContinueWithoutTextButton.Content = "Abbrechen";
+        }
     }
 
     public string? DocumentationText { get; private set; }
@@ -26,6 +38,6 @@ public partial class DocumentAttachmentDocumentationWindow : Window
     private void ContinueWithoutText_Click(object sender, RoutedEventArgs e)
     {
         DocumentationText = null;
-        DialogResult = false;
+        DialogResult = _requiresTransferConfirmation ? false : true;
     }
 }

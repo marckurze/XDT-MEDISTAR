@@ -123,7 +123,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Die erste offizielle Paketvorlage fuer `MEDISTAR + NIDEK ARK1S` steht in `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md`; der technische Export-/Import-Testweg erzeugt die ZIP temporaer mit `TemplatePackageExporter`, prueft sie mit `TemplatePackageImporter` und deckt den UI-nahen Importvorschau-Pfad ab. Eine dauerhaft abgelegte ZIP-Paketdatei bleibt bis zur Freigabe nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` offen.
 - `MEDISTAR + NIDEK AR360` ist als zweiter praktischer Auto-Refraktor-Workflow fuer die XDT-Rueckgabe validiert: BuiltIn-Geraeteprofil, Exportprofil und Schnittstellenprofil sind vorhanden; ARMedian, FarPD, VD, UTF-16-XML, `8402 = AR360` und die `6228`-Zeilen sind testseitig und praktisch belegt. Der AR360-Templatepaket-Test ist analog zu ARK1S abgesichert; XDT-Anhangfall und eine offizielle ZIP-Ablage bleiben offen.
 - `MEDISTAR + NIDEK NT530P` ist als testseitig direkt nutzbarer Tonometrie-/Pachymetrie-Kandidat vorhanden: echte UTF-16-XML-Fixture, BuiltIn-Geraeteprofil, Exportprofil mit mehrzeiliger `6205`-Tonometrie samt Header, `6220`-Pachymetrie samt Header, Schnittstellenprofil, selektiver Templatepaket-Test und korrigierter Nachlauf nach Mehrfachanhang-Export sind abgesichert. Praktische MEDISTAR-Nachpruefung und NT530P-JPG-Anhangfall bleiben offen.
-- `MEDISTAR + Dokumentanhang` ist als AttachmentOnly-/Dokumentgeraete-V1-Kandidat vorhanden: AIS-Datei plus eine oder mehrere stabile Anhangdateien, optionaler `6227`-Dokumentationstext und je Datei eigene `6302`-`6305`-Linkfelder; es werden keine Messwertfelder erzeugt.
+- `MEDISTAR + Dokumentanhang` ist als AttachmentOnly-/Dokumentgeraete-V1-Kandidat vorhanden: AIS-Datei plus eine oder mehrere stabile Anhangdateien, optionaler `6227`-Dokumentationstext und je Datei eigene `6302`-`6305`-Linkfelder; es werden keine Messwertfelder erzeugt. Fuer mehrere nacheinander geschriebene Dateien gibt es profilbezogen `Abschluss nach Wartezeit` und `Manuell bestaetigen`.
 - Der Templatepaket-Export ist auf eine schlanke V1-Auswahl umgestellt: Der Benutzer waehlt ein Schnittstellenprofil als Paketbasis, und das Paket enthaelt nur dieses Schnittstellenprofil plus referenziertes AIS-, Geraete- und Exportprofil.
 - BuiltIn-Profile werden nicht überschrieben.
 - UserDefined-Profile werden separat gespeichert.
@@ -133,7 +133,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Neue AIS-, Geraete- und Exportprofile koennen als schlanke V1 im Tab `Profile & Templates` angelegt werden. AIS/Geraet nutzen einfache Dialoge mit kurzen Hilfetexten zu System, Codierung, Geraetetyp und Parserbasis. `Neues Exportprofil anlegen` startet sichtbar einen leeren Entwurf mit eindeutigem Namen; gespeichert wird erst bewusst als UserDefined. BuiltIns bleiben geschuetzt und es erfolgt keine automatische Aktivierung.
 - UserDefined-AIS-, Geraete-, Export- und Schnittstellenprofile koennen umbenannt werden. Dabei wird nur der sichtbare Name gespeichert; IDs, Referenzen, Exportregeln, Ordnerpfade, XDT-Anhang-Einstellungen und Aktivierungsstatus bleiben unveraendert. BuiltIns bleiben geschuetzt.
 - Templatepaket-ZIP-Dateien erhalten keine eigene App-interne Umbenennungsverwaltung. Paketnamen werden weiter ueber Datei-/Release-Regel gefuehrt; Zielnamen importierter Profile bleiben in der Importvorschau editierbar.
-- Das generische Dokumentgeraet nutzt den bestehenden Mehrfachanhang-Pfad als direkt nutzbaren V1-Kandidaten: XML, PDF, Bild-, DICOM-, Text-, Video- und Audiodateien sind reine Anhaenge; optionaler Anwendertext wird ueber `6227` ausgegeben.
+- Das generische Dokumentgeraet nutzt den bestehenden Mehrfachanhang-Pfad als direkt nutzbaren V1-Kandidaten: XML, PDF, Bild-, DICOM-, Text-, Video- und Audiodateien sind reine Anhaenge; optionaler Anwendertext wird ueber `6227` ausgegeben. Der Automatikabschluss wartet standardmaessig auf eine kurze Ruhezeit nach der letzten Datei, alternativ entscheidet der Anwender im Uebertragen-Dialog.
 - Importierte Templatepakete werden validiert.
 - Konflikte werden analysiert: gleiche ID, gleicher Name, BuiltIn-Schutz, UserDefined-Konflikte, fehlende Abhängigkeiten und prüfpflichtige Ordner-/XDT-Anhang-Einstellungen.
 - Aus der Analyse wird ein Importplan erzeugt.
@@ -222,7 +222,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 - NIDEK AR360 / AR-360A LAN/XML ist fuer Auto-Refraktor-XDT-Rueckgabe praktisch validiert; offen bleiben AR360-XDT-Anhangfall und offizielles ZIP-Release-Artefakt.
 - NIDEK LM7/LM7P LAN/XML ist mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade und Templatepaket-Kandidat testseitig vorbereitet; die Lensmeter-XDT-Rueckgabe ist praktisch in MEDISTAR validiert.
 - NIDEK NT530P: echte XML-Fixture, BuiltIn-Schnittstellenprofil, korrigierter mehrzeiliger `6205`-/`6220`-Export ohne EV-Zusatz, Mehrfachanhang-Linkfelder, Nachlauf-/Monitoring-Reset und Templatepaket-Kandidat sind testseitig vorhanden; praktische MEDISTAR-Nachpruefung offen.
-- Generisches Dokumentgeraet / AttachmentOnly: BuiltIn-Schnittstellenprofil, optionaler `6227`-Text, mehrere `6302`-`6305`-Anhaenge, XML als Anhang statt Messwertdatei und Templatepaket-Kandidat sind testseitig vorhanden; praktische MEDISTAR-Abnahme offen.
+- Generisches Dokumentgeraet / AttachmentOnly: BuiltIn-Schnittstellenprofil, optionaler `6227`-Text, mehrere `6302`-`6305`-Anhaenge, XML als Anhang statt Messwertdatei, Ruhezeit-/Bestaetigungsabschluss und Templatepaket-Kandidat sind testseitig vorhanden; praktische MEDISTAR-Abnahme offen.
 - TOPCON CL300.
 - TOPCON KR800.
 - TOPCON TRK2P.
@@ -275,7 +275,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 - NIDEK AR360 als zweiten Referenzworkflow und Referenzpaket 2 stabil halten; offizielle ZIP-Ablage und ggf. separaten XDT-Anhangtest planen.
 - NIDEK LM7/LM7P als dritten Referenzkandidaten stabil halten; der testseitige Profil-/Templatepaket-Kandidat, der reparierte Live-/Preview-Pfad und das MEDISTAR-Praxisprotokoll sind vorhanden.
 - NIDEK NT530P als naechsten praktischen MEDISTAR-Testkandidaten mit korrigiertem `6205`-/`6220`-Layout, JPG-Mehrfachanhaengen und sauberem Ordner-/Karten-Nachlauf erneut abnehmen; TOPCON-Profile nur dann priorisieren, wenn belastbare Beispiel- und Testdaten vorliegen.
-- Generisches Dokumentgeraet als AttachmentOnly-V1 praktisch testen: mehrere Anhaenge, optionaler `6227`-Text, keine `6228`/`6205`/`6220`-Messwertausgabe.
+- Generisches Dokumentgeraet als AttachmentOnly-V1 praktisch testen: mehrere Anhaenge, Ruhezeit nach letzter Datei, manueller Uebertragen-Dialog, optionaler `6227`-Text, keine `6228`/`6205`/`6220`-Messwertausgabe.
 
 ### Phase 3: Baukasten schlank halten
 
@@ -294,7 +294,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 
 - LM7/LM7P mit der echten LAN/XML-Fixture ist testseitig und praktisch fuer die Lensmeter-XDT-Rueckgabe validiert; alte persistierte BuiltIn-LM7-Exportprofile werden auf die passenden `MedistarLine`-Parserpfade repariert. Naechster Schritt sind weitere Prisma-/PD-Sonderfaelle.
 - NT530P mit dem vorhandenen BuiltIn-Schnittstellenprofil in MEDISTAR erneut praktisch testen, inklusive korrigierter Tonometrie-/Pachymetrieanzeige, optionalem JPG-Mehrfachanhang, Archiv-/Entfernen-Nachlauf und neutralem Monitoring-Kartenstatus nach Export; TOPCON CL300, TOPCON KR800 und TOPCON TRK2P mit echten Gerätedateien vorbereiten.
-- MEDISTAR + Dokumentanhang mit PDF/JPG/XML/MP4/MP3/WAV-Dateien praktisch pruefen; Drag-&-Drop, Vorschau, OCR und pro-Datei-Kommentare bleiben separate spaetere Themen.
+- MEDISTAR + Dokumentanhang mit PDF/JPG/XML/MP4/MP3/WAV-Dateien praktisch pruefen, inklusive Ruhezeitmodus und manuellem Bestaetigungsmodus; Drag-&-Drop, Vorschau, OCR und pro-Datei-Kommentare bleiben separate spaetere Themen.
 - Manuelle Exportprofile je Gerät gegen AIS-Anforderungen prüfen.
 - AIS-/MEDISTAR-Default-Exporttemplates bleiben bewusst zurückgestellt, bis ein neues Fachkonzept vorliegt.
 - Dokumentierte Beispielprofile mit Testergebnissen verknüpfen.
@@ -326,7 +326,7 @@ Praxisprotokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHANG.md`, `docs/E
 5. Fuer LM7/LM7P danach ueber ein offizielles ZIP-Artefakt nach Release-Regel entscheiden.
 6. Die neue schlanke Profilanlage im Live-Test mit einer UserDefined-AIS-Kopie, einem einfachen UserDefined-Geraeteprofil und einer Exportprofil-Kopie pruefen.
 7. Danach NIDEK NT530P praktisch in MEDISTAR mit korrigierter `6205`/`6220`-Ausgabe und JPG-Mehrfachanhaengen validieren; TOPCON CL300/KR800/TRK2P anhand vorhandener Beispiel- und Testdaten priorisieren.
-8. MEDISTAR + Dokumentanhang im Live-Test mit mehreren Anhangdateien und optionalem `6227`-Text pruefen.
+8. MEDISTAR + Dokumentanhang im Live-Test mit mehreren Anhangdateien, Ruhezeit-/Bestaetigungsabschluss und optionalem `6227`-Text pruefen.
 9. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
 10. Read-only Aktivierungsassistent nur als geparkten Regressionsstand weiterfuehren.
 11. Lizenzsignatur- und Installer-Themen erst nach weiterem Profil-/Template-Nutzen priorisieren.

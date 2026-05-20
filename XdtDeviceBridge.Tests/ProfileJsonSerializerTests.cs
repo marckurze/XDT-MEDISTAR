@@ -73,7 +73,9 @@ public sealed class ProfileJsonSerializerTests
                 AutoImportScanIntervalSeconds = 7,
                 DeviceFileWaitTimeoutMinutes = 12,
                 IsAttachmentOnlyMode = true,
-                ShowAttachmentDocumentationDialog = true
+                ShowAttachmentDocumentationDialog = true,
+                AttachmentCompletionMode = AttachmentCompletionMode.ManualConfirmation,
+                AttachmentQuietPeriodSeconds = 25
             }
         };
 
@@ -99,6 +101,8 @@ public sealed class ProfileJsonSerializerTests
         Assert.Contains("\"DeviceFileWaitTimeoutMinutes\": 12", json);
         Assert.Contains("\"IsAttachmentOnlyMode\": true", json);
         Assert.Contains("\"ShowAttachmentDocumentationDialog\": true", json);
+        Assert.Contains("\"AttachmentCompletionMode\": \"ManualConfirmation\"", json);
+        Assert.Contains("\"AttachmentQuietPeriodSeconds\": 25", json);
     }
 
     [Fact]

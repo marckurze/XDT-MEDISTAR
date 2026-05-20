@@ -1731,20 +1731,66 @@
                                                    Grid.ColumnSpan="3"
                                                    Text="Optional: Nach Ablauf der Wartezeit werden Messwerte auch ohne Anhang übertragen. Pflicht: Ohne eindeutigen Anhang wird die Verarbeitung später als Fehler/Blockade behandelt. Gerätedateien und Anhänge werden erst verarbeitet, wenn sie vollständig geschrieben und stabil sind."
                                                    Foreground="DarkOrange"
+                                                    TextWrapping="Wrap"
+                                                    Margin="0,0,0,8"/>
+
+                                        <StackPanel x:Name="InterfaceAttachmentCompletionPanel"
+                                                    Grid.Row="9"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="3"
+                                                    Margin="0,0,0,8">
+                                            <TextBlock Text="Dokumentgeräte-Abschluss:"
+                                                       FontWeight="Bold"
+                                                       Margin="0,0,0,4"/>
+                                            <ComboBox x:Name="InterfaceAttachmentCompletionModeComboBox"
+                                                      SelectedValuePath="Tag"
+                                                      SelectedValue="WaitForQuietPeriod"
+                                                      Width="240"
+                                                      HorizontalAlignment="Left"
+                                                      Margin="0,0,0,6"
+                                                      SelectionChanged="InterfaceAttachmentCompletionModeComboBox_SelectionChanged"
+                                                      ToolTip="Gilt nur für Dokumentgeräte: Automatisch nach ruhigem Ordner oder erst nach Benutzerbestätigung übertragen.">
+                                                <ComboBoxItem Content="Abschluss nach Wartezeit" Tag="WaitForQuietPeriod"/>
+                                                <ComboBoxItem Content="Manuell bestätigen" Tag="ManualConfirmation"/>
+                                            </ComboBox>
+                                            <StackPanel x:Name="InterfaceAttachmentQuietPeriodPanel"
+                                                        Orientation="Horizontal"
+                                                        Margin="0,0,0,4">
+                                                <TextBlock Text="Wartezeit nach letzter Datei:"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,8,0"/>
+                                                <TextBox x:Name="InterfaceAttachmentQuietPeriodSecondsTextBox"
+                                                         Width="80"
+                                                         Text="10"
+                                                         ToolTip="1 bis 300 Sekunden. Jede neue stabile Datei startet die Wartezeit neu."/>
+                                                <TextBlock Text=" Sekunden"
+                                                           VerticalAlignment="Center"
+                                                           Margin="6,0,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Text="Nur bei AttachmentOnly-/Dokumentgeräte-Profilen aktiv. Normale Messgeräte bleiben unverändert."
+                                                       Foreground="DimGray"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Row="10"
+                                                   Grid.Column="0"
+                                                   Grid.ColumnSpan="3"
+                                                   Text="Dokumentgeräte sammeln mehrere stabile Dateien. Im Wartezeitmodus wird nach der letzten Datei übertragen; im manuellen Modus erst nach Klick auf Übertragen."
+                                                   Foreground="DarkOrange"
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,8"/>
 
-                                        <TextBlock Grid.Row="9" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
+                                        <TextBlock Grid.Row="11" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
 
-                                        <TextBlock Grid.Row="10" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
+                                        <TextBlock Grid.Row="12" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
 
-                                        <TextBlock Grid.Row="11" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <TextBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
+                                        <TextBlock Grid.Row="13" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
 
-                                        <TextBlock Grid.Row="12" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <TextBox Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
+                                        <TextBlock Grid.Row="14" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
                                     </Grid>
                                 </GroupBox>
 
@@ -1818,6 +1864,8 @@
                                 <GroupBox Header="Prüfung vor Aktivierung" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>

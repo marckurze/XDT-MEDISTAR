@@ -367,6 +367,8 @@ public sealed class InterfaceMonitoringCardStatusService
         {
             AttachmentProcessingStatusReason.PreparationSucceeded => ("", "Success"),
             AttachmentProcessingStatusReason.AttachmentWait => (string.IsNullOrWhiteSpace(input.Status) ? "wartet" : input.Status, "Waiting"),
+            AttachmentProcessingStatusReason.AttachmentQuietPeriodWait => ("wartet", "Waiting"),
+            AttachmentProcessingStatusReason.AttachmentManualConfirmationWait => ("Bestätigung", "Waiting"),
             AttachmentProcessingStatusReason.NoStableAttachment => ("nicht stabil", "Waiting"),
             AttachmentProcessingStatusReason.AttachmentOptionalTimeoutContinueWithoutAttachment => ("übersprungen", "Neutral"),
             AttachmentProcessingStatusReason.NoSupportedAttachment => ("übersprungen", "Neutral"),
@@ -391,7 +393,9 @@ public sealed class InterfaceMonitoringCardStatusService
             Detail = CreateAttachmentDetail(attachmentStatus),
             DisplayDetail = attachmentStatus.Reason == AttachmentProcessingStatusReason.PreparationSucceeded
                 ? ""
-                : attachmentStatus.Reason == AttachmentProcessingStatusReason.AttachmentWait
+                : attachmentStatus.Reason is AttachmentProcessingStatusReason.AttachmentWait
+                    or AttachmentProcessingStatusReason.AttachmentQuietPeriodWait
+                    or AttachmentProcessingStatusReason.AttachmentManualConfirmationWait
                     ? input.DisplayDetail
                     : attachmentStatus.Reason == AttachmentProcessingStatusReason.AttachmentRequiredTimeoutBlock
                         ? "Timeout erreicht"
@@ -464,6 +468,16 @@ public sealed class InterfaceMonitoringCardStatusService
         AutoImportPairProcessingResult processingResult,
         AttachmentProcessingStatus? attachmentStatus)
     {
+        if (attachmentStatus?.Reason == AttachmentProcessingStatusReason.AttachmentQuietPeriodWait)
+        {
+            return "Dokumentgerät wartet auf weitere Dateien";
+        }
+
+        if (attachmentStatus?.Reason == AttachmentProcessingStatusReason.AttachmentManualConfirmationWait)
+        {
+            return "Dokumentgerät wartet auf Benutzerbestätigung";
+        }
+
         if (attachmentStatus?.Reason == AttachmentProcessingStatusReason.AttachmentWait)
         {
             return "Wartet auf XDT-Anhang";
@@ -496,7 +510,9 @@ public sealed class InterfaceMonitoringCardStatusService
         AutoImportPairProcessingResult processingResult,
         AttachmentProcessingStatus? attachmentStatus)
     {
-        if (attachmentStatus?.Reason == AttachmentProcessingStatusReason.AttachmentWait)
+        if (attachmentStatus?.Reason == AttachmentProcessingStatusReason.AttachmentWait
+            || attachmentStatus?.Reason == AttachmentProcessingStatusReason.AttachmentQuietPeriodWait
+            || attachmentStatus?.Reason == AttachmentProcessingStatusReason.AttachmentManualConfirmationWait)
         {
             return "Waiting";
         }

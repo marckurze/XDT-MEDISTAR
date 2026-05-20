@@ -10,6 +10,8 @@ public enum AttachmentProcessingStatusReason
     MultipleSupportedAttachments,
     MultipleStableAttachments,
     AttachmentWait,
+    AttachmentQuietPeriodWait,
+    AttachmentManualConfirmationWait,
     AttachmentOptionalTimeoutContinueWithoutAttachment,
     AttachmentRequiredTimeoutBlock,
     MultipleAttachmentsAmbiguous,

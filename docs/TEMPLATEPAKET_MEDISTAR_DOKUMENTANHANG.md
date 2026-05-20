@@ -55,6 +55,15 @@ Fuer jede erfolgreich uebertragene Datei werden eigene Linkfelder erzeugt:
 
 Es werden keine Messwertfelder fuer Dokumentgeraete erzeugt: keine `6228`, keine `6205`, keine `6220`.
 
+## Abschlusslogik
+
+Dokumentgeraete koennen mehrere Dateien nacheinander schreiben. Deshalb wird nicht mehr sofort nach der ersten stabilen Datei exportiert.
+
+- `Abschluss nach Wartezeit`: Nach der ersten stabilen Datei startet eine profilbezogene Wartezeit, Standard 10 Sekunden. Jede weitere stabile Datei startet die Wartezeit neu. Erst nach Ablauf ohne neue Datei wird uebertragen.
+- `Manuell bestaetigen`: Sobald AIS-Datei und mindestens eine stabile Dokumentdatei vorhanden sind, oeffnet der Dialog `Dokumente uebertragen`. Ohne Klick auf `Uebertragen` wird kein Export erzeugt.
+
+Der optionale Dokumentationstext bleibt unveraendert: Text erzeugt `6227`, kein Text erzeugt keine leere `6227`-Zeile.
+
 ## Grenzen
 
 - keine Drag-&-Drop-Dateisammlung

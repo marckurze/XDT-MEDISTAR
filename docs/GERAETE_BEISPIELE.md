@@ -1052,6 +1052,8 @@ Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile un
 
 Geraete koennen neben Messwertdateien auch PDF, JPG, DCM, TXT, XML, Video- oder Audiodateien erzeugen. Fuer Workflows ohne Messwerte gibt es jetzt den V1-Kandidaten `MEDISTAR + Dokumentanhang`: Dateien werden nicht geparst, sondern als externe MEDISTAR-Anhaenge uebergeben. Ein optionaler kurzer Dokumentationstext kann ueber `6227` ausgegeben werden.
 
+Fuer mehrere nacheinander geschriebene Dateien hat AttachmentOnly eine Abschlusslogik: Im Modus `Abschluss nach Wartezeit` startet jede neue stabile Datei die Wartezeit neu; im Modus `Manuell bestaetigen` entscheidet der Anwender im Dialog `Dokumente uebertragen` per `Uebertragen`.
+
 Beispiele:
 
 - NIDEK NT530P kann Bild-/Protokollverweise liefern, z. B. `PACHYImage` mit zugehörigen JPG-Dateien.
@@ -1106,6 +1108,7 @@ Wichtig:
 - XML-Dateien werden in diesem Modus als Anhang behandelt und nicht als Messwert-XML interpretiert.
 - MP4, MP3 und WAV sind nur Anhaenge; sie werden nicht abgespielt oder ausgewertet.
 - Ohne Dokumentationstext wird keine leere `6227`-Zeile erzeugt.
+- Mehrere Dateien werden erst nach Ruhezeit oder manueller Bestaetigung uebertragen.
 - Externe Links duerfen nur erzeugt werden, wenn der Anhang erfolgreich in den Zielordner uebertragen wurde.
 - Unbekannte Dateien duerfen nicht blind geloescht oder verschoben werden.
 - Drag-&-Drop, Vorschaukacheln, pro-Datei-Kommentare, OCR und Bild-/DICOM-/Medienanalyse bleiben spaetere Themen.

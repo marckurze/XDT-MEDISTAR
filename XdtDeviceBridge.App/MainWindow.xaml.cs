@@ -1224,10 +1224,13 @@ public partial class MainWindow : Window
         InterfaceAttachmentRequirementModeComboBox.SelectedValue = profile.FolderOptions.AttachmentRequirementMode.ToString();
         InterfaceAttachmentWaitTimeoutSecondsTextBox.Text = profile.FolderOptions.AttachmentWaitTimeoutSeconds.ToString();
         InterfaceAttachmentFileStabilityWaitSecondsTextBox.Text = profile.FolderOptions.AttachmentFileStabilityWaitSeconds.ToString();
+        InterfaceAttachmentCompletionModeComboBox.SelectedValue = profile.FolderOptions.AttachmentCompletionMode.ToString();
+        InterfaceAttachmentQuietPeriodSecondsTextBox.Text = profile.FolderOptions.AttachmentQuietPeriodSeconds.ToString();
         InterfaceAttachmentLinkDocumentNameTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDocumentName;
         InterfaceAttachmentLinkFileFormatTextBox.Text = profile.FolderOptions.AttachmentExternalLinkFileFormat;
         InterfaceAttachmentLinkDescriptionTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDescription;
         InterfaceAttachmentLinkPathTemplateTextBox.Text = profile.FolderOptions.AttachmentExternalLinkPathTemplate;
+        SyncAttachmentCompletionControls(profile);
 
         InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
@@ -1261,6 +1264,8 @@ public partial class MainWindow : Window
         InterfaceAttachmentRequirementModeComboBox.SelectedValue = AttachmentRequirementMode.Optional.ToString();
         InterfaceAttachmentWaitTimeoutSecondsTextBox.Text = "30";
         InterfaceAttachmentFileStabilityWaitSecondsTextBox.Text = "2";
+        InterfaceAttachmentCompletionModeComboBox.SelectedValue = AttachmentCompletionMode.WaitForQuietPeriod.ToString();
+        InterfaceAttachmentQuietPeriodSecondsTextBox.Text = "10";
         InterfaceAttachmentLinkDocumentNameTextBox.Text = string.Empty;
         InterfaceAttachmentLinkFileFormatTextBox.Text = string.Empty;
         InterfaceAttachmentLinkDescriptionTextBox.Text = string.Empty;
@@ -1271,7 +1276,31 @@ public partial class MainWindow : Window
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = false;
         InterfaceArchiveModeComboBox.SelectedValue = ArchiveProcessedFileMode.Copy.ToString();
         InterfaceArchiveRetentionDaysTextBox.Text = string.Empty;
+        SyncAttachmentCompletionControls(null);
         ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateEmpty());
+    }
+
+    private void InterfaceAttachmentCompletionModeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        SyncAttachmentCompletionControls(InterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition);
+    }
+
+    private void SyncAttachmentCompletionControls(InterfaceProfileDefinition? profile)
+    {
+        if (InterfaceAttachmentCompletionPanel is null || InterfaceAttachmentQuietPeriodPanel is null)
+        {
+            return;
+        }
+
+        var isAttachmentOnly = profile?.FolderOptions.IsAttachmentOnlyMode == true;
+        InterfaceAttachmentCompletionPanel.Visibility = isAttachmentOnly
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        var isWaitMode = !string.Equals(
+            InterfaceAttachmentCompletionModeComboBox.SelectedValue as string,
+            AttachmentCompletionMode.ManualConfirmation.ToString(),
+            StringComparison.Ordinal);
+        InterfaceAttachmentQuietPeriodPanel.IsEnabled = isAttachmentOnly && isWaitMode;
     }
 
     private void RefreshInterfaceActivationPreview()
@@ -1501,6 +1530,7 @@ public partial class MainWindow : Window
 
     private InterfaceFolderOptions CreateInterfaceFolderOptionsFromEditor()
     {
+        var selectedProfile = InterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
         return new InterfaceFolderOptions(
             AisImportFolder: InterfaceAisImportFolderTextBox.Text.Trim(),
             DeviceImportFolder: InterfaceDeviceImportFolderTextBox.Text.Trim(),
@@ -1527,7 +1557,11 @@ public partial class MainWindow : Window
             IsAttachmentProcessingEnabled: InterfaceAttachmentProcessingEnabledCheckBox.IsChecked == true,
             AttachmentRequirementMode: ReadAttachmentRequirementModeFromEditor(),
             AttachmentWaitTimeoutSeconds: ReadAttachmentWaitTimeoutSecondsFromEditor(),
-            AttachmentFileStabilityWaitSeconds: ReadAttachmentFileStabilityWaitSecondsFromEditor());
+            AttachmentFileStabilityWaitSeconds: ReadAttachmentFileStabilityWaitSecondsFromEditor(),
+            IsAttachmentOnlyMode: selectedProfile?.FolderOptions.IsAttachmentOnlyMode == true,
+            ShowAttachmentDocumentationDialog: selectedProfile?.FolderOptions.ShowAttachmentDocumentationDialog == true,
+            AttachmentCompletionMode: ReadAttachmentCompletionModeFromEditor(),
+            AttachmentQuietPeriodSeconds: ReadAttachmentQuietPeriodSecondsFromEditor());
     }
 
     private AttachmentTransferMode ReadAttachmentTransferModeFromEditor()
@@ -1584,6 +1618,34 @@ public partial class MainWindow : Window
         }
 
         return stabilitySeconds;
+    }
+
+    private AttachmentCompletionMode ReadAttachmentCompletionModeFromEditor()
+    {
+        return string.Equals(InterfaceAttachmentCompletionModeComboBox.SelectedValue as string, AttachmentCompletionMode.ManualConfirmation.ToString(), StringComparison.Ordinal)
+            ? AttachmentCompletionMode.ManualConfirmation
+            : AttachmentCompletionMode.WaitForQuietPeriod;
+    }
+
+    private int ReadAttachmentQuietPeriodSecondsFromEditor()
+    {
+        var rawValue = InterfaceAttachmentQuietPeriodSecondsTextBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return 10;
+        }
+
+        if (!int.TryParse(rawValue, out var quietPeriodSeconds))
+        {
+            throw new FormatException("Wartezeit nach letzter Datei muss eine ganze Zahl in Sekunden sein.");
+        }
+
+        if (quietPeriodSeconds is < 1 or > 300)
+        {
+            throw new ArgumentException("Wartezeit nach letzter Datei muss zwischen 1 und 300 Sekunden liegen.");
+        }
+
+        return quietPeriodSeconds;
     }
 
     private int ReadAutoImportScanIntervalSecondsFromEditor()
@@ -4627,7 +4689,7 @@ public partial class MainWindow : Window
             automaticProcessingEnabled: true,
             timestamp,
             isMonitoringRunning: _periodicScanCancellationTokenSource is not null,
-            attachmentOnlyDocumentationProvider: RequestAttachmentOnlyDocumentationText);
+            attachmentOnlyConfirmationProvider: RequestAttachmentOnlyConfirmation);
 
         foreach (var result in batchResult.Results)
         {
@@ -4675,15 +4737,20 @@ public partial class MainWindow : Window
         return batchResult;
     }
 
-    private string? RequestAttachmentOnlyDocumentationText(
+    private AttachmentOnlyConfirmationResult RequestAttachmentOnlyConfirmation(
         InterfaceProfileDefinition interfaceProfile,
         PendingImportPair pair,
         IReadOnlyList<AttachmentImportFileCandidate> selectedCandidates)
     {
-        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode
-            || !interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog)
+        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode)
         {
-            return null;
+            return AttachmentOnlyConfirmationResult.Proceed(null);
+        }
+
+        var requiresTransferConfirmation = interfaceProfile.FolderOptions.AttachmentCompletionMode == AttachmentCompletionMode.ManualConfirmation;
+        if (!requiresTransferConfirmation && !interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog)
+        {
+            return AttachmentOnlyConfirmationResult.Proceed(null);
         }
 
         Window? owner = _floatingMonitoringWindows.TryGetValue(interfaceProfile.Metadata.Id, out var floatingWindow)
@@ -4692,7 +4759,8 @@ public partial class MainWindow : Window
                 : IsVisible ? this : null;
         var dialog = new DocumentAttachmentDocumentationWindow(
             interfaceProfile.Metadata.Name,
-            selectedCandidates.Select(candidate => candidate.FileName).ToList());
+            selectedCandidates.Select(candidate => candidate.FileName).ToList(),
+            requiresTransferConfirmation);
         if (owner is not null)
         {
             dialog.Owner = owner;
@@ -4704,8 +4772,8 @@ public partial class MainWindow : Window
         }
 
         return dialog.ShowDialog() == true
-            ? dialog.DocumentationText
-            : null;
+            ? AttachmentOnlyConfirmationResult.Proceed(dialog.DocumentationText)
+            : AttachmentOnlyConfirmationResult.Cancel();
     }
 
     private async void ScanActiveProfilesOnce_Click(object sender, RoutedEventArgs e)

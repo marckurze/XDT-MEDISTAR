@@ -28,4 +28,6 @@ public sealed record InterfaceFolderOptions(
     int AutoImportScanIntervalSeconds = 5,
     int DeviceFileWaitTimeoutMinutes = 10,
     bool IsAttachmentOnlyMode = false,
-    bool ShowAttachmentDocumentationDialog = false);
+    bool ShowAttachmentDocumentationDialog = false,
+    AttachmentCompletionMode AttachmentCompletionMode = AttachmentCompletionMode.WaitForQuietPeriod,
+    int AttachmentQuietPeriodSeconds = 10);

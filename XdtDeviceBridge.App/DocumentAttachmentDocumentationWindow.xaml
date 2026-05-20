@@ -54,12 +54,14 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0,14,0,0">
-            <Button Content="Übernehmen"
+            <Button x:Name="ApplyButton"
+                    Content="Übernehmen"
                     Width="110"
                     Margin="0,0,8,0"
                     IsDefault="True"
                     Click="Apply_Click"/>
-            <Button Content="Ohne Text fortfahren"
+            <Button x:Name="ContinueWithoutTextButton"
+                    Content="Ohne Text fortfahren"
                     Width="150"
                     IsCancel="True"
                     Click="ContinueWithoutText_Click"/>

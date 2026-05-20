@@ -1086,18 +1086,159 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             attachmentExportFolder: CreateTempFolder(),
             attachmentRequirementMode: AttachmentRequirementMode.Required,
             isAttachmentOnlyMode: true,
+            attachmentQuietPeriodSeconds: 1,
             deviceImportFolder: files.Folder);
 
+        var first = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { CreatePair(files.AisFilePath, documentFile) },
+            automaticProcessingEnabled: true,
+            Timestamp);
         var result = coordinator.ProcessReadyPairs(
             profile,
             DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
             new[] { CreatePair(files.AisFilePath, documentFile) },
             automaticProcessingEnabled: true,
-            Timestamp,
-            attachmentOnlyDocumentationProvider: (_, _, _) => "Dokumentation");
+            Timestamp.AddSeconds(1));
 
+        Assert.Equal(0, first.ProcessedCount);
         Assert.Equal(1, result.ProcessedCount);
         Assert.Equal(files.Folder, scanner.LastOptions?.AttachmentImportFolder);
+        Assert.Equal(1, manualProcessor.CallCount);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentOnlyQuietPeriodShouldWaitUntilQuietPeriodElapsed()
+    {
+        var files = CreateTempImportFiles();
+        var documentFile = Path.Combine(files.Folder, "bericht.pdf");
+        File.WriteAllText(documentFile, "pdf");
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate(documentFile, isSupported: true)
+        }));
+        var manualProcessor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = CreateCoordinator(
+            manualProcessor,
+            scanner,
+            new FakeAttachmentPreparationService(CreateAttachmentPreparationResult()));
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: files.Folder,
+            attachmentExportFolder: CreateTempFolder(),
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true,
+            attachmentQuietPeriodSeconds: 5,
+            deviceImportFolder: files.Folder);
+        var pair = CreatePair(files.AisFilePath, documentFile);
+
+        var first = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp);
+        var second = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp.AddSeconds(5));
+
+        Assert.Equal(0, first.ProcessedCount);
+        Assert.Equal(AttachmentProcessingStatusReason.AttachmentQuietPeriodWait, Assert.Single(first.Results).AttachmentStatus?.Reason);
+        Assert.Equal(1, second.ProcessedCount);
+        Assert.Equal(1, manualProcessor.CallCount);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentOnlyQuietPeriodShouldRestartWhenAnotherFileArrives()
+    {
+        var files = CreateTempImportFiles();
+        var firstDocument = Path.Combine(files.Folder, "a.jpg");
+        var secondDocument = Path.Combine(files.Folder, "b.jpg");
+        File.WriteAllText(firstDocument, "a");
+        File.WriteAllText(secondDocument, "b");
+        var scanner = new FakeSequentialAttachmentScanner(
+            CreateAttachmentScanResult(new[] { CreateAttachmentCandidate(firstDocument, isSupported: true) }),
+            CreateAttachmentScanResult(new[]
+            {
+                CreateAttachmentCandidate(firstDocument, isSupported: true),
+                CreateAttachmentCandidate(secondDocument, isSupported: true)
+            }),
+            CreateAttachmentScanResult(new[]
+            {
+                CreateAttachmentCandidate(firstDocument, isSupported: true),
+                CreateAttachmentCandidate(secondDocument, isSupported: true)
+            }));
+        var manualProcessor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = CreateCoordinator(
+            manualProcessor,
+            scanner,
+            new FakeAttachmentPreparationService(CreateAttachmentPreparationResult()));
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: files.Folder,
+            attachmentExportFolder: CreateTempFolder(),
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true,
+            attachmentQuietPeriodSeconds: 10,
+            deviceImportFolder: files.Folder);
+        var pair = CreatePair(files.AisFilePath, firstDocument);
+
+        coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(), new[] { pair }, true, Timestamp);
+        var restarted = coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(), new[] { pair }, true, Timestamp.AddSeconds(7));
+        var completed = coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(), new[] { pair }, true, Timestamp.AddSeconds(17));
+
+        Assert.Equal(0, restarted.ProcessedCount);
+        Assert.Equal(1, completed.ProcessedCount);
+        Assert.Equal(1, manualProcessor.CallCount);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentOnlyManualConfirmationShouldBlockUntilTransferIsConfirmed()
+    {
+        var files = CreateTempImportFiles();
+        var documentFile = Path.Combine(files.Folder, "bericht.pdf");
+        File.WriteAllText(documentFile, "pdf");
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate(documentFile, isSupported: true)
+        }));
+        var manualProcessor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = CreateCoordinator(
+            manualProcessor,
+            scanner,
+            new FakeAttachmentPreparationService(CreateAttachmentPreparationResult()));
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentImportFolder: files.Folder,
+            attachmentExportFolder: CreateTempFolder(),
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true,
+            attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+            deviceImportFolder: files.Folder);
+        var pair = CreatePair(files.AisFilePath, documentFile);
+
+        var waiting = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp,
+            attachmentOnlyConfirmationProvider: (_, _, _) => AttachmentOnlyConfirmationResult.Cancel());
+        var confirmed = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp.AddSeconds(1),
+            attachmentOnlyConfirmationProvider: (_, _, _) => AttachmentOnlyConfirmationResult.Proceed("Dokumentation"));
+
+        Assert.Equal(0, waiting.ProcessedCount);
+        Assert.Equal(AttachmentProcessingStatusReason.AttachmentManualConfirmationWait, Assert.Single(waiting.Results).AttachmentStatus?.Reason);
+        Assert.Equal(1, confirmed.ProcessedCount);
         Assert.Equal(1, manualProcessor.CallCount);
     }
 
@@ -1143,6 +1284,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
         int attachmentWaitTimeoutSeconds = 30,
         bool isAttachmentOnlyMode = false,
+        AttachmentCompletionMode attachmentCompletionMode = AttachmentCompletionMode.WaitForQuietPeriod,
+        int attachmentQuietPeriodSeconds = 10,
         string deviceImportFolder = "")
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
@@ -1166,6 +1309,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
                 AttachmentRequirementMode = attachmentRequirementMode,
                 AttachmentWaitTimeoutSeconds = attachmentWaitTimeoutSeconds,
                 IsAttachmentOnlyMode = isAttachmentOnlyMode,
+                AttachmentCompletionMode = attachmentCompletionMode,
+                AttachmentQuietPeriodSeconds = attachmentQuietPeriodSeconds,
                 DeviceImportFolder = deviceImportFolder
             },
             IsActive = true
