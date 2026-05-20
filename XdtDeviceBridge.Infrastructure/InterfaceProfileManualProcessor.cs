@@ -119,14 +119,16 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 exportContent: null);
         }
 
-        var exportRecords = mappingResult.Records;
+        var exportRecords = isAttachmentOnlyMode
+            ? ExpandAttachmentOnlyDocumentationRecords(mappingResult.Records, documentationText)
+            : mappingResult.Records;
         var attachmentStatus = attachmentPreparation?.Invoke(patient);
         if (attachmentStatus is not null)
         {
             messages.Add(attachmentStatus.Message);
             if (ShouldAppendAttachmentFields(attachmentStatus))
             {
-                exportRecords = AppendAttachmentFields(mappingResult.Records, attachmentStatus.PreparedFields);
+                exportRecords = AppendAttachmentFields(exportRecords, attachmentStatus.PreparedFields);
                 messages.Add("XDT-Anhang-Linkfelder wurden in die Exportdatei übernommen.");
             }
         }
@@ -233,6 +235,40 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     {
         return string.Equals(rule.TargetFieldCode, "6227", StringComparison.Ordinal)
             && string.Equals(rule.SourcePath, "Device.AttachmentOnly/DocumentationText", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<ExportFieldRecord> ExpandAttachmentOnlyDocumentationRecords(
+        IReadOnlyList<ExportFieldRecord> records,
+        string documentationText)
+    {
+        var expandedRecords = new List<ExportFieldRecord>();
+        var documentationLines = SplitDocumentationLines(documentationText);
+        foreach (var record in records)
+        {
+            if (!string.Equals(record.FieldCode, "6227", StringComparison.Ordinal))
+            {
+                expandedRecords.Add(record);
+                continue;
+            }
+
+            foreach (var line in documentationLines)
+            {
+                expandedRecords.Add(new ExportFieldRecord(record.FieldCode, line, record.SortOrder));
+            }
+        }
+
+        return expandedRecords;
+    }
+
+    private static IReadOnlyList<string> SplitDocumentationLines(string value)
+    {
+        return value
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToList();
     }
 
     private static bool ShouldAppendAttachmentFields(AttachmentProcessingStatus attachmentStatus)

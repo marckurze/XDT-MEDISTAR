@@ -123,6 +123,50 @@ public sealed class InterfaceProfileActivationEvaluationServiceTests
     }
 
     [Fact]
+    public void Evaluate_AttachmentOnlyShouldUseDeviceFolderInsteadOfSeparateAttachmentImportFolder()
+    {
+        using var folders = TestFolders.Create();
+        var context = CreateContext(
+            folders,
+            configureAttachment: options => options with
+            {
+                IsAttachmentOnlyMode = true,
+                IsAttachmentProcessingEnabled = true,
+                AttachmentRequirementMode = AttachmentRequirementMode.Required,
+                AttachmentImportFolder = string.Empty,
+                AttachmentExportFolder = folders.AttachmentExportFolder
+            });
+
+        var result = _service.Evaluate(context.InterfaceProfile, context.Catalog);
+
+        Assert.True(result.CanActivate);
+        Assert.DoesNotContain(result.Blockers, check => check.Code == "attachment.folder.import.missing");
+        Assert.Contains(result.Infos, check => check.Code == "attachment.folder.import.attachmentOnlyDeviceFolder");
+    }
+
+    [Fact]
+    public void Evaluate_ShouldWarnButNotBlockWhenConfiguredFolderIsNotReachable()
+    {
+        using var folders = TestFolders.Create();
+        var missingFolder = Path.Combine(folders.Root, "nicht-erreichbar");
+        var context = CreateContext(folders);
+        var profile = context.InterfaceProfile with
+        {
+            FolderOptions = context.InterfaceProfile.FolderOptions with
+            {
+                AisImportFolder = missingFolder
+            }
+        };
+
+        var result = _service.Evaluate(profile, context.Catalog);
+
+        Assert.True(result.CanActivate);
+        Assert.Equal(InterfaceProfileActivationStatus.ReadyWithWarnings, result.ActivationStatus);
+        Assert.DoesNotContain(result.Blockers, check => check.Code == "folder.aisImport.notFound");
+        Assert.Contains(result.Warnings, check => check.Code == "folder.aisImport.notFound");
+    }
+
+    [Fact]
     public void Evaluate_ShouldNotBlockOptionalDisabledAttachmentProcessing()
     {
         using var folders = TestFolders.Create();

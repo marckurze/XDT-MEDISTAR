@@ -1584,7 +1584,7 @@
                                         <TextBox Grid.Row="0" Grid.Column="1" x:Name="InterfaceAisImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="0" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AisImport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Geräte-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceDeviceImportFolderLabel" Text="Geräte-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1" Grid.Column="1" x:Name="InterfaceDeviceImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="1" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
 
@@ -1609,7 +1609,7 @@
                                             <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Wartezeit auf Gerätedatei:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Row="6" Grid.Column="0" x:Name="InterfaceDeviceFileWaitTimeoutLabel" Text="Wartezeit auf Gerätedatei:" FontWeight="Bold" Margin="0,0,8,0"/>
                                         <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal">
                                             <TextBox x:Name="InterfaceDeviceFileWaitTimeoutMinutesTextBox"
                                                      Width="120"
@@ -1620,9 +1620,11 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox Header="XDT-Anhänge für AIS" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
@@ -1643,14 +1645,14 @@
                                             <ColumnDefinition Width="96"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="XDT-Anhang Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" x:Name="InterfaceAttachmentImportFolderLabel" Text="XDT-Anhang Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="0"
                                                  Grid.Column="1"
                                                  x:Name="InterfaceAttachmentImportFolderTextBox"
                                                  Margin="0,0,8,8"
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Optionaler Ordner für Geräte-Dateianhänge, die später als externe AIS-Links übergeben werden. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="0" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="0" Grid.Column="2" x:Name="InterfaceAttachmentImportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="XDT-Anhang Exportordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1"
@@ -1684,7 +1686,7 @@
                                             <ComboBoxItem Content="Verschieben" Tag="Move"/>
                                         </ComboBox>
 
-                                        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+                                        <StackPanel x:Name="InterfaceAttachmentProcessingEnabledPanel" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
                                             <CheckBox x:Name="InterfaceAttachmentProcessingEnabledCheckBox"
                                                       Content="XDT-Anhänge für AIS automatisch verarbeiten"
                                                       Margin="0,0,0,4"
@@ -1694,7 +1696,7 @@
                                                        TextWrapping="Wrap"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="XDT-Anhang ist:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="5" Grid.Column="0" x:Name="InterfaceAttachmentRequirementModeLabel" Text="XDT-Anhang ist:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <ComboBox Grid.Row="5"
                                                   Grid.Column="1"
                                                   x:Name="InterfaceAttachmentRequirementModeComboBox"
@@ -1708,8 +1710,8 @@
                                             <ComboBoxItem Content="Pflicht" Tag="Required"/>
                                         </ComboBox>
 
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Wartezeit auf XDT-Anhang:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <TextBlock Grid.Row="6" Grid.Column="0" x:Name="InterfaceAttachmentWaitTimeoutLabel" Text="Wartezeit auf XDT-Anhang:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <StackPanel x:Name="InterfaceAttachmentWaitTimeoutPanel" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBox x:Name="InterfaceAttachmentWaitTimeoutSecondsTextBox"
                                                      Width="120"
                                                      Text="30"
@@ -1726,7 +1728,8 @@
                                             <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="8"
+                                        <TextBlock x:Name="InterfaceAttachmentGeneralHintTextBlock"
+                                                   Grid.Row="8"
                                                    Grid.Column="0"
                                                    Grid.ColumnSpan="3"
                                                    Text="Optional: Nach Ablauf der Wartezeit werden Messwerte auch ohne Anhang übertragen. Pflicht: Ohne eindeutigen Anhang wird die Verarbeitung später als Fehler/Blockade behandelt. Gerätedateien und Anhänge werden erst verarbeitet, wenn sie vollständig geschrieben und stabil sind."
@@ -1772,7 +1775,8 @@
                                                        TextWrapping="Wrap"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="10"
+                                        <TextBlock x:Name="InterfaceAttachmentCompletionHintTextBlock"
+                                                   Grid.Row="10"
                                                    Grid.Column="0"
                                                    Grid.ColumnSpan="3"
                                                    Text="Dokumentgeräte sammeln mehrere stabile Dateien. Im Wartezeitmodus wird nach der letzten Datei übertragen; im manuellen Modus erst nach Klick auf Übertragen."
@@ -1870,6 +1874,8 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Grid.Row="0"
@@ -1920,6 +1926,7 @@
                                                         <DataGridTextColumn Header="Ordner" Binding="{Binding Label}" Width="150"/>
                                                         <DataGridTextColumn Header="Pfad" Binding="{Binding Path}" Width="*"/>
                                                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
+                                                        <DataGridTextColumn Header="Erreichbar" Binding="{Binding Reachability}" Width="95"/>
                                                         <DataGridTextColumn Header="Hinweis" Binding="{Binding Message}" Width="*"/>
                                                     </DataGrid.Columns>
                                                 </DataGrid>

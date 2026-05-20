@@ -502,8 +502,7 @@ public sealed class AutoImportPairProcessingCoordinator
 
     private static InterfaceProfileDefinition CreateAttachmentProcessingProfile(InterfaceProfileDefinition interfaceProfile)
     {
-        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode
-            || !string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentImportFolder))
+        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode)
         {
             return interfaceProfile;
         }

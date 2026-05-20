@@ -22,6 +22,7 @@ public sealed record InterfaceProfileActivationFolderDisplay(
     string Label,
     string Path,
     string Status,
+    string Reachability,
     string Severity,
     string Message);
 

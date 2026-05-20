@@ -86,16 +86,26 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
     {
         var options = profile.FolderOptions;
 
-        return new[]
+        var rows = new List<InterfaceProfileActivationFolderDisplay>
         {
             CreateFolderDisplay(result, "AIS-Importordner", options.AisImportFolder, "folder.aisImport"),
-            CreateFolderDisplay(result, "Geräte-Importordner", options.DeviceImportFolder, "folder.deviceImport"),
+            CreateFolderDisplay(
+                result,
+                options.IsAttachmentOnlyMode ? "Dokument-Importordner" : "Geräte-Importordner",
+                options.DeviceImportFolder,
+                "folder.deviceImport"),
             CreateFolderDisplay(result, "AIS-Exportordner", options.ExportFolder, "folder.export"),
             CreateFolderDisplay(result, "Archivordner", options.ArchiveFolder, "folder.archive"),
             CreateFolderDisplay(result, "Fehlerordner", options.ErrorFolder, "folder.error"),
-            CreateFolderDisplay(result, "XDT-Anhang-Importordner", options.AttachmentImportFolder, "attachment.folder.import"),
             CreateFolderDisplay(result, "XDT-Anhang-Exportordner", options.AttachmentExportFolder, "attachment.folder.export")
         };
+
+        if (!options.IsAttachmentOnlyMode)
+        {
+            rows.Insert(5, CreateFolderDisplay(result, "XDT-Anhang-Importordner", options.AttachmentImportFolder, "attachment.folder.import"));
+        }
+
+        return rows;
     }
 
     private static IReadOnlyList<InterfaceProfileActivationAttachmentDisplay> BuildAttachmentChecks(
@@ -104,19 +114,22 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
     {
         var options = profile.FolderOptions;
 
-        return new[]
+        var rows = new List<InterfaceProfileActivationAttachmentDisplay>
         {
             CreateAttachmentDisplay(
                 result,
-                "Anhangverarbeitung",
-                options.IsAttachmentProcessingEnabled ? "aktiv" : "inaktiv",
+                options.IsAttachmentOnlyMode ? "Dokumentdateien als AIS-Anhänge" : "Anhangverarbeitung",
+                options.IsAttachmentOnlyMode
+                    ? "aktiv über Dokument-Importordner"
+                    : options.IsAttachmentProcessingEnabled ? "aktiv" : "inaktiv",
                 "attachment.disabled"),
             CreateAttachmentDisplay(
                 result,
-                "Modus",
-                options.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "Optional",
+                options.IsAttachmentOnlyMode ? "Dokumentdateien erforderlich" : "Modus",
+                options.IsAttachmentOnlyMode
+                    ? "Ja"
+                    : options.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "Optional",
                 "attachment.requirementMode"),
-            CreateAttachmentDisplay(result, "XDT-Anhang-Importordner", options.AttachmentImportFolder, "attachment.folder.import"),
             CreateAttachmentDisplay(result, "XDT-Anhang-Exportordner", options.AttachmentExportFolder, "attachment.folder.export"),
             CreateAttachmentDisplay(result, "Dateiname-Template", options.AttachmentFileNameTemplate ?? string.Empty, "attachment.filenameTemplate"),
             CreateAttachmentDisplay(result, "Transfermodus", options.AttachmentTransferMode.ToString(), "attachment.transferMode"),
@@ -127,6 +140,26 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
             CreateAttachmentDisplay(result, "6304 Beschreibung", options.AttachmentExternalLinkDescription, "attachment.6304"),
             CreateAttachmentDisplay(result, "6305 vollständiger Dateipfad", options.AttachmentExternalLinkPathTemplate, "attachment.6305")
         };
+
+        if (options.IsAttachmentOnlyMode)
+        {
+            rows.Insert(2, CreateAttachmentDisplay(result, "Dokumenteingang", options.DeviceImportFolder, "attachment.folder.import"));
+            rows.Insert(
+                3,
+                CreateAttachmentDisplay(
+                    result,
+                    "Dokumentgeräte-Abschluss",
+                    options.AttachmentCompletionMode == AttachmentCompletionMode.ManualConfirmation
+                        ? "Manuell bestätigen"
+                        : $"Abschluss nach Wartezeit ({options.AttachmentQuietPeriodSeconds} Sekunden)",
+                    "attachmentOnly."));
+        }
+        else
+        {
+            rows.Insert(2, CreateAttachmentDisplay(result, "XDT-Anhang-Importordner", options.AttachmentImportFolder, "attachment.folder.import"));
+        }
+
+        return rows;
     }
 
     private static InterfaceProfileActivationFolderDisplay CreateFolderDisplay(
@@ -140,6 +173,7 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
             Label: label,
             Path: DisplayValue(path),
             Status: FormatCheckStatus(check),
+            Reachability: FormatReachability(check, path),
             Severity: check is null ? "INFO" : FormatSeverity(check.Severity),
             Message: FormatCheckMessage(check));
     }
@@ -209,6 +243,38 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
         return string.IsNullOrWhiteSpace(check.Detail)
             ? check.Message
             : $"{check.Message} {check.Detail}";
+    }
+
+    private static string FormatReachability(InterfaceProfileActivationCheckResult? check, string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return "Pfad fehlt";
+        }
+
+        if (check is null)
+        {
+            return "Nicht geprüft";
+        }
+
+        if (check.Code.EndsWith(".ok", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Ja";
+        }
+
+        if (check.Code.EndsWith(".notFound", StringComparison.OrdinalIgnoreCase)
+            || check.Code.EndsWith(".accessDenied", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Nein";
+        }
+
+        if (check.Code.EndsWith(".missing", StringComparison.OrdinalIgnoreCase)
+            || check.Code.EndsWith(".optionalMissing", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Pfad fehlt";
+        }
+
+        return "Nicht geprüft";
     }
 
     private static string DisplayValue(string? value)

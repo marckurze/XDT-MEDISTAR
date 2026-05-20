@@ -196,6 +196,33 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
+    public void Process_AttachmentOnlyShouldWriteEachDocumentationLineAsOwn6227Field()
+    {
+        var result = _processor.Process(
+            CreateAttachmentOnlyInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            CreateDeviceDocumentFile("befund.pdf"),
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ => CreateAttachmentStatus(new[]
+            {
+                new ExportFieldRecord("6302", "Datei", 1),
+                new ExportFieldRecord("6303", "PDF", 2),
+                new ExportFieldRecord("6305", @"C:\GitHub\AnhangExp\befund.pdf", 3)
+            }),
+            _ => "Das ist eine Atlas Datei\r\nHier die zweite Zeile\n\r\nUnd die dritte");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        var lines = SplitXdtLines(result.ExportContent!);
+        var documentationLines = lines.Where(line => line.Contains("6227", StringComparison.Ordinal)).ToArray();
+        Assert.Equal(3, documentationLines.Length);
+        Assert.Contains(documentationLines, line => line.EndsWith("6227Das ist eine Atlas Datei", StringComparison.Ordinal));
+        Assert.Contains(documentationLines, line => line.EndsWith("6227Hier die zweite Zeile", StringComparison.Ordinal));
+        Assert.Contains(documentationLines, line => line.EndsWith("6227Und die dritte", StringComparison.Ordinal));
+        Assert.DoesNotContain(lines, line => line == "Hier die zweite Zeile" || line == "Und die dritte");
+    }
+
+    [Fact]
     public void Process_AttachmentOnlyShouldTreatXmlAsAttachmentWithoutParsing()
     {
         var invalidXmlAttachmentPath = CreateDeviceDocumentFile("dokument.xml", "dies ist kein Messwert-XML");

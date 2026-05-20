@@ -156,6 +156,57 @@ public sealed class InterfaceProfileActivationPreviewDisplayServiceTests
     }
 
     [Fact]
+    public void Create_WithAttachmentOnlyProfile_ShouldHideSeparateAttachmentImportFolder()
+    {
+        var profile = CreateProfile(options => options with
+        {
+            IsAttachmentOnlyMode = true,
+            IsAttachmentProcessingEnabled = true,
+            AttachmentRequirementMode = AttachmentRequirementMode.Required,
+            AttachmentImportFolder = string.Empty
+        });
+        var result = new InterfaceProfileActivationEvaluationResult(
+            InterfaceProfileActivationStatus.Ready,
+            CanActivate: true,
+            Checks: new[]
+            {
+                Check(
+                    InterfaceProfileActivationSeverity.Info,
+                    "XDT-Anhang",
+                    "Dokumentgeräte verwenden den Geräte-/Dokument-Importordner.",
+                    "attachment.folder.import.attachmentOnlyDeviceFolder")
+            });
+
+        var display = _service.Create(profile, result);
+
+        Assert.Contains(display.FolderChecks, row => row.Label == "Dokument-Importordner");
+        Assert.DoesNotContain(display.FolderChecks, row => row.Label == "XDT-Anhang-Importordner");
+        Assert.Contains(display.AttachmentChecks, row =>
+            row.Label == "Dokumenteingang"
+            && row.Value == profile.FolderOptions.DeviceImportFolder);
+    }
+
+    [Fact]
+    public void Create_WithFolderNotFoundWarning_ShouldShowReachabilityNoWithoutBlockerStatus()
+    {
+        var profile = CreateProfile();
+        var result = new InterfaceProfileActivationEvaluationResult(
+            InterfaceProfileActivationStatus.ReadyWithWarnings,
+            CanActivate: true,
+            Checks: new[]
+            {
+                Check(InterfaceProfileActivationSeverity.Warning, "Ordner", "AIS-Importordner ist aktuell nicht erreichbar.", "folder.aisImport.notFound")
+            });
+
+        var display = _service.Create(profile, result);
+
+        var row = Assert.Single(display.FolderChecks, item => item.Label == "AIS-Importordner");
+        Assert.Equal("Warnung", row.Status);
+        Assert.Equal("Nein", row.Reachability);
+        Assert.Equal("WARNUNG", row.Severity);
+    }
+
+    [Fact]
     public void Create_WithProfile_ShouldShowOptionalDisabledAttachmentAsHint()
     {
         var profile = CreateProfile(options => options with

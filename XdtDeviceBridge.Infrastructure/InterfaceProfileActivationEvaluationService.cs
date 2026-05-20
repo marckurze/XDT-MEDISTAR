@@ -191,7 +191,7 @@ public sealed class InterfaceProfileActivationEvaluationService
         EvaluateFolder(
             checks,
             "folder.deviceImport",
-            "Geraete-Importordner",
+            options.IsAttachmentOnlyMode ? "Dokument-Importordner" : "Geraete-Importordner",
             options.DeviceImportFolder,
             isRequired: true);
         EvaluateFolder(
@@ -218,7 +218,8 @@ public sealed class InterfaceProfileActivationEvaluationService
         InterfaceFolderOptions options,
         List<InterfaceProfileActivationCheckResult> checks)
     {
-        var attachmentIsRelevant = options.IsAttachmentProcessingEnabled
+        var attachmentIsRelevant = options.IsAttachmentOnlyMode
+            || options.IsAttachmentProcessingEnabled
             || options.AttachmentRequirementMode == AttachmentRequirementMode.Required;
 
         if (!options.IsAttachmentProcessingEnabled)
@@ -236,12 +237,25 @@ public sealed class InterfaceProfileActivationEvaluationService
             return;
         }
 
-        EvaluateFolder(
-            checks,
-            "attachment.folder.import",
-            "XDT-Anhang Importordner",
-            options.AttachmentImportFolder,
-            isRequired: true);
+        if (options.IsAttachmentOnlyMode)
+        {
+            AddInfo(
+                checks,
+                AttachmentArea,
+                "attachment.folder.import.attachmentOnlyDeviceFolder",
+                "Dokumentgeraete verwenden den Geraete-/Dokument-Importordner als Dateieingang.",
+                options.DeviceImportFolder);
+        }
+        else
+        {
+            EvaluateFolder(
+                checks,
+                "attachment.folder.import",
+                "XDT-Anhang Importordner",
+                options.AttachmentImportFolder,
+                isRequired: true);
+        }
+
         EvaluateFolder(
             checks,
             "attachment.folder.export",
@@ -340,6 +354,36 @@ public sealed class InterfaceProfileActivationEvaluationService
         {
             AddBlocker(checks, AttachmentArea, "attachment.6305.missing", "Feld 6305 Zielpfad/Pfadtemplate kann nicht gebildet werden.");
         }
+
+        if (options.IsAttachmentOnlyMode)
+        {
+            if (options.AttachmentQuietPeriodSeconds < 1 || options.AttachmentQuietPeriodSeconds > 300)
+            {
+                AddBlocker(
+                    checks,
+                    AttachmentArea,
+                    "attachmentOnly.quietPeriod.invalid",
+                    "Wartezeit nach letzter Dokumentdatei muss zwischen 1 und 300 Sekunden liegen.",
+                    $"{options.AttachmentQuietPeriodSeconds} Sekunden");
+            }
+            else if (options.AttachmentCompletionMode == AttachmentCompletionMode.WaitForQuietPeriod)
+            {
+                AddInfo(
+                    checks,
+                    AttachmentArea,
+                    "attachmentOnly.quietPeriod.ok",
+                    "Dokumentgeraet uebertraegt nach Wartezeit ab letzter Datei.",
+                    $"{options.AttachmentQuietPeriodSeconds} Sekunden");
+            }
+            else
+            {
+                AddInfo(
+                    checks,
+                    AttachmentArea,
+                    "attachmentOnly.manualConfirmation",
+                    "Dokumentgeraet wartet auf manuelle Bestaetigung mit Uebertragen.");
+            }
+        }
     }
 
     private void EvaluateFolder(
@@ -391,7 +435,7 @@ public sealed class InterfaceProfileActivationEvaluationService
 
         if (!Directory.Exists(fullPath))
         {
-            AddByRequirement(checks, isRequired, FolderArea, $"{code}.notFound", $"{label} existiert nicht.", fullPath);
+            AddWarning(checks, FolderArea, $"{code}.notFound", $"{label} ist aktuell nicht erreichbar.", fullPath);
             return;
         }
 
@@ -401,7 +445,7 @@ public sealed class InterfaceProfileActivationEvaluationService
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
         {
-            AddByRequirement(checks, isRequired, FolderArea, $"{code}.accessDenied", $"{label} ist nicht lesbar.", ex.Message);
+            AddWarning(checks, FolderArea, $"{code}.accessDenied", $"{label} ist aktuell nicht lesbar.", ex.Message);
             return;
         }
 

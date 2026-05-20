@@ -111,6 +111,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, PendingDocumentAttachmentConfirmation> _pendingDocumentAttachmentConfirmations = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _autoRedockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private WinForms.NotifyIcon? _trayIcon;
     private WinForms.ContextMenuStrip? _trayContextMenu;
@@ -157,6 +158,7 @@ public partial class MainWindow : Window
         InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         _autoRedockTimer.Tick += AutoRedockTimer_Tick;
+        AttachInterfaceActivationPreviewDraftChangeHandlers();
         InitializeTrayIcon();
         SyncBuilderTestPreviewArea();
         InitializeProfileOverview();
@@ -193,6 +195,65 @@ public partial class MainWindow : Window
     {
         base.OnContentRendered(e);
         RestoreFloatingWindowsOnce();
+    }
+
+    private void AttachInterfaceActivationPreviewDraftChangeHandlers()
+    {
+        System.Windows.Controls.TextChangedEventHandler textChangedHandler = (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        foreach (var textBox in new[]
+        {
+            InterfaceAisImportFolderTextBox,
+            InterfaceDeviceImportFolderTextBox,
+            InterfaceExportFolderTextBox,
+            InterfaceArchiveFolderTextBox,
+            InterfaceErrorFolderTextBox,
+            InterfaceAutoImportScanIntervalSecondsTextBox,
+            InterfaceDeviceFileWaitTimeoutMinutesTextBox,
+            InterfaceAttachmentImportFolderTextBox,
+            InterfaceAttachmentExportFolderTextBox,
+            InterfaceAttachmentFileNameTemplateTextBox,
+            InterfaceAttachmentWaitTimeoutSecondsTextBox,
+            InterfaceAttachmentFileStabilityWaitSecondsTextBox,
+            InterfaceAttachmentQuietPeriodSecondsTextBox,
+            InterfaceAttachmentLinkDocumentNameTextBox,
+            InterfaceAttachmentLinkFileFormatTextBox,
+            InterfaceAttachmentLinkDescriptionTextBox,
+            InterfaceAttachmentLinkPathTemplateTextBox,
+            InterfaceArchiveRetentionDaysTextBox
+        })
+        {
+            textBox.TextChanged += textChangedHandler;
+        }
+
+        RoutedEventHandler routedHandler = (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceIsActiveCheckBox.Checked += routedHandler;
+        InterfaceIsActiveCheckBox.Unchecked += routedHandler;
+        InterfaceIsLicenseRequiredCheckBox.Checked += routedHandler;
+        InterfaceIsLicenseRequiredCheckBox.Unchecked += routedHandler;
+        InterfaceAttachmentProcessingEnabledCheckBox.Checked += routedHandler;
+        InterfaceAttachmentProcessingEnabledCheckBox.Unchecked += routedHandler;
+        InterfaceClearAisImportFolderCheckBox.Checked += routedHandler;
+        InterfaceClearAisImportFolderCheckBox.Unchecked += routedHandler;
+        InterfaceClearDeviceImportFolderCheckBox.Checked += routedHandler;
+        InterfaceClearDeviceImportFolderCheckBox.Unchecked += routedHandler;
+        InterfaceArchiveProcessedFilesCheckBox.Checked += routedHandler;
+        InterfaceArchiveProcessedFilesCheckBox.Unchecked += routedHandler;
+        InterfaceMoveFailedFilesToErrorFolderCheckBox.Checked += routedHandler;
+        InterfaceMoveFailedFilesToErrorFolderCheckBox.Unchecked += routedHandler;
+
+        InterfaceAttachmentTransferModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceAttachmentRequirementModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceArchiveModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+    }
+
+    private void RefreshInterfaceActivationPreviewForDraftChange()
+    {
+        if (!IsLoaded || InterfaceProfileComboBox.SelectedItem is null || _profileCatalog is null)
+        {
+            return;
+        }
+
+        RefreshInterfaceActivationPreview();
     }
 
     private void InitializeTrayIcon()
@@ -1163,17 +1224,18 @@ public partial class MainWindow : Window
 
         try
         {
+            var previewProfile = CreateInterfaceProfileDraftForActivationPreview(profile);
             var result = _interfaceProfileActivationEvaluationService.Evaluate(
-                profile,
+                previewProfile,
                 _profileCatalog,
                 CreateLicenseStatesForActivationPreview());
             var guardResult = _interfaceProfileActivationGuardService.ValidateActivationRequest(
                 new InterfaceProfileActivationRequest(
-                    profile,
+                    previewProfile,
                     result,
                     Context: "PreviewOnly"));
             preview = _interfaceProfileActivationPreparationPreviewService.Create(
-                profile,
+                previewProfile,
                 result,
                 guardResult);
             ShowInterfaceActivationPreparationPreview(preview);
@@ -1283,6 +1345,7 @@ public partial class MainWindow : Window
     private void InterfaceAttachmentCompletionModeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         SyncAttachmentCompletionControls(InterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition);
+        RefreshInterfaceActivationPreviewForDraftChange();
     }
 
     private void SyncAttachmentCompletionControls(InterfaceProfileDefinition? profile)
@@ -1293,9 +1356,30 @@ public partial class MainWindow : Window
         }
 
         var isAttachmentOnly = profile?.FolderOptions.IsAttachmentOnlyMode == true;
+        InterfaceDeviceImportFolderLabel.Text = isAttachmentOnly
+            ? "Dokument-Importordner:"
+            : "Geräte-Importordner:";
+        InterfaceDeviceFileWaitTimeoutLabel.Text = isAttachmentOnly
+            ? "Wartezeit auf Dokumentdateien:"
+            : "Wartezeit auf Gerätedatei:";
+        InterfaceAttachmentSettingsGroupBox.Header = isAttachmentOnly
+            ? "Dokumentanhänge für MEDISTAR"
+            : "XDT-Anhänge für AIS";
+        InterfaceAttachmentImportFolderLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentImportFolderTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentImportFolderButton.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentProcessingEnabledPanel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentRequirementModeLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentRequirementModeComboBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentWaitTimeoutLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentWaitTimeoutPanel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentGeneralHintTextBlock.Text = isAttachmentOnly
+            ? "Dokumentgeräte lesen Dateien aus dem Dokument-Importordner und übergeben sie als 6302-6305-Linkfelder. Es wird kein separater XDT-Anhang-Importordner verwendet."
+            : "Optional: Nach Ablauf der Wartezeit werden Messwerte auch ohne Anhang übertragen. Pflicht: Ohne eindeutigen Anhang wird die Verarbeitung später als Fehler/Blockade behandelt. Gerätedateien und Anhänge werden erst verarbeitet, wenn sie vollständig geschrieben und stabil sind.";
         InterfaceAttachmentCompletionPanel.Visibility = isAttachmentOnly
             ? Visibility.Visible
             : Visibility.Collapsed;
+        InterfaceAttachmentCompletionHintTextBlock.Visibility = isAttachmentOnly ? Visibility.Visible : Visibility.Collapsed;
         var isWaitMode = !string.Equals(
             InterfaceAttachmentCompletionModeComboBox.SelectedValue as string,
             AttachmentCompletionMode.ManualConfirmation.ToString(),
@@ -1319,16 +1403,27 @@ public partial class MainWindow : Window
 
         try
         {
+            var previewProfile = CreateInterfaceProfileDraftForActivationPreview(profile);
             var result = _interfaceProfileActivationEvaluationService.Evaluate(
-                profile,
+                previewProfile,
                 _profileCatalog,
                 CreateLicenseStatesForActivationPreview());
-            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.Create(profile, result));
+            ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.Create(previewProfile, result));
         }
         catch (Exception ex)
         {
             ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateError(ex.Message));
         }
+    }
+
+    private InterfaceProfileDefinition CreateInterfaceProfileDraftForActivationPreview(InterfaceProfileDefinition profile)
+    {
+        return profile with
+        {
+            FolderOptions = CreateInterfaceFolderOptionsFromEditor(),
+            IsActive = InterfaceIsActiveCheckBox.IsChecked == true,
+            IsLicenseRequired = InterfaceIsLicenseRequiredCheckBox.IsChecked == true
+        };
     }
 
     private IReadOnlyList<LicensedDeviceState> CreateLicenseStatesForActivationPreview()
@@ -1531,6 +1626,7 @@ public partial class MainWindow : Window
     private InterfaceFolderOptions CreateInterfaceFolderOptionsFromEditor()
     {
         var selectedProfile = InterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
+        var isAttachmentOnly = selectedProfile?.FolderOptions.IsAttachmentOnlyMode == true;
         return new InterfaceFolderOptions(
             AisImportFolder: InterfaceAisImportFolderTextBox.Text.Trim(),
             DeviceImportFolder: InterfaceDeviceImportFolderTextBox.Text.Trim(),
@@ -1546,7 +1642,7 @@ public partial class MainWindow : Window
             ArchiveRetentionDays: ReadArchiveRetentionDaysFromEditor(),
             AutoImportScanIntervalSeconds: ReadAutoImportScanIntervalSecondsFromEditor(),
             DeviceFileWaitTimeoutMinutes: ReadDeviceFileWaitTimeoutMinutesFromEditor(),
-            AttachmentImportFolder: InterfaceAttachmentImportFolderTextBox.Text.Trim(),
+            AttachmentImportFolder: isAttachmentOnly ? string.Empty : InterfaceAttachmentImportFolderTextBox.Text.Trim(),
             AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
             AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim(),
             AttachmentTransferMode: ReadAttachmentTransferModeFromEditor(),
@@ -1554,11 +1650,11 @@ public partial class MainWindow : Window
             AttachmentExternalLinkFileFormat: InterfaceAttachmentLinkFileFormatTextBox.Text.Trim(),
             AttachmentExternalLinkDescription: InterfaceAttachmentLinkDescriptionTextBox.Text.Trim(),
             AttachmentExternalLinkPathTemplate: InterfaceAttachmentLinkPathTemplateTextBox.Text.Trim(),
-            IsAttachmentProcessingEnabled: InterfaceAttachmentProcessingEnabledCheckBox.IsChecked == true,
-            AttachmentRequirementMode: ReadAttachmentRequirementModeFromEditor(),
+            IsAttachmentProcessingEnabled: isAttachmentOnly || InterfaceAttachmentProcessingEnabledCheckBox.IsChecked == true,
+            AttachmentRequirementMode: isAttachmentOnly ? AttachmentRequirementMode.Required : ReadAttachmentRequirementModeFromEditor(),
             AttachmentWaitTimeoutSeconds: ReadAttachmentWaitTimeoutSecondsFromEditor(),
             AttachmentFileStabilityWaitSeconds: ReadAttachmentFileStabilityWaitSecondsFromEditor(),
-            IsAttachmentOnlyMode: selectedProfile?.FolderOptions.IsAttachmentOnlyMode == true,
+            IsAttachmentOnlyMode: isAttachmentOnly,
             ShowAttachmentDocumentationDialog: selectedProfile?.FolderOptions.ShowAttachmentDocumentationDialog == true,
             AttachmentCompletionMode: ReadAttachmentCompletionModeFromEditor(),
             AttachmentQuietPeriodSeconds: ReadAttachmentQuietPeriodSecondsFromEditor());
@@ -3703,6 +3799,7 @@ public partial class MainWindow : Window
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
         _interfaceProfileAutoDetachService.ResetProfile(interfaceProfileId);
         _interfaceProfileNotificationSoundService.ResetProfile(interfaceProfileId);
+        ResetDocumentAttachmentConfirmations(interfaceProfileId);
         EnsureAutoRedockTimerState();
 
         ResetMonitoringRuntimeCard(row, result);
@@ -4753,6 +4850,11 @@ public partial class MainWindow : Window
             return AttachmentOnlyConfirmationResult.Proceed(null);
         }
 
+        if (requiresTransferConfirmation)
+        {
+            return RequestAttachmentOnlyManualConfirmation(interfaceProfile, pair, selectedCandidates);
+        }
+
         Window? owner = _floatingMonitoringWindows.TryGetValue(interfaceProfile.Metadata.Id, out var floatingWindow)
             && floatingWindow.IsVisible
                 ? floatingWindow
@@ -4774,6 +4876,108 @@ public partial class MainWindow : Window
         return dialog.ShowDialog() == true
             ? AttachmentOnlyConfirmationResult.Proceed(dialog.DocumentationText)
             : AttachmentOnlyConfirmationResult.Cancel();
+    }
+
+    private AttachmentOnlyConfirmationResult RequestAttachmentOnlyManualConfirmation(
+        InterfaceProfileDefinition interfaceProfile,
+        PendingImportPair pair,
+        IReadOnlyList<AttachmentImportFileCandidate> selectedCandidates)
+    {
+        var confirmationKey = CreateDocumentAttachmentConfirmationKey(interfaceProfile, pair);
+        if (_pendingDocumentAttachmentConfirmations.TryGetValue(confirmationKey, out var existingState))
+        {
+            if (existingState.IsTransferConfirmed)
+            {
+                _pendingDocumentAttachmentConfirmations.Remove(confirmationKey);
+                return AttachmentOnlyConfirmationResult.Proceed(existingState.DocumentationText);
+            }
+
+            if (existingState.IsCanceled)
+            {
+                return AttachmentOnlyConfirmationResult.Cancel();
+            }
+
+            existingState.Window.UpdateFileNames(selectedCandidates.Select(candidate => candidate.FileName).ToList());
+            if (existingState.Window.IsVisible)
+            {
+                existingState.Window.Activate();
+            }
+
+            return AttachmentOnlyConfirmationResult.Cancel();
+        }
+
+        Window? owner = _floatingMonitoringWindows.TryGetValue(interfaceProfile.Metadata.Id, out var floatingWindow)
+            && floatingWindow.IsVisible
+                ? floatingWindow
+                : IsVisible ? this : null;
+        var dialog = new DocumentAttachmentDocumentationWindow(
+            interfaceProfile.Metadata.Name,
+            selectedCandidates.Select(candidate => candidate.FileName).ToList(),
+            requiresTransferConfirmation: true);
+        if (owner is not null)
+        {
+            dialog.Owner = owner;
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        }
+        else
+        {
+            dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
+        var state = new PendingDocumentAttachmentConfirmation(dialog);
+        dialog.TransferRequested += (_, _) =>
+        {
+            state.DocumentationText = dialog.CurrentDocumentationText;
+            state.IsTransferConfirmed = true;
+            state.IsCompleting = true;
+            dialog.Close();
+        };
+        dialog.CancelRequested += (_, _) =>
+        {
+            state.IsCanceled = true;
+            state.IsCompleting = true;
+            dialog.Close();
+        };
+        dialog.Closed += (_, _) =>
+        {
+            if (!state.IsCompleting && !state.IsTransferConfirmed)
+            {
+                state.IsCanceled = true;
+            }
+        };
+
+        _pendingDocumentAttachmentConfirmations[confirmationKey] = state;
+        dialog.Show();
+        return AttachmentOnlyConfirmationResult.Cancel();
+    }
+
+    private static string CreateDocumentAttachmentConfirmationKey(
+        InterfaceProfileDefinition interfaceProfile,
+        PendingImportPair pair)
+    {
+        return string.Join(
+            "|",
+            interfaceProfile.Metadata.Id,
+            "ais",
+            ImportFileFingerprint.Create(pair.AisFile));
+    }
+
+    private void ResetDocumentAttachmentConfirmations(string interfaceProfileId)
+    {
+        var prefix = $"{interfaceProfileId}|";
+        foreach (var key in _pendingDocumentAttachmentConfirmations.Keys
+            .Where(key => key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .ToList())
+        {
+            var state = _pendingDocumentAttachmentConfirmations[key];
+            state.IsCompleting = true;
+            if (state.Window.IsVisible)
+            {
+                state.Window.Close();
+            }
+
+            _pendingDocumentAttachmentConfirmations.Remove(key);
+        }
     }
 
     private async void ScanActiveProfilesOnce_Click(object sender, RoutedEventArgs e)
@@ -6502,6 +6706,24 @@ public partial class MainWindow : Window
         string CurrentStatus,
         string StatusClass,
         string LastScanText);
+
+    private sealed class PendingDocumentAttachmentConfirmation
+    {
+        public PendingDocumentAttachmentConfirmation(DocumentAttachmentDocumentationWindow window)
+        {
+            Window = window;
+        }
+
+        public DocumentAttachmentDocumentationWindow Window { get; }
+
+        public bool IsTransferConfirmed { get; set; }
+
+        public bool IsCanceled { get; set; }
+
+        public bool IsCompleting { get; set; }
+
+        public string? DocumentationText { get; set; }
+    }
 
     private sealed class PlaceholderRow : INotifyPropertyChanged
     {

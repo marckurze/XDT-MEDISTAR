@@ -42,7 +42,7 @@ Optional kann ein Anwendertext als `6227` ausgegeben werden:
 6227 <Dokumentationstext>
 ```
 
-Ohne Text wird keine leere `6227`-Zeile erzeugt.
+Ohne Text wird keine leere `6227`-Zeile erzeugt. Mehrzeiliger Text wird zeilenweise geschrieben: Jede nicht leere Eingabezeile erzeugt eine eigene `6227`-Feldzeile, damit keine nackten Textzeilen in der XDT-Datei entstehen.
 
 Fuer jede erfolgreich uebertragene Datei werden eigene Linkfelder erzeugt:
 
@@ -60,9 +60,13 @@ Es werden keine Messwertfelder fuer Dokumentgeraete erzeugt: keine `6228`, keine
 Dokumentgeraete koennen mehrere Dateien nacheinander schreiben. Deshalb wird nicht mehr sofort nach der ersten stabilen Datei exportiert.
 
 - `Abschluss nach Wartezeit`: Nach der ersten stabilen Datei startet eine profilbezogene Wartezeit, Standard 10 Sekunden. Jede weitere stabile Datei startet die Wartezeit neu. Erst nach Ablauf ohne neue Datei wird uebertragen.
-- `Manuell bestaetigen`: Sobald AIS-Datei und mindestens eine stabile Dokumentdatei vorhanden sind, oeffnet der Dialog `Dokumente uebertragen`. Ohne Klick auf `Uebertragen` wird kein Export erzeugt.
+- `Manuell bestaetigen`: Sobald AIS-Datei und mindestens eine stabile Dokumentdatei vorhanden sind, oeffnet der Dialog `Dokumente uebertragen`. Der Dialog bleibt offen, neue stabile Dateien werden in der Liste ergaenzt, und ohne Klick auf `Uebertragen` wird kein Export erzeugt.
 
 Der optionale Dokumentationstext bleibt unveraendert: Text erzeugt `6227`, kein Text erzeugt keine leere `6227`-Zeile.
+
+## Konfiguration in der App
+
+Im Tab `Schnittstellenprofile` ist fuer AttachmentOnly-Profile der Geraete-/Dokument-Importordner der massgebliche Eingang fuer Dokumentdateien. Der separate XDT-Anhang-Importordner normaler Messgeraete wird fuer diesen Profiltyp ausgeblendet, damit keine zwei konkurrierenden Eingangsordner sichtbar sind. Die Pruefung vor Aktivierung arbeitet mit aktuellen, noch nicht gespeicherten UI-Werten und zeigt die Ordner-Erreichbarkeit als Hinweis/Warnung; ein eingetragener, aktuell nicht erreichbarer Ordner blockiert nicht hart.
 
 ## Grenzen
 
