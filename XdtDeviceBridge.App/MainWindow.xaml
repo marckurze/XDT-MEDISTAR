@@ -1654,16 +1654,16 @@
                                                  ToolTip="Optionaler Ordner für Geräte-Dateianhänge, die später als externe AIS-Links übergeben werden. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="0" Grid.Column="2" x:Name="InterfaceAttachmentImportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="XDT-Anhang Exportordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceAttachmentExportFolderLabel" Text="XDT-Anhang Exportordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1"
                                                  Grid.Column="1"
                                                  x:Name="InterfaceAttachmentExportFolderTextBox"
                                                  Margin="0,0,8,8"
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Optionaler Zielordner für umbenannte Geräte-Dateianhänge und spätere externe AIS-Links. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="1" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="1" Grid.Column="2" x:Name="InterfaceAttachmentExportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="XDT-Anhang Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" x:Name="InterfaceAttachmentFileNameTemplateLabel" Text="XDT-Anhang Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="2"
                                                  Grid.Column="1"
                                                  Grid.ColumnSpan="2"
@@ -1672,7 +1672,7 @@
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Dateinamen-Template für spätere Geräte-Dateianhänge, z. B. {Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}. Leer bedeutet: sicherer Standard."/>
 
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="XDT-Anhang Übertragung:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="0" x:Name="InterfaceAttachmentTransferModeLabel" Text="XDT-Anhang Übertragung:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <ComboBox Grid.Row="3"
                                                   Grid.Column="1"
                                                   x:Name="InterfaceAttachmentTransferModeComboBox"
@@ -1719,8 +1719,8 @@
                                             <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Dateistabilität abwarten:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <StackPanel Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <TextBlock Grid.Row="7" Grid.Column="0" x:Name="InterfaceAttachmentFileStabilityWaitLabel" Text="Dateistabilität abwarten:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <StackPanel x:Name="InterfaceAttachmentFileStabilityWaitPanel" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBox x:Name="InterfaceAttachmentFileStabilityWaitSecondsTextBox"
                                                      Width="120"
                                                      Text="2"
@@ -1745,7 +1745,7 @@
                                             <TextBlock Text="Dokumentgeräte-Abschluss:"
                                                        FontWeight="Bold"
                                                        Margin="0,0,0,4"/>
-                                            <ComboBox x:Name="InterfaceAttachmentCompletionModeComboBox"
+                                             <ComboBox x:Name="InterfaceAttachmentCompletionModeComboBox"
                                                       SelectedValuePath="Tag"
                                                       SelectedValue="WaitForQuietPeriod"
                                                       Width="240"
@@ -1753,10 +1753,14 @@
                                                       Margin="0,0,0,6"
                                                       SelectionChanged="InterfaceAttachmentCompletionModeComboBox_SelectionChanged"
                                                       ToolTip="Gilt nur für Dokumentgeräte: Automatisch nach ruhigem Ordner oder erst nach Benutzerbestätigung übertragen.">
-                                                <ComboBoxItem Content="Abschluss nach Wartezeit" Tag="WaitForQuietPeriod"/>
-                                                <ComboBoxItem Content="Manuell bestätigen" Tag="ManualConfirmation"/>
-                                            </ComboBox>
-                                            <StackPanel x:Name="InterfaceAttachmentQuietPeriodPanel"
+                                                 <ComboBoxItem Content="Abschluss nach Wartezeit" Tag="WaitForQuietPeriod"/>
+                                                 <ComboBoxItem Content="Manuell bestätigen" Tag="ManualConfirmation"/>
+                                             </ComboBox>
+                                             <CheckBox x:Name="InterfaceAttachmentShowDocumentationDialogCheckBox"
+                                                       Content="Dokumentationstext erfassen"
+                                                       Margin="0,0,0,6"
+                                                       ToolTip="Wenn aktiv, kann vor der Übertragung ein optionaler Text erfasst werden. Jede Textzeile wird als eigene 6227-Zeile ausgegeben."/>
+                                             <StackPanel x:Name="InterfaceAttachmentQuietPeriodPanel"
                                                         Orientation="Horizontal"
                                                         Margin="0,0,0,4">
                                                 <TextBlock Text="Wartezeit nach letzter Datei:"
@@ -1784,16 +1788,16 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,8"/>
 
-                                        <TextBlock Grid.Row="11" Grid.Column="0" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="11" Grid.Column="0" x:Name="InterfaceAttachmentLinkDocumentNameLabel" Text="XDT-Feld 6302 Dokumentenname:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDocumentNameTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6302. MEDISTAR nutzt dieses Feld als Dokumentname bzw. Anzeige in der Karteikarte."/>
 
-                                        <TextBlock Grid.Row="12" Grid.Column="0" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="12" Grid.Column="0" x:Name="InterfaceAttachmentLinkFileFormatLabel" Text="XDT-Feld 6303 Dateiformat:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="12" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkFileFormatTextBox" Margin="0,0,0,8" ToolTip="Vorlage für Feld 6303, z. B. {ExtensionUpperWithoutDot}. Die tatsächliche XDT-Zeile wird später zentral erzeugt."/>
 
-                                        <TextBlock Grid.Row="13" Grid.Column="0" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="13" Grid.Column="0" x:Name="InterfaceAttachmentLinkDescriptionLabel" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
 
-                                        <TextBlock Grid.Row="14" Grid.Column="0" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBlock Grid.Row="14" Grid.Column="0" x:Name="InterfaceAttachmentLinkPathTemplateLabel" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
                                         <TextBox Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
                                     </Grid>
                                 </GroupBox>

@@ -133,6 +133,24 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             }
         }
 
+        if (isAttachmentOnlyMode && !ShouldAppendAttachmentFields(attachmentStatus))
+        {
+            var failureMessages = new List<string> { "Dokumentanhang konnte nicht für MEDISTAR vorbereitet werden." };
+            if (attachmentStatus is not null && !string.IsNullOrWhiteSpace(attachmentStatus.Message))
+            {
+                failureMessages.Add(attachmentStatus.Message);
+            }
+
+            return CreateFailureResult(
+                interfaceProfile,
+                aisFilePath,
+                deviceFilePath,
+                timestamp,
+                failureMessages,
+                new ProcessingPipelineResult(patient, deviceResult.Measurements, exportRecords, string.Empty, issues),
+                exportContent: null);
+        }
+
         var exportResult = _xdtExportBuilder.Build(exportRecords);
         issues.AddRange(exportResult.Issues.Select(issue => new ProcessingIssue(
             issue.Severity == XdtExportIssueSeverity.Error ? ProcessingIssueSeverity.Error : ProcessingIssueSeverity.Warning,
@@ -271,9 +289,10 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             .ToList();
     }
 
-    private static bool ShouldAppendAttachmentFields(AttachmentProcessingStatus attachmentStatus)
+    private static bool ShouldAppendAttachmentFields(AttachmentProcessingStatus? attachmentStatus)
     {
-        if (!attachmentStatus.Success
+        if (attachmentStatus is null
+            || !attachmentStatus.Success
             || attachmentStatus.WasSkipped
             || attachmentStatus.PreparedFields.Count == 0)
         {

@@ -196,6 +196,24 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
+    public void Process_AttachmentOnlyShouldFailInsteadOfExportingAisOnlyWhenAttachmentPreparationFails()
+    {
+        var result = _processor.Process(
+            CreateAttachmentOnlyInterfaceProfile(CreateTempFolder()),
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            GetTestDataPath("sample-gdt-utf8.gdt"),
+            CreateDeviceDocumentFile("befund.pdf"),
+            new DateTime(2026, 6, 1, 12, 0, 0),
+            _ => CreateFailedAttachmentStatus(),
+            _ => string.Empty);
+
+        Assert.False(result.Success);
+        Assert.Null(result.ExportContent);
+        Assert.Contains(result.Messages, message => message.Contains("Dokumentanhang konnte nicht", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(result.Messages, message => message.Contains("Dateipaar erfolgreich verarbeitet", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void Process_AttachmentOnlyShouldWriteEachDocumentationLineAsOwn6227Field()
     {
         var result = _processor.Process(

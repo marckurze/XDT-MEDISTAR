@@ -21,7 +21,8 @@
                    FontSize="15"
                    Margin="0,0,0,6"/>
 
-        <TextBlock Grid.Row="1"
+        <TextBlock x:Name="HintTextBlock"
+                   Grid.Row="1"
                    Text="Erkannte Dateien werden als XDT-Anhänge übergeben. Der optionale Text wird als 6227 in die XDT-Ausgabe geschrieben."
                    Foreground="DimGray"
                    TextWrapping="Wrap"

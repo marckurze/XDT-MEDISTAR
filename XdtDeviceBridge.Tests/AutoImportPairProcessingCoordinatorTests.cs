@@ -1150,6 +1150,73 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_AttachmentOnlyShouldExportPdfLinkFieldsEvenWhenLegacyAttachmentFlagIsDisabled()
+    {
+        var files = CreateValidTempImportFiles();
+        var attachmentExportFolder = CreateTempFolder();
+        var documentFile = Path.Combine(files.Folder, "bericht.pdf");
+        File.WriteAllText(documentFile, "pdf");
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate(documentFile, isSupported: true)
+        }));
+        var coordinator = CreateCoordinator(
+            new InterfaceProfileManualProcessor(),
+            scanner,
+            new AttachmentExternalLinkPreparationService(),
+            patientNumber: "4701-1");
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: false,
+            attachmentImportFolder: string.Empty,
+            attachmentExportFolder: attachmentExportFolder,
+            attachmentRequirementMode: AttachmentRequirementMode.Optional,
+            isAttachmentOnlyMode: true,
+            attachmentQuietPeriodSeconds: 1,
+            deviceImportFolder: files.Folder) with
+        {
+            FolderOptions = CreateInterfaceProfile(
+                isAttachmentProcessingEnabled: false,
+                attachmentImportFolder: string.Empty,
+                attachmentExportFolder: attachmentExportFolder,
+                attachmentRequirementMode: AttachmentRequirementMode.Optional,
+                isAttachmentOnlyMode: true,
+                attachmentQuietPeriodSeconds: 1,
+                deviceImportFolder: files.Folder).FolderOptions with
+            {
+                ExportFolder = CreateTempFolder(),
+                AttachmentTransferMode = AttachmentTransferMode.Copy,
+                ShowAttachmentDocumentationDialog = false
+            }
+        };
+        var pair = CreatePair(files.AisFilePath, documentFile);
+
+        var waiting = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp);
+        var completed = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp.AddSeconds(1));
+
+        Assert.Equal(0, waiting.ProcessedCount);
+        var processed = Assert.Single(completed.Results);
+        Assert.True(processed.Success, string.Join(Environment.NewLine, processed.Messages));
+        Assert.Contains("6302Datei", processed.ManualProcessingResult!.ExportContent);
+        Assert.Contains("6303PDF", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains("6305", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6227", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6228", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6205", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6220", processed.ManualProcessingResult.ExportContent);
+        Assert.Equal(files.Folder, scanner.LastOptions?.AttachmentImportFolder);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_AttachmentOnlyQuietPeriodShouldWaitUntilQuietPeriodElapsed()
     {
         var files = CreateTempImportFiles();
@@ -1280,6 +1347,61 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Equal(0, waiting.ProcessedCount);
         Assert.Equal(AttachmentProcessingStatusReason.AttachmentManualConfirmationWait, Assert.Single(waiting.Results).AttachmentStatus?.Reason);
         Assert.Equal(1, confirmed.ProcessedCount);
+        Assert.Equal(1, manualProcessor.CallCount);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentOnlyManualConfirmationShouldOpenEvenWhenLegacyAttachmentFlagIsDisabled()
+    {
+        var files = CreateTempImportFiles();
+        var documentFile = Path.Combine(files.Folder, "bericht.pdf");
+        File.WriteAllText(documentFile, "pdf");
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate(documentFile, isSupported: true)
+        }));
+        var manualProcessor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = CreateCoordinator(
+            manualProcessor,
+            scanner,
+            new FakeAttachmentPreparationService(CreateAttachmentPreparationResult()));
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: false,
+            attachmentImportFolder: string.Empty,
+            attachmentExportFolder: CreateTempFolder(),
+            attachmentRequirementMode: AttachmentRequirementMode.Optional,
+            isAttachmentOnlyMode: true,
+            attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+            deviceImportFolder: files.Folder);
+        var pair = CreatePair(files.AisFilePath, documentFile);
+        var confirmationCalls = 0;
+
+        var waiting = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp,
+            attachmentOnlyConfirmationProvider: (_, _, _) =>
+            {
+                confirmationCalls++;
+                return AttachmentOnlyConfirmationResult.Cancel();
+            });
+        var confirmed = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp.AddSeconds(1),
+            attachmentOnlyConfirmationProvider: (_, _, _) =>
+            {
+                confirmationCalls++;
+                return AttachmentOnlyConfirmationResult.Proceed("Dokumentation");
+            });
+
+        Assert.Equal(0, waiting.ProcessedCount);
+        Assert.Equal(1, confirmed.ProcessedCount);
+        Assert.Equal(2, confirmationCalls);
         Assert.Equal(1, manualProcessor.CallCount);
     }
 
@@ -1478,6 +1600,25 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         var aisFilePath = Path.Combine(folder, "patient.gdt");
         var deviceFilePath = Path.Combine(folder, "device.xml");
         File.WriteAllText(aisFilePath, "gdt");
+        File.WriteAllText(deviceFilePath, "xml");
+        return new TempImportFiles(folder, aisFilePath, deviceFilePath);
+    }
+
+    private static TempImportFiles CreateValidTempImportFiles()
+    {
+        var folder = CreateTempFolder();
+        var aisFilePath = Path.Combine(folder, "patient.gdt");
+        var deviceFilePath = Path.Combine(folder, "device.xml");
+        File.WriteAllText(
+            aisFilePath,
+            string.Join(Environment.NewLine, new[]
+            {
+                "01530004701-1",
+                "0173101Testfrau",
+                "0133102Anna",
+                "017310312061955",
+                "0148402DATEI"
+            }));
         File.WriteAllText(deviceFilePath, "xml");
         return new TempImportFiles(folder, aisFilePath, deviceFilePath);
     }

@@ -6,20 +6,29 @@ namespace XdtDeviceBridge.App;
 public partial class DocumentAttachmentDocumentationWindow : Window
 {
     private readonly bool _requiresTransferConfirmation;
+    private readonly bool _capturesDocumentationText;
     private readonly ObservableCollection<string> _fileNames = new();
 
     public DocumentAttachmentDocumentationWindow(
         string profileName,
         IReadOnlyList<string> fileNames,
-        bool requiresTransferConfirmation = false)
+        bool requiresTransferConfirmation = false,
+        bool capturesDocumentationText = true)
     {
         InitializeComponent();
         _requiresTransferConfirmation = requiresTransferConfirmation;
+        _capturesDocumentationText = capturesDocumentationText;
         ProfileNameTextBlock.Text = string.IsNullOrWhiteSpace(profileName)
             ? "Dokumentgerät"
             : profileName;
         FileNamesItemsControl.ItemsSource = _fileNames;
         UpdateFileNames(fileNames);
+        if (!_capturesDocumentationText)
+        {
+            HintTextBlock.Text = "Erkannte Dateien werden als XDT-Anhänge übergeben. Es wird kein Dokumentationstext erfasst.";
+            DocumentationTextBox.Visibility = Visibility.Collapsed;
+        }
+
         if (_requiresTransferConfirmation)
         {
             Title = "Dokumente übertragen";
@@ -30,7 +39,7 @@ public partial class DocumentAttachmentDocumentationWindow : Window
 
     public string? DocumentationText { get; private set; }
 
-    public string CurrentDocumentationText => DocumentationTextBox.Text.Trim();
+    public string CurrentDocumentationText => _capturesDocumentationText ? DocumentationTextBox.Text.Trim() : string.Empty;
 
     public event EventHandler? TransferRequested;
 

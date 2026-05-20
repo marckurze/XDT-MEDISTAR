@@ -66,7 +66,11 @@ Der optionale Dokumentationstext bleibt unveraendert: Text erzeugt `6227`, kein 
 
 ## Konfiguration in der App
 
-Im Tab `Schnittstellenprofile` ist fuer AttachmentOnly-Profile der Geraete-/Dokument-Importordner der massgebliche Eingang fuer Dokumentdateien. Der separate XDT-Anhang-Importordner normaler Messgeraete wird fuer diesen Profiltyp ausgeblendet, damit keine zwei konkurrierenden Eingangsordner sichtbar sind. Die Pruefung vor Aktivierung arbeitet mit aktuellen, noch nicht gespeicherten UI-Werten und zeigt die Ordner-Erreichbarkeit als Hinweis/Warnung; ein eingetragener, aktuell nicht erreichbarer Ordner blockiert nicht hart.
+Im Tab `Schnittstellenprofile` ist fuer AttachmentOnly-Profile der Geraete-/Dokument-Importordner der massgebliche Eingang fuer Dokumentdateien. Der separate XDT-Anhang-Importordner normaler Messgeraete wird fuer diesen Profiltyp ausgeblendet, damit keine zwei konkurrierenden Eingangsordner sichtbar sind. Die internen `6302`-`6305`-Templatefelder werden fuer normale Anwender nicht angezeigt; Defaults wie `Datei`, `{ExtensionUpperWithoutDot}` und `{Attachment.TargetFullPath}` bleiben intern wirksam.
+
+Die Option `Dokumentationstext erfassen` steuert nur den optionalen `6227`-Text. Ist sie aus, wird kein Textfenster fuer den Wartezeitmodus angezeigt und im manuellen Modus kein Texteingabefeld angeboten; die Anhaenge werden trotzdem ueber `6302` bis `6305` exportiert.
+
+AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-Importordner. Alte gespeicherte technische Flags wie deaktivierte XDT-Anhang-Automatik duerfen deshalb nicht mehr dazu fuehren, dass nur AIS-Daten ohne Dokumentlinks exportiert werden. Die Pruefung vor Aktivierung arbeitet mit aktuellen, noch nicht gespeicherten UI-Werten und zeigt die Ordner-Erreichbarkeit als Hinweis/Warnung; ein eingetragener, aktuell nicht erreichbarer Ordner blockiert nicht hart.
 
 ## Grenzen
 

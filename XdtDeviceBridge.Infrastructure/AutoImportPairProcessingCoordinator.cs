@@ -291,7 +291,7 @@ public sealed class AutoImportPairProcessingCoordinator
         Func<InterfaceProfileDefinition, PendingImportPair, IReadOnlyList<AttachmentImportFileCandidate>, AttachmentOnlyConfirmationResult>? attachmentOnlyConfirmationProvider)
     {
         var attachmentProfile = CreateAttachmentProcessingProfile(interfaceProfile);
-        if (!interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled
+        if (!attachmentProfile.FolderOptions.IsAttachmentProcessingEnabled
             || !automaticProcessingEnabled
             || !isMonitoringRunning)
         {
@@ -511,7 +511,18 @@ public sealed class AutoImportPairProcessingCoordinator
         {
             FolderOptions = interfaceProfile.FolderOptions with
             {
-                AttachmentImportFolder = interfaceProfile.FolderOptions.DeviceImportFolder
+                AttachmentImportFolder = interfaceProfile.FolderOptions.DeviceImportFolder,
+                IsAttachmentProcessingEnabled = true,
+                AttachmentRequirementMode = AttachmentRequirementMode.Required,
+                AttachmentExternalLinkDocumentName = string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentExternalLinkDocumentName)
+                    ? "Datei"
+                    : interfaceProfile.FolderOptions.AttachmentExternalLinkDocumentName,
+                AttachmentExternalLinkFileFormat = string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentExternalLinkFileFormat)
+                    ? "{ExtensionUpperWithoutDot}"
+                    : interfaceProfile.FolderOptions.AttachmentExternalLinkFileFormat,
+                AttachmentExternalLinkPathTemplate = string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentExternalLinkPathTemplate)
+                    ? "{Attachment.TargetFullPath}"
+                    : interfaceProfile.FolderOptions.AttachmentExternalLinkPathTemplate
             }
         };
     }

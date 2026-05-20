@@ -232,6 +232,8 @@ public partial class MainWindow : Window
         InterfaceIsLicenseRequiredCheckBox.Unchecked += routedHandler;
         InterfaceAttachmentProcessingEnabledCheckBox.Checked += routedHandler;
         InterfaceAttachmentProcessingEnabledCheckBox.Unchecked += routedHandler;
+        InterfaceAttachmentShowDocumentationDialogCheckBox.Checked += routedHandler;
+        InterfaceAttachmentShowDocumentationDialogCheckBox.Unchecked += routedHandler;
         InterfaceClearAisImportFolderCheckBox.Checked += routedHandler;
         InterfaceClearAisImportFolderCheckBox.Unchecked += routedHandler;
         InterfaceClearDeviceImportFolderCheckBox.Checked += routedHandler;
@@ -1288,6 +1290,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentFileStabilityWaitSecondsTextBox.Text = profile.FolderOptions.AttachmentFileStabilityWaitSeconds.ToString();
         InterfaceAttachmentCompletionModeComboBox.SelectedValue = profile.FolderOptions.AttachmentCompletionMode.ToString();
         InterfaceAttachmentQuietPeriodSecondsTextBox.Text = profile.FolderOptions.AttachmentQuietPeriodSeconds.ToString();
+        InterfaceAttachmentShowDocumentationDialogCheckBox.IsChecked = profile.FolderOptions.ShowAttachmentDocumentationDialog;
         InterfaceAttachmentLinkDocumentNameTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDocumentName;
         InterfaceAttachmentLinkFileFormatTextBox.Text = profile.FolderOptions.AttachmentExternalLinkFileFormat;
         InterfaceAttachmentLinkDescriptionTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDescription;
@@ -1328,6 +1331,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentFileStabilityWaitSecondsTextBox.Text = "2";
         InterfaceAttachmentCompletionModeComboBox.SelectedValue = AttachmentCompletionMode.WaitForQuietPeriod.ToString();
         InterfaceAttachmentQuietPeriodSecondsTextBox.Text = "10";
+        InterfaceAttachmentShowDocumentationDialogCheckBox.IsChecked = false;
         InterfaceAttachmentLinkDocumentNameTextBox.Text = string.Empty;
         InterfaceAttachmentLinkFileFormatTextBox.Text = string.Empty;
         InterfaceAttachmentLinkDescriptionTextBox.Text = string.Empty;
@@ -1363,8 +1367,17 @@ public partial class MainWindow : Window
             ? "Wartezeit auf Dokumentdateien:"
             : "Wartezeit auf Gerätedatei:";
         InterfaceAttachmentSettingsGroupBox.Header = isAttachmentOnly
-            ? "Dokumentanhänge für MEDISTAR"
+            ? "Dokumentübergabe an MEDISTAR"
             : "XDT-Anhänge für AIS";
+        InterfaceAttachmentExportFolderLabel.Text = isAttachmentOnly
+            ? "Dokument-Exportordner:"
+            : "XDT-Anhang Exportordner:";
+        InterfaceAttachmentFileNameTemplateLabel.Text = isAttachmentOnly
+            ? "Dateiname für Dokumente:"
+            : "XDT-Anhang Dateiname:";
+        InterfaceAttachmentTransferModeLabel.Text = isAttachmentOnly
+            ? "Übertragung:"
+            : "XDT-Anhang Übertragung:";
         InterfaceAttachmentImportFolderLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentImportFolderTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentImportFolderButton.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
@@ -1373,13 +1386,22 @@ public partial class MainWindow : Window
         InterfaceAttachmentRequirementModeComboBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentWaitTimeoutLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentWaitTimeoutPanel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkDocumentNameLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkDocumentNameTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkFileFormatLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkFileFormatTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkDescriptionLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkDescriptionTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkPathTemplateLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentLinkPathTemplateTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentGeneralHintTextBlock.Text = isAttachmentOnly
-            ? "Dokumentgeräte lesen Dateien aus dem Dokument-Importordner und übergeben sie als 6302-6305-Linkfelder. Es wird kein separater XDT-Anhang-Importordner verwendet."
+            ? "Dokumentdateien kommen aus dem Dokument-Importordner. Die App übergibt sie als MEDISTAR-Anhänge; die technischen 6302-6305-Felder werden intern erzeugt."
             : "Optional: Nach Ablauf der Wartezeit werden Messwerte auch ohne Anhang übertragen. Pflicht: Ohne eindeutigen Anhang wird die Verarbeitung später als Fehler/Blockade behandelt. Gerätedateien und Anhänge werden erst verarbeitet, wenn sie vollständig geschrieben und stabil sind.";
         InterfaceAttachmentCompletionPanel.Visibility = isAttachmentOnly
             ? Visibility.Visible
             : Visibility.Collapsed;
         InterfaceAttachmentCompletionHintTextBlock.Visibility = isAttachmentOnly ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceAttachmentShowDocumentationDialogCheckBox.Visibility = isAttachmentOnly ? Visibility.Visible : Visibility.Collapsed;
         var isWaitMode = !string.Equals(
             InterfaceAttachmentCompletionModeComboBox.SelectedValue as string,
             AttachmentCompletionMode.ManualConfirmation.ToString(),
@@ -1646,18 +1668,31 @@ public partial class MainWindow : Window
             AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
             AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim(),
             AttachmentTransferMode: ReadAttachmentTransferModeFromEditor(),
-            AttachmentExternalLinkDocumentName: InterfaceAttachmentLinkDocumentNameTextBox.Text.Trim(),
-            AttachmentExternalLinkFileFormat: InterfaceAttachmentLinkFileFormatTextBox.Text.Trim(),
+            AttachmentExternalLinkDocumentName: isAttachmentOnly
+                ? DefaultIfWhiteSpace(InterfaceAttachmentLinkDocumentNameTextBox.Text, "Datei")
+                : InterfaceAttachmentLinkDocumentNameTextBox.Text.Trim(),
+            AttachmentExternalLinkFileFormat: isAttachmentOnly
+                ? DefaultIfWhiteSpace(InterfaceAttachmentLinkFileFormatTextBox.Text, "{ExtensionUpperWithoutDot}")
+                : InterfaceAttachmentLinkFileFormatTextBox.Text.Trim(),
             AttachmentExternalLinkDescription: InterfaceAttachmentLinkDescriptionTextBox.Text.Trim(),
-            AttachmentExternalLinkPathTemplate: InterfaceAttachmentLinkPathTemplateTextBox.Text.Trim(),
+            AttachmentExternalLinkPathTemplate: isAttachmentOnly
+                ? DefaultIfWhiteSpace(InterfaceAttachmentLinkPathTemplateTextBox.Text, "{Attachment.TargetFullPath}")
+                : InterfaceAttachmentLinkPathTemplateTextBox.Text.Trim(),
             IsAttachmentProcessingEnabled: isAttachmentOnly || InterfaceAttachmentProcessingEnabledCheckBox.IsChecked == true,
             AttachmentRequirementMode: isAttachmentOnly ? AttachmentRequirementMode.Required : ReadAttachmentRequirementModeFromEditor(),
             AttachmentWaitTimeoutSeconds: ReadAttachmentWaitTimeoutSecondsFromEditor(),
             AttachmentFileStabilityWaitSeconds: ReadAttachmentFileStabilityWaitSecondsFromEditor(),
             IsAttachmentOnlyMode: isAttachmentOnly,
-            ShowAttachmentDocumentationDialog: selectedProfile?.FolderOptions.ShowAttachmentDocumentationDialog == true,
+            ShowAttachmentDocumentationDialog: isAttachmentOnly
+                ? InterfaceAttachmentShowDocumentationDialogCheckBox.IsChecked == true
+                : selectedProfile?.FolderOptions.ShowAttachmentDocumentationDialog == true,
             AttachmentCompletionMode: ReadAttachmentCompletionModeFromEditor(),
             AttachmentQuietPeriodSeconds: ReadAttachmentQuietPeriodSecondsFromEditor());
+    }
+
+    private static string DefaultIfWhiteSpace(string? value, string fallback)
+    {
+        return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
     }
 
     private AttachmentTransferMode ReadAttachmentTransferModeFromEditor()
@@ -4862,7 +4897,8 @@ public partial class MainWindow : Window
         var dialog = new DocumentAttachmentDocumentationWindow(
             interfaceProfile.Metadata.Name,
             selectedCandidates.Select(candidate => candidate.FileName).ToList(),
-            requiresTransferConfirmation);
+            requiresTransferConfirmation,
+            capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog);
         if (owner is not null)
         {
             dialog.Owner = owner;
@@ -4913,7 +4949,8 @@ public partial class MainWindow : Window
         var dialog = new DocumentAttachmentDocumentationWindow(
             interfaceProfile.Metadata.Name,
             selectedCandidates.Select(candidate => candidate.FileName).ToList(),
-            requiresTransferConfirmation: true);
+            requiresTransferConfirmation: true,
+            capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog);
         if (owner is not null)
         {
             dialog.Owner = owner;
@@ -4927,7 +4964,9 @@ public partial class MainWindow : Window
         var state = new PendingDocumentAttachmentConfirmation(dialog);
         dialog.TransferRequested += (_, _) =>
         {
-            state.DocumentationText = dialog.CurrentDocumentationText;
+            state.DocumentationText = interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog
+                ? dialog.CurrentDocumentationText
+                : string.Empty;
             state.IsTransferConfirmed = true;
             state.IsCompleting = true;
             dialog.Close();
