@@ -41,6 +41,7 @@ Besonders stabil wirken aktuell:
 - generischer AttachmentOnly-/Dokumentgeraete-V1-Kandidat `MEDISTAR + Dokumentanhang`: AIS-Datei plus stabile Dokumentdateien erzeugen je Datei eigene `6302`-`6305`-Linkfelder, ohne Messwertparser und ohne `6228`/`6205`/`6220`; `6304` enthaelt Benutzerbeschreibung oder Originaldateiname, `6305` bleibt der technische Pfad.
 - Die Schnittstellenprofil-Konfiguration fuer AttachmentOnly ist kontextsensitiv reduziert: Der Geraete-/Dokument-Importordner ist der Dateieingang, separate XDT-Anhang-Importfelder und interne `6302`-`6305`-Templatefelder werden ausgeblendet, `Dokumentationstext erfassen` ist profilbezogen einstellbar, und der manuelle Dialog sammelt weitere stabile Dateien bis zum Klick auf `Uebertragen`.
 - AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-Importordner, auch wenn alte gespeicherte technische Anhang-Flags deaktiviert sind. Dokumentgeraete erzeugen dadurch wieder je Datei `6302`/`6303`/`6304`/`6305`; eine AIS-only-XDT ohne Dokumentlinks wird fuer Dokumentanhaenge nicht mehr still als Erfolg ausgegeben.
+- Die Texteingabe im Dialog `Dokumente uebertragen` ist vom Polling entkoppelt: offene Dialoge werden nicht neu aktiviert oder vollstaendig neu aufgebaut, neue Dateien werden inkrementell ergaenzt und die schwere automatische Paarverarbeitung wird bis zum Klick auf `Uebertragen` nicht bei jedem Scan erneut gestartet.
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 

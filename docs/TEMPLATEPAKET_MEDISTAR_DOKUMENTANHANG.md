@@ -62,6 +62,8 @@ Im Tab `Schnittstellenprofile` ist fuer AttachmentOnly-Profile der Geraete-/Doku
 
 Die Option `Dokumentationstext erfassen` steuert die pro-Datei-Beschreibung im Dialog. Ist sie aus, werden die Anhaenge trotzdem ueber `6302` bis `6305` exportiert; `6304` wird dann mit dem Originaldateinamen gefuellt. Der fruehere globale Sammeltext ueber `6227` wird im manuellen Dokumentuebergabe-Dialog nicht mehr automatisch erzeugt.
 
+Waehrend der Dialog offen ist, wird die Dateiliste nicht bei jedem Polling-Takt neu aufgebaut. Neue stabile Dateien werden nur ergaenzt, vorhandene Eingaben bleiben im Textfeld erhalten, und die automatische Paarverarbeitung wird erst nach Klick auf `Uebertragen` fortgesetzt.
+
 AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-Importordner. Alte gespeicherte technische Flags wie deaktivierte XDT-Anhang-Automatik duerfen deshalb nicht mehr dazu fuehren, dass nur AIS-Daten ohne Dokumentlinks exportiert werden. Die Pruefung vor Aktivierung arbeitet mit aktuellen, noch nicht gespeicherten UI-Werten und zeigt die Ordner-Erreichbarkeit als Hinweis/Warnung; ein eingetragener, aktuell nicht erreichbarer Ordner blockiert nicht hart.
 
 ## Grenzen

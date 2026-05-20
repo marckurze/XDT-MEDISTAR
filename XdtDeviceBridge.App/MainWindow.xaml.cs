@@ -4788,6 +4788,11 @@ public partial class MainWindow : Window
             return new AutoImportPairProcessingBatchResult(0, 0, 1, Array.Empty<AutoImportPairProcessingResult>());
         }
 
+        if (TryUpdatePendingDocumentAttachmentConfirmationFromScan(interfaceProfile, scanResult))
+        {
+            return new AutoImportPairProcessingBatchResult(0, 0, 0, Array.Empty<AutoImportPairProcessingResult>());
+        }
+
         var exportProfile = _profileCatalog?.ExportProfiles.FirstOrDefault(profile =>
             string.Equals(profile.Metadata.Id, interfaceProfile.ExportProfileId, StringComparison.Ordinal));
         if (exportProfile is null)
@@ -4867,6 +4872,48 @@ public partial class MainWindow : Window
         }
 
         return batchResult;
+    }
+
+    private bool TryUpdatePendingDocumentAttachmentConfirmationFromScan(
+        InterfaceProfileDefinition interfaceProfile,
+        AutoImportScanResult scanResult)
+    {
+        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode
+            || interfaceProfile.FolderOptions.AttachmentCompletionMode != AttachmentCompletionMode.ManualConfirmation)
+        {
+            return false;
+        }
+
+        var prefix = $"{interfaceProfile.Metadata.Id}|";
+        var activeStates = _pendingDocumentAttachmentConfirmations
+            .Where(entry => entry.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                && !entry.Value.IsTransferConfirmed
+                && !entry.Value.IsCanceled
+                && !entry.Value.IsCompleting)
+            .Select(entry => entry.Value)
+            .ToList();
+        if (activeStates.Count == 0)
+        {
+            return false;
+        }
+
+        var documentFiles = scanResult.Queue
+            .GetAll()
+            .Where(file => file.Status == PendingImportFileStatus.Stable
+                && file.Kind.IsDeviceImportFile(true))
+            .Select(DocumentAttachmentDialogFile.FromPendingImportFile)
+            .ToList();
+        if (documentFiles.Count == 0)
+        {
+            return true;
+        }
+
+        foreach (var state in activeStates)
+        {
+            state.Window.UpdateFiles(documentFiles);
+        }
+
+        return true;
     }
 
     private AttachmentOnlyConfirmationResult RequestAttachmentOnlyConfirmation(

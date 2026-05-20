@@ -86,7 +86,7 @@
                                                    Margin="0,2,0,6"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <TextBox Grid.Row="2"
-                                                 Text="{Binding DescriptionText, UpdateSourceTrigger=PropertyChanged}"
+                                                 Text="{Binding DescriptionText, UpdateSourceTrigger=LostFocus}"
                                                  Visibility="{Binding DescriptionVisibility}"
                                                  MinHeight="54"
                                                  AcceptsReturn="True"

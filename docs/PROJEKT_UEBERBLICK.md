@@ -224,6 +224,8 @@ Externe AIS-Linkfelder:
 
 Fuer Dokumentgeraete ohne Messwerte gibt es den V1-Kandidaten `MEDISTAR + Dokumentanhang`. Er behandelt Dateien aus dem Geraete-/Dokument-Importordner als reine Anhaenge und erzeugt keine Messwertfelder wie `6228`, `6205` oder `6220`. Im manuellen Dialog gehoert die Beschreibung direkt zur jeweiligen Datei und wird als `6304` ausgegeben; ohne Eingabe wird der Originaldateiname verwendet. `6305` bleibt der technische Zielpfad.
 
+Der Dialog `Dokumente uebertragen` wird waehrend des Pollings nicht mehr vollstaendig neu aufgebaut. Neue Dateien werden inkrementell ergaenzt, vorhandene Beschreibungen bleiben erhalten, und die automatische Paarverarbeitung setzt erst nach `Uebertragen` fort.
+
 Technische Grundsaetze:
 
 - Der `XdtExportBuilder` erzeugt XDT-Längenpraefixe zentral.

@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Data;
+using System.Windows.Media;
 using XdtDeviceBridge.Infrastructure;
 
 namespace XdtDeviceBridge.App;
@@ -12,6 +14,7 @@ public partial class DocumentAttachmentDocumentationWindow : Window
     private readonly bool _requiresTransferConfirmation;
     private readonly bool _capturesFileDescriptions;
     private readonly ObservableCollection<DocumentAttachmentFileItem> _files = new();
+    private readonly HashSet<string> _knownFingerprints = new(StringComparer.OrdinalIgnoreCase);
 
     public DocumentAttachmentDocumentationWindow(
         string profileName,
@@ -62,31 +65,59 @@ public partial class DocumentAttachmentDocumentationWindow : Window
         UpdateFiles(fileNames.Select(DocumentAttachmentDialogFile.FromFileName).ToList());
     }
 
-    public void UpdateFiles(IReadOnlyList<DocumentAttachmentDialogFile> files)
+    public bool UpdateFiles(IReadOnlyList<DocumentAttachmentDialogFile> files)
     {
-        foreach (var file in files
-            .OrderBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(file => file.FullPath, StringComparer.OrdinalIgnoreCase))
+        var newFiles = new List<DocumentAttachmentDialogFile>();
+        foreach (var file in files)
         {
-            if (_files.Any(item => string.Equals(item.Fingerprint, file.Fingerprint, StringComparison.OrdinalIgnoreCase)))
+            if (!_knownFingerprints.Add(file.Fingerprint))
             {
                 continue;
             }
 
+            newFiles.Add(file);
+        }
+
+        if (newFiles.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var file in newFiles
+            .OrderBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(file => file.FullPath, StringComparer.OrdinalIgnoreCase))
+        {
             _files.Add(new DocumentAttachmentFileItem(file, _capturesFileDescriptions));
         }
+
+        return true;
     }
 
     public IReadOnlyDictionary<string, string> GetFileDescriptions()
     {
-        return _files.ToDictionary(
-            item => item.Fingerprint,
-            item => item.DescriptionText ?? string.Empty,
-            StringComparer.OrdinalIgnoreCase);
+        FlushDescriptionBindings();
+        var descriptions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in _files)
+        {
+            var value = item.DescriptionText ?? string.Empty;
+            descriptions[item.Fingerprint] = value;
+            if (!string.IsNullOrWhiteSpace(item.FullPath))
+            {
+                descriptions[item.FullPath] = value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.FileName))
+            {
+                descriptions[item.FileName] = value;
+            }
+        }
+
+        return descriptions;
     }
 
     private void Apply_Click(object sender, RoutedEventArgs e)
     {
+        FlushDescriptionBindings();
         DocumentationText = null;
         TransferRequested?.Invoke(this, EventArgs.Empty);
         if (_requiresTransferConfirmation)
@@ -107,6 +138,32 @@ public partial class DocumentAttachmentDocumentationWindow : Window
         }
 
         DialogResult = false;
+    }
+
+    private void FlushDescriptionBindings()
+    {
+        foreach (var textBox in FindVisualChildren<System.Windows.Controls.TextBox>(this))
+        {
+            BindingOperations.GetBindingExpression(textBox, System.Windows.Controls.TextBox.TextProperty)?.UpdateSource();
+        }
+    }
+
+    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent)
+        where T : DependencyObject
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T typedChild)
+            {
+                yield return typedChild;
+            }
+
+            foreach (var descendant in FindVisualChildren<T>(child))
+            {
+                yield return descendant;
+            }
+        }
     }
 }
 
@@ -129,6 +186,33 @@ public sealed record DocumentAttachmentDialogFile(
             NormalizeFileFormat(candidate.Extension),
             candidate.SizeBytes,
             candidate.LastWriteTimeUtc);
+    }
+
+    public static DocumentAttachmentDialogFile FromPendingImportFile(PendingImportFile file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+
+        var sizeBytes = 0L;
+        try
+        {
+            var fileInfo = new FileInfo(file.FilePath);
+            if (fileInfo.Exists)
+            {
+                sizeBytes = fileInfo.Length;
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or UnauthorizedAccessException or IOException)
+        {
+            sizeBytes = 0L;
+        }
+
+        return new DocumentAttachmentDialogFile(
+            AttachmentImportFileFingerprint.Create(file.FilePath, sizeBytes, file.DetectedAtUtc),
+            file.FileName,
+            file.FilePath,
+            NormalizeFileFormat(Path.GetExtension(file.FileName)),
+            sizeBytes,
+            file.DetectedAtUtc);
     }
 
     public static DocumentAttachmentDialogFile FromFileName(string fileName)
