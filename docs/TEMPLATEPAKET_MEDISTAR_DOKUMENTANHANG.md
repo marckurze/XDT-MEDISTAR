@@ -12,7 +12,7 @@ V1-Kandidat, testseitig abgesichert. Eine praktische MEDISTAR-Abnahme mit echten
 | --- | --- | --- | --- |
 | AIS-Profil | `ais-medistar-default` | `MEDISTAR` | BuiltIn |
 | Geraeteprofil | `device-document-attachment-default` | `Generisches Dokumentgeraet` | BuiltIn, AttachmentOnly |
-| Exportprofil | `export-medistar-document-attachment-default` | `MEDISTAR + Dokumentanhang Export` | BuiltIn, optional `6227`, Linkfelder |
+| Exportprofil | `export-medistar-document-attachment-default` | `MEDISTAR + Dokumentanhang Export` | BuiltIn, Linkfelder |
 | Schnittstellenprofil | `interface-medistar-document-attachment-default` | `MEDISTAR + Dokumentanhang` | BuiltIn, inaktiv |
 
 ## Dateiverhalten
@@ -36,22 +36,16 @@ XML-Dateien sind in diesem Profilmodus reine Anhaenge und werden nicht als NIDEK
 
 Die XDT-Ausgabe enthaelt die AIS-Basisfelder wie bisher, insbesondere `8000`, Patientendaten und `8402` aus der AIS-Datei.
 
-Optional kann ein Anwendertext als `6227` ausgegeben werden:
-
-```text
-6227 <Dokumentationstext>
-```
-
-Ohne Text wird keine leere `6227`-Zeile erzeugt. Mehrzeiliger Text wird zeilenweise geschrieben: Jede nicht leere Eingabezeile erzeugt eine eigene `6227`-Feldzeile, damit keine nackten Textzeilen in der XDT-Datei entstehen.
-
 Fuer jede erfolgreich uebertragene Datei werden eigene Linkfelder erzeugt:
 
 ```text
 6302 Dokumentenname
 6303 Dateiformat
-6304 Beschreibung, optional
+6304 Beschreibung
 6305 vollstaendiger Dateipfad
 ```
+
+Im manuellen Dokumentfenster gehoert die Beschreibung direkt zur jeweiligen Datei. Dieser pro-Datei-Text wird als `6304` ausgegeben; wenn der Anwender nichts eintraegt, wird der Originaldateiname als sichtbare Beschreibung verwendet. `6305` bleibt immer der technische Zielpfad im Dokument-Exportordner. Mehrzeilige Beschreibungen werden fuer `6304` einzeilig zusammengefuehrt, damit keine nackten Folgezeilen in der XDT-Datei entstehen.
 
 Es werden keine Messwertfelder fuer Dokumentgeraete erzeugt: keine `6228`, keine `6205`, keine `6220`.
 
@@ -60,23 +54,21 @@ Es werden keine Messwertfelder fuer Dokumentgeraete erzeugt: keine `6228`, keine
 Dokumentgeraete koennen mehrere Dateien nacheinander schreiben. Deshalb wird nicht mehr sofort nach der ersten stabilen Datei exportiert.
 
 - `Abschluss nach Wartezeit`: Nach der ersten stabilen Datei startet eine profilbezogene Wartezeit, Standard 10 Sekunden. Jede weitere stabile Datei startet die Wartezeit neu. Erst nach Ablauf ohne neue Datei wird uebertragen.
-- `Manuell bestaetigen`: Sobald AIS-Datei und mindestens eine stabile Dokumentdatei vorhanden sind, oeffnet der Dialog `Dokumente uebertragen`. Der Dialog bleibt offen, neue stabile Dateien werden in der Liste ergaenzt, und ohne Klick auf `Uebertragen` wird kein Export erzeugt.
-
-Der optionale Dokumentationstext bleibt unveraendert: Text erzeugt `6227`, kein Text erzeugt keine leere `6227`-Zeile.
+- `Manuell bestaetigen`: Sobald AIS-Datei und mindestens eine stabile Dokumentdatei vorhanden sind, oeffnet der Dialog `Dokumente uebertragen`. Der Dialog bleibt offen, neue stabile Dateien werden inkrementell in der Liste ergaenzt, vorhandene Texteingaben bleiben erhalten, und ohne Klick auf `Uebertragen` wird kein Export erzeugt.
 
 ## Konfiguration in der App
 
 Im Tab `Schnittstellenprofile` ist fuer AttachmentOnly-Profile der Geraete-/Dokument-Importordner der massgebliche Eingang fuer Dokumentdateien. Der separate XDT-Anhang-Importordner normaler Messgeraete wird fuer diesen Profiltyp ausgeblendet, damit keine zwei konkurrierenden Eingangsordner sichtbar sind. Die internen `6302`-`6305`-Templatefelder werden fuer normale Anwender nicht angezeigt; Defaults wie `Datei`, `{ExtensionUpperWithoutDot}` und `{Attachment.TargetFullPath}` bleiben intern wirksam.
 
-Die Option `Dokumentationstext erfassen` steuert nur den optionalen `6227`-Text. Ist sie aus, wird kein Textfenster fuer den Wartezeitmodus angezeigt und im manuellen Modus kein Texteingabefeld angeboten; die Anhaenge werden trotzdem ueber `6302` bis `6305` exportiert.
+Die Option `Dokumentationstext erfassen` steuert die pro-Datei-Beschreibung im Dialog. Ist sie aus, werden die Anhaenge trotzdem ueber `6302` bis `6305` exportiert; `6304` wird dann mit dem Originaldateinamen gefuellt. Der fruehere globale Sammeltext ueber `6227` wird im manuellen Dokumentuebergabe-Dialog nicht mehr automatisch erzeugt.
 
 AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-Importordner. Alte gespeicherte technische Flags wie deaktivierte XDT-Anhang-Automatik duerfen deshalb nicht mehr dazu fuehren, dass nur AIS-Daten ohne Dokumentlinks exportiert werden. Die Pruefung vor Aktivierung arbeitet mit aktuellen, noch nicht gespeicherten UI-Werten und zeigt die Ordner-Erreichbarkeit als Hinweis/Warnung; ein eingetragener, aktuell nicht erreichbarer Ordner blockiert nicht hart.
 
 ## Grenzen
 
 - keine Drag-&-Drop-Dateisammlung
-- keine Vorschaukacheln
-- keine pro-Datei-Kommentare
+- keine Vorschaukachel-Galerie
+- keine pro-Datei-Messwertlogik
 - keine Bild-, DICOM-, Video- oder Audioanalyse
 - keine OCR
 - keine App-interne Datei-Umbenennung durch Anwender

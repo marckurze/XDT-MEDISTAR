@@ -83,8 +83,14 @@ public sealed class AttachmentExternalLinkPreparationService : IAttachmentExtern
         }
 
         var finalExtension = Path.GetExtension(transferResult.TargetPath);
+        var linkOptions = string.IsNullOrWhiteSpace(request.DescriptionOverride)
+            ? request.FolderOptions
+            : request.FolderOptions with
+            {
+                AttachmentExternalLinkDescription = NormalizeDescription(request.DescriptionOverride)
+            };
         var linkFieldResult = _linkFieldBuilder.Build(
-            request.FolderOptions,
+            linkOptions,
             transferResult.TargetPath,
             string.IsNullOrWhiteSpace(finalExtension) ? originalExtension : finalExtension);
         if (!linkFieldResult.Success || linkFieldResult.FieldSet is null)
@@ -107,6 +113,18 @@ public sealed class AttachmentExternalLinkPreparationService : IAttachmentExtern
             ExternalAisLinkFieldSet: linkFieldResult.FieldSet,
             ExportFields: adapterResult.Fields,
             ErrorMessage: null);
+    }
+
+    private static string NormalizeDescription(string value)
+    {
+        return string.Join(
+            " / ",
+            value
+                .Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Replace('\r', '\n')
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Trim())
+                .Where(line => !string.IsNullOrWhiteSpace(line)));
     }
 
     private static AttachmentExternalLinkPreparationResult Fail(

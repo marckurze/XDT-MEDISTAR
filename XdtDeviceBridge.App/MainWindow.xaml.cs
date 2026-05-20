@@ -4876,13 +4876,13 @@ public partial class MainWindow : Window
     {
         if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode)
         {
-            return AttachmentOnlyConfirmationResult.Proceed(null);
+            return AttachmentOnlyConfirmationResult.Proceed(null, null);
         }
 
         var requiresTransferConfirmation = interfaceProfile.FolderOptions.AttachmentCompletionMode == AttachmentCompletionMode.ManualConfirmation;
         if (!requiresTransferConfirmation && !interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog)
         {
-            return AttachmentOnlyConfirmationResult.Proceed(null);
+            return AttachmentOnlyConfirmationResult.Proceed(null, null);
         }
 
         if (requiresTransferConfirmation)
@@ -4896,7 +4896,7 @@ public partial class MainWindow : Window
                 : IsVisible ? this : null;
         var dialog = new DocumentAttachmentDocumentationWindow(
             interfaceProfile.Metadata.Name,
-            selectedCandidates.Select(candidate => candidate.FileName).ToList(),
+            CreateDocumentAttachmentDialogFiles(selectedCandidates),
             requiresTransferConfirmation,
             capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog);
         if (owner is not null)
@@ -4910,7 +4910,7 @@ public partial class MainWindow : Window
         }
 
         return dialog.ShowDialog() == true
-            ? AttachmentOnlyConfirmationResult.Proceed(dialog.DocumentationText)
+            ? AttachmentOnlyConfirmationResult.Proceed(null, dialog.FileDescriptions)
             : AttachmentOnlyConfirmationResult.Cancel();
     }
 
@@ -4925,7 +4925,7 @@ public partial class MainWindow : Window
             if (existingState.IsTransferConfirmed)
             {
                 _pendingDocumentAttachmentConfirmations.Remove(confirmationKey);
-                return AttachmentOnlyConfirmationResult.Proceed(existingState.DocumentationText);
+                return AttachmentOnlyConfirmationResult.Proceed(null, existingState.FileDescriptions);
             }
 
             if (existingState.IsCanceled)
@@ -4933,11 +4933,7 @@ public partial class MainWindow : Window
                 return AttachmentOnlyConfirmationResult.Cancel();
             }
 
-            existingState.Window.UpdateFileNames(selectedCandidates.Select(candidate => candidate.FileName).ToList());
-            if (existingState.Window.IsVisible)
-            {
-                existingState.Window.Activate();
-            }
+            existingState.Window.UpdateFiles(CreateDocumentAttachmentDialogFiles(selectedCandidates));
 
             return AttachmentOnlyConfirmationResult.Cancel();
         }
@@ -4948,7 +4944,7 @@ public partial class MainWindow : Window
                 : IsVisible ? this : null;
         var dialog = new DocumentAttachmentDocumentationWindow(
             interfaceProfile.Metadata.Name,
-            selectedCandidates.Select(candidate => candidate.FileName).ToList(),
+            CreateDocumentAttachmentDialogFiles(selectedCandidates),
             requiresTransferConfirmation: true,
             capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog);
         if (owner is not null)
@@ -4964,9 +4960,7 @@ public partial class MainWindow : Window
         var state = new PendingDocumentAttachmentConfirmation(dialog);
         dialog.TransferRequested += (_, _) =>
         {
-            state.DocumentationText = interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog
-                ? dialog.CurrentDocumentationText
-                : string.Empty;
+            state.FileDescriptions = dialog.FileDescriptions;
             state.IsTransferConfirmed = true;
             state.IsCompleting = true;
             dialog.Close();
@@ -4999,6 +4993,16 @@ public partial class MainWindow : Window
             interfaceProfile.Metadata.Id,
             "ais",
             ImportFileFingerprint.Create(pair.AisFile));
+    }
+
+    private static IReadOnlyList<DocumentAttachmentDialogFile> CreateDocumentAttachmentDialogFiles(
+        IReadOnlyList<AttachmentImportFileCandidate> candidates)
+    {
+        return candidates
+            .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(candidate => candidate.FullPath, StringComparer.OrdinalIgnoreCase)
+            .Select(DocumentAttachmentDialogFile.FromCandidate)
+            .ToList();
     }
 
     private void ResetDocumentAttachmentConfirmations(string interfaceProfileId)
@@ -6761,7 +6765,8 @@ public partial class MainWindow : Window
 
         public bool IsCompleting { get; set; }
 
-        public string? DocumentationText { get; set; }
+        public IReadOnlyDictionary<string, string> FileDescriptions { get; set; } =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     }
 
     private sealed class PlaceholderRow : INotifyPropertyChanged

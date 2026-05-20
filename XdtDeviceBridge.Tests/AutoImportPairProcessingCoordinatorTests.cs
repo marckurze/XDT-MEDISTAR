@@ -1208,12 +1208,87 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.True(processed.Success, string.Join(Environment.NewLine, processed.Messages));
         Assert.Contains("6302Datei", processed.ManualProcessingResult!.ExportContent);
         Assert.Contains("6303PDF", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains("6304bericht.pdf", processed.ManualProcessingResult.ExportContent);
         Assert.Contains("6305", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6227", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6228", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6205", processed.ManualProcessingResult.ExportContent);
         Assert.DoesNotContain("6220", processed.ManualProcessingResult.ExportContent);
         Assert.Equal(files.Folder, scanner.LastOptions?.AttachmentImportFolder);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_AttachmentOnlyManualConfirmationShouldExportPerFileDescriptionsAs6304()
+    {
+        var files = CreateValidTempImportFiles();
+        var attachmentExportFolder = CreateTempFolder();
+        var pdfFile = Path.Combine(files.Folder, "bericht.pdf");
+        var jpgFile = Path.Combine(files.Folder, "bild.jpg");
+        File.WriteAllText(pdfFile, "pdf");
+        File.WriteAllText(jpgFile, "jpg");
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult(new[]
+        {
+            CreateAttachmentCandidate(jpgFile, isSupported: true),
+            CreateAttachmentCandidate(pdfFile, isSupported: true)
+        }));
+        var coordinator = CreateCoordinator(
+            new InterfaceProfileManualProcessor(),
+            scanner,
+            new AttachmentExternalLinkPreparationService(),
+            patientNumber: "4701-1");
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: false,
+            attachmentImportFolder: string.Empty,
+            attachmentExportFolder: attachmentExportFolder,
+            attachmentRequirementMode: AttachmentRequirementMode.Optional,
+            isAttachmentOnlyMode: true,
+            attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+            deviceImportFolder: files.Folder) with
+        {
+            FolderOptions = CreateInterfaceProfile(
+                isAttachmentProcessingEnabled: false,
+                attachmentImportFolder: string.Empty,
+                attachmentExportFolder: attachmentExportFolder,
+                attachmentRequirementMode: AttachmentRequirementMode.Optional,
+                isAttachmentOnlyMode: true,
+                attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+                deviceImportFolder: files.Folder).FolderOptions with
+            {
+                ExportFolder = CreateTempFolder(),
+                AttachmentTransferMode = AttachmentTransferMode.Copy,
+                ShowAttachmentDocumentationDialog = true
+            }
+        };
+        var pair = CreatePair(files.AisFilePath, pdfFile);
+
+        var result = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp,
+            attachmentOnlyConfirmationProvider: (_, _, candidates) =>
+            {
+                var descriptions = candidates.ToDictionary(
+                    AttachmentImportFileFingerprint.Create,
+                    candidate => candidate.FileName.Equals("bericht.pdf", StringComparison.OrdinalIgnoreCase)
+                        ? "PDF Befund rechts"
+                        : string.Empty,
+                    StringComparer.OrdinalIgnoreCase);
+                return AttachmentOnlyConfirmationResult.Proceed(null, descriptions);
+            });
+
+        var processed = Assert.Single(result.Results);
+        Assert.True(processed.Success, string.Join(Environment.NewLine, processed.Messages));
+        Assert.Equal(2, processed.ManualProcessingResult!.PipelineResult!.ExportRecords.Count(record => record.FieldCode == "6302"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6303"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6304"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6305"));
+        Assert.Contains("6304PDF Befund rechts", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains("6304bild.jpg", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6227", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain(processed.ManualProcessingResult.PipelineResult.ExportRecords, record =>
+            record.FieldCode == "6304" && record.Value?.Contains(attachmentExportFolder, StringComparison.OrdinalIgnoreCase) == true);
     }
 
     [Fact]
@@ -1915,11 +1990,17 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             var targetFolder = Path.GetDirectoryName(_result.TargetPath) ?? @"C:\Export\Attachments";
             var targetPath = Path.Combine(targetFolder, Path.GetFileName(request.SourceAttachmentPath));
             var extension = Path.GetExtension(targetPath).TrimStart('.').ToUpperInvariant();
+            var description = string.IsNullOrWhiteSpace(request.DescriptionOverride)
+                ? "Messprotokoll"
+                : request.DescriptionOverride
+                    .Replace("\r\n", "\n", StringComparison.Ordinal)
+                    .Replace('\r', '\n')
+                    .Replace("\n", " / ", StringComparison.Ordinal);
             var fields = new[]
             {
                 new ExportFieldRecord("6302", "PDF-Befund", 1),
                 new ExportFieldRecord("6303", extension == "JPEG" ? "JPG" : extension, 2),
-                new ExportFieldRecord("6304", "Messprotokoll", 3),
+                new ExportFieldRecord("6304", description, 3),
                 new ExportFieldRecord("6305", targetPath, 4)
             };
 

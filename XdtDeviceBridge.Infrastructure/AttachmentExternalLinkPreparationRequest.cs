@@ -8,4 +8,5 @@ public sealed record AttachmentExternalLinkPreparationRequest(
     PatientData? Patient,
     DateTime ProcessingTimestamp,
     string? OriginalExtension = null,
-    bool? IsSourceStable = null);
+    bool? IsSourceStable = null,
+    string? DescriptionOverride = null);

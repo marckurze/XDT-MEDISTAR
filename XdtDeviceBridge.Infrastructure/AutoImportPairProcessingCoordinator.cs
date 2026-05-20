@@ -397,6 +397,7 @@ public sealed class AutoImportPairProcessingCoordinator
         {
             var selectedCandidates = packageDecision.SelectedCandidates;
             Func<PatientData, string?>? documentationTextProvider = null;
+            IReadOnlyDictionary<string, string>? attachmentDescriptions = null;
             if (interfaceProfile.FolderOptions.IsAttachmentOnlyMode)
             {
                 var completionDecision = _attachmentCompletionService.Decide(
@@ -439,6 +440,7 @@ public sealed class AutoImportPairProcessingCoordinator
 
                     selectedCandidates = completionDecision.SelectedCandidates;
                     documentationTextProvider = _ => confirmationResult.DocumentationText;
+                    attachmentDescriptions = confirmationResult.AttachmentDescriptions;
                 }
                 else if (completionDecision.ShouldWait)
                 {
@@ -480,6 +482,7 @@ public sealed class AutoImportPairProcessingCoordinator
                         }
 
                         documentationTextProvider = _ => confirmationResult.DocumentationText;
+                        attachmentDescriptions = confirmationResult.AttachmentDescriptions;
                     }
                 }
             }
@@ -490,7 +493,8 @@ public sealed class AutoImportPairProcessingCoordinator
                     attachmentProfile,
                     patient,
                     selectedCandidates,
-                    timestamp),
+                    timestamp,
+                    attachmentDescriptions),
                 DocumentationTextProvider: documentationTextProvider);
         }
 
@@ -593,7 +597,8 @@ public sealed class AutoImportPairProcessingCoordinator
         InterfaceProfileDefinition interfaceProfile,
         PatientData patient,
         IReadOnlyList<AttachmentImportFileCandidate> selectedCandidates,
-        DateTime timestamp)
+        DateTime timestamp,
+        IReadOnlyDictionary<string, string>? attachmentDescriptions = null)
     {
         var successfulResults = new List<AttachmentExternalLinkPreparationResult>();
         var failedMessages = new List<string>();
@@ -607,7 +612,8 @@ public sealed class AutoImportPairProcessingCoordinator
                 SourceAttachmentPath: selectedCandidate.FullPath,
                 Patient: patient,
                 ProcessingTimestamp: timestamp,
-                IsSourceStable: selectedCandidate.IsStable));
+                IsSourceStable: selectedCandidate.IsStable,
+                DescriptionOverride: CreateAttachmentDescriptionOverride(interfaceProfile, selectedCandidate, attachmentDescriptions)));
             if (preparationResult.Success)
             {
                 successfulResults.Add(preparationResult);
@@ -648,6 +654,43 @@ public sealed class AutoImportPairProcessingCoordinator
             TargetPath: string.Join("; ", successfulResults.Select(result => result.TargetPath).Where(path => !string.IsNullOrWhiteSpace(path))),
             TargetFileName: string.Join("; ", successfulResults.Select(result => result.TargetFileName).Where(fileName => !string.IsNullOrWhiteSpace(fileName))),
             PreparedFields: fields);
+    }
+
+    private static string? CreateAttachmentDescriptionOverride(
+        InterfaceProfileDefinition interfaceProfile,
+        AttachmentImportFileCandidate candidate,
+        IReadOnlyDictionary<string, string>? attachmentDescriptions)
+    {
+        if (!interfaceProfile.FolderOptions.IsAttachmentOnlyMode)
+        {
+            return null;
+        }
+
+        var fingerprint = AttachmentImportFileFingerprint.Create(candidate);
+        if (TryGetAttachmentDescription(attachmentDescriptions, fingerprint, out var description)
+            || TryGetAttachmentDescription(attachmentDescriptions, candidate.FullPath, out description)
+            || TryGetAttachmentDescription(attachmentDescriptions, candidate.FileName, out description))
+        {
+            return string.IsNullOrWhiteSpace(description)
+                ? candidate.FileName
+                : description;
+        }
+
+        return candidate.FileName;
+    }
+
+    private static bool TryGetAttachmentDescription(
+        IReadOnlyDictionary<string, string>? descriptions,
+        string key,
+        out string? description)
+    {
+        description = null;
+        if (descriptions is null || string.IsNullOrWhiteSpace(key))
+        {
+            return false;
+        }
+
+        return descriptions.TryGetValue(key, out description);
     }
 
     private AttachmentProcessingStatus PrepareAttachmentIfAllowed(

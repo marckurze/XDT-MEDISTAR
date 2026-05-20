@@ -100,6 +100,62 @@ public sealed class AttachmentExternalLinkPreparationServiceTests
     }
 
     [Fact]
+    public void Prepare_ShouldUseDescriptionOverrideFor6304()
+    {
+        var sourceFile = CreateSourceFile("atlas.pdf", "attachment");
+        var targetFolder = CreateTempFolder();
+        var service = new AttachmentExternalLinkPreparationService();
+        var options = CreateOptions(targetFolder, AttachmentTransferMode.Copy) with
+        {
+            AttachmentExternalLinkDescription = ""
+        };
+
+        var result = service.Prepare(CreateRequest(sourceFile, options) with
+        {
+            DescriptionOverride = "Atlas Aufnahme rechts"
+        });
+
+        Assert.True(result.Success);
+        Assert.Contains(result.ExportFields, field => field.FieldCode == "6304" && field.Value == "Atlas Aufnahme rechts");
+        Assert.Contains(result.ExportFields, field => field.FieldCode == "6305" && field.Value == result.TargetPath);
+    }
+
+    [Fact]
+    public void Prepare_ShouldFlattenMultilineDescriptionOverrideFor6304()
+    {
+        var sourceFile = CreateSourceFile("atlas.jpg", "attachment");
+        var targetFolder = CreateTempFolder();
+        var service = new AttachmentExternalLinkPreparationService();
+
+        var result = service.Prepare(CreateRequest(sourceFile, targetFolder, AttachmentTransferMode.Copy) with
+        {
+            DescriptionOverride = "Zeile 1\r\n\r\nZeile 2\nZeile 3"
+        });
+
+        Assert.True(result.Success);
+        Assert.Contains(result.ExportFields, field => field.FieldCode == "6304" && field.Value == "Zeile 1 / Zeile 2 / Zeile 3");
+        Assert.DoesNotContain(result.ExportFields, field => field.Value?.Contains('\n') == true);
+    }
+
+    [Fact]
+    public void Prepare_ShouldKeepTargetPathOnlyIn6305WhenDescriptionOverrideIsPresent()
+    {
+        var sourceFile = CreateSourceFile("atlas.png", "attachment");
+        var targetFolder = CreateTempFolder();
+        var service = new AttachmentExternalLinkPreparationService();
+
+        var result = service.Prepare(CreateRequest(sourceFile, targetFolder, AttachmentTransferMode.Copy) with
+        {
+            DescriptionOverride = "Vorderer Augenabschnitt"
+        });
+
+        Assert.True(result.Success);
+        Assert.Contains(result.ExportFields, field => field.FieldCode == "6304" && field.Value == "Vorderer Augenabschnitt");
+        Assert.DoesNotContain(result.ExportFields, field => field.FieldCode == "6304" && field.Value == result.TargetPath);
+        Assert.Contains(result.ExportFields, field => field.FieldCode == "6305" && field.Value == result.TargetPath);
+    }
+
+    [Fact]
     public void Prepare_ShouldReturnErrorForMissingSourceFile()
     {
         var sourceFile = Path.Combine(CreateTempFolder(), "missing.pdf");
