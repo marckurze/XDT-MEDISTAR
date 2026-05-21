@@ -750,6 +750,7 @@ Ableitung:
 - KM nutzt die Median-Werte und erzeugt zwei vorbereitete Keratometerzeilen fuer `6221`.
 - SBJ gibt nur vorhandene Full-Correction-Fern-/Nahwerte als konservative `6227`-Zeilen aus; leere Unaided-/ContrastVA-/GlareVA-Bloecke werden nicht ausgegeben.
 - Shift-JIS-XML wird gelesen; `8402` kommt weiterhin aus AIS/MEDISTAR.
+- Alte persistierte KR800S-BuiltIn-Exportprofile mit Einzelplatzhaltern oder KM-Regeln ueber `6228` werden gezielt auf die vorbereiteten `MedistarLine`-Pfade repariert.
 
 ## 7.1 TOPCON KR800S - erkannte SourcePaths und Mehruntersuchungsstruktur
 
@@ -885,6 +886,7 @@ Wichtig fuer Parser- und Profil-Logik:
 - SBJ enthaelt mehrere `Type`- und `ExamDistance`-Varianten; aktuell wird `Full Correction` fuer FAR/NEAR konservativ ausgegeben, leere R/L-Zeilen werden ausgelassen.
 - Fuer KR800S wurden in den analysierten Dateien keine JPG-/PDF-Attachments gefunden.
 - Praktische MEDISTAR-Validierung steht noch aus; subjektive Zeilen koennen nach weiteren Praxisbeispielen verfeinert werden.
+- Der Live-Fehler mit leeren Platzhalterzeilen (`R.:S= Z=*`, `KR: K1=* K2=*`) wurde auf alte persistierte BuiltIn-Exportregeln zurueckgefuehrt und testseitig abgesichert.
 
 ## 8. TOPCON TRK2P
 

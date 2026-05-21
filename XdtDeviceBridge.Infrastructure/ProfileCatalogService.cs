@@ -12,6 +12,7 @@ public sealed class ProfileCatalogService
     private const string Nt530PDefaultExportProfileId = "export-medistar-nidek-nt530p-default";
     private const string TopconCl300DefaultDeviceProfileId = "device-topcon-cl300-default";
     private const string TopconCl300DefaultExportProfileId = "export-medistar-topcon-cl300-default";
+    private const string TopconKr800DefaultExportProfileId = "export-medistar-topcon-kr800-default";
 
     private readonly ProfileFileRepository _repository;
 
@@ -399,7 +400,8 @@ public sealed class ProfileCatalogService
     {
         if (!string.Equals(defaultProfile.Metadata.Id, Lm7DefaultExportProfileId, StringComparison.Ordinal)
             && !string.Equals(defaultProfile.Metadata.Id, Nt530PDefaultExportProfileId, StringComparison.Ordinal)
-            && !string.Equals(defaultProfile.Metadata.Id, TopconCl300DefaultExportProfileId, StringComparison.Ordinal))
+            && !string.Equals(defaultProfile.Metadata.Id, TopconCl300DefaultExportProfileId, StringComparison.Ordinal)
+            && !string.Equals(defaultProfile.Metadata.Id, TopconKr800DefaultExportProfileId, StringComparison.Ordinal))
         {
             return;
         }
@@ -428,7 +430,8 @@ public sealed class ProfileCatalogService
     {
         return NeedsLm7ExportProfileRepair(profile)
             || NeedsNt530PExportProfileRepair(profile)
-            || NeedsTopconCl300ExportProfileRepair(profile);
+            || NeedsTopconCl300ExportProfileRepair(profile)
+            || NeedsTopconKr800SExportProfileRepair(profile);
     }
 
     private static bool NeedsTopconCl300DeviceProfileRepair(DeviceProfileDefinition profile)
@@ -522,6 +525,89 @@ public sealed class ProfileCatalogService
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("Device.Ophthalmology/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool NeedsTopconKr800SExportProfileRepair(ExportProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, TopconKr800DefaultExportProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return profile.Rules.Any(rule =>
+            IsLegacyTopconKr800SKeratometryRule(rule)
+            || ContainsLegacyTopconKr800SPath(rule.SourcePath)
+            || ContainsLegacyTopconKr800SPath(rule.OutputTemplate))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6228",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='REF']/REF/R/MedistarLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6228",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='REF']/REF/L/MedistarLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6221",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='KM']/KM/MedistarLine1",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6221",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='KM']/KM/MedistarLine2",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6227",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='SBJ']/MedistarLine1",
+                    StringComparison.Ordinal));
+    }
+
+    private static bool IsLegacyTopconKr800SKeratometryRule(ExportRuleDefinition rule)
+    {
+        if (!string.Equals(rule.TargetFieldCode, "6228", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return ContainsAny(rule.TargetName, "Keratometry", "Kerato", "KM", "KR:", "KL:", "K1=", "K2=")
+            || ContainsAny(rule.Description, "Keratometry", "Kerato", "KM", "KR:", "KL:", "K1=", "K2=")
+            || ContainsAny(rule.SourcePath, "Measure[@Type='KM']", "Measure[@type='KM']", "Keratometry", "K1=", "K2=")
+            || ContainsAny(rule.OutputTemplate, "Measure[@Type='KM']", "Measure[@type='KM']", "KR:", "KL:", "K1=", "K2=");
+    }
+
+    private static bool ContainsLegacyTopconKr800SPath(string? value)
+    {
+        return ContainsAny(
+            value,
+            "Device.Ophthalmology/",
+            "R.:S= Z=*",
+            "L.:S= Z=*",
+            "KR: K1=*",
+            "KL: K1=*");
+    }
+
+    private static bool ContainsAny(string? value, params string[] needles)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && needles.Any(needle => value.Contains(needle, StringComparison.OrdinalIgnoreCase));
     }
 
     private static string GetProfileId<TProfile>(TProfile profile)

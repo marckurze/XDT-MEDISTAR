@@ -93,8 +93,21 @@ public sealed class TopconKr800SProfileTests
     public void MedistarExportForSerial0036_ShouldUseRefKmAndConservativeSbjLines()
     {
         var result = MapWithKr800SExport(GetKr800SFixturePath("M-Serial0036_20131206_213127_TOPCON_KR-800S_.xml"));
+        var exportResult = new XdtExportBuilder().Build(result.Records);
 
         Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Empty(exportResult.Issues);
+        Assert.Contains("8402KR800S", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=- 5.50 Z=+ 0.00*  0 PD= 58 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 5.25 Z=+ 0.00*  0", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.70 43.75 *180 R2=7.70 43.75 *90 // L: R1=7.70 43.75 *180 R2=7.69 43.75 *90", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6221R: AV=7.70 43.75 CYL=+0.00 0 // L: AV=7.70 43.75 CYL=+0.00 0", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("R.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("L.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("KR: K1=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("KL: K1=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228KR:", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228KL:", exportResult.Content, StringComparison.Ordinal);
         Assert.Equal(
             new[]
             {
@@ -124,6 +137,12 @@ public sealed class TopconKr800SProfileTests
         Assert.Contains("6221R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6227Subjektive Refraktion Full Correction FAR: R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6227Subjektive Refraktion Full Correction NEAR: R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("R.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("L.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("KR: K1=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("KL: K1=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228KR:", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228KL:", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6205", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6220", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6302", exportResult.Content, StringComparison.Ordinal);

@@ -34,6 +34,7 @@ Testseitig abgesicherter Kandidat fuer die MEDISTAR-Anbindung des TOPCON KR-800S
 - `8402` kommt weiter aus der AIS-/MEDISTAR-Datei.
 - Keine `6205`, keine `6220`, keine `6330`-Automatik.
 - Keine Anhangfelder `6302` bis `6305` fuer die Messwerte.
+- Persistierte alte BuiltIn-Exportprofile werden beim Katalogstart gezielt repariert, wenn sie noch root-prefixed Einzelplatzhalter oder Keratometer-Regeln ueber `6228` enthalten.
 
 Beispiele testseitig:
 
@@ -58,10 +59,11 @@ Subjektive Refraktion Full Correction FAR: R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:
 
 - Parser- und Namespace-Tests: `TopconKr800SProfileTests`
 - Exportprofil-/BuiltIn-Tests: `DeviceProfileDefinitionTests`, `ExportProfileDefinitionTests`, `InterfaceProfileDefinitionTests`
+- Katalog-Reparaturtests fuer alte persistierte KR800S-BuiltIns: `ProfileCatalogServiceTests`
 - Selektiver Templatepaket-Test: `MedistarTopconKr800STemplatePackageTests`
 
 ## Offen
 
-- Praktische MEDISTAR-Validierung mit echten KR-800S-XML-Dateien.
+- Praktische MEDISTAR-Validierung nach dem Fix mit echten KR-800S-XML-Dateien.
 - Subjektive `6227`-Ausgabe nach Praxisfeedback feinjustieren.
 - Offizielles ZIP-Artefakt erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

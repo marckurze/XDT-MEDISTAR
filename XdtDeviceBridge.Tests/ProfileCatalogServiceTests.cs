@@ -218,6 +218,55 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconKr800SBuiltInExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyTopconKr800SExportProfile(isBuiltIn: true) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-kr800-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/L/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine2");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228" && ContainsLegacyTopconKr800SPath(rule.OutputTemplate));
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228" && ContainsLegacyTopconKr800SPath(rule.SourcePath));
+        Assert.DoesNotContain(profile.Rules, rule =>
+            rule.TargetFieldCode == "6228"
+            && ((rule.SourcePath?.Contains("Measure[@Type='KM']", StringComparison.OrdinalIgnoreCase) ?? false)
+                || (rule.OutputTemplate?.Contains("K1=", StringComparison.OrdinalIgnoreCase) ?? false)));
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldNotRepairUserDefinedTopconKr800SExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyTopconKr800SExportProfile(isBuiltIn: false) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-kr800-default");
+        Assert.False(profile.Metadata.IsBuiltIn);
+        Assert.True(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => ContainsLegacyTopconKr800SPath(rule.OutputTemplate));
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && (rule.OutputTemplate?.Contains("K1=", StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
+    [Fact]
     public void Load_ShouldReadAllExpectedProfilesAfterEnsureDefaultProfiles()
     {
         var paths = CreateAppDataPaths();
@@ -587,6 +636,64 @@ public sealed class ProfileCatalogServiceTests
         };
     }
 
+    private static ExportProfileDefinition CreateLegacyTopconKr800SExportProfile(bool isBuiltIn)
+    {
+        var current = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Rules = current.Rules.Take(6)
+                .Concat(new[]
+                {
+                    new ExportRuleDefinition(
+                        "7",
+                        "6228",
+                        "RefResultRight",
+                        ExportRuleType.Template,
+                        null,
+                        "R.:S={Device.Ophthalmology/Measure[@type='REF']/REF/R/Sphere} Z={Device.Ophthalmology/Measure[@type='REF']/REF/R/Cylinder}*{Device.Ophthalmology/Measure[@type='REF']/REF/R/Axis}                              PD={Device.Ophthalmology/Measure[@type='REF']/PD/Distance}",
+                        7,
+                        true,
+                        "Legacy TOPCON KR800S right REF template with root-prefixed paths."),
+                    new ExportRuleDefinition(
+                        "8",
+                        "6228",
+                        "RefResultLeft",
+                        ExportRuleType.Template,
+                        null,
+                        "L.:S={Device.Ophthalmology/Measure[@type='REF']/REF/L/Sphere} Z={Device.Ophthalmology/Measure[@type='REF']/REF/L/Cylinder}*{Device.Ophthalmology/Measure[@type='REF']/REF/L/Axis}                              PD=",
+                        8,
+                        true,
+                        "Legacy TOPCON KR800S left REF template with root-prefixed paths."),
+                    new ExportRuleDefinition(
+                        "9",
+                        "6228",
+                        "KeratometryRight",
+                        ExportRuleType.Template,
+                        null,
+                        "KR: K1={Device.Ophthalmology/Measure[@type='KM']/KM/R/K1/Power}*{Device.Ophthalmology/Measure[@type='KM']/KM/R/K1/Axis} K2={Device.Ophthalmology/Measure[@type='KM']/KM/R/K2/Power}*{Device.Ophthalmology/Measure[@type='KM']/KM/R/K2/Axis}",
+                        9,
+                        true,
+                        "Legacy TOPCON KR800S KM template wrongly emitted through 6228."),
+                    new ExportRuleDefinition(
+                        "10",
+                        "6228",
+                        "KeratometryLeft",
+                        ExportRuleType.Template,
+                        null,
+                        "KL: K1={Device.Ophthalmology/Measure[@type='KM']/KM/L/K1/Power}*{Device.Ophthalmology/Measure[@type='KM']/KM/L/K1/Axis} K2={Device.Ophthalmology/Measure[@type='KM']/KM/L/K2/Power}*{Device.Ophthalmology/Measure[@type='KM']/KM/L/K2/Axis}",
+                        10,
+                        true,
+                        "Legacy TOPCON KR800S KM template wrongly emitted through 6228.")
+                })
+                .ToArray()
+        };
+    }
+
     private static bool ContainsLegacyLm7MedianPath(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
@@ -598,6 +705,14 @@ public sealed class ProfileCatalogServiceTests
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("Ophthalmology/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ContainsLegacyTopconKr800SPath(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && (value.Contains("Device.Ophthalmology/", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("KR: K1=", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("KL: K1=", StringComparison.OrdinalIgnoreCase));
     }
 
     private static ProfileMetadata CreateUserExportMetadata(string id)
