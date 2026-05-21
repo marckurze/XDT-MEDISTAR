@@ -748,7 +748,7 @@ Ableitung:
 - `XmlDeviceParser` unterscheidet `Measure type="REF"`, `Measure type="KM"` und `Measure type="SBJ"` namespace-tolerant ueber `LocalName`.
 - REF nutzt die Median-Werte und erzeugt vorbereitete `MedistarLine`-Werte fuer `6228`.
 - KM nutzt die Median-Werte und erzeugt zwei vorbereitete Keratometerzeilen fuer `6221`.
-- SBJ gibt nur vorhandene Full-Correction-Fern-/Nahwerte als konservative `6227`-Zeilen aus; leere Unaided-/ContrastVA-/GlareVA-Bloecke werden nicht ausgegeben.
+- SBJ gibt nur vorhandene Full-Correction-Fern-/Nahwerte als konservative `6227`-Zeilen aus; Header und Messwert stehen getrennt, leere Unaided-/ContrastVA-/GlareVA-Bloecke werden nicht ausgegeben.
 - Shift-JIS-XML wird gelesen; `8402` kommt weiterhin aus AIS/MEDISTAR.
 - Alte persistierte KR800S-BuiltIn-Exportprofile mit Einzelplatzhaltern oder KM-Regeln ueber `6228` werden gezielt auf die vorbereiteten `MedistarLine`-Pfade repariert.
 
@@ -875,7 +875,10 @@ Vorbereitete MEDISTAR-Ausgabe:
 6228 L.:S=+ 3.75 Z=- 2.50*173
 6221 R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81
 6221 R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171
-6227 Subjektive Refraktion Full Correction FAR: R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75
+6227 Subjektive Refraktion Full Correction FAR:
+6227 R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75
+6227 Subjektive Refraktion Full Correction NEAR:
+6227 R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75
 ```
 
 Wichtig fuer Parser- und Profil-Logik:
@@ -883,7 +886,7 @@ Wichtig fuer Parser- und Profil-Logik:
 - KR800S liefert mehrere Untersuchungsarten in einer einzigen Datei.
 - `Measure[@type='...']` ist zwingend relevant, weil REF/KM/SBJ parallele Strukturen mit unterschiedlichen Namespaces nutzen.
 - `Median`-Werte werden fuer REF und KM als Standardausgabe verwendet.
-- SBJ enthaelt mehrere `Type`- und `ExamDistance`-Varianten; aktuell wird `Full Correction` fuer FAR/NEAR konservativ ausgegeben, leere R/L-Zeilen werden ausgelassen.
+- SBJ enthaelt mehrere `Type`- und `ExamDistance`-Varianten; aktuell wird `Full Correction` fuer FAR/NEAR konservativ ausgegeben, leere R/L-Zeilen werden ausgelassen und Header/Messwert stehen in getrennten `6227`-Zeilen.
 - Fuer KR800S wurden in den analysierten Dateien keine JPG-/PDF-Attachments gefunden.
 - Praktische MEDISTAR-Validierung steht noch aus; subjektive Zeilen koennen nach weiteren Praxisbeispielen verfeinert werden.
 - Der Live-Fehler mit leeren Platzhalterzeilen (`R.:S= Z=*`, `KR: K1=* K2=*`) wurde auf alte persistierte BuiltIn-Exportregeln zurueckgefuehrt und testseitig abgesichert.

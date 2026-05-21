@@ -443,10 +443,10 @@ public sealed class XmlDeviceParser
             var typeName = GetChildValue(type, "TypeName") ?? "Subjektive Refraktion";
             foreach (var examDistance in FindChildren(type, "ExamDistance"))
             {
-                var line = BuildSubjectiveRefractionLine(typeName, examDistance);
-                if (!string.IsNullOrWhiteSpace(line))
+                var examLines = BuildSubjectiveRefractionLines(typeName, examDistance);
+                if (examLines.Count > 0)
                 {
-                    lines.Add(line);
+                    lines.AddRange(examLines);
                 }
             }
         }
@@ -908,12 +908,12 @@ public sealed class XmlDeviceParser
         return $"{eye}: AV={FormatTwoDecimal(averageRadius)} {FormatTwoDecimal(averagePower)} CYL={FormatSignedCompactDecimal(cylinderPower)} {FormatAxisCompact(cylinderAxis)}";
     }
 
-    private static string? BuildSubjectiveRefractionLine(string typeName, XElement examDistance)
+    private static IReadOnlyList<string> BuildSubjectiveRefractionLines(string typeName, XElement examDistance)
     {
         var refractionData = FindChild(examDistance, "RefractionData");
         if (refractionData is null)
         {
-            return null;
+            return Array.Empty<string>();
         }
 
         var va = FindChild(examDistance, "VA");
@@ -925,28 +925,25 @@ public sealed class XmlDeviceParser
             .ToArray();
         if (eyeSegments.Length == 0)
         {
-            return null;
+            return Array.Empty<string>();
         }
 
-        var parts = new List<string>
-        {
-            $"Subjektive Refraktion {NormalizeSubjectiveTypeName(typeName)} {DetermineDistanceLabel(GetChildValue(examDistance, "Distance"))}:",
-            string.Join(" / ", eyeSegments)
-        };
+        var headerLine = $"Subjektive Refraktion {NormalizeSubjectiveTypeName(typeName)} {DetermineDistanceLabel(GetChildValue(examDistance, "Distance"))}:";
+        var valueParts = new List<string> { string.Join(" / ", eyeSegments) };
 
         var pd = GetChildValue(FindChild(examDistance, "PD") ?? new XElement("PD"), "B");
         if (!string.IsNullOrWhiteSpace(pd))
         {
-            parts.Add($"PD={FormatPd(pd)}");
+            valueParts.Add($"PD={FormatPd(pd)}");
         }
 
         var vd = GetChildValue(examDistance, "VD") ?? GetChildValue(refractionData, "VD");
         if (!string.IsNullOrWhiteSpace(vd))
         {
-            parts.Add($"VD={FormatTwoDecimal(vd)}");
+            valueParts.Add($"VD={FormatTwoDecimal(vd)}");
         }
 
-        return string.Join(" ", parts);
+        return new[] { headerLine, string.Join(" ", valueParts) };
     }
 
     private static string? BuildSubjectiveEyeSegment(string eye, XElement? eyeElement, XElement? va)

@@ -43,9 +43,11 @@ public sealed class TopconKr800SProfileTests
         AssertMeasurement(result, "Measure[@Type='REF']/REF/L/MedistarLine", "L.:S=- 5.25 Z=+ 0.00*  0");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine1", "R: R1=7.70 43.75 *180 R2=7.70 43.75 *90 // L: R1=7.70 43.75 *180 R2=7.69 43.75 *90");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine2", "R: AV=7.70 43.75 CYL=+0.00 0 // L: AV=7.70 43.75 CYL=+0.00 0");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine1", "Subjektive Refraktion Full Correction FAR: L.:S=- 6.00 Z=+ 0.00* 93 VA=0.7 PD=58.5 VD=12.00");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine2", "Subjektive Refraktion Full Correction NEAR: L.:S=- 8.25 Z=+ 0.00* 93 VA=0.8 PD=58.5 VD=12.00");
-        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/MedistarLine3");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine1", "Subjektive Refraktion Full Correction FAR:");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine2", "L.:S=- 6.00 Z=+ 0.00* 93 VA=0.7 PD=58.5 VD=12.00");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine3", "Subjektive Refraktion Full Correction NEAR:");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine4", "L.:S=- 8.25 Z=+ 0.00* 93 VA=0.8 PD=58.5 VD=12.00");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.Value.Contains("FAR: L.:S=", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -76,8 +78,11 @@ public sealed class TopconKr800SProfileTests
         AssertMeasurement(result, "Measure[@Type='REF']/REF/L/MedistarLine", "L.:S=+ 3.75 Z=- 2.50*173");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine1", "R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine2", "R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine1", "Subjektive Refraktion Full Correction FAR: R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine2", "Subjektive Refraktion Full Correction NEAR: R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine1", "Subjektive Refraktion Full Correction FAR:");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine2", "R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine3", "Subjektive Refraktion Full Correction NEAR:");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine4", "R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.Value.Contains("FAR: R.:S=", StringComparison.Ordinal));
         Assert.DoesNotContain(result.Measurements, measurement =>
             measurement.SourcePath.StartsWith("Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal)
             && measurement.Value.Contains("Unaided", StringComparison.OrdinalIgnoreCase));
@@ -108,6 +113,11 @@ public sealed class TopconKr800SProfileTests
         Assert.DoesNotContain("KL: K1=*", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6228KR:", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6228KL:", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227Subjektive Refraktion Full Correction FAR:", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227L.:S=- 6.00 Z=+ 0.00* 93 VA=0.7 PD=58.5 VD=12.00", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227Subjektive Refraktion Full Correction NEAR:", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227L.:S=- 8.25 Z=+ 0.00* 93 VA=0.8 PD=58.5 VD=12.00", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227Subjektive Refraktion Full Correction FAR: L.:S=", exportResult.Content, StringComparison.Ordinal);
         Assert.Equal(
             new[]
             {
@@ -135,8 +145,11 @@ public sealed class TopconKr800SProfileTests
         Assert.Contains("6228L.:S=+ 3.75 Z=- 2.50*173", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6221R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6221R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6227Subjektive Refraktion Full Correction FAR: R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6227Subjektive Refraktion Full Correction NEAR: R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227Subjektive Refraktion Full Correction FAR:", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227Subjektive Refraktion Full Correction NEAR:", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227Subjektive Refraktion Full Correction FAR: R.:S=", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("R.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("L.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("KR: K1=*", exportResult.Content, StringComparison.Ordinal);
@@ -161,12 +174,6 @@ public sealed class TopconKr800SProfileTests
         {
             Assert.False(string.IsNullOrWhiteSpace(rule.SourcePath));
             Assert.StartsWith("Device.", rule.SourcePath, StringComparison.Ordinal);
-            if (rule.SourcePath!.Contains("MedistarLine3", StringComparison.Ordinal)
-                || rule.SourcePath.Contains("MedistarLine4", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
             Assert.Contains(rule.SourcePath[7..], sourcePaths);
         }
     }
