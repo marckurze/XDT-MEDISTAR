@@ -4,7 +4,7 @@ Stand: 2026-05-21
 
 ## Zweck
 
-Testseitig abgesicherter Kandidat fuer die MEDISTAR-Anbindung des TOPCON KR-800S mit Autorefraktion, Keratometrie und konservativer subjektiver Refraktionsausgabe.
+Testseitig abgesicherter und praktisch validierter Kandidat fuer die MEDISTAR-Anbindung des TOPCON KR-800S mit Autorefraktion, Keratometrie und konservativer subjektiver Refraktionsausgabe.
 
 ## Enthaltene Profile
 
@@ -65,9 +65,9 @@ R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75
 - Exportprofil-/BuiltIn-Tests: `DeviceProfileDefinitionTests`, `ExportProfileDefinitionTests`, `InterfaceProfileDefinitionTests`
 - Katalog-Reparaturtests fuer alte persistierte KR800S-BuiltIns: `ProfileCatalogServiceTests`
 - Selektiver Templatepaket-Test: `MedistarTopconKr800STemplatePackageTests`
+- Praktische MEDISTAR-Validierung: `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_KR800S.md`
 
 ## Offen
 
-- Praktische MEDISTAR-Validierung nach dem Fix mit echten KR-800S-XML-Dateien.
-- Getrennte SBJ-`6227`-Header-/Messwertzeilen im naechsten MEDISTAR-Live-Test pruefen.
+- SBJ-/Funktionstestfaelle nach weiteren echten KR-800S-Dateien verfeinern.
 - Offizielles ZIP-Artefakt erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

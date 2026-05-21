@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe und MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat. TOPCON KR800S ist testseitig mit echten REF/KM/SBJ-XML-Dateien angebunden; die praktische MEDISTAR-Validierung steht noch aus. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat und MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -17,7 +17,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | NIDEK-LAN-XML | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Addition; Prisma/PD datenabhaengig | praktisch validierter Referenzkandidat fuer Lensmeter-XDT-Rueckgabe |
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | `6220` Pachymetrie und `6205` Tonometrie; keine `6228`-Geraetewerte | testseitig direkt nutzbarer MEDISTAR-Kandidat, praktische MEDISTAR-Validierung offen |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erster praktisch validierter TOPCON-Referenzkandidat mit Namespace- und Attributanforderungen |
-| TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | testseitig mit zwei echten XML-Fixtures und Templatekandidat abgesichert |
+| TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
 | TOPCON | TRK2P | Tonometer / Refraktions-Keratometer je nach Dateninhalt | Ophthalmology-/JOIA-XML | `TM`, `CCT` | keine zwingend erkennbar | Tonometrie- und Pachymetrieausgabe | relevant für Tonometrie/CCT-Kombination und JOIA-Parserlogik |
 
 ## 3. NIDEK AR1S
@@ -888,7 +888,7 @@ Wichtig fuer Parser- und Profil-Logik:
 - `Median`-Werte werden fuer REF und KM als Standardausgabe verwendet.
 - SBJ enthaelt mehrere `Type`- und `ExamDistance`-Varianten; aktuell wird `Full Correction` fuer FAR/NEAR konservativ ausgegeben, leere R/L-Zeilen werden ausgelassen und Header/Messwert stehen in getrennten `6227`-Zeilen.
 - Fuer KR800S wurden in den analysierten Dateien keine JPG-/PDF-Attachments gefunden.
-- Praktische MEDISTAR-Validierung steht noch aus; subjektive Zeilen koennen nach weiteren Praxisbeispielen verfeinert werden.
+- Praktische MEDISTAR-Validierung ist in `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_KR800S.md` dokumentiert; subjektive Zeilen koennen nach weiteren Praxisbeispielen verfeinert werden.
 - Der Live-Fehler mit leeren Platzhalterzeilen (`R.:S= Z=*`, `KR: K1=* K2=*`) wurde auf alte persistierte BuiltIn-Exportregeln zurueckgefuehrt und testseitig abgesichert.
 
 ## 8. TOPCON TRK2P
@@ -1064,7 +1064,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
-4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist testseitig mit echten REF/KM/SBJ-Dateien angebunden und braucht die praktische MEDISTAR-Abnahme, TRK2P folgt erst mit belastbaren Beispieldateien.
+4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TRK2P folgt erst mit belastbaren Beispieldateien.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
