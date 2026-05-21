@@ -32,8 +32,10 @@ public sealed class InterfaceMonitoringCardStatusService
 
         var aisFile = FindFirstAisFile(scanResult.Queue);
         var deviceFile = FindFirstDeviceFile(scanResult.Queue, interfaceProfile.FolderOptions.IsAttachmentOnlyMode);
+        var allowAisOnlyManualSelection = interfaceProfile.FolderOptions.IsAttachmentOnlyMode
+            && interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         var readyPair = packageEvaluation?.ReadyPairs.FirstOrDefault()
-            ?? scanResult.Queue.FindReadyPairs(interfaceProfile.FolderOptions.IsAttachmentOnlyMode).FirstOrDefault();
+            ?? scanResult.Queue.FindReadyPairs(interfaceProfile.FolderOptions.IsAttachmentOnlyMode, allowAisOnlyManualSelection).FirstOrDefault();
         var patient = TryReadPatient(aisFile);
         var statusText = CreateScanStatusText(scanResult, packageEvaluation, interfaceProfile);
         var statusClass = CreateScanStatusClass(scanResult, packageEvaluation);
@@ -49,7 +51,7 @@ public sealed class InterfaceMonitoringCardStatusService
             AutomaticProcessingText = automaticProcessingEnabled ? "Ja" : "Nein",
             PatientDisplayText = CreatePatientDisplay(patient),
             AisFileName = readyPair?.AisFile.FileName ?? aisFile?.FileName ?? "",
-            DeviceFileName = readyPair?.DeviceFile.FileName ?? deviceFile?.FileName ?? "",
+            DeviceFileName = allowAisOnlyManualSelection ? "" : readyPair?.DeviceFile.FileName ?? deviceFile?.FileName ?? "",
             LastMessage = lastMessage
         };
 
@@ -314,7 +316,10 @@ public sealed class InterfaceMonitoringCardStatusService
         }
 
         var readyPair = packageEvaluation?.ReadyPairs.FirstOrDefault()
-            ?? scanResult.Queue.FindReadyPairs(interfaceProfile.FolderOptions.IsAttachmentOnlyMode).FirstOrDefault();
+            ?? scanResult.Queue.FindReadyPairs(
+                interfaceProfile.FolderOptions.IsAttachmentOnlyMode,
+                interfaceProfile.FolderOptions.IsAttachmentOnlyMode
+                    && interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection).FirstOrDefault();
         var pairComplete = readyPair is not null
             || scanResult.ReadyPairs > 0
             || packageEvaluation?.Reason == AutoImportPackageStateReason.ReadyForProcessing;

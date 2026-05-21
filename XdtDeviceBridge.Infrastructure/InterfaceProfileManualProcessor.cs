@@ -39,7 +39,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 timestamp,
                 new[] { "Exportordner fehlt." },
                 pipelineResult: null,
-                exportContent: null);
+                exportContent: null,
+                allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
         var isAttachmentOnlyMode = interfaceProfile.FolderOptions.IsAttachmentOnlyMode;
@@ -53,7 +54,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 timestamp,
                 new[] { "Dieser Dateityp wird für die manuelle Paarverarbeitung noch nicht unterstützt." },
                 pipelineResult: null,
-                exportContent: null);
+                exportContent: null,
+                allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
         var gdtResult = _gdtParser.ParseFile(aisFilePath);
@@ -70,7 +72,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 timestamp,
                 new[] { "AIS-Datei konnte nicht fehlerfrei gelesen werden." },
                 new ProcessingPipelineResult(null, [], [], string.Empty, issues),
-                exportContent: null);
+                exportContent: null,
+                allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
         var patient = _patientDataMapper.Map(gdtResult.Records);
@@ -94,7 +97,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                     timestamp,
                     new[] { "Gerätedatei konnte nicht fehlerfrei gelesen werden." },
                     new ProcessingPipelineResult(patient, deviceResult.Measurements, [], string.Empty, issues),
-                    exportContent: null);
+                    exportContent: null,
+                    allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
             }
         }
 
@@ -116,7 +120,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 timestamp,
                 new[] { "Mapping konnte nicht fehlerfrei ausgeführt werden." },
                 new ProcessingPipelineResult(patient, deviceResult.Measurements, mappingResult.Records, string.Empty, issues),
-                exportContent: null);
+                exportContent: null,
+                allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
         var exportRecords = isAttachmentOnlyMode
@@ -148,7 +153,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 timestamp,
                 failureMessages,
                 new ProcessingPipelineResult(patient, deviceResult.Measurements, exportRecords, string.Empty, issues),
-                exportContent: null);
+                exportContent: null,
+                allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
         var exportResult = _xdtExportBuilder.Build(exportRecords);
@@ -165,7 +171,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 timestamp,
                 new[] { "XDT-Export konnte nicht fehlerfrei erzeugt werden." },
                 new ProcessingPipelineResult(patient, deviceResult.Measurements, exportRecords, exportResult.Content, issues),
-                exportResult.Content);
+                exportResult.Content,
+                allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
         var fileName = _fileNameBuilder.Build(
@@ -187,7 +194,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 timestamp,
                 fileExportResult.Issues.Select(issue => issue.Message).ToList(),
                 new ProcessingPipelineResult(patient, deviceResult.Measurements, exportRecords, exportResult.Content, issues),
-                exportResult.Content);
+                exportResult.Content,
+                allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
         messages.Add("Dateipaar erfolgreich verarbeitet.");
@@ -328,16 +336,18 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         DateTime failedAt,
         IReadOnlyList<string> failureMessages,
         ProcessingPipelineResult? pipelineResult,
-        string? exportContent)
+        string? exportContent,
+        bool allowMissingDeviceFile = false)
     {
         var messages = failureMessages.ToList();
         var failedFileCopyResult = CopyFailedFilesIfEnabled(
             interfaceProfile,
             aisFilePath,
             deviceFilePath,
-            failedAt.ToUniversalTime(),
-            string.Join(Environment.NewLine, failureMessages),
-            messages);
+                failedAt.ToUniversalTime(),
+                string.Join(Environment.NewLine, failureMessages),
+                messages,
+                allowMissingDeviceFile);
 
         return new InterfaceProfileManualProcessingResult(
             Success: false,
@@ -534,7 +544,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         string deviceFilePath,
         DateTime failedAtUtc,
         string failureReason,
-        List<string> messages)
+        List<string> messages,
+        bool allowMissingDeviceFile = false)
     {
         if (!interfaceProfile.FolderOptions.MoveFailedFilesToErrorFolder)
         {
@@ -557,7 +568,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 interfaceProfile.FolderOptions.ErrorFolder,
                 interfaceProfile.Metadata.Name,
                 aisFilePath,
-                deviceFilePath,
+                allowMissingDeviceFile && !File.Exists(deviceFilePath) ? aisFilePath : deviceFilePath,
                 failedAtUtc,
                 failureReason);
 
@@ -581,5 +592,11 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             messages.Add($"Fehlerablage fehlgeschlagen: {ex.Message}");
             return failedFileCopyResult;
         }
+    }
+
+    private static bool IsManualDocumentSelection(InterfaceProfileDefinition interfaceProfile)
+    {
+        return interfaceProfile.FolderOptions.IsAttachmentOnlyMode
+            && interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
     }
 }

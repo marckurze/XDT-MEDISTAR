@@ -192,4 +192,48 @@ public static class DefaultInterfaceProfileDefinitions
             IsLicenseRequired: true,
             Description: "Built-in inactive V1 candidate for devices that pass documents/files to MEDISTAR as attachments without measurement parsing.");
     }
+
+    public static InterfaceProfileDefinition CreateMedistarManualDocumentTransferDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-manual-document-transfer-default",
+                Name: "MEDISTAR + Manuelle Dokumentübergabe",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile for manual document handoff to MEDISTAR with per-file attachment links.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/Manuelle Dokumentübergabe",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-manual-document-selection-default",
+            ExportProfileId: "export-medistar-manual-document-transfer-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true,
+                AttachmentTransferMode: AttachmentTransferMode.Copy,
+                IsAttachmentProcessingEnabled: true,
+                AttachmentRequirementMode: AttachmentRequirementMode.Required,
+                IsAttachmentOnlyMode: true,
+                ShowAttachmentDocumentationDialog: true,
+                AttachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+                AttachmentOnlySourceMode: AttachmentOnlySourceMode.ManualUserSelection),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive V1 candidate for workflows where users manually select documents and pass them to MEDISTAR as attachments.");
+    }
 }

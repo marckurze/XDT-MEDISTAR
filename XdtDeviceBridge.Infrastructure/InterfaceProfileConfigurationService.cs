@@ -185,7 +185,10 @@ public sealed class InterfaceProfileConfigurationService
         List<InterfaceProfileConfigurationIssue> issues)
     {
         AddMissingFolderWarning(options.AisImportFolder, "AIS-Importordner existiert aktuell nicht.", issues);
-        AddMissingFolderWarning(options.DeviceImportFolder, "Geräte-Importordner existiert aktuell nicht.", issues);
+        if (options.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection)
+        {
+            AddMissingFolderWarning(options.DeviceImportFolder, "Geräte-Importordner existiert aktuell nicht.", issues);
+        }
         AddMissingFolderWarning(options.ExportFolder, "Exportordner existiert aktuell nicht.", issues);
         AddMissingFolderWarning(options.ArchiveFolder, "Archivordner existiert aktuell nicht.", issues);
         AddMissingFolderWarning(options.ErrorFolder, "Fehlerordner existiert aktuell nicht.", issues);

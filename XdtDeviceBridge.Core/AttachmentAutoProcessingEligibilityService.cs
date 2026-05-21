@@ -41,7 +41,8 @@ public sealed class AttachmentAutoProcessingEligibilityService
             reasons.Add("AIS-Patientennummer fehlt.");
         }
 
-        if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentImportFolder))
+        var needsAttachmentImportFolder = interfaceProfile.FolderOptions.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection;
+        if (needsAttachmentImportFolder && string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentImportFolder))
         {
             reasons.Add("XDT-Anhang Importordner fehlt.");
         }

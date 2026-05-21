@@ -188,12 +188,25 @@ public sealed class InterfaceProfileActivationEvaluationService
             "AIS-Importordner",
             options.AisImportFolder,
             isRequired: true);
-        EvaluateFolder(
-            checks,
-            "folder.deviceImport",
-            options.IsAttachmentOnlyMode ? "Dokument-Importordner" : "Geraete-Importordner",
-            options.DeviceImportFolder,
-            isRequired: true);
+        var isManualDocumentSelection = options.IsAttachmentOnlyMode
+            && options.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+        if (isManualDocumentSelection)
+        {
+            AddInfo(
+                checks,
+                FolderArea,
+                "folder.deviceImport.manualSelection",
+                "Manuelle Dokumentuebergabe benoetigt keinen Geraete-Importordner.");
+        }
+        else
+        {
+            EvaluateFolder(
+                checks,
+                "folder.deviceImport",
+                options.IsAttachmentOnlyMode ? "Dokument-Importordner" : "Geraete-Importordner",
+                options.DeviceImportFolder,
+                isRequired: true);
+        }
         EvaluateFolder(
             checks,
             "folder.export",
@@ -237,7 +250,15 @@ public sealed class InterfaceProfileActivationEvaluationService
             return;
         }
 
-        if (options.IsAttachmentOnlyMode)
+        if (options.IsAttachmentOnlyMode && options.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection)
+        {
+            AddInfo(
+                checks,
+                AttachmentArea,
+                "attachment.folder.import.manualSelection",
+                "Manuelle Dokumentuebergabe verwendet Dateien, die der Anwender im Uebertragungsfenster auswaehlt.");
+        }
+        else if (options.IsAttachmentOnlyMode)
         {
             AddInfo(
                 checks,
@@ -355,7 +376,15 @@ public sealed class InterfaceProfileActivationEvaluationService
             AddBlocker(checks, AttachmentArea, "attachment.6305.missing", "Feld 6305 Zielpfad/Pfadtemplate kann nicht gebildet werden.");
         }
 
-        if (options.IsAttachmentOnlyMode)
+        if (options.IsAttachmentOnlyMode && options.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection)
+        {
+            AddInfo(
+                checks,
+                AttachmentArea,
+                "attachmentOnly.manualUserSelection",
+                "Manuelle Dokumentuebergabe wartet auf Dateiauswahl und Uebertragen durch den Anwender.");
+        }
+        else if (options.IsAttachmentOnlyMode)
         {
             if (options.AttachmentQuietPeriodSeconds < 1 || options.AttachmentQuietPeriodSeconds > 300)
             {

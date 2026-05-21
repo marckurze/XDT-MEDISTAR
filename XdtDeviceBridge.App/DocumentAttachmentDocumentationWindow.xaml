@@ -33,7 +33,10 @@
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="8"
-                Margin="0,0,0,12">
+                Margin="0,0,0,12"
+                AllowDrop="True"
+                DragOver="FileDropArea_DragOver"
+                Drop="FileDropArea_Drop">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           MaxHeight="420">
@@ -111,6 +114,12 @@
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
+            <Button x:Name="AddFilesButton"
+                    Content="Dateien hinzufügen"
+                    Width="150"
+                    Margin="0,0,16,0"
+                    Click="AddFiles_Click"
+                    Visibility="Collapsed"/>
             <Button x:Name="ApplyButton"
                     Content="Übertragen"
                     Width="110"

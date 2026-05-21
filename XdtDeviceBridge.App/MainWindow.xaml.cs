@@ -1360,13 +1360,17 @@ public partial class MainWindow : Window
         }
 
         var isAttachmentOnly = profile?.FolderOptions.IsAttachmentOnlyMode == true;
+        var isManualDocumentSelection = isAttachmentOnly
+            && profile?.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         InterfaceDeviceImportFolderLabel.Text = isAttachmentOnly
             ? "Dokument-Importordner:"
             : "Geräte-Importordner:";
         InterfaceDeviceFileWaitTimeoutLabel.Text = isAttachmentOnly
             ? "Wartezeit auf Dokumentdateien:"
             : "Wartezeit auf Gerätedatei:";
-        InterfaceAttachmentSettingsGroupBox.Header = isAttachmentOnly
+        InterfaceAttachmentSettingsGroupBox.Header = isManualDocumentSelection
+            ? "Manuelle Dokumentübergabe an MEDISTAR"
+            : isAttachmentOnly
             ? "Dokumentübergabe an MEDISTAR"
             : "XDT-Anhänge für AIS";
         InterfaceAttachmentExportFolderLabel.Text = isAttachmentOnly
@@ -1394,19 +1398,27 @@ public partial class MainWindow : Window
         InterfaceAttachmentLinkDescriptionTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentLinkPathTemplateLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentLinkPathTemplateTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
-        InterfaceAttachmentGeneralHintTextBlock.Text = isAttachmentOnly
+        InterfaceDeviceImportFolderLabel.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceDeviceImportFolderTextBox.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceDeviceImportFolderButton.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceDeviceFileWaitTimeoutLabel.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceDeviceFileWaitTimeoutPanel.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
+
+        InterfaceAttachmentGeneralHintTextBlock.Text = isManualDocumentSelection
+            ? "AIS startet die manuelle Dokumentübergabe. Dateien werden per Drag & Drop oder Dateiauswahl im Übertragungsfenster ergänzt; technische 6302-6305-Felder erzeugt die App intern."
+            : isAttachmentOnly
             ? "Dokumentdateien kommen aus dem Dokument-Importordner. Die App übergibt sie als MEDISTAR-Anhänge; die technischen 6302-6305-Felder werden intern erzeugt."
             : "Optional: Nach Ablauf der Wartezeit werden Messwerte auch ohne Anhang übertragen. Pflicht: Ohne eindeutigen Anhang wird die Verarbeitung später als Fehler/Blockade behandelt. Gerätedateien und Anhänge werden erst verarbeitet, wenn sie vollständig geschrieben und stabil sind.";
-        InterfaceAttachmentCompletionPanel.Visibility = isAttachmentOnly
+        InterfaceAttachmentCompletionPanel.Visibility = isAttachmentOnly && !isManualDocumentSelection
             ? Visibility.Visible
             : Visibility.Collapsed;
-        InterfaceAttachmentCompletionHintTextBlock.Visibility = isAttachmentOnly ? Visibility.Visible : Visibility.Collapsed;
-        InterfaceAttachmentShowDocumentationDialogCheckBox.Visibility = isAttachmentOnly ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceAttachmentCompletionHintTextBlock.Visibility = isAttachmentOnly && !isManualDocumentSelection ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceAttachmentShowDocumentationDialogCheckBox.Visibility = isAttachmentOnly && !isManualDocumentSelection ? Visibility.Visible : Visibility.Collapsed;
         var isWaitMode = !string.Equals(
             InterfaceAttachmentCompletionModeComboBox.SelectedValue as string,
             AttachmentCompletionMode.ManualConfirmation.ToString(),
             StringComparison.Ordinal);
-        InterfaceAttachmentQuietPeriodPanel.IsEnabled = isAttachmentOnly && isWaitMode;
+        InterfaceAttachmentQuietPeriodPanel.IsEnabled = isAttachmentOnly && !isManualDocumentSelection && isWaitMode;
     }
 
     private void RefreshInterfaceActivationPreview()
@@ -1649,14 +1661,16 @@ public partial class MainWindow : Window
     {
         var selectedProfile = InterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
         var isAttachmentOnly = selectedProfile?.FolderOptions.IsAttachmentOnlyMode == true;
+        var isManualDocumentSelection = isAttachmentOnly
+            && selectedProfile?.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         return new InterfaceFolderOptions(
             AisImportFolder: InterfaceAisImportFolderTextBox.Text.Trim(),
-            DeviceImportFolder: InterfaceDeviceImportFolderTextBox.Text.Trim(),
+            DeviceImportFolder: isManualDocumentSelection ? string.Empty : InterfaceDeviceImportFolderTextBox.Text.Trim(),
             ExportFolder: InterfaceExportFolderTextBox.Text.Trim(),
             ArchiveFolder: InterfaceArchiveFolderTextBox.Text.Trim(),
             ErrorFolder: InterfaceErrorFolderTextBox.Text.Trim(),
             ClearAisImportFolderBeforeProcessing: InterfaceClearAisImportFolderCheckBox.IsChecked == true,
-            ClearDeviceImportFolderBeforeProcessing: InterfaceClearDeviceImportFolderCheckBox.IsChecked == true,
+            ClearDeviceImportFolderBeforeProcessing: !isManualDocumentSelection && InterfaceClearDeviceImportFolderCheckBox.IsChecked == true,
             ClearExportFolderAfterSuccessfulTransfer: false,
             ArchiveProcessedFiles: InterfaceArchiveProcessedFilesCheckBox.IsChecked == true,
             MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true,
@@ -1667,7 +1681,7 @@ public partial class MainWindow : Window
             AttachmentImportFolder: isAttachmentOnly ? string.Empty : InterfaceAttachmentImportFolderTextBox.Text.Trim(),
             AttachmentExportFolder: InterfaceAttachmentExportFolderTextBox.Text.Trim(),
             AttachmentFileNameTemplate: InterfaceAttachmentFileNameTemplateTextBox.Text.Trim(),
-            AttachmentTransferMode: ReadAttachmentTransferModeFromEditor(),
+            AttachmentTransferMode: isManualDocumentSelection ? AttachmentTransferMode.Copy : ReadAttachmentTransferModeFromEditor(),
             AttachmentExternalLinkDocumentName: isAttachmentOnly
                 ? DefaultIfWhiteSpace(InterfaceAttachmentLinkDocumentNameTextBox.Text, "Datei")
                 : InterfaceAttachmentLinkDocumentNameTextBox.Text.Trim(),
@@ -1683,11 +1697,14 @@ public partial class MainWindow : Window
             AttachmentWaitTimeoutSeconds: ReadAttachmentWaitTimeoutSecondsFromEditor(),
             AttachmentFileStabilityWaitSeconds: ReadAttachmentFileStabilityWaitSecondsFromEditor(),
             IsAttachmentOnlyMode: isAttachmentOnly,
-            ShowAttachmentDocumentationDialog: isAttachmentOnly
+            ShowAttachmentDocumentationDialog: isManualDocumentSelection
+                ? true
+                : isAttachmentOnly
                 ? InterfaceAttachmentShowDocumentationDialogCheckBox.IsChecked == true
                 : selectedProfile?.FolderOptions.ShowAttachmentDocumentationDialog == true,
-            AttachmentCompletionMode: ReadAttachmentCompletionModeFromEditor(),
-            AttachmentQuietPeriodSeconds: ReadAttachmentQuietPeriodSecondsFromEditor());
+            AttachmentCompletionMode: isManualDocumentSelection ? AttachmentCompletionMode.ManualConfirmation : ReadAttachmentCompletionModeFromEditor(),
+            AttachmentQuietPeriodSeconds: ReadAttachmentQuietPeriodSecondsFromEditor(),
+            AttachmentOnlySourceMode: selectedProfile?.FolderOptions.AttachmentOnlySourceMode ?? AttachmentOnlySourceMode.DeviceFolder);
     }
 
     private static string DefaultIfWhiteSpace(string? value, string fallback)
@@ -4926,7 +4943,9 @@ public partial class MainWindow : Window
             return AttachmentOnlyConfirmationResult.Proceed(null, null);
         }
 
-        var requiresTransferConfirmation = interfaceProfile.FolderOptions.AttachmentCompletionMode == AttachmentCompletionMode.ManualConfirmation;
+        var isManualDocumentSelection = interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+        var requiresTransferConfirmation = interfaceProfile.FolderOptions.AttachmentCompletionMode == AttachmentCompletionMode.ManualConfirmation
+            || isManualDocumentSelection;
         if (!requiresTransferConfirmation && !interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog)
         {
             return AttachmentOnlyConfirmationResult.Proceed(null, null);
@@ -4945,7 +4964,8 @@ public partial class MainWindow : Window
             interfaceProfile.Metadata.Name,
             CreateDocumentAttachmentDialogFiles(selectedCandidates),
             requiresTransferConfirmation,
-            capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog);
+            capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog,
+            allowsManualFileSelection: isManualDocumentSelection);
         if (owner is not null)
         {
             dialog.Owner = owner;
@@ -4957,7 +4977,7 @@ public partial class MainWindow : Window
         }
 
         return dialog.ShowDialog() == true
-            ? AttachmentOnlyConfirmationResult.Proceed(null, dialog.FileDescriptions)
+            ? AttachmentOnlyConfirmationResult.Proceed(null, dialog.FileDescriptions, dialog.SelectedCandidates)
             : AttachmentOnlyConfirmationResult.Cancel();
     }
 
@@ -4967,12 +4987,16 @@ public partial class MainWindow : Window
         IReadOnlyList<AttachmentImportFileCandidate> selectedCandidates)
     {
         var confirmationKey = CreateDocumentAttachmentConfirmationKey(interfaceProfile, pair);
+        var isManualDocumentSelection = interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         if (_pendingDocumentAttachmentConfirmations.TryGetValue(confirmationKey, out var existingState))
         {
             if (existingState.IsTransferConfirmed)
             {
                 _pendingDocumentAttachmentConfirmations.Remove(confirmationKey);
-                return AttachmentOnlyConfirmationResult.Proceed(null, existingState.FileDescriptions);
+                return AttachmentOnlyConfirmationResult.Proceed(
+                    null,
+                    existingState.FileDescriptions,
+                    existingState.SelectedCandidates);
             }
 
             if (existingState.IsCanceled)
@@ -4993,7 +5017,8 @@ public partial class MainWindow : Window
             interfaceProfile.Metadata.Name,
             CreateDocumentAttachmentDialogFiles(selectedCandidates),
             requiresTransferConfirmation: true,
-            capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog);
+            capturesDocumentationText: interfaceProfile.FolderOptions.ShowAttachmentDocumentationDialog,
+            allowsManualFileSelection: isManualDocumentSelection);
         if (owner is not null)
         {
             dialog.Owner = owner;
@@ -5008,6 +5033,7 @@ public partial class MainWindow : Window
         dialog.TransferRequested += (_, _) =>
         {
             state.FileDescriptions = dialog.FileDescriptions;
+            state.SelectedCandidates = dialog.SelectedCandidates;
             state.IsTransferConfirmed = true;
             state.IsCompleting = true;
             dialog.Close();
@@ -6686,6 +6712,8 @@ public partial class MainWindow : Window
     {
         TryPlayNotificationSoundForDeviceFiles(result);
         var includeAttachmentDeviceFiles = profile?.FolderOptions.IsAttachmentOnlyMode == true;
+        var allowAisOnlyManualSelection = profile?.FolderOptions.IsAttachmentOnlyMode == true
+            && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
 
         if (result.AisFilesDetected > 0)
         {
@@ -6707,8 +6735,10 @@ public partial class MainWindow : Window
         {
             AppendMonitoringEvent(
                 result.InterfaceProfileId,
-                MonitoringActivityEventKeyBuilder.CreateReadyPairKey(result.Queue, includeAttachmentDeviceFiles),
-                $"{profileName}: AIS-/Geräte-Paar vollständig ({result.ReadyPairs}).");
+                MonitoringActivityEventKeyBuilder.CreateReadyPairKey(result.Queue, includeAttachmentDeviceFiles, allowAisOnlyManualSelection),
+                allowAisOnlyManualSelection
+                    ? $"{profileName}: AIS-Datei bereit für manuelle Dokumentübergabe."
+                    : $"{profileName}: AIS-/Geräte-Paar vollständig ({result.ReadyPairs}).");
         }
 
         foreach (var message in result.Messages)
@@ -6814,6 +6844,9 @@ public partial class MainWindow : Window
 
         public IReadOnlyDictionary<string, string> FileDescriptions { get; set; } =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public IReadOnlyList<AttachmentImportFileCandidate> SelectedCandidates { get; set; } =
+            Array.Empty<AttachmentImportFileCandidate>();
     }
 
     private sealed class PlaceholderRow : INotifyPropertyChanged

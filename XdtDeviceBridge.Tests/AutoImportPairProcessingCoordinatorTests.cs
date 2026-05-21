@@ -1292,6 +1292,122 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_ManualDocumentTransferShouldWaitUntilFilesAreSelectedAndTransferred()
+    {
+        var files = CreateValidTempImportFiles();
+        var manualProcessor = new FakeManualProcessor(CreateSuccessResult());
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult());
+        var coordinator = CreateCoordinator(
+            manualProcessor,
+            scanner,
+            new FakeAttachmentPreparationService(CreateAttachmentPreparationResult()));
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentExportFolder: CreateTempFolder(),
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true,
+            attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+            deviceImportFolder: string.Empty,
+            attachmentOnlySourceMode: AttachmentOnlySourceMode.ManualUserSelection);
+        var pair = CreatePair(files.AisFilePath, Path.Combine(files.Folder, "manual-selection-placeholder"));
+
+        var result = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarManualDocumentTransferDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp,
+            attachmentOnlyConfirmationProvider: (_, _, _) => AttachmentOnlyConfirmationResult.Proceed(
+                documentationText: null,
+                attachmentDescriptions: null,
+                selectedCandidates: Array.Empty<AttachmentImportFileCandidate>()));
+
+        Assert.Equal(0, result.ProcessedCount);
+        Assert.Equal(0, manualProcessor.CallCount);
+        Assert.Equal(0, scanner.CallCount);
+        var waiting = Assert.Single(result.Results);
+        Assert.Equal(AttachmentProcessingStatusReason.AttachmentManualConfirmationWait, waiting.AttachmentStatus?.Reason);
+        Assert.Contains("wartet auf Übertragen", waiting.AttachmentStatus?.Message);
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_ManualDocumentTransferShouldExportSelectedFilesAndKeepSources()
+    {
+        var files = CreateValidTempImportFiles();
+        var sourceFolder = CreateTempFolder();
+        var attachmentExportFolder = CreateTempFolder();
+        var pdfFile = Path.Combine(sourceFolder, "befund.pdf");
+        var jpgFile = Path.Combine(sourceFolder, "bild.jpg");
+        File.WriteAllText(pdfFile, "pdf");
+        File.WriteAllText(jpgFile, "jpg");
+        var scanner = new FakeAttachmentScanner(CreateAttachmentScanResult());
+        var coordinator = CreateCoordinator(
+            new InterfaceProfileManualProcessor(),
+            scanner,
+            new AttachmentExternalLinkPreparationService(),
+            patientNumber: "4701-1");
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentExportFolder: attachmentExportFolder,
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true,
+            attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+            deviceImportFolder: string.Empty,
+            attachmentOnlySourceMode: AttachmentOnlySourceMode.ManualUserSelection) with
+        {
+            FolderOptions = CreateInterfaceProfile(
+                isAttachmentProcessingEnabled: true,
+                attachmentExportFolder: attachmentExportFolder,
+                attachmentRequirementMode: AttachmentRequirementMode.Required,
+                isAttachmentOnlyMode: true,
+                attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+                deviceImportFolder: string.Empty,
+                attachmentOnlySourceMode: AttachmentOnlySourceMode.ManualUserSelection).FolderOptions with
+            {
+                ExportFolder = CreateTempFolder(),
+                AttachmentTransferMode = AttachmentTransferMode.Move
+            }
+        };
+        var pair = CreatePair(files.AisFilePath, Path.Combine(files.Folder, "manual-selection-placeholder"));
+        var selectedCandidates = new ManualDocumentSelectionService().AddFiles(new[] { pdfFile, jpgFile }).AcceptedFiles;
+
+        var result = coordinator.ProcessReadyPairs(
+            profile,
+            DefaultExportProfileDefinitions.CreateMedistarManualDocumentTransferDefault(),
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp,
+            attachmentOnlyConfirmationProvider: (_, _, _) =>
+            {
+                var descriptions = selectedCandidates.ToDictionary(
+                    AttachmentImportFileFingerprint.Create,
+                    candidate => candidate.FileName.Equals("befund.pdf", StringComparison.OrdinalIgnoreCase)
+                        ? "PDF Befund rechts"
+                        : string.Empty,
+                    StringComparer.OrdinalIgnoreCase);
+                return AttachmentOnlyConfirmationResult.Proceed(null, descriptions, selectedCandidates);
+            });
+
+        var processed = Assert.Single(result.Results);
+        Assert.True(processed.Success, string.Join(Environment.NewLine, processed.Messages));
+        Assert.Equal(0, scanner.CallCount);
+        Assert.True(File.Exists(pdfFile));
+        Assert.True(File.Exists(jpgFile));
+        Assert.Equal(2, processed.ManualProcessingResult!.PipelineResult!.ExportRecords.Count(record => record.FieldCode == "6302"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6303"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6304"));
+        Assert.Equal(2, processed.ManualProcessingResult.PipelineResult.ExportRecords.Count(record => record.FieldCode == "6305"));
+        Assert.Contains("6304PDF Befund rechts", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains("6304bild.jpg", processed.ManualProcessingResult.ExportContent);
+        Assert.Contains(processed.ManualProcessingResult.PipelineResult.ExportRecords, record =>
+            record.FieldCode == "6305" && record.Value?.Contains(attachmentExportFolder, StringComparison.OrdinalIgnoreCase) == true);
+        Assert.DoesNotContain("6227", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6228", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6205", processed.ManualProcessingResult.ExportContent);
+        Assert.DoesNotContain("6220", processed.ManualProcessingResult.ExportContent);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_AttachmentOnlyQuietPeriodShouldWaitUntilQuietPeriodElapsed()
     {
         var files = CreateTempImportFiles();
@@ -1599,7 +1715,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         bool isAttachmentOnlyMode = false,
         AttachmentCompletionMode attachmentCompletionMode = AttachmentCompletionMode.WaitForQuietPeriod,
         int attachmentQuietPeriodSeconds = 10,
-        string deviceImportFolder = "")
+        string deviceImportFolder = "",
+        AttachmentOnlySourceMode attachmentOnlySourceMode = AttachmentOnlySourceMode.DeviceFolder)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
         {
@@ -1624,7 +1741,8 @@ public sealed class AutoImportPairProcessingCoordinatorTests
                 IsAttachmentOnlyMode = isAttachmentOnlyMode,
                 AttachmentCompletionMode = attachmentCompletionMode,
                 AttachmentQuietPeriodSeconds = attachmentQuietPeriodSeconds,
-                DeviceImportFolder = deviceImportFolder
+                DeviceImportFolder = deviceImportFolder,
+                AttachmentOnlySourceMode = attachmentOnlySourceMode
             },
             IsActive = true
         };

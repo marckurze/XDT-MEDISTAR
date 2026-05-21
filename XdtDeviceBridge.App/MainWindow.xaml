@@ -1586,7 +1586,7 @@
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceDeviceImportFolderLabel" Text="Geräte-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1" Grid.Column="1" x:Name="InterfaceDeviceImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="1" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="1" Grid.Column="2" x:Name="InterfaceDeviceImportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportordner ans AIS:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
@@ -1610,7 +1610,7 @@
                                         </StackPanel>
 
                                         <TextBlock Grid.Row="6" Grid.Column="0" x:Name="InterfaceDeviceFileWaitTimeoutLabel" Text="Wartezeit auf Gerätedatei:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                        <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceDeviceFileWaitTimeoutPanel" Orientation="Horizontal">
                                             <TextBox x:Name="InterfaceDeviceFileWaitTimeoutMinutesTextBox"
                                                      Width="120"
                                                      Text="10"

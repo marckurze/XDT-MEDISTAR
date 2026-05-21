@@ -65,7 +65,13 @@ public sealed class AutoImportScannerService : IAutoImportScanner
             messages.AddRange(aisScan.Messages);
         }
 
-        if (string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
+        var isManualDocumentSelection = profile.FolderOptions.IsAttachmentOnlyMode
+            && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+        if (isManualDocumentSelection)
+        {
+            messages.Add("Manuelle Dokumentübergabe: keine Geräte-Datei im Importordner erforderlich.");
+        }
+        else if (string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
         {
             messages.Add("Geräte-Importordner fehlt.");
         }
@@ -154,7 +160,10 @@ public sealed class AutoImportScannerService : IAutoImportScanner
             AisFilesDetected: aisFilesDetected,
             DeviceFilesDetected: deviceFilesDetected,
             FilesQueued: filesQueued,
-            ReadyPairs: queue.FindReadyPairs(profile.FolderOptions.IsAttachmentOnlyMode).Count,
+            ReadyPairs: queue.FindReadyPairs(
+                profile.FolderOptions.IsAttachmentOnlyMode,
+                profile.FolderOptions.IsAttachmentOnlyMode
+                    && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection).Count,
             Messages: messages,
             Queue: queue);
     }

@@ -13,27 +13,37 @@ public partial class DocumentAttachmentDocumentationWindow : Window
 {
     private readonly bool _requiresTransferConfirmation;
     private readonly bool _capturesFileDescriptions;
+    private readonly bool _allowsManualFileSelection;
+    private readonly ManualDocumentSelectionService _manualDocumentSelectionService = new();
     private readonly ObservableCollection<DocumentAttachmentFileItem> _files = new();
     private readonly HashSet<string> _knownFingerprints = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, AttachmentImportFileCandidate> _candidatesByFingerprint = new(StringComparer.OrdinalIgnoreCase);
 
     public DocumentAttachmentDocumentationWindow(
         string profileName,
         IReadOnlyList<DocumentAttachmentDialogFile> files,
         bool requiresTransferConfirmation = false,
-        bool capturesDocumentationText = true)
+        bool capturesDocumentationText = true,
+        bool allowsManualFileSelection = false)
     {
         InitializeComponent();
         _requiresTransferConfirmation = requiresTransferConfirmation;
         _capturesFileDescriptions = capturesDocumentationText;
+        _allowsManualFileSelection = allowsManualFileSelection;
         ProfileNameTextBlock.Text = string.IsNullOrWhiteSpace(profileName)
             ? "Dokumentgerät"
             : profileName;
         FileItemsControl.ItemsSource = _files;
         UpdateFiles(files);
+        AddFilesButton.Visibility = _allowsManualFileSelection ? Visibility.Visible : Visibility.Collapsed;
 
         if (!_capturesFileDescriptions)
         {
             HintTextBlock.Text = "Prüfen Sie die gefundenen Dateien. Als Beschreibung wird jeweils der Originaldateiname verwendet.";
+        }
+        else if (_allowsManualFileSelection)
+        {
+            HintTextBlock.Text = "Fügen Sie Dateien per Drag & Drop oder Dateiauswahl hinzu und ergänzen Sie optional eine Beschreibung je Datei.";
         }
     }
 
@@ -41,12 +51,14 @@ public partial class DocumentAttachmentDocumentationWindow : Window
         string profileName,
         IReadOnlyList<string> fileNames,
         bool requiresTransferConfirmation = false,
-        bool capturesDocumentationText = true)
+        bool capturesDocumentationText = true,
+        bool allowsManualFileSelection = false)
         : this(
             profileName,
             fileNames.Select(DocumentAttachmentDialogFile.FromFileName).ToList(),
             requiresTransferConfirmation,
-            capturesDocumentationText)
+            capturesDocumentationText,
+            allowsManualFileSelection)
     {
     }
 
@@ -59,6 +71,12 @@ public partial class DocumentAttachmentDocumentationWindow : Window
     public event EventHandler? CancelRequested;
 
     public IReadOnlyDictionary<string, string> FileDescriptions => GetFileDescriptions();
+
+    public IReadOnlyList<AttachmentImportFileCandidate> SelectedCandidates => _candidatesByFingerprint
+        .Values
+        .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(candidate => candidate.FullPath, StringComparer.OrdinalIgnoreCase)
+        .ToList();
 
     public void UpdateFileNames(IReadOnlyList<string> fileNames)
     {
@@ -87,10 +105,22 @@ public partial class DocumentAttachmentDocumentationWindow : Window
             .OrderBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(file => file.FullPath, StringComparer.OrdinalIgnoreCase))
         {
+            RegisterCandidate(file);
             _files.Add(new DocumentAttachmentFileItem(file, _capturesFileDescriptions));
         }
 
         return true;
+    }
+
+    public ManualDocumentSelectionResult AddManualFiles(IEnumerable<string> paths)
+    {
+        var result = _manualDocumentSelectionService.AddFiles(paths, SelectedCandidates);
+        if (result.AcceptedFiles.Count > 0)
+        {
+            UpdateFiles(result.AcceptedFiles.Select(DocumentAttachmentDialogFile.FromCandidate).ToList());
+        }
+
+        return result;
     }
 
     public IReadOnlyDictionary<string, string> GetFileDescriptions()
@@ -117,6 +147,17 @@ public partial class DocumentAttachmentDocumentationWindow : Window
 
     private void Apply_Click(object sender, RoutedEventArgs e)
     {
+        if (_allowsManualFileSelection && _files.Count == 0)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "Bitte fügen Sie mindestens eine Datei hinzu.",
+                "Dokumente übertragen",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
         FlushDescriptionBindings();
         DocumentationText = null;
         TransferRequested?.Invoke(this, EventArgs.Empty);
@@ -138,6 +179,57 @@ public partial class DocumentAttachmentDocumentationWindow : Window
         }
 
         DialogResult = false;
+    }
+
+    private void AddFiles_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Dateien hinzufügen",
+            Multiselect = true,
+            Filter = "Unterstützte Dokumente|*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt;*.xml;*.mp4;*.mp3;*.wav|Alle Dateien|*.*"
+        };
+        if (dialog.ShowDialog(this) == true)
+        {
+            ShowManualFileSelectionResult(AddManualFiles(dialog.FileNames));
+        }
+    }
+
+    private void FileDropArea_DragOver(object sender, System.Windows.DragEventArgs e)
+    {
+        e.Effects = _allowsManualFileSelection && e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
+            ? System.Windows.DragDropEffects.Copy
+            : System.Windows.DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void FileDropArea_Drop(object sender, System.Windows.DragEventArgs e)
+    {
+        if (!_allowsManualFileSelection
+            || !e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
+            || e.Data.GetData(System.Windows.DataFormats.FileDrop) is not string[] paths)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        ShowManualFileSelectionResult(AddManualFiles(paths));
+        e.Handled = true;
+    }
+
+    private void ShowManualFileSelectionResult(ManualDocumentSelectionResult result)
+    {
+        if (result.RejectedMessages.Count == 0)
+        {
+            return;
+        }
+
+        System.Windows.MessageBox.Show(
+            this,
+            string.Join(Environment.NewLine, result.RejectedMessages),
+            "Dateien hinzufügen",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void FlushDescriptionBindings()
@@ -164,6 +256,32 @@ public partial class DocumentAttachmentDocumentationWindow : Window
                 yield return descendant;
             }
         }
+    }
+
+    private void RegisterCandidate(DocumentAttachmentDialogFile file)
+    {
+        if (!File.Exists(file.FullPath))
+        {
+            return;
+        }
+
+        var extension = Path.GetExtension(file.FullPath);
+        if (!SupportedAttachmentFileFormats.IsSupported(extension))
+        {
+            return;
+        }
+
+        var candidate = new AttachmentImportFileCandidate(
+            FileName: file.FileName,
+            Extension: SupportedAttachmentFileFormats.Normalize(extension),
+            FullPath: file.FullPath,
+            SizeBytes: file.SizeBytes,
+            LastWriteTimeUtc: file.LastWriteTimeUtc,
+            IsSupported: true,
+            StableStatus: "Ausgewählt.",
+            ErrorMessage: null,
+            IsStable: true);
+        _candidatesByFingerprint[file.Fingerprint] = candidate;
     }
 }
 

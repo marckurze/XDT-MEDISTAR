@@ -33,8 +33,25 @@ public sealed class PendingImportQueue
 
     public IReadOnlyList<PendingImportPair> FindReadyPairs(bool includeAttachmentDeviceFiles)
     {
+        return FindReadyPairs(includeAttachmentDeviceFiles, allowAisOnlyManualSelection: false);
+    }
+
+    public IReadOnlyList<PendingImportPair> FindReadyPairs(
+        bool includeAttachmentDeviceFiles,
+        bool allowAisOnlyManualSelection)
+    {
         var aisFiles = SortFiles(_filesByPath.Values.Where(IsStableAisFile)).ToList();
         var deviceFiles = SortFiles(_filesByPath.Values.Where(file => IsStableDeviceFile(file, includeAttachmentDeviceFiles))).ToList();
+        if (allowAisOnlyManualSelection && deviceFiles.Count == 0)
+        {
+            return aisFiles
+                .Select(aisFile => new PendingImportPair(
+                    AisFile: aisFile,
+                    DeviceFile: CreateManualSelectionDevicePlaceholder(aisFile),
+                    IsReady: true))
+                .ToList();
+        }
+
         var pairCount = Math.Min(aisFiles.Count, deviceFiles.Count);
         var pairs = new List<PendingImportPair>(pairCount);
 
@@ -69,6 +86,18 @@ public sealed class PendingImportQueue
     {
         return file.Status == PendingImportFileStatus.Stable
             && file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
+    }
+
+    private static PendingImportFile CreateManualSelectionDevicePlaceholder(PendingImportFile aisFile)
+    {
+        return new PendingImportFile(
+            FilePath: $"manual-document-selection://{aisFile.FilePath}",
+            FileName: "Manuelle Dokumentauswahl",
+            Kind: ImportFileKind.AttachmentFile,
+            Status: PendingImportFileStatus.Stable,
+            DetectedAtUtc: aisFile.DetectedAtUtc,
+            StableAtUtc: aisFile.StableAtUtc,
+            Message: "Manuelle Dokumentauswahl wartet auf Dateien.");
     }
 
     private static IOrderedEnumerable<PendingImportFile> SortFiles(IEnumerable<PendingImportFile> files)

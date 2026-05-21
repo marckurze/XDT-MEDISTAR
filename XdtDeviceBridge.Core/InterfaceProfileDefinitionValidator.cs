@@ -38,6 +38,9 @@ public static class InterfaceProfileDefinitionValidator
             return issues;
         }
 
+        var isManualDocumentSelection = profile.FolderOptions.IsAttachmentOnlyMode
+            && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+
         if (profile.IsActive)
         {
             if (string.IsNullOrWhiteSpace(profile.FolderOptions.AisImportFolder))
@@ -45,7 +48,8 @@ public static class InterfaceProfileDefinitionValidator
                 issues.Add("AisImportFolder must be set when profile is active.");
             }
 
-            if (string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
+            if (!isManualDocumentSelection
+                && string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
             {
                 issues.Add("DeviceImportFolder must be set when profile is active.");
             }
@@ -93,6 +97,11 @@ public static class InterfaceProfileDefinitionValidator
         if (!Enum.IsDefined(profile.FolderOptions.AttachmentRequirementMode))
         {
             issues.Add("AttachmentRequirementMode must be a valid value.");
+        }
+
+        if (!Enum.IsDefined(profile.FolderOptions.AttachmentOnlySourceMode))
+        {
+            issues.Add("AttachmentOnlySourceMode must be a valid value.");
         }
 
         if (profile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move

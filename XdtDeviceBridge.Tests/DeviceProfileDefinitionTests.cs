@@ -484,6 +484,19 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile));
     }
 
+    [Fact]
+    public void CreateManualDocumentSelectionDefault_ShouldCreateAttachmentOnlyManualProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault();
+
+        Assert.Equal("device-manual-document-selection-default", profile.Metadata.Id);
+        Assert.Equal("Manuelle Dokumentauswahl", profile.Metadata.Name);
+        Assert.Equal("AttachmentOnlyManual", profile.ParserMode);
+        Assert.Equal("Dokument/Manuell", profile.DeviceType);
+        Assert.Empty(profile.Measurements);
+        Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile));
+    }
+
     private static void AssertRequiredMeasurement(DeviceProfileDefinition profile, string id, string sourcePath)
     {
         Assert.Contains(profile.Measurements, m => m.Id == id && m.SourcePath == sourcePath && m.IsRequired);

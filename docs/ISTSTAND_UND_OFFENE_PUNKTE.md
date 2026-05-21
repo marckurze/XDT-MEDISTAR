@@ -42,6 +42,7 @@ Besonders stabil wirken aktuell:
 - Die Schnittstellenprofil-Konfiguration fuer AttachmentOnly ist kontextsensitiv reduziert: Der Geraete-/Dokument-Importordner ist der Dateieingang, separate XDT-Anhang-Importfelder und interne `6302`-`6305`-Templatefelder werden ausgeblendet, `Dokumentationstext erfassen` ist profilbezogen einstellbar, und der manuelle Dialog sammelt weitere stabile Dateien bis zum Klick auf `Uebertragen`.
 - AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-Importordner, auch wenn alte gespeicherte technische Anhang-Flags deaktiviert sind. Dokumentgeraete erzeugen dadurch wieder je Datei `6302`/`6303`/`6304`/`6305`; eine AIS-only-XDT ohne Dokumentlinks wird fuer Dokumentanhaenge nicht mehr still als Erfolg ausgegeben.
 - Die Texteingabe im Dialog `Dokumente uebertragen` ist vom Polling entkoppelt: offene Dialoge werden nicht neu aktiviert oder vollstaendig neu aufgebaut, neue Dateien werden inkrementell ergaenzt und die schwere automatische Paarverarbeitung wird bis zum Klick auf `Uebertragen` nicht bei jedem Scan erneut gestartet.
+- `MEDISTAR + Manuelle Dokumentuebergabe` ist als eigener AttachmentOnly-Quellmodus vorhanden: AIS startet einen leeren `Dokumente uebertragen`-Dialog, Dateien werden per Drag-&-Drop oder Dateiauswahl hinzugefuegt, pro Datei wird `6304` aus Benutzertext oder Originaldateiname erzeugt, und manuell ausgewaehlte Quelldateien werden nicht geloescht.
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
@@ -50,6 +51,7 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
 - UI-Einstellung fuer die Rueckdock-Zeit und sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungen
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
 - praktische MEDISTAR-Abnahme fuer den generischen Dokumentanhang-Workflow mit mehreren Dateien, Ruhezeit-/Bestaetigungsmodus und pro-Datei-`6304`-Text
+- praktische MEDISTAR-Abnahme fuer die manuelle Dokumentuebergabe mit Drag-&-Drop/Dateiauswahl, PDF/JPG und sicherer Quell-Dateibehandlung
 - Aktivierungsassistent fuer importierte Schnittstellenprofile; read-only Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und technische Guard-Schicht sind vorhanden. Der Dialog `Aktivierung vorbereiten` ist auf die schlanke V1 reduziert: Bewertung, technische Freigabe, Blocker, Warnungen, Hinweise und Sicherheitshinweis; produktive Aktivierung bleibt offen.
 - UI-Korrektur: Die Bereiche `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` im Tab `Schnittstellenprofile` sind wieder sauber getrennt und ueberlappen nicht mehr.
 - Praktische Windows-Sichtpruefung: Der Bereich `Pruefung vor Aktivierung` und der scrollbare Dialog `Aktivierung vorbereiten` sind fuer den aktuellen Vorschau-Status abgenommen; Lesbarkeit, Abschnittsgliederung, reduzierte Redundanz und Sicherheitshinweis wurden positiv bewertet.

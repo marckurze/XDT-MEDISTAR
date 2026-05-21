@@ -289,6 +289,19 @@ public sealed class ExportProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateMedistarManualDocumentTransferDefault_ShouldContainOnlyBaseRules()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarManualDocumentTransferDefault();
+
+        Assert.Equal("export-medistar-manual-document-transfer-default", profile.Metadata.Id);
+        Assert.Equal("device-manual-document-selection-default", profile.SourceDeviceProfileId);
+        Assert.Equal(6, profile.Rules.Count);
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "8402" && rule.SourcePath == "AIS.ExaminationType");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6227" or "6228" or "6205" or "6220");
+        Assert.Empty(ExportProfileDefinitionValidator.Validate(profile));
+    }
+
+    [Fact]
     public void CreateMedistarTopconCl300Default_ShouldCreateProfile()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default();

@@ -170,6 +170,24 @@ public sealed class InterfaceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateMedistarManualDocumentTransferDefault_ShouldUseManualSelectionOptions()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault();
+
+        Assert.Equal("interface-medistar-manual-document-transfer-default", profile.Metadata.Id);
+        Assert.Equal("ais-medistar-default", profile.AisProfileId);
+        Assert.Equal("device-manual-document-selection-default", profile.DeviceProfileId);
+        Assert.Equal("export-medistar-manual-document-transfer-default", profile.ExportProfileId);
+        Assert.True(profile.FolderOptions.IsAttachmentOnlyMode);
+        Assert.True(profile.FolderOptions.ShowAttachmentDocumentationDialog);
+        Assert.Equal(AttachmentCompletionMode.ManualConfirmation, profile.FolderOptions.AttachmentCompletionMode);
+        Assert.Equal(AttachmentOnlySourceMode.ManualUserSelection, profile.FolderOptions.AttachmentOnlySourceMode);
+        Assert.Equal(AttachmentTransferMode.Copy, profile.FolderOptions.AttachmentTransferMode);
+        Assert.Empty(profile.FolderOptions.DeviceImportFolder);
+        Assert.Empty(InterfaceProfileDefinitionValidator.Validate(profile));
+    }
+
+    [Fact]
     public void Validate_ShouldAcceptEmptyAttachmentFolders()
     {
         var profile = WithFolderOptions(CreateFolderOptions(
@@ -295,6 +313,41 @@ public sealed class InterfaceProfileDefinitionTests
         var issues = InterfaceProfileDefinitionValidator.Validate(profile);
 
         Assert.Contains("DeviceFileWaitTimeoutMinutes must not be negative.", issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptManualDocumentTransferWithoutDeviceImportFolder()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault() with
+        {
+            IsActive = true,
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault().FolderOptions with
+            {
+                AisImportFolder = @"C:\XdtDeviceBridge\ais",
+                DeviceImportFolder = string.Empty,
+                ExportFolder = @"C:\XdtDeviceBridge\export",
+                ErrorFolder = @"C:\XdtDeviceBridge\errors",
+                AttachmentExportFolder = @"C:\XdtDeviceBridge\attachments"
+            }
+        };
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.DoesNotContain("DeviceImportFolder must be set when profile is active.", issues);
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportInvalidAttachmentOnlySourceMode()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions() with
+        {
+            AttachmentOnlySourceMode = (AttachmentOnlySourceMode)999
+        });
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("AttachmentOnlySourceMode must be a valid value.", issues);
     }
 
     private static InterfaceProfileDefinition WithFolderOptions(InterfaceFolderOptions options)

@@ -145,6 +145,45 @@ public sealed class InterfaceProfileActivationEvaluationServiceTests
     }
 
     [Fact]
+    public void Evaluate_ManualDocumentTransferShouldNotRequireDeviceOrAttachmentImportFolder()
+    {
+        using var folders = TestFolders.Create();
+        var aisProfile = DefaultAisProfiles.CreateMedistarDefault();
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault();
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarManualDocumentTransferDefault();
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault() with
+        {
+            Metadata = CreateMetadata(
+                "interface-manual-document-userdefined",
+                "Manuelle Dokumentübergabe Praxis",
+                ProfileKind.InterfaceProfile,
+                isBuiltIn: false),
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault().FolderOptions with
+            {
+                AisImportFolder = folders.AisImportFolder,
+                DeviceImportFolder = string.Empty,
+                ExportFolder = folders.ExportFolder,
+                AttachmentImportFolder = string.Empty,
+                AttachmentExportFolder = folders.AttachmentExportFolder,
+                MoveFailedFilesToErrorFolder = false
+            },
+            IsLicenseRequired = false
+        };
+        var catalog = new ProfileCatalog(
+            AisProfiles: new[] { aisProfile },
+            DeviceProfiles: new[] { deviceProfile },
+            ExportProfiles: new[] { exportProfile },
+            InterfaceProfiles: new[] { interfaceProfile });
+
+        var result = _service.Evaluate(interfaceProfile, catalog);
+
+        Assert.True(result.CanActivate);
+        Assert.DoesNotContain(result.Blockers, check => check.Code == "folder.deviceImport.missing");
+        Assert.DoesNotContain(result.Blockers, check => check.Code == "attachment.folder.import.missing");
+        Assert.Contains(result.Infos, check => check.Code == "attachment.folder.import.manualSelection");
+    }
+
+    [Fact]
     public void Evaluate_ShouldWarnButNotBlockWhenConfiguredFolderIsNotReachable()
     {
         using var folders = TestFolders.Create();

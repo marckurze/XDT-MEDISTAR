@@ -329,6 +329,54 @@ public sealed class AutoImportPairProcessingCoordinator
             return new AttachmentGateDecision(DeferredResult: null, AttachmentPreparation: _ => status);
         }
 
+        if (attachmentProfile.FolderOptions.IsAttachmentOnlyMode
+            && attachmentProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection)
+        {
+            if (attachmentOnlyConfirmationProvider is null)
+            {
+                var status = SkippedStatus(
+                    AttachmentProcessingStatusReason.AttachmentManualConfirmationWait,
+                    "Manuelle Dokumentübergabe wartet auf Dateiauswahl.");
+                return new AttachmentGateDecision(
+                    DeferredResult: CreateDeferredResult(
+                        pairInstanceKey,
+                        pair,
+                        "Manuelle Dokumentübergabe: wartet auf Dateiauswahl.",
+                        new[] { status.Message },
+                        status),
+                    AttachmentPreparation: null);
+            }
+
+            var confirmationResult = attachmentOnlyConfirmationProvider(
+                interfaceProfile,
+                pair,
+                Array.Empty<AttachmentImportFileCandidate>());
+            if (!confirmationResult.ShouldProcess || confirmationResult.SelectedCandidates.Count == 0)
+            {
+                var status = SkippedStatus(
+                    AttachmentProcessingStatusReason.AttachmentManualConfirmationWait,
+                    "Manuelle Dokumentübergabe wartet auf Übertragen.");
+                return new AttachmentGateDecision(
+                    DeferredResult: CreateDeferredResult(
+                        pairInstanceKey,
+                        pair,
+                        "Manuelle Dokumentübergabe: wartet auf Dateiauswahl.",
+                        new[] { status.Message },
+                        status),
+                    AttachmentPreparation: null);
+            }
+
+            return new AttachmentGateDecision(
+                DeferredResult: null,
+                AttachmentPreparation: patient => PrepareSelectedAttachments(
+                    attachmentProfile,
+                    patient,
+                    confirmationResult.SelectedCandidates,
+                    timestamp,
+                    confirmationResult.AttachmentDescriptions),
+                DocumentationTextProvider: _ => confirmationResult.DocumentationText);
+        }
+
         var scanResult = _attachmentScannerService.Scan(attachmentProfile.FolderOptions);
         var pairReadySince = GetPairReadySince(pairInstanceKey, timestamp);
         var hasWaitTimedOut = HasAttachmentWaitTimedOut(attachmentProfile, pairReadySince, timestamp);
@@ -438,7 +486,9 @@ public sealed class AutoImportPairProcessingCoordinator
                             AttachmentPreparation: null);
                     }
 
-                    selectedCandidates = completionDecision.SelectedCandidates;
+                    selectedCandidates = confirmationResult.SelectedCandidates.Count > 0
+                        ? confirmationResult.SelectedCandidates
+                        : completionDecision.SelectedCandidates;
                     documentationTextProvider = _ => confirmationResult.DocumentationText;
                     attachmentDescriptions = confirmationResult.AttachmentDescriptions;
                 }
@@ -511,11 +561,14 @@ public sealed class AutoImportPairProcessingCoordinator
             return interfaceProfile;
         }
 
+        var sourceMode = interfaceProfile.FolderOptions.AttachmentOnlySourceMode;
         return interfaceProfile with
         {
             FolderOptions = interfaceProfile.FolderOptions with
             {
-                AttachmentImportFolder = interfaceProfile.FolderOptions.DeviceImportFolder,
+                AttachmentImportFolder = sourceMode == AttachmentOnlySourceMode.ManualUserSelection
+                    ? string.Empty
+                    : interfaceProfile.FolderOptions.DeviceImportFolder,
                 IsAttachmentProcessingEnabled = true,
                 AttachmentRequirementMode = AttachmentRequirementMode.Required,
                 AttachmentExternalLinkDocumentName = string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.AttachmentExternalLinkDocumentName)
@@ -602,13 +655,16 @@ public sealed class AutoImportPairProcessingCoordinator
     {
         var successfulResults = new List<AttachmentExternalLinkPreparationResult>();
         var failedMessages = new List<string>();
+        var folderOptions = interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection
+            ? interfaceProfile.FolderOptions with { AttachmentTransferMode = AttachmentTransferMode.Copy }
+            : interfaceProfile.FolderOptions;
 
         foreach (var selectedCandidate in selectedCandidates
             .OrderBy(candidate => candidate.FileName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(candidate => candidate.FullPath, StringComparer.OrdinalIgnoreCase))
         {
             var preparationResult = _attachmentPreparationService.Prepare(new AttachmentExternalLinkPreparationRequest(
-                FolderOptions: interfaceProfile.FolderOptions,
+                FolderOptions: folderOptions,
                 SourceAttachmentPath: selectedCandidate.FullPath,
                 Patient: patient,
                 ProcessingTimestamp: timestamp,

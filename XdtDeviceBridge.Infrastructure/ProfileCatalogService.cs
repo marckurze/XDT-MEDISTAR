@@ -287,7 +287,8 @@ public sealed class ProfileCatalogService
             DefaultDeviceProfileDefinitions.CreateTopconCl300Default(),
             DefaultDeviceProfileDefinitions.CreateTopconKr800Default(),
             DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault(),
-            DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault()
+            DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(),
+            DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault()
         };
     }
 
@@ -302,7 +303,8 @@ public sealed class ProfileCatalogService
             DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default(),
             DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default(),
             DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault(),
-            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault()
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarManualDocumentTransferDefault()
         };
     }
 
@@ -314,7 +316,8 @@ public sealed class ProfileCatalogService
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekNt530PDefault(),
-            DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault()
+            DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault()
         };
     }
 

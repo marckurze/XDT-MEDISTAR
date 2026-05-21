@@ -1,6 +1,6 @@
 # Templatepaket MEDISTAR + Dokumentanhang
 
-Dieses Dokument beschreibt den Templatepaket-Kandidaten fuer `MEDISTAR + Dokumentanhang`. Der Workflow ist fuer Geraete oder Arbeitsablaeufe gedacht, die keine Messwerte liefern, sondern Dateien als externe MEDISTAR-Anhaenge uebergeben.
+Dieses Dokument beschreibt den Templatepaket-Kandidaten fuer `MEDISTAR + Dokumentanhang`. Der Workflow ist fuer Geraete gedacht, die keine Messwerte liefern, sondern Dateien automatisch in einen Dokument-/Geraete-Importordner schreiben und als externe MEDISTAR-Anhaenge uebergeben.
 
 ## Status
 
@@ -76,3 +76,5 @@ AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-I
 - keine App-interne Datei-Umbenennung durch Anwender
 
 Der erste Live-Test sollte AIS-Datei plus mehrere stabile Anhaenge pruefen und bestaetigen, dass MEDISTAR jede Datei einzeln ueber `6302` bis `6305` erhaelt.
+
+Die separate AIS-gestartete Dateiauswahl per Drag-&-Drop oder Dateidialog ist in `docs/TEMPLATEPAKET_MEDISTAR_MANUELLE_DOKUMENTUEBERGABE.md` dokumentiert und nutzt eigene BuiltIn-Profile.

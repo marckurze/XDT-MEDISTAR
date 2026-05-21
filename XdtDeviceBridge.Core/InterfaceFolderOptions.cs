@@ -30,4 +30,5 @@ public sealed record InterfaceFolderOptions(
     bool IsAttachmentOnlyMode = false,
     bool ShowAttachmentDocumentationDialog = false,
     AttachmentCompletionMode AttachmentCompletionMode = AttachmentCompletionMode.WaitForQuietPeriod,
-    int AttachmentQuietPeriodSeconds = 10);
+    int AttachmentQuietPeriodSeconds = 10,
+    AttachmentOnlySourceMode AttachmentOnlySourceMode = AttachmentOnlySourceMode.DeviceFolder);

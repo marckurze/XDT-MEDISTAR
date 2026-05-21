@@ -86,19 +86,35 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
     {
         var options = profile.FolderOptions;
 
+        var isManualDocumentSelection = options.IsAttachmentOnlyMode
+            && options.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         var rows = new List<InterfaceProfileActivationFolderDisplay>
         {
             CreateFolderDisplay(result, "AIS-Importordner", options.AisImportFolder, "folder.aisImport"),
-            CreateFolderDisplay(
-                result,
-                options.IsAttachmentOnlyMode ? "Dokument-Importordner" : "Geräte-Importordner",
-                options.DeviceImportFolder,
-                "folder.deviceImport"),
             CreateFolderDisplay(result, "AIS-Exportordner", options.ExportFolder, "folder.export"),
             CreateFolderDisplay(result, "Archivordner", options.ArchiveFolder, "folder.archive"),
             CreateFolderDisplay(result, "Fehlerordner", options.ErrorFolder, "folder.error"),
             CreateFolderDisplay(result, "XDT-Anhang-Exportordner", options.AttachmentExportFolder, "attachment.folder.export")
         };
+
+        if (isManualDocumentSelection)
+        {
+            rows.Insert(1, new InterfaceProfileActivationFolderDisplay(
+                Label: "Dokumentauswahl",
+                Path: "manuell im Fenster",
+                Status: "OK",
+                Reachability: "Nicht geprüft",
+                Severity: "INFO",
+                Message: "Kein Geräte-Importordner erforderlich."));
+        }
+        else
+        {
+            rows.Insert(1, CreateFolderDisplay(
+                result,
+                options.IsAttachmentOnlyMode ? "Dokument-Importordner" : "Geräte-Importordner",
+                options.DeviceImportFolder,
+                "folder.deviceImport"));
+        }
 
         if (!options.IsAttachmentOnlyMode)
         {
@@ -114,12 +130,16 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
     {
         var options = profile.FolderOptions;
 
+        var isManualDocumentSelection = options.IsAttachmentOnlyMode
+            && options.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         var rows = new List<InterfaceProfileActivationAttachmentDisplay>
         {
             CreateAttachmentDisplay(
                 result,
-                options.IsAttachmentOnlyMode ? "Dokumentdateien als AIS-Anhänge" : "Anhangverarbeitung",
-                options.IsAttachmentOnlyMode
+                isManualDocumentSelection ? "Manuelle Dokumentübergabe" : options.IsAttachmentOnlyMode ? "Dokumentdateien als AIS-Anhänge" : "Anhangverarbeitung",
+                isManualDocumentSelection
+                    ? "Anwender wählt Dateien im Fenster"
+                    : options.IsAttachmentOnlyMode
                     ? "aktiv über Dokument-Importordner"
                     : options.IsAttachmentProcessingEnabled ? "aktiv" : "inaktiv",
                 "attachment.disabled"),
@@ -141,7 +161,12 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
             CreateAttachmentDisplay(result, "6305 vollständiger Dateipfad", options.AttachmentExternalLinkPathTemplate, "attachment.6305")
         };
 
-        if (options.IsAttachmentOnlyMode)
+        if (isManualDocumentSelection)
+        {
+            rows.Insert(2, CreateAttachmentDisplay(result, "Dokumenteingang", "manuelle Dateiauswahl", "attachment.folder.import"));
+            rows.Insert(3, CreateAttachmentDisplay(result, "Abschluss", "Übertragen im Dialog", "attachmentOnly.manualUserSelection"));
+        }
+        else if (options.IsAttachmentOnlyMode)
         {
             rows.Insert(2, CreateAttachmentDisplay(result, "Dokumenteingang", options.DeviceImportFolder, "attachment.folder.import"));
             rows.Insert(

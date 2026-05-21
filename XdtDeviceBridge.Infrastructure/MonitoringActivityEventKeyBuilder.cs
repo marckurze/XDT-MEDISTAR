@@ -32,9 +32,17 @@ public static class MonitoringActivityEventKeyBuilder
 
     public static string CreateReadyPairKey(PendingImportQueue queue, bool includeAttachmentDeviceFiles)
     {
+        return CreateReadyPairKey(queue, includeAttachmentDeviceFiles, allowAisOnlyManualSelection: false);
+    }
+
+    public static string CreateReadyPairKey(
+        PendingImportQueue queue,
+        bool includeAttachmentDeviceFiles,
+        bool allowAisOnlyManualSelection)
+    {
         ArgumentNullException.ThrowIfNull(queue);
 
-        var pairKeys = queue.FindReadyPairs(includeAttachmentDeviceFiles)
+        var pairKeys = queue.FindReadyPairs(includeAttachmentDeviceFiles, allowAisOnlyManualSelection)
             .Select(pair => string.Join(
                 "+",
                 ImportFileFingerprint.Create(pair.AisFile),

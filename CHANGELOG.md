@@ -40,7 +40,8 @@
 - NIDEK NT530P / NT-530P als direkt nutzbaren MEDISTAR-Kandidaten ergaenzt: echte UTF-16-XML-Fixture, Parserwerte fuer Tonometrie, korrigierten IOP und Pachymetrie, berechnete MEDISTAR-Zeilen fuer `6220` und `6205`, BuiltIn-Schnittstellenprofil und selektiver NT530P-Templatepaket-Test. JPG-Dateien werden nicht als Messwertdateien verarbeitet und bleiben fuer spaetere XDT-Anhang-Validierung relevant.
 - XDT-Mehrfachanhaenge im Automatiklauf ergaenzt: mehrere stabile unterstuetzte Anhangdateien werden sortiert einzeln per bestehender Copy/Move- und Kollisionslogik uebertragen und erzeugen je Datei eine eigene `6302`/`6303`/optional `6304`/`6305`-Linkfeldgruppe.
 - AttachmentOnly-/Dokumentgeraete-V1 ergaenzt: Das BuiltIn-Profil `MEDISTAR + Dokumentanhang` verarbeitet AIS-Datei plus eine oder mehrere stabile Dokument-/Anhangdateien ohne Messwertparser und nutzt fuer jede Datei die bestehenden `6302`/`6303`/`6304`/`6305`-Linkfelder. XML, MP4, MP3 und WAV werden in diesem Modus nur als Anhaenge behandelt.
-- AttachmentOnly-Abschlusslogik ergaenzt: Dokumentgeraete koennen profilbezogen entweder nach einer Wartezeit nach der letzten stabilen Datei automatisch uebertragen oder im Dialog `Dokumente uebertragen` manuell bestaetigt werden. Neue Dateien innerhalb der Wartezeit starten den Countdown neu; Drag-&-Drop und Vorschaukachel-Galerien bleiben weiterhin offen.
+- AttachmentOnly-Abschlusslogik ergaenzt: Dokumentgeraete koennen profilbezogen entweder nach einer Wartezeit nach der letzten stabilen Datei automatisch uebertragen oder im Dialog `Dokumente uebertragen` manuell bestaetigt werden. Neue Dateien innerhalb der Wartezeit starten den Countdown neu; Drag-&-Drop fuer automatisch liefernde Dokumentgeraete und Vorschaukachel-Galerien bleiben weiterhin offen.
+- `MEDISTAR + Manuelle Dokumentuebergabe` als eigenes BuiltIn-Schnittstellenprofil ergaenzt: AIS startet den Dialog `Dokumente uebertragen` mit leerer Liste, Dateien koennen per Drag-&-Drop oder Dateiauswahl hinzugefuegt werden, und jede Datei wird erst nach `Uebertragen` ueber eigene `6302`/`6303`/`6304`/`6305`-Linkfelder exportiert.
 - Tests fuer die Aktivierungsbewertung importierter Schnittstellenprofile ergaenzt, inklusive fehlender Abhaengigkeiten, fehlender Pflichtordner, BuiltIn-Schutz, optional deaktivierter XDT-Anhang-Automatik und lizenzpflichtiger Profile.
 
 ### Behoben
@@ -74,7 +75,7 @@
 
 ### Nicht umgesetzt
 
-- Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit, ein sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungsfenster sowie Drag-&-Drop/Vorschaukacheln fuer Dokumentanhaenge.
+- Noch nicht enthalten sind Autostart, Windows-Dienst, UI-Einstellung fuer die Rueckdock-Zeit, ein sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungsfenster sowie Vorschaukachel-Galerien und Drag-&-Drop fuer automatisch liefernde Dokumentgeraete.
 
 ### Dokumentation
 
@@ -86,7 +87,8 @@
 - ARK1S und AR360 als stabile Referenzpakete in Matrix und Paketdokumenten markiert; offizielle ZIP-Artefakte werden erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
 - Kleine Release-Regel fuer offizielle Templatepaket-ZIPs dokumentiert, inklusive selektivem Exporttest, Import-/DryRun-Test, Praxis-App-Importpruefung, BuiltIn-Schutz und Daten-/Pfadpruefung.
 - Profilumbenennung dokumentiert: Templatepaket-ZIP-Dateien werden weiterhin ueber Dateinamen/Release-Regel versioniert; fuer Importvorschau-Zielnamen bleibt die bestehende Vorschau-Bearbeitung massgeblich, es wurde keine separate Templatepaket-Verwaltung eingefuehrt.
-- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_DOKUMENTANHANG.md` dokumentiert; er beschreibt Dokumentgeraete ohne Messwerte, optionalen `6227`-Text, mehrere `6302`-`6305`-Anhaenge und die bewusst offenen Komfortthemen Drag-&-Drop, Vorschau und Datei-Kommentare.
+- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_DOKUMENTANHANG.md` dokumentiert; er beschreibt automatisch liefernde Dokumentgeraete ohne Messwerte, optionalen `6227`-Text, mehrere `6302`-`6305`-Anhaenge und die bewusst offenen Komfortthemen Vorschau und Datei-Kommentare.
+- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_MANUELLE_DOKUMENTUEBERGABE.md` dokumentiert; er beschreibt die AIS-gestartete manuelle Dateiauswahl mit Drag-&-Drop, Mehrfachauswahl, pro-Datei-`6304` und sicherer Copy-Uebergabe ohne Messwertparser.
 - Praxisabnahme `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md` ergänzt: Systray, manuelles und automatisches Abdocken, Auto-Zurueckandocken, Pin/Position, Signalton, Reset und Sicherheitsgrenzen der Geraeteanbindungsfenster sind als V1-Funktionsblock abgenommen.
 - Projektleitlinie geschaerft: fertige Geraeteprofile und Templatepakete haben Vorrang vor Baukasten-Nutzung; der Aktivierungsassistent ruht bis auf Weiteres als read-only vorbereiteter Stand.
 - Offizielle Paketvorlage `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` fuer das erste Referenzpaket MEDISTAR + NIDEK ARK1S ergaenzt; sie nutzt das bestehende ZIP-Templatepaket-Format, enthaelt keine Kunden-/Patientendaten und keine Live-Pfade.

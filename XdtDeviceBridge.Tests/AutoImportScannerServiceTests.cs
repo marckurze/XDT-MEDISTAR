@@ -129,6 +129,37 @@ public sealed class AutoImportScannerServiceTests
     }
 
     [Fact]
+    public async Task ScanOnceAsync_ManualDocumentSelectionShouldCreateReadyPairFromAisOnly()
+    {
+        var folders = CreateImportFolders();
+        File.WriteAllText(Path.Combine(folders.AisFolder, "patient.gdt"), "gdt");
+        File.WriteAllText(Path.Combine(folders.DeviceFolder, "ignored.pdf"), "pdf");
+        var profile = CreateProfile(
+            folders,
+            isAttachmentOnlyMode: true,
+            attachmentOnlySourceMode: AttachmentOnlySourceMode.ManualUserSelection) with
+        {
+            FolderOptions = CreateFolderOptions(folders.AisFolder, string.Empty) with
+            {
+                IsAttachmentOnlyMode = true,
+                AttachmentOnlySourceMode = AttachmentOnlySourceMode.ManualUserSelection
+            }
+        };
+
+        var result = await _scanner.ScanOnceAsync(profile, StabilityDuration);
+
+        Assert.Equal(1, result.AisFilesDetected);
+        Assert.Equal(0, result.DeviceFilesDetected);
+        Assert.Equal(1, result.FilesQueued);
+        Assert.Equal(1, result.ReadyPairs);
+        Assert.Contains(result.Messages, message => message.Contains("keine Geräte-Datei", StringComparison.OrdinalIgnoreCase));
+        var pair = Assert.Single(result.Queue.FindReadyPairs(
+            includeAttachmentDeviceFiles: true,
+            allowAisOnlyManualSelection: true));
+        Assert.Equal("Manuelle Dokumentauswahl", pair.DeviceFile.FileName);
+    }
+
+    [Fact]
     public async Task ScanOnceAsync_ShouldIgnoreIrrelevantExtensions()
     {
         var folders = CreateImportFolders();
@@ -194,7 +225,8 @@ public sealed class AutoImportScannerServiceTests
     private static InterfaceProfileDefinition CreateProfile(
         ImportFolders folders,
         bool isActive = true,
-        bool isAttachmentOnlyMode = false)
+        bool isAttachmentOnlyMode = false,
+        AttachmentOnlySourceMode attachmentOnlySourceMode = AttachmentOnlySourceMode.DeviceFolder)
     {
         return DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
         {
@@ -207,7 +239,8 @@ public sealed class AutoImportScannerServiceTests
             },
             FolderOptions = CreateFolderOptions(folders.AisFolder, folders.DeviceFolder) with
             {
-                IsAttachmentOnlyMode = isAttachmentOnlyMode
+                IsAttachmentOnlyMode = isAttachmentOnlyMode,
+                AttachmentOnlySourceMode = attachmentOnlySourceMode
             },
             IsActive = isActive,
             IsLicenseRequired = true

@@ -73,6 +73,26 @@ public sealed class PendingImportQueueTests
     }
 
     [Fact]
+    public void FindReadyPairs_ShouldCreateManualSelectionPairWhenOnlyAisFileExistsAndManualSelectionIsAllowed()
+    {
+        var queue = new PendingImportQueue();
+        queue.AddOrUpdate(CreateFile(
+            "C:\\Import\\patient.gdt",
+            ImportFileKind.AisGdt,
+            status: PendingImportFileStatus.Stable));
+
+        var pair = Assert.Single(queue.FindReadyPairs(
+            includeAttachmentDeviceFiles: true,
+            allowAisOnlyManualSelection: true));
+
+        Assert.True(pair.IsReady);
+        Assert.Equal("patient.gdt", pair.AisFile.FileName);
+        Assert.Equal("Manuelle Dokumentauswahl", pair.DeviceFile.FileName);
+        Assert.Equal(ImportFileKind.AttachmentFile, pair.DeviceFile.Kind);
+        Assert.StartsWith("manual-document-selection://", pair.DeviceFile.FilePath, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void FindReadyPairs_ShouldReturnNoPairWhenOnlyDeviceFileExists()
     {
         var queue = new PendingImportQueue();

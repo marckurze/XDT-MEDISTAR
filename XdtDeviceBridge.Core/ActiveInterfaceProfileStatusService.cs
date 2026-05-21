@@ -101,7 +101,8 @@ public sealed class ActiveInterfaceProfileStatusService
             missingFolders.Add("AIS-Importordner fehlt");
         }
 
-        if (string.IsNullOrWhiteSpace(folderOptions.DeviceImportFolder))
+        if (folderOptions.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection
+            && string.IsNullOrWhiteSpace(folderOptions.DeviceImportFolder))
         {
             missingFolders.Add("Geräte-Importordner fehlt");
         }
@@ -173,17 +174,26 @@ public sealed class ActiveInterfaceProfileStatusService
         string exportProfileName)
     {
         var folderOptions = profile.FolderOptions;
+        var isManualDocumentSelection = folderOptions.IsAttachmentOnlyMode
+            && folderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         var attachmentImportFolder = CreateAttachmentFolderDisplay(folderOptions, folderOptions.AttachmentImportFolder, "XDT-Anhang Importordner fehlt");
         var attachmentExportFolder = CreateAttachmentFolderDisplay(folderOptions, folderOptions.AttachmentExportFolder, "XDT-Anhang Exportordner fehlt");
         var attachmentStatus = CreateAttachmentConfigurationStatus(folderOptions);
 
         var expectedInputs = new List<ExpectedInputDisplayItem>
         {
-            CreateExpectedInput("AIS-Patientendatei", folderOptions.AisImportFolder, "AIS-Importordner fehlt", "erwartet"),
-            CreateExpectedInput("Geräte-Datei", folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt", "erwartet")
+            CreateExpectedInput("AIS-Patientendatei", folderOptions.AisImportFolder, "AIS-Importordner fehlt", "erwartet")
         };
+        if (!isManualDocumentSelection)
+        {
+            expectedInputs.Add(CreateExpectedInput(
+                folderOptions.IsAttachmentOnlyMode ? "Dokumentdateien" : "Geräte-Datei",
+                folderOptions.DeviceImportFolder,
+                folderOptions.IsAttachmentOnlyMode ? "Dokument-Importordner fehlt" : "Geräte-Importordner fehlt",
+                "erwartet"));
+        }
 
-        if (HasAttachmentConfiguration(folderOptions))
+        if (HasAttachmentConfiguration(folderOptions) && !isManualDocumentSelection)
         {
             var isAttachmentImportMissing = string.IsNullOrWhiteSpace(folderOptions.AttachmentImportFolder);
             expectedInputs.Add(new ExpectedInputDisplayItem(
@@ -198,7 +208,8 @@ public sealed class ActiveInterfaceProfileStatusService
         var folderDetails = new List<InterfaceMonitoringDetailItem>
         {
             new("AIS-Importordner", DisplayOrMissing(folderOptions.AisImportFolder, "AIS-Importordner fehlt")),
-            new("Geräte-Importordner", DisplayOrMissing(folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt")),
+            new(isManualDocumentSelection ? "Dokumentauswahl" : "Geräte-Importordner",
+                isManualDocumentSelection ? "manuell im Übertragungsfenster" : DisplayOrMissing(folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt")),
             new("Exportordner ans AIS", DisplayOrMissing(folderOptions.ExportFolder, "Exportordner fehlt")),
             new("Archivordner", DisplayOrMissing(folderOptions.ArchiveFolder, "Archivordner nicht konfiguriert")),
             new("Fehlerordner", DisplayOrMissing(folderOptions.ErrorFolder, "Fehlerordner nicht konfiguriert")),

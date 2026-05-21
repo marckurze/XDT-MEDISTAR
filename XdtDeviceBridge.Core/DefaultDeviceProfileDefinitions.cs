@@ -460,4 +460,31 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "Dokument", "Anhang" },
             CanContainMultipleExaminationTypes: false);
     }
+
+    public static DeviceProfileDefinition CreateManualDocumentSelectionDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-manual-document-selection-default",
+                Name: "Manuelle Dokumentauswahl",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile for manual document handoff where users select files or drop them into the transfer window.",
+                Vendor: "XdtDeviceBridge",
+                Product: "Manuelle Dokumentübergabe",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "Manuell",
+            Model: "Dokumentauswahl",
+            DeviceType: "Dokument/Manuell",
+            ParserMode: "AttachmentOnlyManual",
+            Measurements: Array.Empty<DeviceMeasurementDefinition>(),
+            SupportedExaminationTypes: new[] { "Dokument", "Anhang", "Manuell" },
+            CanContainMultipleExaminationTypes: false);
+    }
 }

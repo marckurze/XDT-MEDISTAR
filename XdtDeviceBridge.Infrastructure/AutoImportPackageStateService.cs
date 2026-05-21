@@ -20,6 +20,8 @@ public sealed class AutoImportPackageStateService
             .ThenBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase)
             .ToList();
+        var isManualDocumentSelection = profile.FolderOptions.IsAttachmentOnlyMode
+            && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         var deviceFiles = queue.GetAll()
             .Where(file => IsStableDeviceFile(file, profile.FolderOptions.IsAttachmentOnlyMode))
             .OrderBy(file => file.DetectedAtUtc)
@@ -44,6 +46,14 @@ public sealed class AutoImportPackageStateService
 
         var latestAisFile = aisFiles[^1];
         var pendingAis = GetOrCreatePendingAis(profile, latestAisFile, nowUtc);
+        if (isManualDocumentSelection)
+        {
+            var manualPair = queue
+                .FindReadyPairs(includeAttachmentDeviceFiles: true, allowAisOnlyManualSelection: true)
+                .First(pair => string.Equals(pair.AisFile.FilePath, latestAisFile.FilePath, StringComparison.OrdinalIgnoreCase));
+            messages.Add("AIS-Datei bereit; wartet auf manuelle Dokumentauswahl.");
+            return CreateResult(new[] { manualPair }, messages, replaced, expired, AutoImportPackageStateReason.ReadyForProcessing);
+        }
 
         if (deviceFiles.Count == 0)
         {

@@ -8,24 +8,6 @@ public sealed class AttachmentImportFolderScannerService : IAttachmentImportFold
         ? StringComparer.OrdinalIgnoreCase
         : StringComparer.Ordinal;
 
-    private static readonly IReadOnlySet<string> SupportedExtensions = new HashSet<string>(
-        new[]
-        {
-            ".pdf",
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".tif",
-            ".tiff",
-            ".dcm",
-            ".txt",
-            ".xml",
-            ".mp4",
-            ".mp3",
-            ".wav"
-        },
-        StringComparer.OrdinalIgnoreCase);
-
     private readonly FolderSafetyValidator _folderSafetyValidator;
     private readonly FileStabilityService _fileStabilityService;
 
@@ -145,7 +127,7 @@ public sealed class AttachmentImportFolderScannerService : IAttachmentImportFold
     private AttachmentImportFileCandidate CreateCandidate(FileInfo file, TimeSpan? stabilityDuration)
     {
         var extension = file.Extension.ToLowerInvariant();
-        var isSupported = SupportedExtensions.Contains(extension);
+        var isSupported = SupportedAttachmentFileFormats.IsSupported(extension);
         var isStable = false;
         var stableStatus = "Nicht geprüft.";
         string? errorMessage = isSupported ? null : "Dateityp wird für XDT-Anhänge nicht unterstützt.";
