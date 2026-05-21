@@ -14,7 +14,8 @@ public sealed class InterfaceProfileAutoDetachService
 
     public InterfaceProfileAutoDetachDecision Evaluate(
         InterfaceMonitoringEventEntry entry,
-        InterfaceProfileFloatingWindowState state)
+        InterfaceProfileFloatingWindowState state,
+        bool allowAutoDetach = true)
     {
         ArgumentNullException.ThrowIfNull(entry);
         ArgumentNullException.ThrowIfNull(state);
@@ -43,8 +44,8 @@ public sealed class InterfaceProfileAutoDetachService
         return new InterfaceProfileAutoDetachDecision(
             IsRelevantActivity: true,
             IsSuppressedByCooldown: false,
-            ShouldDetach: !state.IsDetached,
-            ShouldBringToFront: true);
+            ShouldDetach: allowAutoDetach && !state.IsDetached,
+            ShouldBringToFront: allowAutoDetach);
     }
 
     public void ResetProfile(string interfaceProfileId)

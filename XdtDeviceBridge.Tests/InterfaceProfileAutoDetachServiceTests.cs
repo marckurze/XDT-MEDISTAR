@@ -48,6 +48,23 @@ public sealed class InterfaceProfileAutoDetachServiceTests
     }
 
     [Fact]
+    public void Evaluate_ShouldSuppressDetachAndForegroundWhenAutoDetachIsDisabled()
+    {
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+        var state = new InterfaceProfileFloatingWindowState("interface-manual-documents");
+
+        var decision = autoDetachService.Evaluate(
+            Event("interface-manual-documents", "scan-ais-detected", BaseTime),
+            state,
+            allowAutoDetach: false);
+
+        Assert.True(decision.IsRelevantActivity);
+        Assert.False(decision.IsSuppressedByCooldown);
+        Assert.False(decision.ShouldDetach);
+        Assert.False(decision.ShouldBringToFront);
+    }
+
+    [Fact]
     public void Evaluate_ShouldSuppressRepeatedActivityInsideCooldown()
     {
         var stateService = new InterfaceProfileFloatingWindowStateService();

@@ -9,6 +9,72 @@
         ResizeMode="CanResize"
         Topmost="True"
         PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <Style x:Key="DocumentSymbolToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol"/>
+            <Setter Property="Foreground" Value="#14532D"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="ButtonChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#1A22C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#6634D399"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#3322C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#2A22C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#9CA3AF"/>
+                                <Setter TargetName="ButtonChrome" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="DocumentActionButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Foreground" Value="#14532D"/>
+            <Setter Property="Background" Value="#F8FFFB"/>
+            <Setter Property="BorderBrush" Value="#86EFAC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
+    <Window.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#F6FFF9" Offset="0"/>
+            <GradientStop Color="#E9F8EF" Offset="0.58"/>
+            <GradientStop Color="#F8FFFB" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Background>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -28,31 +94,32 @@
                        Grid.Column="0"
                        FontWeight="Bold"
                        FontSize="15"
+                       Foreground="#18392A"
                        VerticalAlignment="Center"/>
             <ToggleButton x:Name="TopMostButton"
                           Grid.Column="1"
-                          Content="TOP"
+                          Content="🔝"
                           IsChecked="True"
-                          MinWidth="52"
-                          Padding="10,4"
-                          ToolTip="Fenster im Vordergrund halten"
+                          Style="{StaticResource DocumentSymbolToggleButtonStyle}"
+                          ToolTip="Immer im Vordergrund"
                           Click="TopMostButton_Click"/>
         </Grid>
 
         <TextBlock x:Name="HintTextBlock"
                    Grid.Row="1"
                    Text="Prüfen Sie die gefundenen Dateien und ergänzen Sie optional eine Beschreibung je Datei."
-                   Foreground="DimGray"
+                   Foreground="#46685A"
                    TextWrapping="Wrap"
                    Margin="0,0,0,10"/>
 
         <Border x:Name="FileDropArea"
                 Grid.Row="2"
-                BorderBrush="#D1D5DB"
+                BorderBrush="#86EFAC"
                 BorderThickness="1"
-                CornerRadius="4"
+                CornerRadius="6"
                 Padding="8"
                 Margin="0,0,0,12"
+                Background="#F8FFFB"
                 AllowDrop="True"
                 DragOver="FileDropArea_DragOver"
                 Drop="FileDropArea_Drop">
@@ -68,9 +135,12 @@
                 <ItemsControl x:Name="FileItemsControl">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border BorderBrush="#E5E7EB"
-                                    BorderThickness="0,0,0,1"
-                                    Padding="0,8">
+                            <Border BorderBrush="#D6F5DF"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Background="#FFFFFF"
+                                    Padding="8"
+                                    Margin="0,0,0,8">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="64"/>
@@ -81,15 +151,15 @@
                                             Width="48"
                                             Height="48"
                                             CornerRadius="6"
-                                            Background="#EEF2F7"
-                                            BorderBrush="#CBD5E1"
-                                            BorderThickness="1"
+                                             Background="#EEF2F7"
+                                             BorderBrush="#A7F3D0"
+                                             BorderThickness="1"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top">
                                         <TextBlock Text="{Binding FileFormatLabel}"
                                                    FontWeight="Bold"
                                                    FontSize="12"
-                                                   Foreground="#334155"
+                                                   Foreground="#14532D"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis"/>
@@ -104,13 +174,14 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Grid.Row="0"
-                                                   Text="{Binding FileName}"
-                                                   FontWeight="Bold"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Grid.Row="1"
-                                                   Text="{Binding DetailText}"
-                                                   Foreground="DimGray"
-                                                   FontSize="12"
+                                                    Text="{Binding FileName}"
+                                                    FontWeight="Bold"
+                                                    Foreground="#18392A"
+                                                    TextTrimming="CharacterEllipsis"/>
+                                         <TextBlock Grid.Row="1"
+                                                    Text="{Binding DetailText}"
+                                                    Foreground="#46685A"
+                                                    FontSize="12"
                                                    Margin="0,2,0,6"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <TextBox Grid.Row="2"
@@ -118,13 +189,15 @@
                                                  Visibility="{Binding DescriptionVisibility}"
                                                  MinHeight="54"
                                                  AcceptsReturn="True"
-                                                 TextWrapping="Wrap"
-                                                 VerticalScrollBarVisibility="Auto"
-                                                 ToolTip="Beschreibung für MEDISTAR-Feld 6304. Ohne Eingabe wird der Originaldateiname verwendet."/>
+                                                  TextWrapping="Wrap"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  BorderBrush="#A7F3D0"
+                                                  Background="#FFFFFF"
+                                                  ToolTip="Beschreibung für MEDISTAR-Feld 6304. Ohne Eingabe wird der Originaldateiname verwendet."/>
                                         <TextBlock Grid.Row="3"
-                                                   Text="Ohne Eingabe wird der Dateiname verwendet."
-                                                   Visibility="{Binding DescriptionVisibility}"
-                                                   Foreground="DimGray"
+                                                    Text="Ohne Eingabe wird der Dateiname verwendet."
+                                                    Visibility="{Binding DescriptionVisibility}"
+                                                    Foreground="#46685A"
                                                    FontSize="11"
                                                    Margin="0,4,0,0"/>
                                     </Grid>
@@ -141,24 +214,28 @@
                     HorizontalAlignment="Right">
             <Button x:Name="AddFilesButton"
                     Content="Dateien hinzufügen"
+                    Style="{StaticResource DocumentActionButtonStyle}"
                     Width="150"
                     Margin="0,0,16,0"
                     Click="AddFiles_Click"
                     Visibility="Collapsed"/>
             <Button x:Name="PasteFilesButton"
                     Content="Aus Zwischenablage"
+                    Style="{StaticResource DocumentActionButtonStyle}"
                     Width="150"
                     Margin="0,0,16,0"
                     Click="PasteFiles_Click"
                     Visibility="Collapsed"/>
             <Button x:Name="ApplyButton"
                     Content="Übertragen"
+                    Style="{StaticResource DocumentActionButtonStyle}"
                     Width="110"
                     Margin="0,0,8,0"
                     IsDefault="True"
                     Click="Apply_Click"/>
             <Button x:Name="CancelButton"
                     Content="Abbrechen"
+                    Style="{StaticResource DocumentActionButtonStyle}"
                     Width="110"
                     IsCancel="True"
                     Click="Cancel_Click"/>

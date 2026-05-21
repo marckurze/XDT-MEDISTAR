@@ -18,12 +18,12 @@ V1-Kandidat, testseitig abgesichert. Eine praktische MEDISTAR-Abnahme steht noch
 ## Ablauf
 
 1. MEDISTAR/AIS schreibt die Patientendatei.
-2. Die App oeffnet das Geraetefenster und den Dialog `Dokumente uebertragen` mit leerer Dateiliste.
+2. Die App oeffnet direkt den Dialog `Dokumente uebertragen` mit leerer Dateiliste; die Monitoring-Karte bleibt im Tab `Verarbeitung` angedockt.
 3. Der Anwender fuegt Dateien per Drag-&-Drop, ueber `Dateien hinzufuegen` oder aus einer Datei-Zwischenablage per `Strg+V`/`Einfügen` hinzu.
 4. Pro Datei kann eine Beschreibung eingegeben werden.
 5. Erst der Klick auf `Uebertragen` erzeugt die XDT-Rueckgabe.
 
-Ohne AIS-Datei wird beim Start der Ueberwachung kein Dialog geoeffnet und kein Floating-Fenster automatisch abgedockt. Ohne `Uebertragen` wird kein Export erzeugt. Es gibt keinen Wartezeitmodus und keinen automatischen Abschluss.
+Ohne AIS-Datei wird beim Start der Ueberwachung kein Dialog geoeffnet und kein Floating-Fenster automatisch abgedockt. Auch bei AIS-Eingang wird fuer diesen Sondermodus kein gruenes Geraeteanbindungsfenster abgedockt; nur der Dokumentdialog kommt in den Vordergrund. Ohne `Uebertragen` wird kein Export erzeugt. Es gibt keinen Wartezeitmodus und keinen automatischen Abschluss.
 
 ## Dateiverhalten
 
@@ -42,7 +42,7 @@ Unterstuetzt werden dieselben sicheren Dokumentanhang-Formate wie beim automatis
 
 Ordner und nicht unterstuetzte Dateitypen werden abgelehnt. XML ist in diesem Modus immer Anhang, nicht Messwert-XML. Es gibt keine Bild-, DICOM-, Audio-, Video- oder Dokumentanalyse.
 
-Der Dialog `Dokumente uebertragen` bleibt standardmaessig im Vordergrund, damit Dateien bequem aus Explorer oder anderen Programmen hineingezogen werden koennen. Der `TOP`-Schalter kann dieses Verhalten fuer das Dialogfenster deaktivieren.
+Der Dialog `Dokumente uebertragen` bleibt standardmaessig im Vordergrund, damit Dateien bequem aus Explorer oder anderen Programmen hineingezogen werden koennen. Der kompakte `🔝`-Schalter kann dieses Verhalten fuer das Dialogfenster deaktivieren und folgt optisch den Geraeteanbindungsfenstern.
 
 ## MEDISTAR-Ausgabe
 

@@ -3717,8 +3717,14 @@ public partial class MainWindow : Window
         }
 
         var currentState = _floatingWindowStateService.GetOrCreate(entry.ScopeId);
-        var decision = _interfaceProfileAutoDetachService.Evaluate(entry, currentState);
+        var allowAutoDetach = !IsManualDocumentSelectionProfile(entry.ScopeId);
+        var decision = _interfaceProfileAutoDetachService.Evaluate(entry, currentState, allowAutoDetach);
         if (!decision.IsRelevantActivity || decision.IsSuppressedByCooldown)
+        {
+            return;
+        }
+
+        if (!allowAutoDetach)
         {
             return;
         }
@@ -3748,6 +3754,14 @@ public partial class MainWindow : Window
             RefreshInterfaceMonitoringCards();
             AppendMessage($"{card.InterfaceProfileName}: Fenster automatisch geöffnet.");
         }
+    }
+
+    private bool IsManualDocumentSelectionProfile(string interfaceProfileId)
+    {
+        return _profileCatalog?.InterfaceProfiles.Any(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfileId, StringComparison.OrdinalIgnoreCase)
+            && profile.FolderOptions.IsAttachmentOnlyMode
+            && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection) == true;
     }
 
     private void TryUpdateAutoRedockForActivity(InterfaceMonitoringEventEntry entry)
