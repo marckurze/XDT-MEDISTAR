@@ -1,6 +1,6 @@
 # Templatepaket-Kandidat: MEDISTAR + TOPCON TRK2P
 
-Status: testseitig vorbereitet, praktische MEDISTAR-Validierung offen.
+Status: testseitig abgesichert und praktisch validiert fuer REF-/KM-/TM-/CCT-XDT-Rueckgabe.
 
 ## Zweck
 
@@ -103,11 +103,14 @@ Abgesichert durch:
 - gezielte Reparaturtests fuer alte persistierte BuiltIn-TRK2P-Profile
 - generische AlreadyProcessed-/Duplikat-Nachlauf-Tests: neue Fingerprints werden verarbeitet, echte Duplikate werden nicht erneut exportiert und bekannte Importdateien werden archiviert, in den Fehlerordner verschoben oder entfernt
 
+## Praktische MEDISTAR-Validierung
+
+- dokumentiert in `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_TRK2P.md`
+- vollstaendige TRK-2P-Datei: REF `6228`, KM `6221`, Pachy `6220` und Tono `6205` wurden praktisch uebernommen
+- TM/CCT-only-Teilmessung Serial1165: nur `6220`/`6205`, keine leeren REF-/KM-/SBJ-Zeilen und kein Exportabbruch
+- Teilmessungsregel bestaetigt: fehlende Messbloecke werden ausgelassen, solange verwertbare Messdaten vorhanden sind
+
 ## Offen
 
-- praktische MEDISTAR-Validierung mit beiden XML-Dateien
-- erneuter Live-Test nach korrigiertem AlreadyProcessed-/Duplikat-Nachlauf
-- Bewertung der neuen mehrzeiligen `6205`-/`6220`-Anzeige mit CorrectedIOP/CCT in MEDISTAR
-- erneuter Live-Test mit TM/CCT-only-Datei Serial1165
 - SBJ-Ausgabe erst nach echten TRK-2P-SBJ-Dateien praktisch bewerten
 - offizielles ZIP-Artefakt erst nach Release-Regel
