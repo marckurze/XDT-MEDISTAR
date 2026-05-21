@@ -915,19 +915,23 @@ Echte Fixtures:
 
 - `M-Serial0001_20190411_113829_TOPCON_TRK-2P_5270367.xml`
 - `M-Serial0135_20130809_174556_TOPCON_TRK-2P_.xml`
+- `M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml`
 
 Getestete Ausgabe:
 
 - Serial0001 erzeugt REF-`6228`, KM-`6221` und TM-`6205` mit IOP-Listen/Average; keine `6220`, weil keine CCT-Werte vorhanden sind; keine `6227`, weil keine SBJ-Werte vorhanden sind.
 - Serial0135 erzeugt REF-`6228`, KM-`6221`, Pachy-`6220` aus `CorrectedIOP/CCT` und TM-`6205` mit CorrectedIOP/CCT sowie IOP-Listen/Average; Tonometrie und Pachymetrie werden analog NT530P mit Header- und Einzelzeilen ausgegeben; keine `6227`, weil keine SBJ-Werte vorhanden sind.
+- Serial1165 erzeugt als Teilmessung nur TM-`6205` und CCT/Pachy-`6220`; fehlende REF/KM/SBJ-Bloecke werden ausgelassen und fuehren nicht zum Exportabbruch.
 - CCT-Werte werden fuer `6220` als Millimeter mit drei Nachkommastellen ausgegeben, z. B. `RA: 0.907   // LA: 0.880`.
 - In der Tonometrie werden CCT-Werte fuer den NT530P-aehnlichen `6205`-Block in Mikrometer umgesetzt, z. B. `PR: 907 [907] µm`; CorrectedIOP wird nicht mehr als ueberlange Einzelzeile ausgegeben.
+- CCT-Listen duerfen `ERROR`-Eintraege enthalten. Ohne Average wird aus den gueltigen CCT-Werten ein arithmetischer Mittelwert gebildet und gerundet, z. B. `PR: 511 509 [510] µm` und `RA: 0.510`.
 - Leere optionale Fragmente, leere SBJ-Zeilen und Dokumentanhangfelder `6302`-`6305` werden fuer Messwerte nicht erzeugt.
 
 Hinweise:
 
+- Kombigeraete duerfen Teilmessungen liefern: fehlende Messbloecke oder fehlende Augen erzeugen keine leeren Zeilen, solange mindestens eine verwertbare Geraetemessung vorhanden ist.
 - Wenn eine separate `Measure type="CCT"` vorhanden ist, wird diese fuer Pachymetrie bevorzugt; sonst dienen `CorrectedIOP/CCT`-Werte als Fallback.
-- SBJ wird nur ausgegeben, wenn echte SBJ-Werte im XML stehen. In den aktuellen Serial0001-/Serial0135-Fixtures sind keine SBJ-Werte enthalten.
+- SBJ wird nur ausgegeben, wenn echte SBJ-Werte im XML stehen. In den aktuellen Serial0001-/Serial0135-/Serial1165-Fixtures sind keine SBJ-Werte enthalten.
 - Das BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON TRK2P` und der selektive Templatepaket-Test sind vorhanden; praktische MEDISTAR-Validierung steht noch aus.
 
 ## 9. Allgemeine Erkenntnisse aus den Beispieldaten

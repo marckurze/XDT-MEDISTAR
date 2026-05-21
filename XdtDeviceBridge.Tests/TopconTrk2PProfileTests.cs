@@ -107,6 +107,41 @@ public sealed class TopconTrk2PProfileTests
     }
 
     [Fact]
+    public void ParseSerial1165_ShouldReadTmAndCctOnlyMeasurements()
+    {
+        var result = _parser.ParseFile(GetTrk2PFixturePath("M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml"));
+
+        Assert.Empty(result.Issues);
+        AssertMeasurement(result, "Common/Company", "TOPCON");
+        AssertMeasurement(result, "Common/ModelName", "TRK-2P");
+        AssertMeasurement(result, "Common/ROMVersion", "1.11.00");
+        AssertMeasurement(result, "Common/Time", "22:55:12");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/R/List[@No='1']/IOP_mmHg", "15.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/R/List[@No='2']/IOP_mmHg", "15.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/R/List[@No='3']/IOP_mmHg", "15.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/R/Average/IOP_mmHg", "15.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/L/List[@No='1']/IOP_mmHg", "13.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/L/List[@No='2']/IOP_mmHg", "12.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/L/List[@No='3']/IOP_mmHg", "14.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/TM/L/Average/IOP_mmHg", "13.0");
+        AssertMeasurement(result, "Measure[@Type='TM']/CCT/R/List[@No='3']/CCT_mm", "0.511");
+        AssertMeasurement(result, "Measure[@Type='TM']/CCT/R/List[@No='4']/CCT_mm", "0.509");
+        AssertMeasurement(result, "Measure[@Type='TM']/CCT/L/List[@No='1']/CCT_mm", "0.516");
+        AssertMeasurement(result, "Measure[@Type='TM']/CCT/L/List[@No='2']/CCT_mm", "0.518");
+        AssertMeasurement(result, "Measure[@Type='TM']/CCT/L/List[@No='3']/CCT_mm", "0.518");
+        AssertMeasurement(result, "Measure[@Type='CCT']/Pachy/HeaderLine", "Pachymetrie");
+        AssertMeasurement(result, "Measure[@Type='CCT']/Pachy/MedistarLine", "RA: 0.510   // LA: 0.517");
+        AssertMeasurement(result, "Measure[@Type='TM']/Tono/HeaderLine", "Tonometrie");
+        AssertMeasurement(result, "Measure[@Type='TM']/Tono/PachyRightLine", "PR: 511 509 [510] µm");
+        AssertMeasurement(result, "Measure[@Type='TM']/Tono/PachyLeftLine", "PL: 516 518 518 [517] µm");
+        AssertMeasurement(result, "Measure[@Type='TM']/Tono/TonoListLine", "R = 15 15 15 [15.0] // L = 13 12 14 [13.0] mmHg 22:55");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath.StartsWith("Measure[@Type='REF']/REF/", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath.StartsWith("Measure[@Type='KM']/KM/MedistarLine", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath.StartsWith("Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath.Contains("CorrectedIOP", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void MedistarExportForSerial0001_ShouldUseRefKmAndTonoWithoutPachyOrSbj()
     {
         var result = MapWithTrk2PExport(GetTrk2PFixturePath("M-Serial0001_20190411_113829_TOPCON_TRK-2P_5270367.xml"));
@@ -164,6 +199,34 @@ public sealed class TopconTrk2PProfileTests
         Assert.Equal(2, result.Records.Count(record => record.FieldCode == "6221"));
         Assert.Equal(2, result.Records.Count(record => record.FieldCode == "6220"));
         Assert.Equal(8, result.Records.Count(record => record.FieldCode == "6205"));
+    }
+
+    [Fact]
+    public void MedistarExportForSerial1165_ShouldUseTmAndCctOnlyWithoutRefKmOrSbj()
+    {
+        var result = MapWithTrk2PExport(GetTrk2PFixturePath("M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml"));
+        var exportResult = new XdtExportBuilder().Build(result.Records);
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Empty(exportResult.Issues);
+        Assert.Contains("8402TRK2P", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6220Pachymetrie", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6220RA: 0.510   // LA: 0.517", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6205Tonometrie", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6205PR: 511 509 [510] µm", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6205PL: 516 518 518 [517] µm", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6205R = 15 15 15 [15.0] // L = 13 12 14 [13.0] mmHg 22:55", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Gemessen", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Korrigiert", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("ERROR", exportResult.Content, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("R.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("K1=*", exportResult.Content, StringComparison.Ordinal);
+        Assert.Equal(2, result.Records.Count(record => record.FieldCode == "6220"));
+        Assert.Equal(4, result.Records.Count(record => record.FieldCode == "6205"));
+        Assert.DoesNotContain(result.Records, record => record.FieldCode is "6228" or "6221" or "6227");
     }
 
     [Fact]

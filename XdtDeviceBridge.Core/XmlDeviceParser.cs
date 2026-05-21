@@ -366,7 +366,7 @@ public sealed class XmlDeviceParser
         var tmMeasure = FindMeasure(root, "TM");
         if (tmMeasure is not null)
         {
-            AddTopconTrk2PTonoAndPachyMedistarLines(measurements, tmMeasure, FindMeasure(root, "CCT"), GetChildValue(common, "Time"));
+            AddTopconTrk2PTonoAndPachyMedistarLines(measurements, tmMeasure, FindMeasure(root, "CCT") ?? tmMeasure, GetChildValue(common, "Time"));
         }
 
         var sbjMeasure = FindMeasure(root, "SBJ");
@@ -545,7 +545,7 @@ public sealed class XmlDeviceParser
                 "CCT");
         }
 
-        var tonoLines = BuildTopconTrk2PTonoMedistarLines(tmRoot, corrected.Right, corrected.Left, time);
+        var tonoLines = BuildTopconTrk2PTonoMedistarLines(tmRoot, cctMeasure, corrected.Right, corrected.Left, time);
         foreach (var line in tonoLines)
         {
             AddMeasurement(
@@ -564,8 +564,8 @@ public sealed class XmlDeviceParser
         TopconTrk2PCorrectedIopParts rightCorrected,
         TopconTrk2PCorrectedIopParts leftCorrected)
     {
-        var rightCct = GetTopconTrk2PCctValue(cctMeasure, "R") ?? rightCorrected.Cct;
-        var leftCct = GetTopconTrk2PCctValue(cctMeasure, "L") ?? leftCorrected.Cct;
+        var rightCct = GetTopconTrk2PCctValues(cctMeasure, "R").SelectedMillimeters ?? rightCorrected.Cct;
+        var leftCct = GetTopconTrk2PCctValues(cctMeasure, "L").SelectedMillimeters ?? leftCorrected.Cct;
 
         var parts = new List<string>();
         if (!string.IsNullOrWhiteSpace(rightCct))
@@ -581,41 +581,57 @@ public sealed class XmlDeviceParser
         return parts.Count == 0 ? null : string.Join("   // ", parts);
     }
 
-    private static string? GetTopconTrk2PCctValue(XElement? cctMeasure, string eye)
+    private static TopconTrk2PCctValues GetTopconTrk2PCctValues(XElement? cctMeasure, string eye)
     {
         if (cctMeasure is null)
         {
-            return null;
+            return TopconTrk2PCctValues.Empty;
         }
 
-        var cctRoot = FindChild(cctMeasure, "CCT");
+        var cctRoot = string.Equals(cctMeasure.Name.LocalName, "CCT", StringComparison.OrdinalIgnoreCase)
+            ? cctMeasure
+            : FindChild(cctMeasure, "CCT");
         var eyeElement = cctRoot is null ? null : FindChild(cctRoot, eye);
         if (eyeElement is null)
         {
-            return null;
+            return TopconTrk2PCctValues.Empty;
         }
 
         var average = FindChild(eyeElement, "Average");
         var averageValue = average is null ? null : GetChildValue(average, "CCT_mm");
+        var values = FindChildren(eyeElement, "List")
+            .Select(element => GetChildValue(element, "CCT_mm"))
+            .Where(value => !string.IsNullOrWhiteSpace(value) && TryParseDecimal(value, out _))
+            .Select(value => value!.Trim())
+            .ToArray();
         if (!string.IsNullOrWhiteSpace(averageValue))
         {
-            return averageValue;
+            var averageTrimmed = averageValue.Trim();
+            return new TopconTrk2PCctValues(
+                averageTrimmed,
+                values.Length == 0 ? new[] { averageTrimmed } : values);
         }
 
-        return FindChildren(eyeElement, "List")
-            .Select(element => GetChildValue(element, "CCT_mm"))
-            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+        return values.Length == 0
+            ? TopconTrk2PCctValues.Empty
+            : new TopconTrk2PCctValues(CalculateTopconTrk2PCctAverage(values), values);
     }
 
     private static IReadOnlyList<TopconTrk2PMedistarLine> BuildTopconTrk2PTonoMedistarLines(
         XElement tmRoot,
+        XElement? cctMeasure,
         TopconTrk2PCorrectedIopParts rightCorrected,
         TopconTrk2PCorrectedIopParts leftCorrected,
         string? time)
     {
         var lines = new List<TopconTrk2PMedistarLine>();
 
-        var rightPachy = BuildTopconTrk2PCorrectedPachyLine("PR", rightCorrected.Cct);
+        var rightCct = GetTopconTrk2PCctValues(cctMeasure, "R");
+        var leftCct = GetTopconTrk2PCctValues(cctMeasure, "L");
+        var rightPachy = BuildTopconTrk2PCorrectedPachyLine(
+            "PR",
+            rightCct,
+            rightCorrected.Cct);
         if (!string.IsNullOrWhiteSpace(rightPachy))
         {
             lines.Add(new TopconTrk2PMedistarLine(
@@ -624,7 +640,10 @@ public sealed class XmlDeviceParser
                 rightPachy));
         }
 
-        var leftPachy = BuildTopconTrk2PCorrectedPachyLine("PL", leftCorrected.Cct);
+        var leftPachy = BuildTopconTrk2PCorrectedPachyLine(
+            "PL",
+            leftCct,
+            leftCorrected.Cct);
         if (!string.IsNullOrWhiteSpace(leftPachy))
         {
             lines.Add(new TopconTrk2PMedistarLine(
@@ -690,8 +709,18 @@ public sealed class XmlDeviceParser
         return lines;
     }
 
-    private static string? BuildTopconTrk2PCorrectedPachyLine(string label, string? cct)
+    private static string? BuildTopconTrk2PCorrectedPachyLine(string label, TopconTrk2PCctValues cctValues, string? correctedCct)
     {
+        if (cctValues.ListMillimeters.Count > 0)
+        {
+            var valuePart = string.Join(" ", cctValues.ListMillimeters.Select(FormatMillimetersAsMicrometers));
+            var selected = string.IsNullOrWhiteSpace(cctValues.SelectedMillimeters)
+                ? string.Empty
+                : $"[{FormatMillimetersAsMicrometers(cctValues.SelectedMillimeters)}]";
+            return $"{label}: {string.Join(" ", new[] { valuePart, selected }.Where(part => !string.IsNullOrWhiteSpace(part)))} µm";
+        }
+
+        var cct = cctValues.SelectedMillimeters ?? correctedCct;
         if (string.IsNullOrWhiteSpace(cct))
         {
             return null;
@@ -699,6 +728,22 @@ public sealed class XmlDeviceParser
 
         var micrometers = FormatMillimetersAsMicrometers(cct);
         return $"{label}: {micrometers} [{micrometers}] µm";
+    }
+
+    private static string CalculateTopconTrk2PCctAverage(IReadOnlyList<string> values)
+    {
+        var parsed = values
+            .Select(value => TryParseDecimal(value, out var number) ? number : (decimal?)null)
+            .Where(value => value.HasValue)
+            .Select(value => value!.Value)
+            .ToArray();
+        if (parsed.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var average = parsed.Average();
+        return average.ToString("0.000", CultureInfo.InvariantCulture);
     }
 
     private static string? BuildTopconTrk2PCorrectedIopMeasurementLine(string label, TopconTrk2PCorrectedIopParts values)
@@ -1709,6 +1754,11 @@ public sealed class XmlDeviceParser
         string? Cct);
 
     private sealed record TopconTrk2PMedistarLine(string Key, string DisplayName, string Value);
+
+    private sealed record TopconTrk2PCctValues(string? SelectedMillimeters, IReadOnlyList<string> ListMillimeters)
+    {
+        public static TopconTrk2PCctValues Empty { get; } = new(null, Array.Empty<string>());
+    }
 
     private sealed record TopconTrk2PCorrectedIop(TopconTrk2PCorrectedIopParts Right, TopconTrk2PCorrectedIopParts Left);
 

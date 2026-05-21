@@ -55,12 +55,15 @@ Pachymetrie:
 - `6220` mit Header `Pachymetrie` und eigener `RA`/`LA`-Zeile, wenn CCT vorhanden ist
 - separate `Measure type="CCT"` wird bevorzugt
 - falls keine separate CCT-Messung vorhanden ist, wird `CorrectedIOP/CCT` als Fallback genutzt
+- CCT-Listen duerfen `ERROR`-Eintraege enthalten; fuer die Ausgabe werden nur gueltige `CCT_mm`-Werte verwendet
+- wenn kein Average vorhanden ist, wird aus den gueltigen CCT-Werten ein arithmetischer Mittelwert gebildet und in Mikrometer gerundet, z. B. `0.511` und `0.509` -> `[510] µm` beziehungsweise `RA: 0.510`
 
 Tonometrie:
 
 - `6205` mit Header `Tonometrie`
 - IOP-Listen/Average werden als eigene `6205`-Zeile ausgegeben
 - bei CorrectedIOP werden gemessener/korrigierter IOP, Param1, Param2 und CCT in mehrere lesbare `6205`-Zeilen aufgeteilt
+- TM/CCT-only-Dateien ohne REF/KM/SBJ sind zulaessig und erzeugen nur `6205`/`6220`
 - keine EV-Zusaetze
 
 SBJ:
@@ -81,11 +84,14 @@ Im Repository liegen echte TRK-2P-Fixtures:
 
 - `XdtDeviceBridge.Tests/TestData/Devices/Topcon/TRK2P/M-Serial0001_20190411_113829_TOPCON_TRK-2P_5270367.xml`
 - `XdtDeviceBridge.Tests/TestData/Devices/Topcon/TRK2P/M-Serial0135_20130809_174556_TOPCON_TRK-2P_.xml`
+- `XdtDeviceBridge.Tests/TestData/Devices/Topcon/TRK2P/M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml`
 
 Serial0001 validiert REF, KM und TM ohne CCT/SBJ.
 
 Serial0135 validiert REF, KM, TM, CorrectedIOP und CCT-Fallback.
 Die Tonometrie-/Pachymetrieausgabe ist dabei an das bereits erfolgreiche NT530P-Mehrzeilenformat angelehnt.
+
+Serial1165 validiert eine Teilmessung mit nur TM/CCT: keine REF-/KM-/SBJ-Zeilen, keine leeren Platzhalter, CCT-ERROR-Eintraege werden ignoriert.
 
 ## Tests
 
@@ -102,5 +108,6 @@ Abgesichert durch:
 - praktische MEDISTAR-Validierung mit beiden XML-Dateien
 - erneuter Live-Test nach korrigiertem AlreadyProcessed-/Duplikat-Nachlauf
 - Bewertung der neuen mehrzeiligen `6205`-/`6220`-Anzeige mit CorrectedIOP/CCT in MEDISTAR
+- erneuter Live-Test mit TM/CCT-only-Datei Serial1165
 - SBJ-Ausgabe erst nach echten TRK-2P-SBJ-Dateien praktisch bewerten
 - offizielles ZIP-Artefakt erst nach Release-Regel

@@ -393,7 +393,7 @@ Vorbereitet, aber noch nicht produktiv validiert:
 - MEDISTAR + Manuelle Dokumentuebergabe: AIS-gestarteter V1-Kandidat fuer manuell ausgewaehlte Dateien mit Drag-&-Drop/Dateiauswahl/Zwischenablage, pro-Datei-`6304`, sicherer Copy-Uebergabe und ohne Geraete-Importordner; praktische MEDISTAR-Abnahme offen
 - TOPCON CL300: erster praktisch validierter TOPCON-Lensmeter-Referenzkandidat mit echten XML-Fixtures, namespace-toleranter LM-Erkennung, `6228`-Ausgabe inklusive ADD, PD und signierten H/V-Prismenkomponenten
 - TOPCON KR800S: praktisch validierter Mehruntersuchungs-Referenzkandidat mit echten Shift-JIS-XML-Fixtures, `6228` REF, `6221` KM, konservativer `6227` SBJ-Ausgabe, Templatepaket-Test, Reparatur alter persistierter BuiltIn-Exportprofile und Praxisprotokoll
-- TOPCON TRK2P: testseitig vollstaendiger Mehruntersuchungs-Kandidat mit echten XML-Fixtures, `6228` REF, `6221` KM, `6220` CCT/Pachy, `6205` Tono, optionalem `6227` SBJ-Pfad, Templatepaket-Test und Repair alter persistierter BuiltIns
+- TOPCON TRK2P: testseitig vollstaendiger Mehruntersuchungs-Kandidat mit echten XML-Fixtures inklusive TM/CCT-only-Teilmessung, `6228` REF, `6221` KM, `6220` CCT/Pachy, `6205` Tono, optionalem `6227` SBJ-Pfad, Templatepaket-Test und Repair alter persistierter BuiltIns
 
 Wichtig: Diese V2-/BuiltIn-Profile sind vorbereitet und konfigurierbar; TOPCON CL300 und TOPCON KR800S sind inzwischen praktisch validiert, und TRK2P ist testseitig vorbereitet mit offener praktischer MEDISTAR-Abnahme.
 

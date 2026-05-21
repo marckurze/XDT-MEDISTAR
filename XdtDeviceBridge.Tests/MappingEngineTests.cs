@@ -261,7 +261,29 @@ public sealed class MappingEngineTests
     }
 
     [Fact]
-    public void Map_MissingOptionalSbjPreparedLineShouldBeSkipped()
+    public void Map_MissingOptionalPreparedLineShouldBeSkippedWhenOtherDeviceLineExists()
+    {
+        var engine = new MappingEngine();
+        var patient = CreatePatient();
+        var measurements = CreateMeasurements();
+        measurements.Add(new MeasurementValue("Measure[@Type='REF']/REF/R/MedistarLine", "REF R", "R.:S=+ 1.00", null, "R", "REF"));
+
+        var rules = new[]
+        {
+            CreateRule("1", "6228", "REF R", "Device.Measure[@Type='REF']/REF/R/MedistarLine", "{value}"),
+            CreateRule("2", "6227", "SBJ", "Device.Measure[@Type='SBJ']/MedistarLine4", "{value}", sortOrder: 2)
+        };
+
+        var result = engine.Map(patient, measurements, rules);
+
+        Assert.False(result.HasErrors);
+        var record = Assert.Single(result.Records);
+        Assert.Equal("6228", record.FieldCode);
+        Assert.Equal("R.:S=+ 1.00", record.Value);
+    }
+
+    [Fact]
+    public void Map_AllMissingOptionalPreparedDeviceLinesCreatesError()
     {
         var engine = new MappingEngine();
         var patient = CreatePatient();
@@ -269,13 +291,15 @@ public sealed class MappingEngineTests
 
         var rules = new[]
         {
-            CreateRule("1", "6227", "SBJ", "Device.Measure[@Type='SBJ']/MedistarLine4", "{value}")
+            CreateRule("1", "6228", "REF R", "Device.Measure[@Type='REF']/REF/R/MedistarLine", "{value}"),
+            CreateRule("2", "6221", "KM", "Device.Measure[@Type='KM']/KM/MedistarLine1", "{value}", sortOrder: 2)
         };
 
         var result = engine.Map(patient, measurements, rules);
 
-        Assert.False(result.HasErrors);
+        Assert.True(result.HasErrors);
         Assert.Empty(result.Records);
+        Assert.Contains(result.Issues, issue => issue.Message == "No exportable device measurements were found.");
     }
 
     [Fact]

@@ -12,9 +12,15 @@ public sealed class MappingEngine
         var issues = new List<MappingIssue>();
         var records = new List<ExportFieldRecord>();
         var measurementMap = CreateMeasurementMap(measurements);
+        var hasEnabledDeviceRules = false;
+        var resolvedDeviceRules = 0;
+        var skippedOptionalDeviceRules = 0;
 
         foreach (var rule in rules.Where(r => r.IsEnabled).OrderBy(r => r.SortOrder))
         {
+            var isDeviceRule = IsDeviceRule(rule);
+            hasEnabledDeviceRules |= isDeviceRule;
+
             if (string.IsNullOrWhiteSpace(rule.TargetFieldCode))
             {
                 issues.Add(new MappingIssue(
@@ -30,6 +36,11 @@ public sealed class MappingEngine
             {
                 if (ShouldSkipMissingOptionalPreparedLine(rule))
                 {
+                    if (isDeviceRule)
+                    {
+                        skippedOptionalDeviceRules++;
+                    }
+
                     continue;
                 }
 
@@ -46,6 +57,22 @@ public sealed class MappingEngine
             var rendered = RenderTemplate(template, sourceValue, patientData, measurementMap);
 
             records.Add(new ExportFieldRecord(rule.TargetFieldCode, rendered, rule.SortOrder));
+            if (isDeviceRule)
+            {
+                resolvedDeviceRules++;
+            }
+        }
+
+        if (hasEnabledDeviceRules
+            && resolvedDeviceRules == 0
+            && skippedOptionalDeviceRules > 0
+            && !issues.Any(issue => issue.Severity == MappingIssueSeverity.Error))
+        {
+            issues.Add(new MappingIssue(
+                MappingIssueSeverity.Error,
+                "No exportable device measurements were found.",
+                string.Empty,
+                string.Empty));
         }
 
         return new MappingResult(records, issues);
@@ -53,15 +80,27 @@ public sealed class MappingEngine
 
     private static bool ShouldSkipMissingOptionalPreparedLine(MappingRule rule)
     {
-        return (string.Equals(rule.TargetFieldCode, "6227", StringComparison.Ordinal)
-                && rule.SourcePath is not null
-                && rule.SourcePath.StartsWith("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.OrdinalIgnoreCase))
-            || (string.Equals(rule.TargetFieldCode, "6220", StringComparison.Ordinal)
-                && rule.SourcePath is not null
-                && rule.SourcePath.StartsWith("Device.Measure[@Type='CCT']/Pachy/", StringComparison.OrdinalIgnoreCase))
-            || (string.Equals(rule.TargetFieldCode, "6205", StringComparison.Ordinal)
-                && rule.SourcePath is not null
-                && rule.SourcePath.StartsWith("Device.Measure[@Type='TM']/Tono/", StringComparison.OrdinalIgnoreCase));
+        return IsOptionalPreparedDeviceLine(rule.SourcePath);
+    }
+
+    private static bool IsDeviceRule(MappingRule rule)
+    {
+        return rule.SourcePath?.StartsWith("Device.", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool IsOptionalPreparedDeviceLine(string? sourcePath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath)
+            || !sourcePath.StartsWith("Device.Measure[", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return sourcePath.EndsWith("/HeaderLine", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/MedistarLine", StringComparison.OrdinalIgnoreCase)
+            || Regex.IsMatch(sourcePath, @"/MedistarLine\d+$", RegexOptions.IgnoreCase)
+            || sourcePath.Contains("/Tono/", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.Contains("/Pachy/", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryResolveSource(
