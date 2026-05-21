@@ -2,8 +2,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 using XdtDeviceBridge.Infrastructure;
 
@@ -36,6 +39,14 @@ public partial class DocumentAttachmentDocumentationWindow : Window
         FileItemsControl.ItemsSource = _files;
         UpdateFiles(files);
         AddFilesButton.Visibility = _allowsManualFileSelection ? Visibility.Visible : Visibility.Collapsed;
+        PasteFilesButton.Visibility = _allowsManualFileSelection ? Visibility.Visible : Visibility.Collapsed;
+        FileDropArea.AllowDrop = _allowsManualFileSelection;
+        if (!_allowsManualFileSelection)
+        {
+            FileDropArea.ContextMenu = null;
+        }
+
+        UpdateTopMostButtonState();
 
         if (!_capturesFileDescriptions)
         {
@@ -43,7 +54,7 @@ public partial class DocumentAttachmentDocumentationWindow : Window
         }
         else if (_allowsManualFileSelection)
         {
-            HintTextBlock.Text = "Fügen Sie Dateien per Drag & Drop oder Dateiauswahl hinzu und ergänzen Sie optional eine Beschreibung je Datei.";
+            HintTextBlock.Text = "Fügen Sie Dateien per Drag & Drop, Dateiauswahl oder Zwischenablage hinzu und ergänzen Sie optional eine Beschreibung je Datei.";
         }
     }
 
@@ -193,6 +204,75 @@ public partial class DocumentAttachmentDocumentationWindow : Window
         {
             ShowManualFileSelectionResult(AddManualFiles(dialog.FileNames));
         }
+    }
+
+    private void PasteFiles_Click(object sender, RoutedEventArgs e)
+    {
+        PasteFilesFromClipboard();
+    }
+
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != Key.V || (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control)
+        {
+            return;
+        }
+
+        if (PasteFilesFromClipboard())
+        {
+            e.Handled = true;
+        }
+    }
+
+    private bool PasteFilesFromClipboard()
+    {
+        if (!_allowsManualFileSelection)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!System.Windows.Clipboard.ContainsFileDropList())
+            {
+                System.Windows.MessageBox.Show(
+                    this,
+                    "Die Zwischenablage enthält keine Dateiliste.",
+                    "Dateien einfügen",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return true;
+            }
+
+            var paths = System.Windows.Clipboard.GetFileDropList()
+                .Cast<string>()
+                .ToList();
+            ShowManualFileSelectionResult(AddManualFiles(paths));
+            return true;
+        }
+        catch (Exception ex) when (ex is ExternalException or ThreadStateException or InvalidOperationException)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                $"Dateien konnten nicht aus der Zwischenablage gelesen werden: {ex.Message}",
+                "Dateien einfügen",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return true;
+        }
+    }
+
+    private void TopMostButton_Click(object sender, RoutedEventArgs e)
+    {
+        Topmost = TopMostButton.IsChecked == true;
+        UpdateTopMostButtonState();
+    }
+
+    private void UpdateTopMostButtonState()
+    {
+        TopMostButton.IsChecked = Topmost;
+        TopMostButton.FontWeight = Topmost ? FontWeights.Bold : FontWeights.Normal;
+        TopMostButton.Opacity = Topmost ? 1.0 : 0.65;
     }
 
     private void FileDropArea_DragOver(object sender, System.Windows.DragEventArgs e)

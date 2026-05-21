@@ -149,7 +149,7 @@ public sealed class InterfaceMonitoringCardStatusService
         return input.Key switch
         {
             "ais" => CreateAisInput(input, aisFile, patient, packageEvaluation),
-            "device" => CreateDeviceInput(input, deviceProfileName, deviceFile, packageEvaluation, aisFile, scanTimestamp, interfaceProfile.FolderOptions.DeviceFileWaitTimeoutMinutes),
+            "device" => CreateDeviceInput(input, deviceProfileName, deviceFile, packageEvaluation, aisFile, scanTimestamp, interfaceProfile.FolderOptions.DeviceFileWaitTimeoutMinutes, interfaceProfile.FolderOptions.IsAttachmentOnlyMode),
             "attachment" => CreateAttachmentInputFromScan(input, interfaceProfile, scanResult, packageEvaluation, scanTimestamp),
             _ => input
         };
@@ -260,8 +260,10 @@ public sealed class InterfaceMonitoringCardStatusService
         AutoImportPackageEvaluationResult? packageEvaluation,
         PendingImportFile? aisFile,
         DateTime scanTimestamp,
-        int deviceFileWaitTimeoutMinutes)
+        int deviceFileWaitTimeoutMinutes,
+        bool isAttachmentOnly)
     {
+        var inputName = isAttachmentOnly ? "Dokumentdateien" : "Geräte-Datei";
         if (deviceFile is null)
         {
             var waitsForDevice = packageEvaluation?.Reason == AutoImportPackageStateReason.WaitingForDeviceFile;
@@ -276,11 +278,16 @@ public sealed class InterfaceMonitoringCardStatusService
                 : remaining;
             return input with
             {
-                Name = "Geräte-Datei",
-                Status = waitsForDevice ? "wartet auf Gerät" : "erwartet",
+                Name = inputName,
+                Status = waitsForDevice
+                    ? isAttachmentOnly ? "wartet auf Dokumentdateien" : "wartet auf Gerät"
+                    : "erwartet",
                 StatusClass = waitsForDevice ? "Waiting" : "Neutral",
                 Detail = waitsForDevice
-                    ? JoinDetails(packageEvaluation?.Messages.LastOrDefault() ?? "AIS-Datei vorhanden, Gerätedatei fehlt.", visibleRemaining)
+                    ? JoinDetails(
+                        packageEvaluation?.Messages.LastOrDefault()
+                            ?? (isAttachmentOnly ? "AIS-Datei vorhanden, Dokumentdateien fehlen." : "AIS-Datei vorhanden, Gerätedatei fehlt."),
+                        visibleRemaining)
                     : input.FolderPath,
                 DisplayDetail = waitsForDevice ? visibleRemaining : ""
             };
@@ -288,7 +295,7 @@ public sealed class InterfaceMonitoringCardStatusService
 
         return input with
         {
-            Name = deviceFile.Status == PendingImportFileStatus.Stable ? "Empfangen" : "Geräte-Datei",
+            Name = deviceFile.Status == PendingImportFileStatus.Stable ? "Empfangen" : inputName,
             Status = deviceFile.Status == PendingImportFileStatus.Stable ? "" : "instabil",
             StatusClass = deviceFile.Status == PendingImportFileStatus.Stable ? "Success" : "Waiting",
             Detail = JoinDetails(deviceFile.FilePath, deviceProfileName),
@@ -303,11 +310,13 @@ public sealed class InterfaceMonitoringCardStatusService
         AutoImportPackageEvaluationResult? packageEvaluation,
         DateTime scanTimestamp)
     {
+        var isAttachmentOnly = interfaceProfile.FolderOptions.IsAttachmentOnlyMode;
+        var attachmentInputName = isAttachmentOnly ? "Dokumentdateien" : "XDT-Anhang";
         if (!interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled)
         {
             return input with
             {
-                Name = "XDT-Anhang",
+                Name = attachmentInputName,
                 Status = "konfiguriert",
                 StatusClass = "Neutral",
                 Detail = input.Detail,
@@ -327,8 +336,10 @@ public sealed class InterfaceMonitoringCardStatusService
         {
             return input with
             {
-                Name = "XDT-Anhang",
-                Status = interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "Optional",
+                Name = attachmentInputName,
+                Status = isAttachmentOnly
+                    ? "erwartet"
+                    : interfaceProfile.FolderOptions.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "Optional",
                 StatusClass = "Neutral",
                 Detail = input.Detail,
                 DisplayDetail = ""
@@ -347,13 +358,15 @@ public sealed class InterfaceMonitoringCardStatusService
 
         return input with
         {
-            Name = "XDT-Anhang",
+            Name = attachmentInputName,
             Status = timeoutReached && isRequired
                 ? "Pflicht blockiert"
                 : isRequired ? "Pflicht" : "Optional",
             StatusClass = timeoutReached && isRequired ? "Blocked" : "Waiting",
             Detail = JoinDetails(
-                isRequired ? "Wartet auf verpflichtenden XDT-Anhang." : "Wartet auf optionalen XDT-Anhang.",
+                isAttachmentOnly
+                    ? "Wartet auf Dokumentdateien."
+                    : isRequired ? "Wartet auf verpflichtenden XDT-Anhang." : "Wartet auf optionalen XDT-Anhang.",
                 remaining),
             DisplayDetail = remaining
         };

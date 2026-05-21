@@ -72,6 +72,28 @@ public sealed class ManualDocumentSelectionServiceTests
         Assert.Contains(result.RejectedMessages, message => message.Contains("bereits in der Liste", StringComparison.OrdinalIgnoreCase));
     }
 
+    [Fact]
+    public void AddFiles_ShouldHandleClipboardStyleFileLists()
+    {
+        var folder = CreateTempFolder();
+        var pdf = CreateFile(folder, "befund.pdf", "pdf");
+        var jpg = CreateFile(folder, "bild.jpg", "jpg");
+        var unsupported = CreateFile(folder, "programm.exe", "bin");
+        var subFolder = Path.Combine(folder, "ordner");
+        Directory.CreateDirectory(subFolder);
+
+        var result = _service.AddFiles(new[] { pdf, jpg, pdf, unsupported, subFolder });
+
+        Assert.Equal(2, result.AcceptedFiles.Count);
+        Assert.Collection(
+            result.AcceptedFiles,
+            file => Assert.Equal("befund.pdf", file.FileName),
+            file => Assert.Equal("bild.jpg", file.FileName));
+        Assert.Contains(result.RejectedMessages, message => message.Contains("bereits in der Liste", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.RejectedMessages, message => message.Contains("Dateityp wird", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.RejectedMessages, message => message.Contains("Ordner werden nicht übernommen", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string CreateFile(string folder, string fileName, string content)
     {
         var path = Path.Combine(folder, fileName);

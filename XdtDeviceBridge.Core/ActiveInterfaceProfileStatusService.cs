@@ -193,7 +193,9 @@ public sealed class ActiveInterfaceProfileStatusService
                 "erwartet"));
         }
 
-        if (HasAttachmentConfiguration(folderOptions) && !isManualDocumentSelection)
+        if (HasAttachmentConfiguration(folderOptions)
+            && !isManualDocumentSelection
+            && !folderOptions.IsAttachmentOnlyMode)
         {
             var isAttachmentImportMissing = string.IsNullOrWhiteSpace(folderOptions.AttachmentImportFolder);
             expectedInputs.Add(new ExpectedInputDisplayItem(

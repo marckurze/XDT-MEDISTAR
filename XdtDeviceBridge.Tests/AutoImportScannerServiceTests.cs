@@ -160,6 +160,31 @@ public sealed class AutoImportScannerServiceTests
     }
 
     [Fact]
+    public async Task ScanOnceAsync_ManualDocumentSelectionShouldStayIdleWithoutAisFile()
+    {
+        var folders = CreateImportFolders();
+        var profile = CreateProfile(
+            folders,
+            isAttachmentOnlyMode: true,
+            attachmentOnlySourceMode: AttachmentOnlySourceMode.ManualUserSelection) with
+        {
+            FolderOptions = CreateFolderOptions(folders.AisFolder, string.Empty) with
+            {
+                IsAttachmentOnlyMode = true,
+                AttachmentOnlySourceMode = AttachmentOnlySourceMode.ManualUserSelection
+            }
+        };
+
+        var result = await _scanner.ScanOnceAsync(profile, StabilityDuration);
+
+        Assert.Equal(0, result.AisFilesDetected);
+        Assert.Equal(0, result.DeviceFilesDetected);
+        Assert.Equal(0, result.FilesQueued);
+        Assert.Equal(0, result.ReadyPairs);
+        Assert.DoesNotContain(result.Messages, message => message.Contains("keine Geräte-Datei", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task ScanOnceAsync_ShouldIgnoreIrrelevantExtensions()
     {
         var folders = CreateImportFolders();

@@ -87,6 +87,32 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
     }
 
     [Fact]
+    public void ApplyScanResult_AttachmentOnlyShouldKeepDocumentInputNeutralBeforePackageStarts()
+    {
+        var profile = CreateProfile(
+            isAttachmentEnabled: true,
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true);
+        var card = CreateCard(profile);
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var scanResult = CreateScanResult(profile, new PendingImportQueue());
+
+        var updated = service.ApplyScanResult(
+            card,
+            profile,
+            scanResult,
+            CreatePackageEvaluation(AutoImportPackageStateReason.WaitingForAisFile),
+            DateTime.Today,
+            automaticProcessingEnabled: true);
+
+        var documentInput = Assert.Single(updated.ExpectedInputs, input => input.Key == "device");
+        Assert.Equal("Dokumentdateien", documentInput.Name);
+        Assert.Equal("erwartet", documentInput.Status);
+        Assert.Equal("Neutral", documentInput.StatusClass);
+        Assert.DoesNotContain(updated.ExpectedInputs, input => input.Key == "attachment");
+    }
+
+    [Fact]
     public void ApplyScanResult_ShouldShowRemainingDeviceWaitTime()
     {
         var profile = CreateProfile();
@@ -350,7 +376,8 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
 
     private static InterfaceProfileDefinition CreateProfile(
         bool isAttachmentEnabled = false,
-        AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional)
+        AttachmentRequirementMode attachmentRequirementMode = AttachmentRequirementMode.Optional,
+        bool isAttachmentOnlyMode = false)
     {
         var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
         return profile with
@@ -364,7 +391,8 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
                 AttachmentImportFolder = isAttachmentEnabled ? @"C:\Test\AnhangImp" : "",
                 AttachmentExportFolder = isAttachmentEnabled ? @"C:\Test\AnhangExp" : "",
                 IsAttachmentProcessingEnabled = isAttachmentEnabled,
-                AttachmentRequirementMode = attachmentRequirementMode
+                AttachmentRequirementMode = attachmentRequirementMode,
+                IsAttachmentOnlyMode = isAttachmentOnlyMode
             }
         };
     }

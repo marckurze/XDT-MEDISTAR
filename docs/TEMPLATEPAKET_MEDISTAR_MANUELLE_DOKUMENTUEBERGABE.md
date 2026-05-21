@@ -19,11 +19,11 @@ V1-Kandidat, testseitig abgesichert. Eine praktische MEDISTAR-Abnahme steht noch
 
 1. MEDISTAR/AIS schreibt die Patientendatei.
 2. Die App oeffnet das Geraetefenster und den Dialog `Dokumente uebertragen` mit leerer Dateiliste.
-3. Der Anwender fuegt Dateien per Drag-&-Drop oder ueber `Dateien hinzufuegen` hinzu.
+3. Der Anwender fuegt Dateien per Drag-&-Drop, ueber `Dateien hinzufuegen` oder aus einer Datei-Zwischenablage per `Strg+V`/`Einfügen` hinzu.
 4. Pro Datei kann eine Beschreibung eingegeben werden.
 5. Erst der Klick auf `Uebertragen` erzeugt die XDT-Rueckgabe.
 
-Ohne `Uebertragen` wird kein Export erzeugt. Es gibt keinen Wartezeitmodus und keinen automatischen Abschluss.
+Ohne AIS-Datei wird beim Start der Ueberwachung kein Dialog geoeffnet und kein Floating-Fenster automatisch abgedockt. Ohne `Uebertragen` wird kein Export erzeugt. Es gibt keinen Wartezeitmodus und keinen automatischen Abschluss.
 
 ## Dateiverhalten
 
@@ -41,6 +41,8 @@ Unterstuetzt werden dieselben sicheren Dokumentanhang-Formate wie beim automatis
 - `.wav`
 
 Ordner und nicht unterstuetzte Dateitypen werden abgelehnt. XML ist in diesem Modus immer Anhang, nicht Messwert-XML. Es gibt keine Bild-, DICOM-, Audio-, Video- oder Dokumentanalyse.
+
+Der Dialog `Dokumente uebertragen` bleibt standardmaessig im Vordergrund, damit Dateien bequem aus Explorer oder anderen Programmen hineingezogen werden koennen. Der `TOP`-Schalter kann dieses Verhalten fuer das Dialogfenster deaktivieren.
 
 ## MEDISTAR-Ausgabe
 

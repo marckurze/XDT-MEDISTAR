@@ -165,6 +165,31 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
     }
 
     [Fact]
+    public void BuildRows_AttachmentOnlyShouldShowNeutralDocumentInputBeforePackageStarts()
+    {
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Dokumente",
+                exportFolder: @"C:\XDT\Export") with
+            {
+                IsAttachmentOnlyMode = true,
+                IsAttachmentProcessingEnabled = true,
+                AttachmentRequirementMode = AttachmentRequirementMode.Required,
+                AttachmentExportFolder = @"C:\XDT\AnhangExp"
+            }
+        };
+
+        var row = Assert.Single(BuildRows(profile));
+
+        var documentInput = Assert.Single(row.MonitoringCard.ExpectedInputs, input => input.Name == "Dokumentdateien");
+        Assert.Equal("erwartet", documentInput.Status);
+        Assert.Equal("Neutral", documentInput.StatusClass);
+        Assert.DoesNotContain(row.MonitoringCard.ExpectedInputs, input => input.Key == "attachment");
+    }
+
+    [Fact]
     public void BuildRows_ShouldCreateMonitoringCardWithProfileNamesAndDefaultRuntimeStatus()
     {
         var profile = CreateProfile(isActive: true, isLicenseRequired: false) with

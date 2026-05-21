@@ -1050,7 +1050,7 @@ Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile un
 
 ## 12.1 Geräteanhänge / externe Dokumente
 
-Geraete koennen neben Messwertdateien auch PDF, JPG, DCM, TXT, XML, Video- oder Audiodateien erzeugen. Fuer Workflows ohne Messwerte gibt es den V1-Kandidaten `MEDISTAR + Dokumentanhang`: Dateien aus dem Geraete-/Dokument-Importordner werden nicht geparst, sondern als externe MEDISTAR-Anhaenge uebergeben. Fuer Arbeitsablaeufe ohne automatisch liefernden Geraeteordner gibt es zusaetzlich `MEDISTAR + Manuelle Dokumentuebergabe`: AIS startet einen leeren Dialog, der Anwender fuegt Dateien per Drag-&-Drop oder Dateiauswahl hinzu. In beiden Varianten gehoert die Beschreibung zur jeweiligen Datei und wird als `6304` ausgegeben.
+Geraete koennen neben Messwertdateien auch PDF, JPG, DCM, TXT, XML, Video- oder Audiodateien erzeugen. Fuer Workflows ohne Messwerte gibt es den V1-Kandidaten `MEDISTAR + Dokumentanhang`: Dateien aus dem Geraete-/Dokument-Importordner werden nicht geparst, sondern als externe MEDISTAR-Anhaenge uebergeben. Fuer Arbeitsablaeufe ohne automatisch liefernden Geraeteordner gibt es zusaetzlich `MEDISTAR + Manuelle Dokumentuebergabe`: Erst AIS-Eingang startet einen leeren Dialog, der Anwender fuegt Dateien per Drag-&-Drop, Dateiauswahl oder Datei-Zwischenablage hinzu. In beiden Varianten gehoert die Beschreibung zur jeweiligen Datei und wird als `6304` ausgegeben.
 
 Fuer mehrere nacheinander geschriebene Dateien hat AttachmentOnly eine Abschlusslogik: Im Modus `Abschluss nach Wartezeit` startet jede neue stabile Datei die Wartezeit neu; im Modus `Manuell bestaetigen` bleibt der Dialog `Dokumente uebertragen` offen, ergaenzt neue Dateien inkrementell und exportiert erst nach Klick auf `Uebertragen`. Bereits eingegebene Beschreibungen bleiben dabei erhalten.
 
@@ -1060,7 +1060,7 @@ Beispiele:
 - Andere Geräte können PDF-Protokolle oder DICOM-Dateien erzeugen.
 - TOPCON- und NIDEK-XML-Dateien können perspektivisch Verweise auf externe Bild- oder Protokolldateien enthalten.
 - Reine Dokumentgeraete koennen XML, PDF, JPG, PNG, DCM, MP4, MP3 oder WAV liefern, ohne dass daraus Messwerte gelesen werden.
-- Manuelle Dokumentuebergabe nutzt dieselben Formate, erwartet aber keine Geraetedatei im Importordner.
+- Manuelle Dokumentuebergabe nutzt dieselben Formate, erwartet aber keine Geraetedatei im Importordner und oeffnet beim reinen Start der Ueberwachung noch keinen Dialog.
 
 Vorgesehener Ablauf:
 
@@ -1108,7 +1108,7 @@ Wichtig:
 - Anhaenge werden je Datei ueber `6302`, `6303`, `6304` und `6305` uebergeben.
 - Alte technische XDT-Anhang-Aktivierungsflags sind fuer AttachmentOnly nicht massgeblich; Dokumentdateien sind der Geraeteinhalt und muessen als Anhaenge vorbereitet werden.
 - Mehrere Dateien werden erst nach Ruhezeit oder manueller Bestaetigung uebertragen.
-- Bei `MEDISTAR + Manuelle Dokumentuebergabe` gibt es keine Ruhezeit: Erst der Klick auf `Uebertragen` exportiert, und manuell ausgewaehlte Quelldateien werden nicht geloescht.
+- Bei `MEDISTAR + Manuelle Dokumentuebergabe` gibt es keine Ruhezeit: Erst der Klick auf `Uebertragen` exportiert, der Dialog bleibt standardmaessig TopMost, und manuell ausgewaehlte Quelldateien werden nicht geloescht.
 - Externe Links duerfen nur erzeugt werden, wenn der Anhang erfolgreich in den Zielordner uebertragen wurde.
 - Unbekannte Dateien duerfen nicht blind geloescht oder verschoben werden.
 - Vorschaukachel-Galerien, OCR und Bild-/DICOM-/Medienanalyse bleiben spaetere Themen.

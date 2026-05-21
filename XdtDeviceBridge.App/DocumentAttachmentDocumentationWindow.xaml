@@ -6,7 +6,9 @@
         MinWidth="620"
         MinHeight="420"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="CanResize">
+        ResizeMode="CanResize"
+        Topmost="True"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,11 +17,27 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="ProfileNameTextBlock"
-                   Grid.Row="0"
-                   FontWeight="Bold"
-                   FontSize="15"
-                   Margin="0,0,0,6"/>
+        <Grid Grid.Row="0"
+              Margin="0,0,0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="ProfileNameTextBlock"
+                       Grid.Column="0"
+                       FontWeight="Bold"
+                       FontSize="15"
+                       VerticalAlignment="Center"/>
+            <ToggleButton x:Name="TopMostButton"
+                          Grid.Column="1"
+                          Content="TOP"
+                          IsChecked="True"
+                          MinWidth="52"
+                          Padding="10,4"
+                          ToolTip="Fenster im Vordergrund halten"
+                          Click="TopMostButton_Click"/>
+        </Grid>
 
         <TextBlock x:Name="HintTextBlock"
                    Grid.Row="1"
@@ -28,7 +46,8 @@
                    TextWrapping="Wrap"
                    Margin="0,0,0,10"/>
 
-        <Border Grid.Row="2"
+        <Border x:Name="FileDropArea"
+                Grid.Row="2"
                 BorderBrush="#D1D5DB"
                 BorderThickness="1"
                 CornerRadius="4"
@@ -37,9 +56,15 @@
                 AllowDrop="True"
                 DragOver="FileDropArea_DragOver"
                 Drop="FileDropArea_Drop">
+            <Border.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Einfügen"
+                              Click="PasteFiles_Click"/>
+                </ContextMenu>
+            </Border.ContextMenu>
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
-                          MaxHeight="420">
+                          VerticalAlignment="Stretch">
                 <ItemsControl x:Name="FileItemsControl">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -119,6 +144,12 @@
                     Width="150"
                     Margin="0,0,16,0"
                     Click="AddFiles_Click"
+                    Visibility="Collapsed"/>
+            <Button x:Name="PasteFilesButton"
+                    Content="Aus Zwischenablage"
+                    Width="150"
+                    Margin="0,0,16,0"
+                    Click="PasteFiles_Click"
                     Visibility="Collapsed"/>
             <Button x:Name="ApplyButton"
                     Content="Übertragen"

@@ -69,7 +69,10 @@ public sealed class AutoImportScannerService : IAutoImportScanner
             && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         if (isManualDocumentSelection)
         {
-            messages.Add("Manuelle Dokumentübergabe: keine Geräte-Datei im Importordner erforderlich.");
+            if (aisFilesDetected > 0)
+            {
+                messages.Add("Manuelle Dokumentübergabe: keine Geräte-Datei im Importordner erforderlich.");
+            }
         }
         else if (string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
         {

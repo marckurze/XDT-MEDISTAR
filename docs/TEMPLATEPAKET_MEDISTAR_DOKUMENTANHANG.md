@@ -64,6 +64,8 @@ Die Option `Dokumentationstext erfassen` steuert die pro-Datei-Beschreibung im D
 
 Waehrend der Dialog offen ist, wird die Dateiliste nicht bei jedem Polling-Takt neu aufgebaut. Neue stabile Dateien werden nur ergaenzt, vorhandene Eingaben bleiben im Textfeld erhalten, und die automatische Paarverarbeitung wird erst nach Klick auf `Uebertragen` fortgesetzt.
 
+Vor einem konkreten Vorgang bleibt die Dokumentanhang-Karte neutral: Dokumentdateien werden als erwartet angezeigt, aber ein fehlender Pflichtanhang wird erst waehrend eines aktiven Pakets beziehungsweise nach Timeout als Warn-/Fehlerzustand dargestellt.
+
 AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-Importordner. Alte gespeicherte technische Flags wie deaktivierte XDT-Anhang-Automatik duerfen deshalb nicht mehr dazu fuehren, dass nur AIS-Daten ohne Dokumentlinks exportiert werden. Die Pruefung vor Aktivierung arbeitet mit aktuellen, noch nicht gespeicherten UI-Werten und zeigt die Ordner-Erreichbarkeit als Hinweis/Warnung; ein eingetragener, aktuell nicht erreichbarer Ordner blockiert nicht hart.
 
 ## Grenzen
