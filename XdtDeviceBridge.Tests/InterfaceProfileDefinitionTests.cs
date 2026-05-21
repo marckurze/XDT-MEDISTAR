@@ -218,6 +218,21 @@ public sealed class InterfaceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateMedistarTopconTrk2PDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconTrk2PDefault();
+
+        Assert.Equal("interface-medistar-topcon-trk2p-default", profile.Metadata.Id);
+        Assert.Equal("ais-medistar-default", profile.AisProfileId);
+        Assert.Equal("device-topcon-trk2p-default", profile.DeviceProfileId);
+        Assert.Equal("export-medistar-topcon-trk2p-default", profile.ExportProfileId);
+        Assert.False(profile.IsActive);
+        Assert.True(profile.IsLicenseRequired);
+        Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Empty(InterfaceProfileDefinitionValidator.Validate(profile));
+    }
+
+    [Fact]
     public void Validate_ShouldAcceptEmptyAttachmentFolders()
     {
         var profile = WithFolderOptions(CreateFolderOptions(

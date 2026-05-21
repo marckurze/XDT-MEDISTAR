@@ -60,7 +60,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Single(catalog.AisProfiles);
         Assert.Equal(9, catalog.DeviceProfiles.Count);
         Assert.Equal(9, catalog.ExportProfiles.Count);
-        Assert.Equal(8, catalog.InterfaceProfiles.Count);
+        Assert.Equal(9, catalog.InterfaceProfiles.Count);
         Assert.Equal("ais-medistar-default", catalog.AisProfiles[0].Metadata.Id);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
@@ -70,6 +70,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt530p-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-cl300-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-kr800-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-trk2p-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-document-attachment-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-manual-document-transfer-default");
     }
@@ -267,6 +268,71 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconTrk2PBuiltInDeviceProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: new[] { CreateLegacyTopconTrk2PDeviceProfile(isBuiltIn: true) },
+            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.DeviceProfiles, profile => profile.Metadata.Id == "device-topcon-trk2p-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Equal("TRK-2P", profile.Model);
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine");
+        Assert.DoesNotContain(profile.Measurements, measurement => ContainsLegacyTopconTrk2PPath(measurement.SourcePath));
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconTrk2PBuiltInExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyTopconTrk2PExportProfile(isBuiltIn: true) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-trk2p-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6220" && rule.SourcePath == "Device.Measure[@Type='CCT']/Pachy/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='TM']/Tono/TonoListLine");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228" && ContainsLegacyTopconTrk2PPath(rule.OutputTemplate));
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228" && ContainsLegacyTopconTrk2PPath(rule.SourcePath));
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldNotRepairUserDefinedTopconTrk2PExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyTopconTrk2PExportProfile(isBuiltIn: false) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-trk2p-default");
+        Assert.False(profile.Metadata.IsBuiltIn);
+        Assert.True(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => ContainsLegacyTopconTrk2PPath(rule.OutputTemplate));
+    }
+
+    [Fact]
     public void Load_ShouldReadAllExpectedProfilesAfterEnsureDefaultProfiles()
     {
         var paths = CreateAppDataPaths();
@@ -277,7 +343,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Single(catalog.AisProfiles);
         Assert.Equal(9, catalog.DeviceProfiles.Count);
         Assert.Equal(9, catalog.ExportProfiles.Count);
-        Assert.Equal(8, catalog.InterfaceProfiles.Count);
+        Assert.Equal(9, catalog.InterfaceProfiles.Count);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
     }
@@ -694,6 +760,68 @@ public sealed class ProfileCatalogServiceTests
         };
     }
 
+    private static DeviceProfileDefinition CreateLegacyTopconTrk2PDeviceProfile(bool isBuiltIn)
+    {
+        var current = DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Model = "TRK2P",
+            DeviceType = "Tonometer/Pachymeter",
+            Measurements = current.Measurements
+                .Where(measurement => !measurement.SourcePath.Contains("MedistarLine", StringComparison.Ordinal))
+                .Select(measurement => measurement with
+                {
+                    SourcePath = measurement.SourcePath.StartsWith("Measure[", StringComparison.Ordinal)
+                        ? $"Ophthalmology/{measurement.SourcePath.Replace("[@Type=", "[@type=", StringComparison.Ordinal)}"
+                        : measurement.SourcePath
+                })
+                .ToArray()
+        };
+    }
+
+    private static ExportProfileDefinition CreateLegacyTopconTrk2PExportProfile(bool isBuiltIn)
+    {
+        var current = DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Rules = current.Rules.Take(6)
+                .Concat(new[]
+                {
+                    new ExportRuleDefinition(
+                        "7",
+                        "6228",
+                        "TonometryBothEyes",
+                        ExportRuleType.Template,
+                        null,
+                        "R = {Device.Ophthalmology/Measure[@type='TM']/TM/R/Average/IOP_mmHg:Iop} // L = {Device.Ophthalmology/Measure[@type='TM']/TM/L/Average/IOP_mmHg:Iop} mmHg",
+                        7,
+                        true,
+                        "Legacy TOPCON TRK2P tonometry template wrongly emitted through 6228."),
+                    new ExportRuleDefinition(
+                        "8",
+                        "6228",
+                        "PachymetryRight",
+                        ExportRuleType.Template,
+                        null,
+                        "PR: {Device.Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='3']/CCT_mm:Pachy} µm",
+                        8,
+                        true,
+                        "Legacy TOPCON TRK2P pachymetry template wrongly emitted through 6228.")
+                })
+                .ToArray()
+        };
+    }
+
     private static bool ContainsLegacyLm7MedianPath(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
@@ -713,6 +841,14 @@ public sealed class ProfileCatalogServiceTests
             && (value.Contains("Device.Ophthalmology/", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("KR: K1=", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("KL: K1=", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ContainsLegacyTopconTrk2PPath(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && (value.Contains("Ophthalmology/", StringComparison.OrdinalIgnoreCase)
+                || value.Contains(":Iop", StringComparison.OrdinalIgnoreCase)
+                || value.Contains(":Pachy", StringComparison.OrdinalIgnoreCase));
     }
 
     private static ProfileMetadata CreateUserExportMetadata(string id)

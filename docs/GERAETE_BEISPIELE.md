@@ -18,7 +18,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | `6220` Pachymetrie und `6205` Tonometrie; keine `6228`-Geraetewerte | testseitig direkt nutzbarer MEDISTAR-Kandidat, praktische MEDISTAR-Validierung offen |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erster praktisch validierter TOPCON-Referenzkandidat mit Namespace- und Attributanforderungen |
 | TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
-| TOPCON | TRK2P | Tonometer / Refraktions-Keratometer je nach Dateninhalt | Ophthalmology-/JOIA-XML | `TM`, `CCT` | keine zwingend erkennbar | Tonometrie- und Pachymetrieausgabe | relevant für Tonometrie/CCT-Kombination und JOIA-Parserlogik |
+| TOPCON | TRK2P | Autorefraktometer / Keratometer / Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `REF`, `KM`, `TM`, `CCT`, optional `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, `6220` Pachy, `6205` Tono, optional `6227` SBJ | vollständiger testseitiger TOPCON-TRK2P-Kandidat; praktische MEDISTAR-Validierung offen |
 
 ## 3. NIDEK AR1S
 
@@ -893,120 +893,42 @@ Wichtig fuer Parser- und Profil-Logik:
 
 ## 8. TOPCON TRK2P
 
-Gerätetyp: Tonometer / Refraktions-Keratometer je nach Dateninhalt
+Geraetetyp: Autorefraktometer / Keratometer / Tonometer / Pachymeter; SBJ optional, falls XML-Werte vorhanden sind.
 
 Dateiformat:
 
-- XML im Ophthalmology-/JOIA-Format
+- XML im TOPCON JOIA-/Ophthalmology-Format, namespace-tolerant gelesen
+- erkannte Namespaces: `nsCommon`, `nsREF`, `nsKM`, `nsTM`, optional `nsSBJ`
+- Root `Ophthalmology`, `Common/Company = TOPCON`, `Common/ModelName = TRK-2P`
 
-Untersuchungsarten:
+Untersuchungsarten und MEDISTAR-Felder:
 
-- `TM` = Tonometrie
-- `CCT` = zentrale Hornhautdicke / Pachymetrie
+| XML-Measure | Bedeutung | MEDISTAR |
+|---|---|---|
+| `REF` | objektive Refraktion / Autorefraktor | `6228` |
+| `KM` | Keratometer | `6221` |
+| `TM` | Tonometrie / IOP | `6205` |
+| `CCT` oder `CorrectedIOP/CCT` | Pachymetrie / zentrale Hornhautdicke | `6220` |
+| `SBJ` | subjektive Refraktion, falls vorhanden | `6227` |
 
-Ableitung:
+Echte Fixtures:
 
-- Tonometrie-Template
-- Pachymetrie-Template
-- mögliche Kombination mit korrigiertem IOP
-- XML-Attribute und Namespaces beachten
+- `M-Serial0001_20190411_113829_TOPCON_TRK-2P_5270367.xml`
+- `M-Serial0135_20130809_174556_TOPCON_TRK-2P_.xml`
 
-## 8.1 TOPCON TRK2P – erkannte SourcePaths für Tonometrie und CCT
+Getestete Ausgabe:
 
-Analysierte lokale Beispieldatei:
+- Serial0001 erzeugt REF-`6228`, KM-`6221` und TM-`6205` mit IOP-Listen/Average; keine `6220`, weil keine CCT-Werte vorhanden sind; keine `6227`, weil keine SBJ-Werte vorhanden sind.
+- Serial0135 erzeugt REF-`6228`, KM-`6221`, Pachy-`6220` aus `CorrectedIOP/CCT` und TM-`6205` mit CorrectedIOP/CCT sowie IOP-Listen/Average; keine `6227`, weil keine SBJ-Werte vorhanden sind.
+- CCT-Werte werden fuer `6220` als Millimeter mit drei Nachkommastellen ausgegeben, z. B. `RA: 0.907   // LA: 0.880`.
+- In der Tonometrie werden CCT-Werte fuer den NT530P-aehnlichen `6205`-Block in Mikrometer umgesetzt, z. B. `PR: 907 [907] µm`.
+- Leere optionale Fragmente, leere SBJ-Zeilen und Dokumentanhangfelder `6302`-`6305` werden fuer Messwerte nicht erzeugt.
 
-- `C:\Users\MarcK\Downloads\Geraeteanbindungen\TOPCON TRK2P\M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml`
+Hinweise:
 
-Die Datei ist ein JOIA-/Ophthalmology-XML mit `encoding="UTF-8"`. Der Root-Knoten `Ophthalmology` hat keinen Default-Namespace. Die Common-Daten und die Tonometrie-Hauptmesswerte verwenden Namespace-Präfixe, während zusätzliche Geräte-/CCT-Blöcke innerhalb von `nsTM:Measure` unqualifizierte Elemente verwenden.
-
-Namespaces:
-
-- `nsCommon = http://www.joia.or.jp/standardized/namespaces/Common`
-- `nsTM = http://www.joia.or.jp/standardized/namespaces/TM`
-- `xsi = http://www.w3.org/2001/XMLSchema-instance`
-
-Erkannte Untersuchungsarten in der analysierten Datei:
-
-| Untersuchungsart | XML-Struktur | Bedeutung | Status / Hinweis |
-|---|---|---|---|
-| `TM` | `Ophthalmology/nsTM:Measure[@type='TM']` | Tonometrie | erkannt |
-| `CCT` | `Ophthalmology/nsTM:Measure/CCT` | zentrale Hornhautdicke / Pachymetrie | erkannt; unqualifizierter Unterknoten innerhalb von `nsTM:Measure` |
-| `REF` | `Ophthalmology/nsREF:Measure[@type='REF']` | Refraktion | nicht vorhanden; noch zu validieren für andere TRK2P-Dateien |
-| `KM` | `Ophthalmology/nsKM:Measure[@type='KM']` | Keratometrie | nicht vorhanden; noch zu validieren für andere TRK2P-Dateien |
-
-Allgemeine Gerätedaten:
-
-| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
-|---|---|---:|---|
-| Company | `Ophthalmology/nsCommon:Common/nsCommon:Company` | `TOPCON` | erkannt |
-| ModelName | `Ophthalmology/nsCommon:Common/nsCommon:ModelName` | `TRK-2P` | erkannt |
-| Messdatum | `Ophthalmology/nsCommon:Common/nsCommon:Date` | `2024-11-26` | erkannt |
-| Messzeit | `Ophthalmology/nsCommon:Common/nsCommon:Time` | `22:55:12` | erkannt |
-
-Erkannte TM-SourcePaths:
-
-| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
-|---|---|---:|---|
-| TM R IOP Einzelwert 1 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='1']/nsTM:IOP_mmHg` | `15.0` | erkannt |
-| TM R IOP Einzelwert 2 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='2']/nsTM:IOP_mmHg` | `15.0` | erkannt |
-| TM R IOP Einzelwert 3 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='3']/nsTM:IOP_mmHg` | `15.0` | erkannt |
-| TM R IOP Mittelwert | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:Average/nsTM:IOP_mmHg` | `15.0` | erkannt |
-| TM L IOP Einzelwert 1 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='1']/nsTM:IOP_mmHg` | `13.0` | erkannt |
-| TM L IOP Einzelwert 2 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='2']/nsTM:IOP_mmHg` | `12.0` | erkannt |
-| TM L IOP Einzelwert 3 | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='3']/nsTM:IOP_mmHg` | `14.0` | erkannt |
-| TM L IOP Mittelwert | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:Average/nsTM:IOP_mmHg` | `13.0` | erkannt |
-| TM R IOP hPa | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:R/nsTM:List[@No='1']/nsTM:IOP_Pa` | leer | erkannt; Nutzung noch zu validieren |
-| TM L IOP hPa | `Ophthalmology/nsTM:Measure[@type='TM']/nsTM:TM/nsTM:L/nsTM:List[@No='1']/nsTM:IOP_Pa` | leer | erkannt; Nutzung noch zu validieren |
-
-Zusätzliche unqualifizierte TM-Geräteparameter:
-
-| Messwert | SourcePath | Beispielwert | Status / Hinweis |
-|---|---|---:|---|
-| Messreihenfolge | `Ophthalmology/nsTM:Measure/TM/RL_Order` | `R` | erkannt |
-| R Pressure Range | `Ophthalmology/nsTM:Measure/TM/R/List[@No='1']/Pressure_Range` | `30` | erkannt; technischer Parameter |
-| L Pressure Range | `Ophthalmology/nsTM:Measure/TM/L/List[@No='1']/Pressure_Range` | `30` | erkannt; technischer Parameter |
-| Alignment Mode | `Ophthalmology/nsTM:Measure/TM/R/List[@No='1']/Alignment_Mode` | `Auto` | erkannt; technische Relevanz noch zu validieren |
-| IOL Mode | `Ophthalmology/nsTM:Measure/TM/R/List[@No='1']/IOL_Mode` | `Off` | erkannt; technische Relevanz noch zu validieren |
-
-Erkannte CCT-/Pachymetrie-SourcePaths:
-
-| Messwert | SourcePath | Beispielwert | Status / Hinweis |
-|---|---|---:|---|
-| CCT Messreihenfolge | `Ophthalmology/nsTM:Measure/CCT/RL_Order` | `R` | erkannt |
-| R CCT Liste 1 Fehler | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='1']/Error` | `ERROR` | erkannt |
-| R CCT Liste 2 Fehler | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='2']/Error` | `ERROR` | erkannt |
-| R CCT Liste 3 | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='3']/CCT_mm` | `0.511` | erkannt; Wert ist in mm |
-| R CCT Liste 4 | `Ophthalmology/nsTM:Measure/CCT/R/List[@No='4']/CCT_mm` | `0.509` | erkannt; Wert ist in mm |
-| R CCT Mittelwert | noch nicht erkannt | - | noch zu validieren; kein expliziter Average-Knoten im analysierten CCT-Block |
-| L CCT Liste 1 | `Ophthalmology/nsTM:Measure/CCT/L/List[@No='1']/CCT_mm` | `0.516` | erkannt; Wert ist in mm |
-| L CCT Liste 2 | `Ophthalmology/nsTM:Measure/CCT/L/List[@No='2']/CCT_mm` | `0.518` | erkannt; Wert ist in mm |
-| L CCT Liste 3 | `Ophthalmology/nsTM:Measure/CCT/L/List[@No='3']/CCT_mm` | `0.518` | erkannt; Wert ist in mm |
-| L CCT Mittelwert | noch nicht erkannt | - | noch zu validieren; kein expliziter Average-Knoten im analysierten CCT-Block |
-| korrigierter IOP rechts | noch nicht erkannt | - | noch zu validieren; kein `CorrectedIOP`-Knoten in der analysierten Datei |
-| korrigierter IOP links | noch nicht erkannt | - | noch zu validieren; kein `CorrectedIOP`-Knoten in der analysierten Datei |
-
-Für spätere anwendernahe Mapping-SourcePaths sollte analog zu CL300/KR800S eine normalisierte Darstellung verwendet werden, z. B.:
-
-```text
-Ophthalmology/Common/Company
-Ophthalmology/Common/ModelName
-Ophthalmology/Measure[@type='TM']/TM/R/List[@No='1']/IOP_mmHg
-Ophthalmology/Measure[@type='TM']/TM/R/Average/IOP_mmHg
-Ophthalmology/Measure[@type='TM']/TM/L/List[@No='1']/IOP_mmHg
-Ophthalmology/Measure[@type='TM']/TM/L/Average/IOP_mmHg
-Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='3']/CCT_mm
-Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='1']/CCT_mm
-```
-
-Wichtig für die spätere Parser- und Profil-Logik:
-
-- `TM` ist der einzige JOIA-Measure-Typ in der analysierten Datei.
-- `CCT` ist kein eigener JOIA-`Measure`-Block, sondern ein unqualifizierter Unterknoten innerhalb von `nsTM:Measure`.
-- Parser müssen gemischte namespace-qualifizierte und unqualifizierte Elemente innerhalb einer Datei unterstützen.
-- CCT-Werte sind in `mm` angegeben, während MEDISTAR-Ausgaben üblicherweise Pachymetrie in `µm` darstellen können; eine spätere Formatfunktion/Umrechnung ist fachlich zu prüfen.
-- Rechte CCT-Messlisten können Fehler statt Werte enthalten; Ergebnislogik muss Fehlerlisten überspringen oder sichtbar machen können.
-- Ein expliziter korrigierter IOP wurde in der analysierten TRK2P-Datei nicht gefunden.
-- Für TRK2P wurden in der analysierten Datei keine JPG-/PDF-Attachments gefunden.
+- Wenn eine separate `Measure type="CCT"` vorhanden ist, wird diese fuer Pachymetrie bevorzugt; sonst dienen `CorrectedIOP/CCT`-Werte als Fallback.
+- SBJ wird nur ausgegeben, wenn echte SBJ-Werte im XML stehen. In den aktuellen Serial0001-/Serial0135-Fixtures sind keine SBJ-Werte enthalten.
+- Das BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON TRK2P` und der selektive Templatepaket-Test sind vorhanden; praktische MEDISTAR-Validierung steht noch aus.
 
 ## 9. Allgemeine Erkenntnisse aus den Beispieldaten
 
@@ -1064,7 +986,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
-4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TRK2P folgt erst mit belastbaren Beispieldateien.
+4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TOPCON TRK2P ist mit echten REF/KM/TM/CCT-Fixtures testseitig vorbereitet und muss praktisch in MEDISTAR validiert werden.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 

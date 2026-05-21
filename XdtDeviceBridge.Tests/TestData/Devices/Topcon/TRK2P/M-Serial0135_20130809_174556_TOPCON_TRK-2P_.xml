@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsREF="http://www.joia.or.jp/standardized/namespaces/REF" xmlns:nsKM="http://www.joia.or.jp/standardized/namespaces/KM" xmlns:nsTM="http://www.joia.or.jp/standardized/namespaces/TM" xsi:schemaLocation="http://www.joia.or.jp/standardized/namespaces/Common Common_schema.xsd 													http://www.joia.or.jp/standardized/namespaces/REF REF_schema.xsd 													http://www.joia.or.jp/standardized/namespaces/KM KM_schema.xsd 													http://www.joia.or.jp/standardized/namespaces/TM">
+	<nsCommon:Common>
+		<nsCommon:Company>TOPCON</nsCommon:Company>
+		<nsCommon:ModelName>TRK-2P</nsCommon:ModelName>
+		<nsCommon:MachineNo>01</nsCommon:MachineNo>
+		<nsCommon:ROMVersion>0.52.00D</nsCommon:ROMVersion>
+		<nsCommon:Version>1.2</nsCommon:Version>
+		<nsCommon:Date>2013-08-09</nsCommon:Date>
+		<nsCommon:Time>17:45:56</nsCommon:Time>
+		<nsCommon:Patient>
+			<nsCommon:No.>0135</nsCommon:No.>
+			<nsCommon:ID>0135</nsCommon:ID>
+			<nsCommon:FirstName></nsCommon:FirstName>
+			<nsCommon:MiddleName></nsCommon:MiddleName>
+			<nsCommon:LastName></nsCommon:LastName>
+			<nsCommon:Sex></nsCommon:Sex>
+			<nsCommon:Age></nsCommon:Age>
+			<nsCommon:DOB></nsCommon:DOB>
+			<nsCommon:NameJ1></nsCommon:NameJ1>
+			<nsCommon:NameJ2></nsCommon:NameJ2>
+		</nsCommon:Patient>
+		<nsCommon:Operator>
+			<nsCommon:No.></nsCommon:No.>
+			<nsCommon:ID></nsCommon:ID>
+		</nsCommon:Operator>
+	</nsCommon:Common>
+	<nsREF:Measure type="REF">
+		<nsREF:VD unit="mm">12.00</nsREF:VD>
+		<nsREF:DiopterStep unit="D">0.01</nsREF:DiopterStep>
+		<nsREF:AxisStep unit="deg">1</nsREF:AxisStep>
+		<nsREF:CylinderMode>-</nsREF:CylinderMode>
+		<nsREF:REF>
+			<nsREF:R>
+				<nsREF:List No="1">
+					<nsREF:Sphere unit="D">-6.52</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.41</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">114</nsREF:Axis>
+					<nsREF:SE unit="D">-6.73</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="2">
+					<nsREF:Sphere unit="D">-6.53</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.42</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">114</nsREF:Axis>
+					<nsREF:SE unit="D">-6.74</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="3">
+					<nsREF:Sphere unit="D">-6.53</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.45</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">114</nsREF:Axis>
+					<nsREF:SE unit="D">-6.76</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:Median>
+					<nsREF:Sphere unit="D">-6.53</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.42</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">114</nsREF:Axis>
+					<nsREF:SE unit="D">-6.74</nsREF:SE>
+				</nsREF:Median>
+			</nsREF:R>
+			<nsREF:L>
+				<nsREF:List No="1">
+					<nsREF:Sphere unit="D">-6.51</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.45</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">64</nsREF:Axis>
+					<nsREF:SE unit="D">-6.74</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="2">
+					<nsREF:Sphere unit="D">-6.53</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.47</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">65</nsREF:Axis>
+					<nsREF:SE unit="D">-6.77</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="3">
+					<nsREF:Sphere unit="D">-6.55</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.48</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">65</nsREF:Axis>
+					<nsREF:SE unit="D">-6.79</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:Median>
+					<nsREF:Sphere unit="D">-6.53</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-0.47</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">65</nsREF:Axis>
+					<nsREF:SE unit="D">-6.77</nsREF:SE>
+				</nsREF:Median>
+			</nsREF:L>
+		</nsREF:REF>
+		<nsREF:PD>
+			<nsREF:WorkingDistance unit="cm"></nsREF:WorkingDistance>
+			<nsREF:Distance unit="mm">65.00</nsREF:Distance>
+			<nsREF:Near unit="mm">65.00</nsREF:Near>
+		</nsREF:PD>
+	</nsREF:Measure>
+	<nsKM:Measure type="KM">
+		<nsKM:DiopterStep unit="D">0.01</nsKM:DiopterStep>
+		<nsKM:AxisStep unit="deg">1</nsKM:AxisStep>
+		<nsKM:CylinderMode>-</nsKM:CylinderMode>
+		<nsKM:RefractiveIndex>1.3375</nsKM:RefractiveIndex>
+		<nsKM:KM>
+			<nsKM:R>
+				<nsKM:List No="1">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.57</nsKM:Radius>
+						<nsKM:Power unit="D">39.38</nsKM:Power>
+						<nsKM:Axis unit="deg">87</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.49</nsKM:Radius>
+						<nsKM:Power unit="D">39.76</nsKM:Power>
+						<nsKM:Axis unit="deg">177</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.53</nsKM:Radius>
+						<nsKM:Power unit="D">39.57</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.38</nsKM:Power>
+						<nsKM:Axis unit="deg">87</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="2">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.55</nsKM:Radius>
+						<nsKM:Power unit="D">39.46</nsKM:Power>
+						<nsKM:Axis unit="deg">87</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.49</nsKM:Radius>
+						<nsKM:Power unit="D">39.76</nsKM:Power>
+						<nsKM:Axis unit="deg">177</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.52</nsKM:Radius>
+						<nsKM:Power unit="D">39.61</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.30</nsKM:Power>
+						<nsKM:Axis unit="deg">87</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="3">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.55</nsKM:Radius>
+						<nsKM:Power unit="D">39.48</nsKM:Power>
+						<nsKM:Axis unit="deg">92</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.49</nsKM:Radius>
+						<nsKM:Power unit="D">39.75</nsKM:Power>
+						<nsKM:Axis unit="deg">2</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.52</nsKM:Radius>
+						<nsKM:Power unit="D">39.61</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.27</nsKM:Power>
+						<nsKM:Axis unit="deg">92</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:Median>
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.56</nsKM:Radius>
+						<nsKM:Power unit="D">39.44</nsKM:Power>
+						<nsKM:Axis unit="deg">87</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.49</nsKM:Radius>
+						<nsKM:Power unit="D">39.76</nsKM:Power>
+						<nsKM:Axis unit="deg">177</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.53</nsKM:Radius>
+						<nsKM:Power unit="D">39.60</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.32</nsKM:Power>
+						<nsKM:Axis unit="deg">87</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:Median>
+			</nsKM:R>
+			<nsKM:L>
+				<nsKM:List No="1">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.62</nsKM:Radius>
+						<nsKM:Power unit="D">39.14</nsKM:Power>
+						<nsKM:Axis unit="deg">71</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.51</nsKM:Radius>
+						<nsKM:Power unit="D">39.67</nsKM:Power>
+						<nsKM:Axis unit="deg">161</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.57</nsKM:Radius>
+						<nsKM:Power unit="D">39.40</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.53</nsKM:Power>
+						<nsKM:Axis unit="deg">71</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="2">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.61</nsKM:Radius>
+						<nsKM:Power unit="D">39.18</nsKM:Power>
+						<nsKM:Axis unit="deg">71</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.51</nsKM:Radius>
+						<nsKM:Power unit="D">39.66</nsKM:Power>
+						<nsKM:Axis unit="deg">161</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.56</nsKM:Radius>
+						<nsKM:Power unit="D">39.42</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.48</nsKM:Power>
+						<nsKM:Axis unit="deg">71</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="3">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.62</nsKM:Radius>
+						<nsKM:Power unit="D">39.16</nsKM:Power>
+						<nsKM:Axis unit="deg">72</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.51</nsKM:Radius>
+						<nsKM:Power unit="D">39.65</nsKM:Power>
+						<nsKM:Axis unit="deg">162</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.57</nsKM:Radius>
+						<nsKM:Power unit="D">39.40</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.49</nsKM:Power>
+						<nsKM:Axis unit="deg">72</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:Median>
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.62</nsKM:Radius>
+						<nsKM:Power unit="D">39.16</nsKM:Power>
+						<nsKM:Axis unit="deg">71</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">8.51</nsKM:Radius>
+						<nsKM:Power unit="D">39.66</nsKM:Power>
+						<nsKM:Axis unit="deg">161</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.57</nsKM:Radius>
+						<nsKM:Power unit="D">39.41</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-0.50</nsKM:Power>
+						<nsKM:Axis unit="deg">71</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:Median>
+			</nsKM:L>
+		</nsKM:KM>
+		<Confidence>
+			<R>
+				<List No="1">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="2">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="3">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<Median>
+					<ConfidenceIndex></ConfidenceIndex>
+				</Median>
+			</R>
+			<L>
+				<List No="1">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="2">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="3">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<Median>
+					<ConfidenceIndex></ConfidenceIndex>
+				</Median>
+			</L>
+		</Confidence>
+	</nsKM:Measure>
+	<nsTM:Measure type="TM">
+		<nsTM:TM>
+			<nsTM:R>
+				<nsTM:List No="1">
+					<nsTM:IOP_mmHg unit="mmHg">20.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:List No="2">
+					<nsTM:IOP_mmHg unit="mmHg">21.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:List No="3">
+					<nsTM:IOP_mmHg unit="mmHg">21.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:Average>
+					<nsTM:IOP_mmHg unit="mmHg">21.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+				</nsTM:Average>
+			</nsTM:R>
+			<nsTM:L>
+				<nsTM:List No="1">
+					<nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:List No="2">
+					<nsTM:IOP_mmHg unit="mmHg">18.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:List No="3">
+					<nsTM:IOP_mmHg unit="mmHg">19.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:Average>
+					<nsTM:IOP_mmHg unit="mmHg">18.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+				</nsTM:Average>
+			</nsTM:L>
+		</nsTM:TM>
+		<nsTM:CorrectedIOP>
+			<nsTM:Formula1 No="1">
+				<nsTM:R>
+					<nsTM:Param1 unit="mm">0.520</nsTM:Param1>
+					<nsTM:Param2>0.012</nsTM:Param2>
+					<nsTM:CCT unit="mm">0.907</nsTM:CCT>
+					<nsTM:Measured>
+						<nsTM:IOP_mmHg unit="mmHg">21.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Measured>
+					<nsTM:Corrected>
+						<nsTM:IOP_mmHg unit="mmHg">16.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Corrected>
+				</nsTM:R>
+				<nsTM:L>
+					<nsTM:Param1 unit="mm">0.520</nsTM:Param1>
+					<nsTM:Param2>0.012</nsTM:Param2>
+					<nsTM:CCT unit="mm">0.880</nsTM:CCT>
+					<nsTM:Measured>
+						<nsTM:IOP_mmHg unit="mmHg">18.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Measured>
+					<nsTM:Corrected>
+						<nsTM:IOP_mmHg unit="mmHg">14.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Corrected>
+				</nsTM:L>
+			</nsTM:Formula1>
+		</nsTM:CorrectedIOP>
+	</nsTM:Measure>
+</Ophthalmology>

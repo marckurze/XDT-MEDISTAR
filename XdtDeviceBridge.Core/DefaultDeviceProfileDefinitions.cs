@@ -405,16 +405,16 @@ public static class DefaultDeviceProfileDefinitions
 
     public static DeviceProfileDefinition CreateTopconTrk2PDefault()
     {
-        var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);
+        var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
 
         return new DeviceProfileDefinition(
             Metadata: new ProfileMetadata(
                 Id: "device-topcon-trk2p-default",
                 Name: "TOPCON TRK2P",
                 ProfileKind: ProfileKind.DeviceProfile,
-                Description: "Default device profile definition for TOPCON TRK2P JOIA/Ophthalmology XML tonometry and CCT files. Namespace-Normalisierung ist später im Parser erforderlich.",
+                Description: "Default device profile definition for TOPCON TRK-2P JOIA/Ophthalmology XML files with REF, KM, TM, CCT fallback and optional SBJ data. XML namespaces nsCommon/nsREF/nsKM/nsTM/nsSBJ are read namespace-tolerantly.",
                 Vendor: "TOPCON",
-                Product: "TRK2P",
+                Product: "TRK-2P",
                 Version: "1.0.0",
                 CreatedAt: timestamp,
                 UpdatedAt: timestamp,
@@ -422,30 +422,46 @@ public static class DefaultDeviceProfileDefinitions
                 IsBuiltIn: true,
                 IsUserDefined: false),
             Manufacturer: "TOPCON",
-            Model: "TRK2P",
-            DeviceType: "Tonometer/Pachymeter",
+            Model: "TRK-2P",
+            DeviceType: "Autorefraktometer/Keratometer/Tonometer/Pachymeter/Subjektivtest",
             ParserMode: "Xml",
             Measurements: new[]
             {
-                new DeviceMeasurementDefinition("trk2p-company", "Company", "Ophthalmology/Common/Company", "Common", string.Empty, string.Empty, false, "TOPCON JOIA common company field; Namespace-Normalisierung erforderlich."),
-                new DeviceMeasurementDefinition("trk2p-model-name", "ModelName", "Ophthalmology/Common/ModelName", "Common", string.Empty, string.Empty, false, "TOPCON JOIA common model field; Namespace-Normalisierung erforderlich."),
-                new DeviceMeasurementDefinition("trk2p-measurement-date", "MeasurementDate", "Ophthalmology/Common/Date", "Common", string.Empty, string.Empty, false, "Measurement date from TOPCON TRK2P common block; optional."),
-                new DeviceMeasurementDefinition("trk2p-measurement-time", "MeasurementTime", "Ophthalmology/Common/Time", "Common", string.Empty, string.Empty, false, "Measurement time from TOPCON TRK2P common block; optional."),
-                new DeviceMeasurementDefinition("trk2p-r-iop-1", "TM R IOP 1", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='1']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 1; optional because productive output selection is noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-r-iop-2", "TM R IOP 2", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='2']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 2; optional because productive output selection is noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-r-iop-3", "TM R IOP 3", "Ophthalmology/Measure[@type='TM']/TM/R/List[@No='3']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 3; optional because productive output selection is noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-r-iop-average", "TM R IOP Average", "Ophthalmology/Measure[@type='TM']/TM/R/Average/IOP_mmHg", "TM", "R", "mmHg", true, "Right IOP average from documented TOPCON TRK2P sample."),
-                new DeviceMeasurementDefinition("trk2p-l-iop-1", "TM L IOP 1", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='1']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 1; optional because productive output selection is noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-l-iop-2", "TM L IOP 2", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='2']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 2; optional because productive output selection is noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-l-iop-3", "TM L IOP 3", "Ophthalmology/Measure[@type='TM']/TM/L/List[@No='3']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 3; optional because productive output selection is noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-l-iop-average", "TM L IOP Average", "Ophthalmology/Measure[@type='TM']/TM/L/Average/IOP_mmHg", "TM", "L", "mmHg", true, "Left IOP average from documented TOPCON TRK2P sample."),
-                new DeviceMeasurementDefinition("trk2p-r-cct-3", "CCT R Pachy 3", "Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='3']/CCT_mm", "CCT", "R", "mm", false, "Right CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-r-cct-4", "CCT R Pachy 4", "Ophthalmology/Measure[@type='TM']/CCT/R/List[@No='4']/CCT_mm", "CCT", "R", "mm", false, "Right CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-l-cct-1", "CCT L Pachy 1", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='1']/CCT_mm", "CCT", "L", "mm", false, "Left CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-l-cct-2", "CCT L Pachy 2", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='2']/CCT_mm", "CCT", "L", "mm", false, "Left CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren."),
-                new DeviceMeasurementDefinition("trk2p-l-cct-3", "CCT L Pachy 3", "Ophthalmology/Measure[@type='TM']/CCT/L/List[@No='3']/CCT_mm", "CCT", "L", "mm", false, "Left CCT value in mm; MEDISTAR µm conversion and productive selection noch zu validieren.")
+                new DeviceMeasurementDefinition("trk2p-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common company field."),
+                new DeviceMeasurementDefinition("trk2p-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common model field."),
+                new DeviceMeasurementDefinition("trk2p-measurement-date", "MeasurementDate", "Common/Date", "Common", string.Empty, string.Empty, false, "Measurement date from TOPCON TRK-2P common block."),
+                new DeviceMeasurementDefinition("trk2p-measurement-time", "MeasurementTime", "Common/Time", "Common", string.Empty, string.Empty, false, "Measurement time from TOPCON TRK-2P common block."),
+                new DeviceMeasurementDefinition("trk2p-ref-r-sphere", "REF R Sphere", "Measure[@Type='REF']/REF/R/Median/Sphere", "REF", "R", "dpt", true, "Right sphere from TOPCON TRK-2P REF median values."),
+                new DeviceMeasurementDefinition("trk2p-ref-r-cylinder", "REF R Cylinder", "Measure[@Type='REF']/REF/R/Median/Cylinder", "REF", "R", "dpt", true, "Right cylinder from TOPCON TRK-2P REF median values."),
+                new DeviceMeasurementDefinition("trk2p-ref-r-axis", "REF R Axis", "Measure[@Type='REF']/REF/R/Median/Axis", "REF", "R", "deg", true, "Right axis from TOPCON TRK-2P REF median values."),
+                new DeviceMeasurementDefinition("trk2p-ref-l-sphere", "REF L Sphere", "Measure[@Type='REF']/REF/L/Median/Sphere", "REF", "L", "dpt", true, "Left sphere from TOPCON TRK-2P REF median values."),
+                new DeviceMeasurementDefinition("trk2p-ref-l-cylinder", "REF L Cylinder", "Measure[@Type='REF']/REF/L/Median/Cylinder", "REF", "L", "dpt", true, "Left cylinder from TOPCON TRK-2P REF median values."),
+                new DeviceMeasurementDefinition("trk2p-ref-l-axis", "REF L Axis", "Measure[@Type='REF']/REF/L/Median/Axis", "REF", "L", "deg", true, "Left axis from TOPCON TRK-2P REF median values."),
+                new DeviceMeasurementDefinition("trk2p-ref-pd-distance", "REF PD Distance", "Measure[@Type='REF']/PD/Distance", "REF", string.Empty, "mm", false, "Distance PD from TOPCON TRK-2P REF data."),
+                new DeviceMeasurementDefinition("trk2p-ref-vd", "REF VD", "Measure[@Type='REF']/VD", "REF", string.Empty, "mm", false, "Vertex distance from TOPCON TRK-2P REF data."),
+                new DeviceMeasurementDefinition("trk2p-ref-r-line", "REF R MEDISTAR-Zeile", "Measure[@Type='REF']/REF/R/MedistarLine", "REF", "R", string.Empty, false, "Computed MEDISTAR REF line for TOPCON TRK-2P right eye."),
+                new DeviceMeasurementDefinition("trk2p-ref-l-line", "REF L MEDISTAR-Zeile", "Measure[@Type='REF']/REF/L/MedistarLine", "REF", "L", string.Empty, false, "Computed MEDISTAR REF line for TOPCON TRK-2P left eye."),
+                new DeviceMeasurementDefinition("trk2p-km-line1", "KM MEDISTAR R1/R2-Zeile", "Measure[@Type='KM']/KM/MedistarLine1", "KM", string.Empty, string.Empty, false, "Computed MEDISTAR keratometry R1/R2 line for TOPCON TRK-2P."),
+                new DeviceMeasurementDefinition("trk2p-km-line2", "KM MEDISTAR AV/CYL-Zeile", "Measure[@Type='KM']/KM/MedistarLine2", "KM", string.Empty, string.Empty, false, "Computed MEDISTAR keratometry AV/CYL line for TOPCON TRK-2P."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-1", "TM R IOP 1", "Measure[@Type='TM']/TM/R/List[@No='1']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 1."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-2", "TM R IOP 2", "Measure[@Type='TM']/TM/R/List[@No='2']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 2."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-3", "TM R IOP 3", "Measure[@Type='TM']/TM/R/List[@No='3']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 3."),
+                new DeviceMeasurementDefinition("trk2p-r-iop-average", "TM R IOP Average", "Measure[@Type='TM']/TM/R/Average/IOP_mmHg", "TM", "R", "mmHg", true, "Right IOP average."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-1", "TM L IOP 1", "Measure[@Type='TM']/TM/L/List[@No='1']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 1."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-2", "TM L IOP 2", "Measure[@Type='TM']/TM/L/List[@No='2']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 2."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-3", "TM L IOP 3", "Measure[@Type='TM']/TM/L/List[@No='3']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 3."),
+                new DeviceMeasurementDefinition("trk2p-l-iop-average", "TM L IOP Average", "Measure[@Type='TM']/TM/L/Average/IOP_mmHg", "TM", "L", "mmHg", true, "Left IOP average."),
+                new DeviceMeasurementDefinition("trk2p-tono-pachy-right-line", "TM MEDISTAR Pachy rechts", "Measure[@Type='TM']/Tono/PachyRightLine", "TM", "R", string.Empty, false, "Computed MEDISTAR tonometry pachymetry line for right eye when CCT is available."),
+                new DeviceMeasurementDefinition("trk2p-tono-pachy-left-line", "TM MEDISTAR Pachy links", "Measure[@Type='TM']/Tono/PachyLeftLine", "TM", "L", string.Empty, false, "Computed MEDISTAR tonometry pachymetry line for left eye when CCT is available."),
+                new DeviceMeasurementDefinition("trk2p-tono-corrected-line", "TM MEDISTAR Korrektur-Zeile", "Measure[@Type='TM']/Tono/CorrectedLine", "TM", string.Empty, string.Empty, false, "Computed MEDISTAR tonometry line with CorrectedIOP and IOP list when available."),
+                new DeviceMeasurementDefinition("trk2p-tono-list-line", "TM MEDISTAR IOP-Listen-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Computed MEDISTAR tonometry list line."),
+                new DeviceMeasurementDefinition("trk2p-pachy-line", "CCT MEDISTAR Pachymetrie-Zeile", "Measure[@Type='CCT']/Pachy/MedistarLine", "CCT", string.Empty, string.Empty, false, "Computed MEDISTAR pachymetry line from CCT or CorrectedIOP fallback."),
+                new DeviceMeasurementDefinition("trk2p-sbj-line1", "SBJ MEDISTAR-Zeile 1", "Measure[@Type='SBJ']/MedistarLine1", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR subjective refraction line 1 when SBJ values are present."),
+                new DeviceMeasurementDefinition("trk2p-sbj-line2", "SBJ MEDISTAR-Zeile 2", "Measure[@Type='SBJ']/MedistarLine2", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR subjective refraction line 2 when SBJ values are present."),
+                new DeviceMeasurementDefinition("trk2p-sbj-line3", "SBJ MEDISTAR-Zeile 3", "Measure[@Type='SBJ']/MedistarLine3", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR subjective refraction line 3 when SBJ values are present."),
+                new DeviceMeasurementDefinition("trk2p-sbj-line4", "SBJ MEDISTAR-Zeile 4", "Measure[@Type='SBJ']/MedistarLine4", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR subjective refraction line 4 when SBJ values are present.")
             },
-            SupportedExaminationTypes: new[] { "TM", "CCT", "Tonometrie", "Pachymetrie" },
+            SupportedExaminationTypes: new[] { "REF", "KM", "TM", "CCT", "SBJ", "Autorefraktion", "Keratometer", "Tonometrie", "Pachymetrie", "Subjektiv" },
             CanContainMultipleExaminationTypes: true);
     }
 

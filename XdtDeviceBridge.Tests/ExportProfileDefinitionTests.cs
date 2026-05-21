@@ -452,7 +452,7 @@ public sealed class ExportProfileDefinitionTests
         Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
         Assert.Equal("device-topcon-trk2p-default", profile.SourceDeviceProfileId);
         Assert.Equal("Windows-1252", profile.OutputEncoding);
-        Assert.Equal(9, profile.Rules.Count);
+        Assert.Equal(19, profile.Rules.Count);
     }
 
     [Fact]
@@ -487,18 +487,20 @@ public sealed class ExportProfileDefinitionTests
     }
 
     [Fact]
-    public void CreateMedistarTopconTrk2PDefault_ShouldContainMultipleResultRulesFor6228()
+    public void CreateMedistarTopconTrk2PDefault_ShouldContainPreparedResultRulesForRefKmPachyTonoAndSbj()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault();
-        var resultRules = profile.Rules
-            .Where(rule => rule.TargetFieldCode == "6228" && rule.RuleType == ExportRuleType.Template)
-            .ToList();
 
-        Assert.Equal(3, resultRules.Count);
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("mmHg"));
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("µm"));
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains(":Iop"));
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains(":Pachy"));
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/L/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine2");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6220" && rule.SourcePath == "Device.Measure[@Type='CCT']/Pachy/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='TM']/Tono/TonoListLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6302" or "6303" or "6304" or "6305");
+        Assert.DoesNotContain(profile.Rules, rule => (rule.OutputTemplate ?? string.Empty).Contains(":Iop", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(profile.Rules, rule => (rule.OutputTemplate ?? string.Empty).Contains(":Pachy", StringComparison.OrdinalIgnoreCase));
     }
 
     private static ExportProfileDefinition WithModifiedRule(

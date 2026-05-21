@@ -9,7 +9,7 @@ public sealed class XmlDeviceParser
     private static readonly HashSet<string> KnownGroups = new(StringComparer.OrdinalIgnoreCase)
     {
         "ARMedian", "ARList", "TrialLens", "ContactLens", "PDList", "LM", "PD", "NT", "PACHY", "CorrectedIOP",
-        "REF", "KM", "SBJ"
+        "REF", "KM", "TM", "CCT", "SBJ"
     };
 
     public DeviceParseResult ParseFile(string path)
@@ -40,6 +40,7 @@ public sealed class XmlDeviceParser
             AddNidekLm7MedistarLines(document.Root, measurements);
             AddTopconCl300MedistarLines(document.Root, measurements);
             AddTopconKr800SMedistarLines(document.Root, measurements);
+            AddTopconTrk2PMedistarLines(document.Root, measurements);
             AddNidekNt530PMedistarLines(document.Root, measurements);
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or IOException or UnauthorizedAccessException)
@@ -329,6 +330,52 @@ public sealed class XmlDeviceParser
         }
     }
 
+    private static void AddTopconTrk2PMedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        if (common is null)
+        {
+            return;
+        }
+
+        var company = GetChildValue(common, "Company");
+        var modelName = GetChildValue(common, "ModelName");
+        if (!string.Equals(company, "TOPCON", StringComparison.OrdinalIgnoreCase)
+            || !IsTopconTrk2PModel(modelName))
+        {
+            return;
+        }
+
+        var refMeasure = FindMeasure(root, "REF");
+        if (refMeasure is not null)
+        {
+            AddTopconKr800SRefMedistarLines(measurements, refMeasure);
+        }
+
+        var kmMeasure = FindMeasure(root, "KM");
+        if (kmMeasure is not null)
+        {
+            AddTopconKr800SKmMedistarLines(measurements, kmMeasure);
+        }
+
+        var tmMeasure = FindMeasure(root, "TM");
+        if (tmMeasure is not null)
+        {
+            AddTopconTrk2PTonoAndPachyMedistarLines(measurements, tmMeasure, FindMeasure(root, "CCT"), GetChildValue(common, "Time"));
+        }
+
+        var sbjMeasure = FindMeasure(root, "SBJ");
+        if (sbjMeasure is not null)
+        {
+            AddTopconKr800SSbjMedistarLines(measurements, sbjMeasure);
+        }
+    }
+
     private static void AddTopconKr800SRefMedistarLines(List<MeasurementValue> measurements, XElement refMeasure)
     {
         var refRoot = FindChild(refMeasure, "REF");
@@ -462,6 +509,291 @@ public sealed class XmlDeviceParser
                 null,
                 "SBJ");
         }
+    }
+
+    private static void AddTopconTrk2PTonoAndPachyMedistarLines(
+        List<MeasurementValue> measurements,
+        XElement tmMeasure,
+        XElement? cctMeasure,
+        string? time)
+    {
+        var tmRoot = FindChild(tmMeasure, "TM");
+        if (tmRoot is null)
+        {
+            return;
+        }
+
+        var corrected = GetTopconTrk2PCorrectedIopParts(tmMeasure);
+        var pachyLine = BuildTopconTrk2PPachyMedistarLine(cctMeasure, corrected.Right, corrected.Left);
+        if (!string.IsNullOrWhiteSpace(pachyLine))
+        {
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='CCT']/Pachy/MedistarLine",
+                "TOPCON TRK-2P MEDISTAR Pachymetrie-Zeile",
+                pachyLine,
+                null,
+                null,
+                "CCT");
+        }
+
+        var tonoLines = BuildTopconTrk2PTonoMedistarLines(tmRoot, corrected.Right, corrected.Left, time);
+        foreach (var line in tonoLines)
+        {
+            AddMeasurement(
+                measurements,
+                $"Measure[@Type='TM']/Tono/{line.Key}",
+                line.DisplayName,
+                line.Value,
+                null,
+                null,
+                "TM");
+        }
+    }
+
+    private static string? BuildTopconTrk2PPachyMedistarLine(
+        XElement? cctMeasure,
+        TopconTrk2PCorrectedIopParts rightCorrected,
+        TopconTrk2PCorrectedIopParts leftCorrected)
+    {
+        var rightCct = GetTopconTrk2PCctValue(cctMeasure, "R") ?? rightCorrected.Cct;
+        var leftCct = GetTopconTrk2PCctValue(cctMeasure, "L") ?? leftCorrected.Cct;
+
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(rightCct))
+        {
+            parts.Add($"RA: {FormatThreeDecimal(rightCct)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(leftCct))
+        {
+            parts.Add($"LA: {FormatThreeDecimal(leftCct)}");
+        }
+
+        return parts.Count == 0 ? null : string.Join("   // ", parts);
+    }
+
+    private static string? GetTopconTrk2PCctValue(XElement? cctMeasure, string eye)
+    {
+        if (cctMeasure is null)
+        {
+            return null;
+        }
+
+        var cctRoot = FindChild(cctMeasure, "CCT");
+        var eyeElement = cctRoot is null ? null : FindChild(cctRoot, eye);
+        if (eyeElement is null)
+        {
+            return null;
+        }
+
+        var average = FindChild(eyeElement, "Average");
+        var averageValue = average is null ? null : GetChildValue(average, "CCT_mm");
+        if (!string.IsNullOrWhiteSpace(averageValue))
+        {
+            return averageValue;
+        }
+
+        return FindChildren(eyeElement, "List")
+            .Select(element => GetChildValue(element, "CCT_mm"))
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+    }
+
+    private static IReadOnlyList<TopconTrk2PMedistarLine> BuildTopconTrk2PTonoMedistarLines(
+        XElement tmRoot,
+        TopconTrk2PCorrectedIopParts rightCorrected,
+        TopconTrk2PCorrectedIopParts leftCorrected,
+        string? time)
+    {
+        var lines = new List<TopconTrk2PMedistarLine>();
+
+        var rightPachy = BuildTopconTrk2PCorrectedPachyLine("PR", rightCorrected.Cct);
+        if (!string.IsNullOrWhiteSpace(rightPachy))
+        {
+            lines.Add(new TopconTrk2PMedistarLine(
+                "PachyRightLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Pachymetrie rechts",
+                rightPachy));
+        }
+
+        var leftPachy = BuildTopconTrk2PCorrectedPachyLine("PL", leftCorrected.Cct);
+        if (!string.IsNullOrWhiteSpace(leftPachy))
+        {
+            lines.Add(new TopconTrk2PMedistarLine(
+                "PachyLeftLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Pachymetrie links",
+                leftPachy));
+        }
+
+        var tonometryList = BuildTopconTrk2PTonometryListSegment(tmRoot, time);
+        var correctedLine = BuildTopconTrk2PCorrectedIopLine(rightCorrected, leftCorrected, tonometryList);
+        if (!string.IsNullOrWhiteSpace(correctedLine))
+        {
+            lines.Add(new TopconTrk2PMedistarLine(
+                "CorrectedLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Korrektur",
+                correctedLine));
+        }
+        else if (!string.IsNullOrWhiteSpace(tonometryList))
+        {
+            lines.Add(new TopconTrk2PMedistarLine(
+                "TonoListLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Einzelwerte",
+                tonometryList));
+        }
+
+        return lines;
+    }
+
+    private static string? BuildTopconTrk2PCorrectedPachyLine(string label, string? cct)
+    {
+        if (string.IsNullOrWhiteSpace(cct))
+        {
+            return null;
+        }
+
+        var micrometers = FormatMillimetersAsMicrometers(cct);
+        return $"{label}: {micrometers} [{micrometers}] µm";
+    }
+
+    private static string? BuildTopconTrk2PCorrectedIopLine(
+        TopconTrk2PCorrectedIopParts right,
+        TopconTrk2PCorrectedIopParts left,
+        string? tonometryList)
+    {
+        var parts = new List<string>();
+        AddTopconTrk2PCorrectedEyeParts(parts, "PR", right);
+        AddTopconTrk2PCorrectedEyeParts(parts, "PL", left);
+
+        if (parts.Count == 0)
+        {
+            return null;
+        }
+
+        var line = string.Join(" Y  ", parts);
+        return string.IsNullOrWhiteSpace(tonometryList) ? line : $"{line} P  {tonometryList}";
+    }
+
+    private static void AddTopconTrk2PCorrectedEyeParts(List<string> parts, string label, TopconTrk2PCorrectedIopParts values)
+    {
+        var measurementParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(values.Measured))
+        {
+            measurementParts.Add($"Gemessen = {FormatOneDecimal(values.Measured)} mmHg");
+        }
+
+        if (!string.IsNullOrWhiteSpace(values.Corrected))
+        {
+            measurementParts.Add($"Korrigiert = {FormatOneDecimal(values.Corrected)} mmHg");
+        }
+
+        if (measurementParts.Count > 0)
+        {
+            parts.Add($"{label}: {string.Join("; ", measurementParts)};");
+        }
+
+        var parameterParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(values.Param1))
+        {
+            parameterParts.Add($"Param1 = {FormatMillimetersAsMicrometers(values.Param1)}um");
+        }
+
+        if (!string.IsNullOrWhiteSpace(values.Param2))
+        {
+            parameterParts.Add($"Param2 = {values.Param2.Trim()}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(values.Cct))
+        {
+            parameterParts.Add($"CCT = {FormatMillimetersAsMicrometers(values.Cct)}um");
+        }
+
+        if (parameterParts.Count > 0)
+        {
+            parts.Add($"{label}: {string.Join("; ", parameterParts)}");
+        }
+    }
+
+    private static string? BuildTopconTrk2PTonometryListSegment(XElement tmRoot, string? time)
+    {
+        var parts = new List<string>();
+        var rightSegment = BuildTopconTrk2PEyeTonometryList("R", FindChild(tmRoot, "R"));
+        var leftSegment = BuildTopconTrk2PEyeTonometryList("L", FindChild(tmRoot, "L"));
+        if (!string.IsNullOrWhiteSpace(rightSegment))
+        {
+            parts.Add(rightSegment);
+        }
+
+        if (!string.IsNullOrWhiteSpace(leftSegment))
+        {
+            parts.Add(leftSegment);
+        }
+
+        if (parts.Count == 0)
+        {
+            return null;
+        }
+
+        var line = $"{string.Join(" // ", parts)} mmHg";
+        var formattedTime = FormatNt530PTime(time);
+        return string.IsNullOrWhiteSpace(formattedTime) ? line : $"{line} {formattedTime}";
+    }
+
+    private static string? BuildTopconTrk2PEyeTonometryList(string label, XElement? eyeElement)
+    {
+        if (eyeElement is null)
+        {
+            return null;
+        }
+
+        var values = FindChildren(eyeElement, "List")
+            .Select(element => GetChildValue(element, "IOP_mmHg"))
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!)
+            .ToList();
+        var average = GetChildValue(FindChild(eyeElement, "Average") ?? new XElement("Average"), "IOP_mmHg");
+        if (values.Count == 0 && string.IsNullOrWhiteSpace(average))
+        {
+            return null;
+        }
+
+        var valuePart = values.Count == 0 ? string.Empty : string.Join(" ", values.Select(FormatPlainNumber));
+        var averagePart = string.IsNullOrWhiteSpace(average) ? string.Empty : $"[{FormatOneDecimal(average)}]";
+        return $"{label} = {string.Join(" ", new[] { valuePart, averagePart }.Where(part => !string.IsNullOrWhiteSpace(part)))}";
+    }
+
+    private static TopconTrk2PCorrectedIop GetTopconTrk2PCorrectedIopParts(XElement tmMeasure)
+    {
+        var correctedIop = FindChild(tmMeasure, "CorrectedIOP");
+        var formula = correctedIop is null ? null : FindChild(correctedIop, "Formula1");
+        if (formula is null)
+        {
+            return new TopconTrk2PCorrectedIop(
+                new TopconTrk2PCorrectedIopParts(null, null, null, null, null),
+                new TopconTrk2PCorrectedIopParts(null, null, null, null, null));
+        }
+
+        return new TopconTrk2PCorrectedIop(
+            GetTopconTrk2PCorrectedEyeParts(FindChild(formula, "R")),
+            GetTopconTrk2PCorrectedEyeParts(FindChild(formula, "L")));
+    }
+
+    private static TopconTrk2PCorrectedIopParts GetTopconTrk2PCorrectedEyeParts(XElement? eyeElement)
+    {
+        if (eyeElement is null)
+        {
+            return new TopconTrk2PCorrectedIopParts(null, null, null, null, null);
+        }
+
+        var measured = GetChildValue(FindChild(eyeElement, "Measured") ?? new XElement("Measured"), "IOP_mmHg");
+        var corrected = GetChildValue(FindChild(eyeElement, "Corrected") ?? new XElement("Corrected"), "IOP_mmHg");
+
+        return new TopconTrk2PCorrectedIopParts(
+            measured,
+            corrected,
+            GetChildValue(eyeElement, "Param1"),
+            GetChildValue(eyeElement, "Param2"),
+            GetChildValue(eyeElement, "CCT"));
     }
 
     private static void AddNidekNt530PMedistarLines(XElement root, List<MeasurementValue> measurements)
@@ -987,6 +1319,16 @@ public sealed class XmlDeviceParser
         return (micrometers / 1000m).ToString("0.000", CultureInfo.InvariantCulture);
     }
 
+    private static string FormatMillimetersAsMicrometers(string value)
+    {
+        if (!TryParseDecimal(value, out var millimeters))
+        {
+            return value.Trim();
+        }
+
+        return (millimeters * 1000m).ToString("0", CultureInfo.InvariantCulture);
+    }
+
     private static string FormatPlainNumber(string value)
     {
         if (!TryParseDecimal(value, out var number))
@@ -1017,6 +1359,16 @@ public sealed class XmlDeviceParser
         }
 
         return number.ToString("0.00", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatThreeDecimal(string value)
+    {
+        if (!TryParseDecimal(value, out var number))
+        {
+            return value.Trim();
+        }
+
+        return number.ToString("0.000", CultureInfo.InvariantCulture);
     }
 
     private static string? FormatNt530PTime(string? value)
@@ -1060,6 +1412,12 @@ public sealed class XmlDeviceParser
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "KR800S", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTopconTrk2PModel(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "TRK2P", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddLensmeterLine(
@@ -1310,6 +1668,17 @@ public sealed class XmlDeviceParser
     private sealed record Nt530PMedistarLine(string Key, string DisplayName, string Value);
 
     private sealed record Nt530PCorrectedIopParts(
+        string? Measured,
+        string? Corrected,
+        string? Param1,
+        string? Param2,
+        string? Cct);
+
+    private sealed record TopconTrk2PMedistarLine(string Key, string DisplayName, string Value);
+
+    private sealed record TopconTrk2PCorrectedIop(TopconTrk2PCorrectedIopParts Right, TopconTrk2PCorrectedIopParts Left);
+
+    private sealed record TopconTrk2PCorrectedIopParts(
         string? Measured,
         string? Corrected,
         string? Param1,
