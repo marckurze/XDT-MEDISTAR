@@ -261,6 +261,24 @@ public sealed class MappingEngineTests
     }
 
     [Fact]
+    public void Map_MissingOptionalSbjPreparedLineShouldBeSkipped()
+    {
+        var engine = new MappingEngine();
+        var patient = CreatePatient();
+        var measurements = CreateMeasurements();
+
+        var rules = new[]
+        {
+            CreateRule("1", "6227", "SBJ", "Device.Measure[@Type='SBJ']/MedistarLine4", "{value}")
+        };
+
+        var result = engine.Map(patient, measurements, rules);
+
+        Assert.False(result.HasErrors);
+        Assert.Empty(result.Records);
+    }
+
+    [Fact]
     public void Map_EmptyTargetFieldCodeCreatesError()
     {
         var engine = new MappingEngine();

@@ -39,6 +39,7 @@ Besonders stabil wirken aktuell:
 - NIDEK LM7 / LM-7P als praktisch validierter Lensmeter-Referenzkandidat mit echter XML-Fixture, `Sphare`/`Sphere`-Toleranz, MEDISTAR-Lensmeter-Ausgabe, Reparatur alter persistierter BuiltIn-Exportpfade, MEDISTAR-Praxisprotokoll und selektivem Templatepaket-Test
 - NIDEK NT530P / NT-530P als direkt nutzbarer testseitiger MEDISTAR-Kandidat mit echter UTF-16-XML-Fixture, `6220`-Pachymetrie, `6205`-Tonometrie, BuiltIn-Schnittstellenprofil, selektivem Templatepaket-Test und korrigiertem Nachlauf nach erfolgreichem Mehrfachanhang-Export
 - TOPCON CL300 als erster praktisch validierter TOPCON-Lensmeter-Referenzkandidat mit echten XML-Fixtures, namespace-toleranter LM-Erkennung, `6228`-MedistarLine-Ausgabe inklusive ADD, PD und signierten H/V-Prismenkomponenten, BuiltIn-Schnittstellenprofil, selektivem Templatepaket-Test und Praxisprotokoll
+- TOPCON KR800S als testseitig direkt nutzbarer Mehruntersuchungs-Kandidat mit echten Shift-JIS-XML-Fixtures, namespace-toleranter REF/KM/SBJ-Erkennung, `6228`-Autorefraktion, `6221`-Keratometrie, konservativer `6227`-SBJ-Ausgabe, BuiltIn-Schnittstellenprofil und selektivem Templatepaket-Test
 - generischer AttachmentOnly-/Dokumentgeraete-V1-Kandidat `MEDISTAR + Dokumentanhang`: AIS-Datei plus stabile Dokumentdateien erzeugen je Datei eigene `6302`-`6305`-Linkfelder, ohne Messwertparser und ohne `6228`/`6205`/`6220`; `6304` enthaelt Benutzerbeschreibung oder Originaldateiname, `6305` bleibt der technische Pfad.
 - Die Schnittstellenprofil-Konfiguration fuer AttachmentOnly ist kontextsensitiv reduziert: Der Geraete-/Dokument-Importordner ist der Dateieingang, separate XDT-Anhang-Importfelder und interne `6302`-`6305`-Templatefelder werden ausgeblendet, `Dokumentationstext erfassen` ist profilbezogen einstellbar, und der manuelle Dialog sammelt weitere stabile Dateien bis zum Klick auf `Uebertragen`.
 - AttachmentOnly erzwingt die Anhangverarbeitung zur Laufzeit ueber den Dokument-Importordner, auch wenn alte gespeicherte technische Anhang-Flags deaktiviert sind. Dokumentgeraete erzeugen dadurch wieder je Datei `6302`/`6303`/`6304`/`6305`; eine AIS-only-XDT ohne Dokumentlinks wird fuer Dokumentanhaenge nicht mehr still als Erfolg ausgegeben.
@@ -48,7 +49,7 @@ Besonders stabil wirken aktuell:
 
 Vorbereitet, aber noch nicht als produktiv abgenommen:
 
-- V2-Geraeteprofile fuer TOPCON KR800 und TOPCON TRK2P
+- V2-Geraeteprofil fuer TOPCON TRK2P; TOPCON KR800S ist testseitig angebunden, aber praktisch in MEDISTAR noch nicht abgenommen
 - fertige, auslieferbare ZIP-Templatepakete fuer diese vorbereiteten Geraeteprofile; fuer ARK1S, AR360 und LM7 sind Referenz-/Kandidatendokumentation und temporaer erzeugte Export-/Import-Tests vorhanden, offizielle ZIP-Artefakte folgen erst nach Release-Regel
 - UI-Einstellung fuer die Rueckdock-Zeit und sichtbarer Countdown-Hinweis fuer abdockbare Geraeteanbindungen
 - weitere End-to-End-Testfaelle der automatischen AIS-/Geraete-/XDT-Anhang-Verarbeitung; ein Pflicht-Anhang-Praxislauf mit MEDISTAR + NIDEK ARK1S ist dokumentiert, weitere Faelle bleiben offen
@@ -337,7 +338,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - NIDEK NT530P: echte XML-Fixture, Parserwerte, korrigierter mehrzeiliger `6205`-/`6220`-Export mit Headern und Templatepaket-Kandidat testseitig vorhanden; praktische MEDISTAR-Abnahme offen
 - MEDISTAR + Dokumentanhang: AttachmentOnly-V1 mit optionalem `6227`, mehreren `6302`-`6305`-Anhaengen und Templatepaket-Kandidat testseitig vorhanden; praktische MEDISTAR-Abnahme offen
 - TOPCON CL300: echte XML-Fixtures, `6228`-Lensmeter-Ausgabe, Templatepaket-Kandidat und praktische MEDISTAR-Abnahme vorhanden; offen bleiben H/V-Prisma-Beobachtung und offizielles ZIP-Artefakt
-- TOPCON KR800
+- TOPCON KR800S: echte Shift-JIS-XML-Fixtures, REF-`6228`, KM-`6221`, konservative SBJ-`6227`-Ausgabe und Templatepaket-Kandidat testseitig vorhanden; praktische MEDISTAR-Abnahme offen
 - TOPCON TRK2P
 - fertige Templatepaket-Dateien fuer vorbereitete Geraeteprofile
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
@@ -394,7 +395,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | mittel | NIDEK NT530P produktiv validieren | Echte UTF-16-XML-Fixture, Parserwerte, Header-/Einzelzeilen fuer `6205` Tonometrie und `6220` Pachymetrie, BuiltIn-Geraete-/Export-/Schnittstellenprofil, selektiver Templatepaket-Test, Mehrfachanhang-Linkfelder und korrigierter Nachlauf/Monitoring-Reset sind vorhanden. | Praktische MEDISTAR-Nachpruefung fuer den kompletten JPG-Mehrfachanhanglauf nach Nachlauf-Fix fehlt. | Geraetespezifischen E2E-Testlauf mit MEDISTAR erneut durchfuehren und protokollieren. | Karteikarten-Darstellung, Ordnernachlauf oder Attachment-Erwartung koennte fachlich abweichen. | Testdaten, MEDISTAR-Anforderungen |
 | mittel | Dokumentgeraete produktiv validieren | BuiltIn `MEDISTAR + Dokumentanhang`, AttachmentOnly-Modus, kontextsensitive Konfiguration, profilbezogene Option `Dokumentationstext erfassen`, pro-Datei-Beschreibung ueber `6304`, mehrere `6302`-`6305`-Linkfeldgruppen, Sammeln bis `Uebertragen` und selektiver Templatepaket-Test sind vorhanden. Der Livefehler mit fehlenden Linkfeldern bei alten deaktivierten Anhang-Flags ist korrigiert. | Praktischer MEDISTAR-Test mit PDF/JPG/XML/Medienanhaengen, pro-Datei-Beschreibung und realistischen Copy/Move-Zielordnern fehlt. | Live-Test mit mehreren stabilen Dokumentdateien protokollieren; dabei Ruhezeit- und manuellen Bestaetigungsmodus, Textoption an/aus und 6302-6305-Ausgabe pruefen. | Dokumentgeraete bleiben ohne Praxisabnahme ein technischer Kandidat. | Testanhaenge, MEDISTAR-Anforderungen |
 | mittel | TOPCON CL300 als Referenzkandidat halten | Echte Serial0001-/Serial1521-XML-Fixtures, Namespace-/LM-Erkennung, BuiltIn-Geraete-/Export-/Schnittstellenprofil, `6228`-MedistarLine-Ausgabe mit ADD, PD und signierten H/V-Prismenkomponenten, Templatepaket-Kandidat und praktische MEDISTAR-Abnahme sind vorhanden. | Offizielles ZIP-Artefakt fehlt; die H/V-Prisma-Darstellung sollte in weiteren MEDISTAR-Anzeigen beobachtet werden. | Praxisprotokoll beibehalten, H/V-Prisma bei weiteren CL300-Faellen pruefen und danach ZIP-Release nach Regel entscheiden. | MEDISTAR-Anzeige der H/V-Prismenkomponenten koennte fachlich nachjustiert werden muessen. | Testdaten, MEDISTAR-Anforderungen |
-| mittel | TOPCON KR800 produktiv validieren | Profile vorbereitet. | REF/KM/SBJ-Strukturen mit echten Daten pruefen. | KR800-Testdaten auswerten und Exportregeln validieren. | Mehruntersuchungsdaten koennen falsch gruppiert werden. | Testdaten |
+| mittel | TOPCON KR800S produktiv validieren | Echte Shift-JIS-Fixtures, namespace-tolerante REF/KM/SBJ-Erkennung, `6228`/`6221`/`6227`-Export, BuiltIns und Templatepaket-Test sind vorhanden. | Praktische MEDISTAR-Abnahme fehlt. | KR800S mit Serial0036/Serial0426 in MEDISTAR testen und SBJ-Darstellung fachlich bewerten. | Subjektive `6227`-Zeilen koennten nach Praxisfeedback feiner formuliert werden. | Testdaten, MEDISTAR-Anforderungen |
 | mittel | TOPCON TRK2P produktiv validieren | Profile vorbereitet. | TM/CCT/IOP-Strukturen und Einheiten pruefen. | TRK2P-Testdaten auswerten und Exportregeln validieren. | IOP/CCT-Ausgabe koennte fachlich unpassend sein. | Testdaten |
 | niedrig | AIS-/MEDISTAR-Exporttemplate-Default-Konzept | Bewusst zurueckgestellt; nach Reset nicht implementiert. | Neues Fachkonzept. Bis dahin keine Modelle, Services, UI, 6330-Automatik oder Codex-Umsetzungsauftraege dazu. | Nicht implementieren; fachliche Neubewertung ausserhalb des aktuellen Entwicklungsstrangs abwarten. | Anwender pflegen Exportregeln weiter manuell im Baukasten. | Neues Fachkonzept, MEDISTAR-Fachabstimmung |
 | mittel | Weitere AIS-Profile ausser MEDISTAR | Nicht produktiv umgesetzt. | AIS-spezifische Parser, Feldkennungen, Exportregeln und Tests. | Erst nach MEDISTAR-Kern stabilisieren und Bedarf priorisieren. | App bleibt MEDISTAR-zentriert. | AIS-Dokumentation |
@@ -456,7 +457,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - LM7/LM7P-Prisma-/PD-Sonderfaelle
 - NT530P
 - TOPCON CL300 H/V-Prisma in weiteren Praxisfaellen beobachten
-- TOPCON KR800
+- TOPCON KR800S praktisch in MEDISTAR validieren
 - TOPCON TRK2P
 
 ### Phase 7: Lizenzierung haerten

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Xml.Linq;
 
 namespace XdtDeviceBridge.Core;
@@ -7,7 +8,8 @@ public sealed class XmlDeviceParser
 {
     private static readonly HashSet<string> KnownGroups = new(StringComparer.OrdinalIgnoreCase)
     {
-        "ARMedian", "ARList", "TrialLens", "ContactLens", "PDList", "LM", "PD", "NT", "PACHY", "CorrectedIOP"
+        "ARMedian", "ARList", "TrialLens", "ContactLens", "PDList", "LM", "PD", "NT", "PACHY", "CorrectedIOP",
+        "REF", "KM", "SBJ"
     };
 
     public DeviceParseResult ParseFile(string path)
@@ -22,6 +24,7 @@ public sealed class XmlDeviceParser
 
         try
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var document = XDocument.Load(path, LoadOptions.PreserveWhitespace);
             if (document.Root is null)
             {
@@ -36,6 +39,7 @@ public sealed class XmlDeviceParser
 
             AddNidekLm7MedistarLines(document.Root, measurements);
             AddTopconCl300MedistarLines(document.Root, measurements);
+            AddTopconKr800SMedistarLines(document.Root, measurements);
             AddNidekNt530PMedistarLines(document.Root, measurements);
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or IOException or UnauthorizedAccessException)
@@ -283,6 +287,181 @@ public sealed class XmlDeviceParser
 
         AddLensmeterLine(measurements, "R", FindChild(lm, "R"), binocularPd, includeSignedPrismComponents: true);
         AddLensmeterLine(measurements, "L", FindChild(lm, "L"), null, includeSignedPrismComponents: true);
+    }
+
+    private static void AddTopconKr800SMedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        if (common is null)
+        {
+            return;
+        }
+
+        var company = GetChildValue(common, "Company");
+        var modelName = GetChildValue(common, "ModelName");
+        if (!string.Equals(company, "TOPCON", StringComparison.OrdinalIgnoreCase)
+            || !IsTopconKr800SModel(modelName))
+        {
+            return;
+        }
+
+        var refMeasure = FindMeasure(root, "REF");
+        if (refMeasure is not null)
+        {
+            AddTopconKr800SRefMedistarLines(measurements, refMeasure);
+        }
+
+        var kmMeasure = FindMeasure(root, "KM");
+        if (kmMeasure is not null)
+        {
+            AddTopconKr800SKmMedistarLines(measurements, kmMeasure);
+        }
+
+        var sbjMeasure = FindMeasure(root, "SBJ");
+        if (sbjMeasure is not null)
+        {
+            AddTopconKr800SSbjMedistarLines(measurements, sbjMeasure);
+        }
+    }
+
+    private static void AddTopconKr800SRefMedistarLines(List<MeasurementValue> measurements, XElement refMeasure)
+    {
+        var refRoot = FindChild(refMeasure, "REF");
+        if (refRoot is null)
+        {
+            return;
+        }
+
+        var pd = GetChildValue(FindChild(refMeasure, "PD") ?? new XElement("PD"), "Distance");
+        var vd = GetChildValue(refMeasure, "VD");
+
+        AddTopconKr800SRefEyeLine(measurements, "R", FindChild(FindChild(refRoot, "R") ?? new XElement("R"), "Median"), pd, vd);
+        AddTopconKr800SRefEyeLine(measurements, "L", FindChild(FindChild(refRoot, "L") ?? new XElement("L"), "Median"), null, null);
+    }
+
+    private static void AddTopconKr800SRefEyeLine(
+        List<MeasurementValue> measurements,
+        string eye,
+        XElement? median,
+        string? pd,
+        string? vd)
+    {
+        var line = BuildRefractionEyeLine(eye, median);
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(pd))
+        {
+            line += $" PD= {FormatPd(pd)}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(vd))
+        {
+            line += $" VD= {FormatTwoDecimal(vd)}";
+        }
+
+        AddMeasurement(
+            measurements,
+            $"Measure[@Type='REF']/REF/{eye}/MedistarLine",
+            $"{eye} MEDISTAR TOPCON KR-800S REF-Zeile",
+            line,
+            null,
+            eye,
+            "REF");
+    }
+
+    private static void AddTopconKr800SKmMedistarLines(List<MeasurementValue> measurements, XElement kmMeasure)
+    {
+        var kmRoot = FindChild(kmMeasure, "KM");
+        if (kmRoot is null)
+        {
+            return;
+        }
+
+        var rightMedian = FindChild(FindChild(kmRoot, "R") ?? new XElement("R"), "Median");
+        var leftMedian = FindChild(FindChild(kmRoot, "L") ?? new XElement("L"), "Median");
+
+        var radiiParts = new[]
+            {
+                BuildKeratometryRadiiSegment("R", rightMedian),
+                BuildKeratometryRadiiSegment("L", leftMedian)
+            }
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Select(part => part!)
+            .ToArray();
+        if (radiiParts.Length > 0)
+        {
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='KM']/KM/MedistarLine1",
+                "MEDISTAR TOPCON KR-800S KM R1/R2-Zeile",
+                string.Join(" // ", radiiParts),
+                null,
+                null,
+                "KM");
+        }
+
+        var averageParts = new[]
+            {
+                BuildKeratometryAverageSegment("R", rightMedian),
+                BuildKeratometryAverageSegment("L", leftMedian)
+            }
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .Select(part => part!)
+            .ToArray();
+        if (averageParts.Length > 0)
+        {
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='KM']/KM/MedistarLine2",
+                "MEDISTAR TOPCON KR-800S KM AV/CYL-Zeile",
+                string.Join(" // ", averageParts),
+                null,
+                null,
+                "KM");
+        }
+    }
+
+    private static void AddTopconKr800SSbjMedistarLines(List<MeasurementValue> measurements, XElement sbjMeasure)
+    {
+        var refractionTest = FindChild(sbjMeasure, "RefractionTest");
+        if (refractionTest is null)
+        {
+            return;
+        }
+
+        var lines = new List<string>();
+        foreach (var type in FindChildren(refractionTest, "Type"))
+        {
+            var typeName = GetChildValue(type, "TypeName") ?? "Subjektive Refraktion";
+            foreach (var examDistance in FindChildren(type, "ExamDistance"))
+            {
+                var line = BuildSubjectiveRefractionLine(typeName, examDistance);
+                if (!string.IsNullOrWhiteSpace(line))
+                {
+                    lines.Add(line);
+                }
+            }
+        }
+
+        for (var i = 0; i < lines.Count; i++)
+        {
+            AddMeasurement(
+                measurements,
+                $"Measure[@Type='SBJ']/MedistarLine{i + 1}",
+                $"MEDISTAR TOPCON KR-800S SBJ-Zeile {i + 1}",
+                lines[i],
+                null,
+                null,
+                "SBJ");
+        }
     }
 
     private static void AddNidekNt530PMedistarLines(XElement root, List<MeasurementValue> measurements)
@@ -643,6 +822,164 @@ public sealed class XmlDeviceParser
         return pachy is null ? null : GetChildValue(FindChild(pachy, "PACHYAverage") ?? new XElement("PACHYAverage"), "Thickness");
     }
 
+    private static string? BuildRefractionEyeLine(string eye, XElement? values)
+    {
+        if (values is null)
+        {
+            return null;
+        }
+
+        var sphere = GetChildValue(values, "Sphere", "Sph", "Sphare");
+        var cylinder = GetChildValue(values, "Cylinder", "Cyl");
+        var axis = GetChildValue(values, "Axis");
+        if (string.IsNullOrWhiteSpace(sphere)
+            || string.IsNullOrWhiteSpace(cylinder)
+            || string.IsNullOrWhiteSpace(axis))
+        {
+            return null;
+        }
+
+        return $"{eye}.:S={FormatSignedDecimal(sphere)} Z={FormatSignedDecimal(cylinder)}*{FormatAxis(axis)}";
+    }
+
+    private static string? BuildKeratometryRadiiSegment(string eye, XElement? median)
+    {
+        if (median is null)
+        {
+            return null;
+        }
+
+        var r1 = BuildKeratometryRadiusPart("R1", FindChild(median, "R1"));
+        var r2 = BuildKeratometryRadiusPart("R2", FindChild(median, "R2"));
+        if (string.IsNullOrWhiteSpace(r1) || string.IsNullOrWhiteSpace(r2))
+        {
+            return null;
+        }
+
+        return $"{eye}: {r1} {r2}";
+    }
+
+    private static string? BuildKeratometryRadiusPart(string label, XElement? element)
+    {
+        if (element is null)
+        {
+            return null;
+        }
+
+        var radius = GetChildValue(element, "Radius");
+        var power = GetChildValue(element, "Power");
+        var axis = GetChildValue(element, "Axis");
+        if (string.IsNullOrWhiteSpace(radius)
+            || string.IsNullOrWhiteSpace(power)
+            || string.IsNullOrWhiteSpace(axis))
+        {
+            return null;
+        }
+
+        return $"{label}={FormatTwoDecimal(radius)} {FormatTwoDecimal(power)} *{FormatAxisCompact(axis)}";
+    }
+
+    private static string? BuildKeratometryAverageSegment(string eye, XElement? median)
+    {
+        if (median is null)
+        {
+            return null;
+        }
+
+        var average = FindChild(median, "Average");
+        var cylinder = FindChild(median, "Cylinder");
+        if (average is null || cylinder is null)
+        {
+            return null;
+        }
+
+        var averageRadius = GetChildValue(average, "Radius");
+        var averagePower = GetChildValue(average, "Power");
+        var cylinderPower = GetChildValue(cylinder, "Power");
+        var cylinderAxis = GetChildValue(cylinder, "Axis");
+        if (string.IsNullOrWhiteSpace(averageRadius)
+            || string.IsNullOrWhiteSpace(averagePower)
+            || string.IsNullOrWhiteSpace(cylinderPower)
+            || string.IsNullOrWhiteSpace(cylinderAxis))
+        {
+            return null;
+        }
+
+        return $"{eye}: AV={FormatTwoDecimal(averageRadius)} {FormatTwoDecimal(averagePower)} CYL={FormatSignedCompactDecimal(cylinderPower)} {FormatAxisCompact(cylinderAxis)}";
+    }
+
+    private static string? BuildSubjectiveRefractionLine(string typeName, XElement examDistance)
+    {
+        var refractionData = FindChild(examDistance, "RefractionData");
+        if (refractionData is null)
+        {
+            return null;
+        }
+
+        var va = FindChild(examDistance, "VA");
+        var right = BuildSubjectiveEyeSegment("R", FindChild(refractionData, "R"), va);
+        var left = BuildSubjectiveEyeSegment("L", FindChild(refractionData, "L"), va);
+        var eyeSegments = new[] { right, left }
+            .Where(segment => !string.IsNullOrWhiteSpace(segment))
+            .Select(segment => segment!)
+            .ToArray();
+        if (eyeSegments.Length == 0)
+        {
+            return null;
+        }
+
+        var parts = new List<string>
+        {
+            $"Subjektive Refraktion {NormalizeSubjectiveTypeName(typeName)} {DetermineDistanceLabel(GetChildValue(examDistance, "Distance"))}:",
+            string.Join(" / ", eyeSegments)
+        };
+
+        var pd = GetChildValue(FindChild(examDistance, "PD") ?? new XElement("PD"), "B");
+        if (!string.IsNullOrWhiteSpace(pd))
+        {
+            parts.Add($"PD={FormatPd(pd)}");
+        }
+
+        var vd = GetChildValue(examDistance, "VD") ?? GetChildValue(refractionData, "VD");
+        if (!string.IsNullOrWhiteSpace(vd))
+        {
+            parts.Add($"VD={FormatTwoDecimal(vd)}");
+        }
+
+        return string.Join(" ", parts);
+    }
+
+    private static string? BuildSubjectiveEyeSegment(string eye, XElement? eyeElement, XElement? va)
+    {
+        var line = BuildRefractionEyeLine(eye, eyeElement);
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return null;
+        }
+
+        var visualAcuity = va is null ? null : GetChildValue(va, eye);
+        return string.IsNullOrWhiteSpace(visualAcuity)
+            ? line
+            : $"{line} VA={visualAcuity.Trim()}";
+    }
+
+    private static string NormalizeSubjectiveTypeName(string value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "Unbenannt"
+            : string.Join(" ", value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private static string DetermineDistanceLabel(string? distance)
+    {
+        if (!TryParseDecimal(distance ?? string.Empty, out var value))
+        {
+            return string.Empty;
+        }
+
+        return value <= 100m ? "NEAR" : "FAR";
+    }
+
     private static string FormatMicrometersAsMillimeters(string value)
     {
         if (!TryParseDecimal(value, out var micrometers))
@@ -673,6 +1010,16 @@ public sealed class XmlDeviceParser
         }
 
         return number.ToString("0.0", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatTwoDecimal(string value)
+    {
+        if (!TryParseDecimal(value, out var number))
+        {
+            return value.Trim();
+        }
+
+        return number.ToString("0.00", CultureInfo.InvariantCulture);
     }
 
     private static string? FormatNt530PTime(string? value)
@@ -710,6 +1057,12 @@ public sealed class XmlDeviceParser
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "CL300", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTopconKr800SModel(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "KR800S", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddLensmeterLine(
@@ -850,6 +1203,16 @@ public sealed class XmlDeviceParser
         return sign + Math.Abs(number).ToString("0.00", CultureInfo.InvariantCulture);
     }
 
+    private static string FormatSignedCompactDecimal(string value)
+    {
+        if (!TryParseDecimal(value, out var number))
+        {
+            return value.Trim();
+        }
+
+        return FormatSignedCompactDecimal(number);
+    }
+
     private static string FormatAxis(string value)
     {
         if (decimal.TryParse(value.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var axis))
@@ -858,6 +1221,16 @@ public sealed class XmlDeviceParser
         }
 
         return value.Trim().PadLeft(3);
+    }
+
+    private static string FormatAxisCompact(string value)
+    {
+        if (decimal.TryParse(value.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var axis))
+        {
+            return ((int)Math.Round(axis, MidpointRounding.AwayFromZero)).ToString(CultureInfo.InvariantCulture);
+        }
+
+        return value.Trim();
     }
 
     private static string FormatPd(string value)

@@ -60,7 +60,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Single(catalog.AisProfiles);
         Assert.Equal(9, catalog.DeviceProfiles.Count);
         Assert.Equal(9, catalog.ExportProfiles.Count);
-        Assert.Equal(7, catalog.InterfaceProfiles.Count);
+        Assert.Equal(8, catalog.InterfaceProfiles.Count);
         Assert.Equal("ais-medistar-default", catalog.AisProfiles[0].Metadata.Id);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
@@ -69,6 +69,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-lm7-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt530p-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-cl300-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-kr800-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-document-attachment-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-manual-document-transfer-default");
     }
@@ -227,7 +228,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Single(catalog.AisProfiles);
         Assert.Equal(9, catalog.DeviceProfiles.Count);
         Assert.Equal(9, catalog.ExportProfiles.Count);
-        Assert.Equal(7, catalog.InterfaceProfiles.Count);
+        Assert.Equal(8, catalog.InterfaceProfiles.Count);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
     }

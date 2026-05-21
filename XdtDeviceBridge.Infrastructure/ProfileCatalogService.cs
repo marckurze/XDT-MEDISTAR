@@ -321,6 +321,7 @@ public sealed class ProfileCatalogService
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekNt530PDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarTopconCl300Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault()
         };

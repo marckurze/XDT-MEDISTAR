@@ -28,6 +28,11 @@ public sealed class MappingEngine
 
             if (!TryResolveSource(rule.SourcePath, patientData, measurementMap, out var sourceValue))
             {
+                if (ShouldSkipMissingOptionalPreparedLine(rule))
+                {
+                    continue;
+                }
+
                 issues.Add(new MappingIssue(
                     MappingIssueSeverity.Error,
                     $"Source value not found: {rule.SourcePath} -> TargetFieldCode {rule.TargetFieldCode}",
@@ -44,6 +49,12 @@ public sealed class MappingEngine
         }
 
         return new MappingResult(records, issues);
+    }
+
+    private static bool ShouldSkipMissingOptionalPreparedLine(MappingRule rule)
+    {
+        return string.Equals(rule.TargetFieldCode, "6227", StringComparison.Ordinal)
+            && rule.SourcePath.StartsWith("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryResolveSource(

@@ -347,15 +347,15 @@ public sealed class DeviceProfileDefinitionTests
         var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
 
         Assert.Equal("TOPCON", profile.Manufacturer);
-        Assert.Equal("KR800", profile.Model);
+        Assert.Equal("KR-800S", profile.Model);
         Assert.Contains("Autorefractor", profile.DeviceType);
         Assert.Contains("Keratometer", profile.DeviceType);
+        Assert.Contains("Subjective", profile.DeviceType);
         Assert.Equal("Xml", profile.ParserMode);
         Assert.True(profile.CanContainMultipleExaminationTypes);
         Assert.Contains("REF", profile.SupportedExaminationTypes);
         Assert.Contains("KM", profile.SupportedExaminationTypes);
         Assert.Contains("SBJ", profile.SupportedExaminationTypes);
-        Assert.Contains("PD", profile.SupportedExaminationTypes);
     }
 
     [Fact]
@@ -363,12 +363,14 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
 
-        AssertRequiredMeasurement(profile, "kr800-ref-r-sphere", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Sphere");
-        AssertRequiredMeasurement(profile, "kr800-ref-r-cylinder", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Cylinder");
-        AssertRequiredMeasurement(profile, "kr800-ref-r-axis", "Ophthalmology/Measure[@type='REF']/REF/R/Median/Axis");
-        AssertRequiredMeasurement(profile, "kr800-ref-l-sphere", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Sphere");
-        AssertRequiredMeasurement(profile, "kr800-ref-l-cylinder", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Cylinder");
-        AssertRequiredMeasurement(profile, "kr800-ref-l-axis", "Ophthalmology/Measure[@type='REF']/REF/L/Median/Axis");
+        AssertRequiredMeasurement(profile, "kr800-ref-r-sphere", "Measure[@Type='REF']/REF/R/Median/Sphere");
+        AssertRequiredMeasurement(profile, "kr800-ref-r-cylinder", "Measure[@Type='REF']/REF/R/Median/Cylinder");
+        AssertRequiredMeasurement(profile, "kr800-ref-r-axis", "Measure[@Type='REF']/REF/R/Median/Axis");
+        AssertRequiredMeasurement(profile, "kr800-ref-l-sphere", "Measure[@Type='REF']/REF/L/Median/Sphere");
+        AssertRequiredMeasurement(profile, "kr800-ref-l-cylinder", "Measure[@Type='REF']/REF/L/Median/Cylinder");
+        AssertRequiredMeasurement(profile, "kr800-ref-l-axis", "Measure[@Type='REF']/REF/L/Median/Axis");
+        AssertOptionalMeasurement(profile, "kr800-ref-r-medistar-line", "Measure[@Type='REF']/REF/R/MedistarLine");
+        AssertOptionalMeasurement(profile, "kr800-ref-l-medistar-line", "Measure[@Type='REF']/REF/L/MedistarLine");
     }
 
     [Fact]
@@ -376,14 +378,12 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
 
-        AssertOptionalMeasurement(profile, "kr800-km-r-k1-power", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Power");
-        AssertOptionalMeasurement(profile, "kr800-km-r-k2-power", "Ophthalmology/Measure[@type='KM']/KM/R/Median/R2/Power");
-        AssertOptionalMeasurement(profile, "kr800-km-l-k1-power", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R1/Power");
-        AssertOptionalMeasurement(profile, "kr800-km-l-k2-power", "Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Power");
-        Assert.Contains(profile.Measurements, measurement =>
-            measurement.Group == "KM"
-            && !measurement.IsRequired
-            && (measurement.Description ?? string.Empty).Contains("KM-Ausgabe noch zu validieren", StringComparison.OrdinalIgnoreCase));
+        AssertOptionalMeasurement(profile, "kr800-km-r-k1-power", "Measure[@Type='KM']/KM/R/Median/R1/Power");
+        AssertOptionalMeasurement(profile, "kr800-km-r-k2-power", "Measure[@Type='KM']/KM/R/Median/R2/Power");
+        AssertOptionalMeasurement(profile, "kr800-km-l-k1-power", "Measure[@Type='KM']/KM/L/Median/R1/Power");
+        AssertOptionalMeasurement(profile, "kr800-km-l-k2-power", "Measure[@Type='KM']/KM/L/Median/R2/Power");
+        AssertOptionalMeasurement(profile, "kr800-km-line1", "Measure[@Type='KM']/KM/MedistarLine1");
+        AssertOptionalMeasurement(profile, "kr800-km-line2", "Measure[@Type='KM']/KM/MedistarLine2");
     }
 
     [Fact]
@@ -391,19 +391,21 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
 
-        AssertUnvalidatedOptionalMeasurement(profile, "kr800-sbj-r-sphere", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph");
-        AssertUnvalidatedOptionalMeasurement(profile, "kr800-sbj-l-sphere", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Sph");
-        AssertUnvalidatedOptionalMeasurement(profile, "kr800-sbj-pd-b", "Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-r-sphere", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-l-sphere", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Sph");
+        AssertOptionalMeasurement(profile, "kr800-sbj-pd-b", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B");
+        AssertOptionalMeasurement(profile, "kr800-sbj-line1", "Measure[@Type='SBJ']/MedistarLine1");
+        AssertOptionalMeasurement(profile, "kr800-sbj-line2", "Measure[@Type='SBJ']/MedistarLine2");
     }
 
     [Fact]
-    public void CreateTopconKr800Default_ShouldDocumentNamespaceRequirement()
+    public void CreateTopconKr800Default_ShouldUseNamespaceTolerantRootlessPaths()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
 
-        Assert.Contains("Namespace-Normalisierung", profile.Metadata.Description);
-        Assert.Contains(profile.Measurements, measurement =>
-            (measurement.Description ?? string.Empty).Contains("Namespace-Normalisierung", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain("Namespace-Normalisierung", profile.Metadata.Description);
+        Assert.DoesNotContain(profile.Measurements, measurement =>
+            measurement.SourcePath.Contains("Ophthalmology/", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

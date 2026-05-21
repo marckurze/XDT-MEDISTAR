@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe und MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe und MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat. TOPCON KR800S ist testseitig mit echten REF/KM/SBJ-XML-Dateien angebunden; die praktische MEDISTAR-Validierung steht noch aus. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -17,7 +17,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | NIDEK-LAN-XML | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Addition; Prisma/PD datenabhaengig | praktisch validierter Referenzkandidat fuer Lensmeter-XDT-Rueckgabe |
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | `6220` Pachymetrie und `6205` Tonometrie; keine `6228`-Geraetewerte | testseitig direkt nutzbarer MEDISTAR-Kandidat, praktische MEDISTAR-Validierung offen |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erster praktisch validierter TOPCON-Referenzkandidat mit Namespace- und Attributanforderungen |
-| TOPCON | KR800 | Autorefraktometer / Keratometer | Ophthalmology-/JOIA-XML | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | getrennte Ergebniszeilen für Refraktion, Keratometrie und optional subjektive Daten | relevant für Mehruntersuchungsdateien und Measure-Type-Selektion |
+| TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | testseitig mit zwei echten XML-Fixtures und Templatekandidat abgesichert |
 | TOPCON | TRK2P | Tonometer / Refraktions-Keratometer je nach Dateninhalt | Ophthalmology-/JOIA-XML | `TM`, `CCT` | keine zwingend erkennbar | Tonometrie- und Pachymetrieausgabe | relevant für Tonometrie/CCT-Kombination und JOIA-Parserlogik |
 
 ## 3. NIDEK AR1S
@@ -728,9 +728,9 @@ Wichtig für die spätere Parserlogik:
 - Für CL300 wurden in den analysierten Dateien keine JPG-/PDF-Attachments gefunden.
 - Praktische MEDISTAR-Validierung der CL300-Karteikartenanzeige ist mit beiden Originalfixtures erfolgt; die H/V-Prismendarstellung bleibt in weiteren Praxisfaellen zu beobachten.
 
-## 7. TOPCON KR800
+## 7. TOPCON KR800S
 
-Gerätetyp: Autorefraktometer/Keratometer
+Gerätetyp: Autorefraktometer/Keratometer/Subjektivtest
 
 Dateiformat:
 
@@ -744,22 +744,19 @@ Untersuchungsarten:
 
 Ableitung:
 
-- ein Gerät liefert mehrere Untersuchungsarten in einer Datei
-- Exportprofil muss auswählen können, welche Untersuchungen übernommen werden
-- Refraktion und Keratometrie benötigen getrennte manuelle Ergebnisregeln
-- Mapping muss `Measure[@type='...']` unterscheiden können
+- Ein Gerät liefert mehrere Untersuchungsarten in einer Datei.
+- `XmlDeviceParser` unterscheidet `Measure type="REF"`, `Measure type="KM"` und `Measure type="SBJ"` namespace-tolerant ueber `LocalName`.
+- REF nutzt die Median-Werte und erzeugt vorbereitete `MedistarLine`-Werte fuer `6228`.
+- KM nutzt die Median-Werte und erzeugt zwei vorbereitete Keratometerzeilen fuer `6221`.
+- SBJ gibt nur vorhandene Full-Correction-Fern-/Nahwerte als konservative `6227`-Zeilen aus; leere Unaided-/ContrastVA-/GlareVA-Bloecke werden nicht ausgegeben.
+- Shift-JIS-XML wird gelesen; `8402` kommt weiterhin aus AIS/MEDISTAR.
 
-Spätere Profilanforderung:
+## 7.1 TOPCON KR800S - erkannte SourcePaths und Mehruntersuchungsstruktur
 
-- mehrere Messwertgruppen
-- mehrere Ergebniszeilen
-- optionale Zusammenfassung oder getrennte Ausgabe
+Analysierte Originalfixtures im Repository:
 
-## 7.1 TOPCON KR800 – erkannte SourcePaths und Mehruntersuchungsstruktur
-
-Analysierte lokale Beispieldatei:
-
-- `C:\Users\MarcK\Downloads\Geraeteanbindungen\TOPCON KR800\M-Serial0426_20241126_145500_TOPCON_KR-800S_4871341.xml`
+- `XdtDeviceBridge.Tests/TestData/Devices/Topcon/KR800S/M-Serial0036_20131206_213127_TOPCON_KR-800S_.xml`
+- `XdtDeviceBridge.Tests/TestData/Devices/Topcon/KR800S/M-Serial0426_20241126_145500_TOPCON_KR-800S_4871341.xml`
 
 Die Datei ist ein JOIA-/Ophthalmology-XML mit `encoding="Shift-JIS"`. Der Root-Knoten `Ophthalmology` hat keinen Default-Namespace, die fachlichen Bereiche verwenden aber mehrere JOIA-Namespace-Präfixe:
 
@@ -856,28 +853,38 @@ Im Beispiel sind vier SBJ-ExamDistance-Kombinationen vorhanden:
 - `Type No="1"` / `Full Correction`, `ExamDistance No="2"` = `33.000 cm`, mit Nahwerten für R/L, aber ohne VA.
 - `Type No="2"` / `Unaided Data`, `ExamDistance No="1"` und `No="2"`, überwiegend leer, aber mit PD binokular.
 
-Für spätere anwendernahe Mapping-SourcePaths sollte analog zu CL300 eine normalisierte Darstellung verwendet werden, z. B.:
+Anwendernahe Mapping-SourcePaths nutzen wie CL300 eine normalisierte Darstellung ohne konkrete Namespace-Prefixe, z. B.:
 
 ```text
-Ophthalmology/Common/Company
-Ophthalmology/Common/ModelName
-Ophthalmology/Measure[@type='REF']/REF/R/Median/Sphere
-Ophthalmology/Measure[@type='REF']/REF/L/Median/Sphere
-Ophthalmology/Measure[@type='KM']/KM/R/Median/R1/Power
-Ophthalmology/Measure[@type='KM']/KM/L/Median/R2/Power
-Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R
-Ophthalmology/Measure[@type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B
+Common/Company
+Common/ModelName
+Measure[@Type='REF']/REF/R/Median/Sphere
+Measure[@Type='REF']/REF/L/Median/Sphere
+Measure[@Type='KM']/KM/R/Median/R1/Power
+Measure[@Type='KM']/KM/L/Median/R2/Power
+Measure[@Type='REF']/REF/R/MedistarLine
+Measure[@Type='KM']/KM/MedistarLine1
+Measure[@Type='SBJ']/MedistarLine1
 ```
 
-Wichtig für die spätere Parser- und Profil-Logik:
+Vorbereitete MEDISTAR-Ausgabe:
 
-- KR800 liefert mehrere Untersuchungsarten in einer einzigen Datei.
-- Exportprofile müssen pro Untersuchungsart entscheiden können, ob `REF`, `KM`, `SBJ` oder nur einzelne Gruppen übernommen werden.
+```text
+6228 R.:S=+ 3.75 Z=- 4.00* 13 PD= 66 VD= 13.75
+6228 L.:S=+ 3.75 Z=- 2.50*173
+6221 R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81
+6221 R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171
+6227 Subjektive Refraktion Full Correction FAR: R.:S=+ 3.75 Z=- 4.00* 13 VA=0.6 / L.:S=+ 3.75 Z=- 2.50*173 VA=1.0 PD=66 VD=13.75
+```
+
+Wichtig fuer Parser- und Profil-Logik:
+
+- KR800S liefert mehrere Untersuchungsarten in einer einzigen Datei.
 - `Measure[@type='...']` ist zwingend relevant, weil REF/KM/SBJ parallele Strukturen mit unterschiedlichen Namespaces nutzen.
-- `Median`-Werte sind für Standardausgaben vermutlich stabiler als Einzelmesslisten.
-- SBJ enthält mehrere `Type`- und `ExamDistance`-Varianten; die fachliche Auswahl ist noch zu validieren.
-- `Shift-JIS` muss als Eingabe-Encoding unterstützt oder zuverlässig erkannt werden.
-- Für KR800 wurden in der analysierten Datei keine JPG-/PDF-Attachments gefunden.
+- `Median`-Werte werden fuer REF und KM als Standardausgabe verwendet.
+- SBJ enthaelt mehrere `Type`- und `ExamDistance`-Varianten; aktuell wird `Full Correction` fuer FAR/NEAR konservativ ausgegeben, leere R/L-Zeilen werden ausgelassen.
+- Fuer KR800S wurden in den analysierten Dateien keine JPG-/PDF-Attachments gefunden.
+- Praktische MEDISTAR-Validierung steht noch aus; subjektive Zeilen koennen nach weiteren Praxisbeispielen verfeinert werden.
 
 ## 8. TOPCON TRK2P
 
@@ -973,7 +980,7 @@ Erkannte CCT-/Pachymetrie-SourcePaths:
 | korrigierter IOP rechts | noch nicht erkannt | - | noch zu validieren; kein `CorrectedIOP`-Knoten in der analysierten Datei |
 | korrigierter IOP links | noch nicht erkannt | - | noch zu validieren; kein `CorrectedIOP`-Knoten in der analysierten Datei |
 
-Für spätere anwendernahe Mapping-SourcePaths sollte analog zu CL300/KR800 eine normalisierte Darstellung verwendet werden, z. B.:
+Für spätere anwendernahe Mapping-SourcePaths sollte analog zu CL300/KR800S eine normalisierte Darstellung verwendet werden, z. B.:
 
 ```text
 Ophthalmology/Common/Company
@@ -1052,7 +1059,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
-4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; KR800 und TRK2P folgen erst mit belastbaren Beispieldateien, ohne fachliche Werte aus Dokumentation zu erfinden.
+4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist testseitig mit echten REF/KM/SBJ-Dateien angebunden und braucht die praktische MEDISTAR-Abnahme, TRK2P folgt erst mit belastbaren Beispieldateien.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
@@ -1183,7 +1190,7 @@ Beschreibung:
 
 - objektive Refraktionswerte aus einem Autorefraktor
 - typischer Kontext: Voruntersuchung durch MFA
-- Beispielgeräte: NIDEK ARK1S, TOPCON KR800, ggf. Kombigeräte wie TRK-2P
+- Beispielgeräte: NIDEK ARK1S, TOPCON KR800S, ggf. Kombigeräte wie TRK-2P
 
 Generisches MEDISTAR-Zielbild:
 

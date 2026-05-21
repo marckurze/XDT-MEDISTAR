@@ -369,7 +369,7 @@ public sealed class ExportProfileDefinitionTests
         Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
         Assert.Equal("device-topcon-kr800-default", profile.SourceDeviceProfileId);
         Assert.Equal("Windows-1252", profile.OutputEncoding);
-        Assert.Equal(10, profile.Rules.Count);
+        Assert.Equal(14, profile.Rules.Count);
     }
 
     [Fact]
@@ -415,27 +415,33 @@ public sealed class ExportProfileDefinitionTests
             .ToList();
 
         Assert.Equal(2, refRules.Count);
-        Assert.Contains(refRules, rule => rule.OutputTemplate.Contains("R.:S="));
-        Assert.Contains(refRules, rule => rule.OutputTemplate.Contains("L.:S="));
-        Assert.All(refRules, rule => Assert.Contains(":Diopter", rule.OutputTemplate));
-        Assert.All(refRules, rule => Assert.Contains(":Axis", rule.OutputTemplate));
-        Assert.All(refRules, rule => Assert.Contains(":Pd", rule.OutputTemplate));
+        Assert.Contains(refRules, rule => rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(refRules, rule => rule.SourcePath == "Device.Measure[@Type='REF']/REF/L/MedistarLine");
+        Assert.All(refRules, rule => Assert.Equal("{value}", rule.OutputTemplate));
     }
 
     [Fact]
-    public void CreateMedistarTopconKr800Default_ShouldPrepareProvisionalKmRules()
+    public void CreateMedistarTopconKr800Default_ShouldContainKmRulesFor6221AndSbjRulesFor6227()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();
         var kmRules = profile.Rules
             .Where(rule =>
-                rule.TargetFieldCode == "6228"
+                rule.TargetFieldCode == "6221"
                 && rule.RuleType == ExportRuleType.Template
                 && rule.TargetName.Contains("Keratometry", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         Assert.Equal(2, kmRules.Count);
-        Assert.All(kmRules, rule => Assert.Contains(":Keratometry", rule.OutputTemplate));
-        Assert.All(kmRules, rule => Assert.Contains("KM-Ausgabe noch zu validieren", rule.Description ?? string.Empty));
+        Assert.Contains(kmRules, rule => rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains(kmRules, rule => rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine2");
+
+        var sbjRules = profile.Rules
+            .Where(rule => rule.TargetFieldCode == "6227" && rule.RuleType == ExportRuleType.Template)
+            .ToList();
+        Assert.Equal(4, sbjRules.Count);
+        Assert.Contains(sbjRules, rule => rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
+        Assert.Contains(sbjRules, rule => rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine2");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6205" or "6220" or "6302" or "6303" or "6304" or "6305");
     }
 
     [Fact]

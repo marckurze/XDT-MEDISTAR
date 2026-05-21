@@ -187,6 +187,43 @@ public static class DefaultInterfaceProfileDefinitions
             Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON CL-300 lensmeter profile candidate.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarTopconKr800Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-topcon-kr800-default",
+                Name: "MEDISTAR + TOPCON KR800S",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for MEDISTAR and TOPCON KR-800S.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON KR-800S",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-topcon-kr800-default",
+            ExportProfileId: "export-medistar-topcon-kr800-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON KR-800S REF, KM and SBJ profile candidate.");
+    }
+
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);
