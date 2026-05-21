@@ -60,7 +60,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Single(catalog.AisProfiles);
         Assert.Equal(9, catalog.DeviceProfiles.Count);
         Assert.Equal(9, catalog.ExportProfiles.Count);
-        Assert.Equal(6, catalog.InterfaceProfiles.Count);
+        Assert.Equal(7, catalog.InterfaceProfiles.Count);
         Assert.Equal("ais-medistar-default", catalog.AisProfiles[0].Metadata.Id);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
@@ -68,6 +68,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ar360-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-lm7-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt530p-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-cl300-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-document-attachment-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-manual-document-transfer-default");
     }
@@ -173,6 +174,49 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconCl300BuiltInDeviceProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: new[] { CreateLegacyTopconCl300DeviceProfile(isBuiltIn: true) },
+            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.DeviceProfiles, profile => profile.Metadata.Id == "device-topcon-cl300-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/MedistarLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/L/MedistarLine");
+        Assert.DoesNotContain(profile.Measurements, measurement => ContainsLegacyTopconCl300Path(measurement.SourcePath));
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconCl300BuiltInExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyTopconCl300ExportProfile(isBuiltIn: true) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-cl300-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => rule.SourcePath == "Device.Measure[@Type='LM']/LM/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.SourcePath == "Device.Measure[@Type='LM']/LM/L/MedistarLine");
+        Assert.DoesNotContain(profile.Rules, rule => ContainsLegacyTopconCl300Path(rule.SourcePath));
+        Assert.DoesNotContain(profile.Rules, rule => ContainsLegacyTopconCl300Path(rule.OutputTemplate));
+    }
+
+    [Fact]
     public void Load_ShouldReadAllExpectedProfilesAfterEnsureDefaultProfiles()
     {
         var paths = CreateAppDataPaths();
@@ -183,7 +227,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Single(catalog.AisProfiles);
         Assert.Equal(9, catalog.DeviceProfiles.Count);
         Assert.Equal(9, catalog.ExportProfiles.Count);
-        Assert.Equal(6, catalog.InterfaceProfiles.Count);
+        Assert.Equal(7, catalog.InterfaceProfiles.Count);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
     }
@@ -484,11 +528,75 @@ public sealed class ProfileCatalogServiceTests
         };
     }
 
+    private static DeviceProfileDefinition CreateLegacyTopconCl300DeviceProfile(bool isBuiltIn)
+    {
+        var current = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Measurements = current.Measurements
+                .Where(measurement => !measurement.SourcePath.EndsWith("/MedistarLine", StringComparison.Ordinal))
+                .Select(measurement => measurement with
+                {
+                    SourcePath = measurement.SourcePath.Replace("Measure[@Type='LM']/", "Ophthalmology/Measure[@type='LM']/", StringComparison.Ordinal)
+                })
+                .ToArray()
+        };
+    }
+
+    private static ExportProfileDefinition CreateLegacyTopconCl300ExportProfile(bool isBuiltIn)
+    {
+        var current = DefaultExportProfileDefinitions.CreateMedistarTopconCl300Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Rules = current.Rules.Take(6)
+                .Concat(new[]
+                {
+                    new ExportRuleDefinition(
+                        "7",
+                        "6228",
+                        "LensmeterResultRight",
+                        ExportRuleType.Template,
+                        "Device.Ophthalmology/Measure[@type='LM']/LM/R/Sphere",
+                        "R.:S={Device.Ophthalmology/Measure[@type='LM']/LM/R/Sphere} Z={Device.Ophthalmology/Measure[@type='LM']/LM/R/Cylinder}*{Device.Ophthalmology/Measure[@type='LM']/LM/R/Axis}",
+                        7,
+                        true,
+                        "Legacy TOPCON CL300 right lensmeter template with root-prefixed paths."),
+                    new ExportRuleDefinition(
+                        "8",
+                        "6228",
+                        "LensmeterResultLeft",
+                        ExportRuleType.Template,
+                        "Device.Ophthalmology/Measure[@type='LM']/LM/L/Sphere",
+                        "L.:S={Device.Ophthalmology/Measure[@type='LM']/LM/L/Sphere} Z={Device.Ophthalmology/Measure[@type='LM']/LM/L/Cylinder}*{Device.Ophthalmology/Measure[@type='LM']/LM/L/Axis}",
+                        8,
+                        true,
+                        "Legacy TOPCON CL300 left lensmeter template with root-prefixed paths.")
+                })
+                .ToArray()
+        };
+    }
+
     private static bool ContainsLegacyLm7MedianPath(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
             && (value.Contains("Device.R/LM/Median/", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("Device.L/LM/Median/", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ContainsLegacyTopconCl300Path(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("Ophthalmology/", StringComparison.OrdinalIgnoreCase);
     }
 
     private static ProfileMetadata CreateUserExportMetadata(string id)

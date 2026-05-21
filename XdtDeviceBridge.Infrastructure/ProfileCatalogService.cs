@@ -10,6 +10,8 @@ public sealed class ProfileCatalogService
     private const string InterfacesFolderName = "interfaces";
     private const string Lm7DefaultExportProfileId = "export-medistar-nidek-lm7-default";
     private const string Nt530PDefaultExportProfileId = "export-medistar-nidek-nt530p-default";
+    private const string TopconCl300DefaultDeviceProfileId = "device-topcon-cl300-default";
+    private const string TopconCl300DefaultExportProfileId = "export-medistar-topcon-cl300-default";
 
     private readonly ProfileFileRepository _repository;
 
@@ -250,9 +252,11 @@ public sealed class ProfileCatalogService
             SaveDefaultIfMissing(GetAisFolder(paths), profile, _repository.SaveAisProfile);
         }
 
+        var devicesFolder = GetDevicesFolder(paths);
         foreach (var profile in CreateDefaultDeviceProfiles())
         {
-            SaveDefaultIfMissing(GetDevicesFolder(paths), profile, _repository.SaveDeviceProfileDefinition);
+            SaveDefaultIfMissing(devicesFolder, profile, _repository.SaveDeviceProfileDefinition);
+            RepairBuiltInDeviceProfileIfNeeded(devicesFolder, profile);
         }
 
         var exportsFolder = GetExportsFolder(paths);
@@ -316,6 +320,7 @@ public sealed class ProfileCatalogService
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekNt530PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTopconCl300Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault()
         };
@@ -362,10 +367,38 @@ public sealed class ProfileCatalogService
         saveProfile(filePath, profile);
     }
 
+    private void RepairBuiltInDeviceProfileIfNeeded(string folder, DeviceProfileDefinition defaultProfile)
+    {
+        if (!string.Equals(defaultProfile.Metadata.Id, TopconCl300DefaultDeviceProfileId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var filePath = CreateProfilePath(folder, defaultProfile.Metadata.Id);
+        if (!File.Exists(filePath))
+        {
+            return;
+        }
+
+        var existingProfile = _repository.LoadDeviceProfileDefinition(filePath);
+        if (!existingProfile.Metadata.IsBuiltIn || existingProfile.Metadata.IsUserDefined)
+        {
+            return;
+        }
+
+        if (!NeedsTopconCl300DeviceProfileRepair(existingProfile))
+        {
+            return;
+        }
+
+        _repository.SaveDeviceProfileDefinition(filePath, defaultProfile);
+    }
+
     private void RepairBuiltInExportProfileIfNeeded(string folder, ExportProfileDefinition defaultProfile)
     {
         if (!string.Equals(defaultProfile.Metadata.Id, Lm7DefaultExportProfileId, StringComparison.Ordinal)
-            && !string.Equals(defaultProfile.Metadata.Id, Nt530PDefaultExportProfileId, StringComparison.Ordinal))
+            && !string.Equals(defaultProfile.Metadata.Id, Nt530PDefaultExportProfileId, StringComparison.Ordinal)
+            && !string.Equals(defaultProfile.Metadata.Id, TopconCl300DefaultExportProfileId, StringComparison.Ordinal))
         {
             return;
         }
@@ -393,7 +426,27 @@ public sealed class ProfileCatalogService
     private static bool NeedsBuiltInExportProfileRepair(ExportProfileDefinition profile)
     {
         return NeedsLm7ExportProfileRepair(profile)
-            || NeedsNt530PExportProfileRepair(profile);
+            || NeedsNt530PExportProfileRepair(profile)
+            || NeedsTopconCl300ExportProfileRepair(profile);
+    }
+
+    private static bool NeedsTopconCl300DeviceProfileRepair(DeviceProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, TopconCl300DefaultDeviceProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return profile.Measurements.Any(measurement =>
+            measurement.SourcePath.Contains("Ophthalmology/", StringComparison.OrdinalIgnoreCase))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='LM']/LM/R/MedistarLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='LM']/LM/L/MedistarLine",
+                StringComparison.Ordinal));
     }
 
     private static bool NeedsLm7ExportProfileRepair(ExportProfileDefinition profile)
@@ -440,6 +493,34 @@ public sealed class ProfileCatalogService
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("Device.Data/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool NeedsTopconCl300ExportProfileRepair(ExportProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, TopconCl300DefaultExportProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return profile.Rules.Any(rule =>
+            string.Equals(rule.TargetFieldCode, "6205", StringComparison.Ordinal)
+            || string.Equals(rule.TargetFieldCode, "6220", StringComparison.Ordinal)
+            || ContainsLegacyTopconCl300Path(rule.SourcePath)
+            || ContainsLegacyTopconCl300Path(rule.OutputTemplate))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.SourcePath,
+                "Device.Measure[@Type='LM']/LM/R/MedistarLine",
+                StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.SourcePath,
+                "Device.Measure[@Type='LM']/LM/L/MedistarLine",
+                StringComparison.Ordinal));
+    }
+
+    private static bool ContainsLegacyTopconCl300Path(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("Device.Ophthalmology/", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GetProfileId<TProfile>(TProfile profile)

@@ -373,9 +373,9 @@ public static class DefaultExportProfileDefinitions
                 Id: "export-medistar-topcon-cl300-default",
                 Name: "MEDISTAR + TOPCON CL300 Export",
                 ProfileKind: ProfileKind.ExportProfile,
-                Description: "Default export profile definition for MEDISTAR and TOPCON CL300 lensmeter data. Prism/Additionswerte und JOIA-Namespace-Normalisierung werden später präzisiert.",
+                Description: "Default export profile definition for MEDISTAR and TOPCON CL-300 lensmeter XML data.",
                 Vendor: "XdtDeviceBridge",
-                Product: "MEDISTAR/TOPCON CL300",
+                Product: "MEDISTAR/TOPCON CL-300",
                 Version: "1.0.0",
                 CreatedAt: timestamp,
                 UpdatedAt: timestamp,
@@ -398,21 +398,21 @@ public static class DefaultExportProfileDefinitions
                     "6228",
                     "LensmeterResultRight",
                     ExportRuleType.Template,
-                    null,
-                    "R.:S={Device.Ophthalmology/Measure[@type='LM']/LM/R/Sphere:Diopter} Z={Device.Ophthalmology/Measure[@type='LM']/LM/R/Cylinder:Diopter}*{Device.Ophthalmology/Measure[@type='LM']/LM/R/Axis:Axis}                              PD={Device.Ophthalmology/Measure[@type='LM']/PD/B/Distance:Pd}",
+                    "Device.Measure[@Type='LM']/LM/R/MedistarLine",
+                    "{value}",
                     7,
                     true,
-                    "MEDISTAR lensmeter card text for TOPCON CL300 right eye. Prism/Additionswerte werden später ergänzt."),
+                    "MEDISTAR lensmeter card text for TOPCON CL-300 right eye; optional additions and PD are included only when present."),
                 new ExportRuleDefinition(
                     "8",
                     "6228",
                     "LensmeterResultLeft",
                     ExportRuleType.Template,
-                    null,
-                    "L.:S={Device.Ophthalmology/Measure[@type='LM']/LM/L/Sphere:Diopter} Z={Device.Ophthalmology/Measure[@type='LM']/LM/L/Cylinder:Diopter}*{Device.Ophthalmology/Measure[@type='LM']/LM/L/Axis:Axis}",
+                    "Device.Measure[@Type='LM']/LM/L/MedistarLine",
+                    "{value}",
                     8,
                     true,
-                    "MEDISTAR lensmeter card text for TOPCON CL300 left eye. Prism/Additionswerte werden später ergänzt.")
+                    "MEDISTAR lensmeter card text for TOPCON CL-300 left eye; optional additions are included only when present.")
             });
     }
 

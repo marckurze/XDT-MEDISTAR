@@ -287,7 +287,7 @@ public sealed class DeviceProfileDefinitionTests
         var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
 
         Assert.Equal("TOPCON", profile.Manufacturer);
-        Assert.Equal("CL300", profile.Model);
+        Assert.Equal("CL-300", profile.Model);
         Assert.Equal("Lensmeter", profile.DeviceType);
         Assert.Equal("Xml", profile.ParserMode);
         Assert.False(profile.CanContainMultipleExaminationTypes);
@@ -301,12 +301,12 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
 
-        AssertRequiredMeasurement(profile, "cl300-r-sphere", "Ophthalmology/Measure[@type='LM']/LM/R/Sphere");
-        AssertRequiredMeasurement(profile, "cl300-r-cylinder", "Ophthalmology/Measure[@type='LM']/LM/R/Cylinder");
-        AssertRequiredMeasurement(profile, "cl300-r-axis", "Ophthalmology/Measure[@type='LM']/LM/R/Axis");
-        AssertRequiredMeasurement(profile, "cl300-l-sphere", "Ophthalmology/Measure[@type='LM']/LM/L/Sphere");
-        AssertRequiredMeasurement(profile, "cl300-l-cylinder", "Ophthalmology/Measure[@type='LM']/LM/L/Cylinder");
-        AssertRequiredMeasurement(profile, "cl300-l-axis", "Ophthalmology/Measure[@type='LM']/LM/L/Axis");
+        AssertRequiredMeasurement(profile, "cl300-r-sphere", "Measure[@Type='LM']/LM/R/Sphere");
+        AssertRequiredMeasurement(profile, "cl300-r-cylinder", "Measure[@Type='LM']/LM/R/Cylinder");
+        AssertRequiredMeasurement(profile, "cl300-r-axis", "Measure[@Type='LM']/LM/R/Axis");
+        AssertRequiredMeasurement(profile, "cl300-l-sphere", "Measure[@Type='LM']/LM/L/Sphere");
+        AssertRequiredMeasurement(profile, "cl300-l-cylinder", "Measure[@Type='LM']/LM/L/Cylinder");
+        AssertRequiredMeasurement(profile, "cl300-l-axis", "Measure[@Type='LM']/LM/L/Axis");
     }
 
     [Fact]
@@ -314,21 +314,23 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
 
-        AssertOptionalMeasurement(profile, "cl300-pd-distance", "Ophthalmology/Measure[@type='LM']/PD/B/Distance");
-        AssertOptionalMeasurement(profile, "cl300-r-prism-horizontal", "Ophthalmology/Measure[@type='LM']/LM/R/H");
-        AssertOptionalMeasurement(profile, "cl300-r-prism-vertical", "Ophthalmology/Measure[@type='LM']/LM/R/V");
-        AssertOptionalMeasurement(profile, "cl300-l-prism-horizontal", "Ophthalmology/Measure[@type='LM']/LM/L/H");
-        AssertOptionalMeasurement(profile, "cl300-l-prism-vertical", "Ophthalmology/Measure[@type='LM']/LM/L/V");
+        AssertOptionalMeasurement(profile, "cl300-pd-distance", "Measure[@Type='LM']/PD/B/Distance");
+        AssertOptionalMeasurement(profile, "cl300-r-prism-horizontal", "Measure[@Type='LM']/LM/R/H");
+        AssertOptionalMeasurement(profile, "cl300-r-prism-vertical", "Measure[@Type='LM']/LM/R/V");
+        AssertOptionalMeasurement(profile, "cl300-l-prism-horizontal", "Measure[@Type='LM']/LM/L/H");
+        AssertOptionalMeasurement(profile, "cl300-l-prism-vertical", "Measure[@Type='LM']/LM/L/V");
     }
 
     [Fact]
-    public void CreateTopconCl300Default_ShouldDocumentNamespaceRequirement()
+    public void CreateTopconCl300Default_ShouldUseNamespaceAgnosticParserPaths()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
 
-        Assert.Contains("Namespace-Normalisierung", profile.Metadata.Description);
-        Assert.Contains(profile.Measurements, measurement =>
-            (measurement.Description ?? string.Empty).Contains("Namespace-Normalisierung", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("nsCommon/nsLM", profile.Metadata.Description);
+        Assert.DoesNotContain(profile.Measurements, measurement =>
+            measurement.SourcePath.Contains("Ophthalmology/", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/MedistarLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/L/MedistarLine");
     }
 
     [Fact]

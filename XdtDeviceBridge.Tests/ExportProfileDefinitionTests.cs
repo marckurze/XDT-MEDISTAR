@@ -352,8 +352,13 @@ public sealed class ExportProfileDefinitionTests
             .ToList();
 
         Assert.Equal(2, resultRules.Count);
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("R.:S="));
-        Assert.Contains(resultRules, rule => rule.OutputTemplate.Contains("L.:S="));
+        Assert.Contains(resultRules, rule =>
+            rule.SourcePath == "Device.Measure[@Type='LM']/LM/R/MedistarLine"
+            && rule.OutputTemplate == "{value}");
+        Assert.Contains(resultRules, rule =>
+            rule.SourcePath == "Device.Measure[@Type='LM']/LM/L/MedistarLine"
+            && rule.OutputTemplate == "{value}");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6205" or "6220");
     }
 
     [Fact]

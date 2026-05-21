@@ -35,6 +35,7 @@ public sealed class XmlDeviceParser
             }
 
             AddNidekLm7MedistarLines(document.Root, measurements);
+            AddTopconCl300MedistarLines(document.Root, measurements);
             AddNidekNt530PMedistarLines(document.Root, measurements);
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or IOException or UnauthorizedAccessException)
@@ -245,6 +246,43 @@ public sealed class XmlDeviceParser
 
         AddLensmeterLine(measurements, "R", FindChild(lm, "R"), distance);
         AddLensmeterLine(measurements, "L", FindChild(lm, "L"), null);
+    }
+
+    private static void AddTopconCl300MedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        var measure = FindMeasure(root, "LM");
+        if (common is null || measure is null)
+        {
+            return;
+        }
+
+        var company = GetChildValue(common, "Company");
+        var modelName = GetChildValue(common, "ModelName");
+        if (!string.Equals(company, "TOPCON", StringComparison.OrdinalIgnoreCase)
+            || !IsTopconCl300Model(modelName))
+        {
+            return;
+        }
+
+        var lm = FindChild(measure, "LM");
+        if (lm is null)
+        {
+            return;
+        }
+
+        var pd = FindChild(measure, "PD");
+        var binocularPd = pd is null
+            ? null
+            : GetChildValue(FindChild(pd, "B") ?? pd, "Distance");
+
+        AddLensmeterLine(measurements, "R", FindChild(lm, "R"), binocularPd, includeSignedPrismComponents: true);
+        AddLensmeterLine(measurements, "L", FindChild(lm, "L"), null, includeSignedPrismComponents: true);
     }
 
     private static void AddNidekNt530PMedistarLines(XElement root, List<MeasurementValue> measurements)
@@ -668,11 +706,18 @@ public sealed class XmlDeviceParser
             || string.Equals(normalized, "LM7P", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsTopconCl300Model(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "CL300", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static void AddLensmeterLine(
         List<MeasurementValue> measurements,
         string eye,
         XElement? eyeElement,
-        string? binocularPd)
+        string? binocularPd,
+        bool includeSignedPrismComponents = false)
     {
         if (eyeElement is null)
         {
@@ -690,9 +735,13 @@ public sealed class XmlDeviceParser
         }
 
         var line = $"{eye}.:S={FormatSignedDecimal(sphere)} Z={FormatSignedDecimal(cylinder)}*{FormatAxis(axis)}";
-        line = AppendAddition(line, "A", GetChildValue(eyeElement, "ADD"));
-        line = AppendAddition(line, "A2", GetChildValue(eyeElement, "ADD2"));
+        line = AppendAddition(line, "A", GetChildValue(eyeElement, "ADD", "Add1"));
+        line = AppendAddition(line, "A2", GetChildValue(eyeElement, "ADD2", "Add2"));
         line = AppendPrism(line, eyeElement);
+        if (includeSignedPrismComponents)
+        {
+            line = AppendSignedPrismComponents(line, eyeElement);
+        }
 
         if (!string.IsNullOrWhiteSpace(binocularPd))
         {
@@ -739,6 +788,29 @@ public sealed class XmlDeviceParser
         return $"{line} P={FormatUnsignedDecimal(prismX)} {prismXBase} {FormatUnsignedDecimal(prismY)} {prismYBase}";
     }
 
+    private static string AppendSignedPrismComponents(string line, XElement eyeElement)
+    {
+        var parts = new List<string>();
+        AddSignedPrismComponent(parts, "H", GetChildValue(eyeElement, "H"));
+        AddSignedPrismComponent(parts, "V", GetChildValue(eyeElement, "V"));
+
+        return parts.Count == 0
+            ? line
+            : $"{line} P={string.Join(" ", parts)}";
+    }
+
+    private static void AddSignedPrismComponent(List<string> parts, string label, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || !TryParseDecimal(value, out var number)
+            || number == 0m)
+        {
+            return;
+        }
+
+        parts.Add($"{label}={FormatSignedCompactDecimal(number)}");
+    }
+
     private static string? NormalizePrismBase(string? value)
     {
         return value?.Trim().ToLowerInvariant() switch
@@ -770,6 +842,12 @@ public sealed class XmlDeviceParser
         }
 
         return Math.Abs(number).ToString("0.00", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatSignedCompactDecimal(decimal number)
+    {
+        var sign = number < 0 ? "-" : "+";
+        return sign + Math.Abs(number).ToString("0.00", CultureInfo.InvariantCulture);
     }
 
     private static string FormatAxis(string value)

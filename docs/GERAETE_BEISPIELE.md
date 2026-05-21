@@ -604,17 +604,24 @@ Gerätetyp: Lensmeter
 Dateiformat:
 
 - XML im Ophthalmology-/JOIA-Format
-- Namespaces möglich
+- Namespaces `nsCommon` und `nsLM`
+- echte Testfixtures im Repository:
+  - `XdtDeviceBridge.Tests/TestData/Devices/Topcon/CL300/M-Serial0001_20120101_000000_TOPCON_CL-300_00.xml`
+  - `XdtDeviceBridge.Tests/TestData/Devices/Topcon/CL300/M-Serial1521_20120101_000000_TOPCON_CL-300_00.xml`
 
-Beispielhafte SourcePath-Struktur:
+Parser-SourcePaths:
 
 ```text
-Ophthalmology/Common/Company = TOPCON
-Ophthalmology/Common/ModelName = CL-300
-Ophthalmology/Measure[@type='LM']/LM/R/Sphere
-Ophthalmology/Measure[@type='LM']/LM/R/Cylinder
-Ophthalmology/Measure[@type='LM']/LM/R/Axis
-Ophthalmology/Measure[@type='LM']/PD/B/Distance
+Common/Company = TOPCON
+Common/ModelName = CL-300
+Measure[@Type='LM']/LM/R/Sphere
+Measure[@Type='LM']/LM/R/Cylinder
+Measure[@Type='LM']/LM/R/Axis
+Measure[@Type='LM']/LM/R/Add1
+Measure[@Type='LM']/LM/R/H
+Measure[@Type='LM']/LM/R/V
+Measure[@Type='LM']/PD/B/Distance
+Measure[@Type='LM']/LM/R/MedistarLine
 ```
 
 Untersuchungsarten:
@@ -627,15 +634,16 @@ Untersuchungsarten:
 
 Ableitung:
 
-- XML-Parser muss Namespaces und Attribute handhaben
-- eigenes Geräteprofil `TOPCON CL300`
-- ähnliche manuelle MEDISTAR-orientierte Ergebnisregel wie Lensmeter möglich, aber mit anderen SourcePaths
+- `XmlDeviceParser` liest Namespaces über `LocalName`, erkennt `Company=TOPCON`, `ModelName=CL-300` und `Measure type="LM"`.
+- BuiltIn-Geräteprofil `TOPCON CL300`, Exportprofil `MEDISTAR + TOPCON CL300 Export` und Schnittstellenprofil `MEDISTAR + TOPCON CL300` sind vorhanden.
+- MEDISTAR-Ausgabe läuft über `6228` und nutzt berechnete `MedistarLine`-Werte analog LM7.
 
 ## 6.1 TOPCON CL300 – erkannte SourcePaths und JOIA/XML-Besonderheiten
 
-Analysierte lokale Beispieldatei:
+Analysierte Originaldateien:
 
-- `C:\Users\MarcK\Downloads\Geraeteanbindungen\TOPCON CL300\M-Serial1521_20120101_000000_TOPCON_CL-300_00.xml`
+- `M-Serial0001_20120101_000000_TOPCON_CL-300_00.xml`
+- `M-Serial1521_20120101_000000_TOPCON_CL-300_00.xml`
 
 Die Datei ist ein JOIA-/Ophthalmology-XML im Format `UTF-8`. Der Root-Knoten `Ophthalmology` hat keinen Default-Namespace, die fachlichen Unterknoten verwenden jedoch Namespace-Präfixe:
 
@@ -662,63 +670,62 @@ Beobachtete Basisstruktur:
 </Ophthalmology>
 ```
 
-Erkannte namespace-aware SourcePaths:
+Erkannte normalisierte SourcePaths:
 
-| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+| Messwert | SourcePath | Beispielwert | Status / Hinweis |
 |---|---|---:|---|
-| Company | `Ophthalmology/nsCommon:Common/nsCommon:Company` | `TOPCON` | erkannt |
-| ModelName | `Ophthalmology/nsCommon:Common/nsCommon:ModelName` | `CL-300` | erkannt |
-| Measure type LM | `Ophthalmology/nsLM:Measure/@type` | `LM` | erkannt |
-| R Sphere | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:R/nsLM:Sphere` | `+3.75` | erkannt; XML-Wert enthält führende Leerzeichen |
-| R Cylinder | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:R/nsLM:Cylinder` | `-3.50` | erkannt; XML-Wert enthält führende Leerzeichen |
-| R Axis | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:R/nsLM:Axis` | `9` | erkannt; XML-Wert enthält führende Leerzeichen |
-| L Sphere | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:L/nsLM:Sphere` | `+3.50` | erkannt; XML-Wert enthält führende Leerzeichen |
-| L Cylinder | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:L/nsLM:Cylinder` | `-3.00` | erkannt; XML-Wert enthält führende Leerzeichen |
-| L Axis | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:L/nsLM:Axis` | `178` | erkannt |
-| PD Distance gesamt | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:PD/nsLM:B/nsLM:Distance` | `55.0` | erkannt |
-| PD Distance rechts | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:PD/nsLM:R/nsLM:Distance` | `25.0` | erkannt |
-| PD Distance links | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:PD/nsLM:L/nsLM:Distance` | `30.0` | erkannt |
+| Company | `Common/Company` | `TOPCON` | erkannt |
+| ModelName | `Common/ModelName` | `CL-300` | erkannt |
+| Measure type LM | `Measure[@Type='LM']/@type` | `LM` | erkannt |
+| R Sphere | `Measure[@Type='LM']/LM/R/Sphere` | `+3.75` | erkannt; XML-Wert wird getrimmt |
+| R Cylinder | `Measure[@Type='LM']/LM/R/Cylinder` | `-3.50` | erkannt; XML-Wert wird getrimmt |
+| R Axis | `Measure[@Type='LM']/LM/R/Axis` | `9` | erkannt; XML-Wert wird getrimmt |
+| L Sphere | `Measure[@Type='LM']/LM/L/Sphere` | `+3.50` | erkannt; XML-Wert wird getrimmt |
+| L Cylinder | `Measure[@Type='LM']/LM/L/Cylinder` | `-3.00` | erkannt; XML-Wert wird getrimmt |
+| L Axis | `Measure[@Type='LM']/LM/L/Axis` | `178` | erkannt |
+| PD Distance gesamt | `Measure[@Type='LM']/PD/B/Distance` | `55.0` | erkannt und als `PD= 55` an der rechten Zeile ausgegeben |
+| PD Distance rechts | `Measure[@Type='LM']/PD/R/Distance` | `25.0` | erkannt |
+| PD Distance links | `Measure[@Type='LM']/PD/L/Distance` | `30.0` | erkannt |
 
 Sonstige relevante Lensmeterwerte:
 
-| Messwert | Namespace-aware SourcePath | Beispielwert | Status / Hinweis |
+| Messwert | SourcePath | Beispielwert | Status / Hinweis |
 |---|---|---:|---|
-| R Addition 1 | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:R/nsLM:Add1` | `+2.25` | erkannt |
-| R Addition 2 | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:R/nsLM:Add2` | leer | erkannt; Nutzung noch zu validieren |
-| R Prisma horizontal | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:R/nsLM:H` | `+0.25` | erkannt; Attribut `Prism="P"` |
-| R Prisma vertikal | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:R/nsLM:V` | `-0.75` | erkannt; Attribut `Prism="P"` |
-| L Addition 1 | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:L/nsLM:Add1` | `+2.25` | erkannt |
-| L Addition 2 | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:L/nsLM:Add2` | leer | erkannt; Nutzung noch zu validieren |
-| L Prisma horizontal | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:L/nsLM:H` | `-0.00` | erkannt; Attribut `Prism="P"` |
-| L Prisma vertikal | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LM/nsLM:L/nsLM:V` | `-1.00` | erkannt; Attribut `Prism="P"` |
-| DiopterStep | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:DiopterStep` | `0.25` | erkannt |
-| AxisStep | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:AxisStep` | `1` | erkannt |
-| PrismStep | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:PrismStep` | `0.25` | erkannt |
-| CylinderMode | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:CylinderMode` | `-` | erkannt |
-| LensType | `Ophthalmology/nsLM:Measure[@type='LM']/nsLM:LensType` | `glass` | erkannt |
+| R Addition 1 | `Measure[@Type='LM']/LM/R/Add1` | `+2.25` | erkannt und als `A=+ 2.25` ausgegeben |
+| R Addition 2 | `Measure[@Type='LM']/LM/R/Add2` | leer | leer, daher keine Ausgabe |
+| R Prisma horizontal | `Measure[@Type='LM']/LM/R/H` | `+0.25` | erkannt und als signierte H-Komponente ausgegeben |
+| R Prisma vertikal | `Measure[@Type='LM']/LM/R/V` | `-0.75` | erkannt und als signierte V-Komponente ausgegeben |
+| L Addition 1 | `Measure[@Type='LM']/LM/L/Add1` | `+2.25` | erkannt und als `A=+ 2.25` ausgegeben |
+| L Addition 2 | `Measure[@Type='LM']/LM/L/Add2` | leer | leer, daher keine Ausgabe |
+| L Prisma horizontal | `Measure[@Type='LM']/LM/L/H` | `-0.00` | erkannt, wegen Nullwert nicht ausgegeben |
+| L Prisma vertikal | `Measure[@Type='LM']/LM/L/V` | `-1.00` | erkannt und als signierte V-Komponente ausgegeben |
+| DiopterStep | `Measure[@Type='LM']/DiopterStep` | `0.25` | erkannt |
+| AxisStep | `Measure[@Type='LM']/AxisStep` | `1` | erkannt |
+| PrismStep | `Measure[@Type='LM']/PrismStep` | `0.25` | erkannt |
+| CylinderMode | `Measure[@Type='LM']/CylinderMode` | `-` | erkannt |
+| LensType | `Measure[@Type='LM']/LensType` | `glass` | erkannt |
 
-Für spätere anwendernahe Mapping-SourcePaths sollte der Parser Namespaces entweder profilabhängig auf bekannte Präfixe abbilden oder normalisieren. Eine gut lesbare normalisierte Darstellung wäre zum Beispiel:
+Erwartete testseitige MEDISTAR-Zeilen:
 
 ```text
-Ophthalmology/Common/Company
-Ophthalmology/Common/ModelName
-Ophthalmology/Measure[@type='LM']/LM/R/Sphere
-Ophthalmology/Measure[@type='LM']/LM/R/Cylinder
-Ophthalmology/Measure[@type='LM']/LM/R/Axis
-Ophthalmology/Measure[@type='LM']/LM/L/Sphere
-Ophthalmology/Measure[@type='LM']/LM/L/Cylinder
-Ophthalmology/Measure[@type='LM']/LM/L/Axis
-Ophthalmology/Measure[@type='LM']/PD/B/Distance
+Serial0001:
+R.:S=- 0.25 Z=- 1.00* 91
+L.:S=+ 0.00 Z=- 1.00* 87
+
+Serial1521:
+R.:S=+ 3.75 Z=- 3.50*  9 A=+ 2.25 P=H=+0.25 V=-0.75 PD= 55
+L.:S=+ 3.50 Z=- 3.00*178 A=+ 2.25 P=V=-1.00
 ```
 
 Wichtig für die spätere Parserlogik:
 
-- Namespaces sind vorhanden und müssen berücksichtigt oder sauber normalisiert werden.
-- `Measure` trägt das Attribut `type="LM"` und sollte darüber von anderen TOPCON-Messarten unterscheidbar sein.
-- Werte können führende Leerzeichen enthalten und müssen vor Formatierung getrimmt werden.
+- Namespaces werden über LocalName verarbeitet; Prefixe wie `nsCommon`/`nsLM` sind dadurch nicht hart verdrahtet.
+- `Measure` trägt das Attribut `type="LM"` und wird darüber von anderen TOPCON-Messarten unterschieden.
+- Werte können führende Leerzeichen enthalten und werden vor Formatierung getrimmt.
 - Einheiten stehen überwiegend als Attribute, z. B. `unit="D"`, `unit="deg"` und `unit="mm"`.
-- Prismatische Werte verwenden `H` und `V` mit Attribut `Prism="P"`; die konkrete MEDISTAR-Basisnotation ist noch zu validieren.
-- Für CL300 wurden in der analysierten Datei keine JPG-/PDF-Attachments gefunden.
+- Prismatische Werte verwenden `H` und `V` mit Attribut `Prism="P"`; sie werden nicht in OUT/IN/UP/DOWN umgedeutet, sondern signiert als H/V-Komponente ausgegeben.
+- Für CL300 wurden in den analysierten Dateien keine JPG-/PDF-Attachments gefunden.
+- Praktische MEDISTAR-Validierung der CL300-Karteikartenanzeige steht noch aus.
 
 ## 7. TOPCON KR800
 
@@ -1044,7 +1051,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
-4. TOPCON CL300, KR800 und TRK2P nach vorhandener Datenlage priorisieren; ohne belastbare Beispieldateien keine fachlichen Werte oder Templates erfinden.
+4. TOPCON CL300 mit den beiden echten Fixtures praktisch in MEDISTAR abnehmen; KR800 und TRK2P folgen erst mit belastbaren Beispieldateien, ohne fachliche Werte aus Dokumentation zu erfinden.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
