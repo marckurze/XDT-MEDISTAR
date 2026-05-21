@@ -4,7 +4,7 @@ Stand: 2026-05-21
 
 ## Zweck
 
-Kandidat fuer die MEDISTAR-Anbindung des TOPCON CL-300 Lensmeters.
+Praktisch validierter Kandidat fuer die MEDISTAR-Anbindung des TOPCON CL-300 Lensmeters und erster TOPCON-Referenzkandidat.
 
 ## Enthaltene Profile
 
@@ -41,6 +41,12 @@ R.:S=+ 3.75 Z=- 3.50*  9 A=+ 2.25 P=H=+0.25 V=-0.75 PD= 55
 L.:S=+ 3.50 Z=- 3.00*178 A=+ 2.25 P=V=-1.00
 ```
 
+Praktische MEDISTAR-Validierung:
+
+- dokumentiert in `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_CL300.md`
+- Serial0001 ohne ADD, PD und Prisma wurde uebernommen.
+- Serial1521 mit ADD, PD und signierten H/V-Prismenkomponenten wurde uebernommen.
+
 ## PD und Prisma
 
 - Gesamt-PD aus `PD/B/Distance` wird, wenn vorhanden, an der rechten `6228`-Zeile ausgegeben.
@@ -56,6 +62,5 @@ L.:S=+ 3.50 Z=- 3.00*178 A=+ 2.25 P=V=-1.00
 
 ## Offen
 
-- Praktische MEDISTAR-Validierung mit beiden Originaldateien.
-- Entscheidung nach Live-Test, ob die H/V-Prismendarstellung fachlich angepasst werden muss.
+- H/V-Prismendarstellung in weiteren MEDISTAR-Anzeigen beobachten.
 - Offizielles ZIP-Artefakt erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.
