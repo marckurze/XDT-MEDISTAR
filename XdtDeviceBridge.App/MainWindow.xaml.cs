@@ -3764,6 +3764,12 @@ public partial class MainWindow : Window
             && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection) == true;
     }
 
+    private static bool IsManualDocumentSelectionProfile(InterfaceProfileDefinition interfaceProfile)
+    {
+        return interfaceProfile.FolderOptions.IsAttachmentOnlyMode
+            && interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+    }
+
     private void TryUpdateAutoRedockForActivity(InterfaceMonitoringEventEntry entry)
     {
         var row = _activeInterfaceProfileStatusRows.FirstOrDefault(item =>
@@ -4878,6 +4884,7 @@ public partial class MainWindow : Window
                 _lastMonitoringScanQueuesByProfileId[interfaceProfile.Metadata.Id] = new PendingImportQueue();
                 _autoImportPackageStateService.ResetProfile(interfaceProfile.Metadata.Id);
                 _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfile.Metadata.Id);
+                CompleteManualDocumentTransferState(interfaceProfile);
                 UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
                 AppendPairMonitoringEvent(
                     interfaceProfile,
@@ -4903,6 +4910,17 @@ public partial class MainWindow : Window
         }
 
         return batchResult;
+    }
+
+    private void CompleteManualDocumentTransferState(InterfaceProfileDefinition interfaceProfile)
+    {
+        if (!IsManualDocumentSelectionProfile(interfaceProfile))
+        {
+            return;
+        }
+
+        ResetDocumentAttachmentConfirmations(interfaceProfile.Metadata.Id);
+        _autoImportPairProcessingCoordinator.ResetProfile(interfaceProfile.Metadata.Id);
     }
 
     private bool TryUpdatePendingDocumentAttachmentConfirmationFromScan(

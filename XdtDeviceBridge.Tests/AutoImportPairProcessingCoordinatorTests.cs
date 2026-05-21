@@ -1408,6 +1408,64 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_ManualDocumentTransferShouldAllowNextAisAfterProfileStateReset()
+    {
+        var files = CreateValidTempImportFiles();
+        var sourceFolder = CreateTempFolder();
+        var attachmentExportFolder = CreateTempFolder();
+        var pdfFile = Path.Combine(sourceFolder, "befund.pdf");
+        File.WriteAllText(pdfFile, "pdf");
+        var manualProcessor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = CreateCoordinator(
+            manualProcessor,
+            new FakeAttachmentScanner(CreateAttachmentScanResult()),
+            new FakeAttachmentPreparationService(CreateAttachmentPreparationResult()),
+            patientNumber: "4701-1");
+        var profile = CreateInterfaceProfile(
+            isAttachmentProcessingEnabled: true,
+            attachmentExportFolder: attachmentExportFolder,
+            attachmentRequirementMode: AttachmentRequirementMode.Required,
+            isAttachmentOnlyMode: true,
+            attachmentCompletionMode: AttachmentCompletionMode.ManualConfirmation,
+            deviceImportFolder: string.Empty,
+            attachmentOnlySourceMode: AttachmentOnlySourceMode.ManualUserSelection);
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarManualDocumentTransferDefault();
+        var pair = CreatePair(files.AisFilePath, Path.Combine(files.Folder, "manual-selection-placeholder"));
+        var selectedCandidates = new ManualDocumentSelectionService().AddFiles(new[] { pdfFile }).AcceptedFiles;
+        var confirmationRequests = 0;
+        AttachmentOnlyConfirmationResult ConfirmTransfer(
+            InterfaceProfileDefinition _,
+            PendingImportPair __,
+            IReadOnlyList<AttachmentImportFileCandidate> ___)
+        {
+            confirmationRequests++;
+            return AttachmentOnlyConfirmationResult.Proceed(null, null, selectedCandidates);
+        }
+
+        var first = coordinator.ProcessReadyPairs(
+            profile,
+            exportProfile,
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp,
+            attachmentOnlyConfirmationProvider: ConfirmTransfer);
+        coordinator.ResetProfile(profile.Metadata.Id);
+        var second = coordinator.ProcessReadyPairs(
+            profile,
+            exportProfile,
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            Timestamp.AddMinutes(1),
+            attachmentOnlyConfirmationProvider: ConfirmTransfer);
+
+        Assert.Equal(1, first.ProcessedCount);
+        Assert.Equal(1, second.ProcessedCount);
+        Assert.Equal(2, confirmationRequests);
+        Assert.Equal(2, manualProcessor.CallCount);
+        Assert.True(Assert.Single(second.Results).Success);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_AttachmentOnlyQuietPeriodShouldWaitUntilQuietPeriodElapsed()
     {
         var files = CreateTempImportFiles();
