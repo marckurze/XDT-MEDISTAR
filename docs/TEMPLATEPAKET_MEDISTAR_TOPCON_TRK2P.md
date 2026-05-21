@@ -93,10 +93,12 @@ Abgesichert durch:
 - `MedistarTopconTrk2PTemplatePackageTests`
 - BuiltIn-Definitionstests fuer Geraet, Export und Schnittstelle
 - gezielte Reparaturtests fuer alte persistierte BuiltIn-TRK2P-Profile
+- generische AlreadyProcessed-/Duplikat-Nachlauf-Tests: neue Fingerprints werden verarbeitet, echte Duplikate werden nicht erneut exportiert und bekannte Importdateien werden archiviert, in den Fehlerordner verschoben oder entfernt
 
 ## Offen
 
 - praktische MEDISTAR-Validierung mit beiden XML-Dateien
+- erneuter Live-Test nach korrigiertem AlreadyProcessed-/Duplikat-Nachlauf
 - Bewertung der `6205`-Tonometrieanzeige mit CorrectedIOP/CCT in MEDISTAR
 - SBJ-Ausgabe erst nach echten TRK-2P-SBJ-Dateien praktisch bewerten
 - offizielles ZIP-Artefakt erst nach Release-Regel

@@ -325,11 +325,11 @@ Aktuelle Grundsaetze:
 - Nur bekannte verarbeitete AIS-/Geraetedateien werden gemaess Profiloption archiviert.
 - Wenn die Profiloption `aus Importordner entfernen` aktiv ist, werden nur diese bekannten verarbeiteten AIS-/Geraetedateien entfernt beziehungsweise ins Archiv verschoben.
 - Reset- und Duplikatsperren verwenden eine Dateiversion statt nur den Pfad; neu geschriebene Dateien mit gleichem Namen werden wieder erkannt.
+- Bereits erfolgreich verarbeitete Dateipaare werden nicht erneut exportiert, aber ueber Archiv-, Fehlerordner- oder Entfernen-Regel aus dem aktiven Importordner herausgenommen, damit sie neue Untersuchungen nicht blockieren.
 - Keine unbekannten Dateien werden geloescht.
 - Keine Ordner werden pauschal geleert.
 - Der Exportordner wird nicht bereinigt.
-- Fehlerablage erzeugt eine Kopie der beteiligten Dateien und eine `error.txt`.
-- Originaldateien bleiben im Fehlerfall erhalten, soweit die aktuelle Sicherheitslogik dies vorsieht.
+- Fehlerablage verschiebt die beteiligten bekannten Dateien und erzeugt eine `error.txt`.
 
 ## 14. Profil- und Template-System
 

@@ -377,6 +377,7 @@ Allgemeine erwartete Ergebnisse über alle Testfälle:
 - Mehrere stabile unterstützte Anhänge im Anhang-Importordner werden stabil sortiert und einzeln übergeben.
 - Nach erfolgreichem Export mit Anhängen bleiben Monitoring-Karten nicht auf alten AIS-/Geräte-Eingängen oder falschem Anhang-Timeout stehen.
 - Reset-/Duplikatsperren blockieren neu geschriebene Dateien mit gleichem Namen nicht dauerhaft.
+- Bereits verarbeitete AIS-/Geraetedateien werden nicht erneut exportiert und bleiben bei vorhandener Archiv-, Fehlerordner- oder Entfernen-Regel nicht als aktive Dateien im Importordner liegen.
 - Exportordner wird nicht pauschal bereinigt.
 
 Ein einzelner Testfall gilt als bestanden, wenn:

@@ -204,16 +204,33 @@ public sealed class AutoImportPairProcessingCoordinator
                     timestamp,
                     attachmentGate.AttachmentPreparation,
                     attachmentGate.DocumentationTextProvider);
-                _processedPairKeys.Add(processedPairKey);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
                 _attachmentCompletionService.MarkCompleted(pairInstanceKey);
+                if (processingResult.Success)
+                {
+                    _processedPairKeys.Add(processedPairKey);
+                }
+                else
+                {
+                    _blockedPairKeys.Add(pairInstanceKey);
+                }
+
                 results.Add(CreateProcessedResult(interfaceProfile, pairInstanceKey, pair, processingResult, processingResult.AttachmentStatus));
             }
             catch (Exception ex)
             {
-                _processedPairKeys.Add(processedPairKey);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
                 _attachmentCompletionService.MarkCompleted(pairInstanceKey);
+                _blockedPairKeys.Add(pairInstanceKey);
+                var handlingResult = _terminalBlockedImportFileHandler.Handle(
+                    interfaceProfile,
+                    pair,
+                    timestamp.ToUniversalTime(),
+                    ex.Message);
+                var messages = new[] { ex.Message }
+                    .Concat(handlingResult.Messages)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToList();
                 results.Add(new AutoImportPairProcessingResult(
                     PairKey: pairInstanceKey,
                     AisFilePath: pair.AisFile.FilePath,
@@ -224,7 +241,7 @@ public sealed class AutoImportPairProcessingCoordinator
                     Status: "Automatischer Fehler",
                     ExportFilePath: null,
                     ManualProcessingResult: null,
-                    Messages: new[] { ex.Message }));
+                    Messages: messages));
             }
             finally
             {
@@ -860,7 +877,7 @@ public sealed class AutoImportPairProcessingCoordinator
 
         return processingResult.FailedFileCopyResult.HasErrors
             ? "Automatischer Fehler, Fehlerablage fehlgeschlagen"
-            : "Automatischer Fehler, Dateien kopiert";
+            : "Automatischer Fehler, Dateien in Fehlerordner verschoben";
     }
 
     private static AttachmentProcessingStatusReason MapPackageDecisionReason(AttachmentPackageDecisionReason reason)

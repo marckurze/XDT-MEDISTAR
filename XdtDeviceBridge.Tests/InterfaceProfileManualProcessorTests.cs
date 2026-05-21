@@ -471,7 +471,7 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
-    public void Process_ShouldCopyFailedFilesWhenErrorCopyIsEnabled()
+    public void Process_ShouldMoveFailedFilesWhenErrorFolderIsEnabled()
     {
         var errorFolder = CreateTempFolder();
         var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
@@ -494,9 +494,9 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.NotNull(result.FailedFileCopyResult);
         Assert.False(result.FailedFileCopyResult.HasErrors);
         Assert.Equal(3, result.FailedFileCopyResult.CopiedFiles.Count);
-        Assert.True(File.Exists(aisFilePath));
-        Assert.True(File.Exists(deviceFilePath));
-        Assert.Contains("Fehlerhafte Importdateien wurden in den Fehlerordner kopiert; Originale bleiben erhalten:", result.Messages);
+        Assert.False(File.Exists(aisFilePath));
+        Assert.False(File.Exists(deviceFilePath));
+        Assert.Contains("Fehlerhafte Importdateien wurden in den Fehlerordner verschoben:", result.Messages);
     }
 
     [Fact]
@@ -524,7 +524,7 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
-    public void Process_ShouldKeepOriginalFilesWhenErrorCopyIsEnabled()
+    public void Process_ShouldRemoveOriginalFilesWhenErrorFolderIsEnabled()
     {
         var aisFilePath = CopyTestDataToTemp("sample-gdt-utf8.gdt", "patient.gdt");
         var deviceFilePath = Path.Combine(CreateTempFolder(), "device.txt");
@@ -542,8 +542,8 @@ public sealed class InterfaceProfileManualProcessorTests
             DateTime.UtcNow);
 
         Assert.False(result.Success);
-        Assert.True(File.Exists(aisFilePath));
-        Assert.True(File.Exists(deviceFilePath));
+        Assert.False(File.Exists(aisFilePath));
+        Assert.False(File.Exists(deviceFilePath));
     }
 
     private static InterfaceProfileDefinition CreateInterfaceProfile(

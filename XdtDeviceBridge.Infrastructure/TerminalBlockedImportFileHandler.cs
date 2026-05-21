@@ -63,8 +63,8 @@ public sealed class TerminalBlockedImportFileHandler
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ErrorFolder))
         {
-            messages.Add("Fehlerordner ist nicht konfiguriert; bekannte Importdateien bleiben im Importordner.");
-            return true;
+            messages.Add("Fehlerordner ist nicht konfiguriert; versuche Archiv-/Entfernen-Nachlauf.");
+            return false;
         }
 
         try
@@ -106,6 +106,22 @@ public sealed class TerminalBlockedImportFileHandler
     {
         if (!interfaceProfile.FolderOptions.ArchiveProcessedFiles)
         {
+            RemoveKnownFileIfEnabled(
+                interfaceProfile.FolderOptions.ClearAisImportFolderBeforeProcessing,
+                pair.AisFile.FilePath,
+                handledFiles,
+                issues);
+            RemoveKnownFileIfEnabled(
+                interfaceProfile.FolderOptions.ClearDeviceImportFolderBeforeProcessing,
+                pair.DeviceFile.FilePath,
+                handledFiles,
+                issues);
+            if (handledFiles.Count > 0)
+            {
+                messages.Add("Bekannte Importdateien des blockierten Pakets wurden aus dem Importordner entfernt:");
+                messages.AddRange(handledFiles);
+            }
+
             return;
         }
 
@@ -117,28 +133,31 @@ public sealed class TerminalBlockedImportFileHandler
 
         var moveFiles = interfaceProfile.FolderOptions.ArchiveProcessedFileMode == ArchiveProcessedFileMode.Move;
         ArchiveKnownFileIfEnabled(
-            interfaceProfile.FolderOptions.ClearAisImportFolderBeforeProcessing,
+            moveFiles || interfaceProfile.FolderOptions.ClearAisImportFolderBeforeProcessing,
             interfaceProfile,
             pair.AisFile.FilePath,
             "AIS",
             blockedAtUtc,
-            moveFiles,
+            moveFiles || interfaceProfile.FolderOptions.ClearAisImportFolderBeforeProcessing,
             handledFiles,
             issues);
         ArchiveKnownFileIfEnabled(
-            interfaceProfile.FolderOptions.ClearDeviceImportFolderBeforeProcessing,
+            moveFiles || interfaceProfile.FolderOptions.ClearDeviceImportFolderBeforeProcessing,
             interfaceProfile,
             pair.DeviceFile.FilePath,
             "Device",
             blockedAtUtc,
-            moveFiles,
+            moveFiles || interfaceProfile.FolderOptions.ClearDeviceImportFolderBeforeProcessing,
             handledFiles,
             issues);
 
         if (handledFiles.Count > 0)
         {
-            messages.Add(moveFiles
-                ? "Bekannte Importdateien des blockierten Pakets wurden ins Archiv verschoben:"
+            var removedFromImportFolder = moveFiles
+                || interfaceProfile.FolderOptions.ClearAisImportFolderBeforeProcessing
+                || interfaceProfile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
+            messages.Add(removedFromImportFolder
+                ? "Bekannte Importdateien des blockierten Pakets wurden gemäß Profilregel ins Archiv verschoben:"
                 : "Bekannte Importdateien des blockierten Pakets wurden ins Archiv kopiert; Originale bleiben erhalten:");
             messages.AddRange(handledFiles);
         }
@@ -174,6 +193,34 @@ public sealed class TerminalBlockedImportFileHandler
         catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
         {
             issues.Add($"Archivierung des blockierten Pakets fehlgeschlagen für {sourceFilePath}: {ex.Message}");
+        }
+    }
+
+    private static void RemoveKnownFileIfEnabled(
+        bool enabled,
+        string sourceFilePath,
+        List<string> handledFiles,
+        List<string> issues)
+    {
+        if (!enabled)
+        {
+            return;
+        }
+
+        if (!File.Exists(sourceFilePath))
+        {
+            issues.Add($"Quelldatei fehlt: {sourceFilePath}");
+            return;
+        }
+
+        try
+        {
+            File.Delete(sourceFilePath);
+            handledFiles.Add(sourceFilePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            issues.Add($"Entfernen des blockierten Pakets fehlgeschlagen für {sourceFilePath}: {ex.Message}");
         }
     }
 }

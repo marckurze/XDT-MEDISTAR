@@ -340,7 +340,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         bool allowMissingDeviceFile = false)
     {
         var messages = failureMessages.ToList();
-        var failedFileCopyResult = CopyFailedFilesIfEnabled(
+        var failedFileCopyResult = MoveFailedFilesIfEnabled(
             interfaceProfile,
             aisFilePath,
             deviceFilePath,
@@ -538,7 +538,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             : "Importdateien wurden ins Archiv kopiert. Originale bleiben erhalten:";
     }
 
-    private FailedFileCopyResult? CopyFailedFilesIfEnabled(
+    private FailedFileCopyResult? MoveFailedFilesIfEnabled(
         InterfaceProfileDefinition interfaceProfile,
         string aisFilePath,
         string deviceFilePath,
@@ -564,7 +564,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 
         try
         {
-            var failedFileCopyResult = _failedFileCopyService.CopyFailedFiles(
+            var failedFileCopyResult = _failedFileCopyService.MoveFailedFiles(
                 interfaceProfile.FolderOptions.ErrorFolder,
                 interfaceProfile.Metadata.Name,
                 aisFilePath,
@@ -579,7 +579,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 return failedFileCopyResult;
             }
 
-            messages.Add("Fehlerhafte Importdateien wurden in den Fehlerordner kopiert; Originale bleiben erhalten:");
+            messages.Add("Fehlerhafte Importdateien wurden in den Fehlerordner verschoben:");
             messages.AddRange(failedFileCopyResult.CopiedFiles);
             return failedFileCopyResult;
         }

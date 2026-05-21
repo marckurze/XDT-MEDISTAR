@@ -286,10 +286,11 @@ Weitere Regeln:
 
 - Bekannte erfolgreich verarbeitete AIS-/Geraetedateien koennen nach Profiloption archiviert werden.
 - Archivmodus `Copy` oder `Move`; ist die Profiloption `aus Importordner entfernen` aktiv, werden genau diese bekannten verarbeiteten AIS-/Geraetedateien aus dem Importordner entfernt beziehungsweise ins Archiv verschoben.
-- Fehlerablage kopiert bekannte betroffene Dateien in den Fehlerordner und schreibt `error.txt`.
+- Fehlerablage verschiebt bekannte betroffene Dateien in den Fehlerordner und schreibt `error.txt`, wenn ein Fehler terminal behandelt werden muss.
 - Unbekannte Dateien werden nicht geloescht oder verschoben.
 - Exportordner werden nicht pauschal bereinigt.
 - Reset-/Duplikatsperren arbeiten dateiversionsbezogen: Eine neu geschriebene Datei mit gleichem Namen wird anhand geaenderter Dateiversion wieder erkannt.
+- AlreadyProcessed-/Duplikatfaelle wenden denselben sicheren Nachlauf auf bekannte AIS-/Geraetedateien an: Archiv, Fehlerordner oder Entfernen-Regel; ohne sichere Regel wird nichts Unbekanntes angefasst.
 
 ### Sicherheitsentscheidungen
 
