@@ -52,14 +52,15 @@ KM:
 
 Pachymetrie:
 
-- `6220` mit `RA`/`LA`, wenn CCT vorhanden ist
+- `6220` mit Header `Pachymetrie` und eigener `RA`/`LA`-Zeile, wenn CCT vorhanden ist
 - separate `Measure type="CCT"` wird bevorzugt
 - falls keine separate CCT-Messung vorhanden ist, wird `CorrectedIOP/CCT` als Fallback genutzt
 
 Tonometrie:
 
-- `6205` mit IOP-Listen und Average
-- bei CorrectedIOP zusaetzlich gemessener/korrigierter IOP, Param1, Param2 und CCT
+- `6205` mit Header `Tonometrie`
+- IOP-Listen/Average werden als eigene `6205`-Zeile ausgegeben
+- bei CorrectedIOP werden gemessener/korrigierter IOP, Param1, Param2 und CCT in mehrere lesbare `6205`-Zeilen aufgeteilt
 - keine EV-Zusaetze
 
 SBJ:
@@ -84,6 +85,7 @@ Im Repository liegen echte TRK-2P-Fixtures:
 Serial0001 validiert REF, KM und TM ohne CCT/SBJ.
 
 Serial0135 validiert REF, KM, TM, CorrectedIOP und CCT-Fallback.
+Die Tonometrie-/Pachymetrieausgabe ist dabei an das bereits erfolgreiche NT530P-Mehrzeilenformat angelehnt.
 
 ## Tests
 
@@ -99,6 +101,6 @@ Abgesichert durch:
 
 - praktische MEDISTAR-Validierung mit beiden XML-Dateien
 - erneuter Live-Test nach korrigiertem AlreadyProcessed-/Duplikat-Nachlauf
-- Bewertung der `6205`-Tonometrieanzeige mit CorrectedIOP/CCT in MEDISTAR
+- Bewertung der neuen mehrzeiligen `6205`-/`6220`-Anzeige mit CorrectedIOP/CCT in MEDISTAR
 - SBJ-Ausgabe erst nach echten TRK-2P-SBJ-Dateien praktisch bewerten
 - offizielles ZIP-Artefakt erst nach Release-Regel

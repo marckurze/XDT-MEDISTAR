@@ -919,9 +919,9 @@ Echte Fixtures:
 Getestete Ausgabe:
 
 - Serial0001 erzeugt REF-`6228`, KM-`6221` und TM-`6205` mit IOP-Listen/Average; keine `6220`, weil keine CCT-Werte vorhanden sind; keine `6227`, weil keine SBJ-Werte vorhanden sind.
-- Serial0135 erzeugt REF-`6228`, KM-`6221`, Pachy-`6220` aus `CorrectedIOP/CCT` und TM-`6205` mit CorrectedIOP/CCT sowie IOP-Listen/Average; keine `6227`, weil keine SBJ-Werte vorhanden sind.
+- Serial0135 erzeugt REF-`6228`, KM-`6221`, Pachy-`6220` aus `CorrectedIOP/CCT` und TM-`6205` mit CorrectedIOP/CCT sowie IOP-Listen/Average; Tonometrie und Pachymetrie werden analog NT530P mit Header- und Einzelzeilen ausgegeben; keine `6227`, weil keine SBJ-Werte vorhanden sind.
 - CCT-Werte werden fuer `6220` als Millimeter mit drei Nachkommastellen ausgegeben, z. B. `RA: 0.907   // LA: 0.880`.
-- In der Tonometrie werden CCT-Werte fuer den NT530P-aehnlichen `6205`-Block in Mikrometer umgesetzt, z. B. `PR: 907 [907] µm`.
+- In der Tonometrie werden CCT-Werte fuer den NT530P-aehnlichen `6205`-Block in Mikrometer umgesetzt, z. B. `PR: 907 [907] µm`; CorrectedIOP wird nicht mehr als ueberlange Einzelzeile ausgegeben.
 - Leere optionale Fragmente, leere SBJ-Zeilen und Dokumentanhangfelder `6302`-`6305` werden fuer Messwerte nicht erzeugt.
 
 Hinweise:

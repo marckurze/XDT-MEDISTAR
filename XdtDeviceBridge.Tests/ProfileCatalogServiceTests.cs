@@ -285,7 +285,11 @@ public sealed class ProfileCatalogServiceTests
         Assert.False(profile.Metadata.IsUserDefined);
         Assert.Equal("TRK-2P", profile.Model);
         Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/HeaderLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/MeasuredRightLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/ParameterLeftLine");
         Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='CCT']/Pachy/HeaderLine");
         Assert.DoesNotContain(profile.Measurements, measurement => ContainsLegacyTopconTrk2PPath(measurement.SourcePath));
     }
 
@@ -307,7 +311,11 @@ public sealed class ProfileCatalogServiceTests
         Assert.False(profile.Metadata.IsUserDefined);
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6220" && rule.SourcePath == "Device.Measure[@Type='CCT']/Pachy/HeaderLine");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6220" && rule.SourcePath == "Device.Measure[@Type='CCT']/Pachy/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='TM']/Tono/HeaderLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='TM']/Tono/MeasuredRightLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='TM']/Tono/ParameterLeftLine");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6205" && rule.SourcePath == "Device.Measure[@Type='TM']/Tono/TonoListLine");
         Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228" && ContainsLegacyTopconTrk2PPath(rule.OutputTemplate));
         Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6228" && ContainsLegacyTopconTrk2PPath(rule.SourcePath));

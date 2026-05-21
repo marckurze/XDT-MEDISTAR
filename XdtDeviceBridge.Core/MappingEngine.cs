@@ -53,14 +53,15 @@ public sealed class MappingEngine
 
     private static bool ShouldSkipMissingOptionalPreparedLine(MappingRule rule)
     {
-        return string.Equals(rule.TargetFieldCode, "6227", StringComparison.Ordinal)
-            && rule.SourcePath is not null
-            && rule.SourcePath.StartsWith("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(rule.TargetFieldCode, "6220", StringComparison.Ordinal)
-                && string.Equals(rule.SourcePath, "Device.Measure[@Type='CCT']/Pachy/MedistarLine", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(rule.TargetFieldCode, "6205", StringComparison.Ordinal)
+        return (string.Equals(rule.TargetFieldCode, "6227", StringComparison.Ordinal)
                 && rule.SourcePath is not null
-                && rule.SourcePath.StartsWith("Device.Measure[@Type='TM']/Tono/", StringComparison.OrdinalIgnoreCase);
+                && rule.SourcePath.StartsWith("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.OrdinalIgnoreCase))
+            || (string.Equals(rule.TargetFieldCode, "6220", StringComparison.Ordinal)
+                && rule.SourcePath is not null
+                && rule.SourcePath.StartsWith("Device.Measure[@Type='CCT']/Pachy/", StringComparison.OrdinalIgnoreCase))
+            || (string.Equals(rule.TargetFieldCode, "6205", StringComparison.Ordinal)
+                && rule.SourcePath is not null
+                && rule.SourcePath.StartsWith("Device.Measure[@Type='TM']/Tono/", StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool TryResolveSource(

@@ -529,6 +529,14 @@ public sealed class XmlDeviceParser
         {
             AddMeasurement(
                 measurements,
+                "Measure[@Type='CCT']/Pachy/HeaderLine",
+                "TOPCON TRK-2P MEDISTAR Pachymetrie-Überschrift",
+                "Pachymetrie",
+                null,
+                null,
+                "CCT");
+            AddMeasurement(
+                measurements,
                 "Measure[@Type='CCT']/Pachy/MedistarLine",
                 "TOPCON TRK-2P MEDISTAR Pachymetrie-Zeile",
                 pachyLine,
@@ -626,20 +634,57 @@ public sealed class XmlDeviceParser
         }
 
         var tonometryList = BuildTopconTrk2PTonometryListSegment(tmRoot, time);
-        var correctedLine = BuildTopconTrk2PCorrectedIopLine(rightCorrected, leftCorrected, tonometryList);
-        if (!string.IsNullOrWhiteSpace(correctedLine))
+
+        var rightMeasured = BuildTopconTrk2PCorrectedIopMeasurementLine("PR", rightCorrected);
+        if (!string.IsNullOrWhiteSpace(rightMeasured))
         {
             lines.Add(new TopconTrk2PMedistarLine(
-                "CorrectedLine",
-                "TOPCON TRK-2P MEDISTAR Tonometrie Korrektur",
-                correctedLine));
+                "MeasuredRightLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Messung rechts",
+                rightMeasured));
         }
-        else if (!string.IsNullOrWhiteSpace(tonometryList))
+
+        var rightParameters = BuildTopconTrk2PCorrectedIopParameterLine("PR", rightCorrected);
+        if (!string.IsNullOrWhiteSpace(rightParameters))
+        {
+            lines.Add(new TopconTrk2PMedistarLine(
+                "ParameterRightLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Parameter rechts",
+                rightParameters));
+        }
+
+        var leftMeasured = BuildTopconTrk2PCorrectedIopMeasurementLine("PL", leftCorrected);
+        if (!string.IsNullOrWhiteSpace(leftMeasured))
+        {
+            lines.Add(new TopconTrk2PMedistarLine(
+                "MeasuredLeftLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Messung links",
+                leftMeasured));
+        }
+
+        var leftParameters = BuildTopconTrk2PCorrectedIopParameterLine("PL", leftCorrected);
+        if (!string.IsNullOrWhiteSpace(leftParameters))
+        {
+            lines.Add(new TopconTrk2PMedistarLine(
+                "ParameterLeftLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie Parameter links",
+                leftParameters));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tonometryList))
         {
             lines.Add(new TopconTrk2PMedistarLine(
                 "TonoListLine",
                 "TOPCON TRK-2P MEDISTAR Tonometrie Einzelwerte",
                 tonometryList));
+        }
+
+        if (lines.Count > 0)
+        {
+            lines.Insert(0, new TopconTrk2PMedistarLine(
+                "HeaderLine",
+                "TOPCON TRK-2P MEDISTAR Tonometrie-Überschrift",
+                "Tonometrie"));
         }
 
         return lines;
@@ -656,25 +701,7 @@ public sealed class XmlDeviceParser
         return $"{label}: {micrometers} [{micrometers}] µm";
     }
 
-    private static string? BuildTopconTrk2PCorrectedIopLine(
-        TopconTrk2PCorrectedIopParts right,
-        TopconTrk2PCorrectedIopParts left,
-        string? tonometryList)
-    {
-        var parts = new List<string>();
-        AddTopconTrk2PCorrectedEyeParts(parts, "PR", right);
-        AddTopconTrk2PCorrectedEyeParts(parts, "PL", left);
-
-        if (parts.Count == 0)
-        {
-            return null;
-        }
-
-        var line = string.Join(" Y  ", parts);
-        return string.IsNullOrWhiteSpace(tonometryList) ? line : $"{line} P  {tonometryList}";
-    }
-
-    private static void AddTopconTrk2PCorrectedEyeParts(List<string> parts, string label, TopconTrk2PCorrectedIopParts values)
+    private static string? BuildTopconTrk2PCorrectedIopMeasurementLine(string label, TopconTrk2PCorrectedIopParts values)
     {
         var measurementParts = new List<string>();
         if (!string.IsNullOrWhiteSpace(values.Measured))
@@ -689,9 +716,14 @@ public sealed class XmlDeviceParser
 
         if (measurementParts.Count > 0)
         {
-            parts.Add($"{label}: {string.Join("; ", measurementParts)};");
+            return $"{label}: {string.Join("; ", measurementParts)};";
         }
 
+        return null;
+    }
+
+    private static string? BuildTopconTrk2PCorrectedIopParameterLine(string label, TopconTrk2PCorrectedIopParts values)
+    {
         var parameterParts = new List<string>();
         if (!string.IsNullOrWhiteSpace(values.Param1))
         {
@@ -710,8 +742,10 @@ public sealed class XmlDeviceParser
 
         if (parameterParts.Count > 0)
         {
-            parts.Add($"{label}: {string.Join("; ", parameterParts)}");
+            return $"{label}: {string.Join("; ", parameterParts)}";
         }
+
+        return null;
     }
 
     private static string? BuildTopconTrk2PTonometryListSegment(XElement tmRoot, string? time)

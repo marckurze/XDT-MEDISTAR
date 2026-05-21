@@ -482,6 +482,34 @@ public sealed class ProfileCatalogService
             || !profile.Measurements.Any(measurement => string.Equals(
                 measurement.SourcePath,
                 "Measure[@Type='TM']/Tono/TonoListLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='TM']/Tono/HeaderLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='TM']/Tono/MeasuredRightLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='TM']/Tono/ParameterRightLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='TM']/Tono/MeasuredLeftLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='TM']/Tono/ParameterLeftLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='CCT']/Pachy/HeaderLine",
+                StringComparison.Ordinal))
+            || profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='TM']/Tono/CorrectedLine",
                 StringComparison.Ordinal));
     }
 
@@ -654,6 +682,54 @@ public sealed class ProfileCatalogService
                 && string.Equals(
                     rule.SourcePath,
                     "Device.Measure[@Type='TM']/Tono/TonoListLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6220",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='CCT']/Pachy/HeaderLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6205",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='TM']/Tono/HeaderLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6205",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='TM']/Tono/MeasuredRightLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6205",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='TM']/Tono/ParameterRightLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6205",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='TM']/Tono/MeasuredLeftLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6205",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='TM']/Tono/ParameterLeftLine",
                     StringComparison.Ordinal));
     }
 
@@ -669,7 +745,9 @@ public sealed class ProfileCatalogService
             value,
             "Device.Ophthalmology/",
             ":Iop",
-            ":Pachy");
+            ":Pachy",
+            "Device.Measure[@Type='TM']/Tono/CorrectedLine",
+            "Measure[@Type='TM']/Tono/CorrectedLine");
     }
 
     private static bool IsLegacyTopconKr800SKeratometryRule(ExportRuleDefinition rule)

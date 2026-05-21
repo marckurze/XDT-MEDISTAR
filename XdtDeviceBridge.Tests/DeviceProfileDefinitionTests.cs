@@ -471,13 +471,19 @@ public sealed class DeviceProfileDefinitionTests
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault();
 
+        AssertOptionalMeasurement(profile, "trk2p-tono-header-line", "Measure[@Type='TM']/Tono/HeaderLine");
         AssertOptionalMeasurement(profile, "trk2p-tono-pachy-right-line", "Measure[@Type='TM']/Tono/PachyRightLine");
         AssertOptionalMeasurement(profile, "trk2p-tono-pachy-left-line", "Measure[@Type='TM']/Tono/PachyLeftLine");
-        AssertOptionalMeasurement(profile, "trk2p-tono-corrected-line", "Measure[@Type='TM']/Tono/CorrectedLine");
+        AssertOptionalMeasurement(profile, "trk2p-tono-measured-right-line", "Measure[@Type='TM']/Tono/MeasuredRightLine");
+        AssertOptionalMeasurement(profile, "trk2p-tono-parameter-right-line", "Measure[@Type='TM']/Tono/ParameterRightLine");
+        AssertOptionalMeasurement(profile, "trk2p-tono-measured-left-line", "Measure[@Type='TM']/Tono/MeasuredLeftLine");
+        AssertOptionalMeasurement(profile, "trk2p-tono-parameter-left-line", "Measure[@Type='TM']/Tono/ParameterLeftLine");
         AssertOptionalMeasurement(profile, "trk2p-tono-list-line", "Measure[@Type='TM']/Tono/TonoListLine");
+        AssertOptionalMeasurement(profile, "trk2p-pachy-header-line", "Measure[@Type='CCT']/Pachy/HeaderLine");
         AssertOptionalMeasurement(profile, "trk2p-pachy-line", "Measure[@Type='CCT']/Pachy/MedistarLine");
         AssertOptionalMeasurement(profile, "trk2p-sbj-line1", "Measure[@Type='SBJ']/MedistarLine1");
         AssertOptionalMeasurement(profile, "trk2p-sbj-line2", "Measure[@Type='SBJ']/MedistarLine2");
+        Assert.DoesNotContain(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/CorrectedLine");
     }
 
     [Fact]
