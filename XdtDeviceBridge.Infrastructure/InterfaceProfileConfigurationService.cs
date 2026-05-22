@@ -50,7 +50,8 @@ public sealed class InterfaceProfileConfigurationService
             FolderOptions: CreateEmptyFolderOptions(),
             IsActive: false,
             IsLicenseRequired: true,
-            Description: "Benutzerdefinierte Schnittstellenkonfiguration. Automatische Verarbeitung ist zunächst deaktiviert.");
+            Description: "Benutzerdefinierte Schnittstellenkonfiguration. Automatische Verarbeitung ist zunächst deaktiviert.",
+            DeviceOutput: CreateDefaultDeviceOutputForExportProfile(exportProfile));
     }
 
     public InterfaceProfileConfigurationResult CreateConfiguredProfile(
@@ -62,12 +63,33 @@ public sealed class InterfaceProfileConfigurationService
         string? createdBy,
         Func<string>? idFactory = null)
     {
+        return CreateConfiguredProfile(
+            originalProfile,
+            folderOptions,
+            isActive,
+            isLicenseRequired,
+            originalProfile.DeviceOutput,
+            timestamp,
+            createdBy,
+            idFactory);
+    }
+
+    public InterfaceProfileConfigurationResult CreateConfiguredProfile(
+        InterfaceProfileDefinition originalProfile,
+        InterfaceFolderOptions folderOptions,
+        bool isActive,
+        bool isLicenseRequired,
+        DeviceOutputConfiguration? deviceOutput,
+        DateTimeOffset timestamp,
+        string? createdBy,
+        Func<string>? idFactory = null)
+    {
         ArgumentNullException.ThrowIfNull(originalProfile);
         ArgumentNullException.ThrowIfNull(folderOptions);
 
         var profile = originalProfile.Metadata.IsBuiltIn
-            ? CreateUserDefinedCopy(originalProfile, folderOptions, isActive, isLicenseRequired, timestamp, createdBy, idFactory)
-            : UpdateUserDefinedProfile(originalProfile, folderOptions, isActive, isLicenseRequired, timestamp);
+            ? CreateUserDefinedCopy(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, timestamp, createdBy, idFactory)
+            : UpdateUserDefinedProfile(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, timestamp);
 
         var issues = ValidateConfiguration(profile);
         return issues.Any(issue => issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error)
@@ -98,6 +120,20 @@ public sealed class InterfaceProfileConfigurationService
             AddMissingFolderWarnings(profile.FolderOptions, issues);
         }
 
+        if (profile.DeviceOutput?.IsEnabled == true)
+        {
+            if (string.IsNullOrWhiteSpace(profile.DeviceOutput.OutputFolder))
+            {
+                issues.Add(new InterfaceProfileConfigurationIssue(
+                    InterfaceProfileConfigurationIssueSeverity.Warning,
+                    "Ausgabeordner an Gerät fehlt. Es wird keine CV-5000-Importdatei geschrieben, bis der Ordner gesetzt ist."));
+            }
+            else
+            {
+                AddMissingFolderWarning(profile.DeviceOutput.OutputFolder, "Ausgabeordner an Gerät existiert aktuell nicht.", issues);
+            }
+        }
+
         return issues;
     }
 
@@ -106,6 +142,7 @@ public sealed class InterfaceProfileConfigurationService
         InterfaceFolderOptions folderOptions,
         bool isActive,
         bool isLicenseRequired,
+        DeviceOutputConfiguration? deviceOutput,
         DateTimeOffset timestamp,
         string? createdBy,
         Func<string>? idFactory)
@@ -133,7 +170,8 @@ public sealed class InterfaceProfileConfigurationService
                 IsUserDefined: true),
             FolderOptions = folderOptions,
             IsActive = isActive,
-            IsLicenseRequired = isLicenseRequired
+            IsLicenseRequired = isLicenseRequired,
+            DeviceOutput = deviceOutput
         };
     }
 
@@ -142,6 +180,7 @@ public sealed class InterfaceProfileConfigurationService
         InterfaceFolderOptions folderOptions,
         bool isActive,
         bool isLicenseRequired,
+        DeviceOutputConfiguration? deviceOutput,
         DateTimeOffset timestamp)
     {
         return originalProfile with
@@ -154,8 +193,21 @@ public sealed class InterfaceProfileConfigurationService
             },
             FolderOptions = folderOptions,
             IsActive = isActive,
-            IsLicenseRequired = isLicenseRequired
+            IsLicenseRequired = isLicenseRequired,
+            DeviceOutput = deviceOutput
         };
+    }
+
+    private static DeviceOutputConfiguration? CreateDefaultDeviceOutputForExportProfile(ExportProfileDefinition exportProfile)
+    {
+        return string.Equals(exportProfile.SourceDeviceProfileId, "device-topcon-cv5000-default", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfile.Metadata.Id, "export-medistar-topcon-cv5000-default", StringComparison.OrdinalIgnoreCase)
+            ? new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: "CVImport.xml",
+                Format: "TOPCON CV-5000 XML")
+            : null;
     }
 
     private static InterfaceFolderOptions CreateEmptyFolderOptions()

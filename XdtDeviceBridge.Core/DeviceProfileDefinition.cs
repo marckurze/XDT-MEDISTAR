@@ -9,7 +9,7 @@ public sealed record DeviceProfileDefinition(
     IReadOnlyList<DeviceMeasurementDefinition> Measurements,
     IReadOnlyList<string> SupportedExaminationTypes,
     bool CanContainMultipleExaminationTypes,
-    DeviceOutputConfiguration? DeviceOutput = null)
+    bool IsBidirectional = false)
 {
     public IReadOnlyList<string> Validate()
     {

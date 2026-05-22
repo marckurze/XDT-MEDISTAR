@@ -161,8 +161,7 @@ public sealed class TopconCv5000ProfileTests
         Assert.Equal("TOPCON", deviceProfile.Manufacturer);
         Assert.Contains("CV-5000", deviceProfile.Model);
         Assert.Equal("Phoropter", deviceProfile.DeviceType);
-        Assert.True(deviceProfile.DeviceOutput?.IsEnabled);
-        Assert.Equal("TOPCON CV-5000 XML", deviceProfile.DeviceOutput?.Format);
+        Assert.True(deviceProfile.IsBidirectional);
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/MedistarLine1");
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(deviceProfile));
 
@@ -175,7 +174,60 @@ public sealed class TopconCv5000ProfileTests
         Assert.Equal("export-medistar-topcon-cv5000-default", interfaceProfile.ExportProfileId);
         Assert.False(interfaceProfile.IsActive);
         Assert.True(interfaceProfile.Metadata.IsBuiltIn);
+        Assert.NotNull(interfaceProfile.DeviceOutput);
+        Assert.False(interfaceProfile.DeviceOutput!.IsEnabled);
+        Assert.Equal(string.Empty, interfaceProfile.DeviceOutput.OutputFolder);
+        Assert.Equal("CVImport.xml", interfaceProfile.DeviceOutput.FileNameTemplate);
+        Assert.Equal("TOPCON CV-5000 XML", interfaceProfile.DeviceOutput.Format);
         Assert.Empty(InterfaceProfileDefinitionValidator.Validate(interfaceProfile));
+    }
+
+    [Fact]
+    public void ImportWriter_ShouldUseDeviceOutputConfigurationFromInterfaceProfile()
+    {
+        var history = _historyParser.ParseFile(GetCv5000FixturePath("Patient_mit_Phoropter_Daten.XDT"));
+        var selected = _historyParser.CreateDefaultCv5000Selection(history.Records);
+        var targetFolder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
+        {
+            DeviceOutput = new DeviceOutputConfiguration(
+                IsEnabled: true,
+                OutputFolder: targetFolder,
+                FileNameTemplate: "CVImport.xml",
+                Format: "TOPCON CV-5000 XML")
+        };
+
+        var result = _writer.WriteFile(
+            new Cv5000ImportSelection(history.Patient, selected, null, null),
+            interfaceProfile,
+            new DateTimeOffset(2026, 5, 23, 10, 31, 35, TimeSpan.Zero));
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(Path.Combine(targetFolder, "CVImport.xml"), result.TargetPath);
+        Assert.True(File.Exists(result.TargetPath));
+    }
+
+    [Fact]
+    public void ImportWriter_ShouldRejectMissingDeviceOutputFolderFromInterfaceProfile()
+    {
+        var history = _historyParser.ParseFile(GetCv5000FixturePath("Patient_mit_Phoropter_Daten.XDT"));
+        var selected = _historyParser.CreateDefaultCv5000Selection(history.Records);
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
+        {
+            DeviceOutput = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default().DeviceOutput! with
+            {
+                IsEnabled = true,
+                OutputFolder = string.Empty
+            }
+        };
+
+        var result = _writer.WriteFile(
+            new Cv5000ImportSelection(history.Patient, selected, @"C:\Wrong", "Wrong.xml"),
+            interfaceProfile);
+
+        Assert.False(result.Success);
+        Assert.Equal("Ausgabeordner an Gerät fehlt.", result.ErrorMessage);
+        Assert.Null(result.TargetPath);
     }
 
     [Fact]

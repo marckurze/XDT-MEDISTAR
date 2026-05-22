@@ -152,6 +152,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
                                            Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
@@ -1620,7 +1621,71 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="230"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="96"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox Grid.Row="0"
+                                                  Grid.Column="0"
+                                                  Grid.ColumnSpan="3"
+                                                  x:Name="InterfaceDeviceOutputEnabledCheckBox"
+                                                  Content="Ausgabe an Gerät aktiv"
+                                                  Margin="0,0,0,8"
+                                                  ToolTip="Aktiviert die Richtung AIS/MEDISTAR zu Gerät für dieses Schnittstellenprofil."/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Ausgabeordner an Gerät:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="1"
+                                                 Grid.Column="1"
+                                                 x:Name="InterfaceDeviceOutputFolderTextBox"
+                                                 Margin="0,0,8,8"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 ToolTip="Zielordner, in dem die XML-Importdatei für den Phoropter erzeugt wird."/>
+                                        <Button Grid.Row="1" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceOutput" Click="SelectInterfaceFolder_Click"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="2"
+                                                 Grid.Column="1"
+                                                 Grid.ColumnSpan="2"
+                                                 x:Name="InterfaceDeviceOutputFileNameTextBox"
+                                                 Text="CVImport.xml"
+                                                 Margin="0,0,0,8"
+                                                 ToolTip="Dateiname für die Geräte-Importdatei. Für CV-5000 standardmäßig CVImport.xml."/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Format:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="3"
+                                                  Grid.Column="1"
+                                                  Grid.ColumnSpan="2"
+                                                  x:Name="InterfaceDeviceOutputFormatComboBox"
+                                                  SelectedValuePath="Tag"
+                                                  SelectedValue="TOPCON CV-5000 XML"
+                                                  Width="260"
+                                                  HorizontalAlignment="Left"
+                                                  Margin="0,0,0,8"
+                                                  ToolTip="Format der Ausgabe an das Gerät.">
+                                            <ComboBoxItem Content="TOPCON CV-5000 XML" Tag="TOPCON CV-5000 XML"/>
+                                        </ComboBox>
+
+                                        <TextBlock Grid.Row="4"
+                                                   Grid.Column="0"
+                                                   Grid.ColumnSpan="3"
+                                                   Text="Hier wird die XML-Datei erzeugt, die der Phoropter einlesen kann. Diese Einstellung betrifft die Richtung AIS/MEDISTAR → Gerät."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"/>
+                                    </Grid>
+                                </GroupBox>
+
+                                <GroupBox x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -1802,7 +1867,7 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox Header="Ordnerbereinigung" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Ordnerbereinigung" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <StackPanel Margin="8">
                                         <TextBlock Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
                                                    Foreground="DarkRed"
@@ -1824,7 +1889,7 @@
                                     </StackPanel>
                                 </GroupBox>
 
-                                <GroupBox Header="Archivierung" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Archivierung" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -1869,7 +1934,7 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox Header="Prüfung vor Aktivierung" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Prüfung vor Aktivierung" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>

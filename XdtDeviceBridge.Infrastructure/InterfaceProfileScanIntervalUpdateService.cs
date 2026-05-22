@@ -65,6 +65,7 @@ public sealed class InterfaceProfileScanIntervalUpdateService
             folderOptions,
             profile.IsActive,
             profile.IsLicenseRequired,
+            profile.DeviceOutput,
             timestamp,
             createdBy,
             idFactory);

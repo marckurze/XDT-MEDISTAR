@@ -207,6 +207,8 @@ public partial class MainWindow : Window
             InterfaceExportFolderTextBox,
             InterfaceArchiveFolderTextBox,
             InterfaceErrorFolderTextBox,
+            InterfaceDeviceOutputFolderTextBox,
+            InterfaceDeviceOutputFileNameTextBox,
             InterfaceAutoImportScanIntervalSecondsTextBox,
             InterfaceDeviceFileWaitTimeoutMinutesTextBox,
             InterfaceAttachmentImportFolderTextBox,
@@ -230,6 +232,8 @@ public partial class MainWindow : Window
         InterfaceIsActiveCheckBox.Unchecked += routedHandler;
         InterfaceIsLicenseRequiredCheckBox.Checked += routedHandler;
         InterfaceIsLicenseRequiredCheckBox.Unchecked += routedHandler;
+        InterfaceDeviceOutputEnabledCheckBox.Checked += routedHandler;
+        InterfaceDeviceOutputEnabledCheckBox.Unchecked += routedHandler;
         InterfaceAttachmentProcessingEnabledCheckBox.Checked += routedHandler;
         InterfaceAttachmentProcessingEnabledCheckBox.Unchecked += routedHandler;
         InterfaceAttachmentShowDocumentationDialogCheckBox.Checked += routedHandler;
@@ -245,6 +249,7 @@ public partial class MainWindow : Window
 
         InterfaceAttachmentTransferModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceAttachmentRequirementModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceDeviceOutputFormatComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceArchiveModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
     }
 
@@ -1278,6 +1283,14 @@ public partial class MainWindow : Window
         InterfaceExportFolderTextBox.Text = profile.FolderOptions.ExportFolder;
         InterfaceArchiveFolderTextBox.Text = profile.FolderOptions.ArchiveFolder;
         InterfaceErrorFolderTextBox.Text = profile.FolderOptions.ErrorFolder;
+        InterfaceDeviceOutputEnabledCheckBox.IsChecked = profile.DeviceOutput?.IsEnabled == true;
+        InterfaceDeviceOutputFolderTextBox.Text = profile.DeviceOutput?.OutputFolder ?? string.Empty;
+        InterfaceDeviceOutputFileNameTextBox.Text = string.IsNullOrWhiteSpace(profile.DeviceOutput?.FileNameTemplate)
+            ? "CVImport.xml"
+            : profile.DeviceOutput!.FileNameTemplate;
+        InterfaceDeviceOutputFormatComboBox.SelectedValue = string.IsNullOrWhiteSpace(profile.DeviceOutput?.Format)
+            ? "TOPCON CV-5000 XML"
+            : profile.DeviceOutput!.Format;
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = profile.FolderOptions.AutoImportScanIntervalSeconds.ToString();
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = profile.FolderOptions.DeviceFileWaitTimeoutMinutes.ToString();
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
@@ -1296,6 +1309,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentLinkDescriptionTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDescription;
         InterfaceAttachmentLinkPathTemplateTextBox.Text = profile.FolderOptions.AttachmentExternalLinkPathTemplate;
         SyncAttachmentCompletionControls(profile);
+        SyncInterfaceDeviceOutputAndAttachmentVisibility(profile);
 
         InterfaceClearAisImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearAisImportFolderBeforeProcessing;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing;
@@ -1319,6 +1333,10 @@ public partial class MainWindow : Window
         InterfaceExportFolderTextBox.Text = string.Empty;
         InterfaceArchiveFolderTextBox.Text = string.Empty;
         InterfaceErrorFolderTextBox.Text = string.Empty;
+        InterfaceDeviceOutputEnabledCheckBox.IsChecked = false;
+        InterfaceDeviceOutputFolderTextBox.Text = string.Empty;
+        InterfaceDeviceOutputFileNameTextBox.Text = "CVImport.xml";
+        InterfaceDeviceOutputFormatComboBox.SelectedValue = "TOPCON CV-5000 XML";
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = "5";
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = "10";
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
@@ -1343,6 +1361,7 @@ public partial class MainWindow : Window
         InterfaceArchiveModeComboBox.SelectedValue = ArchiveProcessedFileMode.Copy.ToString();
         InterfaceArchiveRetentionDaysTextBox.Text = string.Empty;
         SyncAttachmentCompletionControls(null);
+        SyncInterfaceDeviceOutputAndAttachmentVisibility(null);
         ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateEmpty());
     }
 
@@ -1421,6 +1440,27 @@ public partial class MainWindow : Window
         InterfaceAttachmentQuietPeriodPanel.IsEnabled = isAttachmentOnly && !isManualDocumentSelection && isWaitMode;
     }
 
+    private void SyncInterfaceDeviceOutputAndAttachmentVisibility(InterfaceProfileDefinition? profile)
+    {
+        var deviceProfile = GetDeviceProfile(profile?.DeviceProfileId);
+        var showDeviceOutput = InterfaceProfileUiPolicy.ShouldShowDeviceOutput(profile, deviceProfile);
+        var showAttachmentOptions = InterfaceProfileUiPolicy.ShouldShowAisAttachmentOptions(profile, deviceProfile);
+
+        InterfaceDeviceOutputGroupBox.Visibility = showDeviceOutput ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceAttachmentSettingsGroupBox.Visibility = showAttachmentOptions ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private DeviceProfileDefinition? GetDeviceProfile(string? profileId)
+    {
+        if (string.IsNullOrWhiteSpace(profileId))
+        {
+            return null;
+        }
+
+        return _profileCatalog?.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, profileId, StringComparison.OrdinalIgnoreCase));
+    }
+
     private void RefreshInterfaceActivationPreview()
     {
         if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
@@ -1455,6 +1495,7 @@ public partial class MainWindow : Window
         return profile with
         {
             FolderOptions = CreateInterfaceFolderOptionsFromEditor(),
+            DeviceOutput = CreateInterfaceDeviceOutputFromEditor(profile),
             IsActive = InterfaceIsActiveCheckBox.IsChecked == true,
             IsLicenseRequired = InterfaceIsLicenseRequiredCheckBox.IsChecked == true
         };
@@ -1569,6 +1610,7 @@ public partial class MainWindow : Window
             folderOptions,
             InterfaceIsActiveCheckBox.IsChecked == true,
             InterfaceIsLicenseRequiredCheckBox.IsChecked == true,
+            CreateInterfaceDeviceOutputFromEditor(selectedProfile),
             DateTimeOffset.UtcNow,
             Environment.UserName);
 
@@ -1705,6 +1747,21 @@ public partial class MainWindow : Window
             AttachmentCompletionMode: isManualDocumentSelection ? AttachmentCompletionMode.ManualConfirmation : ReadAttachmentCompletionModeFromEditor(),
             AttachmentQuietPeriodSeconds: ReadAttachmentQuietPeriodSecondsFromEditor(),
             AttachmentOnlySourceMode: selectedProfile?.FolderOptions.AttachmentOnlySourceMode ?? AttachmentOnlySourceMode.DeviceFolder);
+    }
+
+    private DeviceOutputConfiguration? CreateInterfaceDeviceOutputFromEditor(InterfaceProfileDefinition selectedProfile)
+    {
+        var deviceProfile = GetDeviceProfile(selectedProfile.DeviceProfileId);
+        if (!InterfaceProfileUiPolicy.ShouldShowDeviceOutput(selectedProfile, deviceProfile))
+        {
+            return null;
+        }
+
+        return new DeviceOutputConfiguration(
+            IsEnabled: InterfaceDeviceOutputEnabledCheckBox.IsChecked == true,
+            OutputFolder: InterfaceDeviceOutputFolderTextBox.Text.Trim(),
+            FileNameTemplate: DefaultIfWhiteSpace(InterfaceDeviceOutputFileNameTextBox.Text, "CVImport.xml"),
+            Format: InterfaceDeviceOutputFormatComboBox.SelectedValue as string ?? "TOPCON CV-5000 XML");
     }
 
     private static string DefaultIfWhiteSpace(string? value, string fallback)
@@ -1875,6 +1932,7 @@ public partial class MainWindow : Window
             "Export" => InterfaceExportFolderTextBox,
             "Archive" => InterfaceArchiveFolderTextBox,
             "Error" => InterfaceErrorFolderTextBox,
+            "DeviceOutput" => InterfaceDeviceOutputFolderTextBox,
             "AttachmentImport" => InterfaceAttachmentImportFolderTextBox,
             "AttachmentExport" => InterfaceAttachmentExportFolderTextBox,
             _ => null

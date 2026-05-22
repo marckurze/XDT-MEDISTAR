@@ -20,7 +20,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
 | TOPCON | TRK2P | Autorefraktometer / Keratometer / Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `REF`, `KM`, `TM`, `CCT`, optional `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, `6220` Pachy, `6205` Tono, optional `6227` SBJ | praktisch validierter TOPCON-TRK2P-Referenzkandidat inklusive TM/CCT-only-Teilmessung |
 | TOPCON | CT1P | Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `TM`, CorrectedIOP/CCT | keine zwingend erkennbar | `6205` Tono, `6220` Pachy | praktisch validierter TOPCON-Tono/Pachy-Referenzkandidat |
-| TOPCON | CV5000 / CV-5000S | Phoropter | Ophthalmology-/JOIA-XML und MEDISTAR-Historien-XDT | `SBJ`, historische `V0`-`V4`-Refraktionszeilen | CV-5000-Import-XML | Richtung Geraet: XML-Import; Richtung MEDISTAR: `6228` Phoropter-Zeilen | erster bidirektionaler TOPCON-Kandidat, testseitig vorbereitet |
+| TOPCON | CV5000 / CV-5000S | Phoropter | Ophthalmology-/JOIA-XML und MEDISTAR-Historien-XDT | `SBJ`, historische `V0`-`V4`-Refraktionszeilen | CV-5000-Import-XML aus Schnittstellenprofil-Konfiguration | Richtung Geraet: XML-Import; Richtung MEDISTAR: `6228` Phoropter-Zeilen | erster bidirektionaler TOPCON-Kandidat, testseitig vorbereitet |
 
 ## 3. NIDEK AR1S
 
@@ -1004,6 +1004,8 @@ Richtung AIS/MEDISTAR -> Phoropter:
 - Neueste exportierbare Lensmeter-, Autorefraktor- und Phoropter-Datensaetze sind testseitig als Default-Auswahl bestimmbar.
 - Die Import-XML nutzt `Ophthalmology`, `nsCommon:Common`, `nsSBJ:Measure type="SBJ"`, `RefractionTest`, je ausgewaehltem Datensatz ein `Type` und nur echte R/L-Sph/Cyl/Axis-Werte.
 - Leere zweite ExamDistance-Bloecke werden nicht kuenstlich erzeugt.
+- Das Geraeteprofil markiert nur die bidirektionale Faehigkeit; Ausgabeordner, Dateiname und Format werden im Schnittstellenprofil im Bereich `Ausgabe an Geraet` gepflegt.
+- Der Bereich `XDT-Anhaenge fuer AIS` ist fuer CV-5000/CV-5000S bewusst ausgeblendet und bleibt fuer andere Geraete unveraendert sichtbar.
 
 Richtung Phoropter -> AIS/MEDISTAR:
 
@@ -1025,6 +1027,7 @@ Status:
 - BuiltIn-Geraeteprofil `device-topcon-cv5000-default`
 - BuiltIn-Exportprofil `export-medistar-topcon-cv5000-default`
 - BuiltIn-Schnittstellenprofil `interface-medistar-topcon-cv5000-default`
+- Schnittstellenprofil-basierte Ausgabe-an-Geraet-Konfiguration mit Dateiname `CVImport.xml` und Format `TOPCON CV-5000 XML`; Ausgabeordner muss vor dem Live-Test bewusst gesetzt werden.
 - Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_TOPCON_CV5000.md`
 - Fixture-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_CV5000.md`
 - Praktische MEDISTAR-/CV-5000-Livevalidierung steht noch aus.

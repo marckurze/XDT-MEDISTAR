@@ -110,11 +110,11 @@ public sealed class UserDefinedProfileCreationServiceTests
         Assert.Equal("Autorefractor", profile.DeviceType);
         Assert.Equal("Xml", profile.ParserMode);
         Assert.Empty(profile.Measurements);
-        Assert.False(profile.DeviceOutput?.IsEnabled);
+        Assert.False(profile.IsBidirectional);
     }
 
     [Fact]
-    public void CreateDeviceProfile_ShouldPersistOptionalDeviceOutputConfiguration()
+    public void CreateDeviceProfile_ShouldPersistBidirectionalCapabilityOnly()
     {
         var catalog = CreateDefaultCatalog();
 
@@ -126,19 +126,13 @@ public sealed class UserDefinedProfileCreationServiceTests
                 "CV-5000S",
                 "Phoropter",
                 "Xml",
-                UseDeviceOutput: true,
-                DeviceOutputFolder: @"C:\PhoropterImport",
-                DeviceOutputFileNameTemplate: "CVImport.xml",
-                DeviceOutputFormat: "TOPCON CV-5000 XML"),
+                IsBidirectional: true),
             _timestamp,
             "Tester");
 
         Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues));
         var profile = result.Profile!;
-        Assert.True(profile.DeviceOutput?.IsEnabled);
-        Assert.Equal(@"C:\PhoropterImport", profile.DeviceOutput?.OutputFolder);
-        Assert.Equal("CVImport.xml", profile.DeviceOutput?.FileNameTemplate);
-        Assert.Equal("TOPCON CV-5000 XML", profile.DeviceOutput?.Format);
+        Assert.True(profile.IsBidirectional);
     }
 
     [Fact]

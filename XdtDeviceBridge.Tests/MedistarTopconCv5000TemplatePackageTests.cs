@@ -58,10 +58,14 @@ public sealed class MedistarTopconCv5000TemplatePackageTests
         Assert.Equal(DefaultExportProfileId, interfaceProfile.ExportProfileId);
         Assert.False(interfaceProfile.IsActive);
         Assert.False(interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.NotNull(interfaceProfile.DeviceOutput);
+        Assert.False(interfaceProfile.DeviceOutput!.IsEnabled);
+        Assert.Equal(string.Empty, interfaceProfile.DeviceOutput.OutputFolder);
+        Assert.Equal("CVImport.xml", interfaceProfile.DeviceOutput.FileNameTemplate);
+        Assert.Equal("TOPCON CV-5000 XML", interfaceProfile.DeviceOutput.Format);
 
         var deviceProfile = Assert.Single(importResult.DeviceProfiles);
-        Assert.True(deviceProfile.DeviceOutput?.IsEnabled);
-        Assert.Equal("TOPCON CV-5000 XML", deviceProfile.DeviceOutput?.Format);
+        Assert.True(deviceProfile.IsBidirectional);
 
         var includedIds = importResult.Package.IncludedProfiles.Select(profile => profile.Id).ToArray();
         Assert.Contains(DefaultAisProfileId, includedIds);

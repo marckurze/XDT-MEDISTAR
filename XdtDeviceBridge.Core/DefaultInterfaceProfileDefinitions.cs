@@ -332,7 +332,12 @@ public static class DefaultInterfaceProfileDefinitions
                 MoveFailedFilesToErrorFolder: true),
             IsActive: false,
             IsLicenseRequired: true,
-            Description: "Built-in inactive candidate for TOPCON CV-5000/CV-5000S: AIS history can be prepared for phoropter XML import and phoropter SBJ XML returns are exported to MEDISTAR as 6228.");
+            Description: "Built-in inactive candidate for TOPCON CV-5000/CV-5000S: AIS history can be prepared for phoropter XML import and phoropter SBJ XML returns are exported to MEDISTAR as 6228.",
+            DeviceOutput: new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: "CVImport.xml",
+                Format: "TOPCON CV-5000 XML"));
     }
 
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()

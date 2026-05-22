@@ -588,11 +588,7 @@ public static class DefaultDeviceProfileDefinitions
             },
             SupportedExaminationTypes: new[] { "SBJ", "Phoropter", "Refraktion", "Prescription", "Full Correction" },
             CanContainMultipleExaminationTypes: true,
-            DeviceOutput: new DeviceOutputConfiguration(
-                IsEnabled: true,
-                OutputFolder: string.Empty,
-                FileNameTemplate: "CVImport.xml",
-                Format: "TOPCON CV-5000 XML"));
+            IsBidirectional: true);
     }
 
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()

@@ -259,6 +259,11 @@ public sealed class InterfaceProfileDefinitionTests
         Assert.False(profile.IsActive);
         Assert.True(profile.IsLicenseRequired);
         Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.NotNull(profile.DeviceOutput);
+        Assert.False(profile.DeviceOutput!.IsEnabled);
+        Assert.Equal(string.Empty, profile.DeviceOutput.OutputFolder);
+        Assert.Equal("CVImport.xml", profile.DeviceOutput.FileNameTemplate);
+        Assert.Equal("TOPCON CV-5000 XML", profile.DeviceOutput.Format);
         Assert.Empty(InterfaceProfileDefinitionValidator.Validate(profile));
     }
 

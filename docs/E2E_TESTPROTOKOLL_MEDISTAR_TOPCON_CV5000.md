@@ -123,7 +123,9 @@ Fachliche Bestaetigung:
 
 ## UI-/Konfigurationshinweis
 
-Die Option `Ausgabefunktionen an Geraet verwenden` ist fuer neue UserDefined-Geraete standardmaessig deaktiviert. Nur bei aktiver Option werden Ausgabeordner, Dateinamenschema und Format sichtbar. Fuer normale Geraete bleibt die Profilanlage dadurch unveraendert schlank.
+Im Dialog `Neues Geraet anlegen` wird nur noch die Faehigkeit `Bidirektionales Geraet, z. B. Phoropter` markiert. Ausgabeordner, Dateiname und Format werden dort nicht mehr konfiguriert.
+
+Die konkrete Ausgabe an den Phoropter wird im Schnittstellenprofil gepflegt. Fuer CV-5000/CV-5000S ist dort der Bereich `Ausgabe an Geraet` sichtbar; dort werden Aktiv-Schalter, Ausgabeordner, Dateiname `CVImport.xml` und Format `TOPCON CV-5000 XML` verwaltet. Der Bereich `XDT-Anhaenge fuer AIS` ist nur fuer CV-5000/CV-5000S ausgeblendet und bleibt fuer andere Geraete sichtbar.
 
 ## Grenzen / offen
 

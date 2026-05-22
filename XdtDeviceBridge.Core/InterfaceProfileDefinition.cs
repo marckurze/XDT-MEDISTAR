@@ -8,7 +8,8 @@ public sealed record InterfaceProfileDefinition(
     InterfaceFolderOptions FolderOptions,
     bool IsActive,
     bool IsLicenseRequired,
-    string? Description)
+    string? Description,
+    DeviceOutputConfiguration? DeviceOutput = null)
 {
     public IReadOnlyList<string> Validate()
     {

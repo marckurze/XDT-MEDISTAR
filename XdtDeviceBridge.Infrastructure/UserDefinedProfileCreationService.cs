@@ -15,10 +15,7 @@ public sealed record UserDefinedDeviceProfileCreationRequest(
     string Model,
     string DeviceType,
     string ParserMode,
-    bool UseDeviceOutput = false,
-    string DeviceOutputFolder = "",
-    string DeviceOutputFileNameTemplate = "",
-    string DeviceOutputFormat = "");
+    bool IsBidirectional = false);
 
 public sealed record UserDefinedExportProfileCreationRequest(
     string ProfileName,
@@ -138,13 +135,7 @@ public sealed class UserDefinedProfileCreationService
             Measurements: Array.Empty<DeviceMeasurementDefinition>(),
             SupportedExaminationTypes: Array.Empty<string>(),
             CanContainMultipleExaminationTypes: false,
-            DeviceOutput: request.UseDeviceOutput
-                ? new DeviceOutputConfiguration(
-                    IsEnabled: true,
-                    OutputFolder: NormalizeOptionalText(request.DeviceOutputFolder, string.Empty),
-                    FileNameTemplate: NormalizeOptionalText(request.DeviceOutputFileNameTemplate, "CVImport.xml"),
-                    Format: NormalizeOptionalText(request.DeviceOutputFormat, "TOPCON CV-5000 XML"))
-                : DeviceOutputConfiguration.Disabled);
+            IsBidirectional: request.IsBidirectional);
 
         issues.AddRange(DeviceProfileDefinitionValidator.Validate(profile));
 

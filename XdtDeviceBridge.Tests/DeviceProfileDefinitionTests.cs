@@ -547,9 +547,7 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Equal("Xml", profile.ParserMode);
         Assert.True(profile.CanContainMultipleExaminationTypes);
         Assert.Contains("SBJ", profile.SupportedExaminationTypes);
-        Assert.True(profile.DeviceOutput?.IsEnabled);
-        Assert.Equal("CVImport.xml", profile.DeviceOutput?.FileNameTemplate);
-        Assert.Equal("TOPCON CV-5000 XML", profile.DeviceOutput?.Format);
+        Assert.True(profile.IsBidirectional);
     }
 
     [Fact]

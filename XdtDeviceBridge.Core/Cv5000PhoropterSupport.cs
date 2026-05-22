@@ -461,6 +461,56 @@ public sealed class TopconCv5000ImportXmlWriter
         return result;
     }
 
+    public Cv5000ImportWriteResult WriteFile(
+        Cv5000ImportSelection selection,
+        InterfaceProfileDefinition interfaceProfile,
+        DateTimeOffset? timestamp = null)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+        ArgumentNullException.ThrowIfNull(interfaceProfile);
+
+        var output = interfaceProfile.DeviceOutput;
+        if (output is null)
+        {
+            return new Cv5000ImportWriteResult(
+                Success: false,
+                TargetPath: null,
+                XmlContent: null,
+                Warnings: Array.Empty<string>(),
+                ErrorMessage: "Keine Ausgabe-an-Gerät-Konfiguration im Schnittstellenprofil vorhanden.");
+        }
+
+        if (!output.IsEnabled)
+        {
+            return new Cv5000ImportWriteResult(
+                Success: false,
+                TargetPath: null,
+                XmlContent: null,
+                Warnings: Array.Empty<string>(),
+                ErrorMessage: "Ausgabe an Gerät ist im Schnittstellenprofil nicht aktiv.");
+        }
+
+        if (string.IsNullOrWhiteSpace(output.OutputFolder))
+        {
+            return new Cv5000ImportWriteResult(
+                Success: false,
+                TargetPath: null,
+                XmlContent: null,
+                Warnings: Array.Empty<string>(),
+                ErrorMessage: "Ausgabeordner an Gerät fehlt.");
+        }
+
+        var configuredSelection = selection with
+        {
+            TargetFolder = output.OutputFolder,
+            TargetFileName = string.IsNullOrWhiteSpace(output.FileNameTemplate)
+                ? "CVImport.xml"
+                : output.FileNameTemplate
+        };
+
+        return WriteFile(configuredSelection, timestamp);
+    }
+
     private static XElement CreateCommonElement(PatientData patient, DateTimeOffset now)
     {
         return new XElement(

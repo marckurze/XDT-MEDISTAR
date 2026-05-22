@@ -92,7 +92,11 @@ Die Fixtures enthalten keine dokumentierten Live-Pfade. Patientendaten werden in
 
 ## UI-/Konfigurationsstand
 
-Neue UserDefined-Geraete koennen optional `Ausgabefunktionen an Geraet verwenden` aktivieren. Erst dann werden Ausgabeordner, Dateinamenschema und Format angezeigt. Der Default bleibt deaktiviert, normale Geraeteprofile werden dadurch nicht ueberladen.
+Neue UserDefined-Geraete markieren nur noch die Faehigkeit `Bidirektionales Geraet, z. B. Phoropter`. Ausgabeordner, Dateiname und Format gehoeren nicht ins Geraeteprofil.
+
+Die konkrete Richtung AIS/MEDISTAR -> Geraet wird im Schnittstellenprofil konfiguriert. Fuer CV-5000/CV-5000S ist dort der Bereich `Ausgabe an Geraet` sichtbar mit Aktiv-Schalter, Ausgabeordner, Dateiname `CVImport.xml` und Format `TOPCON CV-5000 XML`. Bleibt der Ausgabeordner leer, wird keine Importdatei an das Geraet geschrieben und ein Hinweis ausgegeben.
+
+Der Bereich `XDT-Anhaenge fuer AIS` ist bei CV-5000/CV-5000S bewusst ausgeblendet, weil er fuer diesen Workflow nicht relevant ist. Fuer andere Geraete bleibt die XDT-Anhang-Konfiguration unveraendert sichtbar.
 
 Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert. Es erfolgt keine automatische Aktivierung und keine automatische Aenderung bestehender UserDefined-Profile.
 
@@ -102,6 +106,7 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 - CV-5000-Importwriter: `TopconCv5000ProfileTests`
 - CV-5000-Rueckgabeparser und MEDISTAR-`6228`-Export: `TopconCv5000ProfileTests`
 - BuiltIn-Profiltests: `DeviceProfileDefinitionTests`, `ExportProfileDefinitionTests`, `InterfaceProfileDefinitionTests`, `ProfileCatalogServiceTests`
+- Schnittstellenprofil-UI-Sichtbarkeit: `InterfaceProfileUiPolicyTests`
 - Selektiver Templatepaket-Test: `MedistarTopconCv5000TemplatePackageTests`
 
 ## Grenzen / offen
