@@ -6,8 +6,8 @@ Dieses Paket beschreibt die direkte Anbindung `MEDISTAR + TOPCON CT1P` fuer orig
 
 ## Status
 
-- Kandidat testseitig vorbereitet.
-- Praktische MEDISTAR-Validierung steht noch aus.
+- Praktisch validierter TOPCON-Referenzkandidat fuer Tonometrie-/Pachymetrie-XDT-Rueckgabe.
+- Praxisprotokoll: `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_CT1P.md`.
 - Offizielles ZIP-Artefakt wird erst nach der Release-Regel abgelegt.
 
 ## Enthaltene BuiltIns
@@ -76,6 +76,5 @@ Die Fixture enthaelt:
 
 ## Grenzen / offen
 
-- Praktische MEDISTAR-Validierung steht noch aus.
-- Weitere CT-1P-Dateien mit vollstaendigen linken CorrectedIOP/CCT-Werten sollen im Live-Test bestaetigen, dass beide Augen wie vom Geraet vorgesehen uebernommen werden.
+- Weitere CT-1P-Dateien mit vollstaendigen linken CorrectedIOP/CCT-Werten sollen die beidseitige `PR`/`PL`- und `RA`/`LA`-Ausgabe testseitig festnageln.
 - Dauerhafte ZIP-Ablage erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe und MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung. TOPCON CT1P ist als testseitiger Tono/Pachy-Kandidat vorbereitet. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -19,7 +19,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erster praktisch validierter TOPCON-Referenzkandidat mit Namespace- und Attributanforderungen |
 | TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
 | TOPCON | TRK2P | Autorefraktometer / Keratometer / Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `REF`, `KM`, `TM`, `CCT`, optional `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, `6220` Pachy, `6205` Tono, optional `6227` SBJ | praktisch validierter TOPCON-TRK2P-Referenzkandidat inklusive TM/CCT-only-Teilmessung |
-| TOPCON | CT1P | Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `TM`, CorrectedIOP/CCT | keine zwingend erkennbar | `6205` Tono, `6220` Pachy | testseitig direkt nutzbarer TOPCON-Tono/Pachy-Kandidat |
+| TOPCON | CT1P | Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `TM`, CorrectedIOP/CCT | keine zwingend erkennbar | `6205` Tono, `6220` Pachy | praktisch validierter TOPCON-Tono/Pachy-Referenzkandidat |
 
 ## 3. NIDEK AR1S
 
@@ -918,7 +918,7 @@ Echte Fixtures:
 - `M-Serial0135_20130809_174556_TOPCON_TRK-2P_.xml`
 - `M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml`
 
-Getestete Ausgabe:
+Praktisch validierte Ausgabe:
 
 - Serial0001 erzeugt REF-`6228`, KM-`6221` und TM-`6205` mit IOP-Listen/Average; keine `6220`, weil keine CCT-Werte vorhanden sind; keine `6227`, weil keine SBJ-Werte vorhanden sind.
 - Serial0135 erzeugt REF-`6228`, KM-`6221`, Pachy-`6220` aus `CorrectedIOP/CCT` und TM-`6205` mit CorrectedIOP/CCT sowie IOP-Listen/Average; Tonometrie und Pachymetrie werden analog NT530P mit Header- und Einzelzeilen ausgegeben; keine `6227`, weil keine SBJ-Werte vorhanden sind.
@@ -977,7 +977,7 @@ Hinweise:
 
 - Die aktuelle Fixture enthaelt links IOP-Listen/Average, aber keinen verwertbaren linken CCT-/Measured-/Corrected-Wert. Deshalb wird links keine `PL`-/`LA`-Pachy- oder CorrectedIOP-Zeile erzeugt.
 - Keine `6228`, `6221`, `6227` oder `6302` bis `6305` fuer CT-1P-Messwerte.
-- Das BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON CT1P` und der selektive Templatepaket-Test sind vorhanden; praktische MEDISTAR-Validierung steht noch aus.
+- Das BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON CT1P`, der selektive Templatepaket-Test und das Praxisprotokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_CT1P.md` sind vorhanden.
 
 ## 9. Allgemeine Erkenntnisse aus den Beispieldaten
 
