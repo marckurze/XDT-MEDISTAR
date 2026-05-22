@@ -739,4 +739,136 @@ public static class DefaultExportProfileDefinitions
                     "Conservative subjective refraction line 4 for TOPCON TRK-2P when SBJ values are present.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarTopconCt1PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 22, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-topcon-ct1p-default",
+                Name: "MEDISTAR + TOPCON CT1P Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON CT-1P TM and CorrectedIOP/CCT XML data.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON CT-1P",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-topcon-ct1p-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6220",
+                    "PachymetryHeader",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='CCT']/Pachy/HeaderLine",
+                    "{value}",
+                    7,
+                    true,
+                    "MEDISTAR pachymetry heading for TOPCON CT-1P when CCT is available."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6220",
+                    "Pachymetry",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='CCT']/Pachy/MedistarLine",
+                    "{value}",
+                    8,
+                    true,
+                    "MEDISTAR pachymetry line for TOPCON CT-1P when CCT is available."),
+                new ExportRuleDefinition(
+                    "9",
+                    "6205",
+                    "TonometryHeader",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/HeaderLine",
+                    "{value}",
+                    9,
+                    true,
+                    "MEDISTAR tonometry heading for TOPCON CT-1P when TM values are available."),
+                new ExportRuleDefinition(
+                    "10",
+                    "6205",
+                    "TonometryPachyRight",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/PachyRightLine",
+                    "{value}",
+                    10,
+                    true,
+                    "MEDISTAR tonometry pachymetry line for TOPCON CT-1P right eye when CCT is available."),
+                new ExportRuleDefinition(
+                    "11",
+                    "6205",
+                    "TonometryPachyLeft",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/PachyLeftLine",
+                    "{value}",
+                    11,
+                    true,
+                    "MEDISTAR tonometry pachymetry line for TOPCON CT-1P left eye when CCT is available."),
+                new ExportRuleDefinition(
+                    "12",
+                    "6205",
+                    "TonometryMeasuredRight",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/MeasuredRightLine",
+                    "{value}",
+                    12,
+                    true,
+                    "MEDISTAR tonometry measured/corrected line for TOPCON CT-1P right eye when available."),
+                new ExportRuleDefinition(
+                    "13",
+                    "6205",
+                    "TonometryParameterRight",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/ParameterRightLine",
+                    "{value}",
+                    13,
+                    true,
+                    "MEDISTAR tonometry parameter line for TOPCON CT-1P right eye when available."),
+                new ExportRuleDefinition(
+                    "14",
+                    "6205",
+                    "TonometryMeasuredLeft",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/MeasuredLeftLine",
+                    "{value}",
+                    14,
+                    true,
+                    "MEDISTAR tonometry measured/corrected line for TOPCON CT-1P left eye when available."),
+                new ExportRuleDefinition(
+                    "15",
+                    "6205",
+                    "TonometryParameterLeft",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/ParameterLeftLine",
+                    "{value}",
+                    15,
+                    true,
+                    "MEDISTAR tonometry parameter line for TOPCON CT-1P left eye when available."),
+                new ExportRuleDefinition(
+                    "16",
+                    "6205",
+                    "TonometryList",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='TM']/Tono/TonoListLine",
+                    "{value}",
+                    16,
+                    true,
+                    "MEDISTAR tonometry list line for TOPCON CT-1P when TM values are available.")
+            });
+    }
 }

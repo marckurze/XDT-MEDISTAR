@@ -470,6 +470,73 @@ public static class DefaultDeviceProfileDefinitions
             CanContainMultipleExaminationTypes: true);
     }
 
+    public static DeviceProfileDefinition CreateTopconCt1PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 22, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-topcon-ct1p-default",
+                Name: "TOPCON CT1P",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON CT-1P JOIA/Ophthalmology XML files with TM and per-eye CorrectedIOP/CCT pachymetry support. XML namespaces nsCommon/nsTM are read namespace-tolerantly.",
+                Vendor: "TOPCON",
+                Product: "CT-1P",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOPCON",
+            Model: "CT-1P",
+            DeviceType: "Tonometer/Pachymeter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("ct1p-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common company field."),
+                new DeviceMeasurementDefinition("ct1p-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "TOPCON JOIA common model field; expected CT-1P."),
+                new DeviceMeasurementDefinition("ct1p-machine-no", "MachineNo", "Common/MachineNo", "Common", string.Empty, string.Empty, false, "TOPCON CT-1P machine number."),
+                new DeviceMeasurementDefinition("ct1p-rom-version", "ROMVersion", "Common/ROMVersion", "Common", string.Empty, string.Empty, false, "TOPCON CT-1P ROM version."),
+                new DeviceMeasurementDefinition("ct1p-version", "Version", "Common/Version", "Common", string.Empty, string.Empty, false, "TOPCON CT-1P XML version."),
+                new DeviceMeasurementDefinition("ct1p-measurement-date", "MeasurementDate", "Common/Date", "Common", string.Empty, string.Empty, false, "Measurement date from TOPCON CT-1P common block."),
+                new DeviceMeasurementDefinition("ct1p-measurement-time", "MeasurementTime", "Common/Time", "Common", string.Empty, string.Empty, false, "Measurement time from TOPCON CT-1P common block."),
+                new DeviceMeasurementDefinition("ct1p-patient-no", "Patient No.", "Common/Patient/No.", "Common", string.Empty, string.Empty, false, "TOPCON CT-1P patient number."),
+                new DeviceMeasurementDefinition("ct1p-patient-id", "Patient ID", "Common/Patient/ID", "Common", string.Empty, string.Empty, false, "TOPCON CT-1P patient ID."),
+                new DeviceMeasurementDefinition("ct1p-r-iop-1", "TM R IOP 1", "Measure[@Type='TM']/TM/R/List[@No='1']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 1."),
+                new DeviceMeasurementDefinition("ct1p-r-iop-2", "TM R IOP 2", "Measure[@Type='TM']/TM/R/List[@No='2']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 2."),
+                new DeviceMeasurementDefinition("ct1p-r-iop-3", "TM R IOP 3", "Measure[@Type='TM']/TM/R/List[@No='3']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 3."),
+                new DeviceMeasurementDefinition("ct1p-r-iop-5", "TM R IOP 5", "Measure[@Type='TM']/TM/R/List[@No='5']/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP single value 5."),
+                new DeviceMeasurementDefinition("ct1p-r-iop-average", "TM R IOP Average", "Measure[@Type='TM']/TM/R/Average/IOP_mmHg", "TM", "R", "mmHg", false, "Right IOP average."),
+                new DeviceMeasurementDefinition("ct1p-l-iop-4", "TM L IOP 4", "Measure[@Type='TM']/TM/L/List[@No='4']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 4."),
+                new DeviceMeasurementDefinition("ct1p-l-iop-5", "TM L IOP 5", "Measure[@Type='TM']/TM/L/List[@No='5']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 5."),
+                new DeviceMeasurementDefinition("ct1p-l-iop-6", "TM L IOP 6", "Measure[@Type='TM']/TM/L/List[@No='6']/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP single value 6."),
+                new DeviceMeasurementDefinition("ct1p-l-iop-average", "TM L IOP Average", "Measure[@Type='TM']/TM/L/Average/IOP_mmHg", "TM", "L", "mmHg", false, "Left IOP average."),
+                new DeviceMeasurementDefinition("ct1p-corrected-r-measured", "R CorrectedIOP Measured", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/R/Measured/IOP_mmHg", "CorrectedIOP", "R", "mmHg", false, "Right measured IOP from CorrectedIOP."),
+                new DeviceMeasurementDefinition("ct1p-corrected-r-corrected", "R CorrectedIOP Corrected", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/R/Corrected/IOP_mmHg", "CorrectedIOP", "R", "mmHg", false, "Right corrected IOP from CorrectedIOP."),
+                new DeviceMeasurementDefinition("ct1p-corrected-r-param1", "R CorrectedIOP Param1", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/R/Param1", "CorrectedIOP", "R", "mm", false, "Right Param1 for CorrectedIOP."),
+                new DeviceMeasurementDefinition("ct1p-corrected-r-param2", "R CorrectedIOP Param2", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/R/Param2", "CorrectedIOP", "R", string.Empty, false, "Right Param2 for CorrectedIOP."),
+                new DeviceMeasurementDefinition("ct1p-corrected-r-cct", "R CorrectedIOP CCT", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/R/CCT", "CorrectedIOP", "R", "mm", false, "Right CCT fallback from CorrectedIOP."),
+                new DeviceMeasurementDefinition("ct1p-corrected-l-measured", "L CorrectedIOP Measured", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/L/Measured/IOP_mmHg", "CorrectedIOP", "L", "mmHg", false, "Left measured IOP from CorrectedIOP when present."),
+                new DeviceMeasurementDefinition("ct1p-corrected-l-corrected", "L CorrectedIOP Corrected", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/L/Corrected/IOP_mmHg", "CorrectedIOP", "L", "mmHg", false, "Left corrected IOP from CorrectedIOP when present."),
+                new DeviceMeasurementDefinition("ct1p-corrected-l-param1", "L CorrectedIOP Param1", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/L/Param1", "CorrectedIOP", "L", "mm", false, "Left Param1 for CorrectedIOP when usable CCT or measured values are present."),
+                new DeviceMeasurementDefinition("ct1p-corrected-l-param2", "L CorrectedIOP Param2", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/L/Param2", "CorrectedIOP", "L", string.Empty, false, "Left Param2 for CorrectedIOP when usable CCT or measured values are present."),
+                new DeviceMeasurementDefinition("ct1p-corrected-l-cct", "L CorrectedIOP CCT", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/L/CCT", "CorrectedIOP", "L", "mm", false, "Left CCT fallback from CorrectedIOP when present."),
+                new DeviceMeasurementDefinition("ct1p-pachy-header-line", "CCT MEDISTAR Pachymetrie-Überschrift", "Measure[@Type='CCT']/Pachy/HeaderLine", "CCT", string.Empty, string.Empty, false, "Computed MEDISTAR pachymetry heading when CCT values are available."),
+                new DeviceMeasurementDefinition("ct1p-pachy-line", "CCT MEDISTAR Pachymetrie-Zeile", "Measure[@Type='CCT']/Pachy/MedistarLine", "CCT", string.Empty, string.Empty, false, "Computed MEDISTAR pachymetry line from CorrectedIOP/CCT fallback."),
+                new DeviceMeasurementDefinition("ct1p-tono-header-line", "TM MEDISTAR Tonometrie-Überschrift", "Measure[@Type='TM']/Tono/HeaderLine", "TM", string.Empty, string.Empty, false, "Computed MEDISTAR tonometry heading when TM values are available."),
+                new DeviceMeasurementDefinition("ct1p-tono-pachy-right-line", "TM MEDISTAR Pachy rechts", "Measure[@Type='TM']/Tono/PachyRightLine", "TM", "R", string.Empty, false, "Computed MEDISTAR tonometry pachymetry line for right eye when CCT is available."),
+                new DeviceMeasurementDefinition("ct1p-tono-pachy-left-line", "TM MEDISTAR Pachy links", "Measure[@Type='TM']/Tono/PachyLeftLine", "TM", "L", string.Empty, false, "Computed MEDISTAR tonometry pachymetry line for left eye when CCT is available."),
+                new DeviceMeasurementDefinition("ct1p-tono-measured-right-line", "TM MEDISTAR Messung rechts", "Measure[@Type='TM']/Tono/MeasuredRightLine", "TM", "R", string.Empty, false, "Computed MEDISTAR measured and corrected IOP line for right eye when available."),
+                new DeviceMeasurementDefinition("ct1p-tono-parameter-right-line", "TM MEDISTAR Parameter rechts", "Measure[@Type='TM']/Tono/ParameterRightLine", "TM", "R", string.Empty, false, "Computed MEDISTAR CorrectedIOP parameter line for right eye when CCT or measured values are available."),
+                new DeviceMeasurementDefinition("ct1p-tono-measured-left-line", "TM MEDISTAR Messung links", "Measure[@Type='TM']/Tono/MeasuredLeftLine", "TM", "L", string.Empty, false, "Computed MEDISTAR measured and corrected IOP line for left eye when available."),
+                new DeviceMeasurementDefinition("ct1p-tono-parameter-left-line", "TM MEDISTAR Parameter links", "Measure[@Type='TM']/Tono/ParameterLeftLine", "TM", "L", string.Empty, false, "Computed MEDISTAR CorrectedIOP parameter line for left eye when CCT or measured values are available."),
+                new DeviceMeasurementDefinition("ct1p-tono-list-line", "TM MEDISTAR IOP-Listen-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Computed MEDISTAR tonometry list line.")
+            },
+            SupportedExaminationTypes: new[] { "TM", "CCT", "Tonometrie", "Pachymetrie", "CorrectedIOP" },
+            CanContainMultipleExaminationTypes: true);
+    }
+
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

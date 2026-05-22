@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsTM="http://www.joia.or.jp/standardized/namespaces/TM">
+  <nsCommon:Common>
+    <nsCommon:Company>TOPCON</nsCommon:Company>
+    <nsCommon:ModelName>CT-1P</nsCommon:ModelName>
+    <nsCommon:MachineNo>01</nsCommon:MachineNo>
+    <nsCommon:ROMVersion>2.00.09</nsCommon:ROMVersion>
+    <nsCommon:Version>1.2</nsCommon:Version>
+    <nsCommon:Date>2013-06-20</nsCommon:Date>
+    <nsCommon:Time>15:20:02</nsCommon:Time>
+    <nsCommon:Patient>
+      <nsCommon:No.>0214</nsCommon:No.>
+      <nsCommon:ID>0214</nsCommon:ID>
+    </nsCommon:Patient>
+  </nsCommon:Common>
+  <nsTM:Measure type="TM">
+    <nsTM:TM>
+      <nsTM:R>
+        <nsTM:List No="1">
+          <nsTM:IOP_mmHg unit="mmHg">13.0</nsTM:IOP_mmHg>
+        </nsTM:List>
+        <nsTM:List No="2">
+          <nsTM:IOP_mmHg unit="mmHg">12.0</nsTM:IOP_mmHg>
+        </nsTM:List>
+        <nsTM:List No="3">
+          <nsTM:IOP_mmHg unit="mmHg">13.0</nsTM:IOP_mmHg>
+        </nsTM:List>
+        <nsTM:List No="5">
+          <nsTM:IOP_mmHg unit="mmHg">26.0</nsTM:IOP_mmHg>
+        </nsTM:List>
+        <nsTM:Average>
+          <nsTM:IOP_mmHg unit="mmHg">16.0</nsTM:IOP_mmHg>
+        </nsTM:Average>
+      </nsTM:R>
+      <nsTM:L>
+        <nsTM:List No="4">
+          <nsTM:IOP_mmHg unit="mmHg">44.0</nsTM:IOP_mmHg>
+        </nsTM:List>
+        <nsTM:List No="5">
+          <nsTM:IOP_mmHg unit="mmHg">44.0</nsTM:IOP_mmHg>
+        </nsTM:List>
+        <nsTM:List No="6">
+          <nsTM:IOP_mmHg unit="mmHg">44.0</nsTM:IOP_mmHg>
+        </nsTM:List>
+        <nsTM:Average>
+          <nsTM:IOP_mmHg unit="mmHg">44.0</nsTM:IOP_mmHg>
+        </nsTM:Average>
+      </nsTM:L>
+    </nsTM:TM>
+    <nsTM:CorrectedIOP>
+      <nsTM:Formula1 No="1">
+        <nsTM:R>
+          <nsTM:Param1 unit="mm">0.545</nsTM:Param1>
+          <nsTM:Param2>0.050</nsTM:Param2>
+          <nsTM:CCT unit="mm">0.767</nsTM:CCT>
+          <nsTM:Measured>
+            <nsTM:IOP_mmHg unit="mmHg">16.0</nsTM:IOP_mmHg>
+          </nsTM:Measured>
+          <nsTM:Corrected>
+            <nsTM:IOP_mmHg unit="mmHg">5.0</nsTM:IOP_mmHg>
+          </nsTM:Corrected>
+        </nsTM:R>
+        <nsTM:L>
+          <nsTM:Param1 unit="mm">0.545</nsTM:Param1>
+          <nsTM:Param2>0.050</nsTM:Param2>
+          <nsTM:CCT unit="mm"></nsTM:CCT>
+        </nsTM:L>
+      </nsTM:Formula1>
+    </nsTM:CorrectedIOP>
+  </nsTM:Measure>
+</Ophthalmology>

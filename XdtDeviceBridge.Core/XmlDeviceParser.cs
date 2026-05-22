@@ -41,6 +41,7 @@ public sealed class XmlDeviceParser
             AddTopconCl300MedistarLines(document.Root, measurements);
             AddTopconKr800SMedistarLines(document.Root, measurements);
             AddTopconTrk2PMedistarLines(document.Root, measurements);
+            AddTopconCt1PMedistarLines(document.Root, measurements);
             AddNidekNt530PMedistarLines(document.Root, measurements);
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or IOException or UnauthorizedAccessException)
@@ -376,6 +377,36 @@ public sealed class XmlDeviceParser
         }
     }
 
+    private static void AddTopconCt1PMedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        if (common is null)
+        {
+            return;
+        }
+
+        var company = GetChildValue(common, "Company");
+        var modelName = GetChildValue(common, "ModelName");
+        if (!string.Equals(company, "TOPCON", StringComparison.OrdinalIgnoreCase)
+            || !IsTopconCt1PModel(modelName))
+        {
+            return;
+        }
+
+        var tmMeasure = FindMeasure(root, "TM");
+        if (tmMeasure is null)
+        {
+            return;
+        }
+
+        AddTopconCt1PTonoAndPachyMedistarLines(measurements, tmMeasure, GetChildValue(common, "Time"));
+    }
+
     private static void AddTopconKr800SRefMedistarLines(List<MeasurementValue> measurements, XElement refMeasure)
     {
         var refRoot = FindChild(refMeasure, "REF");
@@ -557,6 +588,64 @@ public sealed class XmlDeviceParser
                 null,
                 "TM");
         }
+    }
+
+    private static void AddTopconCt1PTonoAndPachyMedistarLines(
+        List<MeasurementValue> measurements,
+        XElement tmMeasure,
+        string? time)
+    {
+        var tmRoot = FindChild(tmMeasure, "TM");
+        if (tmRoot is null)
+        {
+            return;
+        }
+
+        var corrected = GetTopconTrk2PCorrectedIopParts(tmMeasure);
+        var rightCorrected = SuppressTopconCt1PParameterOnlyCorrectedIop(corrected.Right);
+        var leftCorrected = SuppressTopconCt1PParameterOnlyCorrectedIop(corrected.Left);
+        var pachyLine = BuildTopconTrk2PPachyMedistarLine(null, rightCorrected, leftCorrected);
+        if (!string.IsNullOrWhiteSpace(pachyLine))
+        {
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='CCT']/Pachy/HeaderLine",
+                "TOPCON CT-1P MEDISTAR Pachymetrie-Überschrift",
+                "Pachymetrie",
+                null,
+                null,
+                "CCT");
+            AddMeasurement(
+                measurements,
+                "Measure[@Type='CCT']/Pachy/MedistarLine",
+                "TOPCON CT-1P MEDISTAR Pachymetrie-Zeile",
+                pachyLine,
+                null,
+                null,
+                "CCT");
+        }
+
+        var tonoLines = BuildTopconTrk2PTonoMedistarLines(tmRoot, null, rightCorrected, leftCorrected, time);
+        foreach (var line in tonoLines)
+        {
+            AddMeasurement(
+                measurements,
+                $"Measure[@Type='TM']/Tono/{line.Key}",
+                line.DisplayName.Replace("TRK-2P", "CT-1P", StringComparison.Ordinal),
+                line.Value,
+                null,
+                null,
+                "TM");
+        }
+    }
+
+    private static TopconTrk2PCorrectedIopParts SuppressTopconCt1PParameterOnlyCorrectedIop(TopconTrk2PCorrectedIopParts parts)
+    {
+        return string.IsNullOrWhiteSpace(parts.Cct)
+            && string.IsNullOrWhiteSpace(parts.Measured)
+            && string.IsNullOrWhiteSpace(parts.Corrected)
+            ? new TopconTrk2PCorrectedIopParts(null, null, null, null, null)
+            : parts;
     }
 
     private static string? BuildTopconTrk2PPachyMedistarLine(
@@ -1497,6 +1586,12 @@ public sealed class XmlDeviceParser
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "TRK2P", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTopconCt1PModel(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "CT1P", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddLensmeterLine(

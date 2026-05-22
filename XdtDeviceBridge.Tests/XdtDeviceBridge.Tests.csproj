@@ -64,5 +64,8 @@
     <None Update="TestData\Devices\Topcon\TRK2P\M-Serial1165_20241126_225512_TOPCON_TRK-2P_5284298.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\Devices\Topcon\CT1P\M-Serial0214_20130620_152002_TOPCON_CT-1P_2630218.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

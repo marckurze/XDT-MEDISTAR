@@ -495,6 +495,48 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateTopconCt1PDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCt1PDefault();
+
+        Assert.Equal("TOPCON", profile.Manufacturer);
+        Assert.Equal("CT-1P", profile.Model);
+        Assert.Contains("Tonometer", profile.DeviceType);
+        Assert.Contains("Pachymeter", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.True(profile.CanContainMultipleExaminationTypes);
+        Assert.Contains("TM", profile.SupportedExaminationTypes);
+        Assert.Contains("CCT", profile.SupportedExaminationTypes);
+        Assert.Contains("Tonometrie", profile.SupportedExaminationTypes);
+        Assert.Contains("Pachymetrie", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateTopconCt1PDefault_ShouldContainPreparedTonoAndPachyMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCt1PDefault();
+
+        AssertRequiredMeasurement(profile, "ct1p-company", "Common/Company");
+        AssertRequiredMeasurement(profile, "ct1p-model-name", "Common/ModelName");
+        AssertOptionalMeasurement(profile, "ct1p-r-iop-average", "Measure[@Type='TM']/TM/R/Average/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "ct1p-l-iop-average", "Measure[@Type='TM']/TM/L/Average/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "ct1p-corrected-r-cct", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/R/CCT");
+        AssertOptionalMeasurement(profile, "ct1p-tono-header-line", "Measure[@Type='TM']/Tono/HeaderLine");
+        AssertOptionalMeasurement(profile, "ct1p-tono-parameter-right-line", "Measure[@Type='TM']/Tono/ParameterRightLine");
+        AssertOptionalMeasurement(profile, "ct1p-tono-list-line", "Measure[@Type='TM']/Tono/TonoListLine");
+        AssertOptionalMeasurement(profile, "ct1p-pachy-header-line", "Measure[@Type='CCT']/Pachy/HeaderLine");
+        AssertOptionalMeasurement(profile, "ct1p-pachy-line", "Measure[@Type='CCT']/Pachy/MedistarLine");
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptTopconCt1PProfile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateTopconCt1PDefault());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
     public void CreateDocumentAttachmentDefault_ShouldCreateAttachmentOnlyProfile()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault();
