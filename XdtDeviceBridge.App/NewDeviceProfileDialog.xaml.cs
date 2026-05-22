@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using XdtDeviceBridge.Infrastructure;
 
 namespace XdtDeviceBridge.App;
@@ -41,8 +42,21 @@ public partial class NewDeviceProfileDialog : Window
             Manufacturer: ManufacturerTextBox.Text,
             Model: ModelTextBox.Text,
             DeviceType: DeviceTypeTextBox.Text,
-            ParserMode: ParserModeComboBox.SelectedItem is ParserModeOption option ? option.Value : string.Empty);
+            ParserMode: ParserModeComboBox.SelectedItem is ParserModeOption option ? option.Value : string.Empty,
+            UseDeviceOutput: UseDeviceOutputCheckBox.IsChecked == true,
+            DeviceOutputFolder: DeviceOutputFolderTextBox.Text,
+            DeviceOutputFileNameTemplate: DeviceOutputFileNameTemplateTextBox.Text,
+            DeviceOutputFormat: DeviceOutputFormatComboBox.SelectedItem is ComboBoxItem item
+                ? item.Content?.ToString() ?? string.Empty
+                : "TOPCON CV-5000 XML");
         DialogResult = true;
+    }
+
+    private void UseDeviceOutputCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        DeviceOutputOptionsGrid.Visibility = UseDeviceOutputCheckBox.IsChecked == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private static string CreateParserModeDisplayName(string parserMode)

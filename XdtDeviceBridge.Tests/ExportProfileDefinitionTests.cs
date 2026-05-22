@@ -545,6 +545,36 @@ public sealed class ExportProfileDefinitionTests
         Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6228" or "6221" or "6227" or "6302" or "6303" or "6304" or "6305");
     }
 
+    [Fact]
+    public void CreateMedistarTopconCv5000Default_ShouldCreateProfile()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
+
+        Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
+        Assert.Equal("device-topcon-cv5000-default", profile.SourceDeviceProfileId);
+        Assert.Equal("Windows-1252", profile.OutputEncoding);
+        Assert.Equal(12, profile.Rules.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptMedistarTopconCv5000DefaultProfile()
+    {
+        var issues = ExportProfileDefinitionValidator.Validate(DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void CreateMedistarTopconCv5000Default_ShouldUse6228PreparedSbjLinesOnly()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
+
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "8402" && rule.SourcePath == "AIS.ExaminationType");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine5");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6227" or "6221" or "6220" or "6205" or "6302" or "6303" or "6304" or "6305");
+    }
+
     private static ExportProfileDefinition WithModifiedRule(
         string id,
         Func<ExportRuleDefinition, ExportRuleDefinition> modify)

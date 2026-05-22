@@ -13,6 +13,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="150"/>
@@ -70,7 +72,48 @@
                        Margin="0,3,0,0"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Geräteausgabe:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="5" Grid.Column="1" Margin="0,0,0,12">
+            <CheckBox x:Name="UseDeviceOutputCheckBox"
+                      Content="Ausgabefunktionen an Gerät verwenden"
+                      Checked="UseDeviceOutputCheckBox_Changed"
+                      Unchecked="UseDeviceOutputCheckBox_Changed"
+                      ToolTip="Aktiviert zusätzliche Konfiguration für bidirektionale Geräte wie TOPCON CV-5000."/>
+            <TextBlock Text="Bei normalen Geräteanbindungen deaktiviert lassen. Zusätzliche Felder werden nur bei aktivierter Ausgabe an das Gerät angezeigt."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <Grid x:Name="DeviceOutputOptionsGrid"
+              Grid.Row="6"
+              Grid.Column="0"
+              Grid.ColumnSpan="2"
+              Visibility="Collapsed"
+              Margin="0,0,0,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Ausgabeordner:" FontWeight="Bold" Margin="0,2,8,8"/>
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="DeviceOutputFolderTextBox" Margin="0,0,0,8" ToolTip="Zielordner, in den die Geräte-Importdatei geschrieben wird."/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Dateiname:" FontWeight="Bold" Margin="0,2,8,8"/>
+            <TextBox Grid.Row="1" Grid.Column="1" x:Name="DeviceOutputFileNameTemplateTextBox" Text="CVImport.xml" Margin="0,0,0,8" ToolTip="Dateiname oder späteres Dateinamenschema für die Geräte-Importdatei."/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Format:" FontWeight="Bold" Margin="0,2,8,0"/>
+            <ComboBox Grid.Row="2" Grid.Column="1" x:Name="DeviceOutputFormatComboBox" SelectedIndex="0" ToolTip="Format für die Ausgabe an das Gerät.">
+                <ComboBoxItem Content="TOPCON CV-5000 XML"/>
+            </ComboBox>
+        </Grid>
+
+        <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
             <Button Content="Speichern" Width="110" Margin="0,0,8,0" IsDefault="True" Click="Save_Click"/>
             <Button Content="Abbrechen" Width="110" IsCancel="True"/>
         </StackPanel>

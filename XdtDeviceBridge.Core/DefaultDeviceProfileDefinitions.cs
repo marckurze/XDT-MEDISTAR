@@ -537,6 +537,64 @@ public static class DefaultDeviceProfileDefinitions
             CanContainMultipleExaminationTypes: true);
     }
 
+    public static DeviceProfileDefinition CreateTopconCv5000Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 23, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-topcon-cv5000-default",
+                Name: "TOPCON CV-5000 / CV-5000S",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for bidirectional TOPCON CV-5000 / CV-5000S phoropter workflows. Incoming SBJ XML is read namespace-tolerantly and returned to MEDISTAR as 6228 phoropter result lines; AIS history can be written as TOPCON CV-5000 XML import candidate.",
+                Vendor: "TOPCON",
+                Product: "CV-5000 / CV-5000S",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOPCON",
+            Model: "CV-5000 / CV-5000S",
+            DeviceType: "Phoropter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("cv5000-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "TOPCON common company field."),
+                new DeviceMeasurementDefinition("cv5000-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "TOPCON CV-5000/CV-5000S common model field."),
+                new DeviceMeasurementDefinition("cv5000-machine-no", "MachineNo", "Common/MachineNo", "Common", string.Empty, string.Empty, false, "TOPCON CV-5000 machine number."),
+                new DeviceMeasurementDefinition("cv5000-rom-version", "ROMVersion", "Common/ROMVersion", "Common", string.Empty, string.Empty, false, "TOPCON CV-5000 ROM version."),
+                new DeviceMeasurementDefinition("cv5000-version", "Version", "Common/Version", "Common", string.Empty, string.Empty, false, "TOPCON CV-5000 XML version."),
+                new DeviceMeasurementDefinition("cv5000-date", "Date", "Common/Date", "Common", string.Empty, string.Empty, false, "TOPCON CV-5000 measurement date."),
+                new DeviceMeasurementDefinition("cv5000-time", "Time", "Common/Time", "Common", string.Empty, string.Empty, false, "TOPCON CV-5000 measurement time."),
+                new DeviceMeasurementDefinition("cv5000-patient-no", "Patient No.", "Common/Patient/No.", "Common", string.Empty, string.Empty, false, "TOPCON CV-5000 patient number."),
+                new DeviceMeasurementDefinition("cv5000-patient-id", "Patient ID", "Common/Patient/ID", "Common", string.Empty, string.Empty, false, "TOPCON CV-5000 patient ID."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-name", "SBJ Type 1 Name", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/TypeName", "SBJ", string.Empty, string.Empty, true, "First TOPCON CV-5000 subjective result type name."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-r-sph", "SBJ Type 1 R Sph", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph", "SBJ", "R", "dpt", false, "Right sphere from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-r-cyl", "SBJ Type 1 R Cyl", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Cyl", "SBJ", "R", "dpt", false, "Right cylinder from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-r-axis", "SBJ Type 1 R Axis", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Axis", "SBJ", "R", "deg", false, "Right axis from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-l-sph", "SBJ Type 1 L Sph", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Sph", "SBJ", "L", "dpt", false, "Left sphere from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-l-cyl", "SBJ Type 1 L Cyl", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Cyl", "SBJ", "L", "dpt", false, "Left cylinder from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-l-axis", "SBJ Type 1 L Axis", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Axis", "SBJ", "L", "deg", false, "Left axis from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-vd", "SBJ Type 1 VD", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/VD", "SBJ", string.Empty, "mm", false, "Vertex distance from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-type1-pd-b", "SBJ Type 1 PD B", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B", "SBJ", string.Empty, "mm", false, "Binocular PD from first CV-5000 result type."),
+                new DeviceMeasurementDefinition("cv5000-sbj-line1", "SBJ MEDISTAR-Zeile 1", "Measure[@Type='SBJ']/MedistarLine1", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 line 1 for TOPCON CV-5000 phoropter result."),
+                new DeviceMeasurementDefinition("cv5000-sbj-line2", "SBJ MEDISTAR-Zeile 2", "Measure[@Type='SBJ']/MedistarLine2", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 line 2 for TOPCON CV-5000 phoropter result."),
+                new DeviceMeasurementDefinition("cv5000-sbj-line3", "SBJ MEDISTAR-Zeile 3", "Measure[@Type='SBJ']/MedistarLine3", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 line 3 for TOPCON CV-5000 phoropter result."),
+                new DeviceMeasurementDefinition("cv5000-sbj-line4", "SBJ MEDISTAR-Zeile 4", "Measure[@Type='SBJ']/MedistarLine4", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 line 4 for TOPCON CV-5000 phoropter result."),
+                new DeviceMeasurementDefinition("cv5000-sbj-line5", "SBJ MEDISTAR-Zeile 5", "Measure[@Type='SBJ']/MedistarLine5", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 line 5 for TOPCON CV-5000 phoropter result."),
+                new DeviceMeasurementDefinition("cv5000-sbj-line6", "SBJ MEDISTAR-Zeile 6", "Measure[@Type='SBJ']/MedistarLine6", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 line 6 for TOPCON CV-5000 phoropter result.")
+            },
+            SupportedExaminationTypes: new[] { "SBJ", "Phoropter", "Refraktion", "Prescription", "Full Correction" },
+            CanContainMultipleExaminationTypes: true,
+            DeviceOutput: new DeviceOutputConfiguration(
+                IsEnabled: true,
+                OutputFolder: string.Empty,
+                FileNameTemplate: "CVImport.xml",
+                Format: "TOPCON CV-5000 XML"));
+    }
+
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

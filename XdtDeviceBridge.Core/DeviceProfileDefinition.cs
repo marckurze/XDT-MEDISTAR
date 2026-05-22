@@ -8,10 +8,24 @@ public sealed record DeviceProfileDefinition(
     string ParserMode,
     IReadOnlyList<DeviceMeasurementDefinition> Measurements,
     IReadOnlyList<string> SupportedExaminationTypes,
-    bool CanContainMultipleExaminationTypes)
+    bool CanContainMultipleExaminationTypes,
+    DeviceOutputConfiguration? DeviceOutput = null)
 {
     public IReadOnlyList<string> Validate()
     {
         return DeviceProfileDefinitionValidator.Validate(this);
     }
+}
+
+public sealed record DeviceOutputConfiguration(
+    bool IsEnabled,
+    string OutputFolder,
+    string FileNameTemplate,
+    string Format)
+{
+    public static DeviceOutputConfiguration Disabled { get; } = new(
+        IsEnabled: false,
+        OutputFolder: string.Empty,
+        FileNameTemplate: string.Empty,
+        Format: string.Empty);
 }

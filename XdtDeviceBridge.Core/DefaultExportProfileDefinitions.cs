@@ -871,4 +871,96 @@ public static class DefaultExportProfileDefinitions
                     "MEDISTAR tonometry list line for TOPCON CT-1P when TM values are available.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarTopconCv5000Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 23, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-topcon-cv5000-default",
+                Name: "MEDISTAR + TOPCON CV-5000 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON CV-5000 / CV-5000S phoropter SBJ XML return files. Phoropter result lines are emitted through MEDISTAR field 6228.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON CV-5000",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-topcon-cv5000-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6228",
+                    "PhoropterLine1",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='SBJ']/MedistarLine1",
+                    "{value}",
+                    7,
+                    true,
+                    "MEDISTAR phoropter return line 1 from TOPCON CV-5000."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6228",
+                    "PhoropterLine2",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='SBJ']/MedistarLine2",
+                    "{value}",
+                    8,
+                    true,
+                    "MEDISTAR phoropter return line 2 from TOPCON CV-5000."),
+                new ExportRuleDefinition(
+                    "9",
+                    "6228",
+                    "PhoropterSeparator",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='SBJ']/MedistarLine3",
+                    "{value}",
+                    9,
+                    true,
+                    "Optional separator between TOPCON CV-5000 result blocks."),
+                new ExportRuleDefinition(
+                    "10",
+                    "6228",
+                    "PhoropterLine4",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='SBJ']/MedistarLine4",
+                    "{value}",
+                    10,
+                    true,
+                    "MEDISTAR phoropter return line 4 from TOPCON CV-5000."),
+                new ExportRuleDefinition(
+                    "11",
+                    "6228",
+                    "PhoropterLine5",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='SBJ']/MedistarLine5",
+                    "{value}",
+                    11,
+                    true,
+                    "MEDISTAR phoropter return line 5 from TOPCON CV-5000."),
+                new ExportRuleDefinition(
+                    "12",
+                    "6228",
+                    "PhoropterLine6",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='SBJ']/MedistarLine6",
+                    "{value}",
+                    12,
+                    true,
+                    "Reserved optional MEDISTAR phoropter return line from TOPCON CV-5000.")
+            });
+    }
 }

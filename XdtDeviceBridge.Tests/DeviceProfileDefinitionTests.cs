@@ -537,6 +537,44 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateTopconCv5000Default_ShouldCreateBidirectionalProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
+
+        Assert.Equal("TOPCON", profile.Manufacturer);
+        Assert.Contains("CV-5000", profile.Model);
+        Assert.Equal("Phoropter", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.True(profile.CanContainMultipleExaminationTypes);
+        Assert.Contains("SBJ", profile.SupportedExaminationTypes);
+        Assert.True(profile.DeviceOutput?.IsEnabled);
+        Assert.Equal("CVImport.xml", profile.DeviceOutput?.FileNameTemplate);
+        Assert.Equal("TOPCON CV-5000 XML", profile.DeviceOutput?.Format);
+    }
+
+    [Fact]
+    public void CreateTopconCv5000Default_ShouldContainPreparedSbjMedistarLines()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
+
+        AssertRequiredMeasurement(profile, "cv5000-company", "Common/Company");
+        AssertRequiredMeasurement(profile, "cv5000-model-name", "Common/ModelName");
+        AssertRequiredMeasurement(profile, "cv5000-sbj-type1-name", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/TypeName");
+        AssertOptionalMeasurement(profile, "cv5000-sbj-type1-r-sph", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph");
+        AssertOptionalMeasurement(profile, "cv5000-sbj-type1-pd-b", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B");
+        AssertOptionalMeasurement(profile, "cv5000-sbj-line1", "Measure[@Type='SBJ']/MedistarLine1");
+        AssertOptionalMeasurement(profile, "cv5000-sbj-line5", "Measure[@Type='SBJ']/MedistarLine5");
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptTopconCv5000Profile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateTopconCv5000Default());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
     public void CreateDocumentAttachmentDefault_ShouldCreateAttachmentOnlyProfile()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault();

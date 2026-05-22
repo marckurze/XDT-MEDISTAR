@@ -110,6 +110,35 @@ public sealed class UserDefinedProfileCreationServiceTests
         Assert.Equal("Autorefractor", profile.DeviceType);
         Assert.Equal("Xml", profile.ParserMode);
         Assert.Empty(profile.Measurements);
+        Assert.False(profile.DeviceOutput?.IsEnabled);
+    }
+
+    [Fact]
+    public void CreateDeviceProfile_ShouldPersistOptionalDeviceOutputConfiguration()
+    {
+        var catalog = CreateDefaultCatalog();
+
+        var result = _service.CreateDeviceProfile(
+            catalog,
+            new UserDefinedDeviceProfileCreationRequest(
+                "CV5000 Raum 1",
+                "TOPCON",
+                "CV-5000S",
+                "Phoropter",
+                "Xml",
+                UseDeviceOutput: true,
+                DeviceOutputFolder: @"C:\PhoropterImport",
+                DeviceOutputFileNameTemplate: "CVImport.xml",
+                DeviceOutputFormat: "TOPCON CV-5000 XML"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues));
+        var profile = result.Profile!;
+        Assert.True(profile.DeviceOutput?.IsEnabled);
+        Assert.Equal(@"C:\PhoropterImport", profile.DeviceOutput?.OutputFolder);
+        Assert.Equal("CVImport.xml", profile.DeviceOutput?.FileNameTemplate);
+        Assert.Equal("TOPCON CV-5000 XML", profile.DeviceOutput?.Format);
     }
 
     [Fact]

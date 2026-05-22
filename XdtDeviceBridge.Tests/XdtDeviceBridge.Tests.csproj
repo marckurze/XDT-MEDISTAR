@@ -67,5 +67,14 @@
     <None Update="TestData\Devices\Topcon\CT1P\M-Serial0214_20130620_152002_TOPCON_CT-1P_2630218.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\Devices\Topcon\CV5000\CVImport.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\Devices\Topcon\CV5000\M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\Devices\Topcon\CV5000\Patient_mit_Phoropter_Daten.XDT">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

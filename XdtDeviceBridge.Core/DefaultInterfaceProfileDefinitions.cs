@@ -298,6 +298,43 @@ public static class DefaultInterfaceProfileDefinitions
             Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON CT-1P TM and CCT profile candidate.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarTopconCv5000Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 23, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-topcon-cv5000-default",
+                Name: "MEDISTAR + TOPCON CV-5000",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for the bidirectional MEDISTAR and TOPCON CV-5000 / CV-5000S phoropter workflow.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON CV-5000",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-topcon-cv5000-default",
+            ExportProfileId: "export-medistar-topcon-cv5000-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive candidate for TOPCON CV-5000/CV-5000S: AIS history can be prepared for phoropter XML import and phoropter SBJ XML returns are exported to MEDISTAR as 6228.");
+    }
+
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

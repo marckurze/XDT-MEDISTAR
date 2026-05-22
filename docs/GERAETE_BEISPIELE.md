@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. Die weiteren Profile dienen der fachlichen und technischen Vorbereitung und muessen vor produktiver Nutzung mit echten Praxisdateien validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. MEDISTAR + TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet, muss aber noch praktisch mit MEDISTAR und CV-5000/CV-5000S validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -20,6 +20,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
 | TOPCON | TRK2P | Autorefraktometer / Keratometer / Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `REF`, `KM`, `TM`, `CCT`, optional `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, `6220` Pachy, `6205` Tono, optional `6227` SBJ | praktisch validierter TOPCON-TRK2P-Referenzkandidat inklusive TM/CCT-only-Teilmessung |
 | TOPCON | CT1P | Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `TM`, CorrectedIOP/CCT | keine zwingend erkennbar | `6205` Tono, `6220` Pachy | praktisch validierter TOPCON-Tono/Pachy-Referenzkandidat |
+| TOPCON | CV5000 / CV-5000S | Phoropter | Ophthalmology-/JOIA-XML und MEDISTAR-Historien-XDT | `SBJ`, historische `V0`-`V4`-Refraktionszeilen | CV-5000-Import-XML | Richtung Geraet: XML-Import; Richtung MEDISTAR: `6228` Phoropter-Zeilen | erster bidirektionaler TOPCON-Kandidat, testseitig vorbereitet |
 
 ## 3. NIDEK AR1S
 
@@ -979,6 +980,55 @@ Hinweise:
 - Keine `6228`, `6221`, `6227` oder `6302` bis `6305` fuer CT-1P-Messwerte.
 - Das BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON CT1P`, der selektive Templatepaket-Test und das Praxisprotokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_CT1P.md` sind vorhanden.
 
+## 8.2 TOPCON CV5000 / CV-5000S
+
+Geraetetyp: Phoropter, bidirektional.
+
+Dateiformat:
+
+- TOPCON Ophthalmology-/JOIA-XML fuer die Rueckgabe vom Phoropter
+- CV-5000-kompatible Ophthalmology-/SBJ-Import-XML fuer die Richtung an das Geraet
+- MEDISTAR-GDT/XDT mit historischen Karteikartenzeilen fuer die Auswahl vorhandener Messwerte
+
+Relevante Fixtures im Repository:
+
+- `XdtDeviceBridge.Tests/TestData/Devices/Topcon/CV5000/CVImport.xml`
+- `XdtDeviceBridge.Tests/TestData/Devices/Topcon/CV5000/M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml`
+- `XdtDeviceBridge.Tests/TestData/Devices/Topcon/CV5000/Patient_mit_Phoropter_Daten.XDT`
+
+Richtung AIS/MEDISTAR -> Phoropter:
+
+- Patientendaten werden aus `3000`, `3101`, `3102`, `3103` und `8402` gelesen.
+- Historische Refraktionszeilen mit `V0`, `V1`, `V2`, `V3`, `V4` werden erkannt und gruppiert.
+- `V7`, `P` und `Y` werden erkannt, aber im ersten Schritt nicht in die CV-5000-Import-XML geschrieben.
+- Neueste exportierbare Lensmeter-, Autorefraktor- und Phoropter-Datensaetze sind testseitig als Default-Auswahl bestimmbar.
+- Die Import-XML nutzt `Ophthalmology`, `nsCommon:Common`, `nsSBJ:Measure type="SBJ"`, `RefractionTest`, je ausgewaehltem Datensatz ein `Type` und nur echte R/L-Sph/Cyl/Axis-Werte.
+- Leere zweite ExamDistance-Bloecke werden nicht kuenstlich erzeugt.
+
+Richtung Phoropter -> AIS/MEDISTAR:
+
+- CV-5000/CV-5000S wird ueber `Common/Company = TOPCON`, `Common/ModelName = CV-5000` oder `CV-5000S` und `Measure type="SBJ"` erkannt.
+- Type-Bloecke wie `Prescription` und `Full Correction` werden gelesen.
+- Rueckgabe erfolgt fachlich ueber `6228`, nicht ueber `6227`.
+- Beispielhafte Fixture-Ausgabe:
+
+```text
+R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
+L.:S=+ 1.25 Z=- 2.00*  7
+--
+R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
+L.:S=+ 1.25 Z=- 2.00*  7
+```
+
+Status:
+
+- BuiltIn-Geraeteprofil `device-topcon-cv5000-default`
+- BuiltIn-Exportprofil `export-medistar-topcon-cv5000-default`
+- BuiltIn-Schnittstellenprofil `interface-medistar-topcon-cv5000-default`
+- Templatepaket-Kandidat `docs/TEMPLATEPAKET_MEDISTAR_TOPCON_CV5000.md`
+- Fixture-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_CV5000.md`
+- Praktische MEDISTAR-/CV-5000-Livevalidierung steht noch aus.
+
 ## 9. Allgemeine Erkenntnisse aus den Beispieldaten
 
 1. Jedes Gerät liefert andere Dateistrukturen.
@@ -1035,7 +1085,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
-4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TOPCON TRK2P ist als praktisch validierter REF/KM/TM/CCT-Referenzkandidat inklusive Teilmessungsregel dokumentiert.
+4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TOPCON TRK2P ist als praktisch validierter REF/KM/TM/CCT-Referenzkandidat inklusive Teilmessungsregel dokumentiert, TOPCON CT1P ist fuer Tonometrie/Pachymetrie praktisch validiert, und TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 

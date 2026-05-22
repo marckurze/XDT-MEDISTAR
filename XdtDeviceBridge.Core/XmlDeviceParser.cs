@@ -42,6 +42,7 @@ public sealed class XmlDeviceParser
             AddTopconKr800SMedistarLines(document.Root, measurements);
             AddTopconTrk2PMedistarLines(document.Root, measurements);
             AddTopconCt1PMedistarLines(document.Root, measurements);
+            AddTopconCv5000MedistarLines(document.Root, measurements);
             AddNidekNt530PMedistarLines(document.Root, measurements);
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or IOException or UnauthorizedAccessException)
@@ -405,6 +406,78 @@ public sealed class XmlDeviceParser
         }
 
         AddTopconCt1PTonoAndPachyMedistarLines(measurements, tmMeasure, GetChildValue(common, "Time"));
+    }
+
+    private static void AddTopconCv5000MedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        var company = common is null ? null : GetChildValue(common, "Company");
+        var modelName = common is null ? null : GetChildValue(common, "ModelName");
+        if (!string.Equals(company?.Trim(), "TOPCON", StringComparison.OrdinalIgnoreCase)
+            || !IsTopconCv5000Model(modelName))
+        {
+            return;
+        }
+
+        var sbjMeasure = FindMeasure(root, "SBJ");
+        if (sbjMeasure is null)
+        {
+            return;
+        }
+
+        var refractionTest = FindChild(sbjMeasure, "RefractionTest");
+        if (refractionTest is null)
+        {
+            return;
+        }
+
+        var lines = new List<string>();
+        foreach (var type in FindChildren(refractionTest, "Type"))
+        {
+            var typeLines = new List<string>();
+            foreach (var examDistance in FindChildren(type, "ExamDistance"))
+            {
+                var refractionData = FindChild(examDistance, "RefractionData");
+                if (refractionData is null)
+                {
+                    continue;
+                }
+
+                var pd = GetCv5000BinocularPd(FindChild(examDistance, "PD"));
+                var vd = GetChildValue(refractionData, "VD");
+                AddIfNotEmpty(typeLines, BuildCv5000EyeLine("R", FindChild(refractionData, "R"), pd, vd));
+                AddIfNotEmpty(typeLines, BuildCv5000EyeLine("L", FindChild(refractionData, "L"), null, null));
+            }
+
+            if (typeLines.Count == 0)
+            {
+                continue;
+            }
+
+            if (lines.Count > 0)
+            {
+                lines.Add("--");
+            }
+
+            lines.AddRange(typeLines);
+        }
+
+        for (var index = 0; index < lines.Count; index++)
+        {
+            AddMeasurement(
+                measurements,
+                $"Measure[@Type='SBJ']/MedistarLine{index + 1}",
+                $"MEDISTAR TOPCON CV-5000 SBJ-Zeile {index + 1}",
+                lines[index],
+                null,
+                null,
+                "SBJ");
+        }
     }
 
     private static void AddTopconKr800SRefMedistarLines(List<MeasurementValue> measurements, XElement refMeasure)
@@ -1460,6 +1533,56 @@ public sealed class XmlDeviceParser
             : $"{line} VA={visualAcuity.Trim()}";
     }
 
+    private static string? BuildCv5000EyeLine(string eye, XElement? eyeElement, string? binocularPd, string? vd)
+    {
+        var line = BuildRefractionEyeLine(eye, eyeElement);
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(binocularPd))
+        {
+            line += $" PD= {FormatPd(binocularPd)}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(vd))
+        {
+            line += $" VD= {FormatTwoDecimal(vd)}";
+        }
+
+        return line;
+    }
+
+    private static string? GetCv5000BinocularPd(XElement? pdElement)
+    {
+        if (pdElement is null)
+        {
+            return null;
+        }
+
+        var binocularPd = GetChildValue(pdElement, "B");
+        if (!string.IsNullOrWhiteSpace(binocularPd))
+        {
+            return binocularPd;
+        }
+
+        var rightPd = GetChildValue(pdElement, "R");
+        var leftPd = GetChildValue(pdElement, "L");
+        return TryParseDecimal(rightPd ?? string.Empty, out var right)
+            && TryParseDecimal(leftPd ?? string.Empty, out var left)
+            ? (right + left).ToString("0.00", CultureInfo.InvariantCulture)
+            : null;
+    }
+
+    private static void AddIfNotEmpty(List<string> lines, string? line)
+    {
+        if (!string.IsNullOrWhiteSpace(line))
+        {
+            lines.Add(line);
+        }
+    }
+
     private static string NormalizeSubjectiveTypeName(string value)
     {
         return string.IsNullOrWhiteSpace(value)
@@ -1592,6 +1715,13 @@ public sealed class XmlDeviceParser
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "CT1P", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTopconCv5000Model(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "CV5000", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "CV5000S", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddLensmeterLine(
