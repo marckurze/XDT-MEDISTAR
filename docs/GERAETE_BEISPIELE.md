@@ -20,7 +20,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
 | TOPCON | TRK2P | Autorefraktometer / Keratometer / Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `REF`, `KM`, `TM`, `CCT`, optional `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, `6220` Pachy, `6205` Tono, optional `6227` SBJ | praktisch validierter TOPCON-TRK2P-Referenzkandidat inklusive TM/CCT-only-Teilmessung |
 | TOPCON | CT1P | Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `TM`, CorrectedIOP/CCT | keine zwingend erkennbar | `6205` Tono, `6220` Pachy | praktisch validierter TOPCON-Tono/Pachy-Referenzkandidat |
-| TOPCON | CV5000 / CV-5000S | Phoropter | Ophthalmology-/JOIA-XML und MEDISTAR-Historien-XDT | `SBJ`, historische `V0`-`V4`-Refraktionszeilen | CV-5000-Import-XML aus Schnittstellenprofil-Konfiguration | Richtung Geraet: XML-Import; Richtung MEDISTAR: `6228` Phoropter-Zeilen | erster bidirektionaler TOPCON-Kandidat, testseitig vorbereitet |
+| TOPCON | CV5000 / CV-5000S | Phoropter | Ophthalmology-/JOIA-XML und MEDISTAR-Historien-XDT | `SBJ`, historische `V0`-`V4`-Refraktionszeilen | CV-5000-Import-XML aus Schnittstellenprofil-Konfiguration | Richtung Geraet: XML-Import; Richtung MEDISTAR: `6228` Prescription, CV-5000-spezifisch `6330` Full Correction | erster bidirektionaler TOPCON-Kandidat, testseitig vorbereitet |
 
 ## 3. NIDEK AR1S
 
@@ -1011,15 +1011,18 @@ Richtung Phoropter -> AIS/MEDISTAR:
 
 - CV-5000/CV-5000S wird ueber `Common/Company = TOPCON`, `Common/ModelName = CV-5000` oder `CV-5000S` und `Measure type="SBJ"` erkannt.
 - Type-Bloecke wie `Prescription` und `Full Correction` werden gelesen.
-- Rueckgabe erfolgt fachlich ueber `6228`, nicht ueber `6227`.
+- `Prescription` wird als finaler Verordnungswert mit `6227`-Ueberschrift und `6228`-R/L-Werten ausgegeben.
+- `Full Correction` wird als Maximalwert/Vollkorrektion mit `6227`-Ueberschrift und CV-5000-spezifischen `6330`-R/L-Werten ausgegeben.
+- Die `6330`-Regel ist nur fuer TOPCON CV-5000/CV-5000S `Full Correction`, keine generische Automatik.
 - Beispielhafte Fixture-Ausgabe:
 
 ```text
-R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
-L.:S=+ 1.25 Z=- 2.00*  7
---
-R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
-L.:S=+ 1.25 Z=- 2.00*  7
+6227 Phoropter finaler Verordnungswert
+6228 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
+6228 L.:S=+ 1.25 Z=- 2.00*  7
+6227 Phoropter Maximalwert (Vollkorrektion)
+6330 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
+6330 L.:S=+ 1.25 Z=- 2.00*  7
 ```
 
 Status:

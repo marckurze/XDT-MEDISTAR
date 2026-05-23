@@ -9,7 +9,7 @@ Dieses Paket beschreibt den ersten bidirektionalen TOPCON-Phoropter-Kandidaten f
 - Testseitig abgesichert fuer beide Richtungen:
   - AIS/MEDISTAR -> XdtDeviceBridge -> TOPCON-CV-5000-Import-XML
   - TOPCON CV-5000 -> XdtDeviceBridge -> MEDISTAR-XDT-Rueckgabe
-- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden. Der Rueckweg verarbeitet MEDISTAR-Historien-AIS-Dateien tolerant, damit Karteikartenzeilen den CV-5000-`6228`-Export nicht abbrechen. Der finale MEDISTAR-Import der erzeugten Rueckgabedatei bleibt praktisch zu pruefen.
+- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden. Der Rueckweg verarbeitet MEDISTAR-Historien-AIS-Dateien tolerant, damit Karteikartenzeilen den CV-5000-Rueckexport nicht abbrechen. `Prescription` wird ueber `6228` und `Full Correction` CV-5000-spezifisch ueber `6330` ausgegeben. Der finale MEDISTAR-Import der erzeugten Rueckgabedatei bleibt praktisch zu pruefen.
 - Offizielles ZIP-Artefakt wird erst nach der Release-Regel abgelegt.
 
 ## Enthaltene BuiltIns
@@ -62,27 +62,30 @@ Die Fernentfernung `500.000 cm` ist bewusst konservativ gewaehlt und muss im Liv
 
 ## Richtung Phoropter -> AIS
 
-Die CV-5000-Rueckgabe wird als MEDISTAR-Phoropter-Ergebnis ueber `6228` ausgegeben, obwohl die TOPCON-XML intern `Measure type="SBJ"` nutzt.
+Die CV-5000-Rueckgabe nutzt intern TOPCON-`Measure type="SBJ"`, wird fuer MEDISTAR aber fachlich nach TypeName getrennt.
 
 - `8402` Untersuchungsart kommt aus AIS/MEDISTAR.
 - MEDISTAR-Historien-AIS-Dateien mit Karteikartenzeilen werden im CV-5000-Rueckweg tolerant als Patientenkontext gelesen.
 - Die `CVImport.xml`-Erzeugung ist Phase 1 und kein terminaler Workflowabschluss; final abgeschlossen wird erst nach erfolgreicher Phoropter-Rueckgabe.
-- `6228` enthaelt die rechten/linken Phoropter-Zeilen.
-- `6227`, `6221`, `6220`, `6205` und `6302` bis `6305` werden fuer CV-5000-Messwerte nicht verwendet.
+- `Prescription` enthaelt den finalen Verordnungswert: `6227`-Ueberschrift plus rechte/linke `6228`-Zeilen.
+- `Full Correction` enthaelt den Maximalwert / die Vollkorrektion: `6227`-Ueberschrift plus rechte/linke `6330`-Zeilen.
+- `6330` ist hier eine ausdruecklich CV-5000-spezifische Regel fuer `Full Correction`, keine generische Zeilentypautomatik.
+- `6221`, `6220`, `6205` und `6302` bis `6305` werden fuer CV-5000-Messwerte nicht verwendet.
 - Leere Prism-/VA-/Contrast-Bloecke werden ignoriert.
 - Fehlende Augen oder optionale Werte erzeugen keine leeren Fragmente.
 
 Beispiel aus der echten CV-5000-Rueckgabe-Fixture:
 
 ```text
+6227 Phoropter finaler Verordnungswert
 6228 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
 6228 L.:S=+ 1.25 Z=- 2.00*  7
-6228 --
-6228 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
-6228 L.:S=+ 1.25 Z=- 2.00*  7
+6227 Phoropter Maximalwert (Vollkorrektion)
+6330 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
+6330 L.:S=+ 1.25 Z=- 2.00*  7
 ```
 
-Die Trennzeile `--` trennt die zwei Type-Bloecke `Prescription` und `Full Correction`.
+Die bisherige Trennzeile `--` wird nicht mehr verwendet; die Trennung erfolgt ueber die `6227`-Ueberschriften.
 
 ## Testfixtures
 
@@ -106,7 +109,7 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 
 - Historienparser: `TopconCv5000ProfileTests`
 - CV-5000-Importwriter: `TopconCv5000ProfileTests`
-- CV-5000-Rueckgabeparser und MEDISTAR-`6228`-Export: `TopconCv5000ProfileTests`
+- CV-5000-Rueckgabeparser und MEDISTAR-Export mit `6227`-/`6228`-/`6330`-Trennung: `TopconCv5000ProfileTests`
 - CV-5000-Rueckweg mit MEDISTAR-Historien-AIS und genauer AIS-Fehlerdiagnose: `InterfaceProfileManualProcessorTests`
 - BuiltIn-Profiltests: `DeviceProfileDefinitionTests`, `ExportProfileDefinitionTests`, `InterfaceProfileDefinitionTests`, `ProfileCatalogServiceTests`
 - Schnittstellenprofil-UI-Sichtbarkeit: `InterfaceProfileUiPolicyTests`
@@ -114,7 +117,7 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 
 ## Grenzen / offen
 
-- Praktisch offen bleibt der echte MEDISTAR-Import der erzeugten `6228`-Rueckgabedatei.
+- Praktisch offen bleibt der echte MEDISTAR-Import der erzeugten Rueckgabedatei mit `Prescription` unter `6228` und `Full Correction` unter `6330`.
 - Die vom Dialog erzeugte `CVImport.xml` muss am echten CV-5000/CV-5000S weiter beobachtet werden.
 - Keratometer-, Tonometrie- und Pachymetrie-Karteikartenzeilen werden erkannt, aber mangels eindeutig belegtem CV-5000-Importmapping nicht in die Phoropter-Import-XML geschrieben.
 - Offizielle ZIP-Ablage erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

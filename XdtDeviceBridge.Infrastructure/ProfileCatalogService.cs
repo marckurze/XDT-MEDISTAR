@@ -15,6 +15,8 @@ public sealed class ProfileCatalogService
     private const string TopconKr800DefaultExportProfileId = "export-medistar-topcon-kr800-default";
     private const string TopconTrk2PDefaultDeviceProfileId = "device-topcon-trk2p-default";
     private const string TopconTrk2PDefaultExportProfileId = "export-medistar-topcon-trk2p-default";
+    private const string TopconCv5000DefaultDeviceProfileId = "device-topcon-cv5000-default";
+    private const string TopconCv5000DefaultExportProfileId = "export-medistar-topcon-cv5000-default";
 
     private readonly ProfileFileRepository _repository;
 
@@ -381,7 +383,8 @@ public sealed class ProfileCatalogService
     private void RepairBuiltInDeviceProfileIfNeeded(string folder, DeviceProfileDefinition defaultProfile)
     {
         if (!string.Equals(defaultProfile.Metadata.Id, TopconCl300DefaultDeviceProfileId, StringComparison.Ordinal)
-            && !string.Equals(defaultProfile.Metadata.Id, TopconTrk2PDefaultDeviceProfileId, StringComparison.Ordinal))
+            && !string.Equals(defaultProfile.Metadata.Id, TopconTrk2PDefaultDeviceProfileId, StringComparison.Ordinal)
+            && !string.Equals(defaultProfile.Metadata.Id, TopconCv5000DefaultDeviceProfileId, StringComparison.Ordinal))
         {
             return;
         }
@@ -412,7 +415,8 @@ public sealed class ProfileCatalogService
             && !string.Equals(defaultProfile.Metadata.Id, Nt530PDefaultExportProfileId, StringComparison.Ordinal)
             && !string.Equals(defaultProfile.Metadata.Id, TopconCl300DefaultExportProfileId, StringComparison.Ordinal)
             && !string.Equals(defaultProfile.Metadata.Id, TopconKr800DefaultExportProfileId, StringComparison.Ordinal)
-            && !string.Equals(defaultProfile.Metadata.Id, TopconTrk2PDefaultExportProfileId, StringComparison.Ordinal))
+            && !string.Equals(defaultProfile.Metadata.Id, TopconTrk2PDefaultExportProfileId, StringComparison.Ordinal)
+            && !string.Equals(defaultProfile.Metadata.Id, TopconCv5000DefaultExportProfileId, StringComparison.Ordinal))
         {
             return;
         }
@@ -443,13 +447,15 @@ public sealed class ProfileCatalogService
             || NeedsNt530PExportProfileRepair(profile)
             || NeedsTopconCl300ExportProfileRepair(profile)
             || NeedsTopconKr800SExportProfileRepair(profile)
-            || NeedsTopconTrk2PExportProfileRepair(profile);
+            || NeedsTopconTrk2PExportProfileRepair(profile)
+            || NeedsTopconCv5000ExportProfileRepair(profile);
     }
 
     private static bool NeedsBuiltInDeviceProfileRepair(DeviceProfileDefinition profile)
     {
         return NeedsTopconCl300DeviceProfileRepair(profile)
-            || NeedsTopconTrk2PDeviceProfileRepair(profile);
+            || NeedsTopconTrk2PDeviceProfileRepair(profile)
+            || NeedsTopconCv5000DeviceProfileRepair(profile);
     }
 
     private static bool NeedsTopconCl300DeviceProfileRepair(DeviceProfileDefinition profile)
@@ -516,6 +522,33 @@ public sealed class ProfileCatalogService
             || profile.Measurements.Any(measurement => string.Equals(
                 measurement.SourcePath,
                 "Measure[@Type='TM']/Tono/CorrectedLine",
+                StringComparison.Ordinal));
+    }
+
+    private static bool NeedsTopconCv5000DeviceProfileRepair(DeviceProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, TopconCv5000DefaultDeviceProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return profile.Measurements.Any(measurement =>
+            measurement.SourcePath.StartsWith("Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='SBJ']/Prescription/HeaderLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='SBJ']/Prescription/R/MedistarLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='SBJ']/FullCorrection/HeaderLine",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='SBJ']/FullCorrection/R/MedistarLine",
                 StringComparison.Ordinal));
     }
 
@@ -736,6 +769,45 @@ public sealed class ProfileCatalogService
                 && string.Equals(
                     rule.SourcePath,
                     "Device.Measure[@Type='TM']/Tono/ParameterLeftLine",
+                    StringComparison.Ordinal));
+    }
+
+    private static bool NeedsTopconCv5000ExportProfileRepair(ExportProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, TopconCv5000DefaultExportProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return profile.Rules.Any(rule =>
+            !string.IsNullOrWhiteSpace(rule.SourcePath)
+            && rule.SourcePath.Contains("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal))
+            || profile.Rules.Any(rule =>
+                string.Equals(rule.TargetFieldCode, "6228", StringComparison.Ordinal)
+                && string.Equals(rule.TargetName, "PhoropterSeparator", StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6227",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='SBJ']/Prescription/HeaderLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6228",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='SBJ']/Prescription/R/MedistarLine",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6330",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine",
                     StringComparison.Ordinal));
     }
 

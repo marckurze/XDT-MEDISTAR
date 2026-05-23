@@ -160,18 +160,18 @@ public sealed class TopconCv5000ProfileTests
         AssertMeasurement(result, "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/R", "29.50");
         AssertMeasurement(result, "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/L", "29.50");
         AssertMeasurement(result, "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B", "59.00");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine1", "R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine2", "L.:S=+ 1.25 Z=- 2.00*  7");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine3", "--");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine4", "R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75");
-        AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine5", "L.:S=+ 1.25 Z=- 2.00*  7");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/Prescription/HeaderLine", "Phoropter finaler Verordnungswert");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/Prescription/R/MedistarLine", "R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/Prescription/L/MedistarLine", "L.:S=+ 1.25 Z=- 2.00*  7");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/FullCorrection/HeaderLine", "Phoropter Maximalwert (Vollkorrektion)");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/FullCorrection/R/MedistarLine", "R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75");
+        AssertMeasurement(result, "Measure[@Type='SBJ']/FullCorrection/L/MedistarLine", "L.:S=+ 1.25 Z=- 2.00*  7");
         Assert.DoesNotContain(result.Measurements, measurement =>
-            measurement.SourcePath.StartsWith("Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal)
-            && measurement.Value.Contains("P=", StringComparison.Ordinal));
+            measurement.SourcePath.StartsWith("Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal));
     }
 
     [Fact]
-    public void MedistarExportForCv5000Return_ShouldUse6228AndAisExaminationType()
+    public void MedistarExportForCv5000Return_ShouldSeparatePrescriptionAndFullCorrection()
     {
         var measurements = _xmlParser.ParseFile(GetCv5000FixturePath("M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml")).Measurements;
         var rules = _mappingAdapter.Adapt(DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
@@ -181,15 +181,68 @@ public sealed class TopconCv5000ProfileTests
         Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
         Assert.Empty(exportResult.Issues);
         Assert.Contains("8402Phoro", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227Phoropter finaler Verordnungswert", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6228R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6228--", exportResult.Content, StringComparison.Ordinal);
-        Assert.DoesNotContain("6227", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227Phoropter Maximalwert (Vollkorrektion)", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6330R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6330L.:S=+ 1.25 Z=- 2.00*  7", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228--", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6205", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6220", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6221", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6302", exportResult.Content, StringComparison.Ordinal);
-        Assert.Equal(5, mappingResult.Records.Count(record => record.FieldCode == "6228"));
+        Assert.Equal(2, mappingResult.Records.Count(record => record.FieldCode == "6227"));
+        Assert.Equal(2, mappingResult.Records.Count(record => record.FieldCode == "6228"));
+        Assert.Equal(2, mappingResult.Records.Count(record => record.FieldCode == "6330"));
+    }
+
+    [Fact]
+    public void MedistarExportForCv5000Return_WithOnlyPrescription_ShouldOmitFullCorrectionBlock()
+    {
+        var content = BuildCv5000ExportContent(WriteTempXml(CreateCv5000ReturnXml("Prescription")));
+
+        Assert.Contains("6227Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Phoropter Maximalwert", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MedistarExportForCv5000Return_WithOnlyFullCorrection_ShouldUse6330AndOmitPrescriptionBlock()
+    {
+        var content = BuildCv5000ExportContent(WriteTempXml(CreateCv5000ReturnXml("Full Correction")));
+
+        Assert.Contains("6227Phoropter Maximalwert (Vollkorrektion)", content, StringComparison.Ordinal);
+        Assert.Contains("6330R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", content, StringComparison.Ordinal);
+        Assert.Contains("6330L.:S=+ 1.25 Z=- 2.00*  7", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228R.:S=", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MedistarExportForCv5000Return_WithOneEye_ShouldOutputOnlyPresentEye()
+    {
+        var content = BuildCv5000ExportContent(WriteTempXml(CreateCv5000ReturnXml("Prescription", includeRight: false)));
+
+        Assert.Contains("6227Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228R.:S=", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MedistarExportForCv5000Return_WithoutExportableValues_ShouldFailInsteadOfAisOnlyExport()
+    {
+        var path = WriteTempXml(CreateCv5000ReturnXml("Prescription", includeRight: false, includeLeft: false));
+        var measurements = _xmlParser.ParseFile(path).Measurements;
+        var rules = _mappingAdapter.Adapt(DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+
+        var mappingResult = _mappingEngine.Map(CreatePatientData(), measurements, rules);
+
+        Assert.True(mappingResult.HasErrors);
+        Assert.Contains(mappingResult.Issues, issue => issue.Message == "No exportable device measurements were found.");
+        Assert.DoesNotContain(mappingResult.Records, record => record.FieldCode is "6227" or "6228" or "6330");
     }
 
     [Fact]
@@ -203,12 +256,16 @@ public sealed class TopconCv5000ProfileTests
         Assert.Contains("CV-5000", deviceProfile.Model);
         Assert.Equal("Phoropter", deviceProfile.DeviceType);
         Assert.True(deviceProfile.IsBidirectional);
-        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/MedistarLine1");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/Prescription/R/MedistarLine");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(deviceProfile));
 
         Assert.Equal("device-topcon-cv5000-default", exportProfile.SourceDeviceProfileId);
-        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
-        Assert.DoesNotContain(exportProfile.Rules, rule => rule.TargetFieldCode is "6227" or "6221" or "6220" or "6205" or "6302" or "6303" or "6304" or "6305");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/R/MedistarLine");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.DoesNotContain(exportProfile.Rules, rule => rule.TargetFieldCode is "6221" or "6220" or "6205" or "6302" or "6303" or "6304" or "6305");
         Assert.Empty(ExportProfileDefinitionValidator.Validate(exportProfile));
 
         Assert.Equal("device-topcon-cv5000-default", interfaceProfile.DeviceProfileId);
@@ -293,7 +350,75 @@ public sealed class TopconCv5000ProfileTests
         var result = _xmlParser.ParseFile(path);
 
         Assert.Empty(result.Issues);
-        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/MedistarLine1");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/Prescription/HeaderLine");
+    }
+
+    private string BuildCv5000ExportContent(string devicePath)
+    {
+        var measurements = _xmlParser.ParseFile(devicePath).Measurements;
+        var rules = _mappingAdapter.Adapt(DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+        var mappingResult = _mappingEngine.Map(CreatePatientData(), measurements, rules);
+        var exportResult = new XdtExportBuilder().Build(mappingResult.Records);
+
+        Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
+        Assert.Empty(exportResult.Issues);
+        return exportResult.Content;
+    }
+
+    private static string CreateCv5000ReturnXml(
+        string typeName,
+        bool includeRight = true,
+        bool includeLeft = true)
+    {
+        var right = includeRight
+            ? """
+                        <R>
+                          <Sph>1.25</Sph>
+                          <Cyl>-2.00</Cyl>
+                          <Axis>7</Axis>
+                        </R>
+              """
+            : string.Empty;
+        var left = includeLeft
+            ? """
+                        <L>
+                          <Sph>1.25</Sph>
+                          <Cyl>-2.00</Cyl>
+                          <Axis>7</Axis>
+                        </L>
+              """
+            : string.Empty;
+
+        return $$"""
+            <Ophthalmology>
+              <Common>
+                <Company>TOPCON</Company>
+                <ModelName>CV-5000</ModelName>
+                <Date>2013-06-25</Date>
+                <Time>17:05:09.656</Time>
+              </Common>
+              <Measure type="SBJ">
+                <RefractionTest>
+                  <Type No="1">
+                    <TypeName>{{typeName}}</TypeName>
+                    <ExamDistance No="1">
+                      <Distance unit="cm">500.000</Distance>
+                      <RefractionData>
+            {{right}}
+            {{left}}
+                        <VD>13.75</VD>
+                      </RefractionData>
+                      <PD>
+                        <R>29.50</R>
+                        <L>29.50</L>
+                        <B>59.00</B>
+                      </PD>
+                    </ExamDistance>
+                  </Type>
+                </RefractionTest>
+              </Measure>
+            </Ophthalmology>
+            """;
     }
 
     private static PatientData CreatePatientData()

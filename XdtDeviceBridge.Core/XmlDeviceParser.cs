@@ -436,48 +436,93 @@ public sealed class XmlDeviceParser
             return;
         }
 
-        var lines = new List<string>();
         foreach (var type in FindChildren(refractionTest, "Type"))
         {
-            var typeLines = new List<string>();
-            foreach (var examDistance in FindChildren(type, "ExamDistance"))
+            var typeName = GetChildValue(type, "TypeName");
+            if (IsCv5000PrescriptionType(typeName))
             {
-                var refractionData = FindChild(examDistance, "RefractionData");
-                if (refractionData is null)
-                {
-                    continue;
-                }
-
-                var pd = GetCv5000BinocularPd(FindChild(examDistance, "PD"));
-                var vd = GetChildValue(refractionData, "VD");
-                AddIfNotEmpty(typeLines, BuildCv5000EyeLine("R", FindChild(refractionData, "R"), pd, vd));
-                AddIfNotEmpty(typeLines, BuildCv5000EyeLine("L", FindChild(refractionData, "L"), null, null));
+                AddTopconCv5000TypeMedistarLines(
+                    measurements,
+                    type,
+                    "Prescription",
+                    "Phoropter finaler Verordnungswert");
             }
+            else if (IsCv5000FullCorrectionType(typeName))
+            {
+                AddTopconCv5000TypeMedistarLines(
+                    measurements,
+                    type,
+                    "FullCorrection",
+                    "Phoropter Maximalwert (Vollkorrektion)");
+            }
+        }
+    }
 
-            if (typeLines.Count == 0)
+    private static void AddTopconCv5000TypeMedistarLines(
+        List<MeasurementValue> measurements,
+        XElement type,
+        string pathSegment,
+        string headerLine)
+    {
+        string? rightLine = null;
+        string? leftLine = null;
+
+        foreach (var examDistance in FindChildren(type, "ExamDistance"))
+        {
+            var refractionData = FindChild(examDistance, "RefractionData");
+            if (refractionData is null)
             {
                 continue;
             }
 
-            if (lines.Count > 0)
+            var pd = GetCv5000BinocularPd(FindChild(examDistance, "PD"));
+            var vd = GetChildValue(refractionData, "VD");
+            rightLine ??= BuildCv5000EyeLine("R", FindChild(refractionData, "R"), pd, vd);
+            leftLine ??= BuildCv5000EyeLine("L", FindChild(refractionData, "L"), null, null);
+
+            if (!string.IsNullOrWhiteSpace(rightLine) && !string.IsNullOrWhiteSpace(leftLine))
             {
-                lines.Add("--");
+                break;
             }
-
-            lines.AddRange(typeLines);
         }
 
-        for (var index = 0; index < lines.Count; index++)
+        if (string.IsNullOrWhiteSpace(rightLine) && string.IsNullOrWhiteSpace(leftLine))
         {
-            AddMeasurement(
-                measurements,
-                $"Measure[@Type='SBJ']/MedistarLine{index + 1}",
-                $"MEDISTAR TOPCON CV-5000 SBJ-Zeile {index + 1}",
-                lines[index],
-                null,
-                null,
-                "SBJ");
+            return;
         }
+
+        AddMeasurement(
+            measurements,
+            $"Measure[@Type='SBJ']/{pathSegment}/HeaderLine",
+            $"MEDISTAR TOPCON CV-5000 {pathSegment}-Header",
+            headerLine,
+            null,
+            null,
+            "SBJ");
+
+        AddCv5000OptionalMedistarLine(measurements, pathSegment, "R", rightLine);
+        AddCv5000OptionalMedistarLine(measurements, pathSegment, "L", leftLine);
+    }
+
+    private static void AddCv5000OptionalMedistarLine(
+        List<MeasurementValue> measurements,
+        string pathSegment,
+        string eye,
+        string? line)
+    {
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return;
+        }
+
+        AddMeasurement(
+            measurements,
+            $"Measure[@Type='SBJ']/{pathSegment}/{eye}/MedistarLine",
+            $"MEDISTAR TOPCON CV-5000 {pathSegment} {eye}-Zeile",
+            line,
+            null,
+            null,
+            "SBJ");
     }
 
     private static void AddTopconKr800SRefMedistarLines(List<MeasurementValue> measurements, XElement refMeasure)
@@ -1588,6 +1633,22 @@ public sealed class XmlDeviceParser
         return string.IsNullOrWhiteSpace(value)
             ? "Unbenannt"
             : string.Join(" ", value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    private static bool IsCv5000PrescriptionType(string? value)
+    {
+        return string.Equals(
+            NormalizeSubjectiveTypeName(value ?? string.Empty),
+            "Prescription",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsCv5000FullCorrectionType(string? value)
+    {
+        return string.Equals(
+            NormalizeSubjectiveTypeName(value ?? string.Empty),
+            "Full Correction",
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private static string DetermineDistanceLabel(string? distance)

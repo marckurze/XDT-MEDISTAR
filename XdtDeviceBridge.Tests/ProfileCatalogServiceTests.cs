@@ -343,6 +343,71 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconCv5000BuiltInDeviceProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: new[] { CreateLegacyTopconCv5000DeviceProfile(isBuiltIn: true) },
+            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.DeviceProfiles, profile => profile.Metadata.Id == "device-topcon-cv5000-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/Prescription/R/MedistarLine");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.DoesNotContain(profile.Measurements, measurement => measurement.SourcePath.StartsWith("Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconCv5000BuiltInExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyTopconCv5000ExportProfile(isBuiltIn: true) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-cv5000-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.DoesNotContain(profile.Rules, rule => rule.SourcePath?.Contains("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal) == true);
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetName == "PhoropterSeparator");
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldNotRepairUserDefinedTopconCv5000ExportProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateLegacyTopconCv5000ExportProfile(isBuiltIn: false) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-cv5000-default");
+        Assert.False(profile.Metadata.IsBuiltIn);
+        Assert.True(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
+        Assert.Contains(profile.Rules, rule => rule.TargetName == "PhoropterSeparator");
+    }
+
+    [Fact]
     public void Load_ShouldReadAllExpectedProfilesAfterEnsureDefaultProfiles()
     {
         var paths = CreateAppDataPaths();
@@ -831,6 +896,56 @@ public sealed class ProfileCatalogServiceTests
                         8,
                         true,
                         "Legacy TOPCON TRK2P pachymetry template wrongly emitted through 6228.")
+                })
+                .ToArray()
+        };
+    }
+
+    private static DeviceProfileDefinition CreateLegacyTopconCv5000DeviceProfile(bool isBuiltIn)
+    {
+        var current = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Measurements = current.Measurements
+                .Where(measurement =>
+                    !measurement.SourcePath.Contains("/Prescription/", StringComparison.Ordinal)
+                    && !measurement.SourcePath.Contains("/FullCorrection/", StringComparison.Ordinal))
+                .Concat(new[]
+                {
+                    new DeviceMeasurementDefinition("cv5000-sbj-line1", "SBJ MEDISTAR-Zeile 1", "Measure[@Type='SBJ']/MedistarLine1", "SBJ", string.Empty, string.Empty, false, "Legacy computed MEDISTAR 6228 line 1."),
+                    new DeviceMeasurementDefinition("cv5000-sbj-line2", "SBJ MEDISTAR-Zeile 2", "Measure[@Type='SBJ']/MedistarLine2", "SBJ", string.Empty, string.Empty, false, "Legacy computed MEDISTAR 6228 line 2."),
+                    new DeviceMeasurementDefinition("cv5000-sbj-line3", "SBJ MEDISTAR-Zeile 3", "Measure[@Type='SBJ']/MedistarLine3", "SBJ", string.Empty, string.Empty, false, "Legacy computed MEDISTAR separator."),
+                    new DeviceMeasurementDefinition("cv5000-sbj-line4", "SBJ MEDISTAR-Zeile 4", "Measure[@Type='SBJ']/MedistarLine4", "SBJ", string.Empty, string.Empty, false, "Legacy computed MEDISTAR 6228 line 4."),
+                    new DeviceMeasurementDefinition("cv5000-sbj-line5", "SBJ MEDISTAR-Zeile 5", "Measure[@Type='SBJ']/MedistarLine5", "SBJ", string.Empty, string.Empty, false, "Legacy computed MEDISTAR 6228 line 5.")
+                })
+                .ToArray()
+        };
+    }
+
+    private static ExportProfileDefinition CreateLegacyTopconCv5000ExportProfile(bool isBuiltIn)
+    {
+        var current = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Rules = current.Rules.Take(6)
+                .Concat(new[]
+                {
+                    new ExportRuleDefinition("7", "6228", "PhoropterLine1", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine1", "{value}", 7, true, "Legacy CV-5000 phoropter return line 1."),
+                    new ExportRuleDefinition("8", "6228", "PhoropterLine2", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine2", "{value}", 8, true, "Legacy CV-5000 phoropter return line 2."),
+                    new ExportRuleDefinition("9", "6228", "PhoropterSeparator", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine3", "{value}", 9, true, "Legacy CV-5000 separator line."),
+                    new ExportRuleDefinition("10", "6228", "PhoropterLine4", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine4", "{value}", 10, true, "Legacy CV-5000 phoropter return line 4."),
+                    new ExportRuleDefinition("11", "6228", "PhoropterLine5", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine5", "{value}", 11, true, "Legacy CV-5000 phoropter return line 5."),
+                    new ExportRuleDefinition("12", "6228", "PhoropterLine6", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine6", "{value}", 12, true, "Legacy CV-5000 reserved line.")
                 })
                 .ToArray()
         };

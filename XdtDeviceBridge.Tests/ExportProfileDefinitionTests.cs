@@ -565,14 +565,19 @@ public sealed class ExportProfileDefinitionTests
     }
 
     [Fact]
-    public void CreateMedistarTopconCv5000Default_ShouldUse6228PreparedSbjLinesOnly()
+    public void CreateMedistarTopconCv5000Default_ShouldUsePrescriptionAndFullCorrectionRules()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
 
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "8402" && rule.SourcePath == "AIS.ExaminationType");
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine5");
-        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6227" or "6221" or "6220" or "6205" or "6302" or "6303" or "6304" or "6305");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/L/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/HeaderLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/L/MedistarLine");
+        Assert.DoesNotContain(profile.Rules, rule => rule.SourcePath?.Contains("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal) == true);
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6221" or "6220" or "6205" or "6302" or "6303" or "6304" or "6305");
     }
 
     private static ExportProfileDefinition WithModifiedRule(

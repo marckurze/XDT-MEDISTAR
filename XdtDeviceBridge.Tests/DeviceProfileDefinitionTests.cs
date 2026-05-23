@@ -551,7 +551,7 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
-    public void CreateTopconCv5000Default_ShouldContainPreparedSbjMedistarLines()
+    public void CreateTopconCv5000Default_ShouldContainPreparedPrescriptionAndFullCorrectionLines()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
 
@@ -560,8 +560,10 @@ public sealed class DeviceProfileDefinitionTests
         AssertRequiredMeasurement(profile, "cv5000-sbj-type1-name", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/TypeName");
         AssertOptionalMeasurement(profile, "cv5000-sbj-type1-r-sph", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph");
         AssertOptionalMeasurement(profile, "cv5000-sbj-type1-pd-b", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B");
-        AssertOptionalMeasurement(profile, "cv5000-sbj-line1", "Measure[@Type='SBJ']/MedistarLine1");
-        AssertOptionalMeasurement(profile, "cv5000-sbj-line5", "Measure[@Type='SBJ']/MedistarLine5");
+        AssertOptionalMeasurement(profile, "cv5000-prescription-header", "Measure[@Type='SBJ']/Prescription/HeaderLine");
+        AssertOptionalMeasurement(profile, "cv5000-prescription-r-line", "Measure[@Type='SBJ']/Prescription/R/MedistarLine");
+        AssertOptionalMeasurement(profile, "cv5000-full-correction-header", "Measure[@Type='SBJ']/FullCorrection/HeaderLine");
+        AssertOptionalMeasurement(profile, "cv5000-full-correction-r-line", "Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
     }
 
     [Fact]
