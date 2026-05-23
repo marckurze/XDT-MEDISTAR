@@ -43,3 +43,5 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\RenameProfil
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\RenameProfileDialog.g.cs
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\DocumentAttachmentDocumentationWindow.baml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\DocumentAttachmentDocumentationWindow.g.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\Cv5000PhoropterSelectionDialog.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\Cv5000PhoropterSelectionDialog.g.cs

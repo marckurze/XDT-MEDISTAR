@@ -1,6 +1,6 @@
 # E2E-Testprotokoll: MEDISTAR + TOPCON CV-5000 / CV-5000S
 
-Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Die praktische MEDISTAR-/CV-5000-Livevalidierung steht noch aus.
+Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfenster fuer AIS-Historienwerte ist im Verarbeitungslauf angebunden; die praktische MEDISTAR-/CV-5000-Livevalidierung am Geraet steht noch aus.
 
 ## Validierter Ablauf per Fixture
 
@@ -10,6 +10,8 @@ Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Die praktisch
 - Die App liest Patientendaten aus `3000`, `3101`, `3102`, `3103` und `8402`.
 - Die App erkennt historische refraktive MEDISTAR-Zeilen mit `V0`, `V1`, `V2`, `V3` und `V4`.
 - `V7`, `P` und `Y` werden als nicht fuer den CV-5000-Import freigegebene Gruppen erkannt.
+- Bei aktivierter `Ausgabe an Geraet` und gesetztem Ausgabeordner oeffnet der Verarbeitungslauf das Fenster `Werte an Phoropter uebergeben`.
+- Im Fenster werden die Gruppen nach Untersuchungsart angezeigt; neueste exportierbare `V0`-, `V1`- und `V2`-Datensaetze sind vorausgewaehlt.
 - Aus ausgewaehlten refraktiven Datensaetzen wird eine TOPCON-CV-5000-kompatible XML-Importdatei erzeugt.
 
 ### Phoropter -> XdtDeviceBridge -> AIS/MEDISTAR
@@ -41,7 +43,7 @@ Erkannt werden:
 - Vorname `Anna`
 - Geburtsdatum `12061955`
 - Untersuchungsart `Phoro`
-- historische Gruppen `V0`, `V1`, `V2`, `V3`, `V7`, `P`, `Y`
+- historische Gruppen `V0`, `V1`, `V2`, `V3`, `V4`, `V7`, `P`, `Y`
 
 Default-Auswahl fuer den CV-5000-Import:
 
@@ -127,10 +129,12 @@ Im Dialog `Neues Geraet anlegen` wird nur noch die Faehigkeit `Bidirektionales G
 
 Die konkrete Ausgabe an den Phoropter wird im Schnittstellenprofil gepflegt. Fuer CV-5000/CV-5000S ist dort der Bereich `Ausgabe an Geraet` sichtbar; dort werden Aktiv-Schalter, Ausgabeordner, Dateiname `CVImport.xml` und Format `TOPCON CV-5000 XML` verwaltet. Der Bereich `XDT-Anhaenge fuer AIS` ist nur fuer CV-5000/CV-5000S ausgeblendet und bleibt fuer andere Geraete sichtbar.
 
+Wenn eine passende AIS-Datei im aktiven CV-5000-Schnittstellenprofil erkannt wird, verwendet die App diese Schnittstellenprofil-Konfiguration fuer die Richtung AIS/MEDISTAR -> Geraet. Fehlt der Ausgabeordner, wird keine `CVImport.xml` geschrieben und ein klarer Hinweis ausgegeben.
+
 ## Grenzen / offen
 
 - Praktische MEDISTAR-/CV-5000-Livevalidierung steht noch aus.
-- Das Auswahlfenster fuer den Arzt muss im echten Verarbeitungslauf praktisch validiert werden.
+- Das Auswahlfenster ist im echten Verarbeitungslauf angebunden; seine Bedienung und die erzeugte `CVImport.xml` muessen am echten CV-5000/CV-5000S praktisch validiert werden.
 - `500.000 cm` als Import-ExamDistance ist konservativ und muss am CV-5000/CV-5000S bestaetigt werden.
 - Keratometer/Tonometrie/Pachymetrie aus historischen MEDISTAR-Zeilen werden erkannt, aber noch nicht in die CV-5000-Import-XML geschrieben.
 - Kein offizielles ZIP-Artefakt vor Freigabe nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

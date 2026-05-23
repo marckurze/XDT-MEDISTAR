@@ -48,6 +48,64 @@ public sealed class InterfaceProfileUiPolicyTests
         Assert.True(InterfaceProfileUiPolicy.ShouldShowAisAttachmentOptions(interfaceProfile, deviceProfile));
     }
 
+    [Fact]
+    public void ShouldTriggerCv5000DeviceOutput_WhenCv5000OutputIsEnabled()
+    {
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
+        {
+            DeviceOutput = new DeviceOutputConfiguration(
+                IsEnabled: true,
+                OutputFolder: @"C:\Phoropter",
+                FileNameTemplate: "CVImport.xml",
+                Format: "TOPCON CV-5000 XML")
+        };
+
+        Assert.True(InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile));
+        Assert.Null(InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile));
+    }
+
+    [Fact]
+    public void ShouldNotTriggerCv5000DeviceOutput_WhenOutputIsDisabled()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
+
+        Assert.False(InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile));
+        Assert.Equal(
+            "Ausgabe an Gerät ist für dieses Schnittstellenprofil nicht aktiv.",
+            InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile));
+    }
+
+    [Fact]
+    public void ShouldRejectCv5000DeviceOutput_WhenOutputFolderIsMissing()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
+        {
+            DeviceOutput = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default().DeviceOutput! with
+            {
+                IsEnabled = true,
+                OutputFolder = string.Empty
+            }
+        };
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
+
+        Assert.True(InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile));
+        Assert.Equal("Ausgabeordner an Gerät fehlt.", InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile));
+    }
+
+    [Theory]
+    [InlineData("ARK1S")]
+    [InlineData("NT530P")]
+    [InlineData("Dokumentanhang")]
+    [InlineData("Manuelle Dokumentübergabe")]
+    public void ShouldNotTriggerCv5000DeviceOutput_ForNonCv5000Profiles(string profileKind)
+    {
+        var (interfaceProfile, deviceProfile) = CreateNonCv5000Profile(profileKind);
+
+        Assert.False(InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile));
+    }
+
     private static (InterfaceProfileDefinition InterfaceProfile, DeviceProfileDefinition DeviceProfile) CreateNonCv5000Profile(string profileKind)
     {
         return profileKind switch

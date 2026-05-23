@@ -9,7 +9,7 @@ Dieses Paket beschreibt den ersten bidirektionalen TOPCON-Phoropter-Kandidaten f
 - Testseitig abgesichert fuer beide Richtungen:
   - AIS/MEDISTAR -> XdtDeviceBridge -> TOPCON-CV-5000-Import-XML
   - TOPCON CV-5000 -> XdtDeviceBridge -> MEDISTAR-XDT-Rueckgabe
-- Praktische MEDISTAR-/CV-5000-Livevalidierung steht noch aus.
+- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden; praktische MEDISTAR-/CV-5000-Livevalidierung am Geraet steht noch aus.
 - Offizielles ZIP-Artefakt wird erst nach der Release-Regel abgelegt.
 
 ## Enthaltene BuiltIns
@@ -44,7 +44,7 @@ Relevante MEDISTAR-Praefixe:
 - `P` Pachymetrie, nur erkennen/anzeigen
 - `Y` Tonometrie, nur erkennen/anzeigen
 
-Exportiert werden aktuell nur refraktive, parsebare Datensaetze `V0` bis `V4`. Die Default-Auswahl ist testseitig so vorbereitet, dass die neuesten exportierbaren Datensaetze fuer Lensmeter, Autorefraktor und Phoropter gewaehlt werden koennen.
+Exportiert werden aktuell nur refraktive, parsebare Datensaetze `V0` bis `V4`. Bei aktiver `Ausgabe an Geraet` oeffnet der Verarbeitungslauf nach AIS-Datei-Eingang das Fenster `Werte an Phoropter uebergeben`; dort sind die neuesten exportierbaren Datensaetze fuer Lensmeter, Autorefraktor und Phoropter vorausgewaehlt und weitere refraktive Datensaetze koennen zusaetzlich markiert werden.
 
 Die erzeugte CV-5000-Import-XML orientiert sich an `CVImport.xml`:
 
@@ -94,7 +94,7 @@ Die Fixtures enthalten keine dokumentierten Live-Pfade. Patientendaten werden in
 
 Neue UserDefined-Geraete markieren nur noch die Faehigkeit `Bidirektionales Geraet, z. B. Phoropter`. Ausgabeordner, Dateiname und Format gehoeren nicht ins Geraeteprofil.
 
-Die konkrete Richtung AIS/MEDISTAR -> Geraet wird im Schnittstellenprofil konfiguriert. Fuer CV-5000/CV-5000S ist dort der Bereich `Ausgabe an Geraet` sichtbar mit Aktiv-Schalter, Ausgabeordner, Dateiname `CVImport.xml` und Format `TOPCON CV-5000 XML`. Bleibt der Ausgabeordner leer, wird keine Importdatei an das Geraet geschrieben und ein Hinweis ausgegeben.
+Die konkrete Richtung AIS/MEDISTAR -> Geraet wird im Schnittstellenprofil konfiguriert. Fuer CV-5000/CV-5000S ist dort der Bereich `Ausgabe an Geraet` sichtbar mit Aktiv-Schalter, Ausgabeordner, Dateiname `CVImport.xml` und Format `TOPCON CV-5000 XML`. Bleibt der Ausgabeordner leer, oeffnet sich kein stiller Erfolgsweg: Es wird keine Importdatei an das Geraet geschrieben und ein Hinweis ausgegeben.
 
 Der Bereich `XDT-Anhaenge fuer AIS` ist bei CV-5000/CV-5000S bewusst ausgeblendet, weil er fuer diesen Workflow nicht relevant ist. Fuer andere Geraete bleibt die XDT-Anhang-Konfiguration unveraendert sichtbar.
 
@@ -111,7 +111,7 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 
 ## Grenzen / offen
 
-- Praktische MEDISTAR-/CV-5000-Livevalidierung steht noch aus.
-- Das Auswahlfenster fuer den Arzt ist fachlich/testseitig vorbereitet, muss im produktiven Verarbeitungslauf noch praktisch verdrahtet und validiert werden.
+- Praktische MEDISTAR-/CV-5000-Livevalidierung am echten Phoropter steht noch aus.
+- Das Auswahlfenster fuer den Arzt ist im produktiven Verarbeitungslauf angebunden; die vom Dialog erzeugte `CVImport.xml` muss am echten CV-5000/CV-5000S eingelesen werden.
 - Keratometer-, Tonometrie- und Pachymetrie-Karteikartenzeilen werden erkannt, aber mangels eindeutig belegtem CV-5000-Importmapping nicht in die Phoropter-Import-XML geschrieben.
 - Offizielle ZIP-Ablage erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

@@ -21,6 +21,36 @@ public static class InterfaceProfileUiPolicy
         return !IsCv5000(interfaceProfile, deviceProfile);
     }
 
+    public static bool ShouldTriggerCv5000DeviceOutput(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        return IsCv5000(interfaceProfile, deviceProfile)
+            && interfaceProfile?.DeviceOutput?.IsEnabled == true;
+    }
+
+    public static string? ValidateCv5000DeviceOutput(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        if (!ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile))
+        {
+            return "Ausgabe an Gerät ist für dieses Schnittstellenprofil nicht aktiv.";
+        }
+
+        if (string.IsNullOrWhiteSpace(interfaceProfile?.DeviceOutput?.OutputFolder))
+        {
+            return "Ausgabeordner an Gerät fehlt.";
+        }
+
+        if (string.IsNullOrWhiteSpace(interfaceProfile?.DeviceOutput?.FileNameTemplate))
+        {
+            return "Dateiname für Ausgabe an Gerät fehlt.";
+        }
+
+        return null;
+    }
+
     public static bool IsCv5000(
         InterfaceProfileDefinition? interfaceProfile,
         DeviceProfileDefinition? deviceProfile)

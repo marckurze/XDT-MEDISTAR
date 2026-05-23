@@ -99,6 +99,47 @@ public sealed class TopconCv5000ProfileTests
     }
 
     [Fact]
+    public void HistoricalParser_DefaultSelectionShouldUseNewestExportableV0V1V2Only()
+    {
+        var history = _historyParser.ParseFile(GetCv5000FixturePath("Patient_mit_Phoropter_Daten.XDT"));
+
+        var selected = _historyParser.CreateDefaultCv5000Selection(history.Records);
+
+        Assert.Equal(3, selected.Count);
+        Assert.Equal(
+            new[]
+            {
+                AisHistoricalMeasurementSourceKind.Lensmeter,
+                AisHistoricalMeasurementSourceKind.Autorefraction,
+                AisHistoricalMeasurementSourceKind.Phoropter
+            },
+            selected.Select(record => record.SourceKind));
+        Assert.DoesNotContain(selected, record => record.SourceKind is
+            AisHistoricalMeasurementSourceKind.Prescription
+            or AisHistoricalMeasurementSourceKind.AutorefractionSubjective
+            or AisHistoricalMeasurementSourceKind.Keratometry
+            or AisHistoricalMeasurementSourceKind.Pachymetry
+            or AisHistoricalMeasurementSourceKind.Tonometry);
+        Assert.All(selected, record => Assert.True(record.IsExportableToCv5000));
+    }
+
+    [Fact]
+    public void ImportWriter_ShouldRejectEmptyCv5000Selection()
+    {
+        var history = _historyParser.ParseFile(GetCv5000FixturePath("Patient_mit_Phoropter_Daten.XDT"));
+
+        var result = _writer.BuildXml(new Cv5000ImportSelection(
+            history.Patient,
+            Array.Empty<AisHistoricalMeasurementRecord>(),
+            "C:\\Temp",
+            "CVImport.xml"));
+
+        Assert.False(result.Success);
+        Assert.Equal("Keine exportierbaren refraktiven Messdatensätze für den CV-5000-Import ausgewählt.", result.ErrorMessage);
+        Assert.Null(result.XmlContent);
+    }
+
+    [Fact]
     public void ParseCv5000ReturnXml_ShouldCreateMedistarPhoropterLines()
     {
         var result = _xmlParser.ParseFile(GetCv5000FixturePath("M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml"));

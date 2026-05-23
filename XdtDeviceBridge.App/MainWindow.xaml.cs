@@ -68,6 +68,8 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileInputFolderResetService _interfaceProfileInputFolderResetService = new();
     private readonly AttachmentExternalLinkDiagnosticService _attachmentExternalLinkDiagnosticService = new();
     private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
+    private readonly MedistarHistoricalMeasurementParser _cv5000HistoryParser = new();
+    private readonly TopconCv5000ImportXmlWriter _cv5000ImportWriter = new();
     private readonly BuilderTestExportService _builderTestExportService = new();
     private readonly AttachmentFileNameBuilder _attachmentFileNameBuilder = new();
     private readonly ExternalAisLinkFieldBuilder _externalAisLinkFieldBuilder = new();
@@ -112,6 +114,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PendingDocumentAttachmentConfirmation> _pendingDocumentAttachmentConfirmations = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _cv5000DeviceOutputHandledAisKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _autoRedockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private WinForms.NotifyIcon? _trayIcon;
     private WinForms.ContextMenuStrip? _trayContextMenu;
@@ -3926,6 +3929,7 @@ public partial class MainWindow : Window
         _autoImportPairProcessingCoordinator.ResetProfile(interfaceProfileId);
         _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfileId);
         _monitoringEventDeduplicationService.ResetProfile(interfaceProfileId);
+        _cv5000DeviceOutputHandledAisKeys.RemoveWhere(key => key.StartsWith($"{interfaceProfileId}|", StringComparison.OrdinalIgnoreCase));
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
         _interfaceProfileAutoDetachService.ResetProfile(interfaceProfileId);
         _interfaceProfileNotificationSoundService.ResetProfile(interfaceProfileId);
@@ -4732,6 +4736,8 @@ public partial class MainWindow : Window
 
         RecordScanMonitoringEvents(profile, profileName, result);
 
+        TryHandleCv5000DeviceOutput(profile, result, timestamp);
+
         var automaticProcessingResult = TryProcessReadyPairsAutomatically(profile, result, packageEvaluation);
         _ = automaticProcessingResult;
 
@@ -4865,6 +4871,118 @@ public partial class MainWindow : Window
         }
 
         return "Active";
+    }
+
+    private bool TryHandleCv5000DeviceOutput(
+        InterfaceProfileDefinition? interfaceProfile,
+        AutoImportScanResult scanResult,
+        DateTime timestamp)
+    {
+        if (interfaceProfile is null || _profileCatalog is null)
+        {
+            return false;
+        }
+
+        var deviceProfile = _profileCatalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfile.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (!InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile))
+        {
+            return false;
+        }
+
+        var aisFile = scanResult.Queue.GetAll()
+            .Where(IsStableAisImportFile)
+            .OrderBy(file => file.DetectedAtUtc)
+            .ThenBy(file => file.FileName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase)
+            .LastOrDefault();
+        if (aisFile is null)
+        {
+            return false;
+        }
+
+        var aisKey = CreateCv5000DeviceOutputAisKey(interfaceProfile.Metadata.Id, aisFile);
+        if (_cv5000DeviceOutputHandledAisKeys.Contains(aisKey))
+        {
+            return false;
+        }
+
+        var validationMessage = InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile);
+        if (!string.IsNullOrWhiteSpace(validationMessage))
+        {
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"cv5000-device-output-missing-config:{validationMessage}",
+                $"{interfaceProfile.Metadata.Name}: {validationMessage}",
+                InterfaceMonitoringEventSeverity.Warning);
+            return false;
+        }
+
+        MedistarHistoricalMeasurementParseResult parseResult;
+        try
+        {
+            parseResult = _cv5000HistoryParser.ParseFile(aisFile.FilePath);
+        }
+        catch (Exception ex) when (ex is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException)
+        {
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"cv5000-device-output-read-error:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: AIS-Historienwerte konnten nicht gelesen werden: {ex.Message}",
+                InterfaceMonitoringEventSeverity.Error);
+            return true;
+        }
+
+        var dialog = new Cv5000PhoropterSelectionDialog(parseResult)
+        {
+            Owner = this
+        };
+        var dialogResult = dialog.ShowDialog();
+        if (dialogResult != true)
+        {
+            _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"cv5000-device-output-canceled:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Ausgabe an Phoropter abgebrochen.");
+            return true;
+        }
+
+        var writeResult = _cv5000ImportWriter.WriteFile(
+            new Cv5000ImportSelection(parseResult.Patient, dialog.SelectedMeasurements, null, null),
+            interfaceProfile,
+            new DateTimeOffset(timestamp));
+        if (!writeResult.Success)
+        {
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"cv5000-device-output-failed:{aisKey}:{writeResult.ErrorMessage}",
+                $"{interfaceProfile.Metadata.Name}: CV-5000-Importdatei konnte nicht erzeugt werden: {writeResult.ErrorMessage}",
+                InterfaceMonitoringEventSeverity.Error);
+            return true;
+        }
+
+        _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
+        SetMonitoringRuntimeState(interfaceProfile.Metadata.Id, "CV-5000-Importdatei erzeugt", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+        AppendMonitoringEvent(
+            interfaceProfile.Metadata.Id,
+            $"cv5000-device-output-success:{aisKey}",
+            $"{interfaceProfile.Metadata.Name}: CVImport.xml wurde für TOPCON CV-5000/CV-5000S erzeugt: {writeResult.TargetPath}");
+        return true;
+    }
+
+    private static bool IsStableAisImportFile(PendingImportFile file)
+    {
+        return file.Status == PendingImportFileStatus.Stable
+            && file.Kind.IsAisImportFile();
+    }
+
+    private static string CreateCv5000DeviceOutputAisKey(string interfaceProfileId, PendingImportFile aisFile)
+    {
+        return string.Join("|", interfaceProfileId, "cv5000-device-output", ImportFileFingerprint.Create(aisFile));
     }
 
     private AutoImportPairProcessingBatchResult? TryProcessReadyPairsAutomatically(
@@ -5224,6 +5342,7 @@ public partial class MainWindow : Window
                     var packageEvaluation = _autoImportPackageStateService.Evaluate(profile, result.Queue, DateTime.Now);
                     UpdateMonitoringCardFromScan(profile, result, packageEvaluation, DateTime.Now);
                     RecordScanMonitoringEvents(profile, profile.Metadata.Name, result);
+                    TryHandleCv5000DeviceOutput(profile, result, DateTime.Now);
                 }
                 catch (Exception ex)
                 {
