@@ -4941,7 +4941,23 @@ public partial class MainWindow : Window
             Owner = this
         };
         var dialogResult = dialog.ShowDialog();
-        if (dialogResult != true)
+        var dialogAction = Cv5000DeviceOutputDialogDecision.FromDialogResult(dialogResult, dialog.SelectionOutcome);
+        if (dialogAction == Cv5000DeviceOutputDialogAction.WaitForDeviceResultWithoutImport)
+        {
+            _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
+            SetMonitoringRuntimeState(
+                interfaceProfile.Metadata.Id,
+                "Warte auf Phoropter-Rückgabe",
+                "Active",
+                DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"cv5000-device-output-send-nothing:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Keine Werte an den Phoropter gesendet. Warte auf Phoropter-Rückgabe.");
+            return true;
+        }
+
+        if (dialogAction == Cv5000DeviceOutputDialogAction.CancelSelection)
         {
             _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
             AppendMonitoringEvent(

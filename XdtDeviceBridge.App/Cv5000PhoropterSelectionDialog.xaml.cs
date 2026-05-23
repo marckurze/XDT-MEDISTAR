@@ -28,6 +28,7 @@ public partial class Cv5000PhoropterSelectionDialog : Window
     };
 
     private readonly List<SelectionRow> _rows = new();
+    private readonly Cv5000PhoropterSelectionState _selectionState = new();
 
     public Cv5000PhoropterSelectionDialog(MedistarHistoricalMeasurementParseResult parseResult)
     {
@@ -35,14 +36,18 @@ public partial class Cv5000PhoropterSelectionDialog : Window
 
         InitializeComponent();
 
+        Topmost = _selectionState.IsTopMost;
         SelectedMeasurements = Array.Empty<AisHistoricalMeasurementRecord>();
         PopulatePatientHeader(parseResult.Patient);
         PopulateGroups(parseResult.Records);
         PopulateStatus(parseResult);
+        UpdateTopMostButtonState();
         UpdateExportButton();
     }
 
     public IReadOnlyList<AisHistoricalMeasurementRecord> SelectedMeasurements { get; private set; }
+
+    public Cv5000PhoropterSelectionOutcome SelectionOutcome => _selectionState.Outcome;
 
     private void PopulatePatientHeader(PatientData patient)
     {
@@ -222,12 +227,39 @@ public partial class Cv5000PhoropterSelectionDialog : Window
         }
 
         SelectedMeasurements = selected;
+        _selectionState.SelectValuesToSend();
+        DialogResult = true;
+    }
+
+    private void SendNothingButton_Click(object sender, RoutedEventArgs e)
+    {
+        SelectedMeasurements = Array.Empty<AisHistoricalMeasurementRecord>();
+        _selectionState.SelectSendNothingAndWaitForDeviceResult();
         DialogResult = true;
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
+        _selectionState.Cancel();
         DialogResult = false;
+    }
+
+    private void TopMostButton_Click(object sender, RoutedEventArgs e)
+    {
+        _selectionState.SetTopMost(TopMostButton.IsChecked == true);
+        Topmost = _selectionState.IsTopMost;
+        UpdateTopMostButtonState();
+        if (Topmost)
+        {
+            Activate();
+        }
+    }
+
+    private void UpdateTopMostButtonState()
+    {
+        TopMostButton.IsChecked = Topmost;
+        TopMostButton.FontWeight = Topmost ? FontWeights.Bold : FontWeights.Normal;
+        TopMostButton.Opacity = Topmost ? 1.0 : 0.65;
     }
 
     private static string DisplayOrDash(string? value)

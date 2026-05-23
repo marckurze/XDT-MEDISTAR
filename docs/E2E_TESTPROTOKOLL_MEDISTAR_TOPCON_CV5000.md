@@ -13,6 +13,7 @@ Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfe
 - Bei aktivierter `Ausgabe an Geraet` und gesetztem Ausgabeordner oeffnet der Verarbeitungslauf das Fenster `Werte an Phoropter uebergeben`.
 - Im Fenster werden die Gruppen nach Untersuchungsart angezeigt; neueste exportierbare `V0`-, `V1`- und `V2`-Datensaetze sind vorausgewaehlt.
 - Aus ausgewaehlten refraktiven Datensaetzen wird eine TOPCON-CV-5000-kompatible XML-Importdatei erzeugt.
+- Das Auswahlfenster bleibt standardmaessig per bestehendem `🔝`-Schalter im Vordergrund. Mit `Nichts senden` kann bewusst keine `CVImport.xml` erzeugt werden; die App wartet danach weiter auf die Phoropter-Rueckgabe.
 
 ### Phoropter -> XdtDeviceBridge -> AIS/MEDISTAR
 
@@ -138,6 +139,8 @@ Die konkrete Ausgabe an den Phoropter wird im Schnittstellenprofil gepflegt. Fue
 Wenn eine passende AIS-Datei im aktiven CV-5000-Schnittstellenprofil erkannt wird, verwendet die App diese Schnittstellenprofil-Konfiguration fuer die Richtung AIS/MEDISTAR -> Geraet. Fehlt der Ausgabeordner, wird keine `CVImport.xml` geschrieben und ein klarer Hinweis ausgegeben.
 
 Die Erzeugung der `CVImport.xml` ist Phase 1 und kein finaler Workflowabschluss. AIS-/Patientenkontext und Eingangsdaten bleiben fuer Phase 2 relevant; erst die erfolgreiche Phoropter-Rueckgabe mit MEDISTAR-XDT-Erzeugung schliesst den Vorgang terminal ab.
+
+`Nichts senden` ist kein Fehler und nicht identisch mit `Abbrechen`: Es schliesst nur das Auswahlfenster, schreibt keine Importdatei und laesst den CV-5000-Workflow fuer die spaetere Rueckgabedatei offen. `Abbrechen` bleibt der konservative Bedienabbruch ohne stillen Erfolg.
 
 ## Grenzen / offen
 

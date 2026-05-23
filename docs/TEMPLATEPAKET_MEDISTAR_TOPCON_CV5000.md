@@ -44,7 +44,9 @@ Relevante MEDISTAR-Praefixe:
 - `P` Pachymetrie, nur erkennen/anzeigen
 - `Y` Tonometrie, nur erkennen/anzeigen
 
-Exportiert werden aktuell nur refraktive, parsebare Datensaetze `V0` bis `V4`. Bei aktiver `Ausgabe an Geraet` oeffnet der Verarbeitungslauf nach AIS-Datei-Eingang das Fenster `Werte an Phoropter uebergeben`; dort sind die neuesten exportierbaren Datensaetze fuer Lensmeter, Autorefraktor und Phoropter vorausgewaehlt und weitere refraktive Datensaetze koennen zusaetzlich markiert werden.
+Exportiert werden aktuell nur refraktive, parsebare Datensaetze `V0` bis `V4`. Bei aktiver `Ausgabe an Geraet` oeffnet der Verarbeitungslauf nach AIS-Datei-Eingang das Fenster `Werte an Phoropter uebergeben`; dort sind die neuesten exportierbaren Datensaetze fuer Lensmeter, Autorefraktor und Phoropter vorausgewaehlt und weitere refraktive Datensaetze koennen zusaetzlich markiert werden. Das Fenster startet TopMost mit dem bestehenden `🔝`-Schalter, damit es nicht vom Geraetefenster ueberdeckt wird.
+
+Der Button `Nichts senden` schreibt keine `CVImport.xml` und ist kein Fehlerfall. Er dokumentiert die bewusste Entscheidung, ohne Startwerte am Phoropter weiterzuarbeiten; der Workflow wartet danach weiter auf die spaetere CV-5000-Rueckgabedatei. `Abbrechen` bleibt davon getrennt.
 
 Die erzeugte CV-5000-Import-XML orientiert sich an `CVImport.xml`:
 
@@ -113,6 +115,7 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 - CV-5000-Rueckweg mit MEDISTAR-Historien-AIS und genauer AIS-Fehlerdiagnose: `InterfaceProfileManualProcessorTests`
 - BuiltIn-Profiltests: `DeviceProfileDefinitionTests`, `ExportProfileDefinitionTests`, `InterfaceProfileDefinitionTests`, `ProfileCatalogServiceTests`
 - Schnittstellenprofil-UI-Sichtbarkeit: `InterfaceProfileUiPolicyTests`
+- CV-5000-Auswahldialog-Zustand und Dialogentscheidung: `Cv5000PhoropterSelectionStateTests`
 - Selektiver Templatepaket-Test: `MedistarTopconCv5000TemplatePackageTests`
 
 ## Grenzen / offen

@@ -6,7 +6,59 @@
         Height="700"
         MinWidth="760"
         MinHeight="520"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        Topmost="True">
+    <Window.Resources>
+        <Style x:Key="Cv5000SymbolToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontFamily" Value="Segoe UI Emoji, Segoe UI Symbol"/>
+            <Setter Property="Foreground" Value="#14532D"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="ButtonChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#1A22C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#6634D399"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#3322C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="#2A22C55E"/>
+                                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="#16A34A"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#9CA3AF"/>
+                                <Setter TargetName="ButtonChrome" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -16,10 +68,26 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Margin="0,0,0,12"
-                   Text="Bitte wählen Sie die vorhandenen MEDISTAR-Karteikartenwerte aus, die an TOPCON CV-5000/CV-5000S übergeben werden sollen."
-                   TextWrapping="Wrap" />
+        <Grid Grid.Row="0"
+              Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Text="Bitte wählen Sie die vorhandenen MEDISTAR-Karteikartenwerte aus, die an TOPCON CV-5000/CV-5000S übergeben werden sollen."
+                       TextWrapping="Wrap" />
+            <ToggleButton x:Name="TopMostButton"
+                          Grid.Column="1"
+                          Margin="12,0,0,0"
+                          Content="🔝"
+                          IsChecked="True"
+                          Style="{StaticResource Cv5000SymbolToggleButtonStyle}"
+                          ToolTip="Immer im Vordergrund"
+                          Click="TopMostButton_Click"/>
+        </Grid>
 
         <GroupBox Grid.Row="1"
                   Header="Patient"
@@ -68,6 +136,11 @@
                     Margin="0,0,12,0"
                     Content="An Phoropter ausgeben"
                     Click="ExportButton_Click" />
+            <Button x:Name="SendNothingButton"
+                    Width="130"
+                    Margin="0,0,12,0"
+                    Content="Nichts senden"
+                    Click="SendNothingButton_Click" />
             <Button Width="120"
                     Content="Abbrechen"
                     IsCancel="True"
