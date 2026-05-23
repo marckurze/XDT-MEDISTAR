@@ -9,7 +9,7 @@ Dieses Paket beschreibt den ersten bidirektionalen TOPCON-Phoropter-Kandidaten f
 - Testseitig abgesichert fuer beide Richtungen:
   - AIS/MEDISTAR -> XdtDeviceBridge -> TOPCON-CV-5000-Import-XML
   - TOPCON CV-5000 -> XdtDeviceBridge -> MEDISTAR-XDT-Rueckgabe
-- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden; praktische MEDISTAR-/CV-5000-Livevalidierung am Geraet steht noch aus.
+- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden. Der Rueckweg verarbeitet MEDISTAR-Historien-AIS-Dateien tolerant, damit Karteikartenzeilen den CV-5000-`6228`-Export nicht abbrechen. Der finale MEDISTAR-Import der erzeugten Rueckgabedatei bleibt praktisch zu pruefen.
 - Offizielles ZIP-Artefakt wird erst nach der Release-Regel abgelegt.
 
 ## Enthaltene BuiltIns
@@ -65,6 +65,8 @@ Die Fernentfernung `500.000 cm` ist bewusst konservativ gewaehlt und muss im Liv
 Die CV-5000-Rueckgabe wird als MEDISTAR-Phoropter-Ergebnis ueber `6228` ausgegeben, obwohl die TOPCON-XML intern `Measure type="SBJ"` nutzt.
 
 - `8402` Untersuchungsart kommt aus AIS/MEDISTAR.
+- MEDISTAR-Historien-AIS-Dateien mit Karteikartenzeilen werden im CV-5000-Rueckweg tolerant als Patientenkontext gelesen.
+- Die `CVImport.xml`-Erzeugung ist Phase 1 und kein terminaler Workflowabschluss; final abgeschlossen wird erst nach erfolgreicher Phoropter-Rueckgabe.
 - `6228` enthaelt die rechten/linken Phoropter-Zeilen.
 - `6227`, `6221`, `6220`, `6205` und `6302` bis `6305` werden fuer CV-5000-Messwerte nicht verwendet.
 - Leere Prism-/VA-/Contrast-Bloecke werden ignoriert.
@@ -105,13 +107,14 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 - Historienparser: `TopconCv5000ProfileTests`
 - CV-5000-Importwriter: `TopconCv5000ProfileTests`
 - CV-5000-Rueckgabeparser und MEDISTAR-`6228`-Export: `TopconCv5000ProfileTests`
+- CV-5000-Rueckweg mit MEDISTAR-Historien-AIS und genauer AIS-Fehlerdiagnose: `InterfaceProfileManualProcessorTests`
 - BuiltIn-Profiltests: `DeviceProfileDefinitionTests`, `ExportProfileDefinitionTests`, `InterfaceProfileDefinitionTests`, `ProfileCatalogServiceTests`
 - Schnittstellenprofil-UI-Sichtbarkeit: `InterfaceProfileUiPolicyTests`
 - Selektiver Templatepaket-Test: `MedistarTopconCv5000TemplatePackageTests`
 
 ## Grenzen / offen
 
-- Praktische MEDISTAR-/CV-5000-Livevalidierung am echten Phoropter steht noch aus.
-- Das Auswahlfenster fuer den Arzt ist im produktiven Verarbeitungslauf angebunden; die vom Dialog erzeugte `CVImport.xml` muss am echten CV-5000/CV-5000S eingelesen werden.
+- Praktisch offen bleibt der echte MEDISTAR-Import der erzeugten `6228`-Rueckgabedatei.
+- Die vom Dialog erzeugte `CVImport.xml` muss am echten CV-5000/CV-5000S weiter beobachtet werden.
 - Keratometer-, Tonometrie- und Pachymetrie-Karteikartenzeilen werden erkannt, aber mangels eindeutig belegtem CV-5000-Importmapping nicht in die Phoropter-Import-XML geschrieben.
 - Offizielle ZIP-Ablage erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

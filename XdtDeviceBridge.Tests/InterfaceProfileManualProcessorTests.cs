@@ -38,6 +38,80 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
+    public void Process_Cv5000ReturnShouldReadMedistarHistoryAisTolerantly()
+    {
+        var exportFolder = CreateTempFolder();
+        var aisFilePath = CopyCv5000TestDataToTemp("Patient_mit_Phoropter_Daten.XDT", "Patient.XDT");
+        var deviceFilePath = CopyCv5000TestDataToTemp(
+            "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml",
+            "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml");
+
+        var result = _processor.Process(
+            CreateCv5000InterfaceProfile(exportFolder),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 5, 23, 10, 18, 29));
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.NotNull(result.ExportContent);
+        Assert.Contains("8402Phoro", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228--", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain(result.Messages, message =>
+            message.Contains("AIS-Datei konnte nicht fehlerfrei gelesen werden", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.PipelineResult!.Issues, issue =>
+            issue.Severity == ProcessingIssueSeverity.Warning
+            && issue.Stage == ProcessingStage.GdtParsing
+            && issue.Message.Contains("CV-5000-Historienparser", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(result.PipelineResult.Issues, issue => issue.Severity == ProcessingIssueSeverity.Error);
+        Assert.True(File.Exists(aisFilePath));
+        Assert.True(File.Exists(deviceFilePath));
+    }
+
+    [Fact]
+    public void Process_Cv5000HistoryAisWithoutRequiredPatientDataShouldReturnSpecificFailure()
+    {
+        var aisFilePath = CreateTempFile(
+            "Patient.XDT",
+            "18.05.2026 V0 R.:S=+ 1.00 Z=- 0.25*  7\r\n18.05.2026 V0 L.:S=+ 1.25 Z=- 0.50* 10\r\n");
+        var deviceFilePath = CopyCv5000TestDataToTemp(
+            "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml",
+            "cv5000-return.xml");
+
+        var result = _processor.Process(
+            CreateCv5000InterfaceProfile(CreateTempFolder(), moveFailedFilesToErrorFolder: false),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 5, 23, 10, 18, 29));
+
+        Assert.False(result.Success);
+        var combinedMessages = string.Join(Environment.NewLine, result.Messages);
+        Assert.Contains("Pflicht-Patientendaten fehlen", combinedMessages, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("3000 Patientennummer", combinedMessages, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("3101 Nachname", combinedMessages, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("AIS-Datei konnte nicht fehlerfrei gelesen werden", combinedMessages, StringComparison.OrdinalIgnoreCase);
+        Assert.Null(result.ExportContent);
+    }
+
+    [Fact]
+    public void AisPatientDataReader_ShouldReturnDetailedGdtError()
+    {
+        var aisFilePath = CreateTempFile("Patient.XDT", "PHOROPTER\r\n");
+
+        var result = new AisPatientDataReader().Read(aisFilePath);
+
+        Assert.False(result.Success);
+        Assert.NotNull(result.ErrorMessage);
+        Assert.Contains("GDT-/XDT-Parserfehler", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Zeile 1", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("AIS-Datei konnte nicht fehlerfrei gelesen werden.", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Process_ShouldAppendAttachmentLinkFieldsAtEndWhenAttachmentPreparationSucceeds()
     {
         var baseline = _processor.Process(
@@ -606,6 +680,30 @@ public sealed class InterfaceProfileManualProcessorTests
         };
     }
 
+    private static InterfaceProfileDefinition CreateCv5000InterfaceProfile(
+        string exportFolder,
+        bool moveFailedFilesToErrorFolder = true)
+    {
+        var template = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        return template with
+        {
+            Metadata = template.Metadata with
+            {
+                Id = "interface-medistar-topcon-cv5000-test",
+                Name = "MEDISTAR + TOPCON CV-5000 - Konfiguration",
+                IsBuiltIn = false,
+                IsUserDefined = true
+            },
+            FolderOptions = template.FolderOptions with
+            {
+                ExportFolder = exportFolder,
+                ErrorFolder = CreateTempFolder(),
+                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder
+            },
+            IsActive = true
+        };
+    }
+
     private static AttachmentProcessingStatus CreateAttachmentStatus(IReadOnlyList<ExportFieldRecord> fields)
     {
         return new AttachmentProcessingStatus(
@@ -677,6 +775,27 @@ public sealed class InterfaceProfileManualProcessorTests
         var targetFilePath = Path.Combine(folder, targetFileName);
         File.Copy(GetTestDataPath(testDataFileName), targetFilePath);
         return targetFilePath;
+    }
+
+    private static string CopyCv5000TestDataToTemp(string testDataFileName, string targetFileName)
+    {
+        var folder = CreateTempFolder();
+        var targetFilePath = Path.Combine(folder, targetFileName);
+        File.Copy(GetCv5000TestDataPath(testDataFileName), targetFilePath);
+        return targetFilePath;
+    }
+
+    private static string CreateTempFile(string fileName, string content)
+    {
+        var folder = CreateTempFolder();
+        var filePath = Path.Combine(folder, fileName);
+        File.WriteAllText(filePath, content);
+        return filePath;
+    }
+
+    private static string GetCv5000TestDataPath(string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Topcon", "CV5000", fileName);
     }
 
     private static string CreateDeviceDocumentFile(string fileName, string content = "attachment")

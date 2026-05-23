@@ -6,6 +6,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 {
     private readonly GdtParser _gdtParser = new();
     private readonly PatientDataMapper _patientDataMapper = new();
+    private readonly MedistarHistoricalMeasurementParser _medistarHistoricalMeasurementParser = new();
     private readonly XmlDeviceParser _xmlDeviceParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -58,25 +59,22 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
-        var gdtResult = _gdtParser.ParseFile(aisFilePath);
-        issues.AddRange(gdtResult.Issues.Select(issue => new ProcessingIssue(
-            issue.Severity == GdtParseIssueSeverity.Error ? ProcessingIssueSeverity.Error : ProcessingIssueSeverity.Warning,
-            ProcessingStage.GdtParsing,
-            issue.Message)));
-        if (gdtResult.HasErrors)
+        var aisReadResult = ReadAisPatientData(interfaceProfile, aisFilePath);
+        issues.AddRange(aisReadResult.Issues);
+        if (!aisReadResult.Success || aisReadResult.Patient is null)
         {
             return CreateFailureResult(
                 interfaceProfile,
                 aisFilePath,
                 deviceFilePath,
                 timestamp,
-                new[] { "AIS-Datei konnte nicht fehlerfrei gelesen werden." },
-                new ProcessingPipelineResult(null, [], [], string.Empty, issues),
+                aisReadResult.FailureMessages,
+                new ProcessingPipelineResult(aisReadResult.Patient, [], [], string.Empty, issues),
                 exportContent: null,
                 allowMissingDeviceFile: IsManualDocumentSelection(interfaceProfile));
         }
 
-        var patient = _patientDataMapper.Map(gdtResult.Records);
+        var patient = aisReadResult.Patient;
 
         var documentationText = string.Empty;
         var deviceResult = isAttachmentOnlyMode
@@ -216,6 +214,219 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             FailedFileCopyResult: null,
             Messages: messages,
             AttachmentStatus: attachmentStatus);
+    }
+
+    private AisPatientDataReadForProcessingResult ReadAisPatientData(
+        InterfaceProfileDefinition interfaceProfile,
+        string aisFilePath)
+    {
+        if (string.IsNullOrWhiteSpace(aisFilePath))
+        {
+            return AisPatientDataReadForProcessingResult.CreateFailure(
+                null,
+                Array.Empty<ProcessingIssue>(),
+                new[] { "AIS-Dateipfad fehlt." });
+        }
+
+        if (!File.Exists(aisFilePath))
+        {
+            return AisPatientDataReadForProcessingResult.CreateFailure(
+                null,
+                Array.Empty<ProcessingIssue>(),
+                new[] { $"AIS-Datei nicht gefunden: {aisFilePath}" });
+        }
+
+        GdtParseResult gdtResult;
+        try
+        {
+            gdtResult = _gdtParser.ParseFile(aisFilePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return AisPatientDataReadForProcessingResult.CreateFailure(
+                null,
+                Array.Empty<ProcessingIssue>(),
+                new[] { CreateAisReadExceptionMessage(ex, aisFilePath) });
+        }
+
+        if (!gdtResult.HasErrors)
+        {
+            return AisPatientDataReadForProcessingResult.CreateSuccess(
+                _patientDataMapper.Map(gdtResult.Records),
+                ConvertGdtIssues(gdtResult.Issues, preserveErrorSeverity: true));
+        }
+
+        if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null))
+        {
+            return ReadCv5000HistoryAisPatientData(aisFilePath, gdtResult);
+        }
+
+        return AisPatientDataReadForProcessingResult.CreateFailure(
+            null,
+            ConvertGdtIssues(gdtResult.Issues, preserveErrorSeverity: true),
+            CreateGdtFailureMessages(gdtResult.Issues));
+    }
+
+    private AisPatientDataReadForProcessingResult ReadCv5000HistoryAisPatientData(
+        string aisFilePath,
+        GdtParseResult strictGdtResult)
+    {
+        MedistarHistoricalMeasurementParseResult historyResult;
+        try
+        {
+            historyResult = _medistarHistoricalMeasurementParser.ParseFile(aisFilePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            var messages = CreateGdtFailureMessages(strictGdtResult.Issues).ToList();
+            messages.Insert(0, $"CV-5000-Historien-AIS-Datei konnte nicht gelesen werden: {ex.Message}");
+            return AisPatientDataReadForProcessingResult.CreateFailure(
+                null,
+                ConvertGdtIssues(strictGdtResult.Issues, preserveErrorSeverity: true),
+                messages);
+        }
+
+        var issues = new List<ProcessingIssue>
+        {
+            new(
+                ProcessingIssueSeverity.Warning,
+                ProcessingStage.GdtParsing,
+                "CV-5000-Rueckweg: Standard-GDT-Leser meldete MEDISTAR-Historienzeilen; Patientenkontext wurde mit dem CV-5000-Historienparser gelesen.")
+        };
+        issues.AddRange(ConvertGdtIssues(strictGdtResult.Issues.Take(5), preserveErrorSeverity: false));
+        issues.AddRange(historyResult.Warnings.Select(warning => new ProcessingIssue(
+            ProcessingIssueSeverity.Warning,
+            ProcessingStage.GdtParsing,
+            $"CV-5000-Historienparser: {warning}")));
+
+        var missingFields = GetMissingRequiredAisPatientFields(historyResult.Patient);
+        if (missingFields.Count > 0)
+        {
+            return AisPatientDataReadForProcessingResult.CreateFailure(
+                historyResult.Patient,
+                issues,
+                new[]
+                {
+                    "AIS-Datei enthaelt MEDISTAR-Historienzeilen, aber Pflicht-Patientendaten fehlen: "
+                    + string.Join(", ", missingFields)
+                });
+        }
+
+        return AisPatientDataReadForProcessingResult.CreateSuccess(historyResult.Patient, issues);
+    }
+
+    private static IReadOnlyList<string> GetMissingRequiredAisPatientFields(PatientData patient)
+    {
+        var missing = new List<string>();
+        if (string.IsNullOrWhiteSpace(patient.PatientNumber))
+        {
+            missing.Add("3000 Patientennummer");
+        }
+
+        if (string.IsNullOrWhiteSpace(patient.LastName))
+        {
+            missing.Add("3101 Nachname");
+        }
+
+        if (string.IsNullOrWhiteSpace(patient.FirstName))
+        {
+            missing.Add("3102 Vorname");
+        }
+
+        if (string.IsNullOrWhiteSpace(patient.BirthDate))
+        {
+            missing.Add("3103 Geburtsdatum");
+        }
+
+        return missing;
+    }
+
+    private static IReadOnlyList<ProcessingIssue> ConvertGdtIssues(
+        IEnumerable<GdtParseIssue> issues,
+        bool preserveErrorSeverity)
+    {
+        return issues
+            .Select(issue => new ProcessingIssue(
+                preserveErrorSeverity && issue.Severity == GdtParseIssueSeverity.Error
+                    ? ProcessingIssueSeverity.Error
+                    : ProcessingIssueSeverity.Warning,
+                ProcessingStage.GdtParsing,
+                FormatGdtIssue(issue)))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> CreateGdtFailureMessages(IEnumerable<GdtParseIssue> issues)
+    {
+        var details = issues
+            .Where(issue => issue.Severity == GdtParseIssueSeverity.Error)
+            .Take(5)
+            .Select(FormatGdtIssue)
+            .ToArray();
+
+        if (details.Length == 0)
+        {
+            return new[] { "AIS-Datei konnte wegen GDT-/XDT-Parserfehlern nicht gelesen werden." };
+        }
+
+        return new[]
+        {
+            "AIS-Datei konnte wegen GDT-/XDT-Parserfehlern nicht gelesen werden:",
+        }
+        .Concat(details)
+        .ToArray();
+    }
+
+    private static string FormatGdtIssue(GdtParseIssue issue)
+    {
+        var rawLine = TrimForDiagnostic(issue.RawLine);
+        return string.IsNullOrWhiteSpace(rawLine)
+            ? $"Zeile {issue.LineNumber}: {issue.Message}"
+            : $"Zeile {issue.LineNumber}: {issue.Message} Inhalt: {rawLine}";
+    }
+
+    private static string TrimForDiagnostic(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Trim();
+        return normalized.Length <= 120 ? normalized : normalized[..117] + "...";
+    }
+
+    private static string CreateAisReadExceptionMessage(Exception exception, string aisFilePath)
+    {
+        return exception switch
+        {
+            FileNotFoundException => $"AIS-Datei nicht gefunden: {aisFilePath}",
+            UnauthorizedAccessException => $"Zugriff auf AIS-Datei verweigert: {exception.Message}",
+            IOException => $"AIS-Datei konnte wegen Datei-/IO-Fehler nicht gelesen werden: {exception.Message}",
+            ArgumentException or NotSupportedException => $"AIS-Dateipfad ist ungueltig: {exception.Message}",
+            _ => $"AIS-Datei konnte nicht gelesen werden: {exception.Message}"
+        };
+    }
+
+    private sealed record AisPatientDataReadForProcessingResult(
+        bool Success,
+        PatientData? Patient,
+        IReadOnlyList<ProcessingIssue> Issues,
+        IReadOnlyList<string> FailureMessages)
+    {
+        public static AisPatientDataReadForProcessingResult CreateSuccess(
+            PatientData patient,
+            IReadOnlyList<ProcessingIssue> issues)
+        {
+            return new AisPatientDataReadForProcessingResult(true, patient, issues, Array.Empty<string>());
+        }
+
+        public static AisPatientDataReadForProcessingResult CreateFailure(
+            PatientData? patient,
+            IReadOnlyList<ProcessingIssue> issues,
+            IReadOnlyList<string> failureMessages)
+        {
+            return new AisPatientDataReadForProcessingResult(false, patient, issues, failureMessages);
+        }
     }
 
     private static DeviceParseResult CreateAttachmentOnlyDeviceResult(

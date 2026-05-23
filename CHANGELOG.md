@@ -53,6 +53,7 @@
 
 ### Behoben
 
+- CV-5000/CV-5000S-Rueckweg repariert: MEDISTAR-Historien-AIS-Dateien mit Karteikartenzeilen werden beim Phoropter-Rueckexport gezielt tolerant ueber den CV-5000-Historienparser als Patientenkontext gelesen, sodass die `6228`-Rueckgabe nicht mehr mit der pauschalen Meldung `AIS-Datei konnte nicht fehlerfrei gelesen werden` abbricht. Die `CVImport.xml`-Erzeugung bleibt Phase 1 und markiert den Workflow nicht terminal; der Abschluss erfolgt erst nach erfolgreicher Phoropter-Rueckgabe. Fehlerdetails fuer AIS-/GDT-Leseprobleme werden genauer protokolliert.
 - CV-5000/CV-5000S-Auswahlfenster im echten Scanpfad angebunden: Bei aktivierter `Ausgabe an Geraet` und gesetztem Ausgabeordner oeffnet nach AIS-Datei-Eingang das Fenster `Werte an Phoropter uebergeben`, gruppiert Historienwerte, waehlt neueste `V0`/`V1`/`V2` vor und schreibt `CVImport.xml` ueber die Schnittstellenprofil-Konfiguration. Normale Geraete triggern diesen Dialog nicht.
 - Startfehler bei persistent abgedockten Geraeteanbindungsfenstern behoben: Floating-Fenster werden erst nach der sicheren MainWindow-Anzeige wiederhergestellt, `Owner` wird defensiv gesetzt, und ein Restore-Fehler dockt die Karte statt App-Abbruch sicher an.
 - Floating-Geraeteanbindungsfenster stabilisiert: Schliessen per `X` dockt sicher zurueck, ohne rekursives `Close()`, Radar-/Scanbalken ist im Floating-Fenster sichtbar, und die Scanintervall-Buttons `-`/`+` sind dort ebenfalls verfuegbar.

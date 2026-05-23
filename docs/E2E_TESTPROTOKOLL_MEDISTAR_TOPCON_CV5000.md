@@ -1,6 +1,6 @@
 # E2E-Testprotokoll: MEDISTAR + TOPCON CV-5000 / CV-5000S
 
-Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfenster fuer AIS-Historienwerte ist im Verarbeitungslauf angebunden; die praktische MEDISTAR-/CV-5000-Livevalidierung am Geraet steht noch aus.
+Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfenster fuer AIS-Historienwerte ist im Verarbeitungslauf angebunden; die Erzeugung der `CVImport.xml` wurde praktisch gestartet, und der Rueckweg ist fuer MEDISTAR-Historien-AIS plus CV-5000-Rueckgabe-Fixture abgesichert. Der finale MEDISTAR-Import der erzeugten Rueckgabedatei bleibt praktisch zu pruefen.
 
 ## Validierter Ablauf per Fixture
 
@@ -18,6 +18,7 @@ Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfe
 
 - TOPCON CV-5000 liefert eine XML-Geraetedatei.
 - Die App erkennt CV-5000/CV-5000S ueber TOPCON-Ophthalmology-XML und `Measure type="SBJ"`.
+- Der bereits in Phase 1 gelesene AIS-/Patientenkontext bleibt fachlich massgeblich; MEDISTAR-Historienzeilen in der AIS-Datei werden im Rueckweg tolerant gelesen und blockieren den Export nicht.
 - Die App liest Type-Bloecke, R/L-Refraktionswerte, VD und PD.
 - Die App erzeugt MEDISTAR-kompatible XDT-Rueckgabezeilen ueber `6228`.
 - `8402` Untersuchungsart bleibt aus AIS/MEDISTAR.
@@ -108,6 +109,7 @@ Fachliche Bestaetigung:
 
 - Phoropter-Rueckgabe wird ueber `6228` ausgegeben.
 - `8402` kommt aus AIS/MEDISTAR.
+- MEDISTAR-Historien-AIS-Dateien mit `V0`/`V1`/`V2`/`V3`/`V4`/`V7`/`P`/`Y`-Karteikartenzeilen werden fuer den CV-5000-Rueckweg tolerant gelesen.
 - Beide Type-Bloecke werden getrennt.
 - Keine `6227`-Ausgabe fuer CV-5000-Phoropterwerte.
 - Keine leeren R-/L-Zeilen.
@@ -131,10 +133,12 @@ Die konkrete Ausgabe an den Phoropter wird im Schnittstellenprofil gepflegt. Fue
 
 Wenn eine passende AIS-Datei im aktiven CV-5000-Schnittstellenprofil erkannt wird, verwendet die App diese Schnittstellenprofil-Konfiguration fuer die Richtung AIS/MEDISTAR -> Geraet. Fehlt der Ausgabeordner, wird keine `CVImport.xml` geschrieben und ein klarer Hinweis ausgegeben.
 
+Die Erzeugung der `CVImport.xml` ist Phase 1 und kein finaler Workflowabschluss. AIS-/Patientenkontext und Eingangsdaten bleiben fuer Phase 2 relevant; erst die erfolgreiche Phoropter-Rueckgabe mit MEDISTAR-XDT-Erzeugung schliesst den Vorgang terminal ab.
+
 ## Grenzen / offen
 
-- Praktische MEDISTAR-/CV-5000-Livevalidierung steht noch aus.
-- Das Auswahlfenster ist im echten Verarbeitungslauf angebunden; seine Bedienung und die erzeugte `CVImport.xml` muessen am echten CV-5000/CV-5000S praktisch validiert werden.
+- Praktisch offen bleibt der echte MEDISTAR-Import der erzeugten `6228`-Rueckgabedatei.
+- Das Einlesen der erzeugten `CVImport.xml` am echten CV-5000/CV-5000S muss weiter beobachtet werden.
 - `500.000 cm` als Import-ExamDistance ist konservativ und muss am CV-5000/CV-5000S bestaetigt werden.
 - Keratometer/Tonometrie/Pachymetrie aus historischen MEDISTAR-Zeilen werden erkannt, aber noch nicht in die CV-5000-Import-XML geschrieben.
 - Kein offizielles ZIP-Artefakt vor Freigabe nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.
