@@ -40,6 +40,7 @@ public sealed class XmlDeviceParser
             AddNidekLm7MedistarLines(document.Root, measurements);
             AddTopconCl300MedistarLines(document.Root, measurements);
             AddTopconKr800SMedistarLines(document.Root, measurements);
+            AddTopconKr1MedistarLines(document.Root, measurements);
             AddTopconTrk2PMedistarLines(document.Root, measurements);
             AddTopconCt1PMedistarLines(document.Root, measurements);
             AddTopconCt800AMedistarLines(document.Root, measurements);
@@ -330,6 +331,34 @@ public sealed class XmlDeviceParser
         if (sbjMeasure is not null)
         {
             AddTopconKr800SSbjMedistarLines(measurements, sbjMeasure);
+        }
+    }
+
+    private static void AddTopconKr1MedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        if (common is null)
+        {
+            return;
+        }
+
+        var company = GetChildValue(common, "Company");
+        var modelName = GetChildValue(common, "ModelName");
+        if (!string.Equals(company, "TOPCON", StringComparison.OrdinalIgnoreCase)
+            || !IsTopconKr1Model(modelName))
+        {
+            return;
+        }
+
+        var refMeasure = FindMeasure(root, "REF");
+        if (refMeasure is not null)
+        {
+            AddTopconKr800SRefMedistarLines(measurements, refMeasure);
         }
     }
 
@@ -1833,6 +1862,12 @@ public sealed class XmlDeviceParser
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "KR800S", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTopconKr1Model(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "KR1", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconTrk2PModel(string? modelName)

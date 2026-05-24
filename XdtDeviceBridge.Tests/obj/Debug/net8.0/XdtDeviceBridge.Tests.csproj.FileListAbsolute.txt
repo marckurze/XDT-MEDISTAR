@@ -140,3 +140,4 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\T
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CT800A\M-Serial0069_20190411_170716_TOPCON_CT-800A_AA3100481.xml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CT800A\M-Serial0070_20190411_171259_TOPCON_CT-800A_AA3100481.xml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CT800A\M-Serial0071_20190411_175130_TOPCON_CT-800A_AA3100481.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\KR1\M-Serial0001_20190411_120732_TOPCON_KR-1_4430227.xml

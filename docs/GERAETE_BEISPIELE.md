@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. MEDISTAR + TOPCON Solos ist als weiterer TOPCON-Lensmeter-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON CT800A ist als TOPCON-Non-Contact-Tonometer-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet, muss aber noch praktisch mit MEDISTAR und CV-5000/CV-5000S validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. MEDISTAR + TOPCON Solos ist als weiterer TOPCON-Lensmeter-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON KR-1 ist als Keratorefraktometer-Kandidat mit REF-`6228` testseitig vorbereitet; KM/KRT bleibt ohne echte Fixture offen. MEDISTAR + TOPCON CT800A ist als TOPCON-Non-Contact-Tonometer-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet, muss aber noch praktisch mit MEDISTAR und CV-5000/CV-5000S validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -936,6 +936,44 @@ Wichtig fuer Parser- und Profil-Logik:
 - Praktische MEDISTAR-Validierung ist in `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_KR800S.md` dokumentiert; subjektive Zeilen koennen nach weiteren Praxisbeispielen verfeinert werden.
 - Der Live-Fehler mit leeren Platzhalterzeilen (`R.:S= Z=*`, `KR: K1=* K2=*`) wurde auf alte persistierte BuiltIn-Exportregeln zurueckgefuehrt und testseitig abgesichert.
 
+## 7.2 TOPCON KR-1
+
+Geraetetyp: Keratorefraktometer / Autorefraktor-Keratometer-Kandidat.
+
+Dateiformat:
+
+- XML im TOPCON JOIA-/Ophthalmology-Format
+- Encoding der Fixture: Shift-JIS
+- erkannte Namespaces: `nsCommon`, `nsREF`
+- Root `Ophthalmology`, `Common/Company = TOPCON`, `Common/ModelName = KR-1`
+
+Untersuchungsarten und MEDISTAR-Felder:
+
+| XML-Measure | Bedeutung | MEDISTAR |
+|---|---|---|
+| `REF` | Autorefraktion / Refraktion | `6228` |
+| `KM`/`KRT` | Keratometrie / periphere KRT | offen, keine Ausgabe ohne echte Fixture |
+
+Echte Fixture:
+
+- `XdtDeviceBridge.Tests/TestData/Devices/Topcon/KR1/M-Serial0001_20190411_120732_TOPCON_KR-1_4430227.xml`
+
+Getestete Ausgabe:
+
+```text
+6228 R.:S=+ 0.75 Z=- 0.50*165 PD= 68 VD= 13.75
+6228 L.:S=+ 0.50 Z=+ 0.00*  0
+```
+
+Hinweise:
+
+- KR-1 wird als eigenes BuiltIn-Geraet `device-topcon-kr1-default` gefuehrt und nicht als KR800S-Alias behandelt.
+- Fuer die MEDISTAR-Ausgabe werden die REF-`Median`-Werte verwendet, nicht die einzelnen `List`-Messungen.
+- `PD/Distance` wird als Binokular-PD verwendet; `PD/Near` wird nicht ungeprueft ausgegeben.
+- `SE`, `ConfidenceIndex`, `CataractMode` und `IOLMode` werden nicht nach MEDISTAR exportiert.
+- Die aktuelle Fixture enthaelt keinen KM-/KRT-Block. Deshalb entstehen keine `6221`-Zeilen und keine kuenstlichen Keratometerwerte.
+- Das BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON KR-1`, der selektive Templatepaket-Test und das Fixture-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_KR1.md` sind vorhanden.
+
 ## 8. TOPCON TRK2P
 
 Geraetetyp: Autorefraktometer / Keratometer / Tonometer / Pachymeter; SBJ optional, falls XML-Werte vorhanden sind.
@@ -1172,7 +1210,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
-4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON Solos praktisch in MEDISTAR abnehmen und echte Transmission-/PDF-Faelle sammeln; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TOPCON TRK2P ist als praktisch validierter REF/KM/TM/CCT-Referenzkandidat inklusive Teilmessungsregel dokumentiert, TOPCON CT1P ist fuer Tonometrie/Pachymetrie praktisch validiert, TOPCON CT800A ist als Non-Contact-Tonometer-Kandidat testseitig vorbereitet, und TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet.
+4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON Solos praktisch in MEDISTAR abnehmen und echte Transmission-/PDF-Faelle sammeln; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TOPCON KR-1 ist als REF-`6228`-Keratorefraktometer-Kandidat testseitig vorbereitet und benoetigt noch KM/KRT-Fixtures, TOPCON TRK2P ist als praktisch validierter REF/KM/TM/CCT-Referenzkandidat inklusive Teilmessungsregel dokumentiert, TOPCON CT1P ist fuer Tonometrie/Pachymetrie praktisch validiert, TOPCON CT800A ist als Non-Contact-Tonometer-Kandidat testseitig vorbereitet, und TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 

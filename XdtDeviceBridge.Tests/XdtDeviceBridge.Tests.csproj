@@ -58,6 +58,9 @@
     <None Update="TestData\Devices\Topcon\KR800S\M-Serial0426_20241126_145500_TOPCON_KR-800S_4871341.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\Devices\Topcon\KR1\M-Serial0001_20190411_120732_TOPCON_KR-1_4430227.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\Devices\Topcon\TRK2P\M-Serial0001_20190411_113829_TOPCON_TRK-2P_5270367.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -495,6 +495,60 @@ public static class DefaultDeviceProfileDefinitions
             CanContainMultipleExaminationTypes: true);
     }
 
+    public static DeviceProfileDefinition CreateTopconKr1Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-topcon-kr1-default",
+                Name: "TOPCON KR-1",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON KR-1 XML files. The current fixture validates REF median values; KM/KRT remains prepared for later real fixtures.",
+                Vendor: "TOPCON",
+                Product: "KR-1",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOPCON",
+            Model: "KR-1",
+            DeviceType: "Keratorefraktometer / Autorefraktor-Keratometer-Kandidat",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("kr1-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "TOPCON common company field."),
+                new DeviceMeasurementDefinition("kr1-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "TOPCON common model field; expected KR-1."),
+                new DeviceMeasurementDefinition("kr1-machine-no", "MachineNo", "Common/MachineNo", "Common", string.Empty, string.Empty, false, "TOPCON KR-1 machine number."),
+                new DeviceMeasurementDefinition("kr1-rom-version", "ROMVersion", "Common/ROMVersion", "Common", string.Empty, string.Empty, false, "TOPCON KR-1 ROM version."),
+                new DeviceMeasurementDefinition("kr1-version", "Version", "Common/Version", "Common", string.Empty, string.Empty, false, "TOPCON KR-1 XML version."),
+                new DeviceMeasurementDefinition("kr1-date", "Date", "Common/Date", "Common", string.Empty, string.Empty, false, "TOPCON KR-1 measurement date."),
+                new DeviceMeasurementDefinition("kr1-time", "Time", "Common/Time", "Common", string.Empty, string.Empty, false, "TOPCON KR-1 measurement time."),
+                new DeviceMeasurementDefinition("kr1-patient-no", "Patient No.", "Common/Patient/No.", "Common", string.Empty, string.Empty, false, "TOPCON KR-1 patient number."),
+                new DeviceMeasurementDefinition("kr1-patient-id", "Patient ID", "Common/Patient/ID", "Common", string.Empty, string.Empty, false, "TOPCON KR-1 patient ID."),
+                new DeviceMeasurementDefinition("kr1-ref-vd", "REF VD", "Measure[@Type='REF']/VD", "REF", string.Empty, "mm", false, "Vertex distance from TOPCON KR-1 REF block."),
+                new DeviceMeasurementDefinition("kr1-ref-diopter-step", "REF DiopterStep", "Measure[@Type='REF']/DiopterStep", "REF", string.Empty, "dpt", false, "Diopter step from TOPCON KR-1 REF block."),
+                new DeviceMeasurementDefinition("kr1-ref-axis-step", "REF AxisStep", "Measure[@Type='REF']/AxisStep", "REF", string.Empty, "deg", false, "Axis step from TOPCON KR-1 REF block."),
+                new DeviceMeasurementDefinition("kr1-ref-cylinder-mode", "REF CylinderMode", "Measure[@Type='REF']/CylinderMode", "REF", string.Empty, string.Empty, false, "Cylinder mode from TOPCON KR-1 REF block."),
+                new DeviceMeasurementDefinition("kr1-ref-r-sphere", "REF R Sphere", "Measure[@Type='REF']/REF/R/Median/Sphere", "REF", "R", "dpt", true, "Right autorefractor sphere from TOPCON KR-1 REF median values."),
+                new DeviceMeasurementDefinition("kr1-ref-r-cylinder", "REF R Cylinder", "Measure[@Type='REF']/REF/R/Median/Cylinder", "REF", "R", "dpt", true, "Right autorefractor cylinder from TOPCON KR-1 REF median values."),
+                new DeviceMeasurementDefinition("kr1-ref-r-axis", "REF R Axis", "Measure[@Type='REF']/REF/R/Median/Axis", "REF", "R", "deg", true, "Right autorefractor axis from TOPCON KR-1 REF median values."),
+                new DeviceMeasurementDefinition("kr1-ref-r-se", "REF R SE", "Measure[@Type='REF']/REF/R/Median/SE", "REF", "R", "dpt", false, "Right spherical equivalent from TOPCON KR-1 REF median values; not exported to MEDISTAR."),
+                new DeviceMeasurementDefinition("kr1-ref-l-sphere", "REF L Sphere", "Measure[@Type='REF']/REF/L/Median/Sphere", "REF", "L", "dpt", true, "Left autorefractor sphere from TOPCON KR-1 REF median values."),
+                new DeviceMeasurementDefinition("kr1-ref-l-cylinder", "REF L Cylinder", "Measure[@Type='REF']/REF/L/Median/Cylinder", "REF", "L", "dpt", true, "Left autorefractor cylinder from TOPCON KR-1 REF median values."),
+                new DeviceMeasurementDefinition("kr1-ref-l-axis", "REF L Axis", "Measure[@Type='REF']/REF/L/Median/Axis", "REF", "L", "deg", true, "Left autorefractor axis from TOPCON KR-1 REF median values."),
+                new DeviceMeasurementDefinition("kr1-ref-l-se", "REF L SE", "Measure[@Type='REF']/REF/L/Median/SE", "REF", "L", "dpt", false, "Left spherical equivalent from TOPCON KR-1 REF median values; not exported to MEDISTAR."),
+                new DeviceMeasurementDefinition("kr1-ref-pd-distance", "REF PD Distance", "Measure[@Type='REF']/PD/Distance", "REF", string.Empty, "mm", false, "Binocular distance PD from TOPCON KR-1 REF block."),
+                new DeviceMeasurementDefinition("kr1-ref-pd-near", "REF PD Near", "Measure[@Type='REF']/PD/Near", "REF", string.Empty, "mm", false, "Near PD from TOPCON KR-1 REF block; not exported automatically."),
+                new DeviceMeasurementDefinition("kr1-ref-r-medistar-line", "REF R MEDISTAR-Zeile", "Measure[@Type='REF']/REF/R/MedistarLine", "REF", "R", string.Empty, false, "Computed MEDISTAR REF line for TOPCON KR-1 right eye."),
+                new DeviceMeasurementDefinition("kr1-ref-l-medistar-line", "REF L MEDISTAR-Zeile", "Measure[@Type='REF']/REF/L/MedistarLine", "REF", "L", string.Empty, false, "Computed MEDISTAR REF line for TOPCON KR-1 left eye.")
+            },
+            SupportedExaminationTypes: new[] { "REF", "Refraktion", "Autorefraktion", "Keratometer-Kandidat" },
+            CanContainMultipleExaminationTypes: true);
+    }
+
     public static DeviceProfileDefinition CreateTopconTrk2PDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
