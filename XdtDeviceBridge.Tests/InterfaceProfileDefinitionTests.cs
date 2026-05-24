@@ -203,6 +203,22 @@ public sealed class InterfaceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateMedistarTopconSolosDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconSolosDefault();
+
+        Assert.Equal("interface-medistar-topcon-solos-default", profile.Metadata.Id);
+        Assert.Equal("ais-medistar-default", profile.AisProfileId);
+        Assert.Equal("device-topcon-solos-default", profile.DeviceProfileId);
+        Assert.Equal("export-medistar-topcon-solos-default", profile.ExportProfileId);
+        Assert.False(profile.IsActive);
+        Assert.True(profile.IsLicenseRequired);
+        Assert.False(profile.FolderOptions.IsAttachmentProcessingEnabled);
+        Assert.Null(profile.DeviceOutput);
+        Assert.Empty(InterfaceProfileDefinitionValidator.Validate(profile));
+    }
+
+    [Fact]
     public void CreateMedistarTopconKr800Default_ShouldCreateProfile()
     {
         var profile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default();

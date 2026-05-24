@@ -342,6 +342,54 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateTopconSolosDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconSolosDefault();
+
+        Assert.Equal("TOPCON", profile.Manufacturer);
+        Assert.Equal("SOLOS", profile.Model);
+        Assert.Equal("Lensmeter", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.False(profile.CanContainMultipleExaminationTypes);
+        Assert.False(profile.IsBidirectional);
+        Assert.Contains("Lensmeter", profile.SupportedExaminationTypes);
+        Assert.Contains("PD", profile.SupportedExaminationTypes);
+        Assert.Contains("Prism", profile.SupportedExaminationTypes);
+        Assert.Contains("Transmission", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateTopconSolosDefault_ShouldContainLensmeterAndSchemaVariantMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconSolosDefault();
+
+        AssertRequiredMeasurement(profile, "solos-r-sphere", "Measure[@Type='LM']/LM/R/Sphere");
+        AssertRequiredMeasurement(profile, "solos-r-cylinder", "Measure[@Type='LM']/LM/R/Cylinder");
+        AssertRequiredMeasurement(profile, "solos-r-axis", "Measure[@Type='LM']/LM/R/Axis");
+        AssertRequiredMeasurement(profile, "solos-l-sphere", "Measure[@Type='LM']/LM/L/Sphere");
+        AssertRequiredMeasurement(profile, "solos-l-cylinder", "Measure[@Type='LM']/LM/L/Cylinder");
+        AssertRequiredMeasurement(profile, "solos-l-axis", "Measure[@Type='LM']/LM/L/Axis");
+        AssertOptionalMeasurement(profile, "solos-r-add", "Measure[@Type='LM']/LM/R/ADD");
+        AssertOptionalMeasurement(profile, "solos-r-add2-upper", "Measure[@Type='LM']/LM/R/ADD2");
+        AssertOptionalMeasurement(profile, "solos-r-near-sphere", "Measure[@Type='LM']/LM/R/NearSphere");
+        AssertOptionalMeasurement(profile, "solos-r-prism-horizontal", "Measure[@Type='LM']/LM/R/H");
+        AssertOptionalMeasurement(profile, "solos-r-prism-x", "Measure[@Type='LM']/LM/R/PrismX");
+        AssertOptionalMeasurement(profile, "solos-r-uv-transmittance", "Measure[@Type='LM']/LM/R/UVTransmittance");
+        AssertOptionalMeasurement(profile, "solos-pd-distance", "Measure[@Type='LM']/PD/B/Distance");
+        AssertOptionalMeasurement(profile, "solos-pd-distance-schema", "Measure[@Type='LM']/PD/Distance");
+        AssertOptionalMeasurement(profile, "solos-medistar-r-line", "Measure[@Type='LM']/LM/R/MedistarLine");
+        AssertOptionalMeasurement(profile, "solos-medistar-l-line", "Measure[@Type='LM']/LM/L/MedistarLine");
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptTopconSolosProfile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateTopconSolosDefault());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
     public void CreateTopconKr800Default_ShouldCreateProfile()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();

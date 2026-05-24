@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. MEDISTAR + TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet, muss aber noch praktisch mit MEDISTAR und CV-5000/CV-5000S validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. MEDISTAR + TOPCON Solos ist als weiterer TOPCON-Lensmeter-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet, muss aber noch praktisch mit MEDISTAR und CV-5000/CV-5000S validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -17,6 +17,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | NIDEK-LAN-XML | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Addition; Prisma/PD datenabhaengig | praktisch validierter Referenzkandidat fuer Lensmeter-XDT-Rueckgabe |
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | `6220` Pachymetrie und `6205` Tonometrie; keine `6228`-Geraetewerte | testseitig direkt nutzbarer MEDISTAR-Kandidat, praktische MEDISTAR-Validierung offen |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erster praktisch validierter TOPCON-Referenzkandidat mit Namespace- und Attributanforderungen |
+| TOPCON | Solos | Lensmeter | TOPCON-Lensmeter-XML, Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphaere, Zylinder, Achse, PD, H/V-Prisma, optionale Transmission | PDF-Berichte moeglich, aber in diesem Schritt ohne echte Fixture nicht angebunden | Lensmeter-Ergebniszeilen ueber `6228` | fixture-validierter TOPCON-Lensmeter-Kandidat, praktische MEDISTAR-Abnahme offen |
 | TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
 | TOPCON | TRK2P | Autorefraktometer / Keratometer / Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `REF`, `KM`, `TM`, `CCT`, optional `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, `6220` Pachy, `6205` Tono, optional `6227` SBJ | praktisch validierter TOPCON-TRK2P-Referenzkandidat inklusive TM/CCT-only-Teilmessung |
 | TOPCON | CT1P | Tonometer / Pachymeter | Ophthalmology-/JOIA-XML | `TM`, CorrectedIOP/CCT | keine zwingend erkennbar | `6205` Tono, `6220` Pachy | praktisch validierter TOPCON-Tono/Pachy-Referenzkandidat |
@@ -730,6 +731,47 @@ Wichtig für die spätere Parserlogik:
 - Für CL300 wurden in den analysierten Dateien keine JPG-/PDF-Attachments gefunden.
 - Praktische MEDISTAR-Validierung der CL300-Karteikartenanzeige ist mit beiden Originalfixtures erfolgt; die H/V-Prismendarstellung bleibt in weiteren Praxisfaellen zu beobachten.
 
+## 6.2 TOPCON Solos
+
+Geraetetyp: Lensmeter.
+
+Dateiformat:
+
+- XML im TOPCON-Lensmeter-/Ophthalmology-Format
+- Namespaces `nsCommon` und `nsLM`
+- `Common/Company = TOPCON`
+- `Common/ModelName = SOLOS`
+- `Measure type="LM"`
+- echte Testfixture im Repository:
+  - `XdtDeviceBridge.Tests/TestData/Devices/Topcon/Solos/SolosExportSample.xml`
+
+Erkannte Werte aus `SolosExportSample.xml`:
+
+- Common: MachineNo `000000`, ROMVersion `0.0.1`, Date `2022-02-23`, Time `16:59:18`
+- LM-Einstellungen: DiopterStep `0.25`, AxisStep `1`, PrismStep `0.25`, CylinderMode `-`, LensType `glass`, Wavelength `e`
+- Rechts: Sphere `-1.25`, Cylinder `0`, Axis `0`, H-Prism `-0.5`, V-Prism `0`
+- Links: Sphere `-1.25`, Cylinder `0`, Axis `0`, H-Prism `1`, V-Prism `0`
+- PD: B `65.5`, R `32`, L `33.5`
+
+MEDISTAR-Ausgabe:
+
+```text
+R.:S=- 1.25 Z=+ 0.00*  0 P=H=-0.50 PD= 65.5
+L.:S=- 1.25 Z=+ 0.00*  0 P=H=+1.00
+```
+
+Ableitung:
+
+- Solos ist fachlich nahe an TOPCON CL-300, wird aber als eigenes BuiltIn-Geraet `device-topcon-solos-default` gefuehrt.
+- Ausgabe erfolgt ueber `6228`; `8402` kommt aus AIS/MEDISTAR.
+- Leere ADD-/ADD2-Tags erzeugen keine Fragmente.
+- Null-Prismen werden weggelassen.
+- H/V-Prismen werden konservativ als signierte Komponenten ausgegeben; OUT/IN/UP/DOWN wird nicht geraten.
+- Das Schema enthaelt weitere optionale Felder wie `ADD`, `ADD2`, `NearSphere`, `PrismX`, `PrismY`, `UVTransmittance` und `ConfidenceIndex`. Diese werden robust vorbereitet, aber nur fachlich eindeutig belegte Refraktions-/Prisma-/PD-Werte werden aktuell nach MEDISTAR exportiert.
+- Transmission fuer UV-A, Blaulicht oder sichtbares Licht wird nicht erfunden. `UVTransmittance` kann als optionaler Parserwert erkannt werden, wird ohne konkrete MEDISTAR-Zielregel aber noch nicht ausgegeben.
+- Solos-PDF-Berichte werden in diesem Schritt nicht automatisch angebunden. Dafuer braucht es echte PDF-Fixtures und eine klare Dateinamen-/Ablaufregel; spaeter kann die bestehende XDT-Anhanglogik genutzt werden.
+- Das BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON Solos`, der selektive Templatepaket-Test und das Fixture-Protokoll `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_SOLOS.md` sind vorhanden.
+
 ## 7. TOPCON KR800S
 
 Gerätetyp: Autorefraktometer/Keratometer/Subjektivtest
@@ -1091,7 +1133,7 @@ Empfohlene Reihenfolge für spätere Umsetzung:
 1. ARK1S stabil halten, den reproduzierbaren Export-/Import-Testweg fuer `docs/TEMPLATEPAKET_MEDISTAR_NIDEK_ARK1S.md` nutzen und als naechstes die praktische App-Importabnahme vorbereiten.
 2. LM7/LM7P als dritten Referenzkandidaten halten; Lensmeter-XDT-Rueckgabe ist praktisch validiert, Prisma-/PD-Sonderfaelle und offizielles ZIP bleiben datenabhaengig offen.
 3. NT530P in MEDISTAR praktisch validieren: `6220` Pachymetrie, `6205` Tonometrie und optionaler JPG-Anhangfall.
-4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TOPCON TRK2P ist als praktisch validierter REF/KM/TM/CCT-Referenzkandidat inklusive Teilmessungsregel dokumentiert, TOPCON CT1P ist fuer Tonometrie/Pachymetrie praktisch validiert, und TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet.
+4. TOPCON CL300 als praktisch validierten TOPCON-Referenzkandidaten halten und H/V-Prismen weiter beobachten; TOPCON Solos praktisch in MEDISTAR abnehmen und echte Transmission-/PDF-Faelle sammeln; TOPCON KR800S ist als praktisch validierter REF/KM/SBJ-Referenzkandidat dokumentiert, TOPCON TRK2P ist als praktisch validierter REF/KM/TM/CCT-Referenzkandidat inklusive Teilmessungsregel dokumentiert, TOPCON CT1P ist fuer Tonometrie/Pachymetrie praktisch validiert, und TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet.
 
 Der Baukasten ist dabei nicht der Normalweg. Ziel sind fertige Geraeteprofile und Templatepakete; der Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 
@@ -1190,7 +1232,7 @@ Beschreibung:
 
 - Brillenwerte aus einem Lensmeter
 - typischer Kontext: Voruntersuchung durch MFA
-- Beispielgeräte: NIDEK LM-1800P, NIDEK LM7, TOPCON CL300
+- Beispielgeräte: NIDEK LM-1800P, NIDEK LM7, TOPCON CL300, TOPCON Solos
 
 Generisches MEDISTAR-Zielbild:
 

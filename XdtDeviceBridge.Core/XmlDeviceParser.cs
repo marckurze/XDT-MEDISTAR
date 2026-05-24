@@ -272,7 +272,7 @@ public sealed class XmlDeviceParser
         var company = GetChildValue(common, "Company");
         var modelName = GetChildValue(common, "ModelName");
         if (!string.Equals(company, "TOPCON", StringComparison.OrdinalIgnoreCase)
-            || !IsTopconCl300Model(modelName))
+            || (!IsTopconCl300Model(modelName) && !IsTopconSolosModel(modelName)))
         {
             return;
         }
@@ -1758,6 +1758,12 @@ public sealed class XmlDeviceParser
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "CL300", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTopconSolosModel(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "SOLOS", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconKr800SModel(string? modelName)

@@ -187,6 +187,43 @@ public static class DefaultInterfaceProfileDefinitions
             Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON CL-300 lensmeter profile candidate.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarTopconSolosDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-topcon-solos-default",
+                Name: "MEDISTAR + TOPCON Solos",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for MEDISTAR and TOPCON SOLOS.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON SOLOS",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-topcon-solos-default",
+            ExportProfileId: "export-medistar-topcon-solos-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON SOLOS lensmeter profile candidate.");
+    }
+
     public static InterfaceProfileDefinition CreateMedistarTopconKr800Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);

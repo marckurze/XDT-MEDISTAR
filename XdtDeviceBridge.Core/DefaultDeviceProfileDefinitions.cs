@@ -341,6 +341,98 @@ public static class DefaultDeviceProfileDefinitions
             CanContainMultipleExaminationTypes: false);
     }
 
+    public static DeviceProfileDefinition CreateTopconSolosDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-topcon-solos-default",
+                Name: "TOPCON Solos",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON SOLOS Ophthalmology XML lensmeter files with nsCommon/nsLM namespace handling. Transmission values are read as optional measurements but not exported to MEDISTAR yet.",
+                Vendor: "TOPCON",
+                Product: "SOLOS",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOPCON",
+            Model: "SOLOS",
+            DeviceType: "Lensmeter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("solos-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "TOPCON common company field."),
+                new DeviceMeasurementDefinition("solos-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "TOPCON SOLOS common model field."),
+                new DeviceMeasurementDefinition("solos-machine-no", "MachineNo", "Common/MachineNo", "Common", string.Empty, string.Empty, false, "TOPCON SOLOS machine number."),
+                new DeviceMeasurementDefinition("solos-rom-version", "ROMVersion", "Common/ROMVersion", "Common", string.Empty, string.Empty, false, "TOPCON SOLOS ROM version."),
+                new DeviceMeasurementDefinition("solos-version", "Version", "Common/Version", "Common", string.Empty, string.Empty, false, "TOPCON SOLOS XML version."),
+                new DeviceMeasurementDefinition("solos-date", "Date", "Common/Date", "Common", string.Empty, string.Empty, false, "TOPCON SOLOS measurement date."),
+                new DeviceMeasurementDefinition("solos-time", "Time", "Common/Time", "Common", string.Empty, string.Empty, false, "TOPCON SOLOS measurement time."),
+                new DeviceMeasurementDefinition("solos-patient-no", "Patient No.", "Common/Patient/No.", "Common", string.Empty, string.Empty, false, "TOPCON SOLOS patient number."),
+                new DeviceMeasurementDefinition("solos-patient-id", "Patient ID", "Common/Patient/ID", "Common", string.Empty, string.Empty, false, "TOPCON SOLOS patient ID."),
+                new DeviceMeasurementDefinition("solos-measure-mode", "MeasureMode", "Measure[@Type='LM']/MeasureMode", "LM", string.Empty, string.Empty, false, "Optional SOLOS measure mode from LM schema."),
+                new DeviceMeasurementDefinition("solos-diopter-step", "DiopterStep", "Measure[@Type='LM']/DiopterStep", "LM", string.Empty, "dpt", false, "Diopter step from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-axis-step", "AxisStep", "Measure[@Type='LM']/AxisStep", "LM", string.Empty, "deg", false, "Axis step from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-prism-step", "PrismStep", "Measure[@Type='LM']/PrismStep", "LM", string.Empty, "prism dpt", false, "Prism step from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-prism-diopter-step", "PrismDiopterStep", "Measure[@Type='LM']/PrismDiopterStep", "LM", string.Empty, "prism dpt", false, "Optional SOLOS prism diopter step from LM schema."),
+                new DeviceMeasurementDefinition("solos-prism-base-step", "PrismBaseStep", "Measure[@Type='LM']/PrismBaseStep", "LM", string.Empty, "deg", false, "Optional SOLOS prism base step from LM schema."),
+                new DeviceMeasurementDefinition("solos-prism-mode", "PrismMode", "Measure[@Type='LM']/PrismMode", "LM", string.Empty, string.Empty, false, "Optional SOLOS prism mode from LM schema."),
+                new DeviceMeasurementDefinition("solos-add-mode", "AddMode", "Measure[@Type='LM']/AddMode", "LM", string.Empty, string.Empty, false, "Optional SOLOS addition mode from LM schema."),
+                new DeviceMeasurementDefinition("solos-cylinder-mode", "CylinderMode", "Measure[@Type='LM']/CylinderMode", "LM", string.Empty, string.Empty, false, "Cylinder mode from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-lens-type", "LensType", "Measure[@Type='LM']/LensType", "LM", string.Empty, string.Empty, false, "Lens type from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-wavelength", "Wavelength", "Measure[@Type='LM']/Wavelength", "LM", string.Empty, string.Empty, false, "Wavelength from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-r-sphere", "R Sphere", "Measure[@Type='LM']/LM/R/Sphere", "LM", "R", "dpt", true, "Right lens sphere from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-r-cylinder", "R Cylinder", "Measure[@Type='LM']/LM/R/Cylinder", "LM", "R", "dpt", true, "Right lens cylinder from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-r-axis", "R Axis", "Measure[@Type='LM']/LM/R/Axis", "LM", "R", "deg", true, "Right lens axis from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-r-se", "R SE", "Measure[@Type='LM']/LM/R/SE", "LM", "R", "dpt", false, "Optional right spherical equivalent from SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-r-add1", "R Add1", "Measure[@Type='LM']/LM/R/Add1", "LM", "R", "dpt", false, "Right first addition from SOLOS XML when present."),
+                new DeviceMeasurementDefinition("solos-r-add", "R ADD", "Measure[@Type='LM']/LM/R/ADD", "LM", "R", "dpt", false, "Right first addition from SOLOS schema variant when present."),
+                new DeviceMeasurementDefinition("solos-r-add2", "R Add2", "Measure[@Type='LM']/LM/R/Add2", "LM", "R", "dpt", false, "Right second addition from SOLOS XML when present."),
+                new DeviceMeasurementDefinition("solos-r-add2-upper", "R ADD2", "Measure[@Type='LM']/LM/R/ADD2", "LM", "R", "dpt", false, "Right second addition from SOLOS schema variant when present."),
+                new DeviceMeasurementDefinition("solos-r-near-sphere", "R NearSphere", "Measure[@Type='LM']/LM/R/NearSphere", "LM", "R", "dpt", false, "Optional right near sphere from SOLOS XML; not exported as ADD automatically."),
+                new DeviceMeasurementDefinition("solos-r-near-sphere2", "R NearSphere2", "Measure[@Type='LM']/LM/R/NearSphere2", "LM", "R", "dpt", false, "Optional right second near sphere from SOLOS XML; not exported as ADD automatically."),
+                new DeviceMeasurementDefinition("solos-r-prism-horizontal", "R PrismHorizontal", "Measure[@Type='LM']/LM/R/H", "LM", "R", "prism dpt", false, "Right signed horizontal prism from SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-r-prism-vertical", "R PrismVertical", "Measure[@Type='LM']/LM/R/V", "LM", "R", "prism dpt", false, "Right signed vertical prism from SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-r-prism-x", "R PrismX", "Measure[@Type='LM']/LM/R/PrismX", "LM", "R", "prism dpt", false, "Optional right horizontal prism from schema variant."),
+                new DeviceMeasurementDefinition("solos-r-prism-y", "R PrismY", "Measure[@Type='LM']/LM/R/PrismY", "LM", "R", "prism dpt", false, "Optional right vertical prism from schema variant."),
+                new DeviceMeasurementDefinition("solos-r-uv-transmittance", "R UVTransmittance", "Measure[@Type='LM']/LM/R/UVTransmittance", "LM", "R", "%", false, "Optional right UV transmittance from SOLOS schema; not exported to MEDISTAR yet."),
+                new DeviceMeasurementDefinition("solos-r-confidence-index", "R ConfidenceIndex", "Measure[@Type='LM']/LM/R/ConfidenceIndex", "LM", "R", string.Empty, false, "Optional right confidence index from SOLOS schema."),
+                new DeviceMeasurementDefinition("solos-l-sphere", "L Sphere", "Measure[@Type='LM']/LM/L/Sphere", "LM", "L", "dpt", true, "Left lens sphere from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-l-cylinder", "L Cylinder", "Measure[@Type='LM']/LM/L/Cylinder", "LM", "L", "dpt", true, "Left lens cylinder from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-l-axis", "L Axis", "Measure[@Type='LM']/LM/L/Axis", "LM", "L", "deg", true, "Left lens axis from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-l-se", "L SE", "Measure[@Type='LM']/LM/L/SE", "LM", "L", "dpt", false, "Optional left spherical equivalent from SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-l-add1", "L Add1", "Measure[@Type='LM']/LM/L/Add1", "LM", "L", "dpt", false, "Left first addition from SOLOS XML when present."),
+                new DeviceMeasurementDefinition("solos-l-add", "L ADD", "Measure[@Type='LM']/LM/L/ADD", "LM", "L", "dpt", false, "Left first addition from SOLOS schema variant when present."),
+                new DeviceMeasurementDefinition("solos-l-add2", "L Add2", "Measure[@Type='LM']/LM/L/Add2", "LM", "L", "dpt", false, "Left second addition from SOLOS XML when present."),
+                new DeviceMeasurementDefinition("solos-l-add2-upper", "L ADD2", "Measure[@Type='LM']/LM/L/ADD2", "LM", "L", "dpt", false, "Left second addition from SOLOS schema variant when present."),
+                new DeviceMeasurementDefinition("solos-l-near-sphere", "L NearSphere", "Measure[@Type='LM']/LM/L/NearSphere", "LM", "L", "dpt", false, "Optional left near sphere from SOLOS XML; not exported as ADD automatically."),
+                new DeviceMeasurementDefinition("solos-l-near-sphere2", "L NearSphere2", "Measure[@Type='LM']/LM/L/NearSphere2", "LM", "L", "dpt", false, "Optional left second near sphere from SOLOS XML; not exported as ADD automatically."),
+                new DeviceMeasurementDefinition("solos-l-prism-horizontal", "L PrismHorizontal", "Measure[@Type='LM']/LM/L/H", "LM", "L", "prism dpt", false, "Left signed horizontal prism from SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-l-prism-vertical", "L PrismVertical", "Measure[@Type='LM']/LM/L/V", "LM", "L", "prism dpt", false, "Left signed vertical prism from SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-l-prism-x", "L PrismX", "Measure[@Type='LM']/LM/L/PrismX", "LM", "L", "prism dpt", false, "Optional left horizontal prism from schema variant."),
+                new DeviceMeasurementDefinition("solos-l-prism-y", "L PrismY", "Measure[@Type='LM']/LM/L/PrismY", "LM", "L", "prism dpt", false, "Optional left vertical prism from schema variant."),
+                new DeviceMeasurementDefinition("solos-l-uv-transmittance", "L UVTransmittance", "Measure[@Type='LM']/LM/L/UVTransmittance", "LM", "L", "%", false, "Optional left UV transmittance from SOLOS schema; not exported to MEDISTAR yet."),
+                new DeviceMeasurementDefinition("solos-l-confidence-index", "L ConfidenceIndex", "Measure[@Type='LM']/LM/L/ConfidenceIndex", "LM", "L", string.Empty, false, "Optional left confidence index from SOLOS schema."),
+                new DeviceMeasurementDefinition("solos-pd-distance", "PD Distance", "Measure[@Type='LM']/PD/B/Distance", "PD", string.Empty, "mm", false, "Binocular PD distance from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-pd-r-distance", "R PD Distance", "Measure[@Type='LM']/PD/R/Distance", "PD", "R", "mm", false, "Right PD distance from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-pd-l-distance", "L PD Distance", "Measure[@Type='LM']/PD/L/Distance", "PD", "L", "mm", false, "Left PD distance from TOPCON SOLOS XML."),
+                new DeviceMeasurementDefinition("solos-pd-distance-schema", "PD Distance", "Measure[@Type='LM']/PD/Distance", "PD", string.Empty, "mm", false, "Binocular PD distance from SOLOS schema variant."),
+                new DeviceMeasurementDefinition("solos-pd-distance-r-schema", "R PD Distance", "Measure[@Type='LM']/PD/DistanceR", "PD", "R", "mm", false, "Right PD distance from SOLOS schema variant."),
+                new DeviceMeasurementDefinition("solos-pd-distance-l-schema", "L PD Distance", "Measure[@Type='LM']/PD/DistanceL", "PD", "L", "mm", false, "Left PD distance from SOLOS schema variant."),
+                new DeviceMeasurementDefinition("solos-pd-near", "PD Near", "Measure[@Type='LM']/PD/Near", "PD", string.Empty, "mm", false, "Optional near PD from SOLOS schema variant."),
+                new DeviceMeasurementDefinition("solos-pd-near-r", "R PD Near", "Measure[@Type='LM']/PD/NearR", "PD", "R", "mm", false, "Optional right near PD from SOLOS schema variant."),
+                new DeviceMeasurementDefinition("solos-pd-near-l", "L PD Near", "Measure[@Type='LM']/PD/NearL", "PD", "L", "mm", false, "Optional left near PD from SOLOS schema variant."),
+                new DeviceMeasurementDefinition("solos-medistar-r-line", "R MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/R/MedistarLine", "LM", "R", string.Empty, false, "Computed MEDISTAR lensmeter line for TOPCON SOLOS right lens; optional values are omitted when absent."),
+                new DeviceMeasurementDefinition("solos-medistar-l-line", "L MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/L/MedistarLine", "LM", "L", string.Empty, false, "Computed MEDISTAR lensmeter line for TOPCON SOLOS left lens; optional values are omitted when absent.")
+            },
+            SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism", "Transmission" },
+            CanContainMultipleExaminationTypes: false);
+    }
+
     public static DeviceProfileDefinition CreateTopconKr800Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);

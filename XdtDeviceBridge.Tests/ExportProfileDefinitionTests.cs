@@ -362,6 +362,44 @@ public sealed class ExportProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateMedistarTopconSolosDefault_ShouldCreateProfile()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconSolosDefault();
+
+        Assert.Equal("ais-medistar-default", profile.TargetAisProfileId);
+        Assert.Equal("device-topcon-solos-default", profile.SourceDeviceProfileId);
+        Assert.Equal("Windows-1252", profile.OutputEncoding);
+        Assert.Equal(8, profile.Rules.Count);
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptMedistarTopconSolosDefaultProfile()
+    {
+        var issues = ExportProfileDefinitionValidator.Validate(DefaultExportProfileDefinitions.CreateMedistarTopconSolosDefault());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void CreateMedistarTopconSolosDefault_ShouldContainOnlyLensmeterRulesFor6228()
+    {
+        var profile = DefaultExportProfileDefinitions.CreateMedistarTopconSolosDefault();
+        var resultRules = profile.Rules
+            .Where(rule => rule.TargetFieldCode == "6228" && rule.RuleType == ExportRuleType.Template)
+            .ToList();
+
+        Assert.Equal(2, resultRules.Count);
+        Assert.Contains(resultRules, rule =>
+            rule.SourcePath == "Device.Measure[@Type='LM']/LM/R/MedistarLine"
+            && rule.OutputTemplate == "{value}");
+        Assert.Contains(resultRules, rule =>
+            rule.SourcePath == "Device.Measure[@Type='LM']/LM/L/MedistarLine"
+            && rule.OutputTemplate == "{value}");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "8402" && rule.SourcePath == "AIS.ExaminationType");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6205" or "6220" or "6221" or "6227" or "6330");
+    }
+
+    [Fact]
     public void CreateMedistarTopconKr800Default_ShouldCreateProfile()
     {
         var profile = DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default();

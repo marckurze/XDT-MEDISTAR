@@ -49,6 +49,9 @@
     <None Update="TestData\Devices\Topcon\CL300\M-Serial1521_20120101_000000_TOPCON_CL-300_00.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TestData\Devices\Topcon\Solos\SolosExportSample.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="TestData\Devices\Topcon\KR800S\M-Serial0036_20131206_213127_TOPCON_KR-800S_.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
