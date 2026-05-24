@@ -105,6 +105,27 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_ShouldProcessNewExistingAisVersionWithSamePath()
+    {
+        var files = CreateTempImportFiles();
+        var processor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = new AutoImportPairProcessingCoordinator(processor);
+        var profile = CreateInterfaceProfile();
+        var exportProfile = CreateExportProfile();
+        var firstPair = CreatePair(files.AisFilePath, files.DeviceFilePath);
+
+        coordinator.ProcessReadyPairs(profile, exportProfile, new[] { firstPair }, true, Timestamp);
+        File.WriteAllText(files.AisFilePath, "changed gdt");
+        File.SetLastWriteTimeUtc(files.AisFilePath, Timestamp.AddMinutes(5));
+        var changedPair = CreatePair(files.AisFilePath, files.DeviceFilePath, detectedAtUtc: Timestamp.AddMinutes(5));
+        var second = coordinator.ProcessReadyPairs(profile, exportProfile, new[] { changedPair }, true, Timestamp.AddMinutes(5));
+
+        Assert.Equal(2, processor.CallCount);
+        Assert.Equal(1, second.ProcessedCount);
+        Assert.True(Assert.Single(second.Results).Success);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_ShouldProcessRenamedDeviceFileAsNewImport()
     {
         var files = CreateTempImportFiles();
@@ -981,6 +1002,31 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.False(File.Exists(files.DeviceFilePath));
         Assert.True(File.Exists(Path.Combine(errorFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
         Assert.True(File.Exists(Path.Combine(errorFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
+    }
+
+    [Fact]
+    public void ProcessReadyPairs_Cv5000DuplicateAfterSuccessShouldNotCreateErrorNachlauf()
+    {
+        var files = CreateTempImportFiles();
+        var processor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = new AutoImportPairProcessingCoordinator(processor);
+        var errorFolder = CreateTempFolder();
+        var profile = CreateCv5000InterfaceProfile(errorFolder: errorFolder, moveFailedFilesToErrorFolder: true);
+        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
+
+        coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(), new[] { pair }, true, Timestamp);
+        var duplicate = coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(), new[] { pair }, true, Timestamp);
+
+        Assert.Equal(1, processor.CallCount);
+        Assert.Equal(1, duplicate.SkippedAlreadyProcessedCount);
+        var result = Assert.Single(duplicate.Results);
+        Assert.True(result.WasSkipped);
+        Assert.False(result.WasProcessed);
+        Assert.Equal("Bereits verarbeitet - kein weiterer Export", result.Status);
+        Assert.Contains("Diese AIS-/Geräte-Dateikombination wurde bereits erfolgreich verarbeitet. Es wurde kein weiterer Export erzeugt.", result.Messages);
+        Assert.True(File.Exists(files.AisFilePath));
+        Assert.True(File.Exists(files.DeviceFilePath));
+        Assert.Empty(Directory.EnumerateFiles(errorFolder, "*", SearchOption.AllDirectories));
     }
 
     [Fact]
@@ -1891,6 +1937,25 @@ public sealed class AutoImportPairProcessingCoordinatorTests
                 AttachmentOnlySourceMode = attachmentOnlySourceMode
             },
             IsActive = true
+        };
+    }
+
+    private static InterfaceProfileDefinition CreateCv5000InterfaceProfile(
+        string errorFolder = "",
+        bool moveFailedFilesToErrorFolder = false)
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        return profile with
+        {
+            IsActive = true,
+            FolderOptions = profile.FolderOptions with
+            {
+                ErrorFolder = errorFolder,
+                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder,
+                ArchiveProcessedFiles = false,
+                ClearAisImportFolderBeforeProcessing = false,
+                ClearDeviceImportFolderBeforeProcessing = false
+            }
         };
     }
 

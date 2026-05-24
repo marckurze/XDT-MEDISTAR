@@ -73,6 +73,24 @@ public sealed class AutoImportPackageStateServiceTests
     }
 
     [Fact]
+    public void Evaluate_ShouldReplaceWaitingAisFileWithNewVersionOfSamePath()
+    {
+        var service = new AutoImportPackageStateService();
+        var profile = CreateProfile(deviceFileWaitTimeoutMinutes: 10);
+        var oldAis = CreateAis("Patient.gdt", Timestamp);
+        var newAis = CreateAis("Patient.gdt", Timestamp.AddMinutes(1));
+        service.Evaluate(profile, CreateQueue(oldAis), Timestamp);
+
+        var result = service.Evaluate(profile, CreateQueue(newAis), Timestamp.AddMinutes(1));
+
+        var replaced = Assert.Single(result.ReplacedAisFiles);
+        Assert.Equal("Patient.gdt", replaced.FileName);
+        Assert.Empty(result.ReadyPairs);
+        Assert.Equal(AutoImportPackageStateReason.AisFileReplaced, result.Reason);
+        Assert.Contains("Vorherige AIS-Datei wurde durch neuere AIS-Datei ersetzt.", result.Messages);
+    }
+
+    [Fact]
     public void Evaluate_ShouldUseNewerAisAfterReplacementWhenDeviceArrives()
     {
         var service = new AutoImportPackageStateService();
@@ -107,6 +125,37 @@ public sealed class AutoImportPackageStateServiceTests
     }
 
     [Fact]
+    public void Evaluate_Cv5000ShouldWaitForNewDeviceFileWhenOldPhoropterResultRemains()
+    {
+        var service = new AutoImportPackageStateService();
+        var profile = CreateCv5000Profile();
+        var aisFile = CreateAis("Patient.gdt", Timestamp.AddMinutes(10));
+        var oldDeviceFile = CreateDevice("M-Serial1234.xml", Timestamp.AddMinutes(5));
+
+        var result = service.Evaluate(profile, CreateQueue(aisFile, oldDeviceFile), Timestamp.AddMinutes(10));
+
+        Assert.Empty(result.ReadyPairs);
+        Assert.Equal(AutoImportPackageStateReason.WaitingForDeviceFile, result.Reason);
+        Assert.Contains("Warte auf neue Phoropter-Rueckgabedatei.", result.Messages);
+    }
+
+    [Fact]
+    public void Evaluate_Cv5000ShouldUseNewDeviceVersionAfterSameNameAisCycle()
+    {
+        var service = new AutoImportPackageStateService();
+        var profile = CreateCv5000Profile();
+        var aisFile = CreateAis("Patient.gdt", Timestamp.AddMinutes(10));
+        var deviceFile = CreateDevice("M-Serial1234.xml", Timestamp.AddMinutes(11));
+
+        var result = service.Evaluate(profile, CreateQueue(aisFile, deviceFile), Timestamp.AddMinutes(11));
+
+        var pair = Assert.Single(result.ReadyPairs);
+        Assert.Equal("Patient.gdt", pair.AisFile.FileName);
+        Assert.Equal("M-Serial1234.xml", pair.DeviceFile.FileName);
+        Assert.Equal(AutoImportPackageStateReason.ReadyForProcessing, result.Reason);
+    }
+
+    [Fact]
     public void ResetProfile_ShouldClearWaitingAisStateOnlyForSelectedProfile()
     {
         var service = new AutoImportPackageStateService();
@@ -138,6 +187,19 @@ public sealed class AutoImportPackageStateServiceTests
             FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
             {
                 DeviceFileWaitTimeoutMinutes = deviceFileWaitTimeoutMinutes
+            }
+        };
+    }
+
+    private static InterfaceProfileDefinition CreateCv5000Profile()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        return profile with
+        {
+            IsActive = true,
+            FolderOptions = profile.FolderOptions with
+            {
+                DeviceFileWaitTimeoutMinutes = 10
             }
         };
     }

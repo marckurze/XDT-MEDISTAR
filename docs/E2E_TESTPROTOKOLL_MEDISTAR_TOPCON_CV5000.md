@@ -1,6 +1,6 @@
 # E2E-Testprotokoll: MEDISTAR + TOPCON CV-5000 / CV-5000S
 
-Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfenster fuer AIS-Historienwerte ist im Verarbeitungslauf angebunden; die Erzeugung der `CVImport.xml` wurde praktisch gestartet, und der Rueckweg ist fuer MEDISTAR-Historien-AIS plus CV-5000-Rueckgabe-Fixture abgesichert. Der finale MEDISTAR-Import der erzeugten Rueckgabedatei bleibt praktisch zu pruefen.
+Status: praktisch validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfenster fuer AIS-Historienwerte ist im Verarbeitungslauf angebunden, die Erzeugung der `CVImport.xml` wurde praktisch gestartet, der Rueckweg ist fuer MEDISTAR-Historien-AIS plus CV-5000-Rueckgabe-Fixture abgesichert, und der MEDISTAR-Import der `6228`-/`6227`-Rueckgabedatei wurde praktisch bestaetigt.
 
 ## Validierter Ablauf per Fixture
 
@@ -14,6 +14,7 @@ Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfe
 - Im Fenster werden die Gruppen nach Untersuchungsart angezeigt; neueste exportierbare `V0`-, `V1`- und `V2`-Datensaetze sind vorausgewaehlt.
 - Aus ausgewaehlten refraktiven Datensaetzen wird eine TOPCON-CV-5000-kompatible XML-Importdatei erzeugt.
 - Das Auswahlfenster bleibt standardmaessig per bestehendem `🔝`-Schalter im Vordergrund. Mit `Nichts senden` kann bewusst keine `CVImport.xml` erzeugt werden; die App wartet danach weiter auf die Phoropter-Rueckgabe.
+- Die AIS-Datei kann in der Praxis gleich heissen, z. B. `Patient.gdt`; neue Dateiversionen werden ueber Dateiversion/Fingerprint erkannt und duerfen das Auswahlfenster nach einem abgeschlossenen Zyklus erneut oeffnen.
 
 ### Phoropter -> XdtDeviceBridge -> AIS/MEDISTAR
 
@@ -23,6 +24,7 @@ Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfe
 - Die App liest Type-Bloecke, R/L-Refraktionswerte, VD und PD.
 - Die App erzeugt MEDISTAR-kompatible XDT-Rueckgabezeilen ueber `6228`.
 - `8402` Untersuchungsart bleibt aus AIS/MEDISTAR.
+- Nach erfolgreicher Phase 2 ist der konkrete AIS-/Geraetepaar-Zyklus abgeschlossen; identische Paare werden nicht doppelt exportiert, neue AIS- oder Phoropter-Dateiversionen mit gleichem Dateinamen bleiben aber verarbeitbar.
 
 ## Validierte Ergebnisfelder
 
@@ -141,9 +143,11 @@ Die Erzeugung der `CVImport.xml` ist Phase 1 und kein finaler Workflowabschluss.
 
 `Nichts senden` ist kein Fehler und nicht identisch mit `Abbrechen`: Es schliesst nur das Auswahlfenster, schreibt keine Importdatei und laesst den CV-5000-Workflow fuer die spaetere Rueckgabedatei offen. `Abbrechen` bleibt der konservative Bedienabbruch ohne stillen Erfolg.
 
+Der Duplicate-Schutz ist dateiversionsbezogen: Ein unveraendertes AIS-/Phoropter-Dateipaar wird nicht erneut exportiert und erzeugt keinen Fehlerordner-Nachlauf. Wird `Patient.gdt` fuer einen neuen Praxiszyklus erneut geschrieben, wird die neue Dateiversion erkannt und das Auswahlfenster kann ohne Reset wieder starten.
+
 ## Grenzen / offen
 
-- Praktisch offen bleibt der echte MEDISTAR-Import der erzeugten `6228`-Rueckgabedatei.
+- Weiter im Livebetrieb zu beobachten bleibt der Folgezyklus ohne Reset mit neu geschriebener, gleichnamiger AIS-Datei.
 - Das Einlesen der erzeugten `CVImport.xml` am echten CV-5000/CV-5000S muss weiter beobachtet werden.
 - `500.000 cm` als Import-ExamDistance ist konservativ und muss am CV-5000/CV-5000S bestaetigt werden.
 - Keratometer/Tonometrie/Pachymetrie aus historischen MEDISTAR-Zeilen werden erkannt, aber noch nicht in die CV-5000-Import-XML geschrieben.

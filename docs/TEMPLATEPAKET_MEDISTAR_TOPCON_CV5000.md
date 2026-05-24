@@ -9,7 +9,7 @@ Dieses Paket beschreibt den ersten bidirektionalen TOPCON-Phoropter-Kandidaten f
 - Testseitig abgesichert fuer beide Richtungen:
   - AIS/MEDISTAR -> XdtDeviceBridge -> TOPCON-CV-5000-Import-XML
   - TOPCON CV-5000 -> XdtDeviceBridge -> MEDISTAR-XDT-Rueckgabe
-- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden. Der Rueckweg verarbeitet MEDISTAR-Historien-AIS-Dateien tolerant, damit Karteikartenzeilen den CV-5000-Rueckexport nicht abbrechen. Nach praktischem MEDISTAR-Importtest wird `Prescription` vollstaendig ueber `6228` und `Full Correction` vollstaendig ueber `6227` ausgegeben; `6330` wird fuer CV-5000 nicht mehr verwendet. Der finale MEDISTAR-Import der erzeugten Rueckgabedatei bleibt mit dieser Feldzuordnung praktisch zu pruefen.
+- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden. Der Rueckweg verarbeitet MEDISTAR-Historien-AIS-Dateien tolerant, damit Karteikartenzeilen den CV-5000-Rueckexport nicht abbrechen. Nach praktischem MEDISTAR-Importtest wird `Prescription` vollstaendig ueber `6228` und `Full Correction` vollstaendig ueber `6227` ausgegeben; `6330` wird fuer CV-5000 nicht mehr verwendet. Erfolgreiche Rueckgabezyklen erzeugen keinen zusaetzlichen AlreadyProcessed-Fehlernachlauf; neue Versionen gleichnamiger AIS-Dateien wie `Patient.gdt` koennen das Auswahlfenster erneut oeffnen. Der MEDISTAR-Import der erzeugten Rueckgabedatei ist mit dieser Feldzuordnung praktisch bestaetigt.
 - Offizielles ZIP-Artefakt wird erst nach der Release-Regel abgelegt.
 
 ## Enthaltene BuiltIns
@@ -107,6 +107,8 @@ Der Bereich `XDT-Anhaenge fuer AIS` ist bei CV-5000/CV-5000S bewusst ausgeblende
 
 Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert. Es erfolgt keine automatische Aktivierung und keine automatische Aenderung bestehender UserDefined-Profile.
 
+Der Duplicate-Schutz bleibt aktiv, ist aber dateiversionsbezogen: identische AIS-/Phoropter-Dateipaare werden nicht doppelt exportiert; eine neu geschriebene `Patient.gdt` mit gleicher Dateiablage startet wieder einen neuen CV-5000-Zyklus ohne Reset.
+
 ## Tests
 
 - Historienparser: `TopconCv5000ProfileTests`
@@ -120,7 +122,7 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 
 ## Grenzen / offen
 
-- Praktisch offen bleibt der erneute MEDISTAR-Import der erzeugten Rueckgabedatei mit `Prescription` unter `6228` und `Full Correction` unter `6227`.
+- Im Livebetrieb weiter zu beobachten bleibt der Folgezyklus ohne Reset mit gleichnamiger neu geschriebener AIS-Datei und spaeterer Phoropter-Rueckgabe.
 - Die vom Dialog erzeugte `CVImport.xml` muss am echten CV-5000/CV-5000S weiter beobachtet werden.
 - Keratometer-, Tonometrie- und Pachymetrie-Karteikartenzeilen werden erkannt, aber mangels eindeutig belegtem CV-5000-Importmapping nicht in die Phoropter-Import-XML geschrieben.
 - Offizielle ZIP-Ablage erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

@@ -46,6 +46,16 @@ public sealed class AutoImportPackageStateService
 
         var latestAisFile = aisFiles[^1];
         var pendingAis = GetOrCreatePendingAis(profile, latestAisFile, nowUtc);
+        var latestAisFingerprint = ImportFileFingerprint.Create(latestAisFile);
+        if (!string.Equals(pendingAis.Fingerprint, latestAisFingerprint, StringComparison.OrdinalIgnoreCase)
+            && latestAisFile.DetectedAtUtc >= pendingAis.File.DetectedAtUtc)
+        {
+            replaced.Add(pendingAis.File);
+            messages.Add("Vorherige AIS-Datei wurde durch neuere AIS-Datei ersetzt.");
+            pendingAis = CreatePendingAisState(latestAisFile, nowUtc);
+            _pendingAisByProfileId[profile.Metadata.Id] = pendingAis;
+        }
+
         if (isManualDocumentSelection)
         {
             var manualPair = queue
@@ -57,15 +67,6 @@ public sealed class AutoImportPackageStateService
 
         if (deviceFiles.Count == 0)
         {
-            if (!string.Equals(pendingAis.File.FilePath, latestAisFile.FilePath, StringComparison.OrdinalIgnoreCase)
-                && latestAisFile.DetectedAtUtc >= pendingAis.File.DetectedAtUtc)
-            {
-                replaced.Add(pendingAis.File);
-                messages.Add("Vorherige AIS-Datei wurde durch neuere AIS-Datei ersetzt.");
-                pendingAis = new PendingAisState(latestAisFile, nowUtc);
-                _pendingAisByProfileId[profile.Metadata.Id] = pendingAis;
-            }
-
             if (HasDeviceWaitTimedOut(profile, pendingAis, nowUtc))
             {
                 expired.Add(pendingAis.File);
@@ -81,9 +82,17 @@ public sealed class AutoImportPackageStateService
         }
 
         var selectedAis = aisFiles.FirstOrDefault(file =>
-                string.Equals(file.FilePath, pendingAis.File.FilePath, StringComparison.OrdinalIgnoreCase))
+                string.Equals(ImportFileFingerprint.Create(file), pendingAis.Fingerprint, StringComparison.OrdinalIgnoreCase))
             ?? latestAisFile;
-        var selectedDevice = deviceFiles[0];
+        var selectedDevice = InterfaceProfileUiPolicy.IsCv5000(profile, deviceProfile: null)
+            ? deviceFiles.FirstOrDefault(file => file.DetectedAtUtc >= selectedAis.DetectedAtUtc)
+            : deviceFiles[0];
+        if (selectedDevice is null)
+        {
+            messages.Add("Warte auf neue Phoropter-Rueckgabedatei.");
+            return CreateResult(Array.Empty<PendingImportPair>(), messages, replaced, expired, AutoImportPackageStateReason.WaitingForDeviceFile);
+        }
+
         var pair = new PendingImportPair(selectedAis, selectedDevice, IsReady: true);
         messages.Add("AIS-/Geräte-Dateipaar vollständig.");
 
@@ -107,11 +116,16 @@ public sealed class AutoImportPackageStateService
     {
         if (!_pendingAisByProfileId.TryGetValue(profile.Metadata.Id, out var pendingAis))
         {
-            pendingAis = new PendingAisState(latestAisFile, nowUtc);
+            pendingAis = CreatePendingAisState(latestAisFile, nowUtc);
             _pendingAisByProfileId[profile.Metadata.Id] = pendingAis;
         }
 
         return pendingAis;
+    }
+
+    private static PendingAisState CreatePendingAisState(PendingImportFile latestAisFile, DateTime nowUtc)
+    {
+        return new PendingAisState(latestAisFile, ImportFileFingerprint.Create(latestAisFile), nowUtc);
     }
 
     private static bool HasDeviceWaitTimedOut(
@@ -150,5 +164,5 @@ public sealed class AutoImportPackageStateService
             && file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
     }
 
-    private sealed record PendingAisState(PendingImportFile File, DateTime FirstSeenAtUtc);
+    private sealed record PendingAisState(PendingImportFile File, string Fingerprint, DateTime FirstSeenAtUtc);
 }

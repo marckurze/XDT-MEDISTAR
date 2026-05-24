@@ -140,6 +140,12 @@ public sealed class AutoImportPairProcessingCoordinator
             var processedPairKey = CreateProcessedPairKey(interfaceProfile.Metadata.Id, pair);
             if (_processedPairKeys.Contains(processedPairKey))
             {
+                if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null))
+                {
+                    results.Add(CreateAlreadyProcessedCv5000Result(pairKey, pair));
+                    continue;
+                }
+
                 var duplicateResult = _duplicateImportFileHandler.HandleAlreadyProcessedPair(
                     interfaceProfile,
                     pair,
@@ -296,6 +302,27 @@ public sealed class AutoImportPairProcessingCoordinator
             ManualProcessingResult: processingResult,
             Messages: AppendAttachmentMessage(processingResult.Messages, attachmentStatus),
             AttachmentStatus: attachmentStatus);
+    }
+
+    private static AutoImportPairProcessingResult CreateAlreadyProcessedCv5000Result(
+        string pairKey,
+        PendingImportPair pair)
+    {
+        return new AutoImportPairProcessingResult(
+            PairKey: pairKey,
+            AisFilePath: pair.AisFile.FilePath,
+            DeviceFilePath: pair.DeviceFile.FilePath,
+            WasProcessed: false,
+            WasSkipped: true,
+            Success: false,
+            Status: "Bereits verarbeitet - kein weiterer Export",
+            ExportFilePath: null,
+            ManualProcessingResult: null,
+            Messages: new[]
+            {
+                "Diese AIS-/Geräte-Dateikombination wurde bereits erfolgreich verarbeitet. Es wurde kein weiterer Export erzeugt.",
+                "CV-5000 bleibt für neue AIS- oder Phoropter-Dateiversionen bereit; identische Dateien werden nicht in den Fehlerordner verschoben."
+            });
     }
 
     private AttachmentGateDecision EvaluateAttachmentPackageBeforeProcessing(
