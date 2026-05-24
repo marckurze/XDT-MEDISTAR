@@ -109,7 +109,7 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 
 Der Duplicate-Schutz bleibt aktiv, ist aber dateiversionsbezogen: identische AIS-/Phoropter-Dateipaare werden nicht doppelt exportiert; eine neu geschriebene `Patient.gdt` mit gleicher Dateiablage startet wieder einen neuen CV-5000-Zyklus ohne Reset.
 
-Nach Phase 1 wird fuer CV-5000/CV-5000S eine Baseline der bereits vorhandenen Phoropter-Dateien gehalten. Dadurch werden alte Rueckgabedateien nicht erneut gekoppelt, waehrend eine neue oder ueberschriebene Rueckgabedatei den finalen MEDISTAR-Export startet, auch wenn ihr Dateizeitstempel nicht neuer als die AIS-Datei ist.
+Nach Phase 1 wird fuer CV-5000/CV-5000S eine Baseline der bereits vorhandenen Phoropter-Dateien gehalten. Dadurch werden alte Rueckgabedateien nicht erneut gekoppelt, waehrend eine neue, geaenderte oder gleichnamig ueberschriebene Rueckgabedatei den finalen MEDISTAR-Export startet, auch wenn ihr Dateizeitstempel nicht neuer als die AIS-Datei ist.
 
 ## Tests
 
@@ -124,7 +124,7 @@ Nach Phase 1 wird fuer CV-5000/CV-5000S eine Baseline der bereits vorhandenen Ph
 
 ## Grenzen / offen
 
-- Im Livebetrieb weiter zu beobachten bleibt der Folgezyklus ohne Reset mit gleichnamiger neu geschriebener AIS-Datei und spaeterer Phoropter-Rueckgabe.
+- Im Livebetrieb weiter zu beobachten bleibt der Folgezyklus ohne Reset mit gleichnamiger neu geschriebener AIS-Datei und gleichnamig ueberschriebener/geaenderter Phoropter-Rueckgabe.
 - Die vom Dialog erzeugte `CVImport.xml` muss am echten CV-5000/CV-5000S weiter beobachtet werden.
 - Keratometer-, Tonometrie- und Pachymetrie-Karteikartenzeilen werden erkannt, aber mangels eindeutig belegtem CV-5000-Importmapping nicht in die Phoropter-Import-XML geschrieben.
 - Offizielle ZIP-Ablage erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.

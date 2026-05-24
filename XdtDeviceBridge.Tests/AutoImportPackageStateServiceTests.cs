@@ -169,7 +169,7 @@ public sealed class AutoImportPackageStateServiceTests
 
         Assert.Empty(result.ReadyPairs);
         Assert.Equal(AutoImportPackageStateReason.WaitingForDeviceFile, result.Reason);
-        Assert.Contains("Warte auf neue Phoropter-Rueckgabedatei.", result.Messages);
+        Assert.Contains("Warte auf neue oder geänderte Phoropter-Rueckgabedatei.", result.Messages);
     }
 
     [Fact]
@@ -208,6 +208,60 @@ public sealed class AutoImportPackageStateServiceTests
         var pair = Assert.Single(result.ReadyPairs);
         Assert.Equal("M-Serial1234.xml", pair.DeviceFile.FileName);
         Assert.Equal(AutoImportPackageStateReason.ReadyForProcessing, result.Reason);
+    }
+
+    [Fact]
+    public void MarkCv5000WaitingForDeviceResult_ShouldKeepUnchangedObservedBaselineDeviceWaiting()
+    {
+        var service = new AutoImportPackageStateService();
+        var profile = CreateCv5000Profile();
+        using var files = TempCv5000Files.Create();
+        files.WriteAis("gdt-cycle-2", Timestamp.AddMinutes(10));
+        files.WriteDevice("cv5000-result", Timestamp.AddMinutes(1), Timestamp.AddMinutes(1));
+        var aisFile = CreateRealAis(files.AisPath, Timestamp.AddMinutes(10));
+        var baselineDevice = CreateRealDevice(files.DevicePath, Timestamp.AddMinutes(1));
+        service.MarkCv5000WaitingForDeviceResult(
+            profile.Metadata.Id,
+            aisFile,
+            CreateQueue(aisFile, baselineDevice),
+            Timestamp.AddMinutes(10));
+
+        var result = service.Evaluate(
+            profile,
+            CreateQueue(aisFile, CreateRealDevice(files.DevicePath, Timestamp.AddMinutes(1))),
+            Timestamp.AddMinutes(11));
+
+        Assert.Empty(result.ReadyPairs);
+        Assert.Equal(AutoImportPackageStateReason.WaitingForDeviceFile, result.Reason);
+        Assert.Contains("Warte auf neue oder geänderte Phoropter-Rueckgabedatei.", result.Messages);
+    }
+
+    [Fact]
+    public void MarkCv5000WaitingForDeviceResult_ShouldAcceptOverwrittenSameNameDeviceWhenObservedVersionChanges()
+    {
+        var service = new AutoImportPackageStateService();
+        var profile = CreateCv5000Profile();
+        using var files = TempCv5000Files.Create();
+        files.WriteAis("gdt-cycle-2", Timestamp.AddMinutes(10));
+        files.WriteDevice("cv5000-result", Timestamp.AddMinutes(1), Timestamp.AddMinutes(1));
+        var aisFile = CreateRealAis(files.AisPath, Timestamp.AddMinutes(10));
+        var baselineDevice = CreateRealDevice(files.DevicePath, Timestamp.AddMinutes(1));
+        service.MarkCv5000WaitingForDeviceResult(
+            profile.Metadata.Id,
+            aisFile,
+            CreateQueue(aisFile, baselineDevice),
+            Timestamp.AddMinutes(10));
+
+        files.TouchDeviceAccessTime(Timestamp.AddMinutes(12));
+        var result = service.Evaluate(
+            profile,
+            CreateQueue(aisFile, CreateRealDevice(files.DevicePath, Timestamp.AddMinutes(1))),
+            Timestamp.AddMinutes(12));
+
+        var pair = Assert.Single(result.ReadyPairs);
+        Assert.Equal("M-Serial1234.xml", pair.DeviceFile.FileName);
+        Assert.Equal(AutoImportPackageStateReason.ReadyForProcessing, result.Reason);
+        Assert.Contains("CV-5000-Phoropter-Rueckgabe wurde als neu oder geaendert erkannt.", result.Messages);
     }
 
     [Fact]
@@ -298,5 +352,90 @@ public sealed class AutoImportPackageStateServiceTests
             DetectedAtUtc: detectedAt,
             StableAtUtc: status == PendingImportFileStatus.Stable ? detectedAt : null,
             Message: null);
+    }
+
+    private static PendingImportFile CreateRealAis(
+        string filePath,
+        DateTime detectedAt,
+        PendingImportFileStatus status = PendingImportFileStatus.Stable)
+    {
+        return new PendingImportFile(
+            FilePath: filePath,
+            FileName: Path.GetFileName(filePath),
+            Kind: ImportFileKind.AisGdt,
+            Status: status,
+            DetectedAtUtc: detectedAt,
+            StableAtUtc: status == PendingImportFileStatus.Stable ? detectedAt : null,
+            Message: null);
+    }
+
+    private static PendingImportFile CreateRealDevice(
+        string filePath,
+        DateTime detectedAt,
+        PendingImportFileStatus status = PendingImportFileStatus.Stable)
+    {
+        return new PendingImportFile(
+            FilePath: filePath,
+            FileName: Path.GetFileName(filePath),
+            Kind: ImportFileKind.DeviceXml,
+            Status: status,
+            DetectedAtUtc: detectedAt,
+            StableAtUtc: status == PendingImportFileStatus.Stable ? detectedAt : null,
+            Message: null);
+    }
+
+    private sealed class TempCv5000Files : IDisposable
+    {
+        private TempCv5000Files(string folder)
+        {
+            Folder = folder;
+            AisPath = Path.Combine(folder, "Patient.gdt");
+            DevicePath = Path.Combine(folder, "M-Serial1234.xml");
+        }
+
+        public string Folder { get; }
+
+        public string AisPath { get; }
+
+        public string DevicePath { get; }
+
+        public static TempCv5000Files Create()
+        {
+            var folder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+            return new TempCv5000Files(folder);
+        }
+
+        public void WriteAis(string content, DateTime lastWriteUtc)
+        {
+            File.WriteAllText(AisPath, content);
+            File.SetLastWriteTimeUtc(AisPath, lastWriteUtc);
+        }
+
+        public void WriteDevice(string content, DateTime lastWriteUtc, DateTime lastAccessUtc)
+        {
+            File.WriteAllText(DevicePath, content);
+            File.SetLastWriteTimeUtc(DevicePath, lastWriteUtc);
+            File.SetLastAccessTimeUtc(DevicePath, lastAccessUtc);
+        }
+
+        public void TouchDeviceAccessTime(DateTime lastAccessUtc)
+        {
+            File.SetLastAccessTimeUtc(DevicePath, lastAccessUtc);
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                Directory.Delete(Folder, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
     }
 }

@@ -1077,6 +1077,69 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_Cv5000DirectSecondCycleShouldProcessObservedOverwrittenDeviceWithoutReset()
+    {
+        var folder = CreateTempFolder();
+        var aisPath = Path.Combine(folder, "Patient.gdt");
+        var devicePath = Path.Combine(folder, "M-Serial1234.xml");
+        File.WriteAllText(aisPath, "patient-cycle-1");
+        File.WriteAllText(devicePath, "cv5000-result");
+        File.SetLastWriteTimeUtc(aisPath, Timestamp);
+        File.SetLastWriteTimeUtc(devicePath, Timestamp.AddMinutes(1));
+        File.SetLastAccessTimeUtc(devicePath, Timestamp.AddMinutes(1));
+
+        var processor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = new AutoImportPairProcessingCoordinator(processor);
+        var packageState = new AutoImportPackageStateService();
+        var profile = CreateCv5000InterfaceProfile();
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
+        var firstPair = CreatePair(aisPath, devicePath, detectedAtUtc: Timestamp);
+        coordinator.ProcessReadyPairs(profile, exportProfile, new[] { firstPair }, true, Timestamp);
+
+        File.WriteAllText(aisPath, "patient-cycle-2");
+        File.SetLastWriteTimeUtc(aisPath, Timestamp.AddMinutes(10));
+        var nextAis = new PendingImportFile(
+            FilePath: aisPath,
+            FileName: "Patient.gdt",
+            Kind: ImportFileKind.AisGdt,
+            Status: PendingImportFileStatus.Stable,
+            DetectedAtUtc: Timestamp.AddMinutes(10),
+            StableAtUtc: Timestamp.AddMinutes(10),
+            Message: null);
+        var baselineDevice = new PendingImportFile(
+            FilePath: devicePath,
+            FileName: "M-Serial1234.xml",
+            Kind: ImportFileKind.DeviceXml,
+            Status: PendingImportFileStatus.Stable,
+            DetectedAtUtc: Timestamp.AddMinutes(1),
+            StableAtUtc: Timestamp.AddMinutes(10),
+            Message: null);
+        packageState.MarkCv5000WaitingForDeviceResult(
+            profile.Metadata.Id,
+            nextAis,
+            CreateQueue(nextAis, baselineDevice),
+            Timestamp.AddMinutes(10));
+
+        File.SetLastAccessTimeUtc(devicePath, Timestamp.AddMinutes(12));
+        var overwrittenDevice = baselineDevice with { StableAtUtc = Timestamp.AddMinutes(12) };
+        var package = packageState.Evaluate(
+            profile,
+            CreateQueue(nextAis, overwrittenDevice),
+            Timestamp.AddMinutes(12));
+        var second = coordinator.ProcessReadyPairs(
+            profile,
+            exportProfile,
+            package.ReadyPairs,
+            automaticProcessingEnabled: true,
+            Timestamp.AddMinutes(12));
+
+        Assert.Single(package.ReadyPairs);
+        Assert.Equal(2, processor.CallCount);
+        Assert.Equal(1, second.ProcessedCount);
+        Assert.True(Assert.Single(second.Results).Success);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_DuplicateWithMoveArchiveShouldMoveFiles()
     {
         var files = CreateTempImportFiles();

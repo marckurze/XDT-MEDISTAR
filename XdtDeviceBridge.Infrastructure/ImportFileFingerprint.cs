@@ -31,6 +31,33 @@ public static class ImportFileFingerprint
             "unknown");
     }
 
+    public static string CreateObservedFileVersion(PendingImportFile file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+
+        var normalizedPath = NormalizePath(file.FilePath);
+        try
+        {
+            var info = new FileInfo(normalizedPath);
+            if (info.Exists)
+            {
+                return string.Join(
+                    "|",
+                    normalizedPath,
+                    info.LastWriteTimeUtc.Ticks.ToString(),
+                    info.CreationTimeUtc.Ticks.ToString(),
+                    info.LastAccessTimeUtc.Ticks.ToString(),
+                    info.Length.ToString());
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException or UnauthorizedAccessException)
+        {
+            // Fall back to the normal import fingerprint if extended file metadata cannot be read.
+        }
+
+        return Create(file);
+    }
+
     private static string NormalizePath(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
