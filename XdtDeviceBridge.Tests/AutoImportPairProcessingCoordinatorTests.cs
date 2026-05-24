@@ -1030,6 +1030,53 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
+    public void ProcessReadyPairs_Cv5000FollowUpCycleShouldProcessAfterPhaseOneMarker()
+    {
+        var processor = new FakeManualProcessor(CreateSuccessResult());
+        var coordinator = new AutoImportPairProcessingCoordinator(processor);
+        var packageState = new AutoImportPackageStateService();
+        var profile = CreateCv5000InterfaceProfile();
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
+        var firstPair = CreatePair(@"C:\Import\AIS\Patient.gdt", @"C:\Import\Device\M-Serial1234.xml", detectedAtUtc: Timestamp);
+
+        coordinator.ProcessReadyPairs(profile, exportProfile, new[] { firstPair }, true, Timestamp);
+        var nextAis = new PendingImportFile(
+            FilePath: @"C:\Import\AIS\Patient.gdt",
+            FileName: "Patient.gdt",
+            Kind: ImportFileKind.AisGdt,
+            Status: PendingImportFileStatus.Stable,
+            DetectedAtUtc: Timestamp.AddMinutes(10),
+            StableAtUtc: Timestamp.AddMinutes(10),
+            Message: null);
+        packageState.MarkCv5000WaitingForDeviceResult(
+            profile.Metadata.Id,
+            nextAis,
+            CreateQueue(nextAis),
+            Timestamp.AddMinutes(10));
+        var nextDevice = new PendingImportFile(
+            FilePath: @"C:\Import\Device\M-Serial1234.xml",
+            FileName: "M-Serial1234.xml",
+            Kind: ImportFileKind.DeviceXml,
+            Status: PendingImportFileStatus.Stable,
+            DetectedAtUtc: Timestamp.AddMinutes(1),
+            StableAtUtc: Timestamp.AddMinutes(11),
+            Message: null);
+        var package = packageState.Evaluate(profile, CreateQueue(nextAis, nextDevice), Timestamp.AddMinutes(11));
+
+        var second = coordinator.ProcessReadyPairs(
+            profile,
+            exportProfile,
+            package.ReadyPairs,
+            automaticProcessingEnabled: true,
+            Timestamp.AddMinutes(11));
+
+        Assert.Single(package.ReadyPairs);
+        Assert.Equal(2, processor.CallCount);
+        Assert.Equal(1, second.ProcessedCount);
+        Assert.True(Assert.Single(second.Results).Success);
+    }
+
+    [Fact]
     public void ProcessReadyPairs_DuplicateWithMoveArchiveShouldMoveFiles()
     {
         var files = CreateTempImportFiles();
@@ -1889,6 +1936,17 @@ public sealed class AutoImportPairProcessingCoordinatorTests
                 StableAtUtc: stableAt,
                 Message: null),
             IsReady: true);
+    }
+
+    private static PendingImportQueue CreateQueue(params PendingImportFile[] files)
+    {
+        var queue = new PendingImportQueue();
+        foreach (var file in files)
+        {
+            queue.AddOrUpdate(file);
+        }
+
+        return queue;
     }
 
     private static InterfaceProfileDefinition CreateInterfaceProfile(

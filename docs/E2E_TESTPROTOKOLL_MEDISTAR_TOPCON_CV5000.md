@@ -15,6 +15,7 @@ Status: praktisch validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfen
 - Aus ausgewaehlten refraktiven Datensaetzen wird eine TOPCON-CV-5000-kompatible XML-Importdatei erzeugt.
 - Das Auswahlfenster bleibt standardmaessig per bestehendem `🔝`-Schalter im Vordergrund. Mit `Nichts senden` kann bewusst keine `CVImport.xml` erzeugt werden; die App wartet danach weiter auf die Phoropter-Rueckgabe.
 - Die AIS-Datei kann in der Praxis gleich heissen, z. B. `Patient.gdt`; neue Dateiversionen werden ueber Dateiversion/Fingerprint erkannt und duerfen das Auswahlfenster nach einem abgeschlossenen Zyklus erneut oeffnen.
+- Nach Phase 1 merkt sich die App bereits vorhandene Phoropter-Dateien als Baseline. Nur neue oder geaenderte Rueckgabedateien werden fuer Phase 2 verwendet; ihr Dateizeitstempel muss nicht zwingend neuer als `Patient.gdt` sein.
 
 ### Phoropter -> XdtDeviceBridge -> AIS/MEDISTAR
 
@@ -144,6 +145,8 @@ Die Erzeugung der `CVImport.xml` ist Phase 1 und kein finaler Workflowabschluss.
 `Nichts senden` ist kein Fehler und nicht identisch mit `Abbrechen`: Es schliesst nur das Auswahlfenster, schreibt keine Importdatei und laesst den CV-5000-Workflow fuer die spaetere Rueckgabedatei offen. `Abbrechen` bleibt der konservative Bedienabbruch ohne stillen Erfolg.
 
 Der Duplicate-Schutz ist dateiversionsbezogen: Ein unveraendertes AIS-/Phoropter-Dateipaar wird nicht erneut exportiert und erzeugt keinen Fehlerordner-Nachlauf. Wird `Patient.gdt` fuer einen neuen Praxiszyklus erneut geschrieben, wird die neue Dateiversion erkannt und das Auswahlfenster kann ohne Reset wieder starten.
+
+Wenn ein CV-5000-AIS-/Geraetepaar fachlich vollstaendig ist, wird der Exportpfad gestartet. Alte Phoropter-Dateien aus der Phase-1-Baseline werden dagegen nicht als neue Rueckgabe angezeigt; die Karte bleibt dann bei `Wartet auf Geraet`, bis eine neue Rueckgabedatei erkannt wird.
 
 ## Grenzen / offen
 

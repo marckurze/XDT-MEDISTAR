@@ -35,7 +35,9 @@ public sealed class InterfaceMonitoringCardStatusService
         var allowAisOnlyManualSelection = interfaceProfile.FolderOptions.IsAttachmentOnlyMode
             && interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         var readyPair = packageEvaluation?.ReadyPairs.FirstOrDefault()
-            ?? scanResult.Queue.FindReadyPairs(interfaceProfile.FolderOptions.IsAttachmentOnlyMode, allowAisOnlyManualSelection).FirstOrDefault();
+            ?? (ShouldUseRawReadyPairs(packageEvaluation)
+                ? scanResult.Queue.FindReadyPairs(interfaceProfile.FolderOptions.IsAttachmentOnlyMode, allowAisOnlyManualSelection).FirstOrDefault()
+                : null);
         var patient = TryReadPatient(aisFile);
         var statusText = CreateScanStatusText(scanResult, packageEvaluation, interfaceProfile);
         var statusClass = CreateScanStatusClass(scanResult, packageEvaluation);
@@ -436,12 +438,13 @@ public sealed class InterfaceMonitoringCardStatusService
             return "AIS-Datei ersetzt";
         }
 
-        if (scanResult.ReadyPairs > 0 && interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled)
+        var readyPairCount = CreateEffectiveReadyPairCount(scanResult, packageEvaluation);
+        if (readyPairCount > 0 && interfaceProfile.FolderOptions.IsAttachmentProcessingEnabled)
         {
             return "Wartet auf XDT-Anhang";
         }
 
-        if (scanResult.ReadyPairs > 0)
+        if (readyPairCount > 0)
         {
             return "AIS-/Geräte-Paar vollständig";
         }
@@ -474,12 +477,31 @@ public sealed class InterfaceMonitoringCardStatusService
             return "Waiting";
         }
 
-        if (scanResult.ReadyPairs > 0)
+        var readyPairCount = CreateEffectiveReadyPairCount(scanResult, packageEvaluation);
+        if (readyPairCount > 0)
         {
             return "Active";
         }
 
         return "Waiting";
+    }
+
+    private static int CreateEffectiveReadyPairCount(
+        AutoImportScanResult scanResult,
+        AutoImportPackageEvaluationResult? packageEvaluation)
+    {
+        if (packageEvaluation is null || packageEvaluation.ReadyPairs.Count == 0 && ShouldUseRawReadyPairs(packageEvaluation))
+        {
+            return scanResult.ReadyPairs;
+        }
+
+        return packageEvaluation.ReadyPairs.Count;
+    }
+
+    private static bool ShouldUseRawReadyPairs(AutoImportPackageEvaluationResult? packageEvaluation)
+    {
+        return packageEvaluation is null
+            || packageEvaluation.Reason == AutoImportPackageStateReason.ReadyForProcessing;
     }
 
     private static string CreateProcessingStatusText(

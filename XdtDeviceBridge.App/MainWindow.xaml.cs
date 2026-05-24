@@ -4945,6 +4945,11 @@ public partial class MainWindow : Window
         if (dialogAction == Cv5000DeviceOutputDialogAction.WaitForDeviceResultWithoutImport)
         {
             _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
+            _autoImportPackageStateService.MarkCv5000WaitingForDeviceResult(
+                interfaceProfile.Metadata.Id,
+                aisFile,
+                scanResult.Queue,
+                timestamp);
             SetMonitoringRuntimeState(
                 interfaceProfile.Metadata.Id,
                 "Warte auf Phoropter-Rückgabe",
@@ -4982,6 +4987,11 @@ public partial class MainWindow : Window
         }
 
         _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
+        _autoImportPackageStateService.MarkCv5000WaitingForDeviceResult(
+            interfaceProfile.Metadata.Id,
+            aisFile,
+            scanResult.Queue,
+            timestamp);
         SetMonitoringRuntimeState(interfaceProfile.Metadata.Id, "CV-5000-Importdatei erzeugt", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
         AppendMonitoringEvent(
             interfaceProfile.Metadata.Id,
@@ -5048,6 +5058,14 @@ public partial class MainWindow : Window
         }
 
         var readyPairs = packageEvaluation.ReadyPairs;
+        if (readyPairs.Count > 0 && InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null))
+        {
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                "cv5000-ready-pair-processing-start",
+                $"{interfaceProfile.Metadata.Name}: CV-5000-Paar vollständig, Export wird gestartet.");
+        }
+
         var batchResult = _autoImportPairProcessingCoordinator.ProcessReadyPairs(
             interfaceProfile,
             exportProfile,

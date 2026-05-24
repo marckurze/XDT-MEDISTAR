@@ -85,7 +85,7 @@ public sealed class AutoImportPackageStateService
                 string.Equals(ImportFileFingerprint.Create(file), pendingAis.Fingerprint, StringComparison.OrdinalIgnoreCase))
             ?? latestAisFile;
         var selectedDevice = InterfaceProfileUiPolicy.IsCv5000(profile, deviceProfile: null)
-            ? deviceFiles.FirstOrDefault(file => file.DetectedAtUtc >= selectedAis.DetectedAtUtc)
+            ? FindCv5000DeviceResultFile(pendingAis, selectedAis, deviceFiles)
             : deviceFiles[0];
         if (selectedDevice is null)
         {
@@ -109,6 +109,34 @@ public sealed class AutoImportPackageStateService
         _pendingAisByProfileId.Remove(interfaceProfileId.Trim());
     }
 
+    public void MarkCv5000WaitingForDeviceResult(
+        string interfaceProfileId,
+        PendingImportFile aisFile,
+        PendingImportQueue queue,
+        DateTime nowUtc)
+    {
+        if (string.IsNullOrWhiteSpace(interfaceProfileId))
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(aisFile);
+        ArgumentNullException.ThrowIfNull(queue);
+
+        var baselineDeviceFingerprints = queue.GetAll()
+            .Where(file => IsStableDeviceFile(file, includeAttachmentDeviceFiles: false))
+            .Select(ImportFileFingerprint.Create)
+            .Where(fingerprint => !string.IsNullOrWhiteSpace(fingerprint))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _pendingAisByProfileId[interfaceProfileId.Trim()] = new PendingAisState(
+            aisFile,
+            ImportFileFingerprint.Create(aisFile),
+            nowUtc,
+            IsCv5000DeviceOutputPhaseStarted: true,
+            baselineDeviceFingerprints);
+    }
+
     private PendingAisState GetOrCreatePendingAis(
         InterfaceProfileDefinition profile,
         PendingImportFile latestAisFile,
@@ -125,7 +153,26 @@ public sealed class AutoImportPackageStateService
 
     private static PendingAisState CreatePendingAisState(PendingImportFile latestAisFile, DateTime nowUtc)
     {
-        return new PendingAisState(latestAisFile, ImportFileFingerprint.Create(latestAisFile), nowUtc);
+        return new PendingAisState(
+            latestAisFile,
+            ImportFileFingerprint.Create(latestAisFile),
+            nowUtc,
+            IsCv5000DeviceOutputPhaseStarted: false,
+            BaselineDeviceFingerprints: new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static PendingImportFile? FindCv5000DeviceResultFile(
+        PendingAisState pendingAis,
+        PendingImportFile selectedAis,
+        IReadOnlyList<PendingImportFile> deviceFiles)
+    {
+        if (pendingAis.IsCv5000DeviceOutputPhaseStarted)
+        {
+            return deviceFiles.FirstOrDefault(file =>
+                !pendingAis.BaselineDeviceFingerprints.Contains(ImportFileFingerprint.Create(file)));
+        }
+
+        return deviceFiles.FirstOrDefault(file => file.DetectedAtUtc >= selectedAis.DetectedAtUtc);
     }
 
     private static bool HasDeviceWaitTimedOut(
@@ -164,5 +211,10 @@ public sealed class AutoImportPackageStateService
             && file.Kind.IsDeviceImportFile(includeAttachmentDeviceFiles);
     }
 
-    private sealed record PendingAisState(PendingImportFile File, string Fingerprint, DateTime FirstSeenAtUtc);
+    private sealed record PendingAisState(
+        PendingImportFile File,
+        string Fingerprint,
+        DateTime FirstSeenAtUtc,
+        bool IsCv5000DeviceOutputPhaseStarted,
+        IReadOnlySet<string> BaselineDeviceFingerprints);
 }

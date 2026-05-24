@@ -109,6 +109,8 @@ Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert
 
 Der Duplicate-Schutz bleibt aktiv, ist aber dateiversionsbezogen: identische AIS-/Phoropter-Dateipaare werden nicht doppelt exportiert; eine neu geschriebene `Patient.gdt` mit gleicher Dateiablage startet wieder einen neuen CV-5000-Zyklus ohne Reset.
 
+Nach Phase 1 wird fuer CV-5000/CV-5000S eine Baseline der bereits vorhandenen Phoropter-Dateien gehalten. Dadurch werden alte Rueckgabedateien nicht erneut gekoppelt, waehrend eine neue oder ueberschriebene Rueckgabedatei den finalen MEDISTAR-Export startet, auch wenn ihr Dateizeitstempel nicht neuer als die AIS-Datei ist.
+
 ## Tests
 
 - Historienparser: `TopconCv5000ProfileTests`
