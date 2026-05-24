@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsTM="http://www.joia.or.jp/standardized/namespaces/TM" xsi:schemaLocation="http://www.joia.or.jp/standardized/namespaces/Common Common_schema.xsd http://www.joia.or.jp/standardized/namespaces/TM TM_schema.xsd">
+	<nsCommon:Common>
+		<nsCommon:Company>TOPCON</nsCommon:Company>
+		<nsCommon:ModelName>CT-800A</nsCommon:ModelName>
+		<nsCommon:MachineNo>01</nsCommon:MachineNo>
+		<nsCommon:ROMVersion>1.00.07</nsCommon:ROMVersion>
+		<nsCommon:Version>1.2</nsCommon:Version>
+		<nsCommon:Date>2019-04-11</nsCommon:Date>
+		<nsCommon:Time>17:07:16</nsCommon:Time>
+		<nsCommon:Patient>
+			<nsCommon:No.>0069</nsCommon:No.>
+			<nsCommon:ID>0069</nsCommon:ID>
+			<nsCommon:FirstName></nsCommon:FirstName>
+			<nsCommon:MiddleName></nsCommon:MiddleName>
+			<nsCommon:LastName></nsCommon:LastName>
+			<nsCommon:Sex></nsCommon:Sex>
+			<nsCommon:Age></nsCommon:Age>
+			<nsCommon:DOB></nsCommon:DOB>
+			<nsCommon:NameJ1></nsCommon:NameJ1>
+			<nsCommon:NameJ2></nsCommon:NameJ2>
+		</nsCommon:Patient>
+		<nsCommon:Operator>
+			<nsCommon:No.></nsCommon:No.>
+			<nsCommon:ID></nsCommon:ID>
+		</nsCommon:Operator>
+	</nsCommon:Common>
+	<nsTM:Measure type="TM">
+		<nsTM:TM>
+			<nsTM:R>
+				<nsTM:List No="1">
+					<nsTM:IOP_mmHg unit="mmHg">18.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:List No="2">
+					<nsTM:IOP_mmHg unit="mmHg">20.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:Average>
+					<nsTM:IOP_mmHg unit="mmHg">19.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+				</nsTM:Average>
+			</nsTM:R>
+			<nsTM:L>
+				<nsTM:List No="1">
+					<nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:List No="2">
+					<nsTM:IOP_mmHg unit="mmHg">16.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					<nsTM:ConfidenceIndex></nsTM:ConfidenceIndex>
+				</nsTM:List>
+				<nsTM:Average>
+					<nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg>
+					<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+				</nsTM:Average>
+			</nsTM:L>
+		</nsTM:TM>
+		<nsTM:CorrectedIOP>
+			<nsTM:Formula1 No="1">
+				<nsTM:R>
+					<nsTM:Param1 unit="mm">0.545</nsTM:Param1>
+					<nsTM:Param2>0.050</nsTM:Param2>
+					<nsTM:CCT unit="mm">0.550</nsTM:CCT>
+					<nsTM:Measured>
+						<nsTM:IOP_mmHg unit="mmHg">19.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Measured>
+					<nsTM:Corrected>
+						<nsTM:IOP_mmHg unit="mmHg">19.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Corrected>
+				</nsTM:R>
+				<nsTM:L>
+					<nsTM:Param1 unit="mm">0.545</nsTM:Param1>
+					<nsTM:Param2>0.050</nsTM:Param2>
+					<nsTM:CCT unit="mm">0.550</nsTM:CCT>
+					<nsTM:Measured>
+						<nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Measured>
+					<nsTM:Corrected>
+						<nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg>
+						<nsTM:IOP_Pa unit="hPa"></nsTM:IOP_Pa>
+					</nsTM:Corrected>
+				</nsTM:L>
+			</nsTM:Formula1>
+		</nsTM:CorrectedIOP>
+		<TM>
+			<RL_Order>R</RL_Order>
+			<R>
+				<List No="1">
+					<Alignment_Mode>Auto</Alignment_Mode>
+					<IOL_Mode>Off</IOL_Mode>
+					<Pressure_Range>30</Pressure_Range>
+				</List>
+				<List No="2">
+					<Alignment_Mode>Auto</Alignment_Mode>
+					<IOL_Mode>Off</IOL_Mode>
+					<Pressure_Range>30</Pressure_Range>
+				</List>
+			</R>
+			<L>
+				<List No="1">
+					<Alignment_Mode>Auto</Alignment_Mode>
+					<IOL_Mode>Off</IOL_Mode>
+					<Pressure_Range>30</Pressure_Range>
+				</List>
+				<List No="2">
+					<Alignment_Mode>Auto</Alignment_Mode>
+					<IOL_Mode>Off</IOL_Mode>
+					<Pressure_Range>30</Pressure_Range>
+				</List>
+			</L>
+		</TM>
+		<CorrectedIOP>
+			<R>
+				<List No="1">
+					<IOP_mmHg unit="mmHg">18</IOP_mmHg>
+					<IOP_Pa unit="hPa">18</IOP_Pa>
+				</List>
+				<List No="2">
+					<IOP_mmHg unit="mmHg">20</IOP_mmHg>
+					<IOP_Pa unit="hPa">20</IOP_Pa>
+				</List>
+			</R>
+			<L>
+				<List No="1">
+					<IOP_mmHg unit="mmHg">17</IOP_mmHg>
+					<IOP_Pa unit="hPa">17</IOP_Pa>
+				</List>
+				<List No="2">
+					<IOP_mmHg unit="mmHg">16</IOP_mmHg>
+					<IOP_Pa unit="hPa">16</IOP_Pa>
+				</List>
+			</L>
+		</CorrectedIOP>
+	</nsTM:Measure>
+</Ophthalmology>

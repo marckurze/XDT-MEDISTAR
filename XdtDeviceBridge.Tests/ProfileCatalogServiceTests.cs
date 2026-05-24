@@ -58,9 +58,9 @@ public sealed class ProfileCatalogServiceTests
         var catalog = _service.Load(paths);
 
         Assert.Single(catalog.AisProfiles);
-        Assert.Equal(12, catalog.DeviceProfiles.Count);
-        Assert.Equal(12, catalog.ExportProfiles.Count);
-        Assert.Equal(12, catalog.InterfaceProfiles.Count);
+        Assert.Equal(13, catalog.DeviceProfiles.Count);
+        Assert.Equal(13, catalog.ExportProfiles.Count);
+        Assert.Equal(13, catalog.InterfaceProfiles.Count);
         Assert.Equal("ais-medistar-default", catalog.AisProfiles[0].Metadata.Id);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
@@ -73,6 +73,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-kr800-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-trk2p-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-ct1p-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-ct800a-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-cv5000-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-document-attachment-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-manual-document-transfer-default");
@@ -133,8 +134,8 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.AisProfiles, profile => profile.Metadata.Id == "ais-medistar-default" && profile.Name == "Custom MEDISTAR");
         Assert.Contains(catalog.DeviceProfiles, profile => profile.Metadata.Id == "device-topcon-trk2p-default" && profile.DeviceType == "Custom Tonometer/Pachymeter");
         Assert.Contains(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-trk2p-default" && profile.OutputEncoding == "Custom-Encoding");
-        Assert.Equal(12, catalog.DeviceProfiles.Count);
-        Assert.Equal(12, catalog.ExportProfiles.Count);
+        Assert.Equal(13, catalog.DeviceProfiles.Count);
+        Assert.Equal(13, catalog.ExportProfiles.Count);
     }
 
     [Fact]
@@ -459,9 +460,9 @@ public sealed class ProfileCatalogServiceTests
         var catalog = _service.Load(paths);
 
         Assert.Single(catalog.AisProfiles);
-        Assert.Equal(12, catalog.DeviceProfiles.Count);
-        Assert.Equal(12, catalog.ExportProfiles.Count);
-        Assert.Equal(12, catalog.InterfaceProfiles.Count);
+        Assert.Equal(13, catalog.DeviceProfiles.Count);
+        Assert.Equal(13, catalog.ExportProfiles.Count);
+        Assert.Equal(13, catalog.InterfaceProfiles.Count);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
     }
@@ -707,6 +708,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("device-topcon-kr800-default", ids);
         Assert.Contains("device-topcon-trk2p-default", ids);
         Assert.Contains("device-topcon-ct1p-default", ids);
+        Assert.Contains("device-topcon-ct800a-default", ids);
         Assert.Contains("device-topcon-cv5000-default", ids);
         Assert.Contains("device-document-attachment-default", ids);
         Assert.Contains("device-manual-document-selection-default", ids);
@@ -725,6 +727,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("export-medistar-topcon-kr800-default", ids);
         Assert.Contains("export-medistar-topcon-trk2p-default", ids);
         Assert.Contains("export-medistar-topcon-ct1p-default", ids);
+        Assert.Contains("export-medistar-topcon-ct800a-default", ids);
         Assert.Contains("export-medistar-topcon-cv5000-default", ids);
         Assert.Contains("export-medistar-document-attachment-default", ids);
         Assert.Contains("export-medistar-manual-document-transfer-default", ids);

@@ -137,3 +137,6 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\T
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CV5000\M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CV5000\Patient_mit_Phoropter_Daten.XDT
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\Solos\SolosExportSample.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CT800A\M-Serial0069_20190411_170716_TOPCON_CT-800A_AA3100481.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CT800A\M-Serial0070_20190411_171259_TOPCON_CT-800A_AA3100481.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CT800A\M-Serial0071_20190411_175130_TOPCON_CT-800A_AA3100481.xml

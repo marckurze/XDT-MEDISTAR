@@ -298,6 +298,7 @@ public sealed class ProfileCatalogService
             DefaultDeviceProfileDefinitions.CreateTopconKr800Default(),
             DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault(),
             DefaultDeviceProfileDefinitions.CreateTopconCt1PDefault(),
+            DefaultDeviceProfileDefinitions.CreateTopconCt800ADefault(),
             DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
             DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(),
             DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault()
@@ -317,6 +318,7 @@ public sealed class ProfileCatalogService
             DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default(),
             DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault(),
             DefaultExportProfileDefinitions.CreateMedistarTopconCt1PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCt800ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(),
             DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
             DefaultExportProfileDefinitions.CreateMedistarManualDocumentTransferDefault()
@@ -336,6 +338,7 @@ public sealed class ProfileCatalogService
             DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarTopconTrk2PDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarTopconCt1PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTopconCt800ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault()

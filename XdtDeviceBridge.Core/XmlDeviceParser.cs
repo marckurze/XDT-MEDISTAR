@@ -42,6 +42,7 @@ public sealed class XmlDeviceParser
             AddTopconKr800SMedistarLines(document.Root, measurements);
             AddTopconTrk2PMedistarLines(document.Root, measurements);
             AddTopconCt1PMedistarLines(document.Root, measurements);
+            AddTopconCt800AMedistarLines(document.Root, measurements);
             AddTopconCv5000MedistarLines(document.Root, measurements);
             AddNidekNt530PMedistarLines(document.Root, measurements);
         }
@@ -408,6 +409,31 @@ public sealed class XmlDeviceParser
         AddTopconCt1PTonoAndPachyMedistarLines(measurements, tmMeasure, GetChildValue(common, "Time"));
     }
 
+    private static void AddTopconCt800AMedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        var company = common is null ? null : GetChildValue(common, "Company");
+        var modelName = common is null ? null : GetChildValue(common, "ModelName");
+        if (!string.Equals(company, "TOPCON", StringComparison.OrdinalIgnoreCase)
+            || !IsTopconCt800AModel(modelName))
+        {
+            return;
+        }
+
+        var tmMeasure = FindPrimaryTopconTmMeasure(root);
+        if (tmMeasure is null)
+        {
+            return;
+        }
+
+        AddTopconCt800ATonoMedistarLines(measurements, tmMeasure, common is null ? null : GetChildValue(common, "Time"));
+    }
+
     private static void AddTopconCv5000MedistarLines(XElement root, List<MeasurementValue> measurements)
     {
         if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
@@ -757,6 +783,34 @@ public sealed class XmlDeviceParser
         }
     }
 
+    private static void AddTopconCt800ATonoMedistarLines(
+        List<MeasurementValue> measurements,
+        XElement tmMeasure,
+        string? time)
+    {
+        var tmRoot = FindChild(tmMeasure, "TM");
+        if (tmRoot is null)
+        {
+            return;
+        }
+
+        var corrected = GetTopconTrk2PCorrectedIopParts(tmMeasure);
+        var rightCorrected = KeepCompleteTopconCt800ACorrectedIop(corrected.Right);
+        var leftCorrected = KeepCompleteTopconCt800ACorrectedIop(corrected.Left);
+        var tonoLines = BuildTopconTrk2PTonoMedistarLines(tmRoot, null, rightCorrected, leftCorrected, time);
+        foreach (var line in tonoLines)
+        {
+            AddMeasurement(
+                measurements,
+                $"Measure[@Type='TM']/Tono/{line.Key}",
+                line.DisplayName.Replace("TRK-2P", "CT-800A", StringComparison.Ordinal),
+                line.Value,
+                null,
+                null,
+                "TM");
+        }
+    }
+
     private static TopconTrk2PCorrectedIopParts SuppressTopconCt1PParameterOnlyCorrectedIop(TopconTrk2PCorrectedIopParts parts)
     {
         return string.IsNullOrWhiteSpace(parts.Cct)
@@ -764,6 +818,15 @@ public sealed class XmlDeviceParser
             && string.IsNullOrWhiteSpace(parts.Corrected)
             ? new TopconTrk2PCorrectedIopParts(null, null, null, null, null)
             : parts;
+    }
+
+    private static TopconTrk2PCorrectedIopParts KeepCompleteTopconCt800ACorrectedIop(TopconTrk2PCorrectedIopParts parts)
+    {
+        return !string.IsNullOrWhiteSpace(parts.Cct)
+            && !string.IsNullOrWhiteSpace(parts.Measured)
+            && !string.IsNullOrWhiteSpace(parts.Corrected)
+            ? parts
+            : new TopconTrk2PCorrectedIopParts(null, null, null, null, null);
     }
 
     private static string? BuildTopconTrk2PPachyMedistarLine(
@@ -1784,6 +1847,12 @@ public sealed class XmlDeviceParser
         return string.Equals(normalized, "CT1P", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsTopconCt800AModel(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "CT800A", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsTopconCv5000Model(string? modelName)
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
@@ -1979,6 +2048,41 @@ public sealed class XmlDeviceParser
                 && element.Attributes().Any(attribute =>
                     string.Equals(attribute.Name.LocalName, "Type", StringComparison.OrdinalIgnoreCase)
                     && string.Equals(attribute.Value, type, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static XElement? FindPrimaryTopconTmMeasure(XElement root)
+    {
+        return root.Elements()
+            .Where(element =>
+                string.Equals(element.Name.LocalName, "Measure", StringComparison.OrdinalIgnoreCase)
+                && element.Attributes().Any(attribute =>
+                    string.Equals(attribute.Name.LocalName, "Type", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(attribute.Value, "TM", StringComparison.OrdinalIgnoreCase)))
+            .FirstOrDefault(HasTopconTmTonometryValues);
+    }
+
+    private static bool HasTopconTmTonometryValues(XElement measure)
+    {
+        var tmRoot = FindChild(measure, "TM");
+        if (tmRoot is null)
+        {
+            return false;
+        }
+
+        return HasTopconTmEyeTonometryValues(FindChild(tmRoot, "R"))
+            || HasTopconTmEyeTonometryValues(FindChild(tmRoot, "L"));
+    }
+
+    private static bool HasTopconTmEyeTonometryValues(XElement? eyeElement)
+    {
+        if (eyeElement is null)
+        {
+            return false;
+        }
+
+        return FindChildren(eyeElement, "List")
+            .Any(element => !string.IsNullOrWhiteSpace(GetChildValue(element, "IOP_mmHg")))
+            || !string.IsNullOrWhiteSpace(GetChildValue(FindChild(eyeElement, "Average") ?? new XElement("Average"), "IOP_mmHg"));
     }
 
     private static XElement? FindChild(XElement element, string name)

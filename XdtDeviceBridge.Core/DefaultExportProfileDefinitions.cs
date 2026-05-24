@@ -924,6 +924,46 @@ public static class DefaultExportProfileDefinitions
             });
     }
 
+    public static ExportProfileDefinition CreateMedistarTopconCt800ADefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-topcon-ct800a-default",
+                Name: "MEDISTAR + TOPCON CT-800A Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON CT-800A TM XML data. Tonometry is emitted via 6205; CorrectedIOP/CCT details are included only when complete.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON CT-800A",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-topcon-ct800a-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition("7", "6205", "TonometryHeader", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/HeaderLine", "{value}", 7, true, "MEDISTAR tonometry heading for TOPCON CT-800A when TM values are available."),
+                new ExportRuleDefinition("8", "6205", "TonometryPachyRight", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/PachyRightLine", "{value}", 8, true, "MEDISTAR tonometry CCT line for TOPCON CT-800A right eye when CorrectedIOP is complete."),
+                new ExportRuleDefinition("9", "6205", "TonometryPachyLeft", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/PachyLeftLine", "{value}", 9, true, "MEDISTAR tonometry CCT line for TOPCON CT-800A left eye when CorrectedIOP is complete."),
+                new ExportRuleDefinition("10", "6205", "TonometryMeasuredRight", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/MeasuredRightLine", "{value}", 10, true, "MEDISTAR measured/corrected IOP line for TOPCON CT-800A right eye when complete."),
+                new ExportRuleDefinition("11", "6205", "TonometryParameterRight", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/ParameterRightLine", "{value}", 11, true, "MEDISTAR CorrectedIOP parameter line for TOPCON CT-800A right eye when complete."),
+                new ExportRuleDefinition("12", "6205", "TonometryMeasuredLeft", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/MeasuredLeftLine", "{value}", 12, true, "MEDISTAR measured/corrected IOP line for TOPCON CT-800A left eye when complete."),
+                new ExportRuleDefinition("13", "6205", "TonometryParameterLeft", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/ParameterLeftLine", "{value}", 13, true, "MEDISTAR CorrectedIOP parameter line for TOPCON CT-800A left eye when complete."),
+                new ExportRuleDefinition("14", "6205", "TonometryList", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/TonoListLine", "{value}", 14, true, "MEDISTAR tonometry list line for TOPCON CT-800A when TM values are available.")
+            });
+    }
+
     public static ExportProfileDefinition CreateMedistarTopconCv5000Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 23, 12, 0, 0, TimeSpan.Zero);

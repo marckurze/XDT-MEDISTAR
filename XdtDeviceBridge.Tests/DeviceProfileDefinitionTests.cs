@@ -585,6 +585,45 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
+    public void CreateTopconCt800ADefault_ShouldCreateProfile()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCt800ADefault();
+
+        Assert.Equal("TOPCON", profile.Manufacturer);
+        Assert.Equal("CT-800A", profile.Model);
+        Assert.Contains("Tonometer", profile.DeviceType);
+        Assert.Equal("Xml", profile.ParserMode);
+        Assert.False(profile.CanContainMultipleExaminationTypes);
+        Assert.False(profile.IsBidirectional);
+        Assert.Contains("TM", profile.SupportedExaminationTypes);
+        Assert.Contains("Tonometrie", profile.SupportedExaminationTypes);
+    }
+
+    [Fact]
+    public void CreateTopconCt800ADefault_ShouldContainPreparedTonoMeasurements()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCt800ADefault();
+
+        AssertRequiredMeasurement(profile, "ct800a-company", "Common/Company");
+        AssertRequiredMeasurement(profile, "ct800a-model-name", "Common/ModelName");
+        AssertOptionalMeasurement(profile, "ct800a-r-iop-average", "Measure[@Type='TM']/TM/R/Average/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "ct800a-l-iop-average", "Measure[@Type='TM']/TM/L/Average/IOP_mmHg");
+        AssertOptionalMeasurement(profile, "ct800a-corrected-r-cct", "Measure[@Type='TM']/CorrectedIOP/Formula1[@No='1']/R/CCT");
+        AssertOptionalMeasurement(profile, "ct800a-tono-header-line", "Measure[@Type='TM']/Tono/HeaderLine");
+        AssertOptionalMeasurement(profile, "ct800a-tono-parameter-right-line", "Measure[@Type='TM']/Tono/ParameterRightLine");
+        AssertOptionalMeasurement(profile, "ct800a-tono-list-line", "Measure[@Type='TM']/Tono/TonoListLine");
+        Assert.DoesNotContain(profile.Measurements, measurement => measurement.SourcePath.StartsWith("Measure[@Type='CCT']/", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Validate_ShouldAcceptTopconCt800AProfile()
+    {
+        var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateTopconCt800ADefault());
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
     public void CreateTopconCv5000Default_ShouldCreateBidirectionalProfile()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
