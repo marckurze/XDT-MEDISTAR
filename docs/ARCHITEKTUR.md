@@ -57,16 +57,16 @@ Wenn diese Option aktiviert ist:
 
 - stabile gefundene Dateipaare werden nacheinander verarbeitet
 - XDT-Dateien werden in den konfigurierten Exportordner geschrieben
-- bereits verarbeitete Dateipaare werden nicht erneut exportiert
+- frueher verarbeitete Dateipaare blockieren keine aktuelle Verarbeitung mehr
 - Importdateien werden nur gemäß Schnittstellenprofil archiviert
 - Fehlerdateien werden nur gemäß Schnittstellenprofil in den Fehlerordner kopiert
 
-### 1.4 Archivierung, Duplikate und Fehlerablage
+### 1.4 Archivierung, Nachlauf und Fehlerablage
 
 Der Prototyp unterstützt:
 
 - Archivierung verarbeiteter Importdateien per Kopie oder Verschieben
-- Duplikatbehandlung für bereits verarbeitete AIS-/Geräte-Dateipaare
+- keine Verarbeitungssperre fuer bereits verarbeitete AIS-/Geraete-Dateipaare; Nachlauf/Archivierung ist die organisatorische Wiederholungsbremse
 - optionale Fehlerablage mit Kopie der beteiligten Importdateien
 - `error.txt` im Fehlerordner
 - vorbereitete Archiv-Aufbewahrungslogik ohne automatische Ausführung
@@ -82,7 +82,7 @@ Sicherheitsgrenzen:
 
 Konservativ integriert ist außerdem eine automatische XDT-Anhang-Vorbereitung im bestehenden Automatiklauf: Sie wird nur geprüft, wenn die Überwachung manuell läuft, globale automatische Verarbeitung aktiv ist, das Schnittstellenprofil XDT-Anhänge aktiviert hat und eine AIS-Patientennummer vorhanden ist. Ein oder mehrere stabile unterstützte Anhangkandidaten werden in stabiler Reihenfolge über den vorbereiteten Transfer-/Linkfeldpfad bearbeitet. Bei erfolgreicher Vorbereitung werden je Anhang die semantischen Felder `6302`, `6303`, optional `6304` und `6305` transient an die Exportfeldliste angehängt und über den zentralen XDT-Exportmechanismus mit korrektem Längenpräfix in die erzeugte XDT-Datei geschrieben. Bei deaktivierter Funktion, instabilen Anhängen, fehlenden Anhängen nach Pflicht-Timeout oder Fehlern greift weiter die bestehende Paketentscheidung.
 
-Für das Warten auf vollständige Verarbeitungspakete ist ein zweistufiges Modell vorbereitet. Ein Paket besteht aus AIS-Datei, Gerätedatei und optionalem oder verpflichtendem XDT-Anhang. Phase 1: Eine erkannte stabile AIS-Datei wartet auf eine stabile Gerätedatei; die Wartezeit ist pro Schnittstellenprofil konfigurierbar, Standard `10` Minuten. Kommt vor der Gerätedatei eine neuere AIS-Datei, ersetzt sie den wartenden Auftrag. Phase 2: Erst ab vollständigem AIS-/Geräte-Dateipaar startet die XDT-Anhang-Wartezeit. Standard ist `optional`, die Standard-Wartezeit beträgt 30 Sekunden. Optional bedeutet: Nach Ablauf der Wartezeit darf die Messwertverarbeitung ohne Anhang fortgesetzt werden, wenn kein stabiler Anhang vorhanden ist. Pflicht bedeutet: Ohne stabilen unterstützten Anhang wird die Verarbeitung blockiert. Bei Pflicht-Timeout wird das konkrete Paket terminal als Fehlerfall abgeschlossen und nur die bekannten AIS-/Gerätedateien dieses Pakets werden gemäß Fehler-/Archivoptionen verschoben oder kopiert; unbekannte Dateien und Exportordner werden nicht pauschal bereinigt. Mehrere stabile unterstützte Anhänge werden einzeln übertragen und je Datei über eigene Linkfelder ausgegeben.
+Für das Warten auf vollständige Verarbeitungspakete ist ein zweistufiges Modell vorbereitet. Ein Paket besteht aus AIS-Datei, Gerätedatei und optionalem oder verpflichtendem XDT-Anhang. Phase 1: Eine erkannte stabile AIS-Datei wartet auf eine stabile Gerätedatei; die Wartezeit ist pro Schnittstellenprofil konfigurierbar, Standard `10` Minuten. Massgeblich ist der aktuelle stabile Ordnerinhalt, nicht eine fruehere Verarbeitungshistorie. Phase 2: Erst ab vollständigem AIS-/Geräte-Dateipaar startet die XDT-Anhang-Wartezeit. Standard ist `optional`, die Standard-Wartezeit beträgt 30 Sekunden. Optional bedeutet: Nach Ablauf der Wartezeit darf die Messwertverarbeitung ohne Anhang fortgesetzt werden, wenn kein stabiler Anhang vorhanden ist. Pflicht bedeutet: Ohne stabilen unterstützten Anhang wird die Verarbeitung blockiert. Bei Pflicht-Timeout wird das konkrete Paket terminal als Fehlerfall abgeschlossen und nur die bekannten AIS-/Gerätedateien dieses Pakets werden gemäß Fehler-/Archivoptionen verschoben oder kopiert; unbekannte Dateien und Exportordner werden nicht pauschal bereinigt. Mehrere stabile unterstützte Anhänge werden einzeln übertragen und je Datei über eigene Linkfelder ausgegeben.
 
 Für langsam schreibende Geräte ist eine Stabilitätsprüfung vorbereitet. Der XDT-Anhang-Scanner kann unterstützte Kandidaten mit Stabilitätsstatus markieren; instabile Kandidaten werden nicht automatisch ausgewählt und vom Vorbereitungspfad nicht verschoben oder kopiert, wenn der Instabilitätsstatus bekannt ist. Die Stabilitätswartezeit ist pro Schnittstellenprofil konfigurierbar, Standard `2` Sekunden. Das periodische Ordnerabfrage-Intervall ist ebenfalls pro Schnittstellenprofil vorbereitet, Standard `5` Sekunden; die manuell gestartete Überwachung nutzt weiterhin periodischen Scan und keinen `FileSystemWatcher`.
 
@@ -126,7 +126,6 @@ Die zentrale Logik liegt derzeit in Core- und Infrastructure-Bausteinen:
 - `ProcessedFileArchiveService`
 - `FailedFileCopyService`
 - `AutoImportPairProcessingCoordinator`
-- `DuplicateImportFileHandler`
 
 Diese Struktur ist für den Prototyp ausreichend und bildet die Grundlage für weitere Profile. Für produktive Nutzung weiterer AIS-Systeme, Geräteklassen, Templatepakete und Lizenzdurchsetzung sind noch Validierung und Ausbauschritte erforderlich.
 
@@ -826,7 +825,7 @@ Der aktuelle funktionsfähige Prototyp umfasst:
 - manuell startbare periodische Überwachung
 - optionale automatische Verarbeitung per bewusst gesetztem Haken
 - Archivierung per Kopie oder Verschieben
-- Duplikatbehandlung für bereits verarbeitete Dateipaare
+- Nachlauf ueber Archivieren, Verschieben oder Entfernen statt interner Duplikatsperre
 - Fehlerablage mit `error.txt`
 - Lizenzanzeige ohne harte Sperre
 

@@ -324,8 +324,8 @@ Aktuelle Grundsaetze:
 
 - Nur bekannte verarbeitete AIS-/Geraetedateien werden gemaess Profiloption archiviert.
 - Wenn die Profiloption `aus Importordner entfernen` aktiv ist, werden nur diese bekannten verarbeiteten AIS-/Geraetedateien entfernt beziehungsweise ins Archiv verschoben.
-- Reset- und Duplikatsperren verwenden eine Dateiversion statt nur den Pfad; neu geschriebene Dateien mit gleichem Namen werden wieder erkannt.
-- Bereits erfolgreich verarbeitete Dateipaare werden nicht erneut exportiert, aber ueber Archiv-, Fehlerordner- oder Entfernen-Regel aus dem aktiven Importordner herausgenommen, damit sie neue Untersuchungen nicht blockieren.
+- Eine fruehere Verarbeitung, gleicher Pfad, gleicher Dateiname, Fingerprint oder Zeitstempel ist keine Verarbeitungssperre mehr.
+- Erfolgreich verarbeitete Dateipaare werden gemaess Archiv-, Fehlerordner- oder Entfernen-Regel nachbehandelt. Bleiben sie im Importordner liegen, koennen sie beim naechsten Scan erneut verarbeitet werden; das ist eine bewusste Folge der Profilkonfiguration.
 - Keine unbekannten Dateien werden geloescht.
 - Keine Ordner werden pauschal geleert.
 - Der Exportordner wird nicht bereinigt.
@@ -518,7 +518,7 @@ Die automatische Paketlogik ist zweistufig: Phase 1 AIS-Datei wartet auf stabile
 
 Optionaler XDT-Anhang bedeutet: Wenn ein oder mehrere stabile unterstuetzte Anhaenge rechtzeitig kommen, Export mit je eigener 6302-6305-Linkfeldgruppe; wenn keiner kommt, Export ohne Anhang nach Timeout. Pflicht bedeutet: ohne stabilen unterstuetzten Anhang blockiert die Verarbeitung oder geht in Fehlerstatus. Fuer AttachmentOnly-/Dokumentgeraete gibt es zusaetzlich einen profilbezogenen Abschluss: automatisch nach Ruhezeit seit der letzten stabilen Datei oder manuell per Dialog `Dokumente uebertragen`; dieser Dialog bleibt offen und aktualisiert seine Dateiliste, bis der Anwender `Uebertragen` klickt.
 
-Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden. Reset-/Duplikatsperren unterscheiden neue Dateien mit gleichem Namen anhand ihrer Dateiversion, damit ein neuer MEDISTAR-Auftrag nicht bis zum App-Neustart blockiert bleibt.
+Dateistabilitaet ist wichtig: AIS-, Geraete- und Anhangdateien werden erst verarbeitet, wenn sie stabil und lesbar sind. Default fuer XDT-Anhang-Stabilitaet ist 2 Sekunden. Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar, Default 5 Sekunden. Die automatische Verarbeitung richtet sich nach dem aktuellen Inhalt der konfigurierten Eingangsordner; interne Historie blockiert keinen neuen MEDISTAR-Auftrag.
 
 Profile sind JSON-basiert unter %LocalAppData%\XdtDeviceBridge\profiles. BuiltIn-Profile duerfen nicht ueberschrieben oder geloescht werden, UserDefined-Profile werden separat gespeichert. Neue AIS-, Geraete- und Exportprofile koennen als UserDefined angelegt werden; Konflikte werden blockiert und es wird nichts automatisch aktiviert. UserDefined-Exportprofile koennen geloescht werden, wenn kein Schnittstellenprofil sie verwendet; Exportregeln koennen nur aus UserDefined-Exportprofilen entfernt werden. Templatepaket-Export erfolgt selektiv auf Basis eines Schnittstellenprofils und nimmt nur benoetigte AIS-/Geraete-/Export-Abhaengigkeiten auf. Templatepaket-Import, Validierung, Konfliktanalyse, Importplan, Dry-Run, UI-Vorschau, sichere Benutzerwahl und explizite UserDefined-Uebernahme sind vorhanden. ReplaceExisting bleibt offen. Importierte Schnittstellenprofile werden nicht automatisch aktiviert; IsAttachmentProcessingEnabled wird deaktiviert.
 

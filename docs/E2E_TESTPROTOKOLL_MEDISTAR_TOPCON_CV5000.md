@@ -14,8 +14,8 @@ Status: praktisch validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfen
 - Im Fenster werden die Gruppen nach Untersuchungsart angezeigt; neueste exportierbare `V0`-, `V1`- und `V2`-Datensaetze sind vorausgewaehlt.
 - Aus ausgewaehlten refraktiven Datensaetzen wird eine TOPCON-CV-5000-kompatible XML-Importdatei erzeugt.
 - Das Auswahlfenster bleibt standardmaessig per bestehendem `🔝`-Schalter im Vordergrund. Mit `Nichts senden` kann bewusst keine `CVImport.xml` erzeugt werden; die App wartet danach weiter auf die Phoropter-Rueckgabe.
-- Die AIS-Datei kann in der Praxis gleich heissen, z. B. `Patient.gdt`; neue Dateiversionen werden ueber Dateiversion/Fingerprint erkannt und duerfen das Auswahlfenster nach einem abgeschlossenen Zyklus erneut oeffnen.
-- Nach Phase 1 merkt sich die App bereits vorhandene Phoropter-Dateien als Baseline. Nur neue oder geaenderte Rueckgabedateien werden fuer Phase 2 verwendet; ihr Dateizeitstempel muss nicht zwingend neuer als `Patient.gdt` sein. Bei gleichnamigen ueberschriebenen Rueckgabedateien wird eine erweiterte beobachtete Dateiversion aus Metadaten wie Schreibzeit, Erstellzeit, Zugriffszeit und Groesse verglichen.
+- Die AIS-Datei kann in der Praxis gleich heissen, z. B. `Patient.gdt`. Massgeblich ist der aktuelle Inhalt des konfigurierten AIS-Importordners: liegt die Datei stabil und lesbar vor, kann sie den naechsten CV-5000-Zyklus starten.
+- Nach Phase 1 wartet die App auf eine stabile, lesbare und fachlich passende CV-5000/CV-5000S-Rueckgabedatei im Geraeteordner. Es gibt keinen Baseline-, Fingerprint- oder Zeitstempelabgleich mehr, der eine aktuell vorhandene Rueckgabe blockiert.
 
 ### Phoropter -> XdtDeviceBridge -> AIS/MEDISTAR
 
@@ -25,7 +25,7 @@ Status: praktisch validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfen
 - Die App liest Type-Bloecke, R/L-Refraktionswerte, VD und PD.
 - Die App erzeugt MEDISTAR-kompatible XDT-Rueckgabezeilen ueber `6228`.
 - `8402` Untersuchungsart bleibt aus AIS/MEDISTAR.
-- Nach erfolgreicher Phase 2 ist der konkrete AIS-/Geraetepaar-Zyklus abgeschlossen; identische Paare werden nicht doppelt exportiert, neue AIS- oder Phoropter-Dateiversionen mit gleichem Dateinamen bleiben aber verarbeitbar.
+- Nach erfolgreicher Phase 2 ist der konkrete AIS-/Geraetepaar-Zyklus abgeschlossen; der weitere Umgang mit den Eingangsdateien richtet sich ausschliesslich nach der konfigurierten Archiv-/Entfernen-/Fehlerregel.
 
 ## Validierte Ergebnisfelder
 
@@ -144,13 +144,13 @@ Die Erzeugung der `CVImport.xml` ist Phase 1 und kein finaler Workflowabschluss.
 
 `Nichts senden` ist kein Fehler und nicht identisch mit `Abbrechen`: Es schliesst nur das Auswahlfenster, schreibt keine Importdatei und laesst den CV-5000-Workflow fuer die spaetere Rueckgabedatei offen. `Abbrechen` bleibt der konservative Bedienabbruch ohne stillen Erfolg.
 
-Der Duplicate-Schutz ist dateiversionsbezogen: Ein unveraendertes AIS-/Phoropter-Dateipaar wird nicht erneut exportiert und erzeugt keinen Fehlerordner-Nachlauf. Wird `Patient.gdt` fuer einen neuen Praxiszyklus erneut geschrieben, wird die neue Dateiversion erkannt und das Auswahlfenster kann ohne Reset wieder starten. Wird danach die gleichnamige Phoropter-Rueckgabedatei ueberschrieben oder geaendert, wird sie gegen die Phase-1-Baseline als neue Rueckgabe erkannt und der finale Export gestartet.
+Die automatische Verarbeitung verwendet keine interne AlreadyProcessed-/Duplicate-Sperre mehr. Wenn `Patient.gdt` und eine passende Phoropter-Rueckgabe im jeweiligen Eingangsordner stabil lesbar vorliegen, wird verarbeitet. Bleiben dieselben Dateien nach einem Erfolg im Eingangsordner liegen, koennen sie beim naechsten Scan erneut verarbeitet werden; das wird organisatorisch ueber Archivieren, Verschieben oder Entfernen nach Profilregel vermieden.
 
-Wenn ein CV-5000-AIS-/Geraetepaar fachlich vollstaendig ist, wird der Exportpfad gestartet. Alte Phoropter-Dateien aus der Phase-1-Baseline werden dagegen nicht als neue Rueckgabe angezeigt; die Karte bleibt dann bei `Wartet auf Geraet`, bis eine neue oder geaenderte Rueckgabedatei erkannt wird.
+Wenn ein CV-5000-AIS-/Geraetepaar fachlich vollstaendig ist, wird der Exportpfad gestartet. Bleibt ein Export aus, muss ein echter Grund wie fehlende Lesbarkeit, unpassendes Geraeteprofil, fehlende Patientendaten oder Schreibfehler sichtbar werden.
 
 ## Grenzen / offen
 
-- Weiter im Livebetrieb zu beobachten bleibt der Folgezyklus ohne Reset mit neu geschriebener, gleichnamiger AIS-Datei und gleichnamig ueberschriebener Phoropter-Rueckgabedatei.
+- Weiter im Livebetrieb zu beobachten bleibt die passende Nachlaufkonfiguration, damit Importordner nach erfolgreicher Verarbeitung sauber bleiben und nicht unbeabsichtigt erneut verarbeitet werden.
 - Das Einlesen der erzeugten `CVImport.xml` am echten CV-5000/CV-5000S muss weiter beobachtet werden.
 - `500.000 cm` als Import-ExamDistance ist konservativ und muss am CV-5000/CV-5000S bestaetigt werden.
 - Keratometer/Tonometrie/Pachymetrie aus historischen MEDISTAR-Zeilen werden erkannt, aber noch nicht in die CV-5000-Import-XML geschrieben.

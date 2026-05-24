@@ -5,7 +5,6 @@ namespace XdtDeviceBridge.Infrastructure;
 public sealed class AutoImportPairProcessingCoordinator
 {
     private readonly IInterfaceProfileManualProcessor _manualProcessor;
-    private readonly DuplicateImportFileHandler _duplicateImportFileHandler;
     private readonly AttachmentAutoProcessingEligibilityService _attachmentEligibilityService;
     private readonly IAttachmentImportFolderScannerService _attachmentScannerService;
     private readonly AttachmentAutoCandidateSelectionService _attachmentCandidateSelectionService;
@@ -14,27 +13,17 @@ public sealed class AutoImportPairProcessingCoordinator
     private readonly AttachmentPackageDecisionService _attachmentPackageDecisionService;
     private readonly AttachmentCompletionService _attachmentCompletionService;
     private readonly TerminalBlockedImportFileHandler _terminalBlockedImportFileHandler;
-    private readonly HashSet<string> _processedPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _processingPairKeys = new(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _blockedPairKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DateTime> _pairReadySinceUtc = new(StringComparer.OrdinalIgnoreCase);
 
     public AutoImportPairProcessingCoordinator()
-        : this(new InterfaceProfileManualProcessor(), new DuplicateImportFileHandler())
+        : this(new InterfaceProfileManualProcessor())
     {
     }
 
     public AutoImportPairProcessingCoordinator(IInterfaceProfileManualProcessor manualProcessor)
-        : this(manualProcessor, new DuplicateImportFileHandler())
-    {
-    }
-
-    public AutoImportPairProcessingCoordinator(
-        IInterfaceProfileManualProcessor manualProcessor,
-        DuplicateImportFileHandler duplicateImportFileHandler)
         : this(
             manualProcessor,
-            duplicateImportFileHandler,
             new AttachmentAutoProcessingEligibilityService(),
             new AttachmentImportFolderScannerService(),
             new AttachmentAutoCandidateSelectionService(),
@@ -46,14 +35,12 @@ public sealed class AutoImportPairProcessingCoordinator
 
     public AutoImportPairProcessingCoordinator(
         IInterfaceProfileManualProcessor manualProcessor,
-        DuplicateImportFileHandler duplicateImportFileHandler,
         AttachmentAutoProcessingEligibilityService attachmentEligibilityService,
         IAttachmentImportFolderScannerService attachmentScannerService,
         AttachmentAutoCandidateSelectionService attachmentCandidateSelectionService,
         IAttachmentExternalLinkPreparationService attachmentPreparationService)
         : this(
             manualProcessor,
-            duplicateImportFileHandler,
             attachmentEligibilityService,
             attachmentScannerService,
             attachmentCandidateSelectionService,
@@ -65,7 +52,6 @@ public sealed class AutoImportPairProcessingCoordinator
 
     public AutoImportPairProcessingCoordinator(
         IInterfaceProfileManualProcessor manualProcessor,
-        DuplicateImportFileHandler duplicateImportFileHandler,
         AttachmentAutoProcessingEligibilityService attachmentEligibilityService,
         IAttachmentImportFolderScannerService attachmentScannerService,
         AttachmentAutoCandidateSelectionService attachmentCandidateSelectionService,
@@ -74,7 +60,6 @@ public sealed class AutoImportPairProcessingCoordinator
         AttachmentPackageDecisionService attachmentPackageDecisionService)
         : this(
             manualProcessor,
-            duplicateImportFileHandler,
             attachmentEligibilityService,
             attachmentScannerService,
             attachmentCandidateSelectionService,
@@ -88,7 +73,6 @@ public sealed class AutoImportPairProcessingCoordinator
 
     public AutoImportPairProcessingCoordinator(
         IInterfaceProfileManualProcessor manualProcessor,
-        DuplicateImportFileHandler duplicateImportFileHandler,
         AttachmentAutoProcessingEligibilityService attachmentEligibilityService,
         IAttachmentImportFolderScannerService attachmentScannerService,
         AttachmentAutoCandidateSelectionService attachmentCandidateSelectionService,
@@ -99,7 +83,6 @@ public sealed class AutoImportPairProcessingCoordinator
         TerminalBlockedImportFileHandler terminalBlockedImportFileHandler)
     {
         _manualProcessor = manualProcessor ?? throw new ArgumentNullException(nameof(manualProcessor));
-        _duplicateImportFileHandler = duplicateImportFileHandler ?? throw new ArgumentNullException(nameof(duplicateImportFileHandler));
         _attachmentEligibilityService = attachmentEligibilityService ?? throw new ArgumentNullException(nameof(attachmentEligibilityService));
         _attachmentScannerService = attachmentScannerService ?? throw new ArgumentNullException(nameof(attachmentScannerService));
         _attachmentCandidateSelectionService = attachmentCandidateSelectionService ?? throw new ArgumentNullException(nameof(attachmentCandidateSelectionService));
@@ -127,7 +110,7 @@ public sealed class AutoImportPairProcessingCoordinator
         {
             return new AutoImportPairProcessingBatchResult(
                 ProcessedCount: 0,
-                SkippedAlreadyProcessedCount: 0,
+                SkippedCount: 0,
                 ErrorCount: 0,
                 Results: Array.Empty<AutoImportPairProcessingResult>());
         }
@@ -137,37 +120,6 @@ public sealed class AutoImportPairProcessingCoordinator
         {
             var pairKey = CreatePairKey(interfaceProfile.Metadata.Id, pair.AisFile.FilePath, pair.DeviceFile.FilePath);
             var pairInstanceKey = CreatePairInstanceKey(interfaceProfile.Metadata.Id, pair);
-            var processedPairKey = CreateProcessedPairKey(interfaceProfile.Metadata.Id, pair);
-            if (_processedPairKeys.Contains(processedPairKey))
-            {
-                if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null))
-                {
-                    results.Add(CreateAlreadyProcessedCv5000Result(pairKey, pair));
-                    continue;
-                }
-
-                var duplicateResult = _duplicateImportFileHandler.HandleAlreadyProcessedPair(
-                    interfaceProfile,
-                    pair,
-                    timestamp);
-                results.Add(new AutoImportPairProcessingResult(
-                    PairKey: pairKey,
-                    AisFilePath: pair.AisFile.FilePath,
-                    DeviceFilePath: pair.DeviceFile.FilePath,
-                    WasProcessed: false,
-                    WasSkipped: true,
-                    Success: false,
-                    Status: duplicateResult.Status,
-                    ExportFilePath: null,
-                    ManualProcessingResult: null,
-                    Messages: duplicateResult.Messages));
-                continue;
-            }
-
-            if (_blockedPairKeys.Contains(pairInstanceKey))
-            {
-                continue;
-            }
 
             if (_processingPairKeys.Contains(pairInstanceKey))
             {
@@ -212,13 +164,9 @@ public sealed class AutoImportPairProcessingCoordinator
                     attachmentGate.DocumentationTextProvider);
                 _pairReadySinceUtc.Remove(pairInstanceKey);
                 _attachmentCompletionService.MarkCompleted(pairInstanceKey);
-                if (processingResult.Success)
+                if (!processingResult.Success)
                 {
-                    _processedPairKeys.Add(processedPairKey);
-                }
-                else
-                {
-                    _blockedPairKeys.Add(pairInstanceKey);
+                    _pairReadySinceUtc.Remove(pairInstanceKey);
                 }
 
                 results.Add(CreateProcessedResult(interfaceProfile, pairInstanceKey, pair, processingResult, processingResult.AttachmentStatus));
@@ -227,7 +175,6 @@ public sealed class AutoImportPairProcessingCoordinator
             {
                 _pairReadySinceUtc.Remove(pairInstanceKey);
                 _attachmentCompletionService.MarkCompleted(pairInstanceKey);
-                _blockedPairKeys.Add(pairInstanceKey);
                 var handlingResult = _terminalBlockedImportFileHandler.Handle(
                     interfaceProfile,
                     pair,
@@ -257,7 +204,7 @@ public sealed class AutoImportPairProcessingCoordinator
 
         return new AutoImportPairProcessingBatchResult(
             ProcessedCount: results.Count(result => result.WasProcessed && result.Success),
-            SkippedAlreadyProcessedCount: results.Count(result => result.WasSkipped),
+            SkippedCount: results.Count(result => result.WasSkipped),
             ErrorCount: results.Count(result => result.WasProcessed && !result.Success),
             Results: results);
     }
@@ -270,9 +217,7 @@ public sealed class AutoImportPairProcessingCoordinator
         }
 
         var keyPrefix = $"{interfaceProfileId.Trim()}|";
-        _processedPairKeys.RemoveWhere(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase));
         _processingPairKeys.RemoveWhere(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase));
-        _blockedPairKeys.RemoveWhere(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase));
         foreach (var key in _pairReadySinceUtc.Keys
             .Where(key => key.StartsWith(keyPrefix, StringComparison.OrdinalIgnoreCase))
             .ToList())
@@ -302,27 +247,6 @@ public sealed class AutoImportPairProcessingCoordinator
             ManualProcessingResult: processingResult,
             Messages: AppendAttachmentMessage(processingResult.Messages, attachmentStatus),
             AttachmentStatus: attachmentStatus);
-    }
-
-    private static AutoImportPairProcessingResult CreateAlreadyProcessedCv5000Result(
-        string pairKey,
-        PendingImportPair pair)
-    {
-        return new AutoImportPairProcessingResult(
-            PairKey: pairKey,
-            AisFilePath: pair.AisFile.FilePath,
-            DeviceFilePath: pair.DeviceFile.FilePath,
-            WasProcessed: false,
-            WasSkipped: true,
-            Success: false,
-            Status: "Bereits verarbeitet - kein weiterer Export",
-            ExportFilePath: null,
-            ManualProcessingResult: null,
-            Messages: new[]
-            {
-                "Diese AIS-/Geräte-Dateikombination wurde bereits erfolgreich verarbeitet. Es wurde kein weiterer Export erzeugt.",
-                "CV-5000 bleibt für neue AIS- oder Phoropter-Dateiversionen bereit; identische Dateien werden nicht in den Fehlerordner verschoben."
-            });
     }
 
     private AttachmentGateDecision EvaluateAttachmentPackageBeforeProcessing(
@@ -456,7 +380,6 @@ public sealed class AutoImportPairProcessingCoordinator
             _pairReadySinceUtc.Remove(pairInstanceKey);
             if (packageDecision.Reason == AttachmentPackageDecisionReason.AttachmentRequiredTimeoutBlock)
             {
-                _blockedPairKeys.Add(pairInstanceKey);
                 var handlingResult = _terminalBlockedImportFileHandler.Handle(
                     interfaceProfile,
                     pair,
@@ -941,17 +864,6 @@ public sealed class AutoImportPairProcessingCoordinator
             CreatePairKey(interfaceProfileId, pair.AisFile.FilePath, pair.DeviceFile.FilePath),
             pair.AisFile.DetectedAtUtc.Ticks.ToString(),
             pair.DeviceFile.DetectedAtUtc.Ticks.ToString());
-    }
-
-    private static string CreateProcessedPairKey(string interfaceProfileId, PendingImportPair pair)
-    {
-        return string.Join(
-            "|",
-            interfaceProfileId,
-            "ais",
-            ImportFileFingerprint.Create(pair.AisFile),
-            "device",
-            ImportFileFingerprint.Create(pair.DeviceFile));
     }
 
     private sealed record AttachmentGateDecision(

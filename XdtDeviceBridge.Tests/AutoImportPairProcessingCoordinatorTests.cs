@@ -46,7 +46,7 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
-    public void ProcessReadyPairs_ShouldNotProcessSamePairTwice()
+    public void ProcessReadyPairs_ShouldProcessSamePairAgainWhenFilesRemainInImportFolders()
     {
         var processor = new FakeManualProcessor(CreateSuccessResult());
         var coordinator = new AutoImportPairProcessingCoordinator(processor);
@@ -57,12 +57,12 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         coordinator.ProcessReadyPairs(profile, exportProfile, new[] { pair }, true, Timestamp);
         var second = coordinator.ProcessReadyPairs(profile, exportProfile, new[] { pair }, true, Timestamp);
 
-        Assert.Equal(1, processor.CallCount);
-        Assert.Equal(1, second.SkippedAlreadyProcessedCount);
-        var skipped = Assert.Single(second.Results);
-        Assert.True(skipped.WasSkipped);
-        Assert.Equal("Bereits verarbeitet - keine sichere Nachlaufregel", skipped.Status);
-        Assert.Contains("Paar wurde bereits verarbeitet und nicht erneut exportiert.", skipped.Messages);
+        Assert.Equal(2, processor.CallCount);
+        Assert.Equal(0, second.SkippedCount);
+        Assert.Equal(1, second.ProcessedCount);
+        var processed = Assert.Single(second.Results);
+        Assert.True(processed.Success);
+        Assert.False(processed.WasSkipped);
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
-    public void ResetProfile_ShouldClearProcessedPairStateForSelectedProfile()
+    public void ResetProfile_ShouldClearTransientPairStateForSelectedProfile()
     {
         var processor = new FakeManualProcessor(CreateSuccessResult());
         var coordinator = new AutoImportPairProcessingCoordinator(processor);
@@ -206,7 +206,7 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
-    public void ProcessReadyPairs_ShouldNotMarkFailedFileVersionAsAlreadyProcessed()
+    public void ProcessReadyPairs_ShouldNotTreatFailedFileVersionAsProcessingBlocker()
     {
         var processor = new FakeManualProcessor(CreateFailureResult());
         var coordinator = new AutoImportPairProcessingCoordinator(processor);
@@ -866,7 +866,9 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Equal(0, processor.CallCount);
 
         var third = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp.AddSeconds(60));
-        Assert.Empty(third.Results);
+        var waitingAgain = Assert.Single(third.Results);
+        Assert.True(waitingAgain.WasSkipped);
+        Assert.Equal("Dateipaar vollständig, warte auf XDT-Anhang.", waitingAgain.Status);
         Assert.Equal(0, processor.CallCount);
     }
 
@@ -960,52 +962,27 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
-    public void ProcessReadyPairs_DuplicateWithoutArchiveShouldRemoveKnownFilesWhenRemoveIsEnabled()
+    public void ProcessReadyPairs_ShouldReprocessSameExistingFilesWhenNoNachlaufRemovesThem()
     {
         var files = CreateTempImportFiles();
         var processor = new FakeManualProcessor(CreateSuccessResult());
         var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var profile = CreateInterfaceProfile(
-            archiveProcessedFiles: false,
-            clearAisImportFolderBeforeProcessing: true,
-            clearDeviceImportFolderBeforeProcessing: true);
+        var profile = CreateInterfaceProfile();
         var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
 
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
+        var first = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
+        var second = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
 
-        var result = Assert.Single(duplicate.Results);
-        Assert.Equal("Bereits verarbeitet - aus Importordner entfernt", result.Status);
-        Assert.False(File.Exists(files.AisFilePath));
-        Assert.False(File.Exists(files.DeviceFilePath));
+        Assert.Equal(2, processor.CallCount);
+        Assert.Equal(1, first.ProcessedCount);
+        Assert.Equal(1, second.ProcessedCount);
+        Assert.Equal(0, second.SkippedCount);
+        Assert.True(File.Exists(files.AisFilePath));
+        Assert.True(File.Exists(files.DeviceFilePath));
     }
 
     [Fact]
-    public void ProcessReadyPairs_DuplicateWithoutArchiveShouldMoveKnownFilesToErrorFolderWhenConfigured()
-    {
-        var files = CreateTempImportFiles();
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var errorFolder = CreateTempFolder();
-        var profile = CreateInterfaceProfile(
-            errorFolder: errorFolder,
-            archiveProcessedFiles: false,
-            moveFailedFilesToErrorFolder: true);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        var result = Assert.Single(duplicate.Results);
-        Assert.Equal("Bereits verarbeitet - in Fehlerordner verschoben", result.Status);
-        Assert.False(File.Exists(files.AisFilePath));
-        Assert.False(File.Exists(files.DeviceFilePath));
-        Assert.True(File.Exists(Path.Combine(errorFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
-        Assert.True(File.Exists(Path.Combine(errorFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_Cv5000DuplicateAfterSuccessShouldNotCreateErrorNachlauf()
+    public void ProcessReadyPairs_Cv5000SamePairAfterSuccessShouldProcessAgainAndNotCreateErrorNachlauf()
     {
         var files = CreateTempImportFiles();
         var processor = new FakeManualProcessor(CreateSuccessResult());
@@ -1015,15 +992,14 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
 
         coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(), new[] { pair }, true, Timestamp);
+        var second = coordinator.ProcessReadyPairs(profile, DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default(), new[] { pair }, true, Timestamp);
 
-        Assert.Equal(1, processor.CallCount);
-        Assert.Equal(1, duplicate.SkippedAlreadyProcessedCount);
-        var result = Assert.Single(duplicate.Results);
-        Assert.True(result.WasSkipped);
-        Assert.False(result.WasProcessed);
-        Assert.Equal("Bereits verarbeitet - kein weiterer Export", result.Status);
-        Assert.Contains("Diese AIS-/Geräte-Dateikombination wurde bereits erfolgreich verarbeitet. Es wurde kein weiterer Export erzeugt.", result.Messages);
+        Assert.Equal(2, processor.CallCount);
+        Assert.Equal(1, second.ProcessedCount);
+        var result = Assert.Single(second.Results);
+        Assert.False(result.WasSkipped);
+        Assert.True(result.WasProcessed);
+        Assert.True(result.Success);
         Assert.True(File.Exists(files.AisFilePath));
         Assert.True(File.Exists(files.DeviceFilePath));
         Assert.Empty(Directory.EnumerateFiles(errorFolder, "*", SearchOption.AllDirectories));
@@ -1077,7 +1053,7 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     }
 
     [Fact]
-    public void ProcessReadyPairs_Cv5000DirectSecondCycleShouldProcessObservedOverwrittenDeviceWithoutReset()
+    public void ProcessReadyPairs_Cv5000DirectSecondCycleShouldProcessSameNameDeviceWithoutReset()
     {
         var folder = CreateTempFolder();
         var aisPath = Path.Combine(folder, "Patient.gdt");
@@ -1120,7 +1096,6 @@ public sealed class AutoImportPairProcessingCoordinatorTests
             CreateQueue(nextAis, baselineDevice),
             Timestamp.AddMinutes(10));
 
-        File.SetLastAccessTimeUtc(devicePath, Timestamp.AddMinutes(12));
         var overwrittenDevice = baselineDevice with { StableAtUtc = Timestamp.AddMinutes(12) };
         var package = packageState.Evaluate(
             profile,
@@ -1137,176 +1112,6 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Equal(2, processor.CallCount);
         Assert.Equal(1, second.ProcessedCount);
         Assert.True(Assert.Single(second.Results).Success);
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_DuplicateWithMoveArchiveShouldMoveFiles()
-    {
-        var files = CreateTempImportFiles();
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var archiveFolder = CreateTempFolder();
-        var profile = CreateInterfaceProfile(
-            archiveFolder: archiveFolder,
-            archiveProcessedFiles: true,
-            archiveProcessedFileMode: ArchiveProcessedFileMode.Move,
-            clearAisImportFolderBeforeProcessing: true,
-            clearDeviceImportFolderBeforeProcessing: true);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        var result = Assert.Single(duplicate.Results);
-        Assert.Equal("Bereits verarbeitet - ins Archiv verschoben", result.Status);
-        Assert.False(File.Exists(files.AisFilePath));
-        Assert.False(File.Exists(files.DeviceFilePath));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_DuplicateWithCopyArchiveShouldMoveFilesOutOfImportFolder()
-    {
-        var files = CreateTempImportFiles();
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var archiveFolder = CreateTempFolder();
-        var profile = CreateInterfaceProfile(
-            archiveFolder: archiveFolder,
-            archiveProcessedFiles: true,
-            archiveProcessedFileMode: ArchiveProcessedFileMode.Copy,
-            clearAisImportFolderBeforeProcessing: true,
-            clearDeviceImportFolderBeforeProcessing: true);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        var result = Assert.Single(duplicate.Results);
-        Assert.Equal("Bereits verarbeitet - ins Archiv verschoben", result.Status);
-        Assert.False(File.Exists(files.AisFilePath));
-        Assert.False(File.Exists(files.DeviceFilePath));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_DuplicateShouldArchiveWholePairWhenAisOptionIsEnabled()
-    {
-        var files = CreateTempImportFiles();
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var archiveFolder = CreateTempFolder();
-        var profile = CreateInterfaceProfile(
-            archiveFolder: archiveFolder,
-            archiveProcessedFiles: true,
-            archiveProcessedFileMode: ArchiveProcessedFileMode.Move,
-            clearAisImportFolderBeforeProcessing: true,
-            clearDeviceImportFolderBeforeProcessing: false);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        Assert.Equal("Bereits verarbeitet - ins Archiv verschoben", Assert.Single(duplicate.Results).Status);
-        Assert.False(File.Exists(files.AisFilePath));
-        Assert.False(File.Exists(files.DeviceFilePath));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_DuplicateShouldArchiveWholePairWhenDeviceOptionIsEnabled()
-    {
-        var files = CreateTempImportFiles();
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var archiveFolder = CreateTempFolder();
-        var profile = CreateInterfaceProfile(
-            archiveFolder: archiveFolder,
-            archiveProcessedFiles: true,
-            archiveProcessedFileMode: ArchiveProcessedFileMode.Move,
-            clearAisImportFolderBeforeProcessing: false,
-            clearDeviceImportFolderBeforeProcessing: true);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        Assert.Equal("Bereits verarbeitet - ins Archiv verschoben", Assert.Single(duplicate.Results).Status);
-        Assert.False(File.Exists(files.AisFilePath));
-        Assert.False(File.Exists(files.DeviceFilePath));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "AIS", "patient.gdt")));
-        Assert.True(File.Exists(Path.Combine(archiveFolder, "2026", "06", "01", "MEDISTAR_NIDEK_ARK1S", "Device", "device.xml")));
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_DuplicateWithArchiveMoveShouldMoveFilesEvenWhenRemoveOptionsAreDisabled()
-    {
-        var files = CreateTempImportFiles();
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var profile = CreateInterfaceProfile(
-            archiveFolder: CreateTempFolder(),
-            archiveProcessedFiles: true,
-            archiveProcessedFileMode: ArchiveProcessedFileMode.Move,
-            clearAisImportFolderBeforeProcessing: false,
-            clearDeviceImportFolderBeforeProcessing: false);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        Assert.Equal("Bereits verarbeitet - ins Archiv verschoben", Assert.Single(duplicate.Results).Status);
-        Assert.False(File.Exists(files.AisFilePath));
-        Assert.False(File.Exists(files.DeviceFilePath));
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_DuplicateArchiveFailureShouldReportStatus()
-    {
-        var files = CreateTempImportFiles();
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var profile = CreateInterfaceProfile(
-            archiveFolder: string.Empty,
-            archiveProcessedFiles: true,
-            archiveProcessedFileMode: ArchiveProcessedFileMode.Move,
-            clearAisImportFolderBeforeProcessing: true,
-            clearDeviceImportFolderBeforeProcessing: true);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        var duplicate = coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        var result = Assert.Single(duplicate.Results);
-        Assert.Equal("Bereits verarbeitet - Archivierung fehlgeschlagen", result.Status);
-        Assert.Contains("Archivierung bereits verarbeiteter Dateien fehlgeschlagen: Archivordner fehlt.", result.Messages);
-        Assert.True(File.Exists(files.AisFilePath));
-        Assert.True(File.Exists(files.DeviceFilePath));
-    }
-
-    [Fact]
-    public void ProcessReadyPairs_DuplicateShouldNotMoveUnknownFiles()
-    {
-        var files = CreateTempImportFiles();
-        var unknownFile = Path.Combine(files.Folder, "unknown.xml");
-        File.WriteAllText(unknownFile, "unknown");
-        var processor = new FakeManualProcessor(CreateSuccessResult());
-        var coordinator = new AutoImportPairProcessingCoordinator(processor);
-        var profile = CreateInterfaceProfile(
-            archiveFolder: CreateTempFolder(),
-            archiveProcessedFiles: true,
-            archiveProcessedFileMode: ArchiveProcessedFileMode.Move,
-            clearAisImportFolderBeforeProcessing: true,
-            clearDeviceImportFolderBeforeProcessing: true);
-        var pair = CreatePair(files.AisFilePath, files.DeviceFilePath);
-
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-        coordinator.ProcessReadyPairs(profile, CreateExportProfile(), new[] { pair }, true, Timestamp);
-
-        Assert.True(File.Exists(unknownFile));
     }
 
     [Fact]
@@ -2158,7 +1963,6 @@ public sealed class AutoImportPairProcessingCoordinatorTests
     {
         return new AutoImportPairProcessingCoordinator(
             manualProcessor,
-            new DuplicateImportFileHandler(),
             new AttachmentAutoProcessingEligibilityService(),
             scanner,
             new AttachmentAutoCandidateSelectionService(),

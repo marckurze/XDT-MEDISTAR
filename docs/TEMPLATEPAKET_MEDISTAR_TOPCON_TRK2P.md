@@ -101,7 +101,7 @@ Abgesichert durch:
 - `MedistarTopconTrk2PTemplatePackageTests`
 - BuiltIn-Definitionstests fuer Geraet, Export und Schnittstelle
 - gezielte Reparaturtests fuer alte persistierte BuiltIn-TRK2P-Profile
-- generische AlreadyProcessed-/Duplikat-Nachlauf-Tests: neue Fingerprints werden verarbeitet, echte Duplikate werden nicht erneut exportiert und bekannte Importdateien werden archiviert, in den Fehlerordner verschoben oder entfernt
+- generische Nachlauf-Tests: stabile, lesbare und fachlich passende Dateien werden verarbeitet; danach werden bekannte Importdateien je nach Profilregel archiviert, in den Fehlerordner verschoben oder entfernt
 
 ## Praktische MEDISTAR-Validierung
 

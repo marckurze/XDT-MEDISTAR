@@ -2,6 +2,6 @@ namespace XdtDeviceBridge.Infrastructure;
 
 public sealed record AutoImportPairProcessingBatchResult(
     int ProcessedCount,
-    int SkippedAlreadyProcessedCount,
+    int SkippedCount,
     int ErrorCount,
     IReadOnlyList<AutoImportPairProcessingResult> Results);

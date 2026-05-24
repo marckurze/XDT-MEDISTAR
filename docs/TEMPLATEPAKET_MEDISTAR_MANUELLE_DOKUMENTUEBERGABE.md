@@ -25,7 +25,7 @@ V1-Kandidat, testseitig abgesichert. Eine praktische MEDISTAR-Abnahme steht noch
 
 Ohne AIS-Datei wird beim Start der Ueberwachung kein Dialog geoeffnet und kein Floating-Fenster automatisch abgedockt. Auch bei AIS-Eingang wird fuer diesen Sondermodus kein gruenes Geraeteanbindungsfenster abgedockt; nur der Dokumentdialog kommt in den Vordergrund. Ohne `Uebertragen` wird kein Export erzeugt. Es gibt keinen Wartezeitmodus und keinen automatischen Abschluss.
 
-Nach `Uebertragen` wird der interne Dialog- und Bestaetigungszustand des Profils verworfen. Ein spaeterer AIS-Vorgang startet deshalb wieder mit einem neuen leeren Dialog; gleiche AIS-Dateinamen wie `Patient.gdt` sind zulaessig, solange eine neue Dateiversion beziehungsweise ein neuer Fingerprint vorliegt.
+Nach `Uebertragen` wird der interne Dialog- und Bestaetigungszustand des Profils verworfen. Ein spaeterer AIS-Vorgang startet deshalb wieder mit einem neuen leeren Dialog; gleiche AIS-Dateinamen wie `Patient.gdt` sind zulaessig, sobald die Datei stabil und lesbar im Eingangsordner liegt.
 
 ## Dateiverhalten
 

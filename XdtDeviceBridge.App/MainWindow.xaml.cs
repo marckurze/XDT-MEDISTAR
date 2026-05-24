@@ -5094,6 +5094,7 @@ public partial class MainWindow : Window
                 _lastMonitoringScanQueuesByProfileId[interfaceProfile.Metadata.Id] = new PendingImportQueue();
                 _autoImportPackageStateService.ResetProfile(interfaceProfile.Metadata.Id);
                 _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfile.Metadata.Id);
+                _cv5000DeviceOutputHandledAisKeys.RemoveWhere(key => key.StartsWith($"{interfaceProfile.Metadata.Id}|", StringComparison.OrdinalIgnoreCase));
                 CompleteManualDocumentTransferState(interfaceProfile);
                 UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
                 AppendPairMonitoringEvent(

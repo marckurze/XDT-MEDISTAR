@@ -9,7 +9,7 @@ Dieses Paket beschreibt den ersten bidirektionalen TOPCON-Phoropter-Kandidaten f
 - Testseitig abgesichert fuer beide Richtungen:
   - AIS/MEDISTAR -> XdtDeviceBridge -> TOPCON-CV-5000-Import-XML
   - TOPCON CV-5000 -> XdtDeviceBridge -> MEDISTAR-XDT-Rueckgabe
-- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden. Der Rueckweg verarbeitet MEDISTAR-Historien-AIS-Dateien tolerant, damit Karteikartenzeilen den CV-5000-Rueckexport nicht abbrechen. Nach praktischem MEDISTAR-Importtest wird `Prescription` vollstaendig ueber `6228` und `Full Correction` vollstaendig ueber `6227` ausgegeben; `6330` wird fuer CV-5000 nicht mehr verwendet. Erfolgreiche Rueckgabezyklen erzeugen keinen zusaetzlichen AlreadyProcessed-Fehlernachlauf; neue Versionen gleichnamiger AIS-Dateien wie `Patient.gdt` koennen das Auswahlfenster erneut oeffnen. Der MEDISTAR-Import der erzeugten Rueckgabedatei ist mit dieser Feldzuordnung praktisch bestaetigt.
+- Auswahlfenster und Importdatei-Erzeugung sind im Verarbeitungslauf angebunden. Der Rueckweg verarbeitet MEDISTAR-Historien-AIS-Dateien tolerant, damit Karteikartenzeilen den CV-5000-Rueckexport nicht abbrechen. Nach praktischem MEDISTAR-Importtest wird `Prescription` vollstaendig ueber `6228` und `Full Correction` vollstaendig ueber `6227` ausgegeben; `6330` wird fuer CV-5000 nicht mehr verwendet. Aktuell im Eingangsordner liegende stabile und fachlich passende Dateien werden ohne interne AlreadyProcessed-/Duplicate-Sperre verarbeitet; der MEDISTAR-Import der erzeugten Rueckgabedatei ist mit dieser Feldzuordnung praktisch bestaetigt.
 - Offizielles ZIP-Artefakt wird erst nach der Release-Regel abgelegt.
 
 ## Enthaltene BuiltIns
@@ -107,9 +107,9 @@ Der Bereich `XDT-Anhaenge fuer AIS` ist bei CV-5000/CV-5000S bewusst ausgeblende
 
 Das BuiltIn-Geraeteprofil CV-5000/CV-5000S ist als bidirektional-faehig markiert. Es erfolgt keine automatische Aktivierung und keine automatische Aenderung bestehender UserDefined-Profile.
 
-Der Duplicate-Schutz bleibt aktiv, ist aber dateiversionsbezogen: identische AIS-/Phoropter-Dateipaare werden nicht doppelt exportiert; eine neu geschriebene `Patient.gdt` mit gleicher Dateiablage startet wieder einen neuen CV-5000-Zyklus ohne Reset.
+Die Verarbeitung blockiert nicht mehr anhand frueherer Dateinamen, Pfade, Fingerprints oder Zeitstempel. Eine gleichnamige `Patient.gdt` und eine gleichnamige Phoropter-Rueckgabe koennen im direkten Folgezyklus erneut verarbeitet werden, sobald sie stabil, lesbar und fachlich passend im jeweiligen Eingangsordner liegen.
 
-Nach Phase 1 wird fuer CV-5000/CV-5000S eine Baseline der bereits vorhandenen Phoropter-Dateien gehalten. Dadurch werden alte Rueckgabedateien nicht erneut gekoppelt, waehrend eine neue, geaenderte oder gleichnamig ueberschriebene Rueckgabedatei den finalen MEDISTAR-Export startet, auch wenn ihr Dateizeitstempel nicht neuer als die AIS-Datei ist.
+Doppelexporte werden organisatorisch ueber den konfigurierten Nachlauf vermieden: Nach erfolgreicher Verarbeitung sollen AIS- und Geraetedateien je nach Profilregel archiviert, verschoben oder entfernt werden. Bleiben sie absichtlich im Eingangsordner liegen, ist eine erneute Verarbeitung beim naechsten Scan zulaessig.
 
 ## Tests
 
@@ -124,7 +124,7 @@ Nach Phase 1 wird fuer CV-5000/CV-5000S eine Baseline der bereits vorhandenen Ph
 
 ## Grenzen / offen
 
-- Im Livebetrieb weiter zu beobachten bleibt der Folgezyklus ohne Reset mit gleichnamiger neu geschriebener AIS-Datei und gleichnamig ueberschriebener/geaenderter Phoropter-Rueckgabe.
+- Im Livebetrieb weiter zu beobachten bleibt die Nachlaufkonfiguration, damit nach erfolgreichem Export keine unverarbeitete Altdatei im Importordner liegen bleibt.
 - Die vom Dialog erzeugte `CVImport.xml` muss am echten CV-5000/CV-5000S weiter beobachtet werden.
 - Keratometer-, Tonometrie- und Pachymetrie-Karteikartenzeilen werden erkannt, aber mangels eindeutig belegtem CV-5000-Importmapping nicht in die Phoropter-Import-XML geschrieben.
 - Offizielle ZIP-Ablage erst nach `docs/TEMPLATEPAKET_RELEASE_REGEL.md`.
