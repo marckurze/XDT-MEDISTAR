@@ -148,6 +148,8 @@ Die automatische Verarbeitung verwendet keine interne AlreadyProcessed-/Duplicat
 
 Wenn ein CV-5000-AIS-/Geraetepaar fachlich vollstaendig ist, wird der Exportpfad gestartet. Bleibt ein Export aus, muss ein echter Grund wie fehlende Lesbarkeit, unpassendes Geraeteprofil, fehlende Patientendaten oder Schreibfehler sichtbar werden.
 
+Nach erfolgreichem Export startet fuer automatisch geoeffnete, nicht gepinnte Geraetefenster wieder der AutoRedock-Countdown. Gepinnte Fenster bleiben abgedockt.
+
 ## Grenzen / offen
 
 - Weiter im Livebetrieb zu beobachten bleibt die passende Nachlaufkonfiguration, damit Importordner nach erfolgreicher Verarbeitung sauber bleiben und nicht unbeabsichtigt erneut verarbeitet werden.

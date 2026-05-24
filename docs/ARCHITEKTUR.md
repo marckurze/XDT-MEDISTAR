@@ -86,6 +86,8 @@ Für das Warten auf vollständige Verarbeitungspakete ist ein zweistufiges Model
 
 Für langsam schreibende Geräte ist eine Stabilitätsprüfung vorbereitet. Der XDT-Anhang-Scanner kann unterstützte Kandidaten mit Stabilitätsstatus markieren; instabile Kandidaten werden nicht automatisch ausgewählt und vom Vorbereitungspfad nicht verschoben oder kopiert, wenn der Instabilitätsstatus bekannt ist. Die Stabilitätswartezeit ist pro Schnittstellenprofil konfigurierbar, Standard `2` Sekunden. Das periodische Ordnerabfrage-Intervall ist ebenfalls pro Schnittstellenprofil vorbereitet, Standard `5` Sekunden; die manuell gestartete Überwachung nutzt weiterhin periodischen Scan und keinen `FileSystemWatcher`.
 
+AutoRedock fuer abgedockte Geraeteanbindungsfenster haengt am terminalen Verarbeitungsabschluss. Ein erfolgreicher Export startet fuer automatisch geoeffnete, nicht gepinnte Fenster den Rueckdock-Countdown; ein Pin verhindert den Countdown. Wiederholte Scan-Aktivitaet durch im Importordner verbliebene Dateien darf diesen terminalen Countdown nicht endlos nach hinten schieben.
+
 ### 1.5 Lizenzanzeige
 
 Der Lizenzbereich zeigt den lokalen Lizenzstatus, Lizenzanfragen, importierte Lizenzdateien, lizenzierte Geräte/Anbindungen und Karenzzeiten für neue Anbindungen.

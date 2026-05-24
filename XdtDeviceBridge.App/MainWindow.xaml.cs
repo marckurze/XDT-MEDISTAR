@@ -5097,6 +5097,7 @@ public partial class MainWindow : Window
                 _cv5000DeviceOutputHandledAisKeys.RemoveWhere(key => key.StartsWith($"{interfaceProfile.Metadata.Id}|", StringComparison.OrdinalIgnoreCase));
                 CompleteManualDocumentTransferState(interfaceProfile);
                 UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
+                NotifyAutoRedockProcessingCompleted(interfaceProfile.Metadata.Id, timestamp);
                 AppendPairMonitoringEvent(
                     interfaceProfile,
                     result,
@@ -5121,6 +5122,13 @@ public partial class MainWindow : Window
         }
 
         return batchResult;
+    }
+
+    private void NotifyAutoRedockProcessingCompleted(string interfaceProfileId, DateTime timestamp)
+    {
+        var floatingState = _floatingWindowStateService.GetOrCreate(interfaceProfileId);
+        _ = _interfaceProfileAutoRedockService.NotifyProcessingCompleted(interfaceProfileId, floatingState, timestamp);
+        EnsureAutoRedockTimerState();
     }
 
     private void CompleteManualDocumentTransferState(InterfaceProfileDefinition interfaceProfile)

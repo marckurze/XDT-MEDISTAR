@@ -95,6 +95,17 @@ public sealed class InterfaceProfileAutoRedockService
 
         if (IsOpenActivity(entry))
         {
+            if (state.IsTerminalCompleted && state.IsCountdownRunning)
+            {
+                return new InterfaceProfileAutoRedockDecision(
+                    IsOpenActivity: true,
+                    IsTerminalActivity: false,
+                    DidStartCountdown: false,
+                    DidCancelCountdown: false,
+                    ShouldRedockNow: false,
+                    RedockDueAt: state.RedockDueAt);
+            }
+
             var cancelled = state.IsCountdownRunning;
             state = state with
             {
@@ -113,6 +124,43 @@ public sealed class InterfaceProfileAutoRedockService
         }
 
         return Empty();
+    }
+
+    public InterfaceProfileAutoRedockDecision NotifyProcessingCompleted(
+        string interfaceProfileId,
+        InterfaceProfileFloatingWindowState floatingState,
+        DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(floatingState);
+
+        var state = GetOrCreate(interfaceProfileId) with
+        {
+            IsOperationActive = false,
+            IsTerminalCompleted = true
+        };
+        _states[state.InterfaceProfileId] = state;
+
+        if (CanStartCountdown(state, floatingState))
+        {
+            return StartCountdown(state, now) with
+            {
+                IsTerminalActivity = true
+            };
+        }
+
+        var cancelled = state.IsCountdownRunning;
+        state = state with
+        {
+            IsCountdownRunning = false,
+            RedockDueAt = null
+        };
+        _states[state.InterfaceProfileId] = state;
+        return new InterfaceProfileAutoRedockDecision(
+            IsOpenActivity: false,
+            IsTerminalActivity: true,
+            DidStartCountdown: false,
+            DidCancelCountdown: cancelled,
+            ShouldRedockNow: false);
     }
 
     public InterfaceProfileAutoRedockDecision NotifyPinnedChanged(
@@ -208,6 +256,17 @@ public sealed class InterfaceProfileAutoRedockService
         InterfaceProfileAutoRedockState state,
         DateTime now)
     {
+        if (state.IsCountdownRunning && state.RedockDueAt is not null)
+        {
+            return new InterfaceProfileAutoRedockDecision(
+                IsOpenActivity: false,
+                IsTerminalActivity: false,
+                DidStartCountdown: false,
+                DidCancelCountdown: false,
+                ShouldRedockNow: false,
+                RedockDueAt: state.RedockDueAt);
+        }
+
         var dueAt = now + _redockDelay;
         state = state with
         {

@@ -72,7 +72,7 @@ public sealed class InterfaceProfileAutoRedockServiceTests
     }
 
     [Fact]
-    public void RecordMonitoringEvent_NewActivityShouldCancelRunningCountdown()
+    public void RecordMonitoringEvent_NewActivityAfterTerminalSuccessShouldKeepCountdown()
     {
         var service = new InterfaceProfileAutoRedockService();
         var floatingState = DetachedState("interface-ar360");
@@ -86,13 +86,13 @@ public sealed class InterfaceProfileAutoRedockServiceTests
             floatingState);
 
         Assert.True(openDecision.IsOpenActivity);
-        Assert.True(openDecision.DidCancelCountdown);
-        Assert.False(service.HasPendingCountdowns);
-        Assert.False(service.EvaluateDue("interface-ar360", floatingState, BaseTime.AddSeconds(6)).ShouldRedockNow);
+        Assert.False(openDecision.DidCancelCountdown);
+        Assert.True(service.HasPendingCountdowns);
+        Assert.True(service.EvaluateDue("interface-ar360", floatingState, BaseTime.AddSeconds(6)).ShouldRedockNow);
     }
 
     [Fact]
-    public void RecordMonitoringEvent_VersionedNewActivityShouldCancelRunningCountdown()
+    public void RecordMonitoringEvent_VersionedNewActivityAfterTerminalSuccessShouldKeepCountdown()
     {
         var service = new InterfaceProfileAutoRedockService();
         var floatingState = DetachedState("interface-nt530p");
@@ -110,8 +110,9 @@ public sealed class InterfaceProfileAutoRedockServiceTests
             floatingState);
 
         Assert.True(openDecision.IsOpenActivity);
-        Assert.True(openDecision.DidCancelCountdown);
-        Assert.False(service.HasPendingCountdowns);
+        Assert.False(openDecision.DidCancelCountdown);
+        Assert.True(service.HasPendingCountdowns);
+        Assert.True(service.EvaluateDue("interface-nt530p", floatingState, BaseTime.AddSeconds(6)).ShouldRedockNow);
     }
 
     [Fact]
@@ -128,6 +129,53 @@ public sealed class InterfaceProfileAutoRedockServiceTests
         Assert.True(decision.IsTerminalActivity);
         Assert.False(decision.DidStartCountdown);
         Assert.False(service.HasPendingCountdowns);
+    }
+
+    [Fact]
+    public void NotifyProcessingCompleted_ShouldStartCountdownForAutoDetachedWindow()
+    {
+        var service = new InterfaceProfileAutoRedockService();
+        var floatingState = DetachedState("interface-cv5000");
+        service.MarkAutoDetached("interface-cv5000", floatingState, BaseTime);
+
+        var decision = service.NotifyProcessingCompleted("interface-cv5000", floatingState, BaseTime);
+
+        Assert.True(decision.IsTerminalActivity);
+        Assert.True(decision.DidStartCountdown);
+        Assert.Equal(BaseTime.AddSeconds(5), decision.RedockDueAt);
+        Assert.True(service.EvaluateDue("interface-cv5000", floatingState, BaseTime.AddSeconds(5)).ShouldRedockNow);
+    }
+
+    [Fact]
+    public void NotifyProcessingCompleted_PinnedWindowShouldNotStartCountdown()
+    {
+        var service = new InterfaceProfileAutoRedockService();
+        var pinnedState = DetachedState("interface-cv5000", isPinned: true);
+        service.MarkAutoDetached("interface-cv5000", pinnedState, BaseTime);
+
+        var decision = service.NotifyProcessingCompleted("interface-cv5000", pinnedState, BaseTime);
+
+        Assert.True(decision.IsTerminalActivity);
+        Assert.False(decision.DidStartCountdown);
+        Assert.False(service.HasPendingCountdowns);
+    }
+
+    [Fact]
+    public void RecordMonitoringEvent_RepeatedSuccessfulExportShouldNotPostponeCountdown()
+    {
+        var service = new InterfaceProfileAutoRedockService();
+        var floatingState = DetachedState("interface-cv5000");
+        service.MarkAutoDetached("interface-cv5000", floatingState, BaseTime);
+        _ = service.NotifyProcessingCompleted("interface-cv5000", floatingState, BaseTime);
+
+        var decision = service.RecordMonitoringEvent(
+            Event("interface-cv5000", "pair:patient-device:status", "MEDISTAR + TOPCON CV-5000: automatisch verarbeitet. Exportdatei: out.gdt", BaseTime.AddSeconds(2)),
+            floatingState);
+
+        Assert.True(decision.IsTerminalActivity);
+        Assert.False(decision.DidStartCountdown);
+        Assert.Equal(BaseTime.AddSeconds(5), decision.RedockDueAt);
+        Assert.True(service.EvaluateDue("interface-cv5000", floatingState, BaseTime.AddSeconds(5)).ShouldRedockNow);
     }
 
     [Fact]
