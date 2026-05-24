@@ -785,9 +785,13 @@ public sealed class ProfileCatalogService
             || profile.Rules.Any(rule =>
                 string.Equals(rule.TargetFieldCode, "6228", StringComparison.Ordinal)
                 && string.Equals(rule.TargetName, "PhoropterSeparator", StringComparison.Ordinal))
+            || profile.Rules.Any(rule =>
+                string.Equals(rule.TargetFieldCode, "6330", StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace(rule.SourcePath)
+                && rule.SourcePath.Contains("Device.Measure[@Type='SBJ']/FullCorrection", StringComparison.Ordinal))
             || !profile.Rules.Any(rule => string.Equals(
                 rule.TargetFieldCode,
-                "6227",
+                "6228",
                 StringComparison.Ordinal)
                 && string.Equals(
                     rule.SourcePath,
@@ -803,7 +807,7 @@ public sealed class ProfileCatalogService
                     StringComparison.Ordinal))
             || !profile.Rules.Any(rule => string.Equals(
                 rule.TargetFieldCode,
-                "6330",
+                "6227",
                 StringComparison.Ordinal)
                 && string.Equals(
                     rule.SourcePath,

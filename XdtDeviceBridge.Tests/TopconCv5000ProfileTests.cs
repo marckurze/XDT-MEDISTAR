@@ -181,20 +181,21 @@ public sealed class TopconCv5000ProfileTests
         Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
         Assert.Empty(exportResult.Issues);
         Assert.Contains("8402Phoro", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6227Phoropter finaler Verordnungswert", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228Phoropter finaler Verordnungswert", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6228R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6227Phoropter Maximalwert (Vollkorrektion)", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6330R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6330L.:S=+ 1.25 Z=- 2.00*  7", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6227L.:S=+ 1.25 Z=- 2.00*  7", exportResult.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6228--", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6205", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6220", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6221", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("6302", exportResult.Content, StringComparison.Ordinal);
-        Assert.Equal(2, mappingResult.Records.Count(record => record.FieldCode == "6227"));
-        Assert.Equal(2, mappingResult.Records.Count(record => record.FieldCode == "6228"));
-        Assert.Equal(2, mappingResult.Records.Count(record => record.FieldCode == "6330"));
+        Assert.Equal(3, mappingResult.Records.Count(record => record.FieldCode == "6227"));
+        Assert.Equal(3, mappingResult.Records.Count(record => record.FieldCode == "6228"));
+        Assert.DoesNotContain(mappingResult.Records, record => record.FieldCode == "6330");
     }
 
     [Fact]
@@ -202,7 +203,7 @@ public sealed class TopconCv5000ProfileTests
     {
         var content = BuildCv5000ExportContent(WriteTempXml(CreateCv5000ReturnXml("Prescription")));
 
-        Assert.Contains("6227Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
+        Assert.Contains("6228Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
         Assert.Contains("6228R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", content, StringComparison.Ordinal);
         Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", content, StringComparison.Ordinal);
         Assert.DoesNotContain("Phoropter Maximalwert", content, StringComparison.Ordinal);
@@ -210,15 +211,16 @@ public sealed class TopconCv5000ProfileTests
     }
 
     [Fact]
-    public void MedistarExportForCv5000Return_WithOnlyFullCorrection_ShouldUse6330AndOmitPrescriptionBlock()
+    public void MedistarExportForCv5000Return_WithOnlyFullCorrection_ShouldUse6227AndOmitPrescriptionBlock()
     {
         var content = BuildCv5000ExportContent(WriteTempXml(CreateCv5000ReturnXml("Full Correction")));
 
         Assert.Contains("6227Phoropter Maximalwert (Vollkorrektion)", content, StringComparison.Ordinal);
-        Assert.Contains("6330R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", content, StringComparison.Ordinal);
-        Assert.Contains("6330L.:S=+ 1.25 Z=- 2.00*  7", content, StringComparison.Ordinal);
+        Assert.Contains("6227R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", content, StringComparison.Ordinal);
+        Assert.Contains("6227L.:S=+ 1.25 Z=- 2.00*  7", content, StringComparison.Ordinal);
         Assert.DoesNotContain("Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
         Assert.DoesNotContain("6228R.:S=", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", content, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -226,7 +228,7 @@ public sealed class TopconCv5000ProfileTests
     {
         var content = BuildCv5000ExportContent(WriteTempXml(CreateCv5000ReturnXml("Prescription", includeRight: false)));
 
-        Assert.Contains("6227Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
+        Assert.Contains("6228Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
         Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", content, StringComparison.Ordinal);
         Assert.DoesNotContain("6228R.:S=", content, StringComparison.Ordinal);
     }
@@ -262,9 +264,10 @@ public sealed class TopconCv5000ProfileTests
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(deviceProfile));
 
         Assert.Equal("device-topcon-cv5000-default", exportProfile.SourceDeviceProfileId);
-        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
         Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/R/MedistarLine");
-        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.DoesNotContain(exportProfile.Rules, rule => rule.TargetFieldCode == "6330");
         Assert.DoesNotContain(exportProfile.Rules, rule => rule.TargetFieldCode is "6221" or "6220" or "6205" or "6302" or "6303" or "6304" or "6305");
         Assert.Empty(ExportProfileDefinitionValidator.Validate(exportProfile));
 

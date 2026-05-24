@@ -380,11 +380,33 @@ public sealed class ProfileCatalogServiceTests
         var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-cv5000-default");
         Assert.True(profile.Metadata.IsBuiltIn);
         Assert.False(profile.Metadata.IsUserDefined);
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/R/MedistarLine");
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6330");
         Assert.DoesNotContain(profile.Rules, rule => rule.SourcePath?.Contains("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal) == true);
         Assert.DoesNotContain(profile.Rules, rule => rule.TargetName == "PhoropterSeparator");
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairTopconCv5000BuiltInExportProfileWithLegacy6330Rules()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateTopconCv5000ExportProfileWithLegacy6330Rules(isBuiltIn: true) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-cv5000-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/L/MedistarLine");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6330");
     }
 
     [Fact]
@@ -406,6 +428,26 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(profile.Rules, rule => rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
         Assert.Contains(profile.Rules, rule => rule.TargetName == "PhoropterSeparator");
     }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldNotRepairUserDefinedTopconCv5000ExportProfileWithLegacy6330Rules()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: new[] { CreateTopconCv5000ExportProfileWithLegacy6330Rules(isBuiltIn: false) },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-cv5000-default");
+        Assert.False(profile.Metadata.IsBuiltIn);
+        Assert.True(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+    }
+
 
     [Fact]
     public void Load_ShouldReadAllExpectedProfilesAfterEnsureDefaultProfiles()
@@ -946,6 +988,36 @@ public sealed class ProfileCatalogServiceTests
                     new ExportRuleDefinition("10", "6228", "PhoropterLine4", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine4", "{value}", 10, true, "Legacy CV-5000 phoropter return line 4."),
                     new ExportRuleDefinition("11", "6228", "PhoropterLine5", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine5", "{value}", 11, true, "Legacy CV-5000 phoropter return line 5."),
                     new ExportRuleDefinition("12", "6228", "PhoropterLine6", ExportRuleType.Template, "Device.Measure[@Type='SBJ']/MedistarLine6", "{value}", 12, true, "Legacy CV-5000 reserved line.")
+                })
+                .ToArray()
+        };
+    }
+
+    private static ExportProfileDefinition CreateTopconCv5000ExportProfileWithLegacy6330Rules(bool isBuiltIn)
+    {
+        var current = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Rules = current.Rules
+                .Select(rule =>
+                {
+                    if (string.Equals(rule.SourcePath, "Device.Measure[@Type='SBJ']/Prescription/HeaderLine", StringComparison.Ordinal))
+                    {
+                        return rule with { TargetFieldCode = "6227" };
+                    }
+
+                    if (rule.SourcePath?.Contains("Device.Measure[@Type='SBJ']/FullCorrection/", StringComparison.Ordinal) == true
+                        && rule.SourcePath.EndsWith("/MedistarLine", StringComparison.Ordinal))
+                    {
+                        return rule with { TargetFieldCode = "6330" };
+                    }
+
+                    return rule;
                 })
                 .ToArray()
         };

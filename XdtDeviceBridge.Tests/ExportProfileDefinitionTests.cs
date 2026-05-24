@@ -570,12 +570,13 @@ public sealed class ExportProfileDefinitionTests
         var profile = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
 
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "8402" && rule.SourcePath == "AIS.ExaminationType");
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/HeaderLine");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/R/MedistarLine");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='SBJ']/Prescription/L/MedistarLine");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/HeaderLine");
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6330" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/L/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/FullCorrection/L/MedistarLine");
+        Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode == "6330");
         Assert.DoesNotContain(profile.Rules, rule => rule.SourcePath?.Contains("Device.Measure[@Type='SBJ']/MedistarLine", StringComparison.Ordinal) == true);
         Assert.DoesNotContain(profile.Rules, rule => rule.TargetFieldCode is "6221" or "6220" or "6205" or "6302" or "6303" or "6304" or "6305");
     }

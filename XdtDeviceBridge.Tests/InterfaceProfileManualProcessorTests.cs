@@ -56,12 +56,13 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
         Assert.NotNull(result.ExportContent);
         Assert.Contains("8402Phoro", result.ExportContent, StringComparison.Ordinal);
-        Assert.Contains("6227Phoropter finaler Verordnungswert", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228Phoropter finaler Verordnungswert", result.ExportContent, StringComparison.Ordinal);
         Assert.Contains("6228R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", result.ExportContent, StringComparison.Ordinal);
         Assert.Contains("6228L.:S=+ 1.25 Z=- 2.00*  7", result.ExportContent, StringComparison.Ordinal);
         Assert.Contains("6227Phoropter Maximalwert (Vollkorrektion)", result.ExportContent, StringComparison.Ordinal);
-        Assert.Contains("6330R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", result.ExportContent, StringComparison.Ordinal);
-        Assert.Contains("6330L.:S=+ 1.25 Z=- 2.00*  7", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6227R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6227L.:S=+ 1.25 Z=- 2.00*  7", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", result.ExportContent, StringComparison.Ordinal);
         Assert.DoesNotContain("6228--", result.ExportContent, StringComparison.Ordinal);
         Assert.DoesNotContain(result.Messages, message =>
             message.Contains("AIS-Datei konnte nicht fehlerfrei gelesen werden", StringComparison.OrdinalIgnoreCase));

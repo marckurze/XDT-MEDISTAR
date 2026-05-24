@@ -881,7 +881,7 @@ public static class DefaultExportProfileDefinitions
                 Id: "export-medistar-topcon-cv5000-default",
                 Name: "MEDISTAR + TOPCON CV-5000 Export",
                 ProfileKind: ProfileKind.ExportProfile,
-                Description: "Default export profile definition for MEDISTAR and TOPCON CV-5000 / CV-5000S phoropter SBJ XML return files. Prescription is emitted with a 6227 header and 6228 values; Full Correction is emitted with a 6227 header and CV-5000-specific 6330 values.",
+                Description: "Default export profile definition for MEDISTAR and TOPCON CV-5000 / CV-5000S phoropter SBJ XML return files. Prescription is emitted entirely with 6228; Full Correction is emitted entirely with 6227.",
                 Vendor: "XdtDeviceBridge",
                 Product: "MEDISTAR/TOPCON CV-5000",
                 Version: "1.0.0",
@@ -903,14 +903,14 @@ public static class DefaultExportProfileDefinitions
                 new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
                 new ExportRuleDefinition(
                     "7",
-                    "6227",
+                    "6228",
                     "PrescriptionHeader",
                     ExportRuleType.Template,
                     "Device.Measure[@Type='SBJ']/Prescription/HeaderLine",
                     "{value}",
                     7,
                     true,
-                    "MEDISTAR header for TOPCON CV-5000 Prescription / final prescription value."),
+                    "MEDISTAR 6228 header for TOPCON CV-5000 Prescription / final prescription value."),
                 new ExportRuleDefinition(
                     "8",
                     "6228",
@@ -943,24 +943,24 @@ public static class DefaultExportProfileDefinitions
                     "MEDISTAR header for TOPCON CV-5000 Full Correction / maximum correction value."),
                 new ExportRuleDefinition(
                     "11",
-                    "6330",
+                    "6227",
                     "FullCorrectionRight",
                     ExportRuleType.Template,
                     "Device.Measure[@Type='SBJ']/FullCorrection/R/MedistarLine",
                     "{value}",
                     11,
                     true,
-                    "MEDISTAR CV-5000-specific 6330 right-eye Full Correction value."),
+                    "MEDISTAR 6227 right-eye Full Correction value from TOPCON CV-5000."),
                 new ExportRuleDefinition(
                     "12",
-                    "6330",
+                    "6227",
                     "FullCorrectionLeft",
                     ExportRuleType.Template,
                     "Device.Measure[@Type='SBJ']/FullCorrection/L/MedistarLine",
                     "{value}",
                     12,
                     true,
-                    "MEDISTAR CV-5000-specific 6330 left-eye Full Correction value.")
+                    "MEDISTAR 6227 left-eye Full Correction value from TOPCON CV-5000.")
             });
     }
 }

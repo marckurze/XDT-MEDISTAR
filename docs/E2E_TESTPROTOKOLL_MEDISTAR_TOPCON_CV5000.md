@@ -32,9 +32,8 @@ Status: testseitig validierter bidirektionaler Phoropter-Kandidat. Das Auswahlfe
 - `3102` Vorname
 - `3103` Geburtsdatum
 - `8402` Untersuchungsart aus AIS
-- `6227` Phoropter-Ueberschriften
-- `6228` Prescription-Phoropterwerte
-- `6330` Full-Correction-Phoropterwerte, nur CV-5000-spezifisch
+- `6228` Prescription-Header und Prescription-Phoropterwerte
+- `6227` Full-Correction-Header und Full-Correction-Phoropterwerte
 
 ## AIS-Historienfixture
 
@@ -101,22 +100,22 @@ Leere Prism-/VA-/Contrast-Felder werden ignoriert.
 Die XDT-Laengenpraefixe werden zentral berechnet; die folgenden Zeilen zeigen den fachlichen Inhalt.
 
 ```text
-6227 Phoropter finaler Verordnungswert
+6228 Phoropter finaler Verordnungswert
 6228 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
 6228 L.:S=+ 1.25 Z=- 2.00*  7
 6227 Phoropter Maximalwert (Vollkorrektion)
-6330 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
-6330 L.:S=+ 1.25 Z=- 2.00*  7
+6227 R.:S=+ 1.25 Z=- 2.00*  7 PD= 59 VD= 13.75
+6227 L.:S=+ 1.25 Z=- 2.00*  7
 ```
 
 Fachliche Bestaetigung:
 
-- `Prescription` wird als finaler Verordnungswert mit `6227`-Ueberschrift und `6228`-Werten ausgegeben.
-- `Full Correction` wird als Maximalwert/Vollkorrektion mit `6227`-Ueberschrift und CV-5000-spezifischen `6330`-Werten ausgegeben.
+- `Prescription` wird als finaler Verordnungswert vollstaendig ueber `6228` ausgegeben.
+- `Full Correction` wird als Maximalwert/Vollkorrektion vollstaendig ueber `6227` ausgegeben.
+- Der praktische MEDISTAR-Importtest zeigte, dass `6330` nicht angezeigt wird; CV-5000 verwendet deshalb keine `6330`-Zeilen mehr.
 - `8402` kommt aus AIS/MEDISTAR.
 - MEDISTAR-Historien-AIS-Dateien mit `V0`/`V1`/`V2`/`V3`/`V4`/`V7`/`P`/`Y`-Karteikartenzeilen werden fuer den CV-5000-Rueckweg tolerant gelesen.
 - Beide Type-Bloecke werden ueber Ueberschriften getrennt; keine `6228 --`-Trennzeile mehr.
-- `6330` wird hier ausschliesslich CV-5000-spezifisch fuer `Full Correction` verwendet.
 - Keine leeren R-/L-Zeilen.
 - Keine kuenstlichen Nullwerte.
 - Keine `6302` bis `6305` fuer Messwerte.
