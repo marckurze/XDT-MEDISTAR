@@ -25,4 +25,10 @@ public sealed record InterfaceMonitoringCardDisplay(
     string AttachmentImportFolder,
     string AttachmentExportFolder,
     string AttachmentConfigurationStatus,
-    bool IsDetailsExpanded = false);
+    bool IsDetailsExpanded = false,
+    string DeviceType = "",
+    string DeviceImagePath = "",
+    bool UsesPilotDeviceVisual = false)
+{
+    public bool HasDeviceImage => !string.IsNullOrWhiteSpace(DeviceImagePath);
+}

@@ -111,6 +111,28 @@ public sealed class UserDefinedProfileCreationServiceTests
         Assert.Equal("Xml", profile.ParserMode);
         Assert.Empty(profile.Measurements);
         Assert.False(profile.IsBidirectional);
+        Assert.Equal(string.Empty, profile.DeviceImagePath);
+    }
+
+    [Fact]
+    public void CreateDeviceProfile_ShouldPersistOptionalDeviceImagePath()
+    {
+        var catalog = CreateDefaultCatalog();
+
+        var result = _service.CreateDeviceProfile(
+            catalog,
+            new UserDefinedDeviceProfileCreationRequest(
+                "Praxis Phoropter",
+                "TOPCON",
+                "CV-5000S",
+                "Phoropter",
+                "Xml",
+                DeviceImagePath: @"C:\Praxis\Bilder\cv5000.png"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success);
+        Assert.Equal(@"C:\Praxis\Bilder\cv5000.png", result.Profile!.DeviceImagePath);
     }
 
     [Fact]

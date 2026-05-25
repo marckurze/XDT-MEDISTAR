@@ -213,6 +213,30 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.False(row.MonitoringCard.IsScanAnimationActive);
         Assert.Equal("-", row.MonitoringCard.LastScanText);
         Assert.Equal("Nein", row.MonitoringCard.AutomaticProcessingText);
+        Assert.False(row.MonitoringCard.UsesPilotDeviceVisual);
+        Assert.Equal(string.Empty, row.MonitoringCard.DeviceImagePath);
+    }
+
+    [Fact]
+    public void BuildRows_ShouldUsePilotMonitoringVisualForCv5000()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
+        {
+            IsActive = true,
+            IsLicenseRequired = false
+        };
+
+        var row = Assert.Single(_service.BuildRows(
+            new[] { interfaceProfile },
+            new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            new[] { DefaultDeviceProfileDefinitions.CreateTopconCv5000Default() },
+            new[] { DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default() },
+            Array.Empty<LicensedDeviceState>()));
+
+        Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
+        Assert.Equal("Phoropter", row.MonitoringCard.DeviceType);
+        Assert.True(row.MonitoringCard.HasDeviceImage);
+        Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, row.MonitoringCard.DeviceImagePath);
     }
 
     [Fact]

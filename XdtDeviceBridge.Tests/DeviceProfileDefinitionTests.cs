@@ -635,6 +635,7 @@ public sealed class DeviceProfileDefinitionTests
         Assert.True(profile.CanContainMultipleExaminationTypes);
         Assert.Contains("SBJ", profile.SupportedExaminationTypes);
         Assert.True(profile.IsBidirectional);
+        Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, profile.DeviceImagePath);
     }
 
     [Fact]

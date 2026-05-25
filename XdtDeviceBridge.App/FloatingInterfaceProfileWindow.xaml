@@ -164,12 +164,161 @@
                     </StackPanel>
                 </DockPanel>
 
+                <Border CornerRadius="8"
+                        BorderThickness="0"
+                        Background="#0AF6FFF9"
+                        Padding="4"
+                        Margin="0,0,0,8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesPilotDeviceVisual}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid Height="154">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.05*"/>
+                            <ColumnDefinition Width="1.35*"/>
+                            <ColumnDefinition Width="72"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,8,0">
+                            <TextBlock Text="{Binding DeviceType}"
+                                       FontSize="22"
+                                       FontWeight="SemiBold"
+                                       Foreground="#102A1F"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding InterfaceProfileName}"
+                                       FontSize="16"
+                                       Foreground="#102A1F"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0"/>
+                            <TextBlock Text="{Binding CurrentStatus}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="#166534"
+                                       TextWrapping="Wrap"
+                                       Margin="0,10,0,0"/>
+                        </StackPanel>
+
+                        <Grid Grid.Column="1"
+                              Margin="0,0,10,0">
+                            <Border Background="#10FFFFFF"
+                                    CornerRadius="8"/>
+                            <Image Source="{Binding DeviceImagePath}"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality">
+                                <Image.Style>
+                                    <Style TargetType="Image">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasDeviceImage}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Image.Style>
+                            </Image>
+                            <TextBlock Text="Kein Gerätebild"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="#6B7280">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasDeviceImage}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+
+                        <Grid x:Name="FloatingPilotStatusOrbSurface"
+                              Grid.Column="2"
+                              Width="58"
+                              Height="58"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Loaded="FloatingPilotStatusOrb_Loaded"
+                              Unloaded="FloatingPilotStatusOrb_Unloaded"
+                              DataContextChanged="FloatingPilotStatusOrb_DataContextChanged"
+                              ToolTip="{Binding CurrentStatus}">
+                            <Ellipse Width="46"
+                                     Height="46"
+                                     Tag="StatusOrb"
+                                     RenderTransformOrigin="0.5,0.5"
+                                     Opacity="0.92">
+                                <Ellipse.RenderTransform>
+                                    <ScaleTransform/>
+                                </Ellipse.RenderTransform>
+                                <Ellipse.Effect>
+                                    <DropShadowEffect BlurRadius="18"
+                                                      ShadowDepth="2"
+                                                      Direction="270"
+                                                      Color="#991B1B"
+                                                      Opacity="0.34"/>
+                                </Ellipse.Effect>
+                                <Ellipse.Fill>
+                                    <RadialGradientBrush Center="0.34,0.28"
+                                                         GradientOrigin="0.22,0.18"
+                                                         RadiusX="0.72"
+                                                         RadiusY="0.72">
+                                        <GradientStop Color="#FEE2E2" Offset="0"/>
+                                        <GradientStop Color="#EF4444" Offset="0.42"/>
+                                        <GradientStop Color="#B91C1C" Offset="1"/>
+                                    </RadialGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <Ellipse Width="46"
+                                     Height="46"
+                                     Tag="StatusOrbFlash"
+                                     Opacity="0">
+                                <Ellipse.Fill>
+                                    <RadialGradientBrush Center="0.34,0.28"
+                                                         GradientOrigin="0.2,0.16"
+                                                         RadiusX="0.75"
+                                                         RadiusY="0.75">
+                                        <GradientStop Color="#DCFCE7" Offset="0"/>
+                                        <GradientStop Color="#22C55E" Offset="0.5"/>
+                                        <GradientStop Color="#15803D" Offset="1"/>
+                                    </RadialGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <Ellipse Width="14"
+                                     Height="10"
+                                     Fill="#CCFFFFFF"
+                                     HorizontalAlignment="Left"
+                                     VerticalAlignment="Top"
+                                     Margin="15,12,0,0"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
                 <Border CornerRadius="6"
                         BorderThickness="1"
                         BorderBrush="#14532D"
                         Background="#082116"
                         Padding="6"
                         Margin="0,0,0,8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesPilotDeviceVisual}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid x:Name="FloatingMonitoringRadarSurface"
                           Height="54"
                           ClipToBounds="True"
@@ -244,6 +393,16 @@
                 </Border>
 
                 <WrapPanel Margin="0,0,0,8">
+                    <WrapPanel.Style>
+                        <Style TargetType="WrapPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesPilotDeviceVisual}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </WrapPanel.Style>
                     <Button Content="−"
                             Style="{StaticResource FloatingSymbolButtonStyle}"
                             Margin="0,0,4,4"
@@ -261,6 +420,34 @@
                                Margin="0,0,12,4"/>
                     <TextBlock Text="{Binding AutomaticProcessingText, StringFormat=Automatik: {0}}"
                                Margin="0,0,0,4"/>
+                </WrapPanel>
+
+                <WrapPanel Margin="0,0,0,8"
+                           HorizontalAlignment="Center">
+                    <WrapPanel.Style>
+                        <Style TargetType="WrapPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesPilotDeviceVisual}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </WrapPanel.Style>
+                    <Button Content="−"
+                            Style="{StaticResource FloatingSymbolButtonStyle}"
+                            Margin="0,0,8,4"
+                            Click="DecreaseScanIntervalButton_Click"
+                            ToolTip="Scanintervall um 1 Sekunde verringern"/>
+                    <TextBlock Text="{Binding ScanIntervalText, StringFormat=Intervall: {0}}"
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               Margin="0,2,8,4"/>
+                    <Button Content="+"
+                            Style="{StaticResource FloatingSymbolButtonStyle}"
+                            Margin="0,0,0,4"
+                            Click="IncreaseScanIntervalButton_Click"
+                            ToolTip="Scanintervall um 1 Sekunde erhöhen"/>
                 </WrapPanel>
 
                 <TextBlock Text="Erwartete Eingänge"
@@ -301,6 +488,8 @@
                     <StackPanel Margin="0,6,0,0">
                         <TextBlock Text="{Binding DeviceName, StringFormat=Gerät: {0}}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding ExportProfileName, StringFormat=Exportprofil: {0}}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding LastScanText, StringFormat=Letzter Scan: {0}}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding AutomaticProcessingText, StringFormat=Automatik: {0}}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding AttachmentConfigurationStatus, StringFormat=Anhang: {0}}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding LastMessage, StringFormat=Letzte Meldung: {0}}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding PatientDisplayText, StringFormat=Patient: {0}}" TextWrapping="Wrap"/>

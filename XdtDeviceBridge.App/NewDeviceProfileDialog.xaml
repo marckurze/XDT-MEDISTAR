@@ -80,6 +80,24 @@
             <TextBlock Text="Aktivieren, wenn das Gerät neben der Rückgabe an das AIS auch Daten aus dem AIS empfangen kann. Die konkrete Ausgabe an das Gerät wird später im Schnittstellenprofil konfiguriert."
                        Foreground="DimGray"
                        TextWrapping="Wrap"
+                        Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Gerätebild:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="6" Grid.Column="1" Margin="0,0,0,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right"
+                        Content="Auswählen"
+                        Width="100"
+                        Margin="8,0,0,0"
+                        Click="SelectDeviceImage_Click"
+                        ToolTip="Optionales Bild für spätere Gerätefenster-Darstellungen auswählen."/>
+                <TextBox x:Name="DeviceImagePathTextBox"
+                         ToolTip="Optionaler Pfad zu einem Gerätebild. Ohne Bild wird später ein neutraler Platzhalter verwendet."/>
+            </DockPanel>
+            <TextBlock Text="Optionaler Bildpfad für künftige grafische Gerätefenster. Ohne Bild bleibt das Profil weiterhin gültig."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
                        Margin="0,3,0,0"/>
         </StackPanel>
 

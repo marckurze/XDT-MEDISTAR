@@ -24,13 +24,17 @@ public sealed class ProfileJsonSerializerTests
     [Fact]
     public void DeviceProfileDefinition_ShouldRoundTrip()
     {
-        var profile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault();
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() with
+        {
+            DeviceImagePath = @"C:\Praxis\Bilder\ark1s.png"
+        };
 
         var json = _serializer.SerializeDeviceProfileDefinition(profile);
         var deserialized = _serializer.DeserializeDeviceProfileDefinition(json);
 
         Assert.Equal("NIDEK", deserialized.Manufacturer);
         Assert.Equal("ARK1S", deserialized.Model);
+        Assert.Equal(@"C:\Praxis\Bilder\ark1s.png", deserialized.DeviceImagePath);
         Assert.Equal(profile.Measurements.Count, deserialized.Measurements.Count);
         Assert.Contains(deserialized.Measurements, measurement =>
             measurement.Id == "far-pd"

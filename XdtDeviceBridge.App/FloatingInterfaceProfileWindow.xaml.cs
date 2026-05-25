@@ -10,6 +10,8 @@ public partial class FloatingInterfaceProfileWindow : Window
 {
     private bool _isClosingFromDock;
     private bool _isUpdatingState;
+    private string _pilotOrbAnimationKey = "";
+    private string _pilotOrbFlashKey = "";
 
     public FloatingInterfaceProfileWindow(string interfaceProfileId)
     {
@@ -20,6 +22,7 @@ public partial class FloatingInterfaceProfileWindow : Window
 
         InterfaceProfileId = interfaceProfileId;
         InitializeComponent();
+        DataContextChanged += FloatingInterfaceProfileWindow_DataContextChanged;
     }
 
     public event EventHandler? DockRequested;
@@ -235,5 +238,177 @@ public partial class FloatingInterfaceProfileWindow : Window
         transform = new TranslateTransform();
         element.RenderTransform = transform;
         return transform;
+    }
+
+    private void FloatingInterfaceProfileWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        ApplyPilotWindowSizing();
+    }
+
+    private void FloatingPilotStatusOrb_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            UpdatePilotStatusOrbAnimation(element);
+        }
+    }
+
+    private void FloatingPilotStatusOrb_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            StopPilotStatusOrbAnimation(element);
+        }
+    }
+
+    private void FloatingPilotStatusOrb_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            UpdatePilotStatusOrbAnimation(element);
+        }
+    }
+
+    private void ApplyPilotWindowSizing()
+    {
+        if (DataContext is not InterfaceMonitoringCardDisplay { UsesPilotDeviceVisual: true })
+        {
+            return;
+        }
+
+        MinWidth = Math.Max(MinWidth, 620);
+        MinHeight = Math.Max(MinHeight, 430);
+        if (Width < 690)
+        {
+            Width = 690;
+        }
+
+        if (Height < 540)
+        {
+            Height = 540;
+        }
+    }
+
+    private void UpdatePilotStatusOrbAnimation(FrameworkElement element)
+    {
+        if (element.DataContext is not InterfaceMonitoringCardDisplay { UsesPilotDeviceVisual: true } card)
+        {
+            StopPilotStatusOrbAnimation(element);
+            return;
+        }
+
+        var orb = FindVisualChildByTag<FrameworkElement>(element, "StatusOrb");
+        if (orb is null)
+        {
+            return;
+        }
+
+        var pulseSeconds = InterfaceProfileUiPolicy.GetStatusOrbPulseDurationSeconds(card.ScanIntervalSeconds);
+        var animationKey = $"{card.InterfaceProfileId}|{card.ScanIntervalSeconds}|{card.IsScanAnimationActive}";
+        if (!string.Equals(_pilotOrbAnimationKey, animationKey, StringComparison.Ordinal))
+        {
+            _pilotOrbAnimationKey = animationKey;
+            var scaleTransform = EnsureMutableScaleTransform(orb);
+            var scaleAnimation = new DoubleAnimation
+            {
+                From = 0.92,
+                To = 1.08,
+                Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+
+            var opacityAnimation = new DoubleAnimation
+            {
+                From = 0.72,
+                To = 1,
+                Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            orb.BeginAnimation(UIElement.OpacityProperty, opacityAnimation);
+        }
+
+        var flashKey = CreateDeviceInputFlashKey(card);
+        if (!string.IsNullOrWhiteSpace(flashKey)
+            && !string.Equals(_pilotOrbFlashKey, flashKey, StringComparison.Ordinal))
+        {
+            _pilotOrbFlashKey = flashKey;
+            StartStatusOrbFlash(element);
+        }
+    }
+
+    private void StopPilotStatusOrbAnimation(FrameworkElement element)
+    {
+        var orb = FindVisualChildByTag<FrameworkElement>(element, "StatusOrb");
+        if (orb?.RenderTransform is ScaleTransform scaleTransform && !scaleTransform.IsFrozen)
+        {
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        }
+
+        orb?.BeginAnimation(UIElement.OpacityProperty, null);
+        _pilotOrbAnimationKey = "";
+    }
+
+    private static void StartStatusOrbFlash(DependencyObject element)
+    {
+        var flash = FindVisualChildByTag<FrameworkElement>(element, "StatusOrbFlash");
+        if (flash is null)
+        {
+            return;
+        }
+
+        flash.Opacity = 0;
+        var flashAnimation = new DoubleAnimation
+        {
+            From = 0.95,
+            To = 0,
+            Duration = new Duration(TimeSpan.FromMilliseconds(820)),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        flash.BeginAnimation(UIElement.OpacityProperty, flashAnimation);
+    }
+
+    private static string CreateDeviceInputFlashKey(InterfaceMonitoringCardDisplay card)
+    {
+        return string.IsNullOrWhiteSpace(card.AisFileName) && string.IsNullOrWhiteSpace(card.DeviceFileName)
+            ? string.Empty
+            : $"{card.AisFileName}|{card.DeviceFileName}";
+    }
+
+    private static ScaleTransform EnsureMutableScaleTransform(FrameworkElement element)
+    {
+        if (element.RenderTransform is ScaleTransform transform && !transform.IsFrozen)
+        {
+            return transform;
+        }
+
+        transform = new ScaleTransform(1, 1);
+        element.RenderTransform = transform;
+        return transform;
+    }
+
+    private static T? FindVisualChildByTag<T>(DependencyObject parent, object tag)
+        where T : FrameworkElement
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is T typedChild && Equals(typedChild.Tag, tag))
+            {
+                return typedChild;
+            }
+
+            var descendant = FindVisualChildByTag<T>(child, tag);
+            if (descendant is not null)
+            {
+                return descendant;
+            }
+        }
+
+        return null;
     }
 }

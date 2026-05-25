@@ -106,6 +106,56 @@ public sealed class InterfaceProfileUiPolicyTests
         Assert.False(InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile));
     }
 
+    [Fact]
+    public void ShouldUsePilotMonitoringVisual_ForCv5000Only()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
+
+        Assert.True(InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(interfaceProfile, deviceProfile));
+        Assert.Equal(
+            InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath,
+            InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile));
+    }
+
+    [Theory]
+    [InlineData("ARK1S")]
+    [InlineData("NT530P")]
+    [InlineData("Dokumentanhang")]
+    [InlineData("Manuelle Dokumentübergabe")]
+    public void ShouldKeepPilotMonitoringVisualDisabled_ForNonCv5000Profiles(string profileKind)
+    {
+        var (interfaceProfile, deviceProfile) = CreateNonCv5000Profile(profileKind);
+
+        Assert.False(InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(interfaceProfile, deviceProfile));
+        Assert.Equal(string.Empty, InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile));
+    }
+
+    [Fact]
+    public void GetMonitoringDeviceImagePath_ShouldPreferConfiguredDeviceImage()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default() with
+        {
+            DeviceImagePath = @"C:\Praxis\Bilder\cv5000.png"
+        };
+
+        Assert.Equal(@"C:\Praxis\Bilder\cv5000.png", InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile));
+    }
+
+    [Fact]
+    public void GetStatusOrbPulseDurationSeconds_ShouldScaleWithScanInterval()
+    {
+        var fast = InterfaceProfileUiPolicy.GetStatusOrbPulseDurationSeconds(1);
+        var normal = InterfaceProfileUiPolicy.GetStatusOrbPulseDurationSeconds(5);
+        var slow = InterfaceProfileUiPolicy.GetStatusOrbPulseDurationSeconds(30);
+
+        Assert.True(fast < normal);
+        Assert.True(normal < slow);
+        Assert.Equal(0.65, fast);
+        Assert.Equal(2.8, slow);
+    }
+
     private static (InterfaceProfileDefinition InterfaceProfile, DeviceProfileDefinition DeviceProfile) CreateNonCv5000Profile(string profileKind)
     {
         return profileKind switch

@@ -798,7 +798,8 @@ public static class DefaultDeviceProfileDefinitions
             },
             SupportedExaminationTypes: new[] { "SBJ", "Phoropter", "Refraktion", "Prescription", "Full Correction" },
             CanContainMultipleExaminationTypes: true,
-            IsBidirectional: true);
+            IsBidirectional: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()

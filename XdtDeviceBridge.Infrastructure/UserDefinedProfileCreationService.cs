@@ -15,7 +15,8 @@ public sealed record UserDefinedDeviceProfileCreationRequest(
     string Model,
     string DeviceType,
     string ParserMode,
-    bool IsBidirectional = false);
+    bool IsBidirectional = false,
+    string DeviceImagePath = "");
 
 public sealed record UserDefinedExportProfileCreationRequest(
     string ProfileName,
@@ -108,6 +109,7 @@ public sealed class UserDefinedProfileCreationService
         var model = NormalizeRequiredField(request.Model, "Bitte geben Sie ein Modell ein.", issues);
         var parserMode = NormalizeRequiredField(request.ParserMode, "Bitte wählen Sie eine Parser-/Formatbasis aus.", issues);
         var deviceType = NormalizeOptionalText(request.DeviceType, GenericSystemName);
+        var deviceImagePath = NormalizeOptionalText(request.DeviceImagePath, string.Empty);
         var metadata = CreateMetadata(
             catalog.DeviceProfiles.Select(profile => profile.Metadata),
             ProfileKind.DeviceProfile,
@@ -135,7 +137,8 @@ public sealed class UserDefinedProfileCreationService
             Measurements: Array.Empty<DeviceMeasurementDefinition>(),
             SupportedExaminationTypes: Array.Empty<string>(),
             CanContainMultipleExaminationTypes: false,
-            IsBidirectional: request.IsBidirectional);
+            IsBidirectional: request.IsBidirectional,
+            DeviceImagePath: deviceImagePath);
 
         issues.AddRange(DeviceProfileDefinitionValidator.Validate(profile));
 

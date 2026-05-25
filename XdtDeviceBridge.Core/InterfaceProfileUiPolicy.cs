@@ -4,6 +4,7 @@ public static class InterfaceProfileUiPolicy
 {
     private const string Cv5000InterfaceProfileId = "interface-medistar-topcon-cv5000-default";
     private const string Cv5000DeviceProfileId = "device-topcon-cv5000-default";
+    public const string TopconCv5000DeviceImagePath = "pack://application:,,,/Assets/Devices/Topcon_CV5000_freigestellt.png";
 
     public static bool ShouldShowDeviceOutput(
         InterfaceProfileDefinition? interfaceProfile,
@@ -27,6 +28,32 @@ public static class InterfaceProfileUiPolicy
     {
         return IsCv5000(interfaceProfile, deviceProfile)
             && interfaceProfile?.DeviceOutput?.IsEnabled == true;
+    }
+
+    public static bool ShouldUsePilotMonitoringVisual(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        return IsCv5000(interfaceProfile, deviceProfile);
+    }
+
+    public static string GetMonitoringDeviceImagePath(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        if (!string.IsNullOrWhiteSpace(deviceProfile?.DeviceImagePath))
+        {
+            return deviceProfile.DeviceImagePath.Trim();
+        }
+
+        return IsCv5000(interfaceProfile, deviceProfile)
+            ? TopconCv5000DeviceImagePath
+            : string.Empty;
+    }
+
+    public static double GetStatusOrbPulseDurationSeconds(int scanIntervalSeconds)
+    {
+        return Math.Clamp(Math.Max(1, scanIntervalSeconds) * 0.45, 0.65, 2.8);
     }
 
     public static string? ValidateCv5000DeviceOutput(

@@ -42,8 +42,25 @@ public partial class NewDeviceProfileDialog : Window
             Model: ModelTextBox.Text,
             DeviceType: DeviceTypeTextBox.Text,
             ParserMode: ParserModeComboBox.SelectedItem is ParserModeOption option ? option.Value : string.Empty,
-            IsBidirectional: BidirectionalDeviceCheckBox.IsChecked == true);
+            IsBidirectional: BidirectionalDeviceCheckBox.IsChecked == true,
+            DeviceImagePath: DeviceImagePathTextBox.Text);
         DialogResult = true;
+    }
+
+    private void SelectDeviceImage_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Gerätebild auswählen",
+            Filter = "Bilddateien (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|Alle Dateien (*.*)|*.*",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog(this) == true)
+        {
+            DeviceImagePathTextBox.Text = dialog.FileName;
+        }
     }
 
     private static string CreateParserModeDisplayName(string parserMode)

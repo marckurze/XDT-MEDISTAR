@@ -44,10 +44,13 @@ public sealed class ActiveInterfaceProfileStatusService
         var folderStatus = CreateFolderStatus(profile.FolderOptions);
         var licenseStatus = CreateLicenseStatus(profile, licenseState);
         var processingStatus = CreateProcessingStatus(folderStatus, profile, licenseState);
+        var deviceProfile = deviceProfilesById.TryGetValue(profile.DeviceProfileId, out var resolvedDeviceProfile)
+            ? resolvedDeviceProfile
+            : null;
         var aisName = GetAisProfileName(profile.AisProfileId, aisProfilesById);
         var deviceName = GetDeviceProfileName(profile.DeviceProfileId, deviceProfilesById);
         var exportProfileName = GetExportProfileName(profile.ExportProfileId, exportProfilesById);
-        var monitoringCard = CreateMonitoringCard(profile, aisName, deviceName, exportProfileName);
+        var monitoringCard = CreateMonitoringCard(profile, aisName, deviceName, exportProfileName, deviceProfile);
 
         return new ActiveInterfaceProfileStatusRow(
             Name: profile.Metadata.Name,
@@ -171,7 +174,8 @@ public sealed class ActiveInterfaceProfileStatusService
         InterfaceProfileDefinition profile,
         string aisName,
         string deviceName,
-        string exportProfileName)
+        string exportProfileName,
+        DeviceProfileDefinition? deviceProfile)
     {
         var folderOptions = profile.FolderOptions;
         var isManualDocumentSelection = folderOptions.IsAttachmentOnlyMode
@@ -247,7 +251,10 @@ public sealed class ActiveInterfaceProfileStatusService
             FolderDetails: folderDetails,
             AttachmentImportFolder: attachmentImportFolder,
             AttachmentExportFolder: attachmentExportFolder,
-            AttachmentConfigurationStatus: attachmentStatus);
+            AttachmentConfigurationStatus: attachmentStatus,
+            DeviceType: deviceProfile?.DeviceType ?? string.Empty,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(profile, deviceProfile),
+            UsesPilotDeviceVisual: InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(profile, deviceProfile));
     }
 
     private static ExpectedInputDisplayItem CreateExpectedInput(

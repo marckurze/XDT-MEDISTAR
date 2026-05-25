@@ -258,6 +258,7 @@ public sealed class TopconCv5000ProfileTests
         Assert.Contains("CV-5000", deviceProfile.Model);
         Assert.Equal("Phoropter", deviceProfile.DeviceType);
         Assert.True(deviceProfile.IsBidirectional);
+        Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, deviceProfile.DeviceImagePath);
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/Prescription/HeaderLine");
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/Prescription/R/MedistarLine");
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/FullCorrection/R/MedistarLine");

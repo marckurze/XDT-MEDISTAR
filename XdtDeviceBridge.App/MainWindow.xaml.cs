@@ -38,6 +38,18 @@ public partial class MainWindow : Window
         typeof(MainWindow),
         new PropertyMetadata(""));
 
+    private static readonly DependencyProperty StatusOrbAnimationKeyProperty = DependencyProperty.RegisterAttached(
+        "StatusOrbAnimationKey",
+        typeof(string),
+        typeof(MainWindow),
+        new PropertyMetadata(""));
+
+    private static readonly DependencyProperty StatusOrbFlashKeyProperty = DependencyProperty.RegisterAttached(
+        "StatusOrbFlashKey",
+        typeof(string),
+        typeof(MainWindow),
+        new PropertyMetadata(""));
+
     private readonly ProcessingPipelineService _pipelineService = new();
     private readonly ExportFileNameBuilder _fileNameBuilder = new();
     private readonly FileExportService _fileExportService = new();
@@ -4629,6 +4641,30 @@ public partial class MainWindow : Window
         }
     }
 
+    private void MonitoringPilotStatusOrb_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            UpdatePilotStatusOrbAnimation(element);
+        }
+    }
+
+    private void MonitoringPilotStatusOrb_Unloaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            StopPilotStatusOrbAnimation(element);
+        }
+    }
+
+    private void MonitoringPilotStatusOrb_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            UpdatePilotStatusOrbAnimation(element);
+        }
+    }
+
     private static void StopRadarAnimation(FrameworkElement element)
     {
         var scanBar = FindVisualChildByTag<FrameworkElement>(element, "RadarScanBar");
@@ -4642,6 +4678,89 @@ public partial class MainWindow : Window
         element.SetValue(RadarAnimationKeyProperty, "");
     }
 
+    private static void UpdatePilotStatusOrbAnimation(FrameworkElement element)
+    {
+        if (element.DataContext is not InterfaceMonitoringCardDisplay { UsesPilotDeviceVisual: true } card)
+        {
+            StopPilotStatusOrbAnimation(element);
+            return;
+        }
+
+        var orb = FindVisualChildByTag<FrameworkElement>(element, "StatusOrb");
+        if (orb is null)
+        {
+            return;
+        }
+
+        var pulseSeconds = InterfaceProfileUiPolicy.GetStatusOrbPulseDurationSeconds(card.ScanIntervalSeconds);
+        var animationKey = $"{card.InterfaceProfileId}|{card.ScanIntervalSeconds}|{card.IsScanAnimationActive}";
+        if (!string.Equals(element.GetValue(StatusOrbAnimationKeyProperty) as string, animationKey, StringComparison.Ordinal))
+        {
+            element.SetValue(StatusOrbAnimationKeyProperty, animationKey);
+            var scaleTransform = EnsureMutableScaleTransform(orb);
+            var scaleAnimation = new DoubleAnimation
+            {
+                From = 0.92,
+                To = 1.08,
+                Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+
+            var opacityAnimation = new DoubleAnimation
+            {
+                From = 0.72,
+                To = 1,
+                Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            orb.BeginAnimation(UIElement.OpacityProperty, opacityAnimation);
+        }
+
+        var flashKey = CreateDeviceInputFlashKey(card);
+        if (!string.IsNullOrWhiteSpace(flashKey)
+            && !string.Equals(element.GetValue(StatusOrbFlashKeyProperty) as string, flashKey, StringComparison.Ordinal))
+        {
+            element.SetValue(StatusOrbFlashKeyProperty, flashKey);
+            StartStatusOrbFlash(element);
+        }
+    }
+
+    private static void StopPilotStatusOrbAnimation(FrameworkElement element)
+    {
+        var orb = FindVisualChildByTag<FrameworkElement>(element, "StatusOrb");
+        if (orb?.RenderTransform is ScaleTransform scaleTransform && !scaleTransform.IsFrozen)
+        {
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+        }
+
+        orb?.BeginAnimation(UIElement.OpacityProperty, null);
+        element.SetValue(StatusOrbAnimationKeyProperty, "");
+    }
+
+    private static void StartStatusOrbFlash(DependencyObject element)
+    {
+        var flash = FindVisualChildByTag<FrameworkElement>(element, "StatusOrbFlash");
+        if (flash is null)
+        {
+            return;
+        }
+
+        flash.Opacity = 0;
+        var flashAnimation = new DoubleAnimation
+        {
+            From = 0.95,
+            To = 0,
+            Duration = new Duration(TimeSpan.FromMilliseconds(820)),
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        flash.BeginAnimation(UIElement.OpacityProperty, flashAnimation);
+    }
+
     private static TranslateTransform EnsureMutableTranslateTransform(FrameworkElement element)
     {
         if (element.RenderTransform is TranslateTransform transform && !transform.IsFrozen)
@@ -4652,6 +4771,25 @@ public partial class MainWindow : Window
         transform = new TranslateTransform();
         element.RenderTransform = transform;
         return transform;
+    }
+
+    private static ScaleTransform EnsureMutableScaleTransform(FrameworkElement element)
+    {
+        if (element.RenderTransform is ScaleTransform transform && !transform.IsFrozen)
+        {
+            return transform;
+        }
+
+        transform = new ScaleTransform(1, 1);
+        element.RenderTransform = transform;
+        return transform;
+    }
+
+    private static string CreateDeviceInputFlashKey(InterfaceMonitoringCardDisplay card)
+    {
+        return string.IsNullOrWhiteSpace(card.AisFileName) && string.IsNullOrWhiteSpace(card.DeviceFileName)
+            ? string.Empty
+            : $"{card.AisFileName}|{card.DeviceFileName}";
     }
 
     private static T? FindVisualChild<T>(DependencyObject parent)
