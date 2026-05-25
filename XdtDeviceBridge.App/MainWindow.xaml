@@ -274,28 +274,34 @@
                                                         </Border.Style>
                                                         <Grid Height="150">
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="0.72*"/>
-                                                                <ColumnDefinition Width="1.8*"/>
+                                                                <ColumnDefinition Width="0.58*"/>
+                                                                <ColumnDefinition Width="1.94*"/>
                                                                 <ColumnDefinition Width="52"/>
                                                             </Grid.ColumnDefinitions>
 
                                                             <StackPanel Grid.Column="0"
                                                                         VerticalAlignment="Center"
-                                                                        Margin="0,0,6,0">
-                                                                <TextBlock Text="{Binding DeviceType}"
+                                                                        Margin="0,0,2,0">
+                                                                <TextBlock Text="{Binding EffectiveDeviceTypeDisplay}"
                                                                            FontSize="18"
                                                                            FontWeight="SemiBold"
                                                                            Foreground="#102A1F"
-                                                                           TextWrapping="Wrap"/>
+                                                                           TextWrapping="Wrap"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           MaxHeight="46"
+                                                                           ToolTip="{Binding DeviceType}"/>
                                                                 <TextBlock Text="{Binding InterfaceProfileName}"
                                                                            FontSize="14"
                                                                            Foreground="#102A1F"
                                                                            TextWrapping="Wrap"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           MaxHeight="58"
+                                                                           ToolTip="{Binding InterfaceProfileName}"
                                                                            Margin="0,7,0,0"/>
                                                             </StackPanel>
 
                                                             <Grid Grid.Column="1"
-                                                                  Margin="-12,-8,-4,-4">
+                                                                  Margin="-22,-8,-4,-4">
                                                                 <Border Background="#10FFFFFF"
                                                                         CornerRadius="8"/>
                                                                 <Image Source="{Binding DeviceImagePath}"

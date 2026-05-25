@@ -63,6 +63,50 @@ public static class InterfaceProfileUiPolicy
         return GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile);
     }
 
+    public static string GetMonitoringDeviceTypeDisplay(DeviceProfileDefinition? deviceProfile)
+    {
+        var deviceType = deviceProfile?.DeviceType?.Trim() ?? string.Empty;
+        var model = deviceProfile?.Model?.Trim() ?? string.Empty;
+        var product = deviceProfile?.Metadata.Product?.Trim() ?? string.Empty;
+
+        if (ContainsAny(deviceType, "phoropter") || ContainsAny(model, "CV-5000", "CV5000"))
+        {
+            return "Phoropter";
+        }
+
+        if (ContainsAny(deviceType, "lensmeter"))
+        {
+            return "Lensmeter";
+        }
+
+        if (ContainsAny(deviceType, "document", "dokument"))
+        {
+            return "Dokumentgerät";
+        }
+
+        if (ContainsAny(model, "KR-1", "KR1", "KR-800", "KR800")
+            || ContainsAny(product, "KR-1", "KR1", "KR-800", "KR800")
+            || (ContainsAny(deviceType, "keratometer", "kerato")
+                && ContainsAny(deviceType, "autorefractor", "autorefraktor", "refraktometer")))
+        {
+            return "Keratorefraktometer";
+        }
+
+        if (ContainsAny(deviceType, "tonometer"))
+        {
+            return "Tonometer";
+        }
+
+        if (ContainsAny(deviceType, "autorefractor", "autorefraktor", "refraktometer"))
+        {
+            return "Autorefraktor";
+        }
+
+        return string.IsNullOrWhiteSpace(deviceType)
+            ? "Generisch"
+            : deviceType;
+    }
+
     private static string GetBuiltInDeviceImagePath(
         InterfaceProfileDefinition? interfaceProfile,
         DeviceProfileDefinition? deviceProfile)
@@ -142,5 +186,11 @@ public static class InterfaceProfileUiPolicy
         return !string.IsNullOrWhiteSpace(value)
             && (value.Contains("CV-5000", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("CV5000", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ContainsAny(string? value, params string[] needles)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && needles.Any(needle => value.Contains(needle, StringComparison.OrdinalIgnoreCase));
     }
 }

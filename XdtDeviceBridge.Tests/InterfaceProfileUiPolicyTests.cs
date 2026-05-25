@@ -146,6 +146,22 @@ public sealed class InterfaceProfileUiPolicyTests
         Assert.Equal(@"C:\Praxis\Bilder\cv5000.png", InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile));
     }
 
+    [Theory]
+    [InlineData("CV5000", "Phoropter")]
+    [InlineData("Solos", "Lensmeter")]
+    [InlineData("CT800A", "Tonometer")]
+    [InlineData("KR1", "Keratorefraktometer")]
+    [InlineData("ARK1S", "Autorefraktor")]
+    [InlineData("Dokumentanhang", "Dokumentgerät")]
+    public void GetMonitoringDeviceTypeDisplay_ShouldUseCompactMonitoringLabels(string profileKind, string expectedDisplay)
+    {
+        var (_, deviceProfile) = profileKind == "CV5000"
+            ? (DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default(), DefaultDeviceProfileDefinitions.CreateTopconCv5000Default())
+            : CreateNonCv5000Profile(profileKind);
+
+        Assert.Equal(expectedDisplay, InterfaceProfileUiPolicy.GetMonitoringDeviceTypeDisplay(deviceProfile));
+    }
+
     [Fact]
     public void GetStatusOrbPulseDurationSeconds_ShouldScaleWithScanInterval()
     {

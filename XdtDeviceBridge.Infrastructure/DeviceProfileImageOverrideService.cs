@@ -180,14 +180,10 @@ public sealed class DeviceProfileImageOverrideService
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        if (HasExistingLocalOverride(overridePath))
-        {
-            return overridePath!.Trim();
-        }
-
-        return string.IsNullOrWhiteSpace(profile.DeviceImagePath)
-            ? string.Empty
-            : profile.DeviceImagePath.Trim();
+        return InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(
+            interfaceProfile: null,
+            deviceProfile: profile,
+            deviceImageOverridePath: overridePath);
     }
 
     public bool HasExistingLocalOverride(string? overridePath)

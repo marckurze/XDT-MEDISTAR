@@ -191,28 +191,34 @@
                     </Border.Style>
                     <Grid Height="168">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.72*"/>
-                            <ColumnDefinition Width="1.82*"/>
+                            <ColumnDefinition Width="0.58*"/>
+                            <ColumnDefinition Width="1.96*"/>
                             <ColumnDefinition Width="62"/>
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0"
                                     VerticalAlignment="Center"
-                                    Margin="0,0,6,0">
-                            <TextBlock Text="{Binding DeviceType}"
+                                    Margin="0,0,2,0">
+                            <TextBlock Text="{Binding EffectiveDeviceTypeDisplay}"
                                        FontSize="22"
                                        FontWeight="SemiBold"
                                        Foreground="#102A1F"
-                                       TextWrapping="Wrap"/>
+                                       TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxHeight="58"
+                                       ToolTip="{Binding DeviceType}"/>
                             <TextBlock Text="{Binding InterfaceProfileName}"
                                        FontSize="16"
                                        Foreground="#102A1F"
                                        TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxHeight="66"
+                                       ToolTip="{Binding InterfaceProfileName}"
                                        Margin="0,8,0,0"/>
                         </StackPanel>
 
                         <Grid Grid.Column="1"
-                              Margin="-14,-10,-6,-4">
+                              Margin="-24,-10,-6,-4">
                             <Border Background="#10FFFFFF"
                                     CornerRadius="8"/>
                             <Image Source="{Binding DeviceImagePath}"

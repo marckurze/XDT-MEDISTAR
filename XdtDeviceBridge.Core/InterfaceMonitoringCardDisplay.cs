@@ -28,11 +28,16 @@ public sealed record InterfaceMonitoringCardDisplay(
     bool IsDetailsExpanded = false,
     string DeviceType = "",
     string DeviceImagePath = "",
-    bool UsesPilotDeviceVisual = false)
+    bool UsesPilotDeviceVisual = false,
+    string DeviceTypeDisplay = "")
 {
     public bool HasDeviceImage => IsUsableDeviceImagePath(DeviceImagePath);
 
     public bool ShouldPulseStatusOrb => UsesPilotDeviceVisual && IsScanAnimationActive;
+
+    public string EffectiveDeviceTypeDisplay => string.IsNullOrWhiteSpace(DeviceTypeDisplay)
+        ? DeviceType
+        : DeviceTypeDisplay;
 
     public InterfaceMonitoringCardDisplay WithPilotMonitoringActivity(bool isMonitoringActive)
     {

@@ -240,6 +240,7 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
 
         Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
         Assert.Equal("Phoropter", row.MonitoringCard.DeviceType);
+        Assert.Equal("Phoropter", row.MonitoringCard.EffectiveDeviceTypeDisplay);
         Assert.True(row.MonitoringCard.HasDeviceImage);
         Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, row.MonitoringCard.DeviceImagePath);
         Assert.False(row.MonitoringCard.ShouldPulseStatusOrb);
@@ -318,11 +319,11 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
     }
 
     [Theory]
-    [InlineData("Solos")]
-    [InlineData("CT800A")]
-    [InlineData("KR1")]
-    [InlineData("ARK1S")]
-    public void BuildRows_ShouldUseStandardMonitoringVisualForOtherDevices(string profileKind)
+    [InlineData("Solos", "Lensmeter")]
+    [InlineData("CT800A", "Tonometer")]
+    [InlineData("KR1", "Keratorefraktometer")]
+    [InlineData("ARK1S", "Autorefraktor")]
+    public void BuildRows_ShouldUseStandardMonitoringVisualForOtherDevices(string profileKind, string expectedDeviceTypeDisplay)
     {
         var (interfaceProfile, deviceProfile, exportProfile) = CreateProfileSet(profileKind);
         interfaceProfile = interfaceProfile with
@@ -343,6 +344,8 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
             Array.Empty<LicensedDeviceState>()));
 
         Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
+        Assert.Equal(deviceProfile.DeviceType, row.MonitoringCard.DeviceType);
+        Assert.Equal(expectedDeviceTypeDisplay, row.MonitoringCard.EffectiveDeviceTypeDisplay);
         Assert.False(row.MonitoringCard.ShouldPulseStatusOrb);
         Assert.All(row.MonitoringCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));
     }

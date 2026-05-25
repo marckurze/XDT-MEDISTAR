@@ -83,6 +83,21 @@ public sealed class DeviceProfileImageOverrideServiceTests
     }
 
     [Fact]
+    public void BuildManagementItems_ShouldResolveCv5000BuiltInImageWhenPersistedProfileHasNoImagePath()
+    {
+        var paths = CreateAppDataPaths();
+        var builtInWithoutImagePath = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default() with
+        {
+            DeviceImagePath = string.Empty
+        };
+
+        var item = Assert.Single(_service.BuildManagementItems(paths, new[] { builtInWithoutImagePath }));
+
+        Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, item.EffectiveImagePath);
+        Assert.False(item.HasLocalOverride);
+    }
+
+    [Fact]
     public void ResolveEffectiveImagePath_ShouldPreferExistingOverride()
     {
         var paths = CreateAppDataPaths();
@@ -103,6 +118,19 @@ public sealed class DeviceProfileImageOverrideServiceTests
         var resolved = _service.ResolveEffectiveImagePath(profile, @"C:\nicht-vorhanden\bild.png");
 
         Assert.Equal(profile.DeviceImagePath, resolved);
+    }
+
+    [Fact]
+    public void ResolveEffectiveImagePath_ShouldFallBackToCv5000BuiltInImageWhenProfileImageIsMissing()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default() with
+        {
+            DeviceImagePath = string.Empty
+        };
+
+        var resolved = _service.ResolveEffectiveImagePath(profile, overridePath: null);
+
+        Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, resolved);
     }
 
     private static AppDataPaths CreateAppDataPaths()
