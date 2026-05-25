@@ -61,6 +61,8 @@ public sealed class InterfaceMonitoringCardStatusService
             .Select(input => UpdateInputFromScan(
                 input,
                 updatedCard.DeviceName,
+                updatedCard.UsesPilotDeviceVisual,
+                updatedCard.IsScanAnimationActive,
                 interfaceProfile,
                 scanResult,
                 packageEvaluation,
@@ -140,6 +142,8 @@ public sealed class InterfaceMonitoringCardStatusService
     private ExpectedInputDisplayItem UpdateInputFromScan(
         ExpectedInputDisplayItem input,
         string deviceProfileName,
+        bool usesPilotDeviceVisual,
+        bool isScanAnimationActive,
         InterfaceProfileDefinition interfaceProfile,
         AutoImportScanResult scanResult,
         AutoImportPackageEvaluationResult? packageEvaluation,
@@ -150,8 +154,8 @@ public sealed class InterfaceMonitoringCardStatusService
     {
         return input.Key switch
         {
-            "ais" => CreateAisInput(input, aisFile, patient, packageEvaluation),
-            "device" => CreateDeviceInput(input, deviceProfileName, deviceFile, packageEvaluation, aisFile, scanTimestamp, interfaceProfile.FolderOptions.DeviceFileWaitTimeoutMinutes, interfaceProfile.FolderOptions.IsAttachmentOnlyMode),
+            "ais" => CreateAisInput(input, aisFile, patient, packageEvaluation, usesPilotDeviceVisual, isScanAnimationActive),
+            "device" => CreateDeviceInput(input, deviceProfileName, deviceFile, packageEvaluation, aisFile, scanTimestamp, interfaceProfile.FolderOptions.DeviceFileWaitTimeoutMinutes, interfaceProfile.FolderOptions.IsAttachmentOnlyMode, usesPilotDeviceVisual, isScanAnimationActive),
             "attachment" => CreateAttachmentInputFromScan(input, interfaceProfile, scanResult, packageEvaluation, scanTimestamp),
             _ => input
         };
@@ -208,7 +212,9 @@ public sealed class InterfaceMonitoringCardStatusService
         ExpectedInputDisplayItem input,
         PendingImportFile? aisFile,
         PatientData? patient,
-        AutoImportPackageEvaluationResult? packageEvaluation)
+        AutoImportPackageEvaluationResult? packageEvaluation,
+        bool usesPilotDeviceVisual,
+        bool isScanAnimationActive)
     {
         if (packageEvaluation?.Reason == AutoImportPackageStateReason.AisFileReplaced)
         {
@@ -234,11 +240,12 @@ public sealed class InterfaceMonitoringCardStatusService
 
         if (aisFile is null)
         {
+            var waitingStatus = CreateIdleInputStatus(usesPilotDeviceVisual, isScanAnimationActive);
             return input with
             {
                 Name = "AIS-Patientendatei",
-                Status = "erwartet",
-                StatusClass = "Waiting",
+                Status = waitingStatus,
+                StatusClass = usesPilotDeviceVisual && !isScanAnimationActive ? "Neutral" : "Waiting",
                 Detail = input.FolderPath,
                 DisplayDetail = ""
             };
@@ -263,7 +270,9 @@ public sealed class InterfaceMonitoringCardStatusService
         PendingImportFile? aisFile,
         DateTime scanTimestamp,
         int deviceFileWaitTimeoutMinutes,
-        bool isAttachmentOnly)
+        bool isAttachmentOnly,
+        bool usesPilotDeviceVisual,
+        bool isScanAnimationActive)
     {
         var inputName = isAttachmentOnly ? "Dokumentdateien" : "Geräte-Datei";
         if (deviceFile is null)
@@ -283,8 +292,8 @@ public sealed class InterfaceMonitoringCardStatusService
                 Name = inputName,
                 Status = waitsForDevice
                     ? isAttachmentOnly ? "wartet auf Dokumentdateien" : "wartet auf Gerät"
-                    : "erwartet",
-                StatusClass = waitsForDevice ? "Waiting" : "Neutral",
+                    : CreateIdleInputStatus(usesPilotDeviceVisual, isScanAnimationActive),
+                StatusClass = waitsForDevice || (usesPilotDeviceVisual && isScanAnimationActive) ? "Waiting" : "Neutral",
                 Detail = waitsForDevice
                     ? JoinDetails(
                         packageEvaluation?.Messages.LastOrDefault()
@@ -303,6 +312,16 @@ public sealed class InterfaceMonitoringCardStatusService
             Detail = JoinDetails(deviceFile.FilePath, deviceProfileName),
             DisplayDetail = string.IsNullOrWhiteSpace(deviceProfileName) ? deviceFile.FileName : deviceProfileName
         };
+    }
+
+    private static string CreateIdleInputStatus(bool usesPilotDeviceVisual, bool isScanAnimationActive)
+    {
+        if (!usesPilotDeviceVisual)
+        {
+            return "erwartet";
+        }
+
+        return isScanAnimationActive ? "wartet" : "gestoppt";
     }
 
     private ExpectedInputDisplayItem CreateAttachmentInputFromScan(

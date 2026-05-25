@@ -31,4 +31,6 @@ public sealed record InterfaceMonitoringCardDisplay(
     bool UsesPilotDeviceVisual = false)
 {
     public bool HasDeviceImage => !string.IsNullOrWhiteSpace(DeviceImagePath);
+
+    public bool ShouldPulseStatusOrb => UsesPilotDeviceVisual && IsScanAnimationActive;
 }

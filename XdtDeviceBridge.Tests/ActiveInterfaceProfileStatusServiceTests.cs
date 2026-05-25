@@ -223,7 +223,11 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
         {
             IsActive = true,
-            IsLicenseRequired = false
+            IsLicenseRequired = false,
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
         };
 
         var row = Assert.Single(_service.BuildRows(
@@ -237,6 +241,14 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("Phoropter", row.MonitoringCard.DeviceType);
         Assert.True(row.MonitoringCard.HasDeviceImage);
         Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, row.MonitoringCard.DeviceImagePath);
+        Assert.False(row.MonitoringCard.ShouldPulseStatusOrb);
+        Assert.All(row.MonitoringCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));
+
+        var activeCard = row.MonitoringCard with
+        {
+            IsScanAnimationActive = true
+        };
+        Assert.True(activeCard.ShouldPulseStatusOrb);
     }
 
     [Fact]

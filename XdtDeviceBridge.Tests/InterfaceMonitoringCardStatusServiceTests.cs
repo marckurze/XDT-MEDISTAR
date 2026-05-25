@@ -34,6 +34,35 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
     }
 
     [Fact]
+    public void ApplyScanResult_ShouldUseWaitingInputStatusForActiveCv5000PilotCard()
+    {
+        var baseProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        var profile = baseProfile with
+        {
+            IsActive = true,
+            FolderOptions = baseProfile.FolderOptions with
+            {
+                AisImportFolder = @"C:\Test\AIS",
+                DeviceImportFolder = @"C:\Test\Device",
+                ExportFolder = @"C:\Test\Export"
+            }
+        };
+        var card = CreateCv5000Card(profile) with
+        {
+            IsScanAnimationActive = true
+        };
+        var service = new InterfaceMonitoringCardStatusService(new FakeAisPatientDataReader(_patient));
+        var scanResult = CreateScanResult(profile, new PendingImportQueue());
+
+        var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.WaitingForAisFile), DateTime.Today, automaticProcessingEnabled: true);
+
+        Assert.True(updated.ShouldPulseStatusOrb);
+        Assert.DoesNotContain(updated.ExpectedInputs, input => input.Status == "erwartet");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "wartet");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Status == "wartet");
+    }
+
+    [Fact]
     public void ApplyScanResult_ShouldShowPatientWhenAisFileIsStable()
     {
         var profile = CreateProfile();
@@ -369,6 +398,19 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
                 new[] { DefaultAisProfiles.CreateMedistarDefault() },
                 new[] { DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() },
                 new[] { DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() },
+                Array.Empty<LicensedDeviceState>())
+            .Single()
+            .MonitoringCard;
+    }
+
+    private static InterfaceMonitoringCardDisplay CreateCv5000Card(InterfaceProfileDefinition profile)
+    {
+        var service = new ActiveInterfaceProfileStatusService();
+        return service.BuildRows(
+                new[] { profile },
+                new[] { DefaultAisProfiles.CreateMedistarDefault() },
+                new[] { DefaultDeviceProfileDefinitions.CreateTopconCv5000Default() },
+                new[] { DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default() },
                 Array.Empty<LicensedDeviceState>())
             .Single()
             .MonitoringCard;

@@ -183,10 +183,12 @@ public sealed class ActiveInterfaceProfileStatusService
         var attachmentImportFolder = CreateAttachmentFolderDisplay(folderOptions, folderOptions.AttachmentImportFolder, "XDT-Anhang Importordner fehlt");
         var attachmentExportFolder = CreateAttachmentFolderDisplay(folderOptions, folderOptions.AttachmentExportFolder, "XDT-Anhang Exportordner fehlt");
         var attachmentStatus = CreateAttachmentConfigurationStatus(folderOptions);
+        var usesPilotDeviceVisual = InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(profile, deviceProfile);
+        var initialInputStatus = usesPilotDeviceVisual ? "gestoppt" : "erwartet";
 
         var expectedInputs = new List<ExpectedInputDisplayItem>
         {
-            CreateExpectedInput("AIS-Patientendatei", folderOptions.AisImportFolder, "AIS-Importordner fehlt", "erwartet")
+            CreateExpectedInput("AIS-Patientendatei", folderOptions.AisImportFolder, "AIS-Importordner fehlt", initialInputStatus)
         };
         if (!isManualDocumentSelection)
         {
@@ -194,7 +196,7 @@ public sealed class ActiveInterfaceProfileStatusService
                 folderOptions.IsAttachmentOnlyMode ? "Dokumentdateien" : "Geräte-Datei",
                 folderOptions.DeviceImportFolder,
                 folderOptions.IsAttachmentOnlyMode ? "Dokument-Importordner fehlt" : "Geräte-Importordner fehlt",
-                "erwartet"));
+                initialInputStatus));
         }
 
         if (HasAttachmentConfiguration(folderOptions)
@@ -254,7 +256,7 @@ public sealed class ActiveInterfaceProfileStatusService
             AttachmentConfigurationStatus: attachmentStatus,
             DeviceType: deviceProfile?.DeviceType ?? string.Empty,
             DeviceImagePath: InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(profile, deviceProfile),
-            UsesPilotDeviceVisual: InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(profile, deviceProfile));
+            UsesPilotDeviceVisual: usesPilotDeviceVisual);
     }
 
     private static ExpectedInputDisplayItem CreateExpectedInput(

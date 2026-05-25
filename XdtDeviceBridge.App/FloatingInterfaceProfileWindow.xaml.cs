@@ -276,16 +276,16 @@ public partial class FloatingInterfaceProfileWindow : Window
             return;
         }
 
-        MinWidth = Math.Max(MinWidth, 620);
-        MinHeight = Math.Max(MinHeight, 430);
-        if (Width < 690)
+        MinWidth = Math.Max(MinWidth, 560);
+        MinHeight = Math.Max(MinHeight, 410);
+        if (Width < 620)
         {
-            Width = 690;
+            Width = 620;
         }
 
-        if (Height < 540)
+        if (Height < 500)
         {
-            Height = 540;
+            Height = 500;
         }
     }
 
@@ -303,6 +303,12 @@ public partial class FloatingInterfaceProfileWindow : Window
             return;
         }
 
+        if (!card.ShouldPulseStatusOrb)
+        {
+            StopPilotStatusOrbAnimation(element);
+            return;
+        }
+
         var pulseSeconds = InterfaceProfileUiPolicy.GetStatusOrbPulseDurationSeconds(card.ScanIntervalSeconds);
         var animationKey = $"{card.InterfaceProfileId}|{card.ScanIntervalSeconds}|{card.IsScanAnimationActive}";
         if (!string.Equals(_pilotOrbAnimationKey, animationKey, StringComparison.Ordinal))
@@ -311,8 +317,8 @@ public partial class FloatingInterfaceProfileWindow : Window
             var scaleTransform = EnsureMutableScaleTransform(orb);
             var scaleAnimation = new DoubleAnimation
             {
-                From = 0.92,
-                To = 1.08,
+                From = 0.86,
+                To = 1.14,
                 Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
                 AutoReverse = true,
                 RepeatBehavior = RepeatBehavior.Forever
@@ -322,7 +328,7 @@ public partial class FloatingInterfaceProfileWindow : Window
 
             var opacityAnimation = new DoubleAnimation
             {
-                From = 0.72,
+                From = 0.68,
                 To = 1,
                 Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
                 AutoReverse = true,
@@ -347,9 +353,15 @@ public partial class FloatingInterfaceProfileWindow : Window
         {
             scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
             scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            scaleTransform.ScaleX = 1;
+            scaleTransform.ScaleY = 1;
         }
 
         orb?.BeginAnimation(UIElement.OpacityProperty, null);
+        if (orb is not null)
+        {
+            orb.Opacity = 0.92;
+        }
         _pilotOrbAnimationKey = "";
     }
 

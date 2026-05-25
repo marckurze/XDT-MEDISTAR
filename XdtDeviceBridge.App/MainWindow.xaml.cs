@@ -4692,6 +4692,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (!card.ShouldPulseStatusOrb)
+        {
+            StopPilotStatusOrbAnimation(element);
+            return;
+        }
+
         var pulseSeconds = InterfaceProfileUiPolicy.GetStatusOrbPulseDurationSeconds(card.ScanIntervalSeconds);
         var animationKey = $"{card.InterfaceProfileId}|{card.ScanIntervalSeconds}|{card.IsScanAnimationActive}";
         if (!string.Equals(element.GetValue(StatusOrbAnimationKeyProperty) as string, animationKey, StringComparison.Ordinal))
@@ -4700,8 +4706,8 @@ public partial class MainWindow : Window
             var scaleTransform = EnsureMutableScaleTransform(orb);
             var scaleAnimation = new DoubleAnimation
             {
-                From = 0.92,
-                To = 1.08,
+                From = 0.86,
+                To = 1.14,
                 Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
                 AutoReverse = true,
                 RepeatBehavior = RepeatBehavior.Forever
@@ -4711,7 +4717,7 @@ public partial class MainWindow : Window
 
             var opacityAnimation = new DoubleAnimation
             {
-                From = 0.72,
+                From = 0.68,
                 To = 1,
                 Duration = new Duration(TimeSpan.FromSeconds(pulseSeconds)),
                 AutoReverse = true,
@@ -4736,9 +4742,15 @@ public partial class MainWindow : Window
         {
             scaleTransform.BeginAnimation(ScaleTransform.ScaleXProperty, null);
             scaleTransform.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+            scaleTransform.ScaleX = 1;
+            scaleTransform.ScaleY = 1;
         }
 
         orb?.BeginAnimation(UIElement.OpacityProperty, null);
+        if (orb is not null)
+        {
+            orb.Opacity = 0.92;
+        }
         element.SetValue(StatusOrbAnimationKeyProperty, "");
     }
 
