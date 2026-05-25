@@ -184,7 +184,7 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         var row = Assert.Single(BuildRows(profile));
 
         var documentInput = Assert.Single(row.MonitoringCard.ExpectedInputs, input => input.Name == "Dokumentdateien");
-        Assert.Equal("erwartet", documentInput.Status);
+        Assert.Equal("gestoppt", documentInput.Status);
         Assert.Equal("Neutral", documentInput.StatusClass);
         Assert.DoesNotContain(row.MonitoringCard.ExpectedInputs, input => input.Key == "attachment");
     }
@@ -213,12 +213,13 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.False(row.MonitoringCard.IsScanAnimationActive);
         Assert.Equal("-", row.MonitoringCard.LastScanText);
         Assert.Equal("Nein", row.MonitoringCard.AutomaticProcessingText);
-        Assert.False(row.MonitoringCard.UsesPilotDeviceVisual);
+        Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
         Assert.Equal(string.Empty, row.MonitoringCard.DeviceImagePath);
+        Assert.False(row.MonitoringCard.HasDeviceImage);
     }
 
     [Fact]
-    public void BuildRows_ShouldUsePilotMonitoringVisualForCv5000()
+    public void BuildRows_ShouldUseStandardMonitoringVisualForCv5000()
     {
         var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
         {
@@ -249,6 +250,70 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
             IsScanAnimationActive = true
         };
         Assert.True(activeCard.ShouldPulseStatusOrb);
+        var activeRuntimeCard = row.MonitoringCard.WithPilotMonitoringActivity(isMonitoringActive: true);
+        Assert.True(activeRuntimeCard.ShouldPulseStatusOrb);
+        Assert.All(activeRuntimeCard.ExpectedInputs, input => Assert.Equal("wartet", input.Status));
+        var stoppedRuntimeCard = activeRuntimeCard.WithPilotMonitoringActivity(isMonitoringActive: false);
+        Assert.False(stoppedRuntimeCard.ShouldPulseStatusOrb);
+        Assert.All(stoppedRuntimeCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));
+    }
+
+    [Fact]
+    public void BuildRows_ShouldUsePlaceholderWhenConfiguredDeviceImageIsMissing()
+    {
+        var missingImagePath = @"C:\Praxis\Bilder\nicht-vorhanden.png";
+        var profile = CreateProfile(isActive: true, isLicenseRequired: false) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
+        };
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() with
+        {
+            DeviceImagePath = missingImagePath
+        };
+
+        var row = Assert.Single(_service.BuildRows(
+            new[] { profile },
+            new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            new[] { deviceProfile },
+            new[] { DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() },
+            Array.Empty<LicensedDeviceState>()));
+
+        Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
+        Assert.Equal(missingImagePath, row.MonitoringCard.DeviceImagePath);
+        Assert.False(row.MonitoringCard.HasDeviceImage);
+    }
+
+    [Theory]
+    [InlineData("Solos")]
+    [InlineData("CT800A")]
+    [InlineData("KR1")]
+    [InlineData("ARK1S")]
+    public void BuildRows_ShouldUseStandardMonitoringVisualForOtherDevices(string profileKind)
+    {
+        var (interfaceProfile, deviceProfile, exportProfile) = CreateProfileSet(profileKind);
+        interfaceProfile = interfaceProfile with
+        {
+            IsActive = true,
+            IsLicenseRequired = false,
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
+        };
+
+        var row = Assert.Single(_service.BuildRows(
+            new[] { interfaceProfile },
+            new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            new[] { deviceProfile },
+            new[] { exportProfile },
+            Array.Empty<LicensedDeviceState>()));
+
+        Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
+        Assert.False(row.MonitoringCard.ShouldPulseStatusOrb);
+        Assert.All(row.MonitoringCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));
     }
 
     [Fact]
@@ -286,12 +351,12 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         var row = Assert.Single(BuildRows(profile));
 
         var aisInput = Assert.Single(row.MonitoringCard.ExpectedInputs, input => input.Name == "AIS-Patientendatei");
-        Assert.Equal("erwartet", aisInput.Status);
+        Assert.Equal("gestoppt", aisInput.Status);
         Assert.Equal("Neutral", aisInput.StatusClass);
         Assert.Equal(@"C:\XDT\AIS", aisInput.FolderPath);
 
         var deviceInput = Assert.Single(row.MonitoringCard.ExpectedInputs, input => input.Name == "Geräte-Datei");
-        Assert.Equal("erwartet", deviceInput.Status);
+        Assert.Equal("gestoppt", deviceInput.Status);
         Assert.Equal("Neutral", deviceInput.StatusClass);
         Assert.Equal(@"C:\XDT\Device", deviceInput.FolderPath);
     }
@@ -351,6 +416,30 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
                 IsBuiltIn = false,
                 IsUserDefined = true
             }
+        };
+    }
+
+    private static (InterfaceProfileDefinition InterfaceProfile, DeviceProfileDefinition DeviceProfile, ExportProfileDefinition ExportProfile) CreateProfileSet(string profileKind)
+    {
+        return profileKind switch
+        {
+            "Solos" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconSolosDefault(),
+                DefaultDeviceProfileDefinitions.CreateTopconSolosDefault(),
+                DefaultExportProfileDefinitions.CreateMedistarTopconSolosDefault()),
+            "CT800A" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconCt800ADefault(),
+                DefaultDeviceProfileDefinitions.CreateTopconCt800ADefault(),
+                DefaultExportProfileDefinitions.CreateMedistarTopconCt800ADefault()),
+            "KR1" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr1Default(),
+                DefaultDeviceProfileDefinitions.CreateTopconKr1Default(),
+                DefaultExportProfileDefinitions.CreateMedistarTopconKr1Default()),
+            "ARK1S" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+                DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
+                DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault()),
+            _ => throw new ArgumentOutOfRangeException(nameof(profileKind), profileKind, null)
         };
     }
 

@@ -30,7 +30,70 @@ public sealed record InterfaceMonitoringCardDisplay(
     string DeviceImagePath = "",
     bool UsesPilotDeviceVisual = false)
 {
-    public bool HasDeviceImage => !string.IsNullOrWhiteSpace(DeviceImagePath);
+    public bool HasDeviceImage => IsUsableDeviceImagePath(DeviceImagePath);
 
     public bool ShouldPulseStatusOrb => UsesPilotDeviceVisual && IsScanAnimationActive;
+
+    public InterfaceMonitoringCardDisplay WithPilotMonitoringActivity(bool isMonitoringActive)
+    {
+        var updated = this with
+        {
+            IsScanAnimationActive = isMonitoringActive
+        };
+
+        if (!updated.UsesPilotDeviceVisual)
+        {
+            return updated;
+        }
+
+        var idleStatus = isMonitoringActive ? "wartet" : "gestoppt";
+        var idleStatusClass = isMonitoringActive ? "Waiting" : "Neutral";
+        return updated with
+        {
+            ExpectedInputs = updated.ExpectedInputs
+                .Select(input => IsPilotIdleInput(input)
+                    ? input with
+                    {
+                        Status = idleStatus,
+                        StatusClass = idleStatusClass
+                    }
+                    : input)
+                .ToList()
+        };
+    }
+
+    private static bool IsPilotIdleInput(ExpectedInputDisplayItem input)
+    {
+        return input.Key is "ais" or "device"
+            && string.IsNullOrWhiteSpace(input.DisplayDetail)
+            && input.Status is "gestoppt" or "wartet" or "erwartet";
+    }
+
+    private static bool IsUsableDeviceImagePath(string? deviceImagePath)
+    {
+        if (string.IsNullOrWhiteSpace(deviceImagePath))
+        {
+            return false;
+        }
+
+        var trimmed = deviceImagePath.Trim();
+        if (trimmed.StartsWith("pack://", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        try
+        {
+            return !Path.IsPathFullyQualified(trimmed)
+                || File.Exists(trimmed);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+    }
 }

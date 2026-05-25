@@ -274,9 +274,9 @@
                                                         </Border.Style>
                                                         <Grid Height="150">
                                                             <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="0.85*"/>
-                                                                <ColumnDefinition Width="1.55*"/>
-                                                                <ColumnDefinition Width="58"/>
+                                                                <ColumnDefinition Width="0.72*"/>
+                                                                <ColumnDefinition Width="1.8*"/>
+                                                                <ColumnDefinition Width="52"/>
                                                             </Grid.ColumnDefinitions>
 
                                                             <StackPanel Grid.Column="0"
@@ -295,7 +295,7 @@
                                                             </StackPanel>
 
                                                             <Grid Grid.Column="1"
-                                                                  Margin="-4,0,6,0">
+                                                                  Margin="-12,-8,-4,-4">
                                                                 <Border Background="#10FFFFFF"
                                                                         CornerRadius="8"/>
                                                                 <Image Source="{Binding DeviceImagePath}"
@@ -513,7 +513,7 @@
                                                     </WrapPanel>
 
                                                     <WrapPanel Margin="0,0,0,6"
-                                                               HorizontalAlignment="Center">
+                                                               HorizontalAlignment="Left">
                                                         <WrapPanel.Style>
                                                             <Style TargetType="WrapPanel">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>

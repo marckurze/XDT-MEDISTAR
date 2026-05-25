@@ -107,7 +107,7 @@ public sealed class InterfaceProfileUiPolicyTests
     }
 
     [Fact]
-    public void ShouldUsePilotMonitoringVisual_ForCv5000Only()
+    public void ShouldUseStandardMonitoringVisual_ForCv5000WithBuiltInImage()
     {
         var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
         var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconCv5000Default();
@@ -121,13 +121,16 @@ public sealed class InterfaceProfileUiPolicyTests
     [Theory]
     [InlineData("ARK1S")]
     [InlineData("NT530P")]
+    [InlineData("Solos")]
+    [InlineData("CT800A")]
+    [InlineData("KR1")]
     [InlineData("Dokumentanhang")]
     [InlineData("Manuelle Dokumentübergabe")]
-    public void ShouldKeepPilotMonitoringVisualDisabled_ForNonCv5000Profiles(string profileKind)
+    public void ShouldUseStandardMonitoringVisual_ForNonCv5000Profiles(string profileKind)
     {
         var (interfaceProfile, deviceProfile) = CreateNonCv5000Profile(profileKind);
 
-        Assert.False(InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(interfaceProfile, deviceProfile));
+        Assert.True(InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(interfaceProfile, deviceProfile));
         Assert.Equal(string.Empty, InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile));
     }
 
@@ -166,6 +169,15 @@ public sealed class InterfaceProfileUiPolicyTests
             "NT530P" => (
                 DefaultInterfaceProfileDefinitions.CreateMedistarNidekNt530PDefault(),
                 DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault()),
+            "Solos" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconSolosDefault(),
+                DefaultDeviceProfileDefinitions.CreateTopconSolosDefault()),
+            "CT800A" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconCt800ADefault(),
+                DefaultDeviceProfileDefinitions.CreateTopconCt800ADefault()),
+            "KR1" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr1Default(),
+                DefaultDeviceProfileDefinitions.CreateTopconKr1Default()),
             "Dokumentanhang" => (
                 DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
                 DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault()),

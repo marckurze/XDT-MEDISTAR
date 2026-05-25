@@ -3581,15 +3581,14 @@ public partial class MainWindow : Window
             {
                 var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
                 var runtimeCard = GetRuntimeMonitoringCard(row);
-                var desiredCard = runtimeCard with
+                var desiredCard = (runtimeCard with
                 {
                     CurrentStatus = runtimeState.CurrentStatus,
                     StatusClass = runtimeState.StatusClass,
                     LastScanText = runtimeState.LastScanText,
-                    IsScanAnimationActive = isMonitoringActive,
                     AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein",
                     IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId)
-                };
+                }).WithPilotMonitoringActivity(isMonitoringActive);
                 var floatingState = _floatingWindowStateService.GetOrCreate(row.MonitoringCard.InterfaceProfileId);
                 if (floatingState.IsDetached && _floatingWindowRestoreGate.CanShowFloatingWindows)
                 {

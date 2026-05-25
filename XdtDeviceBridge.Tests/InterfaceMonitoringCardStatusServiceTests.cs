@@ -30,11 +30,11 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
 
         Assert.Equal("Wartet auf AIS", updated.CurrentStatus);
         Assert.Equal("Waiting", updated.StatusClass);
-        Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "erwartet");
+        Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "gestoppt");
     }
 
     [Fact]
-    public void ApplyScanResult_ShouldUseWaitingInputStatusForActiveCv5000PilotCard()
+    public void ApplyScanResult_ShouldUseWaitingInputStatusForActiveStandardDeviceCard()
     {
         var baseProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
         var profile = baseProfile with
@@ -60,6 +60,35 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         Assert.DoesNotContain(updated.ExpectedInputs, input => input.Status == "erwartet");
         Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "wartet");
         Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Status == "wartet");
+    }
+
+    [Fact]
+    public void WithPilotMonitoringActivity_ShouldKeepDetectedInputStatuses()
+    {
+        var baseProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
+        var profile = baseProfile with
+        {
+            IsActive = true,
+            FolderOptions = baseProfile.FolderOptions with
+            {
+                AisImportFolder = @"C:\Test\AIS",
+                DeviceImportFolder = @"C:\Test\Device",
+                ExportFolder = @"C:\Test\Export"
+            }
+        };
+        var card = CreateCv5000Card(profile) with
+        {
+            ExpectedInputs = new[]
+            {
+                new ExpectedInputDisplayItem("ais", "Testfrau Anna", @"C:\Test\AIS", "", "Success", "patient.gdt"),
+                new ExpectedInputDisplayItem("device", "Empfangen", @"C:\Test\Device", "", "Success", "geraet.xml", "TOPCON CV-5000 / CV-5000S")
+            }
+        };
+
+        var updated = card.WithPilotMonitoringActivity(isMonitoringActive: true);
+
+        Assert.All(updated.ExpectedInputs, input => Assert.Equal("", input.Status));
+        Assert.All(updated.ExpectedInputs, input => Assert.Equal("Success", input.StatusClass));
     }
 
     [Fact]
@@ -136,7 +165,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
 
         var documentInput = Assert.Single(updated.ExpectedInputs, input => input.Key == "device");
         Assert.Equal("Dokumentdateien", documentInput.Name);
-        Assert.Equal("erwartet", documentInput.Status);
+        Assert.Equal("gestoppt", documentInput.Status);
         Assert.Equal("Neutral", documentInput.StatusClass);
         Assert.DoesNotContain(updated.ExpectedInputs, input => input.Key == "attachment");
     }
