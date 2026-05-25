@@ -50,6 +50,19 @@ public static class InterfaceProfileUiPolicy
         return GetBuiltInDeviceImagePath(interfaceProfile, deviceProfile);
     }
 
+    public static string GetMonitoringDeviceImagePath(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile,
+        string? deviceImageOverridePath)
+    {
+        if (IsExistingImageOverride(deviceImageOverridePath))
+        {
+            return deviceImageOverridePath!.Trim();
+        }
+
+        return GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile);
+    }
+
     private static string GetBuiltInDeviceImagePath(
         InterfaceProfileDefinition? interfaceProfile,
         DeviceProfileDefinition? deviceProfile)
@@ -57,6 +70,33 @@ public static class InterfaceProfileUiPolicy
         return IsCv5000(interfaceProfile, deviceProfile)
             ? TopconCv5000DeviceImagePath
             : string.Empty;
+    }
+
+    private static bool IsExistingImageOverride(string? deviceImageOverridePath)
+    {
+        if (string.IsNullOrWhiteSpace(deviceImageOverridePath))
+        {
+            return false;
+        }
+
+        var trimmed = deviceImageOverridePath.Trim();
+        if (trimmed.StartsWith("pack://", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        try
+        {
+            return File.Exists(trimmed);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
     }
 
     public static double GetStatusOrbPulseDurationSeconds(int scanIntervalSeconds)

@@ -7,7 +7,8 @@ public sealed class ActiveInterfaceProfileStatusService
         IEnumerable<AisProfile> aisProfiles,
         IEnumerable<DeviceProfileDefinition> deviceProfiles,
         IEnumerable<ExportProfileDefinition> exportProfiles,
-        IEnumerable<LicensedDeviceState> licenseStates)
+        IEnumerable<LicensedDeviceState> licenseStates,
+        IReadOnlyDictionary<string, string>? deviceImageOverrides = null)
     {
         ArgumentNullException.ThrowIfNull(interfaceProfiles);
         ArgumentNullException.ThrowIfNull(aisProfiles);
@@ -27,7 +28,8 @@ public sealed class ActiveInterfaceProfileStatusService
                 aisProfilesById,
                 deviceProfilesById,
                 exportProfilesById,
-                licenseStatesByInterfaceId))
+                licenseStatesByInterfaceId,
+                deviceImageOverrides ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)))
             .ToList();
     }
 
@@ -36,7 +38,8 @@ public sealed class ActiveInterfaceProfileStatusService
         IReadOnlyDictionary<string, AisProfile> aisProfilesById,
         IReadOnlyDictionary<string, DeviceProfileDefinition> deviceProfilesById,
         IReadOnlyDictionary<string, ExportProfileDefinition> exportProfilesById,
-        IReadOnlyDictionary<string, LicensedDeviceState> licenseStatesByInterfaceId)
+        IReadOnlyDictionary<string, LicensedDeviceState> licenseStatesByInterfaceId,
+        IReadOnlyDictionary<string, string> deviceImageOverrides)
     {
         var licenseState = licenseStatesByInterfaceId.TryGetValue(profile.Metadata.Id, out var state)
             ? state
@@ -50,7 +53,7 @@ public sealed class ActiveInterfaceProfileStatusService
         var aisName = GetAisProfileName(profile.AisProfileId, aisProfilesById);
         var deviceName = GetDeviceProfileName(profile.DeviceProfileId, deviceProfilesById);
         var exportProfileName = GetExportProfileName(profile.ExportProfileId, exportProfilesById);
-        var monitoringCard = CreateMonitoringCard(profile, aisName, deviceName, exportProfileName, deviceProfile);
+        var monitoringCard = CreateMonitoringCard(profile, aisName, deviceName, exportProfileName, deviceProfile, deviceImageOverrides);
 
         return new ActiveInterfaceProfileStatusRow(
             Name: profile.Metadata.Name,
@@ -175,7 +178,8 @@ public sealed class ActiveInterfaceProfileStatusService
         string aisName,
         string deviceName,
         string exportProfileName,
-        DeviceProfileDefinition? deviceProfile)
+        DeviceProfileDefinition? deviceProfile,
+        IReadOnlyDictionary<string, string> deviceImageOverrides)
     {
         var folderOptions = profile.FolderOptions;
         var isManualDocumentSelection = folderOptions.IsAttachmentOnlyMode
@@ -185,6 +189,10 @@ public sealed class ActiveInterfaceProfileStatusService
         var attachmentStatus = CreateAttachmentConfigurationStatus(folderOptions);
         var usesPilotDeviceVisual = InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(profile, deviceProfile);
         var initialInputStatus = usesPilotDeviceVisual ? "gestoppt" : "erwartet";
+        var deviceImageOverridePath = deviceProfile is not null
+            && deviceImageOverrides.TryGetValue(deviceProfile.Metadata.Id, out var overridePath)
+                ? overridePath
+                : null;
 
         var expectedInputs = new List<ExpectedInputDisplayItem>
         {
@@ -255,7 +263,7 @@ public sealed class ActiveInterfaceProfileStatusService
             AttachmentExportFolder: attachmentExportFolder,
             AttachmentConfigurationStatus: attachmentStatus,
             DeviceType: deviceProfile?.DeviceType ?? string.Empty,
-            DeviceImagePath: InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(profile, deviceProfile),
+            DeviceImagePath: InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(profile, deviceProfile, deviceImageOverridePath),
             UsesPilotDeviceVisual: usesPilotDeviceVisual);
     }
 

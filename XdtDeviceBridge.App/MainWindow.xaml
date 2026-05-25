@@ -789,6 +789,7 @@
                                 <Button x:Name="ImportTemplatePackageButton" Content="Templatepaket importieren" Width="190" Margin="0,0,16,8" Click="ImportTemplatePackage_Click"/>
                                 <Button Content="Neues AIS anlegen" Width="160" Margin="0,0,8,8" Click="CreateNewAisProfile_Click"/>
                                 <Button Content="Neues Gerät anlegen" Width="170" Margin="0,0,8,8" Click="CreateNewDeviceProfile_Click"/>
+                                <Button Content="Gerät laden" Width="120" Margin="0,0,8,8" Click="LoadDeviceProfile_Click"/>
                                 <Button Content="Neues Exportprofil anlegen" Width="200" Margin="0,0,8,8" Click="CreateNewExportProfile_Click"/>
                             </WrapPanel>
                             <GroupBox Grid.Row="2"

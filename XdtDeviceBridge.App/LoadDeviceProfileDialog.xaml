@@ -1,0 +1,144 @@
+<Window x:Class="XdtDeviceBridge.App.LoadDeviceProfileDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Gerät laden"
+        Width="980"
+        Height="580"
+        MinWidth="780"
+        MinHeight="480"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.25*"/>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <GroupBox Grid.Row="0"
+                  Grid.Column="0"
+                  Header="Geräteprofile">
+            <DataGrid x:Name="DeviceProfilesGrid"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow"
+                      Margin="8"
+                      SelectionChanged="DeviceProfilesGrid_SelectionChanged">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Profil" Binding="{Binding ProfileName}" Width="1.4*"/>
+                    <DataGridTextColumn Header="Hersteller" Binding="{Binding Manufacturer}" Width="0.8*"/>
+                    <DataGridTextColumn Header="Modell" Binding="{Binding Model}" Width="0.8*"/>
+                    <DataGridTextColumn Header="Typ" Binding="{Binding DeviceType}" Width="1*"/>
+                    <DataGridTextColumn Header="Art" Binding="{Binding ProfileKindDisplay}" Width="0.7*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="0"
+                  Grid.Column="2"
+                  Header="Gerätedetails">
+            <Grid Margin="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="128"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profilname:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="ProfileNameText" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Hersteller:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="ManufacturerText" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Modell:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="ModelText" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Gerätetyp:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="DeviceTypeText" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Parserbasis:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="ParserModeText" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Eigenschaft:" FontWeight="Bold" Margin="0,0,8,10"/>
+                <TextBlock Grid.Row="5" Grid.Column="1" x:Name="ProfileKindText" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                <Border Grid.Row="6"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        BorderBrush="#D1D5DB"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Background="#F9FAFB"
+                        MinHeight="180"
+                        Margin="0,0,0,10">
+                    <Grid>
+                        <Image x:Name="DeviceImagePreview"
+                               Stretch="Uniform"
+                               Margin="8"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock x:Name="DeviceImagePlaceholderText"
+                                   Text="Kein Gerätebild"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Foreground="#6B7280"/>
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Row="7"
+                           Grid.Column="0"
+                           Grid.ColumnSpan="2"
+                           x:Name="ImageStatusText"
+                           Foreground="DimGray"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,10"/>
+
+                <WrapPanel Grid.Row="8"
+                           Grid.Column="0"
+                           Grid.ColumnSpan="2"
+                           HorizontalAlignment="Right">
+                    <Button Content="Bild auswählen"
+                            Width="120"
+                            Margin="0,0,8,0"
+                            Click="SelectImage_Click"/>
+                    <Button Content="Bild zurücksetzen"
+                            Width="132"
+                            Margin="0,0,8,0"
+                            Click="ResetImage_Click"/>
+                    <Button Content="Speichern"
+                            Width="100"
+                            Margin="0,0,8,0"
+                            IsDefault="True"
+                            Click="Save_Click"/>
+                    <Button Content="Schließen"
+                            Width="100"
+                            IsCancel="True"/>
+                </WrapPanel>
+            </Grid>
+        </GroupBox>
+
+        <TextBlock Grid.Row="1"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="3"
+                   Text="In dieser V1 werden nur Gerätebilder verwaltet. BuiltIn-Geräte werden fachlich nicht überschrieben; Bildänderungen werden als lokale Overrides gespeichert."
+                   Foreground="DimGray"
+                   TextWrapping="Wrap"
+                   Margin="0,10,0,0"/>
+    </Grid>
+</Window>

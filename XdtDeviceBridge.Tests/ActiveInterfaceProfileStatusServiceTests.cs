@@ -286,6 +286,37 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.False(row.MonitoringCard.HasDeviceImage);
     }
 
+    [Fact]
+    public void BuildRows_ShouldPreferExistingDeviceImageOverride()
+    {
+        var overrideImagePath = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"), "cv5000.png");
+        Directory.CreateDirectory(Path.GetDirectoryName(overrideImagePath)!);
+        File.WriteAllText(overrideImagePath, "image-content");
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() with
+        {
+            IsActive = true,
+            IsLicenseRequired = false,
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
+        };
+
+        var row = Assert.Single(_service.BuildRows(
+            new[] { interfaceProfile },
+            new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            new[] { DefaultDeviceProfileDefinitions.CreateTopconCv5000Default() },
+            new[] { DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default() },
+            Array.Empty<LicensedDeviceState>(),
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["device-topcon-cv5000-default"] = overrideImagePath
+            }));
+
+        Assert.Equal(overrideImagePath, row.MonitoringCard.DeviceImagePath);
+        Assert.True(row.MonitoringCard.HasDeviceImage);
+    }
+
     [Theory]
     [InlineData("Solos")]
     [InlineData("CT800A")]

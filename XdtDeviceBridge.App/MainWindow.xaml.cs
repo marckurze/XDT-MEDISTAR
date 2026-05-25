@@ -99,6 +99,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
     private readonly InterfaceProfileAutoDetachService _interfaceProfileAutoDetachService = new();
     private readonly InterfaceProfileAutoRedockService _interfaceProfileAutoRedockService = new();
+    private readonly DeviceProfileImageOverrideService _deviceProfileImageOverrideService = new();
     private readonly InterfaceProfileNotificationSoundService _interfaceProfileNotificationSoundService = new(isEnabled: MonitoringNotificationSoundEnabled);
     private readonly IInterfaceProfileNotificationSoundPlayer _interfaceProfileNotificationSoundPlayer = new WavInterfaceProfileNotificationSoundPlayer();
     private readonly TrayWindowStateService _trayWindowStateService = new();
@@ -2090,6 +2091,38 @@ public partial class MainWindow : Window
         }
     }
 
+    private void LoadDeviceProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var dialog = new LoadDeviceProfileDialog(catalog.DeviceProfiles, paths, _deviceProfileImageOverrideService)
+            {
+                Owner = this
+            };
+
+            _ = dialog.ShowDialog();
+            if (!dialog.HasChanges)
+            {
+                return;
+            }
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(updatedCatalog);
+            AppendProfileMessage("Gerätebild gespeichert. BuiltIn-Fachprofile wurden nicht überschrieben.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Geräteprofil konnte nicht geladen werden: {ex.Message}");
+        }
+    }
+
     private void ProfileRenameSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         UpdateProfileRenameActionButtons();
@@ -3508,7 +3541,8 @@ public partial class MainWindow : Window
                 _profileCatalog.AisProfiles,
                 _profileCatalog.DeviceProfiles,
                 _profileCatalog.ExportProfiles,
-                licenseStates)
+                licenseStates,
+                LoadDeviceImageOverrides())
             .OrderBy(row => row.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
 
@@ -3531,6 +3565,19 @@ public partial class MainWindow : Window
         _lastMonitoringScanQueuesByProfileId.Clear();
         CloseAllFloatingMonitoringWindows();
         ActiveInterfaceProfilesStatusText.Text = message;
+    }
+
+    private IReadOnlyDictionary<string, string> LoadDeviceImageOverrides()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            return _deviceProfileImageOverrideService.LoadOverrides(paths);
+        }
+        catch
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     private void LoadFloatingWindowStates()
