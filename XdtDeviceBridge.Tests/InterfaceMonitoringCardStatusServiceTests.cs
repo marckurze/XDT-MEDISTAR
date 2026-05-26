@@ -30,6 +30,8 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
 
         Assert.Equal("Wartet auf AIS", updated.CurrentStatus);
         Assert.Equal("Waiting", updated.StatusClass);
+        Assert.False(updated.ShouldFlashStatusOrb);
+        Assert.Equal("StoppedRed", updated.StatusOrbVisualState);
         Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "gestoppt");
     }
 
@@ -57,6 +59,7 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         var updated = service.ApplyScanResult(card, profile, scanResult, CreatePackageEvaluation(AutoImportPackageStateReason.WaitingForAisFile), DateTime.Today, automaticProcessingEnabled: true);
 
         Assert.True(updated.ShouldPulseStatusOrb);
+        Assert.Equal("RunningGreen", updated.StatusOrbVisualState);
         Assert.DoesNotContain(updated.ExpectedInputs, input => input.Status == "erwartet");
         Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Status == "wartet");
         Assert.Contains(updated.ExpectedInputs, input => input.Key == "device" && input.Status == "wartet");
@@ -106,6 +109,8 @@ public sealed class InterfaceMonitoringCardStatusServiceTests
         Assert.Equal("Wartet auf Gerät", updated.CurrentStatus);
         Assert.Equal("Patient: Marc Kurze", updated.PatientDisplayText);
         Assert.Equal("patient.gdt", updated.AisFileName);
+        Assert.False(updated.ShouldPulseStatusOrb);
+        Assert.True(updated.ShouldFlashStatusOrb);
         Assert.Contains(updated.ExpectedInputs, input => input.Key == "ais" && input.Name == "Marc Kurze" && input.Status == "" && input.DisplayDetail == "");
         Assert.DoesNotContain(updated.ExpectedInputs, input => input.Key == "ais" && input.DisplayDetail.Contains(@"C:\Test\AIS", StringComparison.OrdinalIgnoreCase));
     }

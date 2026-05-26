@@ -10,6 +10,12 @@ public sealed class InterfaceProfileUiPolicyTests
         Assert.Equal(576d, InterfaceProfileUiPolicy.PilotMonitoringCardWidth);
         Assert.Equal(672d, InterfaceProfileUiPolicy.PilotFloatingWindowMinWidth);
         Assert.Equal(744d, InterfaceProfileUiPolicy.PilotFloatingWindowDefaultWidth);
+        Assert.Equal(120d, InterfaceProfileUiPolicy.MonitoringInputBadgeMinWidth);
+        Assert.Equal(176d, InterfaceProfileUiPolicy.MonitoringInputBadgeMaxWidth);
+        Assert.Equal(128d, InterfaceProfileUiPolicy.FloatingInputBadgeMinWidth);
+        Assert.Equal(188d, InterfaceProfileUiPolicy.FloatingInputBadgeMaxWidth);
+        Assert.True(InterfaceProfileUiPolicy.MonitoringInputBadgeMaxWidth > InterfaceProfileUiPolicy.MonitoringInputBadgeMinWidth);
+        Assert.True(InterfaceProfileUiPolicy.FloatingInputBadgeMaxWidth > InterfaceProfileUiPolicy.FloatingInputBadgeMinWidth);
     }
 
     [Fact]

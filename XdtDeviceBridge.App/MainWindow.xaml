@@ -75,6 +75,9 @@
                                         <Setter Property="CornerRadius" Value="6"/>
                                         <Setter Property="Padding" Value="6"/>
                                         <Setter Property="Margin" Value="0,0,4,6"/>
+                                        <Setter Property="MinWidth" Value="{x:Static core:InterfaceProfileUiPolicy.MonitoringInputBadgeMinWidth}"/>
+                                        <Setter Property="MaxWidth" Value="{x:Static core:InterfaceProfileUiPolicy.MonitoringInputBadgeMaxWidth}"/>
+                                        <Setter Property="HorizontalAlignment" Value="Left"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect BlurRadius="7"
@@ -391,39 +394,62 @@
                                                                     <Ellipse.RenderTransform>
                                                                         <ScaleTransform/>
                                                                     </Ellipse.RenderTransform>
-                                                                    <Ellipse.Effect>
-                                                                        <DropShadowEffect BlurRadius="16"
-                                                                                          ShadowDepth="2"
-                                                                                          Direction="270"
-                                                                                          Color="#991B1B"
-                                                                                          Opacity="0.34"/>
-                                                                    </Ellipse.Effect>
-                                                                    <Ellipse.Fill>
-                                                                        <RadialGradientBrush Center="0.34,0.28"
-                                                                                             GradientOrigin="0.22,0.18"
-                                                                                             RadiusX="0.72"
-                                                                                             RadiusY="0.72">
-                                                                            <GradientStop Color="#FEE2E2" Offset="0"/>
-                                                                            <GradientStop Color="#EF4444" Offset="0.42"/>
-                                                                            <GradientStop Color="#B91C1C" Offset="1"/>
-                                                                        </RadialGradientBrush>
-                                                                    </Ellipse.Fill>
+                                                                    <Ellipse.Style>
+                                                                        <Style TargetType="Ellipse">
+                                                                            <Setter Property="Effect">
+                                                                                <Setter.Value>
+                                                                                    <DropShadowEffect BlurRadius="16"
+                                                                                                      ShadowDepth="2"
+                                                                                                      Direction="270"
+                                                                                                      Color="#991B1B"
+                                                                                                      Opacity="0.34"/>
+                                                                                </Setter.Value>
+                                                                            </Setter>
+                                                                            <Setter Property="Fill">
+                                                                                <Setter.Value>
+                                                                                    <RadialGradientBrush Center="0.34,0.28"
+                                                                                                         GradientOrigin="0.22,0.18"
+                                                                                                         RadiusX="0.72"
+                                                                                                         RadiusY="0.72">
+                                                                                        <GradientStop Color="#FEE2E2" Offset="0"/>
+                                                                                        <GradientStop Color="#EF4444" Offset="0.42"/>
+                                                                                        <GradientStop Color="#B91C1C" Offset="1"/>
+                                                                                    </RadialGradientBrush>
+                                                                                </Setter.Value>
+                                                                            </Setter>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding ShouldPulseStatusOrb}" Value="True">
+                                                                                    <Setter Property="Effect">
+                                                                                        <Setter.Value>
+                                                                                            <DropShadowEffect BlurRadius="16"
+                                                                                                              ShadowDepth="2"
+                                                                                                              Direction="270"
+                                                                                                              Color="#166534"
+                                                                                                              Opacity="0.34"/>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
+                                                                                    <Setter Property="Fill">
+                                                                                        <Setter.Value>
+                                                                                            <RadialGradientBrush Center="0.34,0.28"
+                                                                                                                 GradientOrigin="0.22,0.18"
+                                                                                                                 RadiusX="0.72"
+                                                                                                                 RadiusY="0.72">
+                                                                                                <GradientStop Color="#DCFCE7" Offset="0"/>
+                                                                                                <GradientStop Color="#22C55E" Offset="0.42"/>
+                                                                                                <GradientStop Color="#15803D" Offset="1"/>
+                                                                                            </RadialGradientBrush>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Ellipse.Style>
                                                                 </Ellipse>
                                                                 <Ellipse Width="40"
                                                                          Height="40"
                                                                          Tag="StatusOrbFlash"
-                                                                         Opacity="0">
-                                                                    <Ellipse.Fill>
-                                                                        <RadialGradientBrush Center="0.34,0.28"
-                                                                                             GradientOrigin="0.2,0.16"
-                                                                                             RadiusX="0.75"
-                                                                                             RadiusY="0.75">
-                                                                            <GradientStop Color="#DCFCE7" Offset="0"/>
-                                                                            <GradientStop Color="#22C55E" Offset="0.5"/>
-                                                                            <GradientStop Color="#15803D" Offset="1"/>
-                                                                        </RadialGradientBrush>
-                                                                    </Ellipse.Fill>
-                                                                </Ellipse>
+                                                                         Fill="#FFFFFFFF"
+                                                                         Opacity="0"/>
                                                                 <Ellipse Width="12"
                                                                          Height="8"
                                                                          Fill="#CCFFFFFF"
@@ -595,10 +621,13 @@
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
                                                                 <Border Style="{StaticResource MonitoringInputBadgeStyle}"
-                                                                        Width="100"
                                                                         ToolTip="{Binding Detail}">
                                                                     <StackPanel>
-                                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" TextWrapping="Wrap"/>
+                                                                        <TextBlock Text="{Binding Name}"
+                                                                                   FontWeight="Bold"
+                                                                                   TextWrapping="NoWrap"
+                                                                                   TextTrimming="CharacterEllipsis"
+                                                                                   ToolTip="{Binding Name}"/>
                                                                         <TextBlock Text="{Binding Status}" Foreground="DimGray" TextWrapping="Wrap">
                                                                             <TextBlock.Style>
                                                                                 <Style TargetType="TextBlock">

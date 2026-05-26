@@ -303,6 +303,14 @@ public partial class FloatingInterfaceProfileWindow : Window
             return;
         }
 
+        var flashKey = CreateDeviceInputFlashKey(card);
+        if (!string.IsNullOrWhiteSpace(flashKey)
+            && !string.Equals(_pilotOrbFlashKey, flashKey, StringComparison.Ordinal))
+        {
+            _pilotOrbFlashKey = flashKey;
+            StartStatusOrbFlash(element);
+        }
+
         if (!card.ShouldPulseStatusOrb)
         {
             StopPilotStatusOrbAnimation(element);
@@ -336,14 +344,6 @@ public partial class FloatingInterfaceProfileWindow : Window
             };
             orb.BeginAnimation(UIElement.OpacityProperty, opacityAnimation);
         }
-
-        var flashKey = CreateDeviceInputFlashKey(card);
-        if (!string.IsNullOrWhiteSpace(flashKey)
-            && !string.Equals(_pilotOrbFlashKey, flashKey, StringComparison.Ordinal))
-        {
-            _pilotOrbFlashKey = flashKey;
-            StartStatusOrbFlash(element);
-        }
     }
 
     private void StopPilotStatusOrbAnimation(FrameworkElement element)
@@ -373,20 +373,36 @@ public partial class FloatingInterfaceProfileWindow : Window
             return;
         }
 
-        flash.Opacity = 0;
-        var flashAnimation = new DoubleAnimation
+        flash.BeginAnimation(UIElement.OpacityProperty, null);
+        flash.Opacity = 1;
+        if (flash is System.Windows.Shapes.Shape shape)
         {
-            From = 0.95,
-            To = 0,
-            Duration = new Duration(TimeSpan.FromMilliseconds(820)),
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            var flashBrush = new SolidColorBrush(Colors.White);
+            shape.Fill = flashBrush;
+            var colorAnimation = new ColorAnimationUsingKeyFrames
+            {
+                Duration = new Duration(TimeSpan.FromMilliseconds(330))
+            };
+            colorAnimation.KeyFrames.Add(new DiscreteColorKeyFrame(Colors.White, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+            colorAnimation.KeyFrames.Add(new DiscreteColorKeyFrame(System.Windows.Media.Color.FromRgb(255, 216, 64), KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(110))));
+            colorAnimation.KeyFrames.Add(new DiscreteColorKeyFrame(Colors.White, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(220))));
+            flashBrush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
+        }
+
+        var flashAnimation = new DoubleAnimationUsingKeyFrames
+        {
+            Duration = new Duration(TimeSpan.FromMilliseconds(430))
         };
+        flashAnimation.KeyFrames.Add(new DiscreteDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        flashAnimation.KeyFrames.Add(new DiscreteDoubleKeyFrame(0.92, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(110))));
+        flashAnimation.KeyFrames.Add(new DiscreteDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(220))));
+        flashAnimation.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(430))));
         flash.BeginAnimation(UIElement.OpacityProperty, flashAnimation);
     }
 
     private static string CreateDeviceInputFlashKey(InterfaceMonitoringCardDisplay card)
     {
-        return string.IsNullOrWhiteSpace(card.AisFileName) && string.IsNullOrWhiteSpace(card.DeviceFileName)
+        return !card.ShouldFlashStatusOrb
             ? string.Empty
             : $"{card.AisFileName}|{card.DeviceFileName}";
     }

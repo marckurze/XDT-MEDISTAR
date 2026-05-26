@@ -7,6 +7,10 @@ public static class InterfaceProfileUiPolicy
     public const double PilotMonitoringCardWidth = 576;
     public const double PilotFloatingWindowMinWidth = 672;
     public const double PilotFloatingWindowDefaultWidth = 744;
+    public const double MonitoringInputBadgeMinWidth = 120;
+    public const double MonitoringInputBadgeMaxWidth = 176;
+    public const double FloatingInputBadgeMinWidth = 128;
+    public const double FloatingInputBadgeMaxWidth = 188;
     public const string BuiltInDeviceImageRoot = "pack://application:,,,/Assets/Devices/";
     public const string TopconCv5000DeviceImagePath = BuiltInDeviceImageRoot + "Topcon_CV5000_freigestellt.png";
 

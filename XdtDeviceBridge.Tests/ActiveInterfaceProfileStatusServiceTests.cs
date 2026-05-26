@@ -244,6 +244,8 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.True(row.MonitoringCard.HasDeviceImage);
         Assert.Equal(InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath, row.MonitoringCard.DeviceImagePath);
         Assert.False(row.MonitoringCard.ShouldPulseStatusOrb);
+        Assert.False(row.MonitoringCard.ShouldFlashStatusOrb);
+        Assert.Equal("StoppedRed", row.MonitoringCard.StatusOrbVisualState);
         Assert.All(row.MonitoringCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));
 
         var activeCard = row.MonitoringCard with
@@ -251,11 +253,14 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
             IsScanAnimationActive = true
         };
         Assert.True(activeCard.ShouldPulseStatusOrb);
+        Assert.Equal("RunningGreen", activeCard.StatusOrbVisualState);
         var activeRuntimeCard = row.MonitoringCard.WithPilotMonitoringActivity(isMonitoringActive: true);
         Assert.True(activeRuntimeCard.ShouldPulseStatusOrb);
+        Assert.Equal("RunningGreen", activeRuntimeCard.StatusOrbVisualState);
         Assert.All(activeRuntimeCard.ExpectedInputs, input => Assert.Equal("wartet", input.Status));
         var stoppedRuntimeCard = activeRuntimeCard.WithPilotMonitoringActivity(isMonitoringActive: false);
         Assert.False(stoppedRuntimeCard.ShouldPulseStatusOrb);
+        Assert.Equal("StoppedRed", stoppedRuntimeCard.StatusOrbVisualState);
         Assert.All(stoppedRuntimeCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));
     }
 

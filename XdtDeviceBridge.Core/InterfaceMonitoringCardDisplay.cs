@@ -36,6 +36,11 @@ public sealed record InterfaceMonitoringCardDisplay(
 
     public bool ShouldPulseStatusOrb => UsesPilotDeviceVisual && IsScanAnimationActive;
 
+    public bool ShouldFlashStatusOrb => UsesPilotDeviceVisual
+        && (!string.IsNullOrWhiteSpace(AisFileName) || !string.IsNullOrWhiteSpace(DeviceFileName));
+
+    public string StatusOrbVisualState => ShouldPulseStatusOrb ? "RunningGreen" : "StoppedRed";
+
     public string EffectiveDeviceTypeDisplay => string.IsNullOrWhiteSpace(DeviceTypeDisplay)
         ? DeviceType
         : DeviceTypeDisplay;
