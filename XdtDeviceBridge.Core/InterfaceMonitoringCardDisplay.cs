@@ -29,7 +29,8 @@ public sealed record InterfaceMonitoringCardDisplay(
     string DeviceType = "",
     string DeviceImagePath = "",
     bool UsesPilotDeviceVisual = false,
-    string DeviceTypeDisplay = "")
+    string DeviceTypeDisplay = "",
+    bool UsesTextAboveImageLayout = false)
 {
     public bool HasDeviceImage => IsUsableDeviceImagePath(DeviceImagePath);
 

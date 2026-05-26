@@ -4,6 +4,9 @@ public static class InterfaceProfileUiPolicy
 {
     private const string Cv5000InterfaceProfileId = "interface-medistar-topcon-cv5000-default";
     private const string Cv5000DeviceProfileId = "device-topcon-cv5000-default";
+    public const double PilotMonitoringCardWidth = 576;
+    public const double PilotFloatingWindowMinWidth = 672;
+    public const double PilotFloatingWindowDefaultWidth = 744;
     public const string BuiltInDeviceImageRoot = "pack://application:,,,/Assets/Devices/";
     public const string TopconCv5000DeviceImagePath = BuiltInDeviceImageRoot + "Topcon_CV5000_freigestellt.png";
 
@@ -105,6 +108,19 @@ public static class InterfaceProfileUiPolicy
         return string.IsNullOrWhiteSpace(deviceType)
             ? "Generisch"
             : deviceType;
+    }
+
+    public static bool ShouldUseTextAboveImageMonitoringLayout(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        var deviceTypeDisplay = GetMonitoringDeviceTypeDisplay(deviceProfile);
+        var interfaceName = interfaceProfile?.Metadata.Name?.Trim() ?? string.Empty;
+        var deviceName = deviceProfile?.Metadata.Name?.Trim() ?? string.Empty;
+
+        return deviceTypeDisplay.Length > 22
+            || interfaceName.Length > 58
+            || deviceName.Length > 58;
     }
 
     private static string GetBuiltInDeviceImagePath(

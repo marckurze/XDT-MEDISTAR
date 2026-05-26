@@ -276,11 +276,11 @@ public partial class FloatingInterfaceProfileWindow : Window
             return;
         }
 
-        MinWidth = Math.Max(MinWidth, 560);
+        MinWidth = Math.Max(MinWidth, InterfaceProfileUiPolicy.PilotFloatingWindowMinWidth);
         MinHeight = Math.Max(MinHeight, 410);
-        if (Width < 620)
+        if (Width < InterfaceProfileUiPolicy.PilotFloatingWindowDefaultWidth)
         {
-            Width = 620;
+            Width = InterfaceProfileUiPolicy.PilotFloatingWindowDefaultWidth;
         }
 
         if (Height < 500)

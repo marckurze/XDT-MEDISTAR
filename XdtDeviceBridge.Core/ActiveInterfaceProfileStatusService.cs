@@ -265,7 +265,8 @@ public sealed class ActiveInterfaceProfileStatusService
             DeviceType: deviceProfile?.DeviceType ?? string.Empty,
             DeviceImagePath: InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(profile, deviceProfile, deviceImageOverridePath),
             UsesPilotDeviceVisual: usesPilotDeviceVisual,
-            DeviceTypeDisplay: InterfaceProfileUiPolicy.GetMonitoringDeviceTypeDisplay(deviceProfile));
+            DeviceTypeDisplay: InterfaceProfileUiPolicy.GetMonitoringDeviceTypeDisplay(deviceProfile),
+            UsesTextAboveImageLayout: InterfaceProfileUiPolicy.ShouldUseTextAboveImageMonitoringLayout(profile, deviceProfile));
     }
 
     private static ExpectedInputDisplayItem CreateExpectedInput(

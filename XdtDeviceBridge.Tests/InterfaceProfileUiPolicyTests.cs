@@ -5,6 +5,14 @@ namespace XdtDeviceBridge.Tests;
 public sealed class InterfaceProfileUiPolicyTests
 {
     [Fact]
+    public void PilotMonitoringLayoutConstants_ShouldUseBroaderStandardWidths()
+    {
+        Assert.Equal(576d, InterfaceProfileUiPolicy.PilotMonitoringCardWidth);
+        Assert.Equal(672d, InterfaceProfileUiPolicy.PilotFloatingWindowMinWidth);
+        Assert.Equal(744d, InterfaceProfileUiPolicy.PilotFloatingWindowDefaultWidth);
+    }
+
+    [Fact]
     public void ShouldShowDeviceOutput_ForCv5000AndHideAisAttachmentOptions()
     {
         var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
@@ -151,6 +159,7 @@ public sealed class InterfaceProfileUiPolicyTests
     [InlineData("Solos", "Lensmeter")]
     [InlineData("CT800A", "Tonometer")]
     [InlineData("KR1", "Keratorefraktometer")]
+    [InlineData("KR800S", "Keratorefraktometer")]
     [InlineData("ARK1S", "Autorefraktor")]
     [InlineData("Dokumentanhang", "Dokumentgerät")]
     public void GetMonitoringDeviceTypeDisplay_ShouldUseCompactMonitoringLabels(string profileKind, string expectedDisplay)
@@ -160,6 +169,30 @@ public sealed class InterfaceProfileUiPolicyTests
             : CreateNonCv5000Profile(profileKind);
 
         Assert.Equal(expectedDisplay, InterfaceProfileUiPolicy.GetMonitoringDeviceTypeDisplay(deviceProfile));
+    }
+
+    [Fact]
+    public void ShouldUseTextAboveImageMonitoringLayout_ShouldStayOffForNormalNames()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default();
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+
+        Assert.False(InterfaceProfileUiPolicy.ShouldUseTextAboveImageMonitoringLayout(interfaceProfile, deviceProfile));
+    }
+
+    [Fact]
+    public void ShouldUseTextAboveImageMonitoringLayout_ShouldTurnOnForVeryLongDisplayNames()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default() with
+        {
+            Metadata = DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default().Metadata with
+            {
+                Name = "MEDISTAR + TOPCON KR800S - sehr lange Raum- und Arbeitsplatz-Konfiguration"
+            }
+        };
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+
+        Assert.True(InterfaceProfileUiPolicy.ShouldUseTextAboveImageMonitoringLayout(interfaceProfile, deviceProfile));
     }
 
     [Fact]
@@ -194,6 +227,9 @@ public sealed class InterfaceProfileUiPolicyTests
             "KR1" => (
                 DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr1Default(),
                 DefaultDeviceProfileDefinitions.CreateTopconKr1Default()),
+            "KR800S" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default(),
+                DefaultDeviceProfileDefinitions.CreateTopconKr800Default()),
             "Dokumentanhang" => (
                 DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
                 DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault()),

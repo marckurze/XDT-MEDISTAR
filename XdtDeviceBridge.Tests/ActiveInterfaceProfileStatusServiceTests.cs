@@ -322,6 +322,7 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
     [InlineData("Solos", "Lensmeter")]
     [InlineData("CT800A", "Tonometer")]
     [InlineData("KR1", "Keratorefraktometer")]
+    [InlineData("KR800S", "Keratorefraktometer")]
     [InlineData("ARK1S", "Autorefraktor")]
     public void BuildRows_ShouldUseStandardMonitoringVisualForOtherDevices(string profileKind, string expectedDeviceTypeDisplay)
     {
@@ -346,8 +347,39 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
         Assert.Equal(deviceProfile.DeviceType, row.MonitoringCard.DeviceType);
         Assert.Equal(expectedDeviceTypeDisplay, row.MonitoringCard.EffectiveDeviceTypeDisplay);
+        Assert.False(row.MonitoringCard.UsesTextAboveImageLayout);
         Assert.False(row.MonitoringCard.ShouldPulseStatusOrb);
         Assert.All(row.MonitoringCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));
+    }
+
+    [Fact]
+    public void BuildRows_ShouldPrepareTextAboveImageLayoutForVeryLongMonitoringNames()
+    {
+        var (interfaceProfile, deviceProfile, exportProfile) = CreateProfileSet("KR800S");
+        interfaceProfile = interfaceProfile with
+        {
+            IsActive = true,
+            IsLicenseRequired = false,
+            Metadata = interfaceProfile.Metadata with
+            {
+                Name = "MEDISTAR + TOPCON KR800S - sehr lange Raum- und Arbeitsplatz-Konfiguration"
+            },
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: @"C:\XDT\AIS",
+                deviceImportFolder: @"C:\XDT\Device",
+                exportFolder: @"C:\XDT\Export")
+        };
+
+        var row = Assert.Single(_service.BuildRows(
+            new[] { interfaceProfile },
+            new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            new[] { deviceProfile },
+            new[] { exportProfile },
+            Array.Empty<LicensedDeviceState>()));
+
+        Assert.Equal(deviceProfile.DeviceType, row.MonitoringCard.DeviceType);
+        Assert.Equal("Keratorefraktometer", row.MonitoringCard.EffectiveDeviceTypeDisplay);
+        Assert.True(row.MonitoringCard.UsesTextAboveImageLayout);
     }
 
     [Fact]
@@ -469,6 +501,10 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
                 DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr1Default(),
                 DefaultDeviceProfileDefinitions.CreateTopconKr1Default(),
                 DefaultExportProfileDefinitions.CreateMedistarTopconKr1Default()),
+            "KR800S" => (
+                DefaultInterfaceProfileDefinitions.CreateMedistarTopconKr800Default(),
+                DefaultDeviceProfileDefinitions.CreateTopconKr800Default(),
+                DefaultExportProfileDefinitions.CreateMedistarTopconKr800Default()),
             "ARK1S" => (
                 DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
                 DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
