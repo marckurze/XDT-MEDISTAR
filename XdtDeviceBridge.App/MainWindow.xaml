@@ -1903,6 +1903,25 @@
                                                      ToolTip="Maximale Wartezeit, nachdem eine AIS-Datei erkannt wurde, bis eine passende Gerätedatei erwartet wird. 0 bedeutet: nicht warten."/>
                                             <TextBlock Text=" Minuten" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                         </StackPanel>
+
+                                        <WrapPanel Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,8,0,0" VerticalAlignment="Center">
+                                            <Button x:Name="InterfaceFolderDefaultButton"
+                                                    Content="Ordner Default"
+                                                    Width="120"
+                                                    Margin="0,0,8,6"
+                                                    Click="ApplyInterfaceFolderDefaults_Click"
+                                                    ToolTip="Trägt Standardpfade unter C:\XDTBox für das aktuelle Geräteprofil ein. Es werden noch keine Ordner erstellt."/>
+                                            <Button x:Name="InterfaceCreateFoldersButton"
+                                                    Content="Ordner anlegen"
+                                                    Width="120"
+                                                    Margin="0,0,12,6"
+                                                    Click="CreateInterfaceFolders_Click"
+                                                    ToolTip="Legt die aktuell eingetragenen Hauptordner an. Vorhandene Ordner gelten als OK."/>
+                                            <TextBlock x:Name="InterfaceFolderSetupStatusTextBlock"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="DimGray"
+                                                       TextWrapping="Wrap"/>
+                                        </WrapPanel>
                                     </Grid>
                                 </GroupBox>
 
@@ -1910,11 +1929,12 @@
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                                             <RowDefinition Height="Auto"/>
+                                             <RowDefinition Height="Auto"/>
+                                             <RowDefinition Height="Auto"/>
+                                             <RowDefinition Height="Auto"/>
+                                             <RowDefinition Height="Auto"/>
+                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
                                             <ColumnDefinition Width="*"/>
@@ -2147,10 +2167,34 @@
                                         <TextBlock Grid.Row="13" Grid.Column="0" x:Name="InterfaceAttachmentLinkDescriptionLabel" Text="XDT-Feld 6304 Beschreibung:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
 
-                                        <TextBlock Grid.Row="14" Grid.Column="0" x:Name="InterfaceAttachmentLinkPathTemplateLabel" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <TextBox Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
-                                    </Grid>
-                                </GroupBox>
+                                         <TextBlock Grid.Row="14" Grid.Column="0" x:Name="InterfaceAttachmentLinkPathTemplateLabel" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                         <TextBox Grid.Row="14" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkPathTemplateTextBox" ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
+
+                                         <WrapPanel x:Name="InterfaceAttachmentFolderSetupPanel"
+                                                    Grid.Row="15"
+                                                    Grid.Column="1"
+                                                    Grid.ColumnSpan="2"
+                                                    Margin="0,10,0,0"
+                                                    VerticalAlignment="Center">
+                                             <Button x:Name="InterfaceAttachmentFolderDefaultButton"
+                                                     Content="Ordner Default"
+                                                     Width="120"
+                                                     Margin="0,0,8,6"
+                                                     Click="ApplyInterfaceAttachmentFolderDefaults_Click"
+                                                     ToolTip="Trägt Standardpfade für XDT-Anhänge unter C:\XDTBox für das aktuelle Geräteprofil ein. Es werden noch keine Ordner erstellt."/>
+                                             <Button x:Name="InterfaceCreateAttachmentFoldersButton"
+                                                     Content="Ordner anlegen"
+                                                     Width="120"
+                                                     Margin="0,0,12,6"
+                                                     Click="CreateInterfaceAttachmentFolders_Click"
+                                                     ToolTip="Legt die aktuell eingetragenen XDT-Anhang-Ordner an. Vorhandene Ordner gelten als OK."/>
+                                             <TextBlock x:Name="InterfaceAttachmentFolderSetupStatusTextBlock"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="DimGray"
+                                                        TextWrapping="Wrap"/>
+                                         </WrapPanel>
+                                     </Grid>
+                                 </GroupBox>
 
                                 <GroupBox Header="Ordnerbereinigung" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <StackPanel Margin="8">

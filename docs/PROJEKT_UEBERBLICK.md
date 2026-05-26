@@ -117,6 +117,8 @@ Er enthaelt:
 
 Im Tab `Schnittstellenprofile` ist der Button `Neues Schnittstellenprofil anlegen` funktionsfaehig: Er oeffnet einen Dialog fuer Profilname, AIS-Profil, Geraeteprofil und Exportprofil. Das neue Profil wird als UserDefined gespeichert, bleibt initial inaktiv und enthaelt keine automatisch erfundenen Ordnerpfade. Ordner, Nachlauf, CV-5000-Ausgabe-an-Geraet und Dokumentanhaenge werden danach im bestehenden Konfigurationsbereich gepflegt.
 
+Im selben Tab kann der Anwender Ordnerpfade vorbereiten, ohne Fachlogik zu aktivieren: `Ordner Default` fuellt Standardpfade unter `C:\XDTBox\<Geraetename>` in die aktuell sichtbaren Pfadfelder, `Ordner anlegen` erstellt die eingetragenen Ordner und meldet Erfolg oder konkrete Pfad-/Berechtigungsfehler. Es werden keine Dateien angelegt, geloescht oder verarbeitet.
+
 Der Bereich `Test & Vorschau` erlaubt:
 
 - AIS-Datei laden

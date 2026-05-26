@@ -109,6 +109,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileActivationPreviewDisplayService _interfaceProfileActivationPreviewDisplayService = new();
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
     private readonly InterfaceProfileActivationGuardService _interfaceProfileActivationGuardService = new();
+    private readonly InterfaceProfileFolderSetupService _interfaceProfileFolderSetupService = new();
     private readonly InterfaceProfileFloatingWindowStateRepository _floatingWindowStateRepository = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
@@ -1332,6 +1333,8 @@ public partial class MainWindow : Window
         InterfaceAttachmentLinkFileFormatTextBox.Text = profile.FolderOptions.AttachmentExternalLinkFileFormat;
         InterfaceAttachmentLinkDescriptionTextBox.Text = profile.FolderOptions.AttachmentExternalLinkDescription;
         InterfaceAttachmentLinkPathTemplateTextBox.Text = profile.FolderOptions.AttachmentExternalLinkPathTemplate;
+        InterfaceFolderSetupStatusTextBlock.Text = string.Empty;
+        InterfaceAttachmentFolderSetupStatusTextBlock.Text = string.Empty;
         SyncAttachmentCompletionControls(profile);
         SyncInterfaceDeviceOutputAndAttachmentVisibility(profile);
 
@@ -1378,6 +1381,8 @@ public partial class MainWindow : Window
         InterfaceAttachmentLinkFileFormatTextBox.Text = string.Empty;
         InterfaceAttachmentLinkDescriptionTextBox.Text = string.Empty;
         InterfaceAttachmentLinkPathTemplateTextBox.Text = string.Empty;
+        InterfaceFolderSetupStatusTextBlock.Text = string.Empty;
+        InterfaceAttachmentFolderSetupStatusTextBlock.Text = string.Empty;
         InterfaceClearAisImportFolderCheckBox.IsChecked = false;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
@@ -1428,6 +1433,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentImportFolderLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentImportFolderTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentImportFolderButton.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
+        InterfaceAttachmentFolderSetupPanel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentProcessingEnabledPanel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentRequirementModeLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentRequirementModeComboBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
@@ -2059,6 +2065,173 @@ public partial class MainWindow : Window
         }
 
         return retentionDays == 0 ? null : retentionDays;
+    }
+
+    private void ApplyInterfaceFolderDefaults_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetSelectedInterfaceDeviceProfile(out _, out var deviceProfile))
+        {
+            return;
+        }
+
+        var defaults = _interfaceProfileFolderSetupService.CreateMainDefaultFolders(deviceProfile);
+        InterfaceAisImportFolderTextBox.Text = defaults.AisImportFolder;
+        InterfaceDeviceImportFolderTextBox.Text = defaults.DeviceImportFolder;
+        InterfaceExportFolderTextBox.Text = defaults.ExportFolder;
+        InterfaceArchiveFolderTextBox.Text = defaults.ArchiveFolder;
+        InterfaceErrorFolderTextBox.Text = defaults.ErrorFolder;
+
+        SetFolderSetupStatus(
+            InterfaceFolderSetupStatusTextBlock,
+            "Standardpfade eingetragen. Bitte prüfen und speichern.",
+            isSuccess: true);
+    }
+
+    private void CreateInterfaceFolders_Click(object sender, RoutedEventArgs e)
+    {
+        var result = _interfaceProfileFolderSetupService.CreateDirectories(CreateMainFolderCreationRequestsFromEditor());
+
+        ShowFolderCreationResult(
+            result,
+            InterfaceFolderSetupStatusTextBlock,
+            "Ordner wurden angelegt.");
+    }
+
+    private void ApplyInterfaceAttachmentFolderDefaults_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetSelectedInterfaceDeviceProfile(out _, out var deviceProfile))
+        {
+            return;
+        }
+
+        var defaults = _interfaceProfileFolderSetupService.CreateAttachmentDefaultFolders(deviceProfile);
+        InterfaceAttachmentImportFolderTextBox.Text = defaults.AttachmentImportFolder;
+        InterfaceAttachmentExportFolderTextBox.Text = defaults.AttachmentExportFolder;
+
+        SetFolderSetupStatus(
+            InterfaceAttachmentFolderSetupStatusTextBlock,
+            "Standardpfade eingetragen. Bitte prüfen und speichern.",
+            isSuccess: true);
+    }
+
+    private void CreateInterfaceAttachmentFolders_Click(object sender, RoutedEventArgs e)
+    {
+        if (InterfaceAttachmentSettingsGroupBox.Visibility != Visibility.Visible
+            || InterfaceAttachmentFolderSetupPanel.Visibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        var result = _interfaceProfileFolderSetupService.CreateDirectories(CreateAttachmentFolderCreationRequestsFromEditor());
+
+        ShowFolderCreationResult(
+            result,
+            InterfaceAttachmentFolderSetupStatusTextBlock,
+            "XDT-Anhang-Ordner wurden angelegt.");
+    }
+
+    private bool TryGetSelectedInterfaceDeviceProfile(
+        out InterfaceProfileDefinition profile,
+        out DeviceProfileDefinition deviceProfile)
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedProfile)
+        {
+            profile = null!;
+            deviceProfile = null!;
+            System.Windows.MessageBox.Show(
+                this,
+                "Bitte zuerst ein Schnittstellenprofil auswählen.",
+                "Ordner vorbereiten",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return false;
+        }
+
+        var selectedDeviceProfile = GetDeviceProfile(selectedProfile.DeviceProfileId);
+        if (selectedDeviceProfile is null)
+        {
+            profile = null!;
+            deviceProfile = null!;
+            System.Windows.MessageBox.Show(
+                this,
+                "Das Geräteprofil zum ausgewählten Schnittstellenprofil wurde nicht gefunden.",
+                "Ordner vorbereiten",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return false;
+        }
+
+        profile = selectedProfile;
+        deviceProfile = selectedDeviceProfile;
+        return true;
+    }
+
+    private IReadOnlyList<InterfaceProfileFolderCreationRequest> CreateMainFolderCreationRequestsFromEditor()
+    {
+        return new[]
+        {
+            new InterfaceProfileFolderCreationRequest("AIS-Patienten Datei an XDTBox", InterfaceAisImportFolderTextBox.Text),
+            new InterfaceProfileFolderCreationRequest("Gerätedatei an XDTBox", InterfaceDeviceImportFolderTextBox.Text),
+            new InterfaceProfileFolderCreationRequest("Ergebnisdatei an AIS", InterfaceExportFolderTextBox.Text),
+            new InterfaceProfileFolderCreationRequest("Archiv", InterfaceArchiveFolderTextBox.Text),
+            new InterfaceProfileFolderCreationRequest("Fehler", InterfaceErrorFolderTextBox.Text)
+        };
+    }
+
+    private IReadOnlyList<InterfaceProfileFolderCreationRequest> CreateAttachmentFolderCreationRequestsFromEditor()
+    {
+        return new[]
+        {
+            new InterfaceProfileFolderCreationRequest("XDT-Anhang Import", InterfaceAttachmentImportFolderTextBox.Text),
+            new InterfaceProfileFolderCreationRequest("XDT-Anhang Export", InterfaceAttachmentExportFolderTextBox.Text)
+        };
+    }
+
+    private void ShowFolderCreationResult(
+        InterfaceProfileFolderCreationResult result,
+        TextBlock statusTextBlock,
+        string successMessage)
+    {
+        if (result.Success)
+        {
+            SetFolderSetupStatus(statusTextBlock, successMessage, isSuccess: true);
+            return;
+        }
+
+        var statusMessage = result.HasCreatedOrExistingFolders
+            ? "Ordner teilweise angelegt. Bitte Details prüfen."
+            : "Ordner konnten nicht angelegt werden. Bitte Details prüfen.";
+        SetFolderSetupStatus(statusTextBlock, statusMessage, isSuccess: false);
+
+        System.Windows.MessageBox.Show(
+            this,
+            BuildFolderCreationErrorMessage(result),
+            "Ordner anlegen",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+    }
+
+    private static void SetFolderSetupStatus(TextBlock statusTextBlock, string message, bool isSuccess)
+    {
+        statusTextBlock.Text = message;
+        statusTextBlock.Foreground = isSuccess
+            ? System.Windows.Media.Brushes.SeaGreen
+            : System.Windows.Media.Brushes.DarkRed;
+    }
+
+    private static string BuildFolderCreationErrorMessage(InterfaceProfileFolderCreationResult result)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Folgende Ordner konnten nicht angelegt werden:");
+
+        foreach (var entry in result.Entries.Where(entry => !entry.Success))
+        {
+            var path = string.IsNullOrWhiteSpace(entry.Path) ? "(Pfad fehlt)" : entry.Path;
+            builder.AppendLine($"- {entry.Label}: {path}");
+            builder.AppendLine($"  Grund: {entry.ErrorMessage ?? "Unbekannter Fehler"}");
+        }
+
+        return builder.ToString().TrimEnd();
     }
 
     private void SelectInterfaceFolder_Click(object sender, RoutedEventArgs e)

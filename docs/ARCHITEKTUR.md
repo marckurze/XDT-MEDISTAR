@@ -212,6 +212,8 @@ Ein `ExportProfile` muss denselben Ziel-Feldcode mehrfach verwenden können, z. 
 
 Schnittstellenprofile koennen in der WPF-App als sichere V1 ueber den Dialog `Neues Schnittstellenprofil anlegen` erstellt werden. Der Dialog speichert nur UserDefined-Profile, prueft eindeutigen Namen und vorhandene Referenzen, setzt `IsActive = false` und laesst Ordner leer. Dadurch entstehen keine Ordner, keine Dateioperationen und keine automatische Verarbeitung. BuiltIn-Schnittstellenprofile werden durch diesen Pfad nicht ueberschrieben.
 
+Im gleichen Tab gibt es fuer die Ordnerkonfiguration zwei bewusste Bedienwege: `Ordner Default` traegt aus dem Geraeteprofil abgeleitete Standardpfade unter `C:\XDTBox\<Geraetename>` in die UI-Felder ein, ohne das Dateisystem anzufassen. `Ordner anlegen` liest die aktuell eingetragenen Pfade und erstellt genau diese Ordner per `Directory.CreateDirectory`; vorhandene Ordner gelten als Erfolg, fehlende/ungueltige Pfade und Berechtigungsprobleme werden als Bedienrueckmeldung gemeldet. Diese Funktion aktiviert kein Profil, startet keine Verarbeitung und bereinigt keine Ordner.
+
 Beispiel:
 
 ```text
