@@ -291,6 +291,155 @@ public sealed class UserDefinedProfileCreationServiceTests
     }
 
     [Fact]
+    public void CreateInterfaceProfile_ShouldCreateInactiveUserDefinedProfile()
+    {
+        var catalog = CreateDefaultCatalog();
+        var sourceInterfaces = catalog.InterfaceProfiles.ToArray();
+        var result = _service.CreateInterfaceProfile(
+            catalog,
+            new UserDefinedInterfaceProfileCreationRequest(
+                "Praxis Schnittstelle",
+                "ais-medistar-default",
+                "device-nidek-ark1s-default",
+                "export-medistar-nidek-ark1s-default"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues));
+        var profile = result.Profile!;
+        Assert.Equal("interface-praxis-schnittstelle", profile.Metadata.Id);
+        Assert.Equal("Praxis Schnittstelle", profile.Metadata.Name);
+        Assert.False(profile.Metadata.IsBuiltIn);
+        Assert.True(profile.Metadata.IsUserDefined);
+        Assert.Equal(ProfileKind.InterfaceProfile, profile.Metadata.ProfileKind);
+        Assert.Equal("ais-medistar-default", profile.AisProfileId);
+        Assert.Equal("device-nidek-ark1s-default", profile.DeviceProfileId);
+        Assert.Equal("export-medistar-nidek-ark1s-default", profile.ExportProfileId);
+        Assert.False(profile.IsActive);
+        Assert.True(profile.IsLicenseRequired);
+        Assert.Equal(string.Empty, profile.FolderOptions.AisImportFolder);
+        Assert.Equal(string.Empty, profile.FolderOptions.DeviceImportFolder);
+        Assert.Equal(string.Empty, profile.FolderOptions.ExportFolder);
+        Assert.Equal(5, profile.FolderOptions.AutoImportScanIntervalSeconds);
+        Assert.Equal(10, profile.FolderOptions.DeviceFileWaitTimeoutMinutes);
+        Assert.Equal(2, profile.FolderOptions.AttachmentFileStabilityWaitSeconds);
+        Assert.Null(profile.DeviceOutput);
+        Assert.Equal(sourceInterfaces, catalog.InterfaceProfiles);
+    }
+
+    [Fact]
+    public void CreateInterfaceProfile_ShouldRejectMissingRequiredFields()
+    {
+        var result = _service.CreateInterfaceProfile(
+            CreateDefaultCatalog(),
+            new UserDefinedInterfaceProfileCreationRequest(" ", "", "", ""),
+            _timestamp,
+            "Tester");
+
+        Assert.False(result.Success);
+        Assert.Contains("Bitte geben Sie einen Profilnamen ein.", result.Issues);
+        Assert.Contains("Bitte wählen Sie ein AIS-Profil aus.", result.Issues);
+        Assert.Contains("Bitte wählen Sie ein Geräteprofil aus.", result.Issues);
+        Assert.Contains("Bitte wählen Sie ein Exportprofil aus.", result.Issues);
+    }
+
+    [Fact]
+    public void CreateInterfaceProfile_ShouldRejectDuplicateNameAndBuiltInId()
+    {
+        var catalog = CreateDefaultCatalog();
+        var duplicateName = _service.CreateInterfaceProfile(
+            catalog,
+            new UserDefinedInterfaceProfileCreationRequest(
+                "MEDISTAR + NIDEK ARK1S",
+                "ais-medistar-default",
+                "device-nidek-ark1s-default",
+                "export-medistar-nidek-ark1s-default"),
+            _timestamp,
+            "Tester");
+        var duplicateId = _service.CreateInterfaceProfile(
+            catalog,
+            new UserDefinedInterfaceProfileCreationRequest(
+                "Praxis Schnittstelle",
+                "ais-medistar-default",
+                "device-nidek-ark1s-default",
+                "export-medistar-nidek-ark1s-default"),
+            _timestamp,
+            "Tester",
+            idFactory: () => "interface-medistar-nidek-ark1s-default");
+
+        Assert.False(duplicateName.Success);
+        Assert.False(duplicateId.Success);
+        Assert.Contains("Es existiert bereits ein Profil mit diesem Namen oder dieser ID.", duplicateName.Issues);
+        Assert.Contains("Es existiert bereits ein Profil mit diesem Namen oder dieser ID.", duplicateId.Issues);
+    }
+
+    [Fact]
+    public void CreateInterfaceProfile_ShouldRejectMissingReferences()
+    {
+        var result = _service.CreateInterfaceProfile(
+            CreateDefaultCatalog(),
+            new UserDefinedInterfaceProfileCreationRequest(
+                "Praxis Schnittstelle",
+                "ais-missing",
+                "device-missing",
+                "export-missing"),
+            _timestamp,
+            "Tester");
+
+        Assert.False(result.Success);
+        Assert.Contains("Das ausgewählte AIS-Profil wurde nicht gefunden.", result.Issues);
+        Assert.Contains("Das ausgewählte Geräteprofil wurde nicht gefunden.", result.Issues);
+        Assert.Contains("Das ausgewählte Exportprofil wurde nicht gefunden.", result.Issues);
+    }
+
+    [Fact]
+    public void CreateInterfaceProfile_ShouldPrepareCv5000DeviceOutputButKeepItInactive()
+    {
+        var catalog = CreateCv5000Catalog();
+        var result = _service.CreateInterfaceProfile(
+            catalog,
+            new UserDefinedInterfaceProfileCreationRequest(
+                "MEDISTAR + CV5000 Raum 1",
+                "ais-medistar-default",
+                "device-topcon-cv5000-default",
+                "export-medistar-topcon-cv5000-default"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues));
+        var profile = result.Profile!;
+        Assert.False(profile.IsActive);
+        Assert.NotNull(profile.DeviceOutput);
+        Assert.False(profile.DeviceOutput!.IsEnabled);
+        Assert.Equal(string.Empty, profile.DeviceOutput.OutputFolder);
+        Assert.Equal("CVImport.xml", profile.DeviceOutput.FileNameTemplate);
+        Assert.Equal("TOPCON CV-5000 XML", profile.DeviceOutput.Format);
+    }
+
+    [Fact]
+    public void CreateInterfaceProfile_ShouldKeepDocumentAttachmentOptionsUsable()
+    {
+        var catalog = CreateDocumentAttachmentCatalog();
+        var result = _service.CreateInterfaceProfile(
+            catalog,
+            new UserDefinedInterfaceProfileCreationRequest(
+                "MEDISTAR + Dokumente Praxis",
+                "ais-medistar-default",
+                "device-document-attachment-default",
+                "export-medistar-document-attachment-default"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues));
+        var profile = result.Profile!;
+        Assert.False(profile.IsActive);
+        Assert.True(profile.FolderOptions.IsAttachmentOnlyMode);
+        Assert.True(profile.FolderOptions.ShowAttachmentDocumentationDialog);
+        Assert.Equal(AttachmentRequirementMode.Required, profile.FolderOptions.AttachmentRequirementMode);
+        Assert.Null(profile.DeviceOutput);
+    }
+
+    [Fact]
     public void CreateUniqueProfileId_ShouldCreateSuffixInsteadOfOverwritingExistingId()
     {
         var id = UserDefinedProfileCreationService.CreateUniqueProfileId(
@@ -308,5 +457,23 @@ public sealed class UserDefinedProfileCreationServiceTests
             DeviceProfiles: new[] { DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() },
             ExportProfiles: new[] { DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() },
             InterfaceProfiles: new[] { DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() });
+    }
+
+    private static ProfileCatalog CreateCv5000Catalog()
+    {
+        return new ProfileCatalog(
+            AisProfiles: new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            DeviceProfiles: new[] { DefaultDeviceProfileDefinitions.CreateTopconCv5000Default() },
+            ExportProfiles: new[] { DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default() },
+            InterfaceProfiles: new[] { DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default() });
+    }
+
+    private static ProfileCatalog CreateDocumentAttachmentCatalog()
+    {
+        return new ProfileCatalog(
+            AisProfiles: new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            DeviceProfiles: new[] { DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault() },
+            ExportProfiles: new[] { DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault() },
+            InterfaceProfiles: new[] { DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault() });
     }
 }

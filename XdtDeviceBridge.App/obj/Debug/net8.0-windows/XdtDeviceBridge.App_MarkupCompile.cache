@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\App.xaml
-91992055837
+10727355993
 1-43377973
-121598350616
+13-771597511
 209483516507
-Cv5000PhoropterSelectionDialog.xaml;DocumentAttachmentDocumentationWindow.xaml;FloatingInterfaceProfileWindow.xaml;InterfaceProfileActivationPreparationPreviewWindow.xaml;LoadDeviceProfileDialog.xaml;MainWindow.xaml;NewAisProfileDialog.xaml;NewDeviceProfileDialog.xaml;RenameProfileDialog.xaml;
+Cv5000PhoropterSelectionDialog.xaml;DocumentAttachmentDocumentationWindow.xaml;FloatingInterfaceProfileWindow.xaml;InterfaceProfileActivationPreparationPreviewWindow.xaml;LoadDeviceProfileDialog.xaml;MainWindow.xaml;NewAisProfileDialog.xaml;NewDeviceProfileDialog.xaml;NewInterfaceProfileDialog.xaml;RenameProfileDialog.xaml;
 
 False
 

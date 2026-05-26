@@ -210,6 +210,8 @@ Ein `ExportProfile` muss denselben Ziel-Feldcode mehrfach verwenden können, z. 
 - Aktivierungsstatus
 - Lizenzstatus je Geräteanbindung
 
+Schnittstellenprofile koennen in der WPF-App als sichere V1 ueber den Dialog `Neues Schnittstellenprofil anlegen` erstellt werden. Der Dialog speichert nur UserDefined-Profile, prueft eindeutigen Namen und vorhandene Referenzen, setzt `IsActive = false` und laesst Ordner leer. Dadurch entstehen keine Ordner, keine Dateioperationen und keine automatische Verarbeitung. BuiltIn-Schnittstellenprofile werden durch diesen Pfad nicht ueberschrieben.
+
 Beispiel:
 
 ```text

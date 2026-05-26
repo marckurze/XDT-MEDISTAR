@@ -108,11 +108,14 @@ Er enthaelt:
 - Exportprofile
 - Exportregeln
 - schlanke Anlage neuer AIS-, Geraete- und Exportprofile als UserDefined
+- sichere Anlage neuer Schnittstellenprofile als inaktive UserDefined-Kombination aus AIS-, Geraete- und Exportprofil
 - sichere UserDefined-Wartung fuer Exportprofile und Exportregeln
 - Platzhalter
 - Templatepaket-Export per ausgewaehltem Schnittstellenprofil
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
 - Baukastenbereich `Test & Vorschau`
+
+Im Tab `Schnittstellenprofile` ist der Button `Neues Schnittstellenprofil anlegen` funktionsfaehig: Er oeffnet einen Dialog fuer Profilname, AIS-Profil, Geraeteprofil und Exportprofil. Das neue Profil wird als UserDefined gespeichert, bleibt initial inaktiv und enthaelt keine automatisch erfundenen Ordnerpfade. Ordner, Nachlauf, CV-5000-Ausgabe-an-Geraet und Dokumentanhaenge werden danach im bestehenden Konfigurationsbereich gepflegt.
 
 Der Bereich `Test & Vorschau` erlaubt:
 

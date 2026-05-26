@@ -1791,10 +1791,10 @@
                                           ToolTip="{Binding SelectedItem.Metadata.Name, RelativeSource={RelativeSource Self}}"
                                           SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
                                 <WrapPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="0,0,0,8">
-                                    <Button Content="Neues Schnittstellenprofil anlegen (später)"
+                                    <Button Content="Neues Schnittstellenprofil anlegen"
                                             Width="260"
                                             Margin="0,0,8,8"
-                                            Click="ProfileAssistantPlaceholder_Click"/>
+                                            Click="CreateNewInterfaceProfile_Click"/>
                                     <Button Content="Schnittstellenprofil für ausgewähltes Exportprofil erstellen"
                                             Width="360"
                                             Margin="0,0,8,8"

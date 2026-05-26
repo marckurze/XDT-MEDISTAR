@@ -1601,6 +1601,67 @@ public partial class MainWindow : Window
         }
     }
 
+    private void CreateNewInterfaceProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var dialog = new NewInterfaceProfileDialog(catalog)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = _userDefinedProfileCreationService.CreateInterfaceProfile(
+            catalog,
+            dialog.Request,
+            DateTimeOffset.UtcNow,
+            Environment.UserName);
+        if (!result.Success || result.Profile is null)
+        {
+            AppendProfileCreationIssues("Schnittstellenprofil wurde nicht gespeichert", result.Issues);
+            System.Windows.MessageBox.Show(
+                this,
+                string.Join(Environment.NewLine, result.Issues),
+                "Neues Schnittstellenprofil anlegen",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.SaveNewInterfaceProfileDefinition(paths, result.Profile);
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(
+                updatedCatalog,
+                selectedExportProfileId: result.Profile.ExportProfileId,
+                selectedInterfaceProfileId: result.Profile.Metadata.Id,
+                selectedAisProfileId: result.Profile.AisProfileId,
+                selectedDeviceProfileId: result.Profile.DeviceProfileId);
+            AppendProfileMessage($"Schnittstellenprofil gespeichert: {result.Profile.Metadata.Name}");
+            AppendProfileMessage("Profil wurde als UserDefined und inaktiv gespeichert. Es wurde keine automatische Verarbeitung gestartet.");
+        }
+        catch (Exception ex)
+        {
+            AppendProfileMessage($"Schnittstellenprofil konnte nicht gespeichert werden: {ex.Message}");
+            System.Windows.MessageBox.Show(
+                this,
+                $"Schnittstellenprofil konnte nicht gespeichert werden:{Environment.NewLine}{ex.Message}",
+                "Neues Schnittstellenprofil anlegen",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
     private void SaveInterfaceProfile_Click(object sender, RoutedEventArgs e)
     {
         if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedProfile)
@@ -6073,13 +6134,6 @@ public partial class MainWindow : Window
             TemplatePackageImportExecutionResultTextBox.Text = $"Importübernahme konnte nicht ausgeführt werden: {ex.Message}";
             AppendProfileMessage($"Templatepaket-Importübernahme fehlgeschlagen: {ex.Message}");
         }
-    }
-
-    private void ProfileAssistantPlaceholder_Click(object sender, RoutedEventArgs e)
-    {
-        const string message = "Funktion noch nicht implementiert. Dieser Bereich ist für den späteren Profil-Assistenten vorgesehen.";
-        System.Windows.MessageBox.Show(message, "Profil-Assistent", MessageBoxButton.OK, MessageBoxImage.Information);
-        AppendProfileMessage(message);
     }
 
     private void ShowTemplatePackageImportResult(

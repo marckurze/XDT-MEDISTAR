@@ -1,0 +1,91 @@
+<Window x:Class="XdtDeviceBridge.App.NewInterfaceProfileDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Neues Schnittstellenprofil anlegen"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="16" MinWidth="680">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Profilname:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+            <TextBox x:Name="ProfileNameTextBox"
+                     MinWidth="480"
+                     ToolTip="Name dieses Schnittstellenprofils, z. B. 'MEDISTAR + TOPCON CV-5000 Raum 1'."/>
+            <TextBlock Text="Name dieses Schnittstellenprofils. Der Name muss eindeutig sein."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,12">
+            <ComboBox x:Name="AisProfileComboBox"
+                      DisplayMemberPath="DisplayName"
+                      SelectedValuePath="Id"
+                      IsTextSearchEnabled="True"
+                      ToolTip="Vorhandenes AIS-Profil auswählen."/>
+            <TextBlock Text="BuiltIn- und UserDefined-AIS-Profile können ausgewählt werden."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Geräteprofil:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,12">
+            <ComboBox x:Name="DeviceProfileComboBox"
+                      DisplayMemberPath="DisplayName"
+                      SelectedValuePath="Id"
+                      IsTextSearchEnabled="True"
+                      ToolTip="Vorhandenes Geräteprofil auswählen."/>
+            <TextBlock Text="Das Geräteprofil beschreibt das Gerät. Die Ordner werden später im Tab Schnittstellenprofile gesetzt."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Exportprofil:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,0,0,12">
+            <ComboBox x:Name="ExportProfileComboBox"
+                      DisplayMemberPath="DisplayName"
+                      SelectedValuePath="Id"
+                      IsTextSearchEnabled="True"
+                      ToolTip="Vorhandenes Exportprofil auswählen."/>
+            <TextBlock Text="V1 zeigt alle Exportprofile. Bitte ein fachlich passendes Exportprofil auswählen."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <Border Grid.Row="4"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                BorderBrush="#D8E3EA"
+                BorderThickness="1"
+                Padding="10"
+                Margin="0,2,0,14">
+            <TextBlock Foreground="DimGray" TextWrapping="Wrap">
+                Das neue Schnittstellenprofil wird als UserDefined-Profil inaktiv angelegt.
+                Ordner, Nachlauf und automatische Verarbeitung werden danach im Tab Schnittstellenprofile konfiguriert.
+                Beim Anlegen wird keine Verarbeitung gestartet und es werden keine Ordner erstellt.
+            </TextBlock>
+        </Border>
+
+        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Anlegen" Width="110" Margin="0,0,8,0" IsDefault="True" Click="Create_Click"/>
+            <Button Content="Abbrechen" Width="110" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

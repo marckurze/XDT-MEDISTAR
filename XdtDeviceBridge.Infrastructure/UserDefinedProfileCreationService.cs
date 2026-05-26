@@ -25,6 +25,12 @@ public sealed record UserDefinedExportProfileCreationRequest(
     string OutputEncoding,
     IReadOnlyList<ExportRuleDefinition> Rules);
 
+public sealed record UserDefinedInterfaceProfileCreationRequest(
+    string ProfileName,
+    string AisProfileId,
+    string DeviceProfileId,
+    string ExportProfileId);
+
 public sealed record UserDefinedProfileCreationResult<TProfile>(
     TProfile? Profile,
     IReadOnlyList<string> Issues)
@@ -37,6 +43,12 @@ public sealed class UserDefinedProfileCreationService
     private const string DefaultEncoding = "Windows-1252";
     private const string GenericSystemName = "Generisch";
     private const string MedistarSystemName = "MEDISTAR";
+    private const string Cv5000DeviceProfileId = "device-topcon-cv5000-default";
+    private const string Cv5000ExportProfileId = "export-medistar-topcon-cv5000-default";
+    private const string DocumentAttachmentDeviceProfileId = "device-document-attachment-default";
+    private const string DocumentAttachmentExportProfileId = "export-medistar-document-attachment-default";
+    private const string ManualDocumentSelectionDeviceProfileId = "device-manual-document-selection-default";
+    private const string ManualDocumentTransferExportProfileId = "export-medistar-manual-document-transfer-default";
 
     public UserDefinedProfileCreationResult<AisProfile> CreateAisProfile(
         ProfileCatalog catalog,
@@ -211,6 +223,72 @@ public sealed class UserDefinedProfileCreationService
             : new UserDefinedProfileCreationResult<ExportProfileDefinition>(null, issues);
     }
 
+    public UserDefinedProfileCreationResult<InterfaceProfileDefinition> CreateInterfaceProfile(
+        ProfileCatalog catalog,
+        UserDefinedInterfaceProfileCreationRequest request,
+        DateTimeOffset timestamp,
+        string? createdBy,
+        Func<string>? idFactory = null)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var issues = new List<string>();
+        var profileName = NormalizeRequiredName(request.ProfileName, issues);
+        var aisProfileId = NormalizeRequiredField(request.AisProfileId, "Bitte wählen Sie ein AIS-Profil aus.", issues);
+        var deviceProfileId = NormalizeRequiredField(request.DeviceProfileId, "Bitte wählen Sie ein Geräteprofil aus.", issues);
+        var exportProfileId = NormalizeRequiredField(request.ExportProfileId, "Bitte wählen Sie ein Exportprofil aus.", issues);
+        var metadata = CreateMetadata(
+            catalog.InterfaceProfiles.Select(profile => profile.Metadata),
+            ProfileKind.InterfaceProfile,
+            "interface",
+            profileName,
+            Description: $"Benutzerdefiniertes Schnittstellenprofil {profileName}.",
+            Vendor: "XdtDeviceBridge",
+            Product: profileName,
+            timestamp,
+            createdBy,
+            issues,
+            idFactory);
+
+        if (!catalog.AisProfiles.Any(profile => string.Equals(profile.Metadata.Id, aisProfileId, StringComparison.OrdinalIgnoreCase)))
+        {
+            issues.Add("Das ausgewählte AIS-Profil wurde nicht gefunden.");
+        }
+
+        if (!catalog.DeviceProfiles.Any(profile => string.Equals(profile.Metadata.Id, deviceProfileId, StringComparison.OrdinalIgnoreCase)))
+        {
+            issues.Add("Das ausgewählte Geräteprofil wurde nicht gefunden.");
+        }
+
+        if (!catalog.ExportProfiles.Any(profile => string.Equals(profile.Metadata.Id, exportProfileId, StringComparison.OrdinalIgnoreCase)))
+        {
+            issues.Add("Das ausgewählte Exportprofil wurde nicht gefunden.");
+        }
+
+        if (metadata is null || issues.Count > 0)
+        {
+            return new UserDefinedProfileCreationResult<InterfaceProfileDefinition>(null, issues);
+        }
+
+        var profile = new InterfaceProfileDefinition(
+            Metadata: metadata,
+            AisProfileId: aisProfileId,
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: CreateDefaultInterfaceFolderOptions(deviceProfileId, exportProfileId),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Benutzerdefinierte Schnittstellenkonfiguration. Automatische Verarbeitung ist zunächst deaktiviert.",
+            DeviceOutput: CreateDefaultDeviceOutput(deviceProfileId, exportProfileId));
+
+        issues.AddRange(InterfaceProfileDefinitionValidator.Validate(profile));
+
+        return issues.Count == 0
+            ? new UserDefinedProfileCreationResult<InterfaceProfileDefinition>(profile, Array.Empty<string>())
+            : new UserDefinedProfileCreationResult<InterfaceProfileDefinition>(null, issues);
+    }
+
     public static bool HasProfileNameOrIdConflict(
         IEnumerable<ProfileMetadata> existingMetadata,
         string candidate)
@@ -310,6 +388,45 @@ public sealed class UserDefinedProfileCreationService
             RequiredPatientFieldCodes = medistar.RequiredPatientFieldCodes.ToArray(),
             SupportedOutputFieldCodes = medistar.SupportedOutputFieldCodes.ToArray()
         };
+    }
+
+    private static DeviceOutputConfiguration? CreateDefaultDeviceOutput(string deviceProfileId, string exportProfileId)
+    {
+        return string.Equals(deviceProfileId, Cv5000DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfileId, Cv5000ExportProfileId, StringComparison.OrdinalIgnoreCase)
+            ? new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: "CVImport.xml",
+                Format: "TOPCON CV-5000 XML")
+            : null;
+    }
+
+    private static InterfaceFolderOptions CreateDefaultInterfaceFolderOptions(string deviceProfileId, string exportProfileId)
+    {
+        if (string.Equals(deviceProfileId, DocumentAttachmentDeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfileId, DocumentAttachmentExportProfileId, StringComparison.OrdinalIgnoreCase))
+        {
+            return DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault().FolderOptions;
+        }
+
+        if (string.Equals(deviceProfileId, ManualDocumentSelectionDeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfileId, ManualDocumentTransferExportProfileId, StringComparison.OrdinalIgnoreCase))
+        {
+            return DefaultInterfaceProfileDefinitions.CreateMedistarManualDocumentTransferDefault().FolderOptions;
+        }
+
+        return new InterfaceFolderOptions(
+            AisImportFolder: string.Empty,
+            DeviceImportFolder: string.Empty,
+            ExportFolder: string.Empty,
+            ArchiveFolder: string.Empty,
+            ErrorFolder: string.Empty,
+            ClearAisImportFolderBeforeProcessing: false,
+            ClearDeviceImportFolderBeforeProcessing: false,
+            ClearExportFolderAfterSuccessfulTransfer: false,
+            ArchiveProcessedFiles: false,
+            MoveFailedFilesToErrorFolder: true);
     }
 
     private static ProfileMetadata? CreateMetadata(
