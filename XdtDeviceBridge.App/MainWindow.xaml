@@ -1810,10 +1810,18 @@
                                             Click="RenameSelectedInterfaceProfile_Click"
                                             ToolTip="Ändert nur den sichtbaren Namen eines UserDefined-Schnittstellenprofils."
                                             ToolTipService.ShowOnDisabled="True"/>
-                                    <Button Content="Speichern"
+                                    <Button x:Name="SaveInterfaceProfileButton"
+                                            Content="Speichern"
                                             Width="220"
                                             Margin="0,0,0,8"
                                             Click="SaveInterfaceProfile_Click"/>
+                                    <TextBlock x:Name="InterfaceProfileSaveFeedbackText"
+                                               MinWidth="95"
+                                               Margin="8,2,0,8"
+                                               VerticalAlignment="Center"
+                                               Foreground="#1D7D46"
+                                               FontWeight="SemiBold"
+                                               Text=""/>
                                 </WrapPanel>
 
                                 <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">

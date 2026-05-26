@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -94,6 +95,7 @@ public partial class MainWindow : Window
     private readonly UserDefinedProfileCreationService _userDefinedProfileCreationService = new();
     private readonly UserDefinedProfileRenameService _userDefinedProfileRenameService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
+    private readonly SaveFeedbackDisplayService _saveFeedbackDisplayService = new();
     private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
     private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
@@ -158,6 +160,12 @@ public partial class MainWindow : Window
     private bool _notificationSoundFailureReported;
     private bool _isNewExportProfileDraftActive;
     private string _lastTemplatePackageImportSelectionSignature = string.Empty;
+    private DispatcherTimer? _interfaceProfileSaveFeedbackTimer;
+    private bool _hasInterfaceProfileSaveButtonOriginalState;
+    private object? _interfaceProfileSaveButtonOriginalContent;
+    private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBackground;
+    private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalForeground;
+    private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBorderBrush;
 
     public MainWindow()
     {
@@ -1713,10 +1721,68 @@ public partial class MainWindow : Window
 
             AppendInterfaceConfigurationIssues(result.Issues);
             AppendProfileMessage("Schnittstellenprofil gespeichert.");
+            ShowInterfaceProfileSaveFeedback();
         }
         catch (Exception ex)
         {
             AppendProfileMessage($"Schnittstellenprofil konnte nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
+    private void ShowInterfaceProfileSaveFeedback()
+    {
+        var display = _saveFeedbackDisplayService.CreateForSaveResult(isSuccessful: true);
+        if (!display.ShowSuccess)
+        {
+            return;
+        }
+
+        ResetInterfaceProfileSaveFeedback();
+
+        _interfaceProfileSaveButtonOriginalContent = SaveInterfaceProfileButton.Content;
+        _interfaceProfileSaveButtonOriginalBackground = SaveInterfaceProfileButton.Background;
+        _interfaceProfileSaveButtonOriginalForeground = SaveInterfaceProfileButton.Foreground;
+        _interfaceProfileSaveButtonOriginalBorderBrush = SaveInterfaceProfileButton.BorderBrush;
+        _hasInterfaceProfileSaveButtonOriginalState = true;
+
+        SaveInterfaceProfileButton.Content = display.ButtonText;
+        SaveInterfaceProfileButton.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(211, 239, 221));
+        SaveInterfaceProfileButton.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(23, 91, 49));
+        SaveInterfaceProfileButton.BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(72, 157, 101));
+        InterfaceProfileSaveFeedbackText.Text = display.StatusText;
+
+        _interfaceProfileSaveFeedbackTimer = new DispatcherTimer
+        {
+            Interval = display.VisibleDuration
+        };
+        _interfaceProfileSaveFeedbackTimer.Tick += (_, _) => ResetInterfaceProfileSaveFeedback();
+        _interfaceProfileSaveFeedbackTimer.Start();
+    }
+
+    private void ResetInterfaceProfileSaveFeedback()
+    {
+        if (_interfaceProfileSaveFeedbackTimer is not null)
+        {
+            _interfaceProfileSaveFeedbackTimer.Stop();
+            _interfaceProfileSaveFeedbackTimer = null;
+        }
+
+        if (_hasInterfaceProfileSaveButtonOriginalState)
+        {
+            SaveInterfaceProfileButton.Content = _interfaceProfileSaveButtonOriginalContent;
+            SaveInterfaceProfileButton.Background = _interfaceProfileSaveButtonOriginalBackground;
+            SaveInterfaceProfileButton.Foreground = _interfaceProfileSaveButtonOriginalForeground;
+            SaveInterfaceProfileButton.BorderBrush = _interfaceProfileSaveButtonOriginalBorderBrush;
+            _hasInterfaceProfileSaveButtonOriginalState = false;
+            _interfaceProfileSaveButtonOriginalContent = null;
+            _interfaceProfileSaveButtonOriginalBackground = null;
+            _interfaceProfileSaveButtonOriginalForeground = null;
+            _interfaceProfileSaveButtonOriginalBorderBrush = null;
+        }
+
+        if (InterfaceProfileSaveFeedbackText is not null)
+        {
+            InterfaceProfileSaveFeedbackText.Text = string.Empty;
         }
     }
 
