@@ -1407,7 +1407,7 @@ public partial class MainWindow : Window
             && profile?.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
         InterfaceDeviceImportFolderLabel.Text = isAttachmentOnly
             ? "Dokument-Importordner:"
-            : "Geräte-Importordner:";
+            : "Gerätedatei an XDTBox:";
         InterfaceDeviceFileWaitTimeoutLabel.Text = isAttachmentOnly
             ? "Wartezeit auf Dokumentdateien:"
             : "Wartezeit auf Gerätedatei:";
@@ -1418,7 +1418,7 @@ public partial class MainWindow : Window
             : "XDT-Anhänge für AIS";
         InterfaceAttachmentExportFolderLabel.Text = isAttachmentOnly
             ? "Dokument-Exportordner:"
-            : "XDT-Anhang Exportordner:";
+            : "XDT-Anhang Export:";
         InterfaceAttachmentFileNameTemplateLabel.Text = isAttachmentOnly
             ? "Dateiname für Dokumente:"
             : "XDT-Anhang Dateiname:";

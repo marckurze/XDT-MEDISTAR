@@ -1866,15 +1866,15 @@
                                             <ColumnDefinition Width="96"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Patienten Datei an XDTBox:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="0" Grid.Column="1" x:Name="InterfaceAisImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="0" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AisImport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceDeviceImportFolderLabel" Text="Geräte-Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceDeviceImportFolderLabel" Text="Gerätedatei an XDTBox:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1" Grid.Column="1" x:Name="InterfaceDeviceImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="1" Grid.Column="2" x:Name="InterfaceDeviceImportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportordner ans AIS:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Ergebnisdatei an AIS:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="2" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Export" Click="SelectInterfaceFolder_Click"/>
 
@@ -1995,7 +1995,7 @@
                                             <ColumnDefinition Width="96"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Row="0" Grid.Column="0" x:Name="InterfaceAttachmentImportFolderLabel" Text="XDT-Anhang Importordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" x:Name="InterfaceAttachmentImportFolderLabel" Text="XDT-Anhang Import:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="0"
                                                  Grid.Column="1"
                                                  x:Name="InterfaceAttachmentImportFolderTextBox"
@@ -2004,7 +2004,7 @@
                                                  ToolTip="Optionaler Ordner für Geräte-Dateianhänge, die später als externe AIS-Links übergeben werden. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
                                         <Button Grid.Row="0" Grid.Column="2" x:Name="InterfaceAttachmentImportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
 
-                                        <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceAttachmentExportFolderLabel" Text="XDT-Anhang Exportordner:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceAttachmentExportFolderLabel" Text="XDT-Anhang Export:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1"
                                                  Grid.Column="1"
                                                  x:Name="InterfaceAttachmentExportFolderTextBox"
