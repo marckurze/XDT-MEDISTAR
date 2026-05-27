@@ -321,6 +321,7 @@ dotnet run --project XdtDeviceBridge.App
 - Die Lizenzdatei wird mit RSA-PSS/SHA-256 validiert und lokal gespeichert; Legacy-JSON bleibt nur als unsignierter Uebergang erkennbar.
 - Das interne Herstellerwerkzeug `XdtBox.LicenseIssuer.exe` erzeugt `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId. Es ist ein Kommandozeilentool; Doppelklick ohne Parameter zeigt Hilfe und wartet auf Tastendruck.
 - Die grafische Hersteller-App `XdtBox.LicenseManager.exe` liest Lizenzanfragen, erzeugt signierte `.xdtboxlic`-Dateien, fuehrt eine lokale Historie ausgestellter Lizenzen und speichert Hersteller-Einstellungen. Sie ist nicht Teil der Endkunden-App; private Schluessel bleiben externe Dateien.
+- Der produktive V1-KeyId lautet `xdtbox-prod-2026-01`. Der passende private PEM-Schluessel liegt ausschliesslich beim Hersteller, standardmaessig unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`; die App enthaelt nur den Public Key.
 - Die Lizenz wird aktuell nur angezeigt, aber noch nicht erzwungen.
 - Es gibt noch keine Online-Lizenzierung.
 - Die MEDISTAR/NIDEK-Verarbeitung bleibt auch ohne Lizenz weiterhin nutzbar.

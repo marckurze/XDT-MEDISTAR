@@ -18,7 +18,7 @@ public sealed record LicenseManagerSettings(
             DefaultRequestFolder: Path.Combine(baseFolder, "requests"),
             DefaultKeyFolder: Path.Combine(baseFolder, "keys"),
             PrivateKeyPath: null,
-            KeyId: "xdtbox-prod-2026-01",
+            KeyId: LicensePublicKeyProvider.ProductionKeyId,
             DefaultIssuer: "Technik-Apparat",
             DefaultGraceDays: 7);
     }

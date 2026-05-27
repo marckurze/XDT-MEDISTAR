@@ -28,7 +28,7 @@ public sealed class LicenseManagerRepositoryTests
             DefaultRequestFolder: @"C:\XDTBox\Lizenzaktivierung\requests",
             DefaultKeyFolder: @"C:\XDTBox\Lizenzaktivierung\keys",
             PrivateKeyPath: @"C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem",
-            KeyId: "xdtbox-prod-2026-01",
+            KeyId: LicensePublicKeyProvider.ProductionKeyId,
             DefaultIssuer: "Technik-Apparat",
             DefaultGraceDays: 7);
 

@@ -223,6 +223,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Signierte `.xdtboxlic`-Lizenzdateien werden lokal mit RSA-PSS/SHA-256 geprueft.
 - Internes `XdtBox.LicenseIssuer`-Tool erzeugt signierte `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId.
 - Internes grafisches `XdtBox.LicenseManager`-Tool liest Lizenzanfragen, erzeugt signierte Lizenzen, fuehrt eine lokale Historie ausgestellter Lizenzen und kann Kundendaten fuer Folgelizenzen uebernehmen.
+- Produktive V1-KeyId `xdtbox-prod-2026-01` ist mit Public Key in der App hinterlegt; der private Schluessel liegt extern beim Hersteller unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`.
 - Legacy-JSON-Lizenzen bleiben nur als unsignierter Uebergang erkennbar.
 - Lizenzierte Geräte/Anbindungen werden bewertet.
 - Karenzzeiten für neue Anbindungen sind vorbereitet.
@@ -350,7 +351,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 
 ### Phase 7: Lizenzsignatur und Lizenzdurchsetzung
 
-- Produktiven Public Key/KeyId festlegen und Key-Rotation dokumentieren.
+- Key-Rotation dokumentieren und sicheren Backup-/Zugriffsprozess fuer den externen privaten Produktionsschluessel definieren.
 - Sicheren Ablage-/Backup-/Zugriffsprozess fuer den externen privaten Produktionsschluessel definieren.
 - Herstellerprozess fuer `XdtBox.LicenseManager` organisatorisch festlegen: Request-Ablage, Lizenzhistorie sichern, private Schluessel extern verwalten, Lizenzdateien an Kunden uebermitteln.
 - Harte Sperren zentral vor Aktivierung beziehungsweise Start der Ueberwachung aktivieren; Parser und XDT-Export bleiben frei von Lizenzabbruchlogik.

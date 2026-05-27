@@ -132,7 +132,13 @@ Herstellerseitige Persistenz fuer `XdtBox.LicenseManager`:
 - `C:\XDTBox\Lizenzaktivierung\data\license-manager-settings.json`
 - Standardordner `licenses`, `requests` und `keys` unter `C:\XDTBox\Lizenzaktivierung`
 
-Der private Produktionsschluessel bleibt eine externe PEM-Datei beim Hersteller. Die Hersteller-App darf den Pfad speichern, speichert aber niemals den Schluesselinhalt und enthaelt keinen fest einkompilierten privaten Schluessel.
+Der produktive V1-Schluesselsatz ist lokal beim Hersteller erzeugt. Die App kennt nur den Public Key zur `KeyId` `xdtbox-prod-2026-01`; der private Schluessel bleibt eine externe PEM-Datei beim Hersteller:
+
+- Private Key: `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`
+- Public-Key-Referenzdatei: `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_public.pem`
+- App-Public-Key: `LicensePublicKeyProvider.ProductionKeyId`
+
+Die Hersteller-App darf den Private-Key-Pfad speichern, speichert aber niemals den Schluesselinhalt und enthaelt keinen fest einkompilierten privaten Schluessel. Der private PEM-Schluessel darf nicht ins Repository oder in Kundensysteme gelangen.
 
 ## 4. InstallationInfo und Maschinenbindung
 

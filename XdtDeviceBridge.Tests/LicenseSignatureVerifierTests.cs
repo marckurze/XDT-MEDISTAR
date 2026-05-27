@@ -103,6 +103,22 @@ public sealed class LicenseSignatureVerifierTests
         Assert.Equal(LicenseSignatureVerificationStatus.MissingSignature, result.Status);
     }
 
+    [Fact]
+    public void DefaultProvider_ShouldContainProductionPublicKey()
+    {
+        var provider = new LicensePublicKeyProvider();
+
+        var found = provider.TryGetPublicKey(
+            LicensePublicKeyProvider.ProductionKeyId,
+            out var publicKeyBytes);
+
+        Assert.True(found);
+        Assert.NotEmpty(publicKeyBytes);
+        using var rsa = RSA.Create();
+        rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out var bytesRead);
+        Assert.Equal(publicKeyBytes.Length, bytesRead);
+    }
+
     private static LicenseSignatureVerifier CreateVerifier(RSA rsa)
     {
         var publicKeyBase64 = Convert.ToBase64String(rsa.ExportSubjectPublicKeyInfo());

@@ -111,6 +111,7 @@ Aktueller Stand:
 - `.xdtboxlic`-Import prueft Envelope, Payload, Signatur, ProductCode, InstallationId, Ablauf/Karenz und `MaxActiveDeviceConnections`, aktiviert aber noch kein produktives Gate
 - `XdtBox.LicenseIssuer` ist ein separates internes Console-Projekt fuer den Hersteller. Es erzeugt signierte `.xdtboxlic`-Dateien, referenziert die Core-Lizenzmodelle und laedt den privaten RSA-Schluessel nur aus einem externen PEM-Pfad.
 - `XdtBox.LicenseManager` ist ein separates internes WPF-Projekt fuer den Hersteller. Es liest Lizenzanfragen mit Kundendaten und dokumentierten Geraeteanbindungen, erzeugt signierte `.xdtboxlic` ueber dieselbe Issuer-Logik, speichert eine lokale JSON-Historie und verwaltet Standardordner/KeyId/Private-Key-Pfad als Einstellungen.
+- Der produktive V1-Public-Key ist in der App unter `LicensePublicKeyProvider.ProductionKeyId = xdtbox-prod-2026-01` hinterlegt. Der passende Private Key liegt nur extern beim Hersteller, standardmaessig unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`.
 - Lizenzanfragen enthalten Kundendaten und Geraetenamen nur zur Herstellerdokumentation; technisch lizenzbindend bleibt ausschliesslich `MaxActiveDeviceConnections`.
 - der Lizenz-Tab zeigt den Hinweis: `Achtung: Bei Hardwaretausch bitte neue Lizenz anfordern, Karenzzeit 7 Tage ab Umzug der Hardware.`
 
