@@ -37,6 +37,7 @@ Besonders stabil wirken aktuell:
 - XDTBox unterscheidet bei Geraetequellen nun `NetworkLan` und `SerialRs232`: `NetworkLan` ist der bestehende Datei-/UNC-Workflow ueber den Geraete-Eingangsordner, `SerialRs232` ist als COM-Port-Quelle mit Kommunikationsparametern vorbereitet. Neue Geraeteprofile koennen RS232 speichern; Schnittstellenprofile zeigen dann statt des Geraeteordners eine COM-Port-Konfiguration. Der AIS-Patientenordner bleibt auch bei RS232 massgeblich.
 - Im Tab `Profile & Templates` ist eine RS232-/COM-Port-Testfunktion vorhanden. Sie listet verfuegbare Ports, erlaubt Parameter wie Baudrate, Datenbits, Stoppbits, Paritaet und Flusskontrolle, liest Rohdaten zeitbegrenzt als Text und Hexdump und meldet fehlende/belegte Ports robust. Produktive serielle medizinische Parser bleiben bis zu echten Geraetedaten offen.
 - Fuer die NIDEK-RS232-Familie ist jetzt eine erste konservative Analyseebene vorhanden: Frames mit SOH/STX/ETB/EOT und optionaler NCP10-Checksumme werden gelesen, RS/SD/RD/RSD/CL-Kommandos koennen fuer Tests gebaut werden, und LM-/NT-/PM-Rohdaten werden als Kandidaten fuer `6228`, `6205` beziehungsweise `6220` erkannt. Die Auswertung ist im RS232-Testdialog sichtbar; ein produktiver automatischer RS232-XDT-Export bleibt bis zu echten Rohdaten und Praxistest offen.
+- Fuer die Lizenzierung liegt mit `docs/LIZENZIERUNG_PRODUKTIVPLAN.md` ein konkreter Produktivplan vor: V1 lizenziert ausschliesslich die Anzahl aktiver Geraeteanbindungen (`MaxActiveDeviceConnections`); LAN/UNC, `SerialRs232`, Dokumentanhang, Profile/Templates und Testbereiche sind keine separaten Module. Signierte Offline-Lizenz, 7-Tage-Karenz nach Hardwareumzug beziehungsweise Lizenzproblem, ungueltige-Signatur-Blockade und zentrale Gates vor Aktivierung beziehungsweise Verarbeitungsstart sind vorbereitet/dokumentiert, aber noch nicht produktiv hart angeschlossen.
 - AutoRedock haengt direkt am erfolgreichen Verarbeitungsabschluss: automatisch geoeffnete, nicht gepinnte Geraetefenster docken nach Erfolg wieder an; wiederholte Scan-Aktivitaet durch liegende Eingangsdateien schiebt den Countdown nicht endlos weiter. Gepinnte Fenster bleiben weiterhin abgedockt.
 - AutoDetach ist fuer wiederholte Durchlaeufe generisch abgesichert: neue Dateiversionen mit gleichem Dateinamen loesen nach AutoRedock oder Reset erneut nur das betroffene Schnittstellenprofil-Fenster aus.
 - Reset gibt auch den profilbezogenen Monitoring-Dedupe-State frei; nach `↺` und anschliessendem X-Andocken kann eine neu geschriebene AIS-Datei wieder automatisch nur das betroffene Floating-Fenster oeffnen.
@@ -248,6 +249,8 @@ Der Tab `Lizenz` enthaelt:
 - Karenzzeitmodell
 
 Eine harte produktive Lizenzsperre und digitale Signaturpruefung sind nicht aktiv umgesetzt.
+
+Fachliche V1-Entscheidung: Lizenzpflichtig ist nur die Anzahl aktiver Schnittstellenprofile. Nach Ablauf der Karenzzeit duerfen nicht lizenzierte aktive Geraeteanbindungen nicht mehr starten. Bei ungueltiger Signatur soll exakt `Lizenzdatei ist ungültig oder wurde verändert.` angezeigt werden. InstallationId bleibt fuehrend; bei Hardwaretausch ist eine neue Lizenzanforderung noetig, mit 7 Tagen Karenzzeit ab Umzug.
 
 ### XDT-Anhaenge fuer AIS
 

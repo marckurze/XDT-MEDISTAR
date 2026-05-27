@@ -223,6 +223,9 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Karenzzeiten für neue Anbindungen sind vorbereitet.
 - Eine harte produktive Lizenzsperre ist noch nicht aktiv.
 - Digitale Signaturprüfung und Online-Lizenzierung sind noch offen.
+- Der Produktivplan `docs/LIZENZIERUNG_PRODUKTIVPLAN.md` konkretisiert die naechste Offline-V1: signierter JSON-Payload, asymmetrische Signatur, datensparsame Installation-ID, `MaxActiveDeviceConnections`, 7-Tage-Karenz und zentrale Gates vor Aktivierung beziehungsweise Start der Verarbeitung.
+- V1 lizenziert nur die Anzahl aktiver Geraeteanbindungen. LAN/UNC, `SerialRs232`, Dokumentanhang, Profile/Templates und Test-/Analysebereiche sind keine separaten Lizenzmodule.
+- InstallationId bleibt fuehrend; bei Hardwaretausch ist eine neue Lizenzanforderung erforderlich, der spaetere Tab `Hardwareumzug` soll Einrichtungs-Export/-Import und 7-Tage-Karenz abbilden.
 
 ## 2. Was ist praktisch validiert?
 
@@ -342,9 +345,10 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 
 ### Phase 7: Lizenzsignatur und Lizenzdurchsetzung
 
-- Signaturformat und Public-Key-Prüfung definieren.
-- Importierte Lizenzdateien kryptografisch prüfen.
-- Harte Sperren erst aktivieren, wenn Ausnahmepfade und Karenzzeiten fachlich bestätigt sind.
+- Signaturformat und Public-Key-Prüfung fuer `LicenseEnvelope`/`LicensePayload` produktiv implementieren.
+- Importierte `.xdtboxlic`-Lizenzdateien kryptografisch prüfen.
+- Harte Sperren zentral vor Aktivierung beziehungsweise Start der Ueberwachung aktivieren; Parser und XDT-Export bleiben frei von Lizenzabbruchlogik.
+- Blockade nach 7-Tage-Karenz und bei ungueltiger Signatur mit klarer Meldung umsetzen.
 
 ### Phase 8: Installer / Deployment
 

@@ -105,6 +105,9 @@ Aktueller Stand:
 - keine Online-Lizenzierung
 - keine digitale Signaturprüfung
 - keine harte produktive Lizenzsperre
+- `docs/LIZENZIERUNG_PRODUKTIVPLAN.md` beschreibt den Iststand, die fachlichen V1-Entscheidungen, die Manipulations-/Datenschutzrisiken und das Zielmodell fuer eine signierte Offline-Lizenzdatei
+- V1 lizenziert ausschliesslich die Anzahl aktiver Geraeteanbindungen; LAN/UNC, `SerialRs232`, Dokumentanhang und Test-/Analysebereiche sind keine separaten Lizenzmodule
+- der Lizenz-Tab zeigt den Hinweis: `Achtung: Bei Hardwaretausch bitte neue Lizenz anfordern, Karenzzeit 7 Tage ab Umzug der Hardware.`
 
 ### 1.6 NIDEK LM7/LM7P architektonisch
 
@@ -633,7 +636,7 @@ Nach einem Import müssen lokale Pfade geprüft werden. Das betrifft besonders:
 
 Die erste marktfähige Lizenzversion soll offline funktionieren.
 
-Iststand `0.1.0-prototype`: Die App kann Installationsinformationen anzeigen, eine Lizenzanfrage exportieren, eine Lizenzdatei importieren und aktive lizenzpflichtige Schnittstellenprofile bewerten. Die Lizenz wird noch nicht digital signiert geprüft und die produktive Verarbeitung wird noch nicht hart gesperrt.
+Iststand `0.1.0-prototype`: Die App kann Installationsinformationen anzeigen, eine Lizenzanfrage exportieren, eine Lizenzdatei importieren und aktive lizenzpflichtige Schnittstellenprofile bewerten. Karenzzeiten fuer nicht gedeckte aktive lizenzpflichtige Schnittstellenprofile sind modelliert. Die Lizenz wird noch nicht digital signiert geprüft und die produktive Verarbeitung wird noch nicht hart gesperrt. Das aktuelle `Signature`-Feld ist nur ein JSON-Feld und noch keine kryptografische Validierung.
 
 Grundprinzip:
 
@@ -644,7 +647,9 @@ Grundprinzip:
 - Der private Signaturschlüssel bleibt ausschließlich beim Hersteller.
 - Die App enthält nur den öffentlichen Prüfschlüssel.
 
-Lizenzrelevant ist die Anzahl aktiver lizenzpflichtiger Geräteprofile, nicht die reine Installation.
+Lizenzrelevant ist in V1 ausschliesslich die Anzahl aktiver Geraeteanbindungen beziehungsweise aktiver Schnittstellenprofile. Module wie LAN/UNC, `SerialRs232` oder Dokumentanhang werden nicht separat lizenziert.
+
+Produktivplan: `docs/LIZENZIERUNG_PRODUKTIVPLAN.md` empfiehlt fuer XDTBox V1 einen signierten JSON-Payload mit asymmetrischer Signatur, oeffentlichem Pruefschluessel in der App, privatem Herstellerschluessel ausserhalb des Repositories, datensparsamer Installation-ID, `MaxActiveDeviceConnections`, 7-Tage-Karenz und zentralen Gates vor Aktivierung oder Start der Verarbeitung. Parser und XDT-Exportbuilder sollen keine eigenen Lizenzsperren enthalten. InstallationId bleibt fuehrend; bei Hardwaretausch wird eine neue Lizenzanforderung erzeugt.
 
 Die Lizenzprüfung muss folgende Zustände abbilden können:
 

@@ -2565,6 +2565,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
@@ -2599,13 +2600,26 @@
                             </Grid>
                         </GroupBox>
 
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Grid.Row="1"
+                                BorderBrush="#E0A126"
+                                BorderThickness="1"
+                                Background="#FFF4D6"
+                                CornerRadius="4"
+                                Padding="10"
+                                Margin="0,0,0,8">
+                            <TextBlock Text="Achtung: Bei Hardwaretausch bitte neue Lizenz anfordern, Karenzzeit 7 Tage ab Umzug der Hardware."
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       Foreground="#5A3A00"/>
+                        </Border>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
                             <Button Content="Lizenzdatei importieren" Width="190" Margin="0,0,8,0" Click="ImportLicenseFile_Click"/>
                             <Button Content="Karenzzeiten aktualisieren" Width="210" Click="UpdateGracePeriods_Click"/>
                         </StackPanel>
 
-                        <GroupBox Header="Lizenzierte Geräte / Anbindungen" Grid.Row="2" Margin="0,0,0,8">
+                        <GroupBox Header="Lizenzierte Geräte / Anbindungen" Grid.Row="3" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -2654,7 +2668,7 @@
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Lizenzmeldungen" Grid.Row="3">
+                        <GroupBox Header="Lizenzmeldungen" Grid.Row="4">
                             <TextBox x:Name="LicenseMessagesTextBox"
                                      Margin="8"
                                      MinHeight="280"
