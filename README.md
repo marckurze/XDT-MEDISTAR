@@ -1,6 +1,6 @@
 # XdtDeviceBridge
 
-XdtDeviceBridge ist ein lokaler Windows-Prototyp fuer die dateibasierte Anbindung von Untersuchungsgeraeten an ein Arztinformationssystem ueber GDT/XDT-Dateien.
+XdtDeviceBridge ist ein lokaler Windows-Prototyp fuer die dateibasierte Anbindung von Untersuchungsgeraeten an ein Arztinformationssystem ueber GDT/XDT-Dateien. Der Produktname fuer den spaeteren Einsatz ist XDTBox; Kunden-App und grafisches Hersteller-Lizenztool verwenden das offizielle XDTBox-Icon sowie das neue Logo-/Schriftzug-Branding.
 
 Der aktuelle Fokus liegt auf dem Workflow MEDISTAR mit einem NIDEK ARK1S / AR-1s Autorefraktometer.
 

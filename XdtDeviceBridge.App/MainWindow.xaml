@@ -2,14 +2,50 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:core="clr-namespace:XdtDeviceBridge.Core;assembly=XdtDeviceBridge.Core"
-        Title="XdtDeviceBridge"
+        Title="XDTBox"
         Icon="Assets/App/XDTBox.ico"
         Height="900"
         Width="1200"
         MinHeight="800"
-        MinWidth="1200">
-    <Grid Margin="12">
-        <TabControl>
+        MinWidth="1200"
+        Background="{DynamicResource XdtBoxWindowBackgroundBrush}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/XdtBoxTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="12" Style="{StaticResource XdtBoxRootGridStyle}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Style="{StaticResource XdtBoxBrandHeaderStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Source="Assets/Branding/XDTBox_Logo_Schriftzug.png"
+                       Style="{StaticResource XdtBoxLogoImageStyle}"
+                       MaxWidth="360"/>
+                <StackPanel Grid.Column="1"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                    <TextBlock Text="Medizinische Geräte sicher verbinden"
+                               Foreground="{StaticResource XdtBoxDarkTextBrush}"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Right"/>
+                    <TextBlock Text="Lokale XDT/GDT-Brücke für Praxis, Geräte und Hersteller-Lizenzen"
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               FontSize="12"
+                               HorizontalAlignment="Right"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <TabControl Grid.Row="1">
             <TabItem Header="Verarbeitung">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="8" MinHeight="700">

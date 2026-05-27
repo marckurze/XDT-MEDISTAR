@@ -50,6 +50,58 @@ public sealed class AppIconSourceTests
         Assert.Contains(@"<ApplicationIcon>..\XdtDeviceBridge.App\Assets\App\XDTBox.ico</ApplicationIcon>", project);
     }
 
+    [Fact]
+    public void BrandingLogoAndTheme_ShouldExistInRepository()
+    {
+        var logoPath = FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Branding", "XDTBox_Logo_Schriftzug.png"));
+        var themePath = FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Styles", "XdtBoxTheme.xaml"));
+
+        Assert.True(new FileInfo(logoPath).Length > 0);
+
+        var theme = File.ReadAllText(themePath);
+        Assert.Contains("XdtBoxPrimaryBrush", theme);
+        Assert.Contains("XdtBoxAccentBrush", theme);
+        Assert.Contains("XdtBoxDarkTextBrush", theme);
+        Assert.Contains("XdtBoxPanelBackgroundBrush", theme);
+        Assert.Contains("XdtBoxBorderBrush", theme);
+    }
+
+    [Fact]
+    public void CustomerAppWindow_ShouldReferenceBrandingHeaderAndTheme()
+    {
+        var project = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "XdtDeviceBridge.App.csproj"));
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+
+        Assert.Contains(@"<Resource Include=""Assets\Branding\XDTBox_Logo_Schriftzug.png"" />", project);
+        Assert.Contains(@"Source=""Styles/XdtBoxTheme.xaml""", xaml);
+        Assert.Contains(@"Source=""Assets/Branding/XDTBox_Logo_Schriftzug.png""", xaml);
+        Assert.Contains("XdtBoxBrandHeaderStyle", xaml);
+        Assert.Contains(@"Title=""XDTBox""", xaml);
+    }
+
+    [Fact]
+    public void LicenseManagerWindow_ShouldReferenceBrandingHeaderAndTheme()
+    {
+        var project = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "XdtBox.LicenseManager.csproj"));
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+
+        Assert.Contains(@"<Resource Include=""..\XdtDeviceBridge.App\Assets\Branding\XDTBox_Logo_Schriftzug.png"" Link=""Assets\Branding\XDTBox_Logo_Schriftzug.png"" />", project);
+        Assert.Contains(@"<Page Include=""..\XdtDeviceBridge.App\Styles\XdtBoxTheme.xaml"" Link=""Styles\XdtBoxTheme.xaml"" />", project);
+        Assert.Contains(@"Source=""Styles/XdtBoxTheme.xaml""", xaml);
+        Assert.Contains(@"Source=""Assets/Branding/XDTBox_Logo_Schriftzug.png""", xaml);
+        Assert.Contains("XdtBoxBrandHeaderStyle", xaml);
+    }
+
+    [Fact]
+    public void FloatingDeviceWindow_ShouldNotReceiveBrandingHeaderLayout()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "FloatingInterfaceProfileWindow.xaml"));
+
+        Assert.DoesNotContain("XDTBox_Logo_Schriftzug.png", xaml);
+        Assert.DoesNotContain("XdtBoxBrandHeaderStyle", xaml);
+        Assert.DoesNotContain(@"Source=""Styles/XdtBoxTheme.xaml""", xaml);
+    }
+
     private static string FindWorkspaceFile(string projectFolder, string relativePath)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

@@ -14,5 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="..\XdtDeviceBridge.App\Assets\App\XDTBox.ico" Link="Assets\App\XDTBox.ico" />
+    <Resource Include="..\XdtDeviceBridge.App\Assets\Branding\XDTBox_Logo_Schriftzug.png" Link="Assets\Branding\XDTBox_Logo_Schriftzug.png" />
+    <Page Include="..\XdtDeviceBridge.App\Styles\XdtBoxTheme.xaml" Link="Styles\XdtBoxTheme.xaml" />
   </ItemGroup>
 </Project>

@@ -6,9 +6,45 @@
         Height="820"
         Width="1220"
         MinHeight="720"
-        MinWidth="1080">
-    <Grid Margin="10">
-        <TabControl x:Name="LicenseManagerTabs">
+        MinWidth="1080"
+        Background="{DynamicResource XdtBoxWindowBackgroundBrush}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/XdtBoxTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="10" Style="{StaticResource XdtBoxRootGridStyle}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Style="{StaticResource XdtBoxBrandHeaderStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Source="Assets/Branding/XDTBox_Logo_Schriftzug.png"
+                       Style="{StaticResource XdtBoxLogoImageStyle}"
+                       MaxWidth="340"/>
+                <StackPanel Grid.Column="1"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                    <TextBlock Text="Interne Hersteller-Lizenzverwaltung"
+                               Foreground="{StaticResource XdtBoxDarkTextBrush}"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Right"/>
+                    <TextBlock Text="Lizenzanfragen einlesen, signieren und nachvollziehbar historisieren"
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               FontSize="12"
+                               HorizontalAlignment="Right"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <TabControl x:Name="LicenseManagerTabs" Grid.Row="1">
             <TabItem Header="Lizenz erstellen">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="8">

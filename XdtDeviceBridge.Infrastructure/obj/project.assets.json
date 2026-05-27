@@ -12,18 +12,6 @@
           "bin/placeholder/XdtDeviceBridge.Core.dll": {}
         }
       }
-    },
-    "net8.0/win-x64": {
-      "XdtDeviceBridge.Core/0.1.0-prototype": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v8.0",
-        "compile": {
-          "bin/placeholder/XdtDeviceBridge.Core.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/XdtDeviceBridge.Core.dll": {}
-        }
-      }
     }
   },
   "libraries": {
@@ -103,11 +91,6 @@
           }
         },
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
-      }
-    },
-    "runtimes": {
-      "win-x64": {
-        "#import": []
       }
     }
   }

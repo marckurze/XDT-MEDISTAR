@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\App\XDTBox.ico" />
+    <Resource Include="Assets\Branding\XDTBox_Logo_Schriftzug.png" />
     <Resource Include="Assets\Devices\Topcon_CV5000_freigestellt.png" />
   </ItemGroup>
 </Project>
