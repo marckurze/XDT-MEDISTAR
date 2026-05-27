@@ -266,6 +266,9 @@ V1 bevorzugt Dateiimport:
 - `.xdtboxlic` enthaelt `LicenseEnvelope` als JSON.
 - `PayloadBase64Url` enthaelt die unveraenderten signierten Payload-Bytes.
 - `SignatureBase64Url` enthaelt die Signatur ueber diese Payload-Bytes.
+- Erfolgreich importierte `.xdtboxlic`-Dateien werden automatisch dauerhaft unter `%LocalAppData%\XdtDeviceBridge\licenses\license.xdtboxlic` gespeichert; ein zusaetzlicher Speichern-Schritt ist nicht erforderlich.
+- Die lokal gespeicherte `.xdtboxlic` ist die fuehrende Lizenzquelle fuer Lizenzstatus, Geraeteanzahl und Karenzzeitbewertung.
+- `Karenzzeiten aktualisieren` veraendert die Lizenzdatei nicht, sondern zaehlt aktive Geraeteanbindungen neu und bewertet sie gegen die aktuell fuehrende Lizenzquelle.
 - Legacy-`license.json` bleibt fuer den Uebergang lesbar, wird aber als unsigniert gekennzeichnet.
 
 Spaeter kann ein Textkey ergaenzt werden:

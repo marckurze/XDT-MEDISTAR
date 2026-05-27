@@ -66,6 +66,22 @@ public sealed class LicenseV1ModelTests
         Assert.Null(typeof(LicensePayload).GetProperty("AllowedDeviceProfileIds"));
     }
 
+    [Fact]
+    public void CreateSuccessfulLicenseImportMessage_ShouldUseSingularDeviceText()
+    {
+        var message = XdtBoxLicenseConstants.CreateSuccessfulLicenseImportMessage(1);
+
+        Assert.Equal("Wir haben 1 Gerät für Sie lizenziert. Vielen Dank. Ihr XDTBox Team.", message);
+    }
+
+    [Fact]
+    public void CreateSuccessfulLicenseImportMessage_ShouldUsePluralDeviceText()
+    {
+        var message = XdtBoxLicenseConstants.CreateSuccessfulLicenseImportMessage(14);
+
+        Assert.Equal("Wir haben 14 Geräte für Sie lizenziert. Vielen Dank. Ihr XDTBox Team.", message);
+    }
+
     private static LicensePayload CreatePayload(int maxActiveDeviceConnections)
     {
         return new LicensePayload(

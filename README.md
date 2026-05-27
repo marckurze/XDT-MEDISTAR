@@ -318,7 +318,9 @@ dotnet run --project XdtDeviceBridge.App
 - Eine Offline-Lizenzanfrage kann als JSON-Datei exportiert werden.
 - Die Lizenzanfrage kann Kundendaten sowie die Namen aktiver beziehungsweise lizenzpflichtiger Geraeteanbindungen dokumentieren. Diese Namen dienen nur der Herstellerverwaltung; lizenzbindend bleibt ausschliesslich die Anzahl aktiver Geraeteanbindungen.
 - Eine signierte Offline-Lizenzdatei kann als `.xdtboxlic` importiert werden.
-- Die Lizenzdatei wird mit RSA-PSS/SHA-256 validiert und lokal gespeichert; Legacy-JSON bleibt nur als unsignierter Uebergang erkennbar.
+- Die Lizenzdatei wird mit RSA-PSS/SHA-256 validiert und beim Import automatisch lokal gespeichert; ein zusaetzlicher Speicherschritt ist nicht erforderlich.
+- Die gespeicherte `.xdtboxlic` ist fuehrende Lizenzquelle vor Legacy-`license.json`; `Karenzzeiten aktualisieren` bewertet nur neu und setzt die lizenzierte Geraeteanzahl nicht zurueck.
+- Legacy-JSON bleibt nur als unsignierter Uebergang erkennbar.
 - Das interne Herstellerwerkzeug `XdtBox.LicenseIssuer.exe` erzeugt `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId. Es ist ein Kommandozeilentool; Doppelklick ohne Parameter zeigt Hilfe und wartet auf Tastendruck.
 - Die grafische Hersteller-App `XdtBox.LicenseManager.exe` liest Lizenzanfragen, erzeugt signierte `.xdtboxlic`-Dateien, fuehrt eine lokale Historie ausgestellter Lizenzen und speichert Hersteller-Einstellungen. Sie ist nicht Teil der Endkunden-App; private Schluessel bleiben externe Dateien.
 - Der produktive V1-KeyId lautet `xdtbox-prod-2026-01`. Der passende private PEM-Schluessel liegt ausschliesslich beim Hersteller, standardmaessig unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`; die App enthaelt nur den Public Key.

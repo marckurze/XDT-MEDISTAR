@@ -1629,9 +1629,9 @@ public partial class MainWindow : Window
         try
         {
             var paths = _appDataPathProvider.GetDefaultUserPaths();
-            var license = File.Exists(paths.LicenseFile)
-                ? _licenseFileRepository.Load(paths.LicenseFile)
-                : null;
+            var installation = _installationInfo ?? _installationInfoProvider.GetOrCreate(paths.BaseFolder);
+            _installationInfo = installation;
+            var license = LoadCurrentDisplayLicenseFromLocalSource(paths, installation);
             var gracePeriodStore = _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
 
             return _licensedDeviceStateEvaluator.Evaluate(
@@ -4375,6 +4375,27 @@ public partial class MainWindow : Window
         }
     }
 
+    private LicenseInfo? LoadCurrentDisplayLicenseFromLocalSource(AppDataPaths paths, InstallationInfo? installation)
+    {
+        var signedLicenseFile = GetSignedLicenseFilePath(paths);
+        if (installation is not null && File.Exists(signedLicenseFile))
+        {
+            var result = _licenseImportService.ImportFromFile(
+                signedLicenseFile,
+                installation,
+                CountActiveDeviceConnectionsForLicenseV1(),
+                DateTime.UtcNow);
+
+            return result.Payload is not null && result.SignatureStatus == LicenseSignatureVerificationStatus.Valid
+                ? CreateDisplayLicenseInfo(result.Payload, "RSA-PSS-SHA256 geprüft")
+                : null;
+        }
+
+        return File.Exists(paths.LicenseFile)
+            ? _licenseFileRepository.Load(paths.LicenseFile)
+            : null;
+    }
+
     private void ShowLicensedDeviceStates(LicenseInfo? license)
     {
         ShowLicensedDeviceStates(license, LoadGracePeriodStoreOrEmpty());
@@ -6779,10 +6800,12 @@ public partial class MainWindow : Window
             CountActiveDeviceConnectionsForLicenseV1(),
             DateTime.UtcNow);
 
+        var persistedSignedLicense = false;
         if (result.CanPersistLicenseFile)
         {
             Directory.CreateDirectory(paths.LicensesFolder);
             File.Copy(filePath, GetSignedLicenseFilePath(paths), overwrite: true);
+            persistedSignedLicense = true;
         }
 
         var displayLicense = result.Payload is not null && result.SignatureStatus == LicenseSignatureVerificationStatus.Valid
@@ -6796,6 +6819,13 @@ public partial class MainWindow : Window
             CountActiveDeviceConnectionsForLicenseV1(),
             result.Payload?.MaxActiveDeviceConnections ?? 0);
         AppendLicenseMessage(result.UserMessage);
+        if (persistedSignedLicense
+            && result.Payload is not null
+            && result.SignatureStatus == LicenseSignatureVerificationStatus.Valid
+            && result.PolicyEvaluation?.Status == LicenseV1PolicyStatus.Valid)
+        {
+            AppendLicenseMessage(XdtBoxLicenseConstants.CreateSuccessfulLicenseImportMessage(result.Payload.MaxActiveDeviceConnections));
+        }
     }
 
     private void UpdateGracePeriods_Click(object sender, RoutedEventArgs e)
@@ -6804,9 +6834,9 @@ public partial class MainWindow : Window
         {
             var nowUtc = DateTime.UtcNow;
             var paths = _appDataPathProvider.GetDefaultUserPaths();
-            var license = File.Exists(paths.LicenseFile)
-                ? _licenseFileRepository.Load(paths.LicenseFile)
-                : null;
+            var installation = _installationInfo ?? _installationInfoProvider.GetOrCreate(paths.BaseFolder);
+            _installationInfo = installation;
+            var license = LoadCurrentDisplayLicenseFromLocalSource(paths, installation);
             var existingStore = _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
             var existingGracePeriodIds = existingStore.GracePeriods
                 .Select(gracePeriod => gracePeriod.InterfaceProfileId)
@@ -6836,7 +6866,7 @@ public partial class MainWindow : Window
             }
 
             _licensedDeviceGracePeriodRepository.Save(paths.DeviceGracePeriodsFile, updatedStore);
-            ShowLicensedDeviceStates(license, updatedStore);
+            RefreshLicensedDeviceStatesFromLocalLicense();
             if (newGracePeriodCount == 0)
             {
                 AppendLicenseMessageOnce("Keine neuen Karenzzeiten erforderlich.");
