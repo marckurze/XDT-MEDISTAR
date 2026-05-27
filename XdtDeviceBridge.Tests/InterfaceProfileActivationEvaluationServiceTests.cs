@@ -184,6 +184,27 @@ public sealed class InterfaceProfileActivationEvaluationServiceTests
     }
 
     [Fact]
+    public void Evaluate_SerialProfileShouldNotRequireDeviceImportFolder()
+    {
+        using var folders = TestFolders.Create();
+        var context = CreateContext(folders);
+        var profile = context.InterfaceProfile with
+        {
+            FolderOptions = context.InterfaceProfile.FolderOptions with
+            {
+                DeviceImportFolder = string.Empty
+            },
+            SerialSettings = SerialCommunicationSettings.Default with { PortName = "COM6" }
+        };
+
+        var result = _service.Evaluate(profile, context.Catalog);
+
+        Assert.True(result.CanActivate);
+        Assert.DoesNotContain(result.Blockers, check => check.Code == "folder.deviceImport.missing");
+        Assert.Contains(result.Infos, check => check.Code == "folder.deviceImport.serial");
+    }
+
+    [Fact]
     public void Evaluate_ShouldWarnButNotBlockWhenConfiguredFolderIsNotReachable()
     {
         using var folders = TestFolders.Create();

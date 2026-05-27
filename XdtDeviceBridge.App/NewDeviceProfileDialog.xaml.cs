@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Controls;
+using XdtDeviceBridge.Core;
 using XdtDeviceBridge.Infrastructure;
 
 namespace XdtDeviceBridge.App;
@@ -43,7 +45,8 @@ public partial class NewDeviceProfileDialog : Window
             DeviceType: DeviceTypeTextBox.Text,
             ParserMode: ParserModeComboBox.SelectedItem is ParserModeOption option ? option.Value : string.Empty,
             IsBidirectional: BidirectionalDeviceCheckBox.IsChecked == true,
-            DeviceImagePath: DeviceImagePathTextBox.Text);
+            DeviceImagePath: DeviceImagePathTextBox.Text,
+            ConnectionKind: ReadConnectionKind());
         DialogResult = true;
     }
 
@@ -70,6 +73,15 @@ public partial class NewDeviceProfileDialog : Window
             : parserMode.Equals("Csv", StringComparison.OrdinalIgnoreCase)
                 ? "CSV"
                 : parserMode;
+    }
+
+    private DeviceConnectionKind ReadConnectionKind()
+    {
+        var rawValue = ConnectionKindComboBox.SelectedValue as string
+            ?? (ConnectionKindComboBox.SelectedItem as ComboBoxItem)?.Tag as string;
+        return Enum.TryParse<DeviceConnectionKind>(rawValue, ignoreCase: true, out var connectionKind)
+            ? connectionKind
+            : DeviceConnectionKind.NetworkLan;
     }
 
     private sealed record ParserModeOption(string DisplayName, string Value)

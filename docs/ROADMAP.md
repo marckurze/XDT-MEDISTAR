@@ -55,6 +55,14 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
   - aktivem Schnittstellenprofil
   - stabilen Dateien
 
+### Geraetequellen: LAN/Datei und RS232
+
+- XDTBox fuehrt den bisherigen Geraete-Dateiimport als `NetworkLan`: Geraete schreiben Messdateien ueber LAN/UNC/Shared Folder in den konfigurierten Geraete-Eingangsordner.
+- `SerialRs232` ist als zweite Geraetequelle vorbereitet. RS232-Profile speichern COM-Port, Baudrate, Datenbits, Stoppbits, Paritaet, Flusskontrolle, Timeouts und bidirektionale Option.
+- Der AIS-Patientenordner bleibt fuer beide Quellen erhalten; ersetzt wird bei RS232 nur der Geraete-Eingangsordner.
+- Im Tab `Profile & Templates` gibt es eine COM-Port-Testfunktion fuer zeitlich begrenzte Rohdaten-Mitschnitte mit Text- und Hexanzeige.
+- Produktive serielle Parser und ein dauerhafter RS232-Profilbetrieb muessen pro konkretem Altgeraet anhand echter Rohdaten ergaenzt und praktisch validiert werden.
+
 ### XDT-Anhänge für AIS
 
 - Schnittstellenprofile enthalten einen vorbereiteten Bereich `XDT-Anhänge für AIS`.

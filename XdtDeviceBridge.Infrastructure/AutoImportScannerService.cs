@@ -67,7 +67,11 @@ public sealed class AutoImportScannerService : IAutoImportScanner
 
         var isManualDocumentSelection = profile.FolderOptions.IsAttachmentOnlyMode
             && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
-        if (isManualDocumentSelection)
+        if (profile.SerialSettings is not null)
+        {
+            messages.Add("RS232-Profil: Geräte-Eingangsordner wird nicht gescannt. Serielle Dauerauswertung ist vorbereitet, aber noch nicht produktiv aktiviert.");
+        }
+        else if (isManualDocumentSelection)
         {
             if (aisFilesDetected > 0)
             {

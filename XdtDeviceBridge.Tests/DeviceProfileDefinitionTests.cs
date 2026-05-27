@@ -17,6 +17,8 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Contains("Refraktion", profile.SupportedExaminationTypes);
         Assert.Contains("PD", profile.SupportedExaminationTypes);
         Assert.Equal(10, profile.Measurements.Count);
+        Assert.Equal(DeviceConnectionKind.NetworkLan, profile.ConnectionKind);
+        Assert.Null(profile.SerialSettings);
     }
 
     [Fact]
@@ -68,6 +70,19 @@ public sealed class DeviceProfileDefinitionTests
         var issues = DeviceProfileDefinitionValidator.Validate(profile);
 
         Assert.Contains("ParserMode must not be empty.", issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportInvalidConnectionKind()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() with
+        {
+            ConnectionKind = (DeviceConnectionKind)999
+        };
+
+        var issues = DeviceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("ConnectionKind must be a valid value.", issues);
     }
 
     [Fact]

@@ -270,6 +270,41 @@ public sealed class InterfaceProfileConfigurationServiceTests
     }
 
     [Fact]
+    public void CreateConfiguredProfile_ShouldPreserveSerialSettingsAndSkipDeviceImportFolderWarning()
+    {
+        var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            Metadata = CreateUserMetadata("interface-serial"),
+            SerialSettings = SerialCommunicationSettings.Default with { PortName = "COM1" }
+        };
+        var options = CreateFolderOptions(
+            aisImportFolder: Path.GetTempPath(),
+            deviceImportFolder: string.Empty,
+            exportFolder: Path.GetTempPath(),
+            errorFolder: Path.GetTempPath());
+        var serialSettings = SerialCommunicationSettings.Default with
+        {
+            PortName = "COM9",
+            BaudRate = 19200,
+            IsBidirectional = true
+        };
+
+        var result = _service.CreateConfiguredProfile(
+            userProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            deviceOutput: userProfile.DeviceOutput,
+            serialSettings: serialSettings,
+            timestamp: _timestamp,
+            createdBy: "TestUser");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Equal(serialSettings, result.Profile!.SerialSettings);
+        Assert.DoesNotContain(result.Issues, issue => issue.Message == "Geräte-Importordner existiert aktuell nicht.");
+    }
+
+    [Fact]
     public void CreateConfiguredProfile_ShouldReportInvalidArchiveRetentionDays()
     {
         var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with

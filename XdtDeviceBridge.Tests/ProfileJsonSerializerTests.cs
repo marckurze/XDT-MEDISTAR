@@ -35,10 +35,88 @@ public sealed class ProfileJsonSerializerTests
         Assert.Equal("NIDEK", deserialized.Manufacturer);
         Assert.Equal("ARK1S", deserialized.Model);
         Assert.Equal(@"C:\Praxis\Bilder\ark1s.png", deserialized.DeviceImagePath);
+        Assert.Equal(DeviceConnectionKind.NetworkLan, deserialized.ConnectionKind);
+        Assert.Null(deserialized.SerialSettings);
         Assert.Equal(profile.Measurements.Count, deserialized.Measurements.Count);
         Assert.Contains(deserialized.Measurements, measurement =>
             measurement.Id == "far-pd"
             && measurement.SourcePath == "PD/PDList[@No='1']/FarPD");
+    }
+
+    [Fact]
+    public void DeviceProfileDefinition_ShouldRoundTripSerialRs232Settings()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() with
+        {
+            ConnectionKind = DeviceConnectionKind.SerialRs232,
+            SerialSettings = SerialCommunicationSettings.Default with
+            {
+                PortName = "COM4",
+                BaudRate = 19200,
+                DataBits = 7,
+                StopBits = SerialStopBitsSetting.Two,
+                Parity = SerialParitySetting.Even,
+                Handshake = SerialHandshakeSetting.RequestToSend,
+                IsBidirectional = true,
+                LineTerminator = SerialLineTerminatorSetting.CR,
+                ReadTimeoutMilliseconds = 1500,
+                WriteTimeoutMilliseconds = 2000
+            }
+        };
+
+        var json = _serializer.SerializeDeviceProfileDefinition(profile);
+        var deserialized = _serializer.DeserializeDeviceProfileDefinition(json);
+
+        Assert.Contains("\"ConnectionKind\": \"SerialRs232\"", json);
+        Assert.Equal(DeviceConnectionKind.SerialRs232, deserialized.ConnectionKind);
+        Assert.NotNull(deserialized.SerialSettings);
+        Assert.Equal("COM4", deserialized.SerialSettings!.PortName);
+        Assert.Equal(19200, deserialized.SerialSettings.BaudRate);
+        Assert.Equal(7, deserialized.SerialSettings.DataBits);
+        Assert.Equal(SerialStopBitsSetting.Two, deserialized.SerialSettings.StopBits);
+        Assert.Equal(SerialParitySetting.Even, deserialized.SerialSettings.Parity);
+        Assert.Equal(SerialHandshakeSetting.RequestToSend, deserialized.SerialSettings.Handshake);
+        Assert.True(deserialized.SerialSettings.IsBidirectional);
+        Assert.Equal(SerialLineTerminatorSetting.CR, deserialized.SerialSettings.LineTerminator);
+        Assert.Equal(1500, deserialized.SerialSettings.ReadTimeoutMilliseconds);
+        Assert.Equal(2000, deserialized.SerialSettings.WriteTimeoutMilliseconds);
+    }
+
+    [Fact]
+    public void DeviceProfileDefinition_ShouldDeserializeOlderJsonWithoutConnectionKindAsNetworkLan()
+    {
+        var json = """
+        {
+          "Metadata": {
+            "Id": "device-old",
+            "Name": "Old Device",
+            "ProfileKind": "DeviceProfile",
+            "Description": null,
+            "Vendor": null,
+            "Product": null,
+            "Version": "1.0",
+            "CreatedAt": "2026-05-03T12:00:00+00:00",
+            "UpdatedAt": "2026-05-03T12:00:00+00:00",
+            "CreatedBy": "Test",
+            "IsBuiltIn": false,
+            "IsUserDefined": true
+          },
+          "Manufacturer": "NIDEK",
+          "Model": "ALT",
+          "DeviceType": "Autorefractor",
+          "ParserMode": "Xml",
+          "Measurements": [],
+          "SupportedExaminationTypes": [],
+          "CanContainMultipleExaminationTypes": false,
+          "IsBidirectional": false,
+          "DeviceImagePath": ""
+        }
+        """;
+
+        var deserialized = _serializer.DeserializeDeviceProfileDefinition(json);
+
+        Assert.Equal(DeviceConnectionKind.NetworkLan, deserialized.ConnectionKind);
+        Assert.Null(deserialized.SerialSettings);
     }
 
     [Fact]
@@ -89,6 +167,7 @@ public sealed class ProfileJsonSerializerTests
         Assert.False(deserialized.IsActive);
         Assert.True(deserialized.IsLicenseRequired);
         Assert.Equal(profile.FolderOptions, deserialized.FolderOptions);
+        Assert.Null(deserialized.SerialSettings);
         Assert.Contains("\"AttachmentImportFolder\":", json);
         Assert.Contains("\"AttachmentExportFolder\":", json);
         Assert.Contains("\"AttachmentFileNameTemplate\":", json);
@@ -107,6 +186,31 @@ public sealed class ProfileJsonSerializerTests
         Assert.Contains("\"ShowAttachmentDocumentationDialog\": true", json);
         Assert.Contains("\"AttachmentCompletionMode\": \"ManualConfirmation\"", json);
         Assert.Contains("\"AttachmentQuietPeriodSeconds\": 25", json);
+    }
+
+    [Fact]
+    public void InterfaceProfileDefinition_ShouldRoundTripSerialSettings()
+    {
+        var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            SerialSettings = SerialCommunicationSettings.Default with
+            {
+                PortName = "COM8",
+                BaudRate = 38400,
+                Handshake = SerialHandshakeSetting.XOnXOff,
+                IsBidirectional = true
+            }
+        };
+
+        var json = _serializer.SerializeInterfaceProfileDefinition(profile);
+        var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
+
+        Assert.Contains("\"SerialSettings\":", json);
+        Assert.NotNull(deserialized.SerialSettings);
+        Assert.Equal("COM8", deserialized.SerialSettings!.PortName);
+        Assert.Equal(38400, deserialized.SerialSettings.BaudRate);
+        Assert.Equal(SerialHandshakeSetting.XOnXOff, deserialized.SerialSettings.Handshake);
+        Assert.True(deserialized.SerialSettings.IsBidirectional);
     }
 
     [Fact]

@@ -10,7 +10,9 @@ public sealed record DeviceProfileDefinition(
     IReadOnlyList<string> SupportedExaminationTypes,
     bool CanContainMultipleExaminationTypes,
     bool IsBidirectional = false,
-    string DeviceImagePath = "")
+    string DeviceImagePath = "",
+    DeviceConnectionKind ConnectionKind = DeviceConnectionKind.NetworkLan,
+    SerialCommunicationSettings? SerialSettings = null)
 {
     public IReadOnlyList<string> Validate()
     {

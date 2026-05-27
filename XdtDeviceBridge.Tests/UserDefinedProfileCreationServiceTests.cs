@@ -112,6 +112,36 @@ public sealed class UserDefinedProfileCreationServiceTests
         Assert.Empty(profile.Measurements);
         Assert.False(profile.IsBidirectional);
         Assert.Equal(string.Empty, profile.DeviceImagePath);
+        Assert.Equal(DeviceConnectionKind.NetworkLan, profile.ConnectionKind);
+        Assert.Null(profile.SerialSettings);
+    }
+
+    [Fact]
+    public void CreateDeviceProfile_ShouldPersistSerialRs232ConnectionKind()
+    {
+        var catalog = CreateDefaultCatalog();
+
+        var result = _service.CreateDeviceProfile(
+            catalog,
+            new UserDefinedDeviceProfileCreationRequest(
+                "RS232 Gerät",
+                "NIDEK",
+                "Altgerät",
+                "Autorefractor",
+                "Text",
+                ConnectionKind: DeviceConnectionKind.SerialRs232),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues));
+        var profile = result.Profile!;
+        Assert.Equal(DeviceConnectionKind.SerialRs232, profile.ConnectionKind);
+        Assert.NotNull(profile.SerialSettings);
+        Assert.Equal(9600, profile.SerialSettings!.BaudRate);
+        Assert.Equal(8, profile.SerialSettings.DataBits);
+        Assert.Equal(SerialStopBitsSetting.One, profile.SerialSettings.StopBits);
+        Assert.Equal(SerialHandshakeSetting.None, profile.SerialSettings.Handshake);
+        Assert.False(profile.SerialSettings.IsBidirectional);
     }
 
     [Fact]
@@ -324,7 +354,46 @@ public sealed class UserDefinedProfileCreationServiceTests
         Assert.Equal(10, profile.FolderOptions.DeviceFileWaitTimeoutMinutes);
         Assert.Equal(2, profile.FolderOptions.AttachmentFileStabilityWaitSeconds);
         Assert.Null(profile.DeviceOutput);
+        Assert.Null(profile.SerialSettings);
         Assert.Equal(sourceInterfaces, catalog.InterfaceProfiles);
+    }
+
+    [Fact]
+    public void CreateInterfaceProfile_ShouldPrepareSerialSettingsForRs232Device()
+    {
+        var serialDevice = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault() with
+        {
+            ConnectionKind = DeviceConnectionKind.SerialRs232,
+            SerialSettings = SerialCommunicationSettings.Default with
+            {
+                PortName = "COM7",
+                BaudRate = 19200,
+                IsBidirectional = true
+            }
+        };
+        var catalog = new ProfileCatalog(
+            AisProfiles: new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            DeviceProfiles: new[] { serialDevice },
+            ExportProfiles: new[] { DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault() },
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>());
+
+        var result = _service.CreateInterfaceProfile(
+            catalog,
+            new UserDefinedInterfaceProfileCreationRequest(
+                "Praxis RS232",
+                "ais-medistar-default",
+                "device-nidek-ark1s-default",
+                "export-medistar-nidek-ark1s-default"),
+            _timestamp,
+            "Tester");
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Issues));
+        var profile = result.Profile!;
+        Assert.False(profile.IsActive);
+        Assert.NotNull(profile.SerialSettings);
+        Assert.Equal("COM7", profile.SerialSettings!.PortName);
+        Assert.Equal(19200, profile.SerialSettings.BaudRate);
+        Assert.True(profile.SerialSettings.IsBidirectional);
     }
 
     [Fact]

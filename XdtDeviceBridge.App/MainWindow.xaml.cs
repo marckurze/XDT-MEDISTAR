@@ -110,6 +110,8 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
     private readonly InterfaceProfileActivationGuardService _interfaceProfileActivationGuardService = new();
     private readonly InterfaceProfileFolderSetupService _interfaceProfileFolderSetupService = new();
+    private readonly ISerialPortDiscoveryService _serialPortDiscoveryService = new SerialPortDiscoveryService();
+    private readonly ISerialDeviceCommunicationService _serialDeviceCommunicationService = new SerialDeviceCommunicationService();
     private readonly InterfaceProfileFloatingWindowStateRepository _floatingWindowStateRepository = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
@@ -162,6 +164,7 @@ public partial class MainWindow : Window
     private bool _isNewExportProfileDraftActive;
     private string _lastTemplatePackageImportSelectionSignature = string.Empty;
     private DispatcherTimer? _interfaceProfileSaveFeedbackTimer;
+    private CancellationTokenSource? _serialTestCancellationTokenSource;
     private bool _hasInterfaceProfileSaveButtonOriginalState;
     private object? _interfaceProfileSaveButtonOriginalContent;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBackground;
@@ -186,6 +189,7 @@ public partial class MainWindow : Window
         AttachInterfaceActivationPreviewDraftChangeHandlers();
         InitializeTrayIcon();
         SyncBuilderTestPreviewArea();
+        InitializeSerialCommunicationUi();
         InitializeProfileOverview();
         InitializeLicenseOverview();
     }
@@ -200,6 +204,9 @@ public partial class MainWindow : Window
         }
 
         StopPeriodicScan(updateUi: false);
+        _serialTestCancellationTokenSource?.Cancel();
+        _serialTestCancellationTokenSource?.Dispose();
+        _serialTestCancellationTokenSource = null;
         _autoRedockTimer.Stop();
         SaveFloatingWindowStates();
         CloseAllFloatingMonitoringWindows();
@@ -220,6 +227,30 @@ public partial class MainWindow : Window
     {
         base.OnContentRendered(e);
         RestoreFloatingWindowsOnce();
+    }
+
+    private void InitializeSerialCommunicationUi()
+    {
+        RefreshSerialPortComboBox(SerialTestPortComboBox);
+        RefreshSerialPortComboBox(InterfaceSerialPortComboBox);
+        SerialTestStatusTextBlock.Text = "Kein Mitschnitt gestartet.";
+        SerialTestBytesTextBlock.Text = "0 Bytes";
+        InterfaceSerialStatusTextBlock.Text = "RS232 ersetzt nur den Geräte-Eingangsordner. AIS-Patientendatei, Ergebnisordner, Archiv und Fehlerordner bleiben wie gewohnt konfigurierbar.";
+    }
+
+    private void RefreshSerialPortComboBox(System.Windows.Controls.ComboBox comboBox)
+    {
+        var currentText = comboBox.Text;
+        var ports = _serialPortDiscoveryService.GetAvailablePortNames();
+        comboBox.ItemsSource = ports;
+        if (!string.IsNullOrWhiteSpace(currentText))
+        {
+            comboBox.Text = currentText;
+        }
+        else if (ports.Count > 0)
+        {
+            comboBox.SelectedIndex = 0;
+        }
     }
 
     private void AttachInterfaceActivationPreviewDraftChangeHandlers()
@@ -246,7 +277,11 @@ public partial class MainWindow : Window
             InterfaceAttachmentLinkFileFormatTextBox,
             InterfaceAttachmentLinkDescriptionTextBox,
             InterfaceAttachmentLinkPathTemplateTextBox,
-            InterfaceArchiveRetentionDaysTextBox
+            InterfaceArchiveRetentionDaysTextBox,
+            InterfaceSerialBaudRateTextBox,
+            InterfaceSerialDataBitsTextBox,
+            InterfaceSerialReadTimeoutTextBox,
+            InterfaceSerialWriteTimeoutTextBox
         })
         {
             textBox.TextChanged += textChangedHandler;
@@ -263,6 +298,8 @@ public partial class MainWindow : Window
         InterfaceAttachmentProcessingEnabledCheckBox.Unchecked += routedHandler;
         InterfaceAttachmentShowDocumentationDialogCheckBox.Checked += routedHandler;
         InterfaceAttachmentShowDocumentationDialogCheckBox.Unchecked += routedHandler;
+        InterfaceSerialBidirectionalCheckBox.Checked += routedHandler;
+        InterfaceSerialBidirectionalCheckBox.Unchecked += routedHandler;
         InterfaceClearAisImportFolderCheckBox.Checked += routedHandler;
         InterfaceClearAisImportFolderCheckBox.Unchecked += routedHandler;
         InterfaceClearDeviceImportFolderCheckBox.Checked += routedHandler;
@@ -276,6 +313,10 @@ public partial class MainWindow : Window
         InterfaceAttachmentRequirementModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceDeviceOutputFormatComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceArchiveModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceSerialPortComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceSerialStopBitsComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceSerialParityComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceSerialHandshakeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
     }
 
     private void RefreshInterfaceActivationPreviewForDraftChange()
@@ -1318,6 +1359,7 @@ public partial class MainWindow : Window
             : profile.DeviceOutput!.Format;
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = profile.FolderOptions.AutoImportScanIntervalSeconds.ToString();
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = profile.FolderOptions.DeviceFileWaitTimeoutMinutes.ToString();
+        ApplySerialSettingsToInterfaceEditor(GetSerialSettingsForProfile(profile));
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
@@ -1366,6 +1408,7 @@ public partial class MainWindow : Window
         InterfaceDeviceOutputFormatComboBox.SelectedValue = "TOPCON CV-5000 XML";
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = "5";
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = "10";
+        ApplySerialSettingsToInterfaceEditor(SerialCommunicationSettings.Default);
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
@@ -1410,6 +1453,7 @@ public partial class MainWindow : Window
         var isAttachmentOnly = profile?.FolderOptions.IsAttachmentOnlyMode == true;
         var isManualDocumentSelection = isAttachmentOnly
             && profile?.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+        var usesSerialDevice = IsSerialInterfaceProfile(profile);
         InterfaceDeviceImportFolderLabel.Text = isAttachmentOnly
             ? "Dokument-Importordner:"
             : "Gerätedatei an XDTBox:";
@@ -1447,11 +1491,13 @@ public partial class MainWindow : Window
         InterfaceAttachmentLinkDescriptionTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentLinkPathTemplateLabel.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
         InterfaceAttachmentLinkPathTemplateTextBox.Visibility = isAttachmentOnly ? Visibility.Collapsed : Visibility.Visible;
-        InterfaceDeviceImportFolderLabel.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
-        InterfaceDeviceImportFolderTextBox.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
-        InterfaceDeviceImportFolderButton.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
-        InterfaceDeviceFileWaitTimeoutLabel.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
-        InterfaceDeviceFileWaitTimeoutPanel.Visibility = isManualDocumentSelection ? Visibility.Collapsed : Visibility.Visible;
+        var showDeviceImportFolder = !isManualDocumentSelection && !usesSerialDevice;
+        InterfaceDeviceImportFolderLabel.Visibility = showDeviceImportFolder ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceDeviceImportFolderTextBox.Visibility = showDeviceImportFolder ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceDeviceImportFolderButton.Visibility = showDeviceImportFolder ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceDeviceFileWaitTimeoutLabel.Visibility = showDeviceImportFolder ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceDeviceFileWaitTimeoutPanel.Visibility = showDeviceImportFolder ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceClearDeviceImportFolderCheckBox.Visibility = usesSerialDevice ? Visibility.Collapsed : Visibility.Visible;
 
         InterfaceAttachmentGeneralHintTextBlock.Text = isManualDocumentSelection
             ? "AIS startet die manuelle Dokumentübergabe. Dateien werden per Drag & Drop oder Dateiauswahl im Übertragungsfenster ergänzt; technische 6302-6305-Felder erzeugt die App intern."
@@ -1475,7 +1521,9 @@ public partial class MainWindow : Window
         var deviceProfile = GetDeviceProfile(profile?.DeviceProfileId);
         var showDeviceOutput = InterfaceProfileUiPolicy.ShouldShowDeviceOutput(profile, deviceProfile);
         var showAttachmentOptions = InterfaceProfileUiPolicy.ShouldShowAisAttachmentOptions(profile, deviceProfile);
+        var showSerialCommunication = IsSerialInterfaceProfile(profile);
 
+        InterfaceSerialCommunicationGroupBox.Visibility = showSerialCommunication ? Visibility.Visible : Visibility.Collapsed;
         InterfaceDeviceOutputGroupBox.Visibility = showDeviceOutput ? Visibility.Visible : Visibility.Collapsed;
         InterfaceAttachmentSettingsGroupBox.Visibility = showAttachmentOptions ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -1489,6 +1537,43 @@ public partial class MainWindow : Window
 
         return _profileCatalog?.DeviceProfiles.FirstOrDefault(profile =>
             string.Equals(profile.Metadata.Id, profileId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private SerialCommunicationSettings GetSerialSettingsForProfile(InterfaceProfileDefinition profile)
+    {
+        var deviceProfile = GetDeviceProfile(profile.DeviceProfileId);
+        if (profile.SerialSettings is not null)
+        {
+            return profile.SerialSettings;
+        }
+
+        return deviceProfile?.ConnectionKind == DeviceConnectionKind.SerialRs232
+            ? deviceProfile.SerialSettings ?? SerialCommunicationSettings.Default
+            : SerialCommunicationSettings.Default;
+    }
+
+    private bool IsSerialInterfaceProfile(InterfaceProfileDefinition? profile)
+    {
+        if (profile is null)
+        {
+            return false;
+        }
+
+        return profile.SerialSettings is not null
+            || GetDeviceProfile(profile.DeviceProfileId)?.ConnectionKind == DeviceConnectionKind.SerialRs232;
+    }
+
+    private void ApplySerialSettingsToInterfaceEditor(SerialCommunicationSettings settings)
+    {
+        InterfaceSerialPortComboBox.Text = settings.PortName ?? string.Empty;
+        InterfaceSerialBaudRateTextBox.Text = settings.BaudRate.ToString(CultureInfo.InvariantCulture);
+        InterfaceSerialDataBitsTextBox.Text = settings.DataBits.ToString(CultureInfo.InvariantCulture);
+        InterfaceSerialStopBitsComboBox.SelectedValue = settings.StopBits.ToString();
+        InterfaceSerialParityComboBox.SelectedValue = settings.Parity.ToString();
+        InterfaceSerialHandshakeComboBox.SelectedValue = settings.Handshake.ToString();
+        InterfaceSerialBidirectionalCheckBox.IsChecked = settings.IsBidirectional;
+        InterfaceSerialReadTimeoutTextBox.Text = settings.ReadTimeoutMilliseconds.ToString(CultureInfo.InvariantCulture);
+        InterfaceSerialWriteTimeoutTextBox.Text = settings.WriteTimeoutMilliseconds.ToString(CultureInfo.InvariantCulture);
     }
 
     private void RefreshInterfaceActivationPreview()
@@ -1526,6 +1611,7 @@ public partial class MainWindow : Window
         {
             FolderOptions = CreateInterfaceFolderOptionsFromEditor(),
             DeviceOutput = CreateInterfaceDeviceOutputFromEditor(profile),
+            SerialSettings = CreateInterfaceSerialSettingsFromEditor(profile),
             IsActive = InterfaceIsActiveCheckBox.IsChecked == true,
             IsLicenseRequired = InterfaceIsLicenseRequiredCheckBox.IsChecked == true
         };
@@ -1686,9 +1772,11 @@ public partial class MainWindow : Window
 
         var selectedExportProfileId = (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id;
         InterfaceFolderOptions folderOptions;
+        SerialCommunicationSettings? serialSettings;
         try
         {
             folderOptions = CreateInterfaceFolderOptionsFromEditor();
+            serialSettings = CreateInterfaceSerialSettingsFromEditor(selectedProfile);
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException)
         {
@@ -1702,6 +1790,7 @@ public partial class MainWindow : Window
             InterfaceIsActiveCheckBox.IsChecked == true,
             InterfaceIsLicenseRequiredCheckBox.IsChecked == true,
             CreateInterfaceDeviceOutputFromEditor(selectedProfile),
+            serialSettings,
             DateTimeOffset.UtcNow,
             Environment.UserName);
 
@@ -1854,14 +1943,15 @@ public partial class MainWindow : Window
         var isAttachmentOnly = selectedProfile?.FolderOptions.IsAttachmentOnlyMode == true;
         var isManualDocumentSelection = isAttachmentOnly
             && selectedProfile?.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+        var usesSerialDevice = IsSerialInterfaceProfile(selectedProfile);
         return new InterfaceFolderOptions(
             AisImportFolder: InterfaceAisImportFolderTextBox.Text.Trim(),
-            DeviceImportFolder: isManualDocumentSelection ? string.Empty : InterfaceDeviceImportFolderTextBox.Text.Trim(),
+            DeviceImportFolder: isManualDocumentSelection || usesSerialDevice ? string.Empty : InterfaceDeviceImportFolderTextBox.Text.Trim(),
             ExportFolder: InterfaceExportFolderTextBox.Text.Trim(),
             ArchiveFolder: InterfaceArchiveFolderTextBox.Text.Trim(),
             ErrorFolder: InterfaceErrorFolderTextBox.Text.Trim(),
             ClearAisImportFolderBeforeProcessing: InterfaceClearAisImportFolderCheckBox.IsChecked == true,
-            ClearDeviceImportFolderBeforeProcessing: !isManualDocumentSelection && InterfaceClearDeviceImportFolderCheckBox.IsChecked == true,
+            ClearDeviceImportFolderBeforeProcessing: !isManualDocumentSelection && !usesSerialDevice && InterfaceClearDeviceImportFolderCheckBox.IsChecked == true,
             ClearExportFolderAfterSuccessfulTransfer: false,
             ArchiveProcessedFiles: InterfaceArchiveProcessedFilesCheckBox.IsChecked == true,
             MoveFailedFilesToErrorFolder: InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked == true,
@@ -1913,9 +2003,108 @@ public partial class MainWindow : Window
             Format: InterfaceDeviceOutputFormatComboBox.SelectedValue as string ?? "TOPCON CV-5000 XML");
     }
 
+    private SerialCommunicationSettings? CreateInterfaceSerialSettingsFromEditor(InterfaceProfileDefinition selectedProfile)
+    {
+        if (!IsSerialInterfaceProfile(selectedProfile))
+        {
+            return null;
+        }
+
+        return CreateSerialSettingsFromValues(
+            InterfaceSerialPortComboBox.Text,
+            InterfaceSerialBaudRateTextBox.Text,
+            InterfaceSerialDataBitsTextBox.Text,
+            InterfaceSerialStopBitsComboBox.SelectedValue as string,
+            InterfaceSerialParityComboBox.SelectedValue as string,
+            InterfaceSerialHandshakeComboBox.SelectedValue as string,
+            InterfaceSerialBidirectionalCheckBox.IsChecked == true,
+            InterfaceSerialReadTimeoutTextBox.Text,
+            InterfaceSerialWriteTimeoutTextBox.Text);
+    }
+
     private static string DefaultIfWhiteSpace(string? value, string fallback)
     {
         return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+    }
+
+    private static SerialCommunicationSettings CreateSerialSettingsFromValues(
+        string? portName,
+        string? baudRate,
+        string? dataBits,
+        string? stopBits,
+        string? parity,
+        string? handshake,
+        bool isBidirectional,
+        string? readTimeout,
+        string? writeTimeout)
+    {
+        var settings = new SerialCommunicationSettings(
+            PortName: portName?.Trim(),
+            BaudRate: ReadPositiveIntOrDefault(baudRate, 9600, "Baudrate"),
+            DataBits: ReadPositiveIntOrDefault(dataBits, 8, "Datenbits"),
+            StopBits: ReadEnumOrDefault(stopBits, SerialStopBitsSetting.One),
+            Parity: ReadEnumOrDefault(parity, SerialParitySetting.None),
+            Handshake: ReadEnumOrDefault(handshake, SerialHandshakeSetting.None),
+            IsBidirectional: isBidirectional,
+            ReadTimeoutMilliseconds: ReadNonNegativeIntOrDefault(readTimeout, 1000, "ReadTimeout"),
+            WriteTimeoutMilliseconds: ReadNonNegativeIntOrDefault(writeTimeout, 1000, "WriteTimeout"));
+
+        var validationIssue = SerialDeviceCommunicationService.ValidateSettings(settings, requirePortName: false);
+        if (validationIssue is not null)
+        {
+            throw new ArgumentException(validationIssue);
+        }
+
+        return settings;
+    }
+
+    private static int ReadPositiveIntOrDefault(string? rawValue, int fallback, string label)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return fallback;
+        }
+
+        if (!int.TryParse(rawValue.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        {
+            throw new FormatException($"{label} muss eine ganze Zahl sein.");
+        }
+
+        if (value <= 0)
+        {
+            throw new ArgumentException($"{label} muss größer als 0 sein.");
+        }
+
+        return value;
+    }
+
+    private static int ReadNonNegativeIntOrDefault(string? rawValue, int fallback, string label)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return fallback;
+        }
+
+        if (!int.TryParse(rawValue.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        {
+            throw new FormatException($"{label} muss eine ganze Zahl sein.");
+        }
+
+        if (value < 0)
+        {
+            throw new ArgumentException($"{label} darf nicht negativ sein.");
+        }
+
+        return value;
+    }
+
+    private static TEnum ReadEnumOrDefault<TEnum>(string? rawValue, TEnum fallback)
+        where TEnum : struct, Enum
+    {
+        return Enum.TryParse<TEnum>(rawValue, ignoreCase: true, out var value)
+            && Enum.IsDefined(value)
+            ? value
+            : fallback;
     }
 
     private AttachmentTransferMode ReadAttachmentTransferModeFromEditor()
@@ -2076,7 +2265,9 @@ public partial class MainWindow : Window
 
         var defaults = _interfaceProfileFolderSetupService.CreateMainDefaultFolders(deviceProfile);
         InterfaceAisImportFolderTextBox.Text = defaults.AisImportFolder;
-        InterfaceDeviceImportFolderTextBox.Text = defaults.DeviceImportFolder;
+        InterfaceDeviceImportFolderTextBox.Text = deviceProfile.ConnectionKind == DeviceConnectionKind.SerialRs232
+            ? string.Empty
+            : defaults.DeviceImportFolder;
         InterfaceExportFolderTextBox.Text = defaults.ExportFolder;
         InterfaceArchiveFolderTextBox.Text = defaults.ArchiveFolder;
         InterfaceErrorFolderTextBox.Text = defaults.ErrorFolder;
@@ -2130,6 +2321,141 @@ public partial class MainWindow : Window
             "XDT-Anhang-Ordner wurden angelegt.");
     }
 
+    private void RefreshInterfaceSerialPorts_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshSerialPortComboBox(InterfaceSerialPortComboBox);
+        InterfaceSerialStatusTextBlock.Text = InterfaceSerialPortComboBox.Items.Count == 0
+            ? "Keine COM-Ports gefunden. Port kann bei Bedarf manuell eingetragen werden."
+            : "COM-Ports aktualisiert.";
+    }
+
+    private void RefreshSerialTestPorts_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshSerialPortComboBox(SerialTestPortComboBox);
+        SerialTestStatusTextBlock.Text = SerialTestPortComboBox.Items.Count == 0
+            ? "Keine COM-Ports gefunden. Port kann bei Bedarf manuell eingetragen werden."
+            : "COM-Ports aktualisiert.";
+    }
+
+    private async void StartSerialTestListen_Click(object sender, RoutedEventArgs e)
+    {
+        if (_serialTestCancellationTokenSource is not null)
+        {
+            SerialTestStatusTextBlock.Text = "Ein RS232-Mitschnitt läuft bereits.";
+            return;
+        }
+
+        SerialCommunicationSettings settings;
+        TimeSpan duration;
+        try
+        {
+            settings = CreateSerialTestSettingsFromEditor();
+            duration = ReadSerialTestDuration();
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            SerialTestStatusTextBlock.Text = ex.Message;
+            SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DarkRed;
+            return;
+        }
+
+        _serialTestCancellationTokenSource = new CancellationTokenSource();
+        SetSerialTestRunningState(isRunning: true);
+        SerialTestRawTextBox.Text = string.Empty;
+        SerialTestHexTextBox.Text = string.Empty;
+        SerialTestBytesTextBlock.Text = "0 Bytes";
+        SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DimGray;
+        SerialTestStatusTextBlock.Text = $"Mitschnitt auf {settings.PortName} läuft...";
+
+        try
+        {
+            var result = await _serialDeviceCommunicationService.ListenAsync(
+                settings,
+                duration,
+                _serialTestCancellationTokenSource.Token);
+            SerialTestRawTextBox.Text = result.RawText;
+            SerialTestHexTextBox.Text = result.HexDump;
+            SerialTestBytesTextBlock.Text = $"{result.BytesReceived} Bytes";
+            SerialTestStatusTextBlock.Foreground = result.Success
+                ? System.Windows.Media.Brushes.SeaGreen
+                : System.Windows.Media.Brushes.DarkRed;
+            SerialTestStatusTextBlock.Text = result.Success
+                ? $"Daten empfangen auf {result.PortName}."
+                : result.ErrorMessage ?? "Keine Daten empfangen.";
+        }
+        finally
+        {
+            _serialTestCancellationTokenSource?.Dispose();
+            _serialTestCancellationTokenSource = null;
+            SetSerialTestRunningState(isRunning: false);
+        }
+    }
+
+    private void StopSerialTestListen_Click(object sender, RoutedEventArgs e)
+    {
+        _serialTestCancellationTokenSource?.Cancel();
+    }
+
+    private async void SendSerialTestCommand_Click(object sender, RoutedEventArgs e)
+    {
+        SerialCommunicationSettings settings;
+        try
+        {
+            settings = CreateSerialTestSettingsFromEditor();
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            SerialTestStatusTextBlock.Text = ex.Message;
+            SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DarkRed;
+            return;
+        }
+
+        SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DimGray;
+        SerialTestStatusTextBlock.Text = $"Sende an {settings.PortName}...";
+        var result = await _serialDeviceCommunicationService.WriteAsync(
+            settings,
+            SerialTestCommandTextBox.Text,
+            CancellationToken.None);
+        SerialTestStatusTextBlock.Foreground = result.Success
+            ? System.Windows.Media.Brushes.SeaGreen
+            : System.Windows.Media.Brushes.DarkRed;
+        SerialTestStatusTextBlock.Text = result.Success
+            ? $"{result.BytesWritten} Bytes gesendet."
+            : result.ErrorMessage ?? "Senden fehlgeschlagen.";
+    }
+
+    private SerialCommunicationSettings CreateSerialTestSettingsFromEditor()
+    {
+        return CreateSerialSettingsFromValues(
+            SerialTestPortComboBox.Text,
+            SerialTestBaudRateTextBox.Text,
+            SerialTestDataBitsTextBox.Text,
+            SerialTestStopBitsComboBox.SelectedValue as string,
+            SerialTestParityComboBox.SelectedValue as string,
+            SerialTestHandshakeComboBox.SelectedValue as string,
+            isBidirectional: true,
+            readTimeout: "1000",
+            writeTimeout: "1000");
+    }
+
+    private TimeSpan ReadSerialTestDuration()
+    {
+        var seconds = ReadPositiveIntOrDefault(SerialTestDurationSecondsTextBox.Text, 10, "Mitschnittdauer");
+        if (seconds > 300)
+        {
+            throw new ArgumentException("Mitschnittdauer darf höchstens 300 Sekunden betragen.");
+        }
+
+        return TimeSpan.FromSeconds(seconds);
+    }
+
+    private void SetSerialTestRunningState(bool isRunning)
+    {
+        SerialTestStartButton.IsEnabled = !isRunning;
+        SerialTestStopButton.IsEnabled = isRunning;
+        RefreshSerialTestPortsButton.IsEnabled = !isRunning;
+    }
+
     private bool TryGetSelectedInterfaceDeviceProfile(
         out InterfaceProfileDefinition profile,
         out DeviceProfileDefinition deviceProfile)
@@ -2168,14 +2494,21 @@ public partial class MainWindow : Window
 
     private IReadOnlyList<InterfaceProfileFolderCreationRequest> CreateMainFolderCreationRequestsFromEditor()
     {
-        return new[]
+        var requests = new List<InterfaceProfileFolderCreationRequest>
         {
             new InterfaceProfileFolderCreationRequest("AIS-Patienten Datei an XDTBox", InterfaceAisImportFolderTextBox.Text),
-            new InterfaceProfileFolderCreationRequest("Gerätedatei an XDTBox", InterfaceDeviceImportFolderTextBox.Text),
             new InterfaceProfileFolderCreationRequest("Ergebnisdatei an AIS", InterfaceExportFolderTextBox.Text),
             new InterfaceProfileFolderCreationRequest("Archiv", InterfaceArchiveFolderTextBox.Text),
             new InterfaceProfileFolderCreationRequest("Fehler", InterfaceErrorFolderTextBox.Text)
         };
+
+        if (InterfaceProfileComboBox.SelectedItem is InterfaceProfileDefinition profile
+            && !IsSerialInterfaceProfile(profile))
+        {
+            requests.Insert(1, new InterfaceProfileFolderCreationRequest("Gerätedatei an XDTBox", InterfaceDeviceImportFolderTextBox.Text));
+        }
+
+        return requests;
     }
 
     private IReadOnlyList<InterfaceProfileFolderCreationRequest> CreateAttachmentFolderCreationRequestsFromEditor()

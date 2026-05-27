@@ -69,6 +69,7 @@ public sealed class InterfaceProfileConfigurationService
             isActive,
             isLicenseRequired,
             originalProfile.DeviceOutput,
+            originalProfile.SerialSettings,
             timestamp,
             createdBy,
             idFactory);
@@ -84,12 +85,35 @@ public sealed class InterfaceProfileConfigurationService
         string? createdBy,
         Func<string>? idFactory = null)
     {
+        return CreateConfiguredProfile(
+            originalProfile,
+            folderOptions,
+            isActive,
+            isLicenseRequired,
+            deviceOutput,
+            originalProfile.SerialSettings,
+            timestamp,
+            createdBy,
+            idFactory);
+    }
+
+    public InterfaceProfileConfigurationResult CreateConfiguredProfile(
+        InterfaceProfileDefinition originalProfile,
+        InterfaceFolderOptions folderOptions,
+        bool isActive,
+        bool isLicenseRequired,
+        DeviceOutputConfiguration? deviceOutput,
+        SerialCommunicationSettings? serialSettings,
+        DateTimeOffset timestamp,
+        string? createdBy,
+        Func<string>? idFactory = null)
+    {
         ArgumentNullException.ThrowIfNull(originalProfile);
         ArgumentNullException.ThrowIfNull(folderOptions);
 
         var profile = originalProfile.Metadata.IsBuiltIn
-            ? CreateUserDefinedCopy(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, timestamp, createdBy, idFactory)
-            : UpdateUserDefinedProfile(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, timestamp);
+            ? CreateUserDefinedCopy(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, serialSettings, timestamp, createdBy, idFactory)
+            : UpdateUserDefinedProfile(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, serialSettings, timestamp);
 
         var issues = ValidateConfiguration(profile);
         return issues.Any(issue => issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error)
@@ -117,7 +141,7 @@ public sealed class InterfaceProfileConfigurationService
 
         if (!AnyCleanupOptionEnabled(profile.FolderOptions))
         {
-            AddMissingFolderWarnings(profile.FolderOptions, issues);
+            AddMissingFolderWarnings(profile, issues);
         }
 
         if (profile.DeviceOutput?.IsEnabled == true)
@@ -143,6 +167,7 @@ public sealed class InterfaceProfileConfigurationService
         bool isActive,
         bool isLicenseRequired,
         DeviceOutputConfiguration? deviceOutput,
+        SerialCommunicationSettings? serialSettings,
         DateTimeOffset timestamp,
         string? createdBy,
         Func<string>? idFactory)
@@ -171,7 +196,8 @@ public sealed class InterfaceProfileConfigurationService
             FolderOptions = folderOptions,
             IsActive = isActive,
             IsLicenseRequired = isLicenseRequired,
-            DeviceOutput = deviceOutput
+            DeviceOutput = deviceOutput,
+            SerialSettings = serialSettings
         };
     }
 
@@ -181,6 +207,7 @@ public sealed class InterfaceProfileConfigurationService
         bool isActive,
         bool isLicenseRequired,
         DeviceOutputConfiguration? deviceOutput,
+        SerialCommunicationSettings? serialSettings,
         DateTimeOffset timestamp)
     {
         return originalProfile with
@@ -194,7 +221,8 @@ public sealed class InterfaceProfileConfigurationService
             FolderOptions = folderOptions,
             IsActive = isActive,
             IsLicenseRequired = isLicenseRequired,
-            DeviceOutput = deviceOutput
+            DeviceOutput = deviceOutput,
+            SerialSettings = serialSettings
         };
     }
 
@@ -233,11 +261,13 @@ public sealed class InterfaceProfileConfigurationService
     }
 
     private static void AddMissingFolderWarnings(
-        InterfaceFolderOptions options,
+        InterfaceProfileDefinition profile,
         List<InterfaceProfileConfigurationIssue> issues)
     {
+        var options = profile.FolderOptions;
         AddMissingFolderWarning(options.AisImportFolder, "AIS-Importordner existiert aktuell nicht.", issues);
-        if (options.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection)
+        if (profile.SerialSettings is null
+            && options.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection)
         {
             AddMissingFolderWarning(options.DeviceImportFolder, "Geräte-Importordner existiert aktuell nicht.", issues);
         }

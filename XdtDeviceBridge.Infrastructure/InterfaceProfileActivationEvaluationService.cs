@@ -38,7 +38,7 @@ public sealed class InterfaceProfileActivationEvaluationService
 
         EvaluateProfile(profile, checks);
         EvaluateDependencies(profile, catalog, checks);
-        EvaluateFolders(profile.FolderOptions, checks);
+        EvaluateFolders(profile, checks);
         EvaluateAttachmentConfiguration(profile.FolderOptions, checks);
         EvaluateLicense(profile, licenseStates ?? Array.Empty<LicensedDeviceState>(), checks);
 
@@ -179,9 +179,10 @@ public sealed class InterfaceProfileActivationEvaluationService
     }
 
     private void EvaluateFolders(
-        InterfaceFolderOptions options,
+        InterfaceProfileDefinition profile,
         List<InterfaceProfileActivationCheckResult> checks)
     {
+        var options = profile.FolderOptions;
         EvaluateFolder(
             checks,
             "folder.aisImport",
@@ -190,7 +191,18 @@ public sealed class InterfaceProfileActivationEvaluationService
             isRequired: true);
         var isManualDocumentSelection = options.IsAttachmentOnlyMode
             && options.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
-        if (isManualDocumentSelection)
+        if (profile.SerialSettings is not null)
+        {
+            AddInfo(
+                checks,
+                FolderArea,
+                "folder.deviceImport.serial",
+                "RS232-Profile verwenden keinen Geraete-Importordner.",
+                string.IsNullOrWhiteSpace(profile.SerialSettings.PortName)
+                    ? "COM-Port noch nicht gesetzt."
+                    : profile.SerialSettings.PortName);
+        }
+        else if (isManualDocumentSelection)
         {
             AddInfo(
                 checks,

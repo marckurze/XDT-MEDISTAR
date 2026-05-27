@@ -40,6 +40,7 @@ public static class InterfaceProfileDefinitionValidator
 
         var isManualDocumentSelection = profile.FolderOptions.IsAttachmentOnlyMode
             && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+        var usesSerialDevice = profile.SerialSettings is not null;
 
         if (profile.IsActive)
         {
@@ -49,6 +50,7 @@ public static class InterfaceProfileDefinitionValidator
             }
 
             if (!isManualDocumentSelection
+                && !usesSerialDevice
                 && string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
             {
                 issues.Add("DeviceImportFolder must be set when profile is active.");
@@ -66,10 +68,16 @@ public static class InterfaceProfileDefinitionValidator
             issues.Add("AisImportFolder must be set when ClearAisImportFolderBeforeProcessing is true.");
         }
 
-        if (profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing
+        if (!usesSerialDevice
+            && profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing
             && string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
         {
             issues.Add("DeviceImportFolder must be set when ClearDeviceImportFolderBeforeProcessing is true.");
+        }
+
+        if (usesSerialDevice && profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing)
+        {
+            issues.Add("ClearDeviceImportFolderBeforeProcessing must be false for serial RS232 profiles.");
         }
 
         if (profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer
@@ -133,6 +141,49 @@ public static class InterfaceProfileDefinitionValidator
         if (profile.FolderOptions.DeviceFileWaitTimeoutMinutes < 0)
         {
             issues.Add("DeviceFileWaitTimeoutMinutes must not be negative.");
+        }
+
+        if (profile.SerialSettings is not null)
+        {
+            if (profile.IsActive && string.IsNullOrWhiteSpace(profile.SerialSettings.PortName))
+            {
+                issues.Add("Serial PortName must be set when serial profile is active.");
+            }
+
+            if (profile.SerialSettings.BaudRate <= 0)
+            {
+                issues.Add("Serial BaudRate must be greater than 0.");
+            }
+
+            if (profile.SerialSettings.DataBits is < 5 or > 8)
+            {
+                issues.Add("Serial DataBits must be between 5 and 8.");
+            }
+
+            if (!Enum.IsDefined(profile.SerialSettings.StopBits))
+            {
+                issues.Add("Serial StopBits must be a valid value.");
+            }
+
+            if (!Enum.IsDefined(profile.SerialSettings.Parity))
+            {
+                issues.Add("Serial Parity must be a valid value.");
+            }
+
+            if (!Enum.IsDefined(profile.SerialSettings.Handshake))
+            {
+                issues.Add("Serial Handshake must be a valid value.");
+            }
+
+            if (profile.SerialSettings.ReadTimeoutMilliseconds < 0)
+            {
+                issues.Add("Serial ReadTimeoutMilliseconds must not be negative.");
+            }
+
+            if (profile.SerialSettings.WriteTimeoutMilliseconds < 0)
+            {
+                issues.Add("Serial WriteTimeoutMilliseconds must not be negative.");
+            }
         }
 
         if (profile.FolderOptions.ArchiveProcessedFiles

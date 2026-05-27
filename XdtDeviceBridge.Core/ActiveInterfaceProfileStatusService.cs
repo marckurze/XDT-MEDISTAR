@@ -44,7 +44,7 @@ public sealed class ActiveInterfaceProfileStatusService
         var licenseState = licenseStatesByInterfaceId.TryGetValue(profile.Metadata.Id, out var state)
             ? state
             : null;
-        var folderStatus = CreateFolderStatus(profile.FolderOptions);
+        var folderStatus = CreateFolderStatus(profile);
         var licenseStatus = CreateLicenseStatus(profile, licenseState);
         var processingStatus = CreateProcessingStatus(folderStatus, profile, licenseState);
         var deviceProfile = deviceProfilesById.TryGetValue(profile.DeviceProfileId, out var resolvedDeviceProfile)
@@ -99,15 +99,17 @@ public sealed class ActiveInterfaceProfileStatusService
             : profileId;
     }
 
-    private static string CreateFolderStatus(InterfaceFolderOptions folderOptions)
+    private static string CreateFolderStatus(InterfaceProfileDefinition profile)
     {
+        var folderOptions = profile.FolderOptions;
         var missingFolders = new List<string>();
         if (string.IsNullOrWhiteSpace(folderOptions.AisImportFolder))
         {
             missingFolders.Add("AIS-Importordner fehlt");
         }
 
-        if (folderOptions.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection
+        if (profile.SerialSettings is null
+            && folderOptions.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection
             && string.IsNullOrWhiteSpace(folderOptions.DeviceImportFolder))
         {
             missingFolders.Add("Geräte-Importordner fehlt");
@@ -184,6 +186,7 @@ public sealed class ActiveInterfaceProfileStatusService
         var folderOptions = profile.FolderOptions;
         var isManualDocumentSelection = folderOptions.IsAttachmentOnlyMode
             && folderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+        var usesSerialDevice = profile.SerialSettings is not null;
         var attachmentImportFolder = CreateAttachmentFolderDisplay(folderOptions, folderOptions.AttachmentImportFolder, "XDT-Anhang Importordner fehlt");
         var attachmentExportFolder = CreateAttachmentFolderDisplay(folderOptions, folderOptions.AttachmentExportFolder, "XDT-Anhang Exportordner fehlt");
         var attachmentStatus = CreateAttachmentConfigurationStatus(folderOptions);
@@ -198,7 +201,19 @@ public sealed class ActiveInterfaceProfileStatusService
         {
             CreateExpectedInput("AIS-Patientendatei", folderOptions.AisImportFolder, "AIS-Importordner fehlt", initialInputStatus)
         };
-        if (!isManualDocumentSelection)
+        if (usesSerialDevice)
+        {
+            var portName = profile.SerialSettings?.PortName;
+            var isPortMissing = string.IsNullOrWhiteSpace(portName);
+            expectedInputs.Add(new ExpectedInputDisplayItem(
+                Key: "serial",
+                Name: "RS232 / COM-Port",
+                FolderPath: isPortMissing ? "COM-Port fehlt" : portName!,
+                Status: isPortMissing ? "fehlt" : initialInputStatus,
+                StatusClass: isPortMissing ? "Error" : "Neutral",
+                Detail: isPortMissing ? "Serielle Gerätekommunikation noch nicht vollständig konfiguriert." : $"Warte auf Daten an {portName}."));
+        }
+        else if (!isManualDocumentSelection)
         {
             expectedInputs.Add(CreateExpectedInput(
                 folderOptions.IsAttachmentOnlyMode ? "Dokumentdateien" : "Geräte-Datei",
@@ -224,8 +239,8 @@ public sealed class ActiveInterfaceProfileStatusService
         var folderDetails = new List<InterfaceMonitoringDetailItem>
         {
             new("AIS-Importordner", DisplayOrMissing(folderOptions.AisImportFolder, "AIS-Importordner fehlt")),
-            new(isManualDocumentSelection ? "Dokumentauswahl" : "Geräte-Importordner",
-                isManualDocumentSelection ? "manuell im Übertragungsfenster" : DisplayOrMissing(folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt")),
+            new(usesSerialDevice ? "Gerätequelle" : isManualDocumentSelection ? "Dokumentauswahl" : "Geräte-Importordner",
+                usesSerialDevice ? FormatSerialDetail(profile.SerialSettings) : isManualDocumentSelection ? "manuell im Übertragungsfenster" : DisplayOrMissing(folderOptions.DeviceImportFolder, "Geräte-Importordner fehlt")),
             new("Exportordner ans AIS", DisplayOrMissing(folderOptions.ExportFolder, "Exportordner fehlt")),
             new("Archivordner", DisplayOrMissing(folderOptions.ArchiveFolder, "Archivordner nicht konfiguriert")),
             new("Fehlerordner", DisplayOrMissing(folderOptions.ErrorFolder, "Fehlerordner nicht konfiguriert")),
@@ -331,6 +346,17 @@ public sealed class ActiveInterfaceProfileStatusService
         return folderOptions.IsAttachmentProcessingEnabled
             || !string.IsNullOrWhiteSpace(folderOptions.AttachmentImportFolder)
             || !string.IsNullOrWhiteSpace(folderOptions.AttachmentExportFolder);
+    }
+
+    private static string FormatSerialDetail(SerialCommunicationSettings? settings)
+    {
+        if (settings is null)
+        {
+            return "RS232-Konfiguration fehlt";
+        }
+
+        var portName = string.IsNullOrWhiteSpace(settings.PortName) ? "COM-Port fehlt" : settings.PortName;
+        return $"{portName}, {settings.BaudRate} Baud, {settings.DataBits} Datenbits, {settings.StopBits}, {settings.Handshake}";
     }
 
     private static string DisplayOrMissing(string? value, string missingMessage)

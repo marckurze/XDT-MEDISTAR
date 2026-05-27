@@ -15,6 +15,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="150"/>
@@ -72,8 +73,23 @@
                        Margin="0,3,0,0"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="5" Grid.Column="0" Text="Bidirektional:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Anbindung / Datenquelle:" FontWeight="Bold" Margin="0,2,8,12"/>
         <StackPanel Grid.Row="5" Grid.Column="1" Margin="0,0,0,12">
+            <ComboBox x:Name="ConnectionKindComboBox"
+                      SelectedValuePath="Tag"
+                      SelectedValue="NetworkLan"
+                      ToolTip="Legt fest, wie XDTBox Gerätedaten empfängt. LAN nutzt den bisherigen Eingangsordner/UNC-Pfad.">
+                <ComboBoxItem Content="LAN / Datei über Eingangsordner" Tag="NetworkLan"/>
+                <ComboBoxItem Content="Seriell RS232 / COM-Port" Tag="SerialRs232"/>
+            </ComboBox>
+            <TextBlock Text="LAN ist die bisherige dateibasierte Geräteanbindung über Eingangsordner oder UNC-Pfad. RS232 speichert serielle Kommunikationsparameter im Schnittstellenprofil."
+                       Foreground="DimGray"
+                       TextWrapping="Wrap"
+                       Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Bidirektional:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="6" Grid.Column="1" Margin="0,0,0,12">
             <CheckBox x:Name="BidirectionalDeviceCheckBox"
                       Content="Bidirektionales Gerät, z. B. Phoropter"
                       ToolTip="Aktiviert zusätzliche Konfiguration für bidirektionale Geräte wie TOPCON CV-5000."/>
@@ -83,8 +99,8 @@
                         Margin="0,3,0,0"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="Gerätebild:" FontWeight="Bold" Margin="0,2,8,12"/>
-        <StackPanel Grid.Row="6" Grid.Column="1" Margin="0,0,0,12">
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="Gerätebild:" FontWeight="Bold" Margin="0,2,8,12"/>
+        <StackPanel Grid.Row="7" Grid.Column="1" Margin="0,0,0,12">
             <DockPanel>
                 <Button DockPanel.Dock="Right"
                         Content="Auswählen"
@@ -101,7 +117,7 @@
                        Margin="0,3,0,0"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+        <StackPanel Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
             <Button Content="Speichern" Width="110" Margin="0,0,8,0" IsDefault="True" Click="Save_Click"/>
             <Button Content="Abbrechen" Width="110" IsCancel="True"/>
         </StackPanel>

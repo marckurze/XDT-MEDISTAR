@@ -97,7 +97,19 @@ public sealed class InterfaceProfileActivationPreviewDisplayService
             CreateFolderDisplay(result, "XDT-Anhang-Exportordner", options.AttachmentExportFolder, "attachment.folder.export")
         };
 
-        if (isManualDocumentSelection)
+        if (profile.SerialSettings is not null)
+        {
+            rows.Insert(1, new InterfaceProfileActivationFolderDisplay(
+                Label: "Serielle Gerätekommunikation",
+                Path: string.IsNullOrWhiteSpace(profile.SerialSettings.PortName)
+                    ? "COM-Port fehlt"
+                    : profile.SerialSettings.PortName,
+                Status: FormatCheckStatus(FindCheck(result, "folder.deviceImport.serial")),
+                Reachability: "Nicht geprüft",
+                Severity: FormatSeverity(FindCheck(result, "folder.deviceImport.serial")?.Severity ?? InterfaceProfileActivationSeverity.Info),
+                Message: FormatCheckMessage(FindCheck(result, "folder.deviceImport.serial"))));
+        }
+        else if (isManualDocumentSelection)
         {
             rows.Insert(1, new InterfaceProfileActivationFolderDisplay(
                 Label: "Dokumentauswahl",

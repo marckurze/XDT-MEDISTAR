@@ -164,6 +164,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
                                            Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
@@ -838,6 +839,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <StackPanel Grid.Row="0" Margin="0,0,0,8">
                                 <TextBlock Text="Templatepaket-Export"
@@ -867,6 +869,88 @@
                                 <Button Content="Neues Exportprofil anlegen" Width="200" Margin="0,0,8,8" Click="CreateNewExportProfile_Click"/>
                             </WrapPanel>
                             <GroupBox Grid.Row="2"
+                                      Header="RS232 / COM-Port testen"
+                                      Margin="0,8,0,0">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="120"/>
+                                        <RowDefinition Height="120"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="190"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="190"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="COM-Port:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <ComboBox Grid.Row="0" Grid.Column="1" x:Name="SerialTestPortComboBox" IsEditable="True" Margin="0,0,8,8" ToolTip="COM-Port, z. B. COM1 oder COM3."/>
+                                    <Button Grid.Row="0" Grid.Column="2" x:Name="RefreshSerialTestPortsButton" Content="Aktualisieren" Width="110" Margin="0,0,16,8" Click="RefreshSerialTestPorts_Click"/>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="Baudrate:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <TextBox Grid.Row="0" Grid.Column="4" x:Name="SerialTestBaudRateTextBox" Text="9600" Width="120" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Datenbits:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="SerialTestDataBitsTextBox" Text="8" Width="120" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="3" Text="Stoppbits:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <ComboBox Grid.Row="1" Grid.Column="4" x:Name="SerialTestStopBitsComboBox" SelectedValuePath="Tag" SelectedValue="One" Width="160" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                        <ComboBoxItem Content="1" Tag="One"/>
+                                        <ComboBoxItem Content="1,5" Tag="OnePointFive"/>
+                                        <ComboBoxItem Content="2" Tag="Two"/>
+                                    </ComboBox>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Flusskontrolle:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <ComboBox Grid.Row="2" Grid.Column="1" x:Name="SerialTestHandshakeComboBox" SelectedValuePath="Tag" SelectedValue="None" Width="170" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                        <ComboBoxItem Content="Keine" Tag="None"/>
+                                        <ComboBoxItem Content="RTS/CTS" Tag="RequestToSend"/>
+                                        <ComboBoxItem Content="XON/XOFF" Tag="XOnXOff"/>
+                                        <ComboBoxItem Content="RTS/CTS + XON/XOFF" Tag="RequestToSendXOnXOff"/>
+                                    </ComboBox>
+                                    <TextBlock Grid.Row="2" Grid.Column="3" Text="Parität:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <ComboBox Grid.Row="2" Grid.Column="4" x:Name="SerialTestParityComboBox" SelectedValuePath="Tag" SelectedValue="None" Width="160" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                        <ComboBoxItem Content="Keine" Tag="None"/>
+                                        <ComboBoxItem Content="Odd" Tag="Odd"/>
+                                        <ComboBoxItem Content="Even" Tag="Even"/>
+                                        <ComboBoxItem Content="Mark" Tag="Mark"/>
+                                        <ComboBoxItem Content="Space" Tag="Space"/>
+                                    </ComboBox>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Dauer:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,8">
+                                        <TextBox x:Name="SerialTestDurationSecondsTextBox" Text="10" Width="80"/>
+                                        <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                    </StackPanel>
+                                    <Button Grid.Row="3" Grid.Column="2" x:Name="SerialTestStartButton" Content="Start" Width="110" Margin="0,0,8,8" Click="StartSerialTestListen_Click"/>
+                                    <Button Grid.Row="3" Grid.Column="3" x:Name="SerialTestStopButton" Content="Stop" Width="110" Margin="0,0,8,8" Click="StopSerialTestListen_Click" IsEnabled="False"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="4" x:Name="SerialTestBytesTextBlock" Text="0 Bytes" VerticalAlignment="Center" Margin="0,0,8,8"/>
+
+                                    <StackPanel Grid.Row="3" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+                                        <TextBox x:Name="SerialTestCommandTextBox" MinWidth="220" HorizontalAlignment="Stretch" ToolTip="Optionaler Sendetext für bidirektionale RS232-Tests."/>
+                                        <Button x:Name="SerialTestSendButton" Content="Senden" Width="90" Margin="8,0,0,0" Click="SendSerialTestCommand_Click"/>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Rohtext:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="5" x:Name="SerialTestRawTextBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Hex:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                    <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" x:Name="SerialTestHexTextBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="5"
+                                               x:Name="SerialTestStatusTextBlock"
+                                               Foreground="DimGray"
+                                               Text="Kein Mitschnitt gestartet."
+                                               TextWrapping="Wrap"
+                                               Margin="0,0,0,8"/>
+                                </Grid>
+                            </GroupBox>
+
+                            <GroupBox Grid.Row="3"
                                       Header="Profile umbenennen"
                                       Margin="0,8,0,0">
                                 <Grid Margin="8">
@@ -907,11 +991,11 @@
                                     </WrapPanel>
                                 </Grid>
                             </GroupBox>
-                            <TextBlock Grid.Row="3"
+                            <TextBlock Grid.Row="4"
                                        Text="Neue AIS-, Geräte- und Exportprofile werden als UserDefined angelegt. BuiltIn-Profile bleiben unverändert."
                                        Foreground="DimGray"
                                        TextWrapping="Wrap"/>
-                            <GroupBox Grid.Row="4"
+                            <GroupBox Grid.Row="5"
                                       Header="Templatepaket-Importvorschau"
                                       Margin="0,8,0,0">
                                 <Grid Margin="8">
@@ -1925,7 +2009,75 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox x:Name="InterfaceSerialCommunicationGroupBox" Header="Serielle Gerätekommunikation / COM-Port" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="230"/>
+                                            <ColumnDefinition Width="220"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="COM-Port:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="0" Grid.Column="1" x:Name="InterfaceSerialPortComboBox" IsEditable="True" Margin="0,0,8,8" ToolTip="COM-Port, z. B. COM1 oder COM3."/>
+                                        <Button Grid.Row="0" Grid.Column="2" x:Name="RefreshInterfaceSerialPortsButton" Content="Aktualisieren" Width="110" Margin="0,0,16,8" Click="RefreshInterfaceSerialPorts_Click"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="3" Text="Baudrate:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="0" Grid.Column="4" x:Name="InterfaceSerialBaudRateTextBox" Text="9600" Width="120" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Datenbits:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="InterfaceSerialDataBitsTextBox" Text="8" Width="120" HorizontalAlignment="Left" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="3" Text="Stoppbits:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="1" Grid.Column="4" x:Name="InterfaceSerialStopBitsComboBox" SelectedValuePath="Tag" SelectedValue="One" Width="160" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                            <ComboBoxItem Content="1" Tag="One"/>
+                                            <ComboBoxItem Content="1,5" Tag="OnePointFive"/>
+                                            <ComboBoxItem Content="2" Tag="Two"/>
+                                        </ComboBox>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Flusskontrolle:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="InterfaceSerialHandshakeComboBox" SelectedValuePath="Tag" SelectedValue="None" Width="180" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                            <ComboBoxItem Content="Keine" Tag="None"/>
+                                            <ComboBoxItem Content="RTS/CTS" Tag="RequestToSend"/>
+                                            <ComboBoxItem Content="XON/XOFF" Tag="XOnXOff"/>
+                                            <ComboBoxItem Content="RTS/CTS + XON/XOFF" Tag="RequestToSendXOnXOff"/>
+                                        </ComboBox>
+                                        <TextBlock Grid.Row="2" Grid.Column="3" Text="Parität:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="2" Grid.Column="4" x:Name="InterfaceSerialParityComboBox" SelectedValuePath="Tag" SelectedValue="None" Width="160" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                            <ComboBoxItem Content="Keine" Tag="None"/>
+                                            <ComboBoxItem Content="Odd" Tag="Odd"/>
+                                            <ComboBoxItem Content="Even" Tag="Even"/>
+                                            <ComboBoxItem Content="Mark" Tag="Mark"/>
+                                            <ComboBoxItem Content="Space" Tag="Space"/>
+                                        </ComboBox>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Bidirektional:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <CheckBox Grid.Row="3" Grid.Column="1" x:Name="InterfaceSerialBidirectionalCheckBox" Content="Senden und Empfangen" Margin="0,0,8,8"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="3" Text="Timeouts:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <StackPanel Grid.Row="3" Grid.Column="4" Orientation="Horizontal" Margin="0,0,8,8">
+                                            <TextBox x:Name="InterfaceSerialReadTimeoutTextBox" Text="1000" Width="80" ToolTip="ReadTimeout in Millisekunden."/>
+                                            <TextBlock Text=" / " VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBox x:Name="InterfaceSerialWriteTimeoutTextBox" Text="1000" Width="80" ToolTip="WriteTimeout in Millisekunden."/>
+                                            <TextBlock Text=" ms" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Row="4"
+                                                   Grid.Column="0"
+                                                   Grid.ColumnSpan="5"
+                                                   x:Name="InterfaceSerialStatusTextBlock"
+                                                   Text="RS232 ersetzt nur den Geräte-Eingangsordner. AIS-Patientendatei, Ergebnisordner, Archiv und Fehlerordner bleiben wie gewohnt konfigurierbar."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"/>
+                                    </Grid>
+                                </GroupBox>
+
+                                <GroupBox x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -1990,7 +2142,7 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2196,7 +2348,7 @@
                                      </Grid>
                                  </GroupBox>
 
-                                <GroupBox Header="Ordnerbereinigung" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Ordnerbereinigung" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <StackPanel Margin="8">
                                         <TextBlock Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
                                                    Foreground="DarkRed"
@@ -2218,7 +2370,7 @@
                                     </StackPanel>
                                 </GroupBox>
 
-                                <GroupBox Header="Archivierung" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Archivierung" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2263,7 +2415,7 @@
                                     </Grid>
                                 </GroupBox>
 
-                                <GroupBox Header="Prüfung vor Aktivierung" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <GroupBox Header="Prüfung vor Aktivierung" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>

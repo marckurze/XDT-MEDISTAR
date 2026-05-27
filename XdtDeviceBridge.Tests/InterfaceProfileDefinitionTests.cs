@@ -450,6 +450,60 @@ public sealed class InterfaceProfileDefinitionTests
     }
 
     [Fact]
+    public void Validate_ShouldAcceptActiveSerialProfileWithoutDeviceImportFolder()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            aisImportFolder: @"C:\XdtDeviceBridge\ais",
+            deviceImportFolder: string.Empty,
+            exportFolder: @"C:\XdtDeviceBridge\export",
+            errorFolder: @"C:\XdtDeviceBridge\errors",
+            moveFailedFilesToErrorFolder: true)) with
+        {
+            IsActive = true,
+            SerialSettings = SerialCommunicationSettings.Default with { PortName = "COM3" }
+        };
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.DoesNotContain("DeviceImportFolder must be set when profile is active.", issues);
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldReportActiveSerialProfileWithoutPortName()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            aisImportFolder: @"C:\XdtDeviceBridge\ais",
+            exportFolder: @"C:\XdtDeviceBridge\export",
+            errorFolder: @"C:\XdtDeviceBridge\errors",
+            moveFailedFilesToErrorFolder: true)) with
+        {
+            IsActive = true,
+            SerialSettings = SerialCommunicationSettings.Default
+        };
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("Serial PortName must be set when serial profile is active.", issues);
+        Assert.DoesNotContain("DeviceImportFolder must be set when profile is active.", issues);
+    }
+
+    [Fact]
+    public void Validate_ShouldRejectDeviceImportCleanupForSerialProfile()
+    {
+        var profile = WithFolderOptions(CreateFolderOptions(
+            deviceImportFolder: string.Empty,
+            clearDeviceImportFolderBeforeProcessing: true)) with
+        {
+            SerialSettings = SerialCommunicationSettings.Default with { PortName = "COM4" }
+        };
+
+        var issues = InterfaceProfileDefinitionValidator.Validate(profile);
+
+        Assert.Contains("ClearDeviceImportFolderBeforeProcessing must be false for serial RS232 profiles.", issues);
+    }
+
+    [Fact]
     public void Validate_ShouldReportInvalidAttachmentOnlySourceMode()
     {
         var profile = WithFolderOptions(CreateFolderOptions() with

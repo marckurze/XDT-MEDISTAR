@@ -90,6 +90,8 @@ Für langsam schreibende Geräte ist eine Stabilitätsprüfung vorbereitet. Der 
 
 AutoRedock fuer abgedockte Geraeteanbindungsfenster haengt am terminalen Verarbeitungsabschluss. Ein erfolgreicher Export startet fuer automatisch geoeffnete, nicht gepinnte Fenster den Rueckdock-Countdown; ein Pin verhindert den Countdown. Wiederholte Scan-Aktivitaet durch im Importordner verbliebene Dateien darf diesen terminalen Countdown nicht endlos nach hinten schieben.
 
+Die App wird als Produkt unter dem Namen XDTBox gefuehrt. Bei Geraetequellen unterscheidet das Profilmodell jetzt zwischen `NetworkLan` und `SerialRs232`. `NetworkLan` ist der bisherige, bestehende Datei-/UNC-Workflow: Das Geraet schreibt Messdaten ueber LAN/SMB/Shared Folder in den konfigurierten Geraete-Eingangsordner, und der periodische Scan verarbeitet stabile Dateien. `SerialRs232` ersetzt nur diese Geraete-Dateiquelle durch eine COM-Port-Konfiguration; AIS-Patientendatei, `8402`-Quelle, Ergebnisordner, Archiv, Fehlerordner und die XDT-Ausgabe bleiben gleich. COM-Port, Baudrate, Datenbits, Stoppbits, Paritaet, Flusskontrolle, Timeouts und bidirektionale Option sind profilierbar. Im Tab `Profile & Templates` gibt es eine robuste Testfunktion fuer zeitlich begrenzte Mitschnitte mit Rohtext und Hexdump. Produktive medizinische Parser fuer konkrete serielle Geraete sind noch nicht aktiviert; serielle Rohdaten werden zunaechst empfangen, angezeigt und als Erweiterungsstelle vorbereitet.
+
 ### 1.5 Lizenzanzeige
 
 Der Lizenzbereich zeigt den lokalen Lizenzstatus, Lizenzanfragen, importierte Lizenzdateien, lizenzierte Geräte/Anbindungen und Karenzzeiten für neue Anbindungen.
@@ -168,6 +170,8 @@ Typische Inhalte:
 - Hersteller
 - Modell oder Gerätetyp
 - Dateiformat
+- Anbindungsart: `NetworkLan` fuer den bisherigen Datei-/UNC-Eingangsordner oder `SerialRs232` fuer COM-Port
+- serielle Kommunikationsparameter, falls `SerialRs232` gewaehlt ist
 - Parsermodus: XML, XPath, Regex, CSV, Text, GDT/XDT
 - Geräte-Importordner
 - erkannte Messwertpfade

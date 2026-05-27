@@ -57,6 +57,28 @@ public sealed class AutoImportScannerServiceTests
     }
 
     [Fact]
+    public async Task ScanOnceAsync_SerialProfileShouldScanAisAndSkipDeviceImportFolder()
+    {
+        var folders = CreateImportFolders();
+        File.WriteAllText(Path.Combine(folders.AisFolder, "patient.gdt"), "gdt");
+        var profile = CreateProfile(folders) with
+        {
+            FolderOptions = CreateFolderOptions(
+                aisImportFolder: folders.AisFolder,
+                deviceImportFolder: string.Empty),
+            SerialSettings = SerialCommunicationSettings.Default with { PortName = "COM5" }
+        };
+
+        var result = await _scanner.ScanOnceAsync(profile, StabilityDuration);
+
+        Assert.Equal(1, result.AisFilesDetected);
+        Assert.Equal(0, result.DeviceFilesDetected);
+        Assert.Equal(1, result.FilesQueued);
+        Assert.Contains(result.Messages, message => message.Contains("RS232-Profil", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain("Geräte-Importordner fehlt.", result.Messages);
+    }
+
+    [Fact]
     public async Task ScanOnceAsync_ShouldQueueStableGdtAndXmlFiles()
     {
         var folders = CreateImportFolders();

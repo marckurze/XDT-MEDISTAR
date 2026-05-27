@@ -9,7 +9,8 @@ public sealed record InterfaceProfileDefinition(
     bool IsActive,
     bool IsLicenseRequired,
     string? Description,
-    DeviceOutputConfiguration? DeviceOutput = null)
+    DeviceOutputConfiguration? DeviceOutput = null,
+    SerialCommunicationSettings? SerialSettings = null)
 {
     public IReadOnlyList<string> Validate()
     {

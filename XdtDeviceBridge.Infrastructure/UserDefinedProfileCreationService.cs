@@ -16,7 +16,8 @@ public sealed record UserDefinedDeviceProfileCreationRequest(
     string DeviceType,
     string ParserMode,
     bool IsBidirectional = false,
-    string DeviceImagePath = "");
+    string DeviceImagePath = "",
+    DeviceConnectionKind ConnectionKind = DeviceConnectionKind.NetworkLan);
 
 public sealed record UserDefinedExportProfileCreationRequest(
     string ProfileName,
@@ -150,7 +151,11 @@ public sealed class UserDefinedProfileCreationService
             SupportedExaminationTypes: Array.Empty<string>(),
             CanContainMultipleExaminationTypes: false,
             IsBidirectional: request.IsBidirectional,
-            DeviceImagePath: deviceImagePath);
+            DeviceImagePath: deviceImagePath,
+            ConnectionKind: request.ConnectionKind,
+            SerialSettings: request.ConnectionKind == DeviceConnectionKind.SerialRs232
+                ? SerialCommunicationSettings.Default
+                : null);
 
         issues.AddRange(DeviceProfileDefinitionValidator.Validate(profile));
 
@@ -271,6 +276,8 @@ public sealed class UserDefinedProfileCreationService
             return new UserDefinedProfileCreationResult<InterfaceProfileDefinition>(null, issues);
         }
 
+        var selectedDeviceProfile = catalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, deviceProfileId, StringComparison.OrdinalIgnoreCase));
         var profile = new InterfaceProfileDefinition(
             Metadata: metadata,
             AisProfileId: aisProfileId,
@@ -280,7 +287,10 @@ public sealed class UserDefinedProfileCreationService
             IsActive: false,
             IsLicenseRequired: true,
             Description: "Benutzerdefinierte Schnittstellenkonfiguration. Automatische Verarbeitung ist zunächst deaktiviert.",
-            DeviceOutput: CreateDefaultDeviceOutput(deviceProfileId, exportProfileId));
+            DeviceOutput: CreateDefaultDeviceOutput(deviceProfileId, exportProfileId),
+            SerialSettings: selectedDeviceProfile?.ConnectionKind == DeviceConnectionKind.SerialRs232
+                ? selectedDeviceProfile.SerialSettings ?? SerialCommunicationSettings.Default
+                : null);
 
         issues.AddRange(InterfaceProfileDefinitionValidator.Validate(profile));
 

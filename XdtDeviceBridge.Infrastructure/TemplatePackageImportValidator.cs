@@ -135,7 +135,8 @@ public sealed class TemplatePackageImportValidator
             AddError(issues, "Aktives Schnittstellenprofil benötigt einen AIS-Importordner.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);
         }
 
-        var requiresDeviceImportFolder = interfaceProfile.FolderOptions.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection;
+        var requiresDeviceImportFolder = interfaceProfile.SerialSettings is null
+            && interfaceProfile.FolderOptions.AttachmentOnlySourceMode != AttachmentOnlySourceMode.ManualUserSelection;
         if (requiresDeviceImportFolder && string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.DeviceImportFolder))
         {
             AddError(issues, "Aktives Schnittstellenprofil benötigt einen Geräte-Importordner.", interfaceProfile.Metadata.Id, ProfileKind.InterfaceProfile);

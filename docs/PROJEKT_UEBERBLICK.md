@@ -6,13 +6,13 @@ Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Session
 
 ## 1. Kurzbeschreibung
 
-XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die dateibasierte Bridge zwischen Arztinformationssystemen und augenaerztlichen Untersuchungsgeraeten.
+XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die Bridge zwischen Arztinformationssystemen und augenaerztlichen Untersuchungsgeraeten. Der Produktname fuer den spaeteren Einsatz ist XDTBox.
 
 Der Fokus liegt aktuell auf:
 
 - MEDISTAR als AIS/PVS-Ziel
 - GDT/XDT-Dateien als Austauschformat
-- augenaerztlichen Messgeraeten
+- augenaerztlichen Messgeraeten ueber den bisherigen LAN-/UNC-Dateiworkflow und vorbereitet ueber serielle RS232-/COM-Port-Kommunikation
 - lokalem, offlinefaehigem Betrieb
 
 Es gibt bewusst:
@@ -110,6 +110,7 @@ Er enthaelt:
 - schlanke Anlage neuer AIS-, Geraete- und Exportprofile als UserDefined
 - sichere Anlage neuer Schnittstellenprofile als inaktive UserDefined-Kombination aus AIS-, Geraete- und Exportprofil
 - sichere UserDefined-Wartung fuer Exportprofile und Exportregeln
+- RS232-/COM-Port-Testfunktion fuer zeitlich begrenzte Rohdaten-Mitschnitte mit Text-/Hexanzeige
 - Platzhalter
 - Templatepaket-Export per ausgewaehltem Schnittstellenprofil
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
@@ -160,10 +161,13 @@ UserDefined-Profile koennen umbenannt werden, ohne ihre technische Funktion zu v
 
 Ein Schnittstellenprofil verknuepft AIS-Profil, Geraeteprofil, Exportprofil, Ordner, Archivierung, Fehlerablage, Automatik- und XDT-Anhang-Einstellungen.
 
+Geraeteprofile koennen als Quelle `NetworkLan` oder `SerialRs232` tragen. `NetworkLan` ist der bestehende Datei-/UNC-Workflow mit `Geraetedatei an XDTBox`; `SerialRs232` ersetzt diesen Geraeteordner durch eine COM-Port-Konfiguration. AIS-Patientendatei, Ergebnisdatei an AIS, Archiv und Fehler bleiben auch bei RS232 Teil des Schnittstellenprofils.
+
 Aktuell dokumentierte Felder:
 
 - AIS-Importordner
 - Geraete-Importordner
+- bei RS232 statt Geraete-Importordner: COM-Port, Baudrate, Datenbits, Stoppbits, Paritaet, Flusskontrolle, bidirektionale Option und Timeouts
 - Exportordner ans AIS
 - Archivordner
 - Fehlerordner

@@ -32,6 +32,11 @@ public static class DeviceProfileDefinitionValidator
             issues.Add("ParserMode must not be empty.");
         }
 
+        if (!Enum.IsDefined(profile.ConnectionKind))
+        {
+            issues.Add("ConnectionKind must be a valid value.");
+        }
+
         if (profile.Measurements is null)
         {
             issues.Add("Measurements must not be null.");
