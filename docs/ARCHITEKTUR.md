@@ -109,6 +109,7 @@ Aktueller Stand:
 - `docs/LIZENZIERUNG_PRODUKTIVPLAN.md` beschreibt den Iststand, die fachlichen V1-Entscheidungen, die Manipulations-/Datenschutzrisiken und das Zielmodell fuer eine signierte Offline-Lizenzdatei
 - V1 lizenziert ausschliesslich die Anzahl aktiver Geraeteanbindungen; LAN/UNC, `SerialRs232`, Dokumentanhang und Test-/Analysebereiche sind keine separaten Lizenzmodule
 - `.xdtboxlic`-Import prueft Envelope, Payload, Signatur, ProductCode, InstallationId, Ablauf/Karenz und `MaxActiveDeviceConnections`, aktiviert aber noch kein produktives Gate
+- `XdtBox.LicenseIssuer` ist ein separates internes Console-Projekt fuer den Hersteller. Es erzeugt signierte `.xdtboxlic`-Dateien, referenziert die Core-Lizenzmodelle und laedt den privaten RSA-Schluessel nur aus einem externen PEM-Pfad.
 - der Lizenz-Tab zeigt den Hinweis: `Achtung: Bei Hardwaretausch bitte neue Lizenz anfordern, Karenzzeit 7 Tage ab Umzug der Hardware.`
 
 ### 1.6 NIDEK LM7/LM7P architektonisch

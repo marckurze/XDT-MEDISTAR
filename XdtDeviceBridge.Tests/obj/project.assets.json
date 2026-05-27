@@ -412,6 +412,20 @@
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
       },
+      "XdtBox.LicenseIssuer/0.1.0-prototype": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "XdtDeviceBridge.Core": "0.1.0-prototype",
+          "XdtDeviceBridge.Infrastructure": "0.1.0-prototype"
+        },
+        "compile": {
+          "bin/placeholder/XdtBox.LicenseIssuer.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/XdtBox.LicenseIssuer.dll": {}
+        }
+      },
       "XdtDeviceBridge.Core/0.1.0-prototype": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
@@ -956,6 +970,11 @@
         "xunit.runner.visualstudio.nuspec"
       ]
     },
+    "XdtBox.LicenseIssuer/0.1.0-prototype": {
+      "type": "project",
+      "path": "../XdtBox.LicenseIssuer/XdtBox.LicenseIssuer.csproj",
+      "msbuildProject": "../XdtBox.LicenseIssuer/XdtBox.LicenseIssuer.csproj"
+    },
     "XdtDeviceBridge.Core/0.1.0-prototype": {
       "type": "project",
       "path": "../XdtDeviceBridge.Core/XdtDeviceBridge.Core.csproj",
@@ -970,6 +989,7 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "Microsoft.NET.Test.Sdk >= 17.11.1",
+      "XdtBox.LicenseIssuer >= 0.1.0-prototype",
       "XdtDeviceBridge.Core >= 0.1.0-prototype",
       "XdtDeviceBridge.Infrastructure >= 0.1.0-prototype",
       "coverlet.collector >= 6.0.2",
@@ -1004,6 +1024,9 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
+            "C:\\GitHub\\XDT-MEDISTAR\\XdtBox.LicenseIssuer\\XdtBox.LicenseIssuer.csproj": {
+              "projectPath": "C:\\GitHub\\XDT-MEDISTAR\\XdtBox.LicenseIssuer\\XdtBox.LicenseIssuer.csproj"
+            },
             "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj": {
               "projectPath": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj"
             },

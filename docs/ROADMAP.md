@@ -220,6 +220,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Lizenzanfrage kann exportiert werden.
 - Lizenzdatei kann importiert werden.
 - Signierte `.xdtboxlic`-Lizenzdateien werden lokal mit RSA-PSS/SHA-256 geprueft.
+- Internes `XdtBox.LicenseIssuer`-Tool erzeugt signierte `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId.
 - Legacy-JSON-Lizenzen bleiben nur als unsignierter Uebergang erkennbar.
 - Lizenzierte Geräte/Anbindungen werden bewertet.
 - Karenzzeiten für neue Anbindungen sind vorbereitet.
@@ -265,7 +266,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 - Produktive Aktivierung importierter Schnittstellenprofile; Pruefung, Guard und V1-Preview sind nur read-only vorbereitet.
 - Produktiver `ActivationExecutor` mit frischem Laden, finaler Evaluation + Guard und sicherer UserDefined-Speicherung.
 - Vollständiger Profil-Assistent für unbekannte Geräte; die schlanke V1-Anlage von AIS-, Geraete- und Exportprofilen als UserDefined ist vorhanden, ersetzt aber noch keinen gefuehrten Datei-/Messwert-Assistenten.
-- Produktives Lizenz-Issuer-Tool und finaler Public-Key-Rollout.
+- Finaler Public-Key-Rollout und sicherer privater Schluesselprozess.
 - Online-Lizenzierung.
 - Harte produktive Lizenzdurchsetzung.
 - Installer / Deployment.
@@ -347,8 +348,8 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 
 ### Phase 7: Lizenzsignatur und Lizenzdurchsetzung
 
-- Internes `XdtBox.LicenseIssuer`-Tool bauen; privater Produktionsschluessel bleibt ausserhalb des Repositories.
 - Produktiven Public Key/KeyId festlegen und Key-Rotation dokumentieren.
+- Sicheren Ablage-/Backup-/Zugriffsprozess fuer den externen privaten Produktionsschluessel definieren.
 - Harte Sperren zentral vor Aktivierung beziehungsweise Start der Ueberwachung aktivieren; Parser und XDT-Export bleiben frei von Lizenzabbruchlogik.
 - Blockade nach 7-Tage-Karenz und bei ungueltiger Signatur mit klarer Meldung umsetzen.
 

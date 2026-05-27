@@ -9,6 +9,7 @@
       "XdtDeviceBridge.Tests/0.1.0-prototype": {
         "dependencies": {
           "Microsoft.NET.Test.Sdk": "17.11.1",
+          "XdtBox.LicenseIssuer": "0.1.0-prototype",
           "XdtDeviceBridge.Core": "0.1.0-prototype",
           "XdtDeviceBridge.Infrastructure": "0.1.0-prototype",
           "coverlet.collector": "6.0.2",
@@ -342,6 +343,18 @@
         }
       },
       "xunit.runner.visualstudio/2.8.2": {},
+      "XdtBox.LicenseIssuer/0.1.0-prototype": {
+        "dependencies": {
+          "XdtDeviceBridge.Core": "0.1.0-prototype",
+          "XdtDeviceBridge.Infrastructure": "0.1.0-prototype"
+        },
+        "runtime": {
+          "XdtBox.LicenseIssuer.dll": {
+            "assemblyVersion": "0.1.0.0",
+            "fileVersion": "0.1.0.0"
+          }
+        }
+      },
       "XdtDeviceBridge.Core/0.1.0-prototype": {
         "runtime": {
           "XdtDeviceBridge.Core.dll": {
@@ -473,6 +486,11 @@
       "sha512": "sha512-vm1tbfXhFmjFMUmS4M0J0ASXz3/U5XvXBa6DOQUL3fEz4Vt6YPhv+ESCarx6M6D+9kJkJYZKCNvJMas1+nVfmQ==",
       "path": "xunit.runner.visualstudio/2.8.2",
       "hashPath": "xunit.runner.visualstudio.2.8.2.nupkg.sha512"
+    },
+    "XdtBox.LicenseIssuer/0.1.0-prototype": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     },
     "XdtDeviceBridge.Core/0.1.0-prototype": {
       "type": "project",

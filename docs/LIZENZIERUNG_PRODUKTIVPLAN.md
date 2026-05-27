@@ -107,6 +107,7 @@ Vorbereitete V1-Bausteine:
 - `LicenseV1PolicyEvaluator`
 - `LicenseV1DeviceConnectionCounter`
 - `XdtBoxLicenseConstants`
+- internes Console-Projekt `XdtBox.LicenseIssuer`
 
 Persistenzorte laut `AppDataPathProvider`:
 
@@ -183,9 +184,9 @@ Keine personenbezogenen Daten werden erzwungen. Patientendaten duerfen nie in Li
 
 ## 6. Hersteller-Lizenzerstellung
 
-Der Hersteller soll aus einer Lizenzanforderung eine signierte Lizenzdatei erzeugen koennen.
+Der Hersteller kann aus einer Lizenzanforderung oder einer expliziten InstallationId eine signierte Lizenzdatei erzeugen.
 
-Vorgeschlagenes internes Tool:
+Internes Tool:
 
 ```text
 XdtBox.LicenseIssuer
@@ -200,6 +201,14 @@ Aufgaben:
 - Payload mit privatem RSA-PSS-Schluessel signieren
 - `LicenseEnvelope` schreiben
 - Datei mit Endung `.xdtboxlic` erzeugen
+
+Beispielaufruf:
+
+```powershell
+XdtBox.LicenseIssuer.exe --request "C:\XDTBox\Lizenzaktivierung\requests\praxis.json" --licensee "Praxis Muster" --customer-number "K12345" --max-active-device-connections 3 --valid-from "2026-05-27" --valid-until "2027-05-27" --key-id "xdtbox-prod-2026-01" --private-key "C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem" --out "C:\XDTBox\Lizenzaktivierung\licenses\praxis-muster.xdtboxlic"
+```
+
+Das Tool ist framework-dependent fuer Windows x64 nach `C:\XDTBox\Lizenzaktivierung` veroeffentlichbar. Der private Schluessel wird nur ueber `--private-key` aus einem externen PEM-Pfad geladen.
 
 Sicherheitsregel:
 
@@ -299,8 +308,8 @@ Nicht empfohlen:
 
 ## 14. Naechste Umsetzungsschritte
 
-1. Internes `XdtBox.LicenseIssuer`-Werkzeug ausserhalb der App bauen.
-2. Produktiven Public Key und Key-Rotation-Prozess festlegen.
+1. Produktiven Public Key und Key-Rotation-Prozess festlegen.
+2. Privaten Produktionsschluessel extern sicher ablegen und Backup-/Zugriffsprozess definieren.
 3. Lizenzanforderung final datensparsam machen und echte App-Version setzen.
 4. Zentrale Start-/Aktivierungs-Gates anschliessen.
 5. Monitoring- und Lizenz-Tab-Status fuer blockierte Geraeteanbindungen ergaenzen.

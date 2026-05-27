@@ -6,3 +6,8 @@ TestResults/
 *.suo
 *.userosscache
 *.sln.docstates
+*.pem
+*.key
+private*.json
+*_private.*
+keys/private/

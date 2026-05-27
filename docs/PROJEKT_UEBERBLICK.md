@@ -436,12 +436,13 @@ Vorhanden:
 - Karenzzeitmodell
 - Karenzzeiten speichern/laden
 - RSA-PSS/SHA-256-Signaturpruefung ueber die Payload-Bytes
+- internes Herstellerwerkzeug `XdtBox.LicenseIssuer` zum Erzeugen signierter `.xdtboxlic`-Dateien
 
 Aktueller Stand:
 
 - keine harte produktive Lizenzsperre
 - keine Online-Lizenzierung
-- kein produktives Issuer-Tool und noch kein finaler produktiver Public-Key-Prozess
+- noch kein finaler produktiver Public-Key-/Private-Key-Prozess
 - Lizenzlogik ist Anzeige-, Bewertungs- und Vorbereitungslogik
 
 Der konkrete Produktivplan steht in `docs/LIZENZIERUNG_PRODUKTIVPLAN.md`. Fuer XDTBox V1 wird dort eine offlinefaehige `.xdtboxlic`-Lizenz mit asymmetrischer Signatur, datensparsamer Installation-ID, `MaxActiveDeviceConnections`, 7-Tage-Karenz und zentralen Gates vor Aktivierung beziehungsweise Start der Verarbeitung festgelegt. Lizenzpflichtig ist ausschliesslich die Anzahl aktiver Geraeteanbindungen; `NetworkLan`, `SerialRs232`, Dokumentanhang, Profile/Templates und Testbereiche sind keine separaten Lizenzmodule. Parser und XDT-Ausgabe sollen nicht direkt lizenzseitig abbrechen. InstallationId bleibt fuehrend; bei Hardwaretausch wird eine neue Lizenzanforderung erzeugt.
@@ -561,7 +562,7 @@ TOPCON KR-1 ist als eigener Keratorefraktometer-Kandidat vorbereitet: `docs/TEMP
 
 TOPCON CT800A ist als eigener Non-Contact-Tonometer-Kandidat vorbereitet: `docs/TEMPLATEPAKET_MEDISTAR_TOPCON_CT800A.md` und `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_CT800A.md` dokumentieren CT-800A-Erkennung, TOPCON-TM-XML, `6205`-Tonometrie, vollstaendige CorrectedIOP/CCT-Detailzeilen nur bei verwertbaren Daten und ausgelassene ERROR-/Detailbloecke ohne Exportabbruch.
 
-Lizenzsystem: InstallationInfo, Lizenzanfrage, `.xdtboxlic`-Lizenzimport, Statusanzeige, Bewertung aktiver Geraeteanbindungen und Karenzzeitmodell sind vorbereitet. Die V1-Modelle fuer `LicenseEnvelope`, `LicensePayload`, Signaturstatus, RSA-PSS/SHA-256-Verifikation und nicht produktiv angeschlossene Policy-Bewertung konkretisieren `MaxActiveDeviceConnections` und 7-Tage-Karenz. Es gibt noch keine harte Lizenzsperre und keine Online-Lizenzierung.
+Lizenzsystem: InstallationInfo, Lizenzanfrage, `.xdtboxlic`-Lizenzimport, Statusanzeige, Bewertung aktiver Geraeteanbindungen und Karenzzeitmodell sind vorbereitet. Die V1-Modelle fuer `LicenseEnvelope`, `LicensePayload`, Signaturstatus, RSA-PSS/SHA-256-Verifikation und nicht produktiv angeschlossene Policy-Bewertung konkretisieren `MaxActiveDeviceConnections` und 7-Tage-Karenz. Das interne Tool `XdtBox.LicenseIssuer` erzeugt signierte `.xdtboxlic`-Dateien, laedt private Schluessel nur extern und gehoert nicht zur Endkunden-App. Es gibt noch keine harte Lizenzsperre und keine Online-Lizenzierung.
 
 Wichtige Sicherheitsregeln: keine unbekannten Dateien anfassen, keine pauschale Ordnerleerung, Exportordner nicht bereinigen, instabile Dateien nicht verarbeiten, mehrere XDT-Anhaenge nur als einzelne unterstuetzte Dateien mit eigenen Linkfeldgruppen uebergeben, keine medizinische Bewertung, BuiltIns nicht ueberschreiben.
 
