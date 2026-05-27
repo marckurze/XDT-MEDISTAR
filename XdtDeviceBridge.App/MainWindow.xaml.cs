@@ -116,6 +116,7 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileFolderSetupService _interfaceProfileFolderSetupService = new();
     private readonly IXdtBoxBackupService _xdtBoxBackupService = new XdtBoxBackupService();
     private readonly XdtBoxBackupPathService _xdtBoxBackupPathService = new();
+    private readonly XdtBoxAppSettingsRepository _appSettingsRepository = new();
     private readonly ISerialPortDiscoveryService _serialPortDiscoveryService = new SerialPortDiscoveryService();
     private readonly ISerialDeviceCommunicationService _serialDeviceCommunicationService = new SerialDeviceCommunicationService();
     private readonly InterfaceProfileFloatingWindowStateRepository _floatingWindowStateRepository = new();
@@ -173,7 +174,9 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _serialTestCancellationTokenSource;
     private bool _hasInterfaceProfileSaveButtonOriginalState;
     private bool _hasAutoStartedPeriodicScan;
+    private bool _hasAppliedStartupTrayPreference;
     private bool _userStoppedPeriodicScan;
+    private XdtBoxAppSettings _appSettings = XdtBoxAppSettings.CreateDefault();
     private object? _interfaceProfileSaveButtonOriginalContent;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBackground;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalForeground;
@@ -182,6 +185,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        LoadAppSettings();
         LoadFloatingWindowStates();
         DraftRuleTypeComboBox.ItemsSource = Enum.GetValues<ExportRuleType>();
         AisPlaceholdersGrid.ItemsSource = _aisPlaceholderRows;
@@ -205,10 +209,19 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(CancelEventArgs e)
     {
-        if (_trayWindowStateService.ShouldCancelClose())
+        if (_appSettings.CloseToTrayInsteadOfExit && _trayWindowStateService.ShouldCancelClose())
         {
             e.Cancel = true;
             MinimizeMainWindowToTray();
+            return;
+        }
+
+        if (_appSettings.ConfirmExitWhileMonitoring
+            && _periodicScanCancellationTokenSource is not null
+            && !_trayWindowStateService.IsExitRequested
+            && !ConfirmExitWhileMonitoringRuns())
+        {
+            e.Cancel = true;
             return;
         }
 
@@ -237,6 +250,58 @@ public partial class MainWindow : Window
         base.OnContentRendered(e);
         RestoreFloatingWindowsOnce();
         Dispatcher.BeginInvoke((Action)TryAutoStartPeriodicScanOnce, DispatcherPriority.ContextIdle);
+        Dispatcher.BeginInvoke((Action)ApplyStartupTrayPreferenceOnce, DispatcherPriority.ApplicationIdle);
+    }
+
+    private void LoadAppSettings()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _appSettings = _appSettingsRepository.LoadOrDefault(GetAppSettingsFilePath(paths));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            _appSettings = XdtBoxAppSettings.CreateDefault();
+            AppendMessage($"App-Einstellungen konnten nicht geladen werden: {ex.Message}");
+        }
+    }
+
+    private void SaveAppSettings()
+    {
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        _appSettingsRepository.Save(GetAppSettingsFilePath(paths), _appSettings);
+    }
+
+    private static string GetAppSettingsFilePath(AppDataPaths paths)
+    {
+        return Path.Combine(paths.BaseFolder, "ui", "app-settings.json");
+    }
+
+    private bool ConfirmExitWhileMonitoringRuns()
+    {
+        var result = System.Windows.MessageBox.Show(
+            this,
+            "Die Überwachung läuft noch. Möchten Sie XDTBox wirklich beenden?",
+            "XDTBox beenden",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        return result == MessageBoxResult.Yes;
+    }
+
+    private void ApplyStartupTrayPreferenceOnce()
+    {
+        if (_hasAppliedStartupTrayPreference)
+        {
+            return;
+        }
+
+        _hasAppliedStartupTrayPreference = true;
+        if (_appSettings.StartMinimizedToTray)
+        {
+            MinimizeMainWindowToTray();
+        }
     }
 
     private void InitializeSerialCommunicationUi()
@@ -438,10 +503,10 @@ public partial class MainWindow : Window
 
     private void ShowTrayHint()
     {
-        const string message = "XdtDeviceBridge läuft im Infobereich weiter. Über das Symbol neben der Uhr kann das Fenster wieder geöffnet oder die App beendet werden.";
+        const string message = "XDTBox läuft im Infobereich weiter. Über das Symbol neben der Uhr kann das Fenster wieder geöffnet oder die App beendet werden.";
         try
         {
-            _trayIcon?.ShowBalloonTip(4000, "XdtDeviceBridge", message, WinForms.ToolTipIcon.Info);
+            _trayIcon?.ShowBalloonTip(4000, "XDTBox", message, WinForms.ToolTipIcon.Info);
         }
         catch
         {
@@ -4461,10 +4526,39 @@ public partial class MainWindow : Window
             : informationalVersion;
     }
 
-    private void HeaderHelpButton_Click(object sender, RoutedEventArgs e)
+    private void TabHelpButton_Click(object sender, RoutedEventArgs e)
     {
-        HeaderHelpButton.ContextMenu.PlacementTarget = HeaderHelpButton;
-        HeaderHelpButton.ContextMenu.IsOpen = true;
+        TabHelpButton.ContextMenu.PlacementTarget = TabHelpButton;
+        TabHelpButton.ContextMenu.IsOpen = true;
+    }
+
+    private void OpenAppSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new AppSettingsDialog(_appSettings)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        _appSettings = dialog.Settings.Clone();
+        try
+        {
+            SaveAppSettings();
+            AppendMessage("App-Einstellungen gespeichert.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                $"App-Einstellungen konnten nicht gespeichert werden: {ex.Message}",
+                "XDTBox Einstellungen",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private void OpenHelpCenter_Click(object sender, RoutedEventArgs e)
@@ -5681,6 +5775,12 @@ public partial class MainWindow : Window
         }
 
         _hasAutoStartedPeriodicScan = true;
+        if (!_appSettings.AutoStartMonitoringOnAppStart)
+        {
+            AppendMonitoringEvent("monitoring", "monitoring-autostart-disabled", "Automatischer Überwachungsstart ist in den App-Einstellungen deaktiviert.", InterfaceMonitoringEventSeverity.Info);
+            return;
+        }
+
         StartPeriodicScan(initiatedByAutoStart: true);
     }
 

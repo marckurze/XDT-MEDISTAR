@@ -10,7 +10,7 @@ Basis dieses Abgleichs:
 
 ## 1. Kurzfazit
 
-Die Dokumentation passt grundsaetzlich zum aktuellen Projektstand. README, Roadmap, Projektueberblick und Architektur beschreiben den stabilen Kern mit MEDISTAR und NIDEK ARK1S, die manuell gestartete periodische Automatik, XDT-Anhaenge fuer AIS, den Baukasten-Testexport und den sicheren Templatepaket-Import weitgehend zutreffend.
+Die Dokumentation passt grundsaetzlich zum aktuellen Projektstand. README, Roadmap, Projektueberblick und Architektur beschreiben den stabilen Kern mit MEDISTAR und NIDEK ARK1S, die periodische Automatik innerhalb der geoeffneten App, XDT-Anhaenge fuer AIS, den Baukasten-Testexport und den sicheren Templatepaket-Import weitgehend zutreffend.
 
 Neue Arbeitsleitlinie: Der Aktivierungsassistent wird vorerst nicht weiter ausgebaut. Der Produktwert liegt nun zuerst in fertigen Geraeteprofilen und Templatepaketen, damit Anwender den Baukasten moeglichst selten brauchen.
 
@@ -42,7 +42,8 @@ Besonders stabil wirken aktuell:
 - Das neue XDTBox-Logo-/Schriftzugmotiv liegt als Branding-Asset unter `XdtDeviceBridge.App/Assets/Branding/XDTBox_Logo_Schriftzug.png`. Kunden-App und grafisches Hersteller-Lizenztool nutzen einen schmalen Markenheader sowie zentrale Theme-Resources in `XdtDeviceBridge.App/Styles/XdtBoxTheme.xaml`; die Geraeteanbindungsfenster wurden strukturell nicht umgebaut.
 - Der Tab `Verarbeitung` ist produktionsreif vereinfacht: Der Einzelscan-Button und die globale Auto-Verarbeiten-Checkbox sind entfernt. Sobald die geoeffnete XDTBox-App startet, wird die Ueberwachung fuer aktive Schnittstellenprofile einmalig automatisch gestartet; der Anwender kann sie weiter ueber `Ueberwachung stoppen` und `Ueberwachung starten` steuern. Gefundene passende Dateipaare werden bei laufender Ueberwachung immer automatisch verarbeitet.
 - Der neue Tab `Sicherung/Umzug` erstellt und liest `.xdtboxbackup`-Konfigurationssicherungen. Gesichert werden Profile, lokale Geraetebilder, Bild-Overrides, Lizenz-Kundendaten, UI-Komfortdaten und optional die importierte `.xdtboxlic`. Patientendaten, Messdateien sowie Import-, Export-, Archiv- und Fehlerordner-Inhalte werden nicht gesichert; Restore ist nur bei gestoppter Ueberwachung moeglich und weist auf neue Lizenzanforderung nach Hardwaretausch hin.
-- Im XDTBox-Header gibt es ein `?`-Menue mit `Hilfe` und `Info`. Die Hilfe ist lokal eingebettet und beschreibt Verarbeitung, Profile/Templates, Schnittstellenprofile, Lizenzierung, Sicherung/Umzug, Geraeteworkflows und Fehlerbehebung; der Info-Dialog zeigt Version und Herstellerdaten.
+- Das `?`-Menue mit `Hilfe` und `Info` sitzt jetzt in der Tab-Zeile neben den Registern. Direkt daneben oeffnet ein Zahnrad die App-Einstellungen fuer Autostart-Ueberwachung, Start minimiert ins Systray, Schliessen-ins-Systray und Beenden-Bestaetigung bei laufender Ueberwachung.
+- Die Tabs `Profile & Templates` und `Schnittstellenprofile` sind zur besseren Uebersicht in einklappbare Bereiche gegliedert und starten standardmaessig eingeklappt; die Vorschau `Pruefung vor Aktivierung` trennt Statusinformationen und Aktionsbuttons layoutseitig, damit keine Textueberlagerungen entstehen.
 - AutoRedock haengt direkt am erfolgreichen Verarbeitungsabschluss: automatisch geoeffnete, nicht gepinnte Geraetefenster docken nach Erfolg wieder an; wiederholte Scan-Aktivitaet durch liegende Eingangsdateien schiebt den Countdown nicht endlos weiter. Gepinnte Fenster bleiben weiterhin abgedockt.
 - AutoDetach ist fuer wiederholte Durchlaeufe generisch abgesichert: neue Dateiversionen mit gleichem Dateinamen loesen nach AutoRedock oder Reset erneut nur das betroffene Schnittstellenprofil-Fenster aus.
 - Reset gibt auch den profilbezogenen Monitoring-Dedupe-State frei; nach `↺` und anschliessendem X-Andocken kann eine neu geschriebene AIS-Datei wieder automatisch nur das betroffene Floating-Fenster oeffnen.
@@ -100,15 +101,16 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
   - Patientendaten wie `3000`, `3101`, `3102`, `3103`
   - Untersuchungsart `8402`
   - Ergebniszeilen `6228` fuer rechts/links im validierten ARK1S-Workflow
-- Keine Cloud, kein Windows-Dienst, kein Autostart, keine Verarbeitung beim App-Start.
+- Keine Cloud, kein Windows-Dienst, kein Windows-Autostart und keine Verarbeitung, wenn die App geschlossen ist. Die Ueberwachung kann beim Oeffnen der App per App-Einstellung automatisch starten.
 
 ### Tabs
 
-Die App hat aktuell vier Haupt-Tabs:
+Die App hat aktuell fuenf Haupt-Tabs:
 
 - `Verarbeitung`
 - `Profile & Templates`
 - `Schnittstellenprofile`
+- `Sicherung/Umzug`
 - `Lizenz`
 
 ### Verarbeitung
@@ -117,7 +119,8 @@ Der Tab `Verarbeitung` ist auf Betrieb und Automatik ausgerichtet:
 
 - aktive Schnittstellenprofile
 - manuell startbare und stoppbare Ueberwachung
-- Checkbox fuer automatische Verarbeitung gefundener Dateipaare
+- automatische Verarbeitung gefundener Dateipaare bei laufender Ueberwachung
+- Zahnrad-Einstellung fuer den automatischen Ueberwachungsstart beim App-Start
 - Anzeige gefundener Dateipaare bzw. Verarbeitungspakete
 - Status-/Logmeldungen
 - alter manueller Diagnosebereich als eingeklappter Rueckfallbereich
@@ -387,7 +390,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | Bereich | Aussage in Dokumentation | Tatsaechlicher Code-/Projektstand | Bewertung | Empfehlung |
 | --- | --- | --- | --- | --- |
 | Version | `0.1.0-prototype` in README, VERSION und Buildprops. | Versionen stimmen ueberein. | passt | Keine Aenderung noetig. |
-| Automatikmodell | Keine Verarbeitung beim App-Start, manuell gestartete Ueberwachung, periodischer Scan. | Code nutzt `PeriodicAutoImportScanService`, keine automatische Startlogik. | passt | Keine Aenderung noetig. |
+| Automatikmodell | App-Start-Ueberwachung ist lokal konfigurierbar, standardmaessig aktiv, periodischer Scan. | Code nutzt `PeriodicAutoImportScanService` und App-Einstellungen; kein Dienst, kein Windows-Autostart. | passt | Keine Aenderung noetig. |
 | FileSystemWatcher / Dienst / Autostart | Dokumentation sagt: nicht enthalten. | Keine entsprechende Implementierung erkennbar. | passt | Als Sicherheitsentscheidung beibehalten. |
 | Paket-Wartelogik | Roadmap, Projektueberblick und E2E-Testplan beschreiben zweistufige Logik. | `AutoImportPackageStateService` und Coordinator bilden die Logik ab. | passt | Praktischen E2E-Testplan ausfuehren. |
 | XDT-Anhaenge | Dokumentation beschreibt sichere automatische Vorbereitung und Linkausgabe `6302` bis `6305`. | Services, Coordinator, ManualProcessor und Testexport enthalten diese Logik. | passt | In Architektur fruehere "nur vorbereitet"-Formulierungen glaetten. |

@@ -34,23 +34,6 @@
                            VerticalAlignment="Center"
                            HorizontalAlignment="Right"
                            LastChildFill="False">
-                    <Button x:Name="HeaderHelpButton"
-                            DockPanel.Dock="Right"
-                            Content="?"
-                            Width="32"
-                            Height="32"
-                            Margin="16,0,0,0"
-                            FontSize="16"
-                            FontWeight="Bold"
-                            ToolTip="Hilfe und Info"
-                            Click="HeaderHelpButton_Click">
-                        <Button.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Hilfe" Click="OpenHelpCenter_Click"/>
-                                <MenuItem Header="Info" Click="OpenAboutDialog_Click"/>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-                    </Button>
                     <TextBlock Text="Medizinische Geräte sicher verbinden"
                                DockPanel.Dock="Right"
                                Foreground="{StaticResource XdtBoxDarkTextBrush}"
@@ -60,7 +43,8 @@
                 </DockPanel>
             </Grid>
         </Border>
-        <TabControl Grid.Row="1">
+        <Grid Grid.Row="1">
+        <TabControl x:Name="MainTabControl">
             <TabItem Header="Verarbeitung">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="8" MinHeight="700">
@@ -845,7 +829,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Expander Header="Profilübersicht" IsExpanded="True" Grid.Row="0" Margin="0,0,0,8">
+                        <Expander Header="Profilübersicht" IsExpanded="False" Grid.Row="0" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -874,7 +858,8 @@
                             </Grid>
                         </Expander>
 
-                        <Grid Grid.Row="1" Margin="0,0,0,8">
+                        <Expander Header="Templatepakete, neue Profile und RS232-Test" IsExpanded="False" Grid.Row="1" Margin="0,0,0,8">
+                        <Grid Margin="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -1186,8 +1171,9 @@
                                 </Grid>
                             </GroupBox>
                         </Grid>
+                        </Expander>
 
-                        <Expander Header="Profilnamen" IsExpanded="True" Grid.Row="2" Margin="0,0,0,8">
+                        <Expander Header="Profilnamen" IsExpanded="False" Grid.Row="2" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1239,7 +1225,7 @@
                             </Grid>
                         </Expander>
 
-                        <Expander Header="Exportregeln" IsExpanded="True" Grid.Row="3" Margin="0,0,0,8">
+                        <Expander Header="Exportregeln" IsExpanded="False" Grid.Row="3" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1394,7 +1380,7 @@
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <Expander Header="Exportregel-Entwurf" IsExpanded="True" Grid.Row="5" Margin="0,0,0,8">
+                        <Expander Header="Exportregel-Entwurf" IsExpanded="False" Grid.Row="5" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1462,7 +1448,7 @@
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <Expander Header="Regelvorschau" IsExpanded="True" Grid.Row="7" Margin="0,0,0,8">
+                        <Expander Header="Regelvorschau" IsExpanded="False" Grid.Row="7" Margin="0,0,0,8">
                             <TextBox x:Name="ExportRulePreviewTextBox"
                                      Margin="8"
                                      MinHeight="150"
@@ -1479,7 +1465,7 @@
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <Expander Header="Test &amp; Vorschau" IsExpanded="True" Grid.Row="9" Margin="0,0,0,8">
+                        <Expander Header="Test &amp; Vorschau" IsExpanded="False" Grid.Row="9" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1763,7 +1749,7 @@
                                       ShowsPreview="True"/>
 
                         <Expander Header="Verfügbare Platzhalter"
-                                  IsExpanded="True"
+                                  IsExpanded="False"
                                   Grid.Row="11"
                                   Margin="0,0,0,8"
                                   ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
@@ -1877,7 +1863,7 @@
                             </Grid>
                         </Expander>
 
-                        <GroupBox Header="Profil- und Template-Meldungen" Grid.Row="12">
+                        <Expander Header="Profil- und Template-Meldungen" IsExpanded="False" Grid.Row="12">
                             <TextBox x:Name="ProfileMessagesTextBox"
                                      Margin="8"
                                      MinHeight="160"
@@ -1885,7 +1871,7 @@
                                      AcceptsReturn="True"
                                      TextWrapping="Wrap"
                                      VerticalScrollBarVisibility="Auto"/>
-                        </GroupBox>
+                        </Expander>
                     </Grid>
                 </ScrollViewer>
             </TabItem>
@@ -1991,7 +1977,7 @@
                                     <CheckBox x:Name="InterfaceIsLicenseRequiredCheckBox" Content="Lizenzpflichtig" Margin="0,0,24,8"/>
                                 </WrapPanel>
 
-                                <GroupBox Header="Ordner" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Ordner" IsExpanded="False" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2067,9 +2053,9 @@
                                                        TextWrapping="Wrap"/>
                                         </WrapPanel>
                                     </Grid>
-                                </GroupBox>
+                                </Expander>
 
-                                <GroupBox x:Name="InterfaceSerialCommunicationGroupBox" Header="Serielle Gerätekommunikation / COM-Port" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander x:Name="InterfaceSerialCommunicationGroupBox" Header="Serielle Gerätekommunikation / COM-Port" IsExpanded="False" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2135,9 +2121,9 @@
                                                    Foreground="DimGray"
                                                    TextWrapping="Wrap"/>
                                     </Grid>
-                                </GroupBox>
+                                </Expander>
 
-                                <GroupBox x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" IsExpanded="False" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2200,9 +2186,9 @@
                                                    Foreground="DimGray"
                                                    TextWrapping="Wrap"/>
                                     </Grid>
-                                </GroupBox>
+                                </Expander>
 
-                                <GroupBox x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" IsExpanded="False" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2406,9 +2392,9 @@
                                                         TextWrapping="Wrap"/>
                                          </WrapPanel>
                                      </Grid>
-                                 </GroupBox>
+                                 </Expander>
 
-                                <GroupBox Header="Ordnerbereinigung" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Ordnerbereinigung" IsExpanded="False" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <StackPanel Margin="8">
                                         <TextBlock Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
                                                    Foreground="DarkRed"
@@ -2428,9 +2414,9 @@
                                             <CheckBox x:Name="InterfaceMoveFailedFilesToErrorFolderCheckBox" Content="fehlerhafte Dateien in Fehlerordner verschieben" Margin="0,0,16,8"/>
                                         </WrapPanel>
                                     </StackPanel>
-                                </GroupBox>
+                                </Expander>
 
-                                <GroupBox Header="Archivierung" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Archivierung" IsExpanded="False" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2473,9 +2459,9 @@
                                                    FontWeight="Bold"
                                                    TextWrapping="Wrap"/>
                                     </Grid>
-                                </GroupBox>
+                                </Expander>
 
-                                <GroupBox Header="Prüfung vor Aktivierung" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Prüfung vor Aktivierung" IsExpanded="False" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2494,27 +2480,52 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,8"/>
 
-                                        <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+                                        <Grid Grid.Row="1" Margin="0,0,0,10">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
                                             <TextBlock x:Name="InterfaceActivationPreviewStatusText"
+                                                       Grid.Row="0"
+                                                       Grid.Column="0"
                                                        Text="Status: -"
                                                        FontWeight="Bold"
-                                                       Margin="0,3,18,8"/>
+                                                       Margin="0,0,18,8"
+                                                       TextWrapping="Wrap"/>
                                             <TextBlock x:Name="InterfaceActivationPreviewCanActivateText"
+                                                       Grid.Row="0"
+                                                       Grid.Column="1"
                                                        Text="Aktivierbar: -"
                                                        FontWeight="Bold"
-                                                       Margin="0,3,18,8"/>
+                                                       Margin="0,0,18,8"
+                                                       TextWrapping="Wrap"/>
                                             <TextBlock x:Name="InterfaceActivationPreviewCountsText"
+                                                       Grid.Row="0"
+                                                       Grid.Column="2"
                                                        Text="Blocker: 0 | Warnungen: 0 | Hinweise: 0"
-                                                       Margin="0,3,18,8"/>
-                                            <Button Content="Prüfung aktualisieren"
-                                                    Width="180"
-                                                    Margin="0,0,8,8"
-                                                    Click="RefreshInterfaceActivationPreview_Click"/>
-                                            <Button Content="Aktivierung vorbereiten"
-                                                    Width="190"
-                                                    Margin="0,0,0,8"
-                                                    Click="PrepareInterfaceActivationPreview_Click"/>
-                                        </WrapPanel>
+                                                       Margin="0,0,0,8"
+                                                       TextWrapping="Wrap"/>
+
+                                            <StackPanel Grid.Row="1"
+                                                        Grid.Column="0"
+                                                        Grid.ColumnSpan="3"
+                                                        Orientation="Horizontal"
+                                                        HorizontalAlignment="Left">
+                                                <Button Content="Prüfung aktualisieren"
+                                                        Width="180"
+                                                        Margin="0,0,8,0"
+                                                        Click="RefreshInterfaceActivationPreview_Click"/>
+                                                <Button Content="Aktivierung vorbereiten"
+                                                        Width="190"
+                                                        Click="PrepareInterfaceActivationPreview_Click"/>
+                                            </StackPanel>
+                                        </Grid>
 
                                         <Grid Grid.Row="2" Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions>
@@ -2593,7 +2604,7 @@
                                             </Expander>
                                         </Grid>
                                     </Grid>
-                                </GroupBox>
+                                </Expander>
                              </Grid>
                          </GroupBox>
                     </Grid>
@@ -2875,5 +2886,30 @@
                 </ScrollViewer>
             </TabItem>
         </TabControl>
+            <StackPanel x:Name="TabUtilityButtonsPanel"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="0,4,12,0"
+                        Panel.ZIndex="10">
+                <Button x:Name="TabHelpButton"
+                        Content="?"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        ToolTip="Hilfe und Info"
+                        Click="TabHelpButton_Click">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Hilfe" Click="OpenHelpCenter_Click"/>
+                            <MenuItem Header="Info" Click="OpenAboutDialog_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+                <Button x:Name="AppSettingsButton"
+                        Content="⚙"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        ToolTip="App-Einstellungen"
+                        Click="OpenAppSettings_Click"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

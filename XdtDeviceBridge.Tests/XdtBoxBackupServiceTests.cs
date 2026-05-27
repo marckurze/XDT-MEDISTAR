@@ -33,6 +33,7 @@ public sealed class XdtBoxBackupServiceTests
         Assert.NotNull(archive.GetEntry("profiles/interfaces/interface-user.json"));
         Assert.NotNull(archive.GetEntry("device-images/device-user.png"));
         Assert.NotNull(archive.GetEntry("settings/device-image-overrides.json"));
+        Assert.NotNull(archive.GetEntry("settings/ui/app-settings.json"));
         Assert.NotNull(archive.GetEntry("license-customer/license-customer-data.json"));
         Assert.NotNull(archive.GetEntry("license/license.xdtboxlic"));
         Assert.Null(archive.GetEntry("patient-import/patient.gdt"));
@@ -55,6 +56,7 @@ public sealed class XdtBoxBackupServiceTests
         Assert.True(File.Exists(Path.Combine(targetPaths.ProfilesFolder, "interfaces", "interface-user.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "DeviceImages", "device-user.png")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "device-image-overrides.json")));
+        Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "ui", "app-settings.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license-customer-data.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license.xdtboxlic")));
     }
@@ -129,6 +131,8 @@ public sealed class XdtBoxBackupServiceTests
         Directory.CreateDirectory(Path.Combine(paths.BaseFolder, "DeviceImages"));
         File.WriteAllText(Path.Combine(paths.BaseFolder, "DeviceImages", "device-user.png"), "image");
         File.WriteAllText(Path.Combine(paths.BaseFolder, "device-image-overrides.json"), """{"device-user":"DeviceImages/device-user.png"}""");
+        Directory.CreateDirectory(Path.Combine(paths.BaseFolder, "ui"));
+        File.WriteAllText(Path.Combine(paths.BaseFolder, "ui", "app-settings.json"), """{"AutoStartMonitoringOnAppStart":true}""");
 
         Directory.CreateDirectory(paths.LicensesFolder);
         File.WriteAllText(Path.Combine(paths.LicensesFolder, "license-customer-data.json"), """{"CustomerName":"Praxis"}""");

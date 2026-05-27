@@ -54,3 +54,5 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\AboutXdtBoxW
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\HelpCenterWindow.baml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\AboutXdtBoxWindow.g.cs
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\HelpCenterWindow.g.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\AppSettingsDialog.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\AppSettingsDialog.g.cs

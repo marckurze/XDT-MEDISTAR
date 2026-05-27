@@ -30,6 +30,7 @@ public sealed class ProductiveUiSourceTests
 
         Assert.Contains("_hasAutoStartedPeriodicScan", code);
         Assert.Contains("_userStoppedPeriodicScan", code);
+        Assert.Contains("_appSettings.AutoStartMonitoringOnAppStart", code);
         Assert.Contains("TryAutoStartPeriodicScanOnce", code);
         Assert.Contains("Dispatcher.BeginInvoke((Action)TryAutoStartPeriodicScanOnce", code);
     }
@@ -48,16 +49,95 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
-    public void HeaderHelpMenu_ShouldExposeHelpAndInfo()
+    public void TabUtilityButtons_ShouldExposeHelpInfoAndSettings()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
-        Assert.Contains("x:Name=\"HeaderHelpButton\"", xaml);
+        Assert.Contains("x:Name=\"TabUtilityButtonsPanel\"", xaml);
+        Assert.Contains("x:Name=\"TabHelpButton\"", xaml);
+        Assert.Contains("x:Name=\"AppSettingsButton\"", xaml);
         Assert.Contains("Header=\"Hilfe\"", xaml);
         Assert.Contains("Header=\"Info\"", xaml);
+        Assert.Contains("Style=\"{StaticResource XdtBoxTabUtilityButtonStyle}\"", xaml);
+        Assert.DoesNotContain("x:Name=\"HeaderHelpButton\"", xaml);
         Assert.Contains("OpenHelpCenter_Click", code);
         Assert.Contains("OpenAboutDialog_Click", code);
+        Assert.Contains("OpenAppSettings_Click", code);
+        Assert.Contains("TabHelpButton_Click", code);
+    }
+
+    [Fact]
+    public void AppSettingsDialog_ShouldExposeStartupAndTrayOptions()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AppSettingsDialog.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("App beim Start direkt minimieren und ins Systray legen", xaml);
+        Assert.Contains("Überwachung der Ordner beim Start automatisch starten", xaml);
+        Assert.Contains("Beim Schließen ins Systray minimieren statt beenden", xaml);
+        Assert.Contains("Bestätigung anzeigen, wenn bei laufender Überwachung beendet werden soll", xaml);
+        Assert.Contains("LoadAppSettings", code);
+        Assert.Contains("SaveAppSettings", code);
+        Assert.Contains("ApplyStartupTrayPreferenceOnce", code);
+        Assert.Contains("_appSettings.CloseToTrayInsteadOfExit", code);
+    }
+
+    [Fact]
+    public void ProfileTemplatesTab_ShouldUseCollapsedSectionsByDefault()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+
+        Assert.Contains("Header=\"Profilübersicht\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Templatepakete, neue Profile und RS232-Test\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Profilnamen\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Exportregeln\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Exportregel-Entwurf\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Regelvorschau\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Test &amp; Vorschau\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Verfügbare Platzhalter\"", xaml);
+        Assert.Contains("Header=\"Profil- und Template-Meldungen\" IsExpanded=\"False\"", xaml);
+    }
+
+    [Fact]
+    public void InterfaceProfilesTab_ShouldUseCollapsedEditableSectionsByDefault()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+
+        Assert.Contains("<Expander Header=\"Ordner\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceSerialCommunicationGroupBox\" Header=\"Serielle Gerätekommunikation / COM-Port\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceDeviceOutputGroupBox\" Header=\"Ausgabe an Gerät\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceAttachmentSettingsGroupBox\" Header=\"XDT-Anhänge für AIS\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("<Expander Header=\"Ordnerbereinigung\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("<Expander Header=\"Archivierung\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("<Expander Header=\"Prüfung vor Aktivierung\" IsExpanded=\"False\"", xaml);
+    }
+
+    [Fact]
+    public void ActivationPreviewLayout_ShouldSeparateStatusAndActionButtons()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+
+        var start = xaml.IndexOf("Header=\"Prüfung vor Aktivierung\"", StringComparison.Ordinal);
+        Assert.True(start >= 0);
+        var end = xaml.IndexOf("InterfaceActivationPreviewFolderChecksGrid", start, StringComparison.Ordinal);
+        Assert.True(end > start);
+        var section = xaml[start..end];
+
+        Assert.Contains("<Grid.RowDefinitions>", section);
+        Assert.Contains("<StackPanel Grid.Row=\"1\"", section);
+        Assert.Contains("TextWrapping=\"Wrap\"", section);
+        Assert.DoesNotContain("<WrapPanel Grid.Row=\"1\"", section);
+    }
+
+    [Fact]
+    public void FloatingDeviceWindow_ShouldRemainStructurallySeparatedFromMainUiSettings()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "FloatingInterfaceProfileWindow.xaml"));
+
+        Assert.DoesNotContain("TabUtilityButtonsPanel", xaml);
+        Assert.DoesNotContain("AppSettingsButton", xaml);
+        Assert.DoesNotContain("Sicherung/Umzug", xaml);
     }
 
     [Fact]

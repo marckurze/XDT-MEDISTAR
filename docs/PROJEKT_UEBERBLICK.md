@@ -23,7 +23,7 @@ Es gibt bewusst:
 - keinen `FileSystemWatcher`
 - keine Verarbeitung, wenn die App geschlossen ist
 
-Konkret bedeutet das fuer den aktuellen Produktivbetrieb: Beim Oeffnen der XDTBox-App startet die interne periodische Ueberwachung automatisch, solange aktive Schnittstellenprofile vorhanden sind. Das ist kein Windows-Autostart und kein Dienst; nach dem Schliessen der App laeuft keine Verarbeitung weiter.
+Konkret bedeutet das fuer den aktuellen Produktivbetrieb: Beim Oeffnen der XDTBox-App startet die interne periodische Ueberwachung standardmaessig automatisch, solange aktive Schnittstellenprofile vorhanden sind. Das Verhalten ist ueber das Zahnrad in der Tab-Zeile konfigurierbar. Das ist kein Windows-Autostart und kein Dienst; nach dem Schliessen der App laeuft keine Verarbeitung weiter.
 
 Aktuelle Entwicklungsleitlinie: Fertige Geraeteprofile und Templatepakete haben Vorrang vor weiterer Aktivierungs- oder Assistentenarchitektur. Der Baukasten bleibt Werkzeug fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen, nicht der normale Bedienweg.
 
@@ -78,7 +78,7 @@ Die App besitzt aktuell diese Haupt-Tabs:
 - `Sicherung/Umzug`
 - `Lizenz`
 
-Zusaetzlich gibt es im XDTBox-Header ein `?`-Menue fuer `Hilfe` und `Info`. Die Hilfe ist lokal in der App enthalten; der Info-Dialog zeigt Version und Herstellerdaten.
+Zusaetzlich gibt es in der Tab-Zeile ein `?`-Menue fuer `Hilfe` und `Info` sowie ein Zahnrad fuer App-Einstellungen. Die Hilfe ist lokal in der App enthalten; der Info-Dialog zeigt Version und Herstellerdaten.
 
 ## 5. Tab Verarbeitung
 
@@ -88,14 +88,13 @@ Er enthaelt bzw. fokussiert:
 
 - aktive Schnittstellenprofile
 - Ueberwachung manuell starten/stoppen
-- automatische Verarbeitung per Haken
+- automatische Verarbeitung gefundener Dateipaare bei laufender Ueberwachung
 - gefundene Dateipaare bzw. Verarbeitungspakete
 - Status- und Logmeldungen
 
-Die automatische Verarbeitung startet nur, wenn:
+Die automatische Verarbeitung laeuft nur, wenn:
 
-- die Ueberwachung manuell gestartet wurde
-- die globale automatische Verarbeitung aktiv ist
+- die Ueberwachung gestartet wurde oder per App-Einstellung beim Oeffnen automatisch startet
 - ein aktives Schnittstellenprofil vorhanden ist
 - die beteiligten Dateien stabil sind
 
@@ -118,6 +117,7 @@ Er enthaelt:
 - RS232-/COM-Port-Testfunktion fuer zeitlich begrenzte Rohdaten-Mitschnitte mit Text-/Hexanzeige und optionaler NIDEK-RS232-Auswertung
 - Platzhalter
 - Templatepaket-Export per ausgewaehltem Schnittstellenprofil
+- standardmaessig eingeklappte Bereiche fuer bessere Uebersicht
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
 - Baukastenbereich `Test & Vorschau`
 
@@ -313,14 +313,14 @@ Der Automatik-Prototyp ist bewusst konservativ.
 
 Aktuelle Sicherheitsregeln:
 
-- keine Verarbeitung beim App-Start
+- App-Start-Ueberwachung ist per App-Einstellung steuerbar und standardmaessig aktiv
 - kein Windows-Dienst
-- kein Autostart
+- kein Windows-Autostart
 - kein `FileSystemWatcher`
 - periodischer Scan
 - Scan-Intervall konfigurierbar, Default `5` Sekunden
-- automatische Verarbeitung nur bei manuell gestarteter Ueberwachung
-- automatische Verarbeitung nur mit gesetztem Haken
+- automatische Verarbeitung nur bei laufender Ueberwachung
+- passende Dateipaare werden bei laufender Ueberwachung immer automatisch verarbeitet
 - keine unbekannten Dateien anfassen
 - keine pauschale Ordnerleerung
 - Exportordner wird nicht bereinigt
@@ -459,9 +459,9 @@ Diese Entscheidungen gelten fuer weitere Entwicklung:
 
 - BuiltIn-Profile nicht ueberschreiben
 - UserDefined-Profile separat speichern
-- keine Verarbeitung beim App-Start
+- App-Start-Ueberwachung nur innerhalb der geoeffneten App und per App-Einstellung steuerbar
 - kein Windows-Dienst
-- kein Autostart
+- kein Windows-Autostart
 - kein `FileSystemWatcher`
 - keine unbekannten Dateien anfassen
 - keine pauschale Ordnerleerung
@@ -532,7 +532,7 @@ Der folgende Block kann in einen neuen Chat kopiert werden:
 ```text
 Wir arbeiten an XdtDeviceBridge / XDT Verwaltung, Version 0.1.0-prototype.
 
-XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer eine dateibasierte AIS-/Geraete-Bridge im augenaerztlichen Umfeld. Fokus ist MEDISTAR mit XDT/GDT und NIDEK ARK1S XML. Es gibt keine Cloud, keinen Windows-Dienst, keinen Autostart, keinen FileSystemWatcher und keine Verarbeitung beim App-Start.
+XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer eine dateibasierte AIS-/Geraete-Bridge im augenaerztlichen Umfeld. Fokus ist MEDISTAR mit XDT/GDT und NIDEK ARK1S XML. Es gibt keine Cloud, keinen Windows-Dienst, keinen Windows-Autostart, keinen FileSystemWatcher und keine Verarbeitung, wenn die App geschlossen ist. Die App-Start-Ueberwachung ist lokal konfigurierbar und standardmaessig aktiv.
 
 Praktisch validiert ist MEDISTAR + NIDEK ARK1S: AIS-GDT/XDT einlesen, NIDEK ARK1S XML einlesen, Patientendaten und Messwerte mappen und eine MEDISTAR-kompatible XDT-Datei erzeugen. Wichtige Felder sind 8000=6310, Patientendaten 3000/3101/3102/3103, 8402 Untersuchungsart und 6228 Ergebniszeilen rechts/links. Am 2026-05-11 wurde zusaetzlich der XDT-Anhang-Link ueber 6302/6303/optional 6304/6305 praktisch validiert; ein externer Anhang konnte aus einer MEDISTAR-Karteikarte geoeffnet werden.
 

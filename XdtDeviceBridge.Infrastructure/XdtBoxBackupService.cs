@@ -84,6 +84,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
 
             AddFileIfExists(archive, GetDeviceImageOverridesFilePath(paths), "settings/device-image-overrides.json", includedAreas, "Gerätebild-Overrides");
             AddFileIfExists(archive, GetFloatingWindowStateFilePath(paths), "settings/ui/floating-interface-windows.json", includedAreas, "UI-Einstellungen");
+            AddFileIfExists(archive, GetAppSettingsFilePath(paths), "settings/ui/app-settings.json", includedAreas, "App-Einstellungen");
             AddFileIfExists(archive, GetLicenseCustomerDataFilePath(paths), "license-customer/license-customer-data.json", includedAreas, "Lizenz-Kundendaten");
             AddFileIfExists(archive, paths.DeviceGracePeriodsFile, "license/device-grace-periods.json", includedAreas, "Lizenz-Karenzzeiten");
 
@@ -152,6 +153,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             RestoreDirectory(archive, "device-images/", GetDeviceImagesFolder(paths));
             RestoreFile(archive, "settings/device-image-overrides.json", GetDeviceImageOverridesFilePath(paths));
             RestoreFile(archive, "settings/ui/floating-interface-windows.json", GetFloatingWindowStateFilePath(paths));
+            RestoreFile(archive, "settings/ui/app-settings.json", GetAppSettingsFilePath(paths));
             RestoreFile(archive, "license-customer/license-customer-data.json", GetLicenseCustomerDataFilePath(paths));
             RestoreFile(archive, "license/device-grace-periods.json", paths.DeviceGracePeriodsFile);
             RestoreFile(archive, "license/license.xdtboxlic", GetSignedLicenseFilePath(paths));
@@ -306,6 +308,11 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
     private static string GetFloatingWindowStateFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.BaseFolder, "ui", "floating-interface-windows.json");
+    }
+
+    private static string GetAppSettingsFilePath(AppDataPaths paths)
+    {
+        return Path.Combine(paths.BaseFolder, "ui", "app-settings.json");
     }
 
     private static string GetLicenseCustomerDataFilePath(AppDataPaths paths)

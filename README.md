@@ -2,7 +2,7 @@
 
 XdtDeviceBridge ist ein lokaler Windows-Prototyp fuer die dateibasierte Anbindung von Untersuchungsgeraeten an ein Arztinformationssystem ueber GDT/XDT-Dateien. Der Produktname fuer den spaeteren Einsatz ist XDTBox; Kunden-App und grafisches Hersteller-Lizenztool verwenden das offizielle XDTBox-Icon sowie das neue Logo-/Schriftzug-Branding.
 
-In der Kunden-App startet die periodische Überwachung beim Öffnen der App automatisch fuer aktive Schnittstellenprofile. Es gibt weiterhin keinen Windows-Dienst, keinen Windows-Autostart und keinen FileSystemWatcher. XDTBox bringt ausserdem einen Tab `Sicherung/Umzug` fuer lokale Konfigurationssicherungen im Format `.xdtboxbackup` sowie ein lokales Hilfe-/Info-Menue im Header mit.
+In der Kunden-App startet die periodische Überwachung beim Öffnen der App standardmaessig automatisch fuer aktive Schnittstellenprofile; dieses Verhalten ist ueber das Zahnrad in der Tab-Zeile konfigurierbar. Es gibt weiterhin keinen Windows-Dienst, keinen Windows-Autostart und keinen FileSystemWatcher. XDTBox bringt ausserdem einen Tab `Sicherung/Umzug` fuer lokale Konfigurationssicherungen im Format `.xdtboxbackup` sowie ein lokales Hilfe-/Info-Menue direkt neben den Tabs mit.
 
 Der aktuelle Fokus liegt auf dem Workflow MEDISTAR mit einem NIDEK ARK1S / AR-1s Autorefraktometer.
 
@@ -22,13 +22,13 @@ Ein isolierter `AttachmentImportFolderScannerService` ist vorbereitet. Er listet
 
 Eine isolierte automatische Kandidatenauswahl ist ebenfalls vorbereitet: Automatisch eindeutig ist zunächst nur der Fall, dass genau eine unterstützte Anhangdatei im XDT-Anhang Importordner gefunden wurde. Bei mehreren unterstützten Dateien wird nicht automatisch ausgewählt, weil der Patientenbezug unsicher wäre.
 
-Die konservative automatische XDT-Anhang-Vorbereitung ist vorbereitet: Sie greift nur während der manuell gestarteten Überwachung, bei aktivierter globaler automatischer Verarbeitung, aktivierter XDT-Anhang-Funktion im Schnittstellenprofil und genau einem unterstützten Anhangkandidaten. Bei erfolgreicher Vorbereitung werden die XDT-Feldcode/Wert-Paare 6302, 6303, optional 6304 und 6305 transient an die erzeugte XDT-Exportdatei angehängt. Bei deaktivierter Funktion, fehlender Eindeutigkeit, mehreren unterstützten Anhängen oder Fehlern bleibt der bestehende Export unverändert. Die XDT-Längenpräfixe werden weiterhin zentral durch den Exportmechanismus erzeugt.
+Die konservative automatische XDT-Anhang-Vorbereitung ist vorbereitet: Sie greift nur während laufender Überwachung, aktivierter XDT-Anhang-Funktion im Schnittstellenprofil und genau einem unterstützten Anhangkandidaten. Bei erfolgreicher Vorbereitung werden die XDT-Feldcode/Wert-Paare 6302, 6303, optional 6304 und 6305 transient an die erzeugte XDT-Exportdatei angehängt. Bei deaktivierter Funktion, fehlender Eindeutigkeit, mehreren unterstützten Anhängen oder Fehlern bleibt der bestehende Export unverändert. Die XDT-Längenpräfixe werden weiterhin zentral durch den Exportmechanismus erzeugt.
 
 Für vollständige Verarbeitungspakete ist ein zweistufiges Wartemodell vorbereitet: Zuerst wartet eine erkannte AIS-Datei auf eine stabile Gerätedatei. Die Wartezeit ist pro Schnittstellenprofil konfigurierbar, Standard `10` Minuten. Kommt vor der Gerätedatei eine neuere AIS-Datei, ersetzt sie den wartenden Auftrag. Erst wenn AIS- und Gerätedatei als stabiles Paar vorhanden sind, startet die XDT-Anhang-Wartezeit. XDT-Anhänge können pro Schnittstellenprofil `optional` oder als `Pflicht` erwartet werden. Standard ist `optional`, die Standard-Wartezeit beträgt 30 Sekunden. Optional bedeutet: Nach Timeout dürfen Messwerte ohne Anhang übertragen werden. Pflicht bedeutet: Ohne eindeutigen Anhang wird die Verarbeitung blockiert; bei Timeout wird das konkrete Paket terminal als Fehlerfall abgeschlossen, damit neue Untersuchungen weiterlaufen können. Dabei werden nur bekannte AIS-/Gerätedateien dieses Pakets gemäß Fehler-/Archivoptionen behandelt, unbekannte Dateien und Exportordner werden nicht pauschal bereinigt. Mehrere unterstützte Anhänge bleiben unsicher und werden nicht automatisch zugeordnet.
 
 Für langsam schreibende Geräte ist zusätzlich eine Stabilitätsprüfung vorbereitet: XDT-Anhänge werden erst automatisch ausgewählt oder übertragen, wenn sie über die konfigurierte Stabilitätswartezeit unverändert und lesbar bleiben. Standard ist 2 Sekunden. Das periodische Ordnerabfrage-Intervall ist pro Schnittstellenprofil konfigurierbar; der Standard bleibt 5 Sekunden. Es wird weiterhin kein FileSystemWatcher verwendet.
 
-Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich `Test & Vorschau` für den Baukasten-Test: AIS-Testdatei laden, Gerätedatei laden, optional XDT-Anhang einlesen, Messwerte prüfen, Gesamtexport-Vorschau kontrollieren und einen Testexport erstellen. Das verwendete Schnittstellenprofil wird dort mit AIS-, Geräte-, Exportprofil- und XDT-Anhang-Konfiguration angezeigt. Der Button `XDT-Anhang einlesen` öffnet eine Dateiauswahl, sodass ein XDT-Anhang aus beliebigem Speicherort für die externe Template-Vorbereitung gewählt werden kann. Sobald AIS- und Gerätedatei geladen sind, aktualisiert der Baukasten nach dem Einlesen automatisch die Gesamtexport-Vorschau mit den transienten Linkfeldern 6302 bis 6305. Vorschau und Testexport simulieren trotzdem den im Schnittstellenprofil definierten XDT-Anhang-Exportpfad: 6305 zeigt auf `XDT-Anhang Exportordner` plus erzeugten Dateinamen, nicht auf den Quellpfad. `Testexport erstellen` öffnet eine Ordnerauswahl und schreibt Test-XDT-Datei plus korrekt umbenannten Anhang physisch in den gewählten Testordner; der 6305-Wert in der Test-XDT-Datei bleibt auf den simulierten Schnittstellenprofil-Zielpfad ausgerichtet, und der produktive Schnittstellenprofil-Exportordner wird im Baukasten-Test nicht beschrieben. Exportprofile und BuiltIn-Profile werden dadurch nicht verändert. `Messwerte prüfen` ist standardmäßig eingeklappt, `Verfügbare Platzhalter` bleibt standardmäßig ausgeklappt. Der Tab `Verarbeitung` bleibt der Betriebsbereich für aktive Schnittstellenprofile, manuell gestartete Überwachung und automatische Verarbeitung.
+Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich `Test & Vorschau` für den Baukasten-Test: AIS-Testdatei laden, Gerätedatei laden, optional XDT-Anhang einlesen, Messwerte prüfen, Gesamtexport-Vorschau kontrollieren und einen Testexport erstellen. Das verwendete Schnittstellenprofil wird dort mit AIS-, Geräte-, Exportprofil- und XDT-Anhang-Konfiguration angezeigt. Der Button `XDT-Anhang einlesen` öffnet eine Dateiauswahl, sodass ein XDT-Anhang aus beliebigem Speicherort für die externe Template-Vorbereitung gewählt werden kann. Sobald AIS- und Gerätedatei geladen sind, aktualisiert der Baukasten nach dem Einlesen automatisch die Gesamtexport-Vorschau mit den transienten Linkfeldern 6302 bis 6305. Vorschau und Testexport simulieren trotzdem den im Schnittstellenprofil definierten XDT-Anhang-Exportpfad: 6305 zeigt auf `XDT-Anhang Exportordner` plus erzeugten Dateinamen, nicht auf den Quellpfad. `Testexport erstellen` öffnet eine Ordnerauswahl und schreibt Test-XDT-Datei plus korrekt umbenannten Anhang physisch in den gewählten Testordner; der 6305-Wert in der Test-XDT-Datei bleibt auf den simulierten Schnittstellenprofil-Zielpfad ausgerichtet, und der produktive Schnittstellenprofil-Exportordner wird im Baukasten-Test nicht beschrieben. Exportprofile und BuiltIn-Profile werden dadurch nicht verändert. Der Tab `Profile & Templates` ist zur besseren Uebersicht in standardmaessig eingeklappte Bereiche gegliedert; der Tab `Verarbeitung` bleibt der Betriebsbereich fuer aktive Schnittstellenprofile, Ueberwachung und automatische Verarbeitung.
 
 ## Aktueller Funktionsumfang
 
@@ -38,9 +38,9 @@ Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich 
 - Mapping der Patientendaten und Messwerte in MEDISTAR-kompatible XDT-Felder.
 - Erzeugen einer XDT-Exportvorschau.
 - Manuelles Schreiben einer Exportdatei in einen ausgewaehlten Ordner.
-- Automatisch startende Überwachung innerhalb der geöffneten App; passende Dateipaare werden bei laufender Überwachung automatisch verarbeitet.
+- Konfigurierbar automatisch startende Überwachung innerhalb der geöffneten App; passende Dateipaare werden bei laufender Überwachung automatisch verarbeitet.
 - Lokale Konfigurationssicherung und Wiederherstellung ueber `.xdtboxbackup` ohne Patientendaten oder Messdateien.
-- Lokales Hilfe-Center und Info-Dialog mit Herstellerdaten.
+- Lokales Hilfe-Center und Info-Dialog mit Herstellerdaten in der Tab-Zeile sowie Zahnrad-Einstellungen fuer Autostart- und Systray-Verhalten.
 - Vorbereitete V2-Geraeteprofile fuer NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
 - Unit-Tests fuer Parser, Mapping, Export und Datei-Export.
 
@@ -59,7 +59,7 @@ Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich 
 
 ## Aktueller Automatik-Prototyp
 
-Der Automatik-Prototyp bereitet die spaetere produktive Ordnerverarbeitung vor und kann bereits manuell gestartet werden. Der manuelle Baukasten-Test befindet sich im Tab `Profile & Templates`.
+Der Automatik-Prototyp bereitet die spaetere produktive Ordnerverarbeitung vor und startet in der geoeffneten App standardmaessig automatisch; er kann weiter manuell gestoppt und gestartet werden. Der manuelle Baukasten-Test befindet sich im Tab `Profile & Templates`.
 
 ### 1. Baukasten-Test
 
@@ -91,7 +91,7 @@ Ein Schnittstellenprofil enthaelt:
 - XDT-Anhang Exportordner (optional)
 - XDT-Anhang Dateiname, Standard: `{Ais.PatientNumber}_{Date:ddMMyyyy}_{Time:HHmmss}{ExtensionUpper}`
 - XDT-Anhang Übertragung: Kopieren oder Verschieben, Standard `Verschieben`, vorbereitet für spätere Dateianhang-Verarbeitung
-- Einschaltfunktion `XDT-Anhänge für AIS automatisch verarbeiten`, Standard aus; spätere Verarbeitung nur bei manuell gestarteter Überwachung, aktivierter automatischer Verarbeitung und vorhandener AIS-Patientennummer
+- Einschaltfunktion `XDT-Anhänge für AIS automatisch verarbeiten`, Standard aus; spätere Verarbeitung nur bei laufender Überwachung und vorhandener AIS-Patientennummer
 - XDT-Anhang-Erwartung: optional oder Pflicht, Standard optional
 - Wartezeit auf XDT-Anhang, Standard 30 Sekunden
 - Dateistabilität für XDT-Anhänge, Standard 2 Sekunden
@@ -103,9 +103,9 @@ Ein Schnittstellenprofil enthaelt:
 - Archivierungsoptionen
 - Fehlerablageoptionen
 
-### 3. Manuell startbare Ueberwachung
+### 3. Ueberwachung
 
-Die Ueberwachung startet nicht automatisch beim App-Start. Der Benutzer muss sie im Tab `Verarbeitung` manuell starten.
+Die Ueberwachung startet standardmaessig beim Oeffnen der App, wenn aktive Schnittstellenprofile vorhanden sind. Ueber das Zahnrad in der Tab-Zeile kann dieser App-Start-Autostart deaktiviert werden; die Buttons `Ueberwachung starten` und `Ueberwachung stoppen` bleiben erhalten.
 
 Funktionen:
 
@@ -113,9 +113,9 @@ Funktionen:
 - AIS-Importordner und Geraete-Importordner werden geprueft
 - Dateien werden erst verarbeitet, wenn sie stabil und lesbar sind
 - fertige AIS-/Geraete-Dateipaare werden in den Monitoring-Karten als Paketstatus sichtbar
-- Ueberwachung kann manuell gestoppt werden
+- Ueberwachung kann manuell gestoppt und wieder gestartet werden
 
-Wichtig: Es gibt keinen Windows-Dienst, keinen Autostart und aktuell keinen FileSystemWatcher. Die Ueberwachung basiert auf periodischem Scan.
+Wichtig: Es gibt keinen Windows-Dienst, keinen Windows-Autostart und aktuell keinen FileSystemWatcher. Die Ueberwachung basiert auf periodischem Scan innerhalb der geoeffneten App.
 
 Die Monitoring-Meldungen im Tab `Verarbeitung` werden dedupliziert: Wiederholt ein Scan denselben technischen Zustand oder dieselbe Statusmeldung, wird sie nicht erneut als neues Ereignis angehängt. Die Übersicht der aktiven Schnittstellenprofile enthält grünliche Radar-/Glas-Karten pro aktiver Schnittstelle. Die Karten zeigen Profilzuordnung, Scanstatus, erwartete Eingänge wie AIS-Datei, Gerätedatei und optional XDT-Anhang sowie ausklappbare Details. Laufende Scan-/Paket-/Verarbeitungsergebnisse füllen die Karten mit Status wie `Wartet auf AIS`, `Wartet auf Gerät`, `Wartet auf XDT-Anhang`, `Export erfolgreich` oder `Fehler / blockiert`; falls vorhanden werden Patient, erkannte Dateien, XDT-Anhang-Zustand, Exportdatei und Warte-/Restzeiten sichtbar. Die XDT-Anhang-Kachel zeigt während der Wartephase `Pflicht` oder `Optional` plus Restzeit beziehungsweise Timeoutstatus. Die Eingangskacheln zeigen kompakte Live-Daten ohne sichtbare Pfade; Pfade bleiben in Tooltips und im Detailbereich verfügbar. Bei laufender Überwachung zeigt jede Karte eine deutlich sichtbare Radar-/Scanfläche mit schmalem grünem, halbtransparentem, horizontal wanderndem Scanbalken, dessen UI-Animation an das konfigurierte Scanintervall der Schnittstelle angelehnt ist. Das Scanintervall kann in der Karte per `-`/`+` als Schnittstellenprofil-Konfiguration angepasst werden; BuiltIn-Profile werden dabei nicht überschrieben. Detailinformationen wie AIS-Datei, Gerätedatei, Anhang, Export, letzter erfolgreicher Export und letzte Meldung liegen im Bereich `Details`. Die Animation ist nur eine Anzeige und steuert keine Verarbeitung.
 
