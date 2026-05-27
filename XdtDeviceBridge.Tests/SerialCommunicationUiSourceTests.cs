@@ -19,6 +19,10 @@ public sealed class SerialCommunicationUiSourceTests
 
         Assert.Contains("RS232 / COM-Port testen", xaml);
         Assert.Contains("x:Name=\"SerialTestPortComboBox\"", xaml);
+        Assert.Contains("x:Name=\"SerialTestProtocolComboBox\"", xaml);
+        Assert.Contains("NIDEK RS232", xaml);
+        Assert.Contains("x:Name=\"SerialTestNidekModeComboBox\"", xaml);
+        Assert.Contains("x:Name=\"SerialTestNidekAnalysisTextBox\"", xaml);
         Assert.Contains("x:Name=\"InterfaceSerialCommunicationGroupBox\"", xaml);
         Assert.Contains("Serielle Gerätekommunikation / COM-Port", xaml);
         Assert.Contains("x:Name=\"InterfaceSerialPortComboBox\"", xaml);

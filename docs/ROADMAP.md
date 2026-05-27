@@ -61,7 +61,8 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - `SerialRs232` ist als zweite Geraetequelle vorbereitet. RS232-Profile speichern COM-Port, Baudrate, Datenbits, Stoppbits, Paritaet, Flusskontrolle, Timeouts und bidirektionale Option.
 - Der AIS-Patientenordner bleibt fuer beide Quellen erhalten; ersetzt wird bei RS232 nur der Geraete-Eingangsordner.
 - Im Tab `Profile & Templates` gibt es eine COM-Port-Testfunktion fuer zeitlich begrenzte Rohdaten-Mitschnitte mit Text- und Hexanzeige.
-- Produktive serielle Parser und ein dauerhafter RS232-Profilbetrieb muessen pro konkretem Altgeraet anhand echter Rohdaten ergaenzt und praktisch validiert werden.
+- Fuer NIDEK-RS232 ist eine erste Protokollanalyse vorbereitet: FrameReader fuer SOH/STX/ETB/EOT, optionale NCP10-Checksumme, CommandBuilder fuer RS/SD/RD/RSD/CL und PayloadParser fuer LM-, NT- und PM-Kandidaten.
+- Produktive serielle Parser und ein dauerhafter RS232-Profilbetrieb muessen pro konkretem Altgeraet anhand echter Rohdaten ergaenzt und praktisch validiert werden. Die aktuelle NIDEK-Auswertung bleibt Test-/Analysepfad und exportiert nicht automatisch.
 
 ### XDT-Anhänge für AIS
 

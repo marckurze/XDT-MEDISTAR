@@ -877,8 +877,10 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="120"/>
                                         <RowDefinition Height="120"/>
+                                        <RowDefinition Height="160"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="150"/>
@@ -921,25 +923,41 @@
                                         <ComboBoxItem Content="Space" Tag="Space"/>
                                     </ComboBox>
 
-                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Dauer:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,8">
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Protokoll:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <ComboBox Grid.Row="3" Grid.Column="1" x:Name="SerialTestProtocolComboBox" SelectedValuePath="Tag" SelectedValue="Raw" Width="170" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                        <ComboBoxItem Content="Raw" Tag="Raw"/>
+                                        <ComboBoxItem Content="NIDEK RS232" Tag="NidekRs232"/>
+                                    </ComboBox>
+                                    <TextBlock Grid.Row="3" Grid.Column="3" Text="Modus:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <ComboBox Grid.Row="3" Grid.Column="4" x:Name="SerialTestNidekModeComboBox" SelectedValuePath="Tag" SelectedValue="Unknown" Width="190" HorizontalAlignment="Left" Margin="0,0,8,8">
+                                        <ComboBoxItem Content="Listen only" Tag="Unknown"/>
+                                        <ComboBoxItem Content="NCP10" Tag="Ncp10"/>
+                                        <ComboBoxItem Content="NIDEK RS-SD vorbereitet" Tag="Nidek"/>
+                                    </ComboBox>
+                                    <Button Grid.Row="3" Grid.Column="5" x:Name="ParseSerialTestRawButton" Content="Rohdaten auswerten" Width="150" HorizontalAlignment="Left" Margin="0,0,0,8" Click="ParseSerialTestRaw_Click"/>
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Dauer:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,8">
                                         <TextBox x:Name="SerialTestDurationSecondsTextBox" Text="10" Width="80"/>
                                         <TextBlock Text=" Sekunden" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                     </StackPanel>
-                                    <Button Grid.Row="3" Grid.Column="2" x:Name="SerialTestStartButton" Content="Start" Width="110" Margin="0,0,8,8" Click="StartSerialTestListen_Click"/>
-                                    <Button Grid.Row="3" Grid.Column="3" x:Name="SerialTestStopButton" Content="Stop" Width="110" Margin="0,0,8,8" Click="StopSerialTestListen_Click" IsEnabled="False"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="4" x:Name="SerialTestBytesTextBlock" Text="0 Bytes" VerticalAlignment="Center" Margin="0,0,8,8"/>
+                                    <Button Grid.Row="4" Grid.Column="2" x:Name="SerialTestStartButton" Content="Start" Width="110" Margin="0,0,8,8" Click="StartSerialTestListen_Click"/>
+                                    <Button Grid.Row="4" Grid.Column="3" x:Name="SerialTestStopButton" Content="Stop" Width="110" Margin="0,0,8,8" Click="StopSerialTestListen_Click" IsEnabled="False"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="4" x:Name="SerialTestBytesTextBlock" Text="0 Bytes" VerticalAlignment="Center" Margin="0,0,8,8"/>
 
-                                    <StackPanel Grid.Row="3" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+                                    <StackPanel Grid.Row="4" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
                                         <TextBox x:Name="SerialTestCommandTextBox" MinWidth="220" HorizontalAlignment="Stretch" ToolTip="Optionaler Sendetext für bidirektionale RS232-Tests."/>
                                         <Button x:Name="SerialTestSendButton" Content="Senden" Width="90" Margin="8,0,0,0" Click="SendSerialTestCommand_Click"/>
                                     </StackPanel>
 
-                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Rohtext:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="5" x:Name="SerialTestRawTextBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8"/>
+                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Rohtext:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" x:Name="SerialTestRawTextBox" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8" ToolTip="Empfangene oder eingefügte Rohdaten. Für NIDEK-RS232 können Steuerzeichen auch über Hex ausgewertet werden."/>
 
-                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Hex:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="5" x:Name="SerialTestHexTextBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Hex:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                    <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="5" x:Name="SerialTestHexTextBox" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8" ToolTip="Empfangener oder eingefügter Hexdump, z. B. 01 44 4C 4D 02 ..."/>
+
+                                    <TextBlock Grid.Row="7" Grid.Column="0" Text="NIDEK:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                    <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="5" x:Name="SerialTestNidekAnalysisTextBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
 
                                     <TextBlock Grid.Row="0" Grid.Column="5"
                                                x:Name="SerialTestStatusTextBlock"

@@ -110,7 +110,7 @@ Er enthaelt:
 - schlanke Anlage neuer AIS-, Geraete- und Exportprofile als UserDefined
 - sichere Anlage neuer Schnittstellenprofile als inaktive UserDefined-Kombination aus AIS-, Geraete- und Exportprofil
 - sichere UserDefined-Wartung fuer Exportprofile und Exportregeln
-- RS232-/COM-Port-Testfunktion fuer zeitlich begrenzte Rohdaten-Mitschnitte mit Text-/Hexanzeige
+- RS232-/COM-Port-Testfunktion fuer zeitlich begrenzte Rohdaten-Mitschnitte mit Text-/Hexanzeige und optionaler NIDEK-RS232-Auswertung
 - Platzhalter
 - Templatepaket-Export per ausgewaehltem Schnittstellenprofil
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
@@ -128,6 +128,8 @@ Der Bereich `Test & Vorschau` erlaubt:
 - Messwerte pruefen
 - Gesamtexport-Vorschau XDT pruefen
 - Testexport erstellen
+
+Die RS232-Testfunktion kann fuer NIDEK-RS232-Rohdaten Frames mit SOH/STX/ETB/EOT, optionale NCP10-Checksummen, Header, Segmente, Modellinformationen und erste Messwertkandidaten anzeigen. LM-Rohdaten werden nur als `6228`-Kandidaten, NT-Tonometrie nur als `6205`-Kandidaten und PM/Pachymetrie nur als `6220`-Kandidaten markiert. Daraus entsteht noch kein automatischer produktiver XDT-Export.
 
 ## 7. Baukasten `Test & Vorschau`
 

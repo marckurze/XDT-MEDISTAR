@@ -2363,6 +2363,7 @@ public partial class MainWindow : Window
         SetSerialTestRunningState(isRunning: true);
         SerialTestRawTextBox.Text = string.Empty;
         SerialTestHexTextBox.Text = string.Empty;
+        SerialTestNidekAnalysisTextBox.Text = string.Empty;
         SerialTestBytesTextBlock.Text = "0 Bytes";
         SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DimGray;
         SerialTestStatusTextBlock.Text = $"Mitschnitt auf {settings.PortName} läuft...";
@@ -2382,6 +2383,7 @@ public partial class MainWindow : Window
             SerialTestStatusTextBlock.Text = result.Success
                 ? $"Daten empfangen auf {result.PortName}."
                 : result.ErrorMessage ?? "Keine Daten empfangen.";
+            UpdateSerialTestNidekAnalysisIfSelected();
         }
         finally
         {
@@ -2424,6 +2426,171 @@ public partial class MainWindow : Window
             : result.ErrorMessage ?? "Senden fehlgeschlagen.";
     }
 
+    private void ParseSerialTestRaw_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateSerialTestNidekAnalysisIfSelected(forceStatus: true);
+    }
+
+    private void UpdateSerialTestNidekAnalysisIfSelected(bool forceStatus = false)
+    {
+        if (!string.Equals(SerialTestProtocolComboBox.SelectedValue as string, "NidekRs232", StringComparison.Ordinal))
+        {
+            SerialTestNidekAnalysisTextBox.Text = "Protokoll Raw: keine NIDEK-RS232-Auswertung aktiv.";
+            return;
+        }
+
+        try
+        {
+            var bytes = ReadSerialTestPayloadBytes();
+            if (bytes.Length == 0)
+            {
+                SerialTestNidekAnalysisTextBox.Text = "Keine Rohdaten für die NIDEK-RS232-Auswertung vorhanden.";
+                return;
+            }
+
+            var mode = ReadEnumOrDefault(
+                SerialTestNidekModeComboBox.SelectedValue as string,
+                NidekRs232CommunicationMode.Unknown);
+            var reader = new NidekRs232FrameReader();
+            var parser = new NidekRs232PayloadParser();
+            var result = reader.Read(bytes, mode);
+            SerialTestNidekAnalysisTextBox.Text = FormatNidekRs232Analysis(result, parser);
+            if (forceStatus)
+            {
+                SerialTestStatusTextBlock.Foreground = result.Frames.Count > 0
+                    ? System.Windows.Media.Brushes.SeaGreen
+                    : System.Windows.Media.Brushes.DarkOrange;
+                SerialTestStatusTextBlock.Text = result.Frames.Count > 0
+                    ? $"{result.Frames.Count} NIDEK-RS232-Frame(s) erkannt."
+                    : "Keine vollständigen NIDEK-RS232-Frames erkannt.";
+            }
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            SerialTestNidekAnalysisTextBox.Text = ex.Message;
+            if (forceStatus)
+            {
+                SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DarkRed;
+                SerialTestStatusTextBlock.Text = ex.Message;
+            }
+        }
+    }
+
+    private byte[] ReadSerialTestPayloadBytes()
+    {
+        var hexText = SerialTestHexTextBox.Text;
+        if (!string.IsNullOrWhiteSpace(hexText))
+        {
+            return ParseHexBytes(hexText);
+        }
+
+        return Encoding.ASCII.GetBytes(SerialTestRawTextBox.Text ?? string.Empty);
+    }
+
+    private static byte[] ParseHexBytes(string text)
+    {
+        var compact = Regex.Replace(text, @"[^0-9A-Fa-f]", string.Empty);
+        if (compact.Length == 0)
+        {
+            return Array.Empty<byte>();
+        }
+
+        if (compact.Length % 2 != 0)
+        {
+            throw new FormatException("Hexdump enthält eine ungerade Anzahl Hex-Zeichen.");
+        }
+
+        var bytes = new byte[compact.Length / 2];
+        for (var i = 0; i < bytes.Length; i++)
+        {
+            bytes[i] = byte.Parse(compact.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        }
+
+        return bytes;
+    }
+
+    private static string FormatNidekRs232Analysis(
+        NidekRs232FrameReadResult result,
+        NidekRs232PayloadParser parser)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Frames: {result.Frames.Count}");
+        if (result.NoiseBytes.Length > 0)
+        {
+            builder.AppendLine($"Noise ignoriert: {result.NoiseBytes.Length} Byte");
+        }
+
+        if (result.HasPartialFrame)
+        {
+            builder.AppendLine($"Unvollständiger Frame: {result.PartialBytes.Length} Byte");
+        }
+
+        foreach (var warning in result.Warnings)
+        {
+            builder.AppendLine($"Warnung: {warning}");
+        }
+
+        for (var index = 0; index < result.Frames.Count; index++)
+        {
+            var frame = result.Frames[index];
+            builder.AppendLine();
+            builder.AppendLine($"Frame {index + 1}: Header={frame.Header}, Kind={frame.Kind}, DeviceCode={frame.DeviceCode}");
+            builder.AppendLine(frame.HasChecksum
+                ? $"Checksum: {frame.ChecksumText} ({(frame.ChecksumValid == true ? "gültig" : "ungültig")})"
+                : "Checksum: keine");
+            builder.AppendLine($"Trailing CR: {(frame.HasTrailingCr ? "ja" : "nein")}");
+            foreach (var segment in frame.Segments)
+            {
+                builder.AppendLine($"  Segment: {EscapeControlText(segment)}");
+            }
+
+            foreach (var warning in frame.Warnings)
+            {
+                builder.AppendLine($"  Frame-Warnung: {warning}");
+            }
+
+            if (frame.Kind != NidekRs232FrameKind.Data)
+            {
+                continue;
+            }
+
+            var payload = parser.Parse(frame);
+            builder.AppendLine($"  Payload: Familie={payload.DeviceFamily}, Hersteller={payload.Manufacturer ?? "-"}, Modell={payload.Model ?? "-"}");
+            if (payload.MeasurementDateTime.HasValue)
+            {
+                builder.AppendLine($"  Messzeit: {payload.MeasurementDateTime.Value:yyyy-MM-dd HH:mm}");
+            }
+
+            foreach (var candidate in payload.MedistarCandidates)
+            {
+                builder.AppendLine($"  Kandidat {candidate.FieldCode}: {candidate.PreviewText}");
+            }
+
+            foreach (var error in payload.Errors)
+            {
+                builder.AppendLine($"  Fehlersegment {error.Code}: {error.RawText}");
+            }
+
+            foreach (var warning in payload.Warnings)
+            {
+                builder.AppendLine($"  Payload-Warnung: {warning}");
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string EscapeControlText(string value)
+    {
+        return value
+            .Replace("\r", "\\r", StringComparison.Ordinal)
+            .Replace("\n", "\\n", StringComparison.Ordinal)
+            .Replace("\u0001", "<SOH>", StringComparison.Ordinal)
+            .Replace("\u0002", "<STX>", StringComparison.Ordinal)
+            .Replace("\u0004", "<EOT>", StringComparison.Ordinal)
+            .Replace("\u0017", "<ETB>", StringComparison.Ordinal);
+    }
+
     private SerialCommunicationSettings CreateSerialTestSettingsFromEditor()
     {
         return CreateSerialSettingsFromValues(
@@ -2454,6 +2621,7 @@ public partial class MainWindow : Window
         SerialTestStartButton.IsEnabled = !isRunning;
         SerialTestStopButton.IsEnabled = isRunning;
         RefreshSerialTestPortsButton.IsEnabled = !isRunning;
+        ParseSerialTestRawButton.IsEnabled = !isRunning;
     }
 
     private bool TryGetSelectedInterfaceDeviceProfile(
