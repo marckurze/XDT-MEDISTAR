@@ -10,7 +10,8 @@ public sealed record LicenseRequest(
     string AppVersion,
     int ActiveLicensedDeviceCount,
     IReadOnlyList<LicenseRequestDevice> Devices,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    LicenseRequestCustomer? Customer = null)
 {
     public IReadOnlyList<string> Validate()
     {

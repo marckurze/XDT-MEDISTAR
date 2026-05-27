@@ -61,6 +61,9 @@ Vorhanden sind:
 - Aktivierungsvorschau mit Lizenzhinweisen, aber ohne harte Sperre
 - echte kryptografische Signaturpruefung fuer V1-Lizenzen mit RSA-PSS/SHA-256
 - Public-Key-Auswahl ueber `KeyId`
+- Kundendaten in der Lizenzanforderung: Praxis-/Firmenname, Adresse, Telefon, optionale E-Mail und Ansprechpartner
+- dokumentierende Liste der angefragten Geraeteanbindungen mit Schnittstellenprofilname, Geraeteprofilname und ConnectionKind; diese Namen sind nicht lizenzbindend
+- internes GUI-Werkzeug `XdtBox.LicenseManager` fuer den Hersteller: Lizenzanfragen einlesen, Kundendaten anzeigen, `.xdtboxlic` erzeugen, lokale Historie ausgestellter Lizenzen fuehren und weitere Lizenzen fuer bestehende Kunden vorbereiten
 
 Nicht produktiv vorhanden sind:
 
@@ -86,8 +89,12 @@ Bestehende Core-/Infrastructure-Bausteine:
 - `LicenseEvaluator`
 - `LicenseEvaluationResult`
 - `LicenseRequest`
+- `LicenseRequestCustomer`
 - `LicenseRequestDevice`
 - `LicenseRequestBuilder`
+- `IssuedLicenseRecord`
+- `IssuedLicenseDeviceRecord`
+- `LicenseManagerSettings`
 - `InstallationInfo`
 - `LicensedDeviceStateEvaluator`
 - `LicensedDeviceGracePeriodService`
@@ -108,14 +115,24 @@ Vorbereitete V1-Bausteine:
 - `LicenseV1DeviceConnectionCounter`
 - `XdtBoxLicenseConstants`
 - internes Console-Projekt `XdtBox.LicenseIssuer`
+- internes WPF-Projekt `XdtBox.LicenseManager`
 
 Persistenzorte laut `AppDataPathProvider`:
 
 - `%LocalAppData%\XdtDeviceBridge\installation.json`
 - `%LocalAppData%\XdtDeviceBridge\licenses\license.xdtboxlic`
 - `%LocalAppData%\XdtDeviceBridge\licenses\license.json` fuer Legacy/Uebergang
+- `%LocalAppData%\XdtDeviceBridge\licenses\license-customer-data.json`
 - `%LocalAppData%\XdtDeviceBridge\licenses\device-grace-periods.json`
 - `%LocalAppData%\XdtDeviceBridge\license-requests\`
+
+Herstellerseitige Persistenz fuer `XdtBox.LicenseManager`:
+
+- `C:\XDTBox\Lizenzaktivierung\data\license-history.json`
+- `C:\XDTBox\Lizenzaktivierung\data\license-manager-settings.json`
+- Standardordner `licenses`, `requests` und `keys` unter `C:\XDTBox\Lizenzaktivierung`
+
+Der private Produktionsschluessel bleibt eine externe PEM-Datei beim Hersteller. Die Hersteller-App darf den Pfad speichern, speichert aber niemals den Schluesselinhalt und enthaelt keinen fest einkompilierten privaten Schluessel.
 
 ## 4. InstallationInfo und Maschinenbindung
 

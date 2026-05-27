@@ -109,6 +109,97 @@ public sealed class LicenseRequestTests
     }
 
     [Fact]
+    public void SaveAndLoad_ShouldPreserveCustomerData()
+    {
+        var filePath = CreateTempFilePath("license-request.json");
+        var request = CreateLicenseRequest() with
+        {
+            Customer = new LicenseRequestCustomer(
+                CustomerName: "Praxis Muster",
+                Street: "Musterstraße 1",
+                PostalCode: "12345",
+                City: "Musterstadt",
+                Phone: "01234",
+                Email: "info@example.test",
+                ContactPerson: "Frau Muster")
+        };
+
+        _repository.Save(filePath, request);
+        var loaded = _repository.Load(filePath);
+
+        Assert.NotNull(loaded.Customer);
+        Assert.Equal("Praxis Muster", loaded.Customer.CustomerName);
+        Assert.Equal("info@example.test", loaded.Customer.Email);
+    }
+
+    [Fact]
+    public void SaveAndLoad_ShouldPreserveDocumentaryDeviceConnectionData()
+    {
+        var filePath = CreateTempFilePath("license-request.json");
+        var request = CreateLicenseRequest() with
+        {
+            Devices = new[]
+            {
+                CreateDevice() with
+                {
+                    InterfaceProfileId = "interface-medistar-device",
+                    DisplayName = "MEDISTAR + Gerät",
+                    DeviceProfileId = "device-test",
+                    DeviceDisplayName = "Testgerät",
+                    ConnectionKind = DeviceConnectionKind.SerialRs232
+                }
+            }
+        };
+
+        _repository.Save(filePath, request);
+        var loaded = _repository.Load(filePath);
+
+        var device = Assert.Single(loaded.Devices);
+        Assert.Equal("interface-medistar-device", device.InterfaceProfileId);
+        Assert.Equal("MEDISTAR + Gerät", device.DisplayName);
+        Assert.Equal("device-test", device.DeviceProfileId);
+        Assert.Equal("Testgerät", device.DeviceDisplayName);
+        Assert.Equal(DeviceConnectionKind.SerialRs232, device.ConnectionKind);
+    }
+
+    [Fact]
+    public void Load_ShouldReadLegacyRequestWithoutCustomerData()
+    {
+        var filePath = CreateTempFilePath("legacy-license-request.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        File.WriteAllText(filePath, """
+            {
+              "RequestId": "request-legacy",
+              "InstallationId": "installation-1",
+              "MachineName": "TEST-MACHINE",
+              "UserName": "test-user",
+              "IsTerminalServer": false,
+              "ProductCode": "XDTBOX",
+              "AppVersion": "1.0.0",
+              "ActiveLicensedDeviceCount": 1,
+              "Devices": [
+                {
+                  "Id": "interface-1",
+                  "Name": "MEDISTAR + Test",
+                  "Manufacturer": "",
+                  "Model": "",
+                  "ProfileId": "interface-1",
+                  "IsActive": true,
+                  "IsLicenseRequired": true
+                }
+              ],
+              "CreatedAt": "2026-05-03T00:00:00Z"
+            }
+            """);
+
+        var loaded = _repository.Load(filePath);
+
+        Assert.Null(loaded.Customer);
+        Assert.Equal(DeviceConnectionKind.NetworkLan, loaded.Devices[0].ConnectionKind);
+        Assert.Empty(loaded.Devices[0].DeviceProfileId);
+    }
+
+    [Fact]
     public void Load_ShouldThrowFileNotFoundExceptionForMissingFile()
     {
         var filePath = CreateTempFilePath("missing-license-request.json");

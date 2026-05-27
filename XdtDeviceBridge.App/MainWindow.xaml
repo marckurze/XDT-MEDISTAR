@@ -2566,6 +2566,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
@@ -2613,13 +2614,57 @@
                                        Foreground="#5A3A00"/>
                         </Border>
 
-                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                        <GroupBox Header="Kundendaten für Lizenzanforderung" Grid.Row="2" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Praxis-/Firmenname:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerNameTextBox" Margin="0,0,0,6"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Straße / Hausnummer:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="LicenseCustomerStreetTextBox" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="PLZ / Ort:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBox x:Name="LicenseCustomerPostalCodeTextBox" Width="100" Margin="0,0,8,0"/>
+                                    <TextBox x:Name="LicenseCustomerCityTextBox" MinWidth="220"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="LicenseCustomerPhoneTextBox" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="2" Grid.Column="3" x:Name="LicenseCustomerEmailTextBox" Margin="0,0,0,6"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Ansprechpartner:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="LicenseCustomerContactPersonTextBox" Margin="0,0,16,0"/>
+                                <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                    <Button Content="Speichern" Width="120" Margin="0,0,8,0" Click="SaveLicenseCustomerData_Click"/>
+                                    <TextBlock x:Name="LicenseCustomerDataStatusText"
+                                               VerticalAlignment="Center"
+                                               Foreground="#2F6F4E"
+                                               TextWrapping="Wrap"
+                                               Text="Die Gerätenamen dienen nur der Dokumentation der Lizenzanfrage. Lizenzpflichtig ist ausschließlich die Anzahl aktivierter Geräteanbindungen."/>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
                             <Button Content="Lizenz importieren" Width="190" Margin="0,0,8,0" Click="ImportLicenseFile_Click"/>
                             <Button Content="Karenzzeiten aktualisieren" Width="210" Click="UpdateGracePeriods_Click"/>
                         </StackPanel>
 
-                        <GroupBox Header="Lizenzierte Geräte / Anbindungen" Grid.Row="3" Margin="0,0,0,8">
+                        <GroupBox Header="Lizenzierte Geräte / Anbindungen" Grid.Row="4" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -2668,7 +2713,7 @@
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Header="Lizenzmeldungen" Grid.Row="4">
+                        <GroupBox Header="Lizenzmeldungen" Grid.Row="5">
                             <TextBox x:Name="LicenseMessagesTextBox"
                                      Margin="8"
                                      MinHeight="280"

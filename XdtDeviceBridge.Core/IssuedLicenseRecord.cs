@@ -1,0 +1,25 @@
+namespace XdtDeviceBridge.Core;
+
+public sealed record IssuedLicenseRecord(
+    string LicenseId,
+    DateTime IssuedAtUtc,
+    string LicenseeName,
+    string? CustomerNumber,
+    string CustomerName,
+    string Street,
+    string PostalCode,
+    string City,
+    string Phone,
+    string? Email,
+    string? ContactPerson,
+    string InstallationId,
+    int MaxActiveDeviceConnections,
+    DateTime ValidFromUtc,
+    DateTime ValidUntilUtc,
+    int GraceDays,
+    string LicenseType,
+    string KeyId,
+    string OutputFilePath,
+    string? RequestFilePath,
+    string? Notes,
+    IReadOnlyList<IssuedLicenseDeviceRecord> Devices);

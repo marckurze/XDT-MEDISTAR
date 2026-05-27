@@ -218,9 +218,11 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Lizenzstatus wird angezeigt und bewertet.
 - Lizenzanfrage kann exportiert werden.
+- Lizenzanfragen enthalten Kundendaten und eine dokumentierende Liste der Geraeteanbindungen; Geraetenamen sind nicht lizenzbindend.
 - Lizenzdatei kann importiert werden.
 - Signierte `.xdtboxlic`-Lizenzdateien werden lokal mit RSA-PSS/SHA-256 geprueft.
 - Internes `XdtBox.LicenseIssuer`-Tool erzeugt signierte `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId.
+- Internes grafisches `XdtBox.LicenseManager`-Tool liest Lizenzanfragen, erzeugt signierte Lizenzen, fuehrt eine lokale Historie ausgestellter Lizenzen und kann Kundendaten fuer Folgelizenzen uebernehmen.
 - Legacy-JSON-Lizenzen bleiben nur als unsignierter Uebergang erkennbar.
 - Lizenzierte Geräte/Anbindungen werden bewertet.
 - Karenzzeiten für neue Anbindungen sind vorbereitet.
@@ -350,6 +352,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 
 - Produktiven Public Key/KeyId festlegen und Key-Rotation dokumentieren.
 - Sicheren Ablage-/Backup-/Zugriffsprozess fuer den externen privaten Produktionsschluessel definieren.
+- Herstellerprozess fuer `XdtBox.LicenseManager` organisatorisch festlegen: Request-Ablage, Lizenzhistorie sichern, private Schluessel extern verwalten, Lizenzdateien an Kunden uebermitteln.
 - Harte Sperren zentral vor Aktivierung beziehungsweise Start der Ueberwachung aktivieren; Parser und XDT-Export bleiben frei von Lizenzabbruchlogik.
 - Blockade nach 7-Tage-Karenz und bei ungueltiger Signatur mit klarer Meldung umsetzen.
 

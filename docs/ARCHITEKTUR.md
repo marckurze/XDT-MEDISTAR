@@ -110,6 +110,8 @@ Aktueller Stand:
 - V1 lizenziert ausschliesslich die Anzahl aktiver Geraeteanbindungen; LAN/UNC, `SerialRs232`, Dokumentanhang und Test-/Analysebereiche sind keine separaten Lizenzmodule
 - `.xdtboxlic`-Import prueft Envelope, Payload, Signatur, ProductCode, InstallationId, Ablauf/Karenz und `MaxActiveDeviceConnections`, aktiviert aber noch kein produktives Gate
 - `XdtBox.LicenseIssuer` ist ein separates internes Console-Projekt fuer den Hersteller. Es erzeugt signierte `.xdtboxlic`-Dateien, referenziert die Core-Lizenzmodelle und laedt den privaten RSA-Schluessel nur aus einem externen PEM-Pfad.
+- `XdtBox.LicenseManager` ist ein separates internes WPF-Projekt fuer den Hersteller. Es liest Lizenzanfragen mit Kundendaten und dokumentierten Geraeteanbindungen, erzeugt signierte `.xdtboxlic` ueber dieselbe Issuer-Logik, speichert eine lokale JSON-Historie und verwaltet Standardordner/KeyId/Private-Key-Pfad als Einstellungen.
+- Lizenzanfragen enthalten Kundendaten und Geraetenamen nur zur Herstellerdokumentation; technisch lizenzbindend bleibt ausschliesslich `MaxActiveDeviceConnections`.
 - der Lizenz-Tab zeigt den Hinweis: `Achtung: Bei Hardwaretausch bitte neue Lizenz anfordern, Karenzzeit 7 Tage ab Umzug der Hardware.`
 
 ### 1.6 NIDEK LM7/LM7P architektonisch
@@ -639,7 +641,7 @@ Nach einem Import müssen lokale Pfade geprüft werden. Das betrifft besonders:
 
 Die erste marktfähige Lizenzversion soll offline funktionieren.
 
-Iststand `0.1.0-prototype`: Die App kann Installationsinformationen anzeigen, eine Lizenzanfrage exportieren, eine Lizenzdatei importieren und aktive lizenzpflichtige Schnittstellenprofile bewerten. Karenzzeiten fuer nicht gedeckte aktive lizenzpflichtige Schnittstellenprofile sind modelliert. Die Lizenz wird noch nicht digital signiert geprüft und die produktive Verarbeitung wird noch nicht hart gesperrt. Das aktuelle `Signature`-Feld ist nur ein JSON-Feld und noch keine kryptografische Validierung.
+Iststand `0.1.0-prototype`: Die App kann Installationsinformationen anzeigen, eine Lizenzanfrage mit Kundendaten und dokumentierten Geraeteanbindungen exportieren, signierte `.xdtboxlic`-Lizenzdateien importieren und aktive lizenzpflichtige Schnittstellenprofile bewerten. Karenzzeiten fuer nicht gedeckte aktive lizenzpflichtige Schnittstellenprofile sind modelliert. RSA-PSS/SHA-256-Signaturpruefung ist vorhanden; die produktive Verarbeitung wird aber noch nicht hart gesperrt. Das alte `Signature`-Feld in Legacy-JSON bleibt nur Uebergangsanzeige.
 
 Grundprinzip:
 
@@ -811,10 +813,14 @@ Für die spätere Offline-Lizenzierung sind folgende Modelle und Infrastrukturba
 - `LicensedDeviceStateEvaluator`
 - `LicensedDeviceGracePeriodService`
 - `LicenseRequest`
+- `LicenseRequestCustomer`
+- `LicenseRequestDevice`
 - `LicenseRequestBuilder`
 - `LicenseRequestFileRepository`
+- `XdtBox.LicenseIssuer`
+- `XdtBox.LicenseManager`
 
-Diese Bausteine ermöglichen eine lokale Installationskennung, das Speichern und Laden einer Lizenzdatei, eine lokale Lizenzbewertung aktiver lizenzpflichtiger Schnittstellenprofile, Karenzzeiten sowie das Erzeugen und Speichern einer Offline-Lizenzanfrage. Eine echte Signaturprüfung und produktive Erzwingung der Lizenz sind weiterhin nicht implementiert.
+Diese Bausteine ermöglichen eine lokale Installationskennung, das Speichern und Laden einer Lizenzdatei, eine lokale Lizenzbewertung aktiver lizenzpflichtiger Schnittstellenprofile, Karenzzeiten sowie das Erzeugen und Speichern einer Offline-Lizenzanfrage. Die Signaturprüfung fuer `.xdtboxlic` ist implementiert; produktive Erzwingung der Lizenz ist weiterhin nicht aktiv.
 
 ### 8.4 Lokale App-Daten
 

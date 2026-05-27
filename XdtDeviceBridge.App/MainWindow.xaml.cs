@@ -90,6 +90,7 @@ public partial class MainWindow : Window
     private readonly ExternalAisLinkXdtFieldAdapter _externalAisLinkXdtFieldAdapter = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
+    private readonly LicenseCustomerDataRepository _licenseCustomerDataRepository = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
@@ -4167,6 +4168,7 @@ public partial class MainWindow : Window
             var paths = _appDataPathProvider.GetDefaultUserPaths();
             var installation = _installationInfoProvider.GetOrCreate(paths.BaseFolder);
             _installationInfo = installation;
+            LoadLicenseCustomerDataIntoEditor(paths);
             var activeLicensedDeviceCount = CountActiveLicensedDevices();
             var signedLicenseFile = GetSignedLicenseFilePath(paths);
 
@@ -4251,6 +4253,77 @@ public partial class MainWindow : Window
         LicenseStatusText.Text = status;
         LicenseActiveDeviceCountText.Text = activeLicensedDeviceCount.ToString();
         LicenseLicensedDeviceCountText.Text = licensedDeviceCount.ToString();
+    }
+
+    private void LoadLicenseCustomerDataIntoEditor(AppDataPaths paths)
+    {
+        try
+        {
+            var customer = _licenseCustomerDataRepository.LoadOrEmpty(GetLicenseCustomerDataFilePath(paths));
+            ShowLicenseCustomerData(customer);
+        }
+        catch (Exception ex)
+        {
+            ShowLicenseCustomerData(LicenseRequestCustomer.Empty);
+            LicenseCustomerDataStatusText.Text = $"Kundendaten konnten nicht geladen werden: {ex.Message}";
+        }
+    }
+
+    private void ShowLicenseCustomerData(LicenseRequestCustomer customer)
+    {
+        LicenseCustomerNameTextBox.Text = customer.CustomerName;
+        LicenseCustomerStreetTextBox.Text = customer.Street;
+        LicenseCustomerPostalCodeTextBox.Text = customer.PostalCode;
+        LicenseCustomerCityTextBox.Text = customer.City;
+        LicenseCustomerPhoneTextBox.Text = customer.Phone;
+        LicenseCustomerEmailTextBox.Text = customer.Email ?? string.Empty;
+        LicenseCustomerContactPersonTextBox.Text = customer.ContactPerson ?? string.Empty;
+    }
+
+    private LicenseRequestCustomer ReadLicenseCustomerDataFromEditor()
+    {
+        return new LicenseRequestCustomer(
+            CustomerName: LicenseCustomerNameTextBox.Text.Trim(),
+            Street: LicenseCustomerStreetTextBox.Text.Trim(),
+            PostalCode: LicenseCustomerPostalCodeTextBox.Text.Trim(),
+            City: LicenseCustomerCityTextBox.Text.Trim(),
+            Phone: LicenseCustomerPhoneTextBox.Text.Trim(),
+            Email: NormalizeOptionalText(LicenseCustomerEmailTextBox.Text),
+            ContactPerson: NormalizeOptionalText(LicenseCustomerContactPersonTextBox.Text));
+    }
+
+    private IReadOnlyList<string> ValidateLicenseCustomerDataForExport(LicenseRequestCustomer customer)
+    {
+        var issues = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(customer.CustomerName))
+        {
+            issues.Add("Praxis-/Firmenname fehlt.");
+        }
+
+        if (string.IsNullOrWhiteSpace(customer.Phone) && string.IsNullOrWhiteSpace(customer.Email))
+        {
+            issues.Add("Bitte Telefonnummer oder E-Mail für Rückfragen angeben.");
+        }
+
+        return issues;
+    }
+
+    private void SaveLicenseCustomerData_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var customer = ReadLicenseCustomerDataFromEditor();
+            _licenseCustomerDataRepository.Save(GetLicenseCustomerDataFilePath(paths), customer);
+            LicenseCustomerDataStatusText.Text = "Kundendaten gespeichert. Gerätenamen bleiben reine Dokumentation; lizenzpflichtig ist nur die Anzahl aktiver Geräteanbindungen.";
+            AppendLicenseMessage("Kundendaten für Lizenzanforderung gespeichert.");
+        }
+        catch (Exception ex)
+        {
+            LicenseCustomerDataStatusText.Text = $"Kundendaten konnten nicht gespeichert werden: {ex.Message}";
+            AppendLicenseMessage($"Kundendaten konnten nicht gespeichert werden: {ex.Message}");
+        }
     }
 
     private void RefreshLicensedDeviceStatesFromLocalLicense()
@@ -4405,6 +4478,16 @@ public partial class MainWindow : Window
     private static string GetSignedLicenseFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.LicensesFolder, "license.xdtboxlic");
+    }
+
+    private static string GetLicenseCustomerDataFilePath(AppDataPaths paths)
+    {
+        return Path.Combine(paths.LicensesFolder, "license-customer-data.json");
+    }
+
+    private static string? NormalizeOptionalText(string value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private void ShowSignedLicenseStatus(string licenseFile, InstallationInfo installation)
@@ -6576,6 +6659,20 @@ public partial class MainWindow : Window
             return;
         }
 
+        var customer = ReadLicenseCustomerDataFromEditor();
+        var customerIssues = ValidateLicenseCustomerDataForExport(customer);
+        if (customerIssues.Count > 0)
+        {
+            AppendLicenseMessage("Lizenzanfrage wurde nicht exportiert, weil Kundendaten fehlen:");
+            foreach (var issue in customerIssues)
+            {
+                AppendLicenseMessage($"[Kundendaten] {issue}");
+            }
+
+            LicenseCustomerDataStatusText.Text = string.Join(" ", customerIssues);
+            return;
+        }
+
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Lizenzanfrage (*.json)|*.json|Alle Dateien (*.*)|*.*",
@@ -6595,12 +6692,17 @@ public partial class MainWindow : Window
             var request = _licenseRequestBuilder.Build(
                 _installationInfo,
                 _profileCatalog.InterfaceProfiles,
+                _profileCatalog.DeviceProfiles,
+                customer,
                 XdtBoxLicenseConstants.ProductCode,
                 "0.1.0",
                 DateTime.UtcNow);
 
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _licenseCustomerDataRepository.Save(GetLicenseCustomerDataFilePath(paths), customer);
             _licenseRequestFileRepository.Save(dialog.FileName, request);
             AppendLicenseMessage($"Lizenzanfrage erfolgreich exportiert: {dialog.FileName}");
+            AppendLicenseMessage($"Aktive Geräteanbindungen in der Anfrage: {request.ActiveLicensedDeviceCount}. Gerätenamen dienen nur der Dokumentation.");
         }
         catch (Exception ex)
         {

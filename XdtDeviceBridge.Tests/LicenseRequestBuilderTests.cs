@@ -1,4 +1,5 @@
 using XdtDeviceBridge.Core;
+using XdtDeviceBridge.Infrastructure;
 
 namespace XdtDeviceBridge.Tests;
 
@@ -81,6 +82,76 @@ public sealed class LicenseRequestBuilderTests
         var request = BuildDefaultRequest();
 
         Assert.DoesNotContain(request.Devices, device => device.Id == "interface-not-licensed");
+    }
+
+    [Fact]
+    public void Build_WithDeviceProfiles_ShouldIncludeCustomerData()
+    {
+        var customer = new LicenseRequestCustomer(
+            CustomerName: "Praxis Muster",
+            Street: "Musterstraße 1",
+            PostalCode: "12345",
+            City: "Musterstadt",
+            Phone: "01234",
+            Email: "info@example.test",
+            ContactPerson: "Frau Muster");
+
+        var request = _builder.Build(
+            CreateInstallationInfo(),
+            CreateInterfaceProfiles(),
+            CreateDeviceProfiles(),
+            customer,
+            XdtBoxLicenseConstants.ProductCode,
+            "1.0.0",
+            CreatedAtUtc);
+
+        Assert.NotNull(request.Customer);
+        Assert.Equal("Praxis Muster", request.Customer.CustomerName);
+        Assert.Equal("Musterstadt", request.Customer.City);
+    }
+
+    [Fact]
+    public void Build_WithDeviceProfiles_ShouldDocumentDeviceConnectionNames()
+    {
+        var request = _builder.Build(
+            CreateInstallationInfo(),
+            CreateInterfaceProfiles(),
+            CreateDeviceProfiles(),
+            LicenseRequestCustomer.Empty,
+            XdtBoxLicenseConstants.ProductCode,
+            "1.0.0",
+            CreatedAtUtc);
+
+        var activeDevice = Assert.Single(request.Devices, device => device.Id == "interface-active");
+        Assert.Equal("interface-active", activeDevice.InterfaceProfileId);
+        Assert.Equal("Active Device", activeDevice.DisplayName);
+        Assert.Equal("device-nidek-ark1s-default", activeDevice.DeviceProfileId);
+        Assert.Equal("NIDEK ARK1S", activeDevice.DeviceDisplayName);
+        Assert.Equal(DeviceConnectionKind.NetworkLan, activeDevice.ConnectionKind);
+        Assert.Equal("NIDEK", activeDevice.Manufacturer);
+        Assert.Equal("ARK1S", activeDevice.Model);
+    }
+
+    [Fact]
+    public void Build_WithDeviceProfiles_ShouldKeepDeviceNamesNonBindingForLicensedCount()
+    {
+        var profiles = CreateInterfaceProfiles()
+            .Select(profile => profile.Metadata.Id == "interface-active"
+                ? profile with { Metadata = profile.Metadata with { Name = "Umbenannte Geräteanbindung" } }
+                : profile)
+            .ToArray();
+
+        var request = _builder.Build(
+            CreateInstallationInfo(),
+            profiles,
+            CreateDeviceProfiles(),
+            LicenseRequestCustomer.Empty,
+            XdtBoxLicenseConstants.ProductCode,
+            "1.0.0",
+            CreatedAtUtc);
+
+        Assert.Equal(1, request.ActiveLicensedDeviceCount);
+        Assert.Contains(request.Devices, device => device.DisplayName == "Umbenannte Geräteanbindung");
     }
 
     [Fact]
@@ -171,6 +242,14 @@ public sealed class LicenseRequestBuilderTests
             CreateInterfaceProfile("interface-active", "Active Device", isActive: true, isLicenseRequired: true),
             CreateInterfaceProfile("interface-inactive", "Inactive Device", isActive: false, isLicenseRequired: true),
             CreateInterfaceProfile("interface-not-licensed", "Not Licensed Device", isActive: true, isLicenseRequired: false)
+        };
+    }
+
+    private static IReadOnlyList<DeviceProfileDefinition> CreateDeviceProfiles()
+    {
+        return new[]
+        {
+            DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault()
         };
     }
 

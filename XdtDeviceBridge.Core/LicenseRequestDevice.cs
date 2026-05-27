@@ -7,4 +7,9 @@ public sealed record LicenseRequestDevice(
     string Model,
     string ProfileId,
     bool IsActive,
-    bool IsLicenseRequired);
+    bool IsLicenseRequired,
+    string InterfaceProfileId = "",
+    string DisplayName = "",
+    string DeviceProfileId = "",
+    string DeviceDisplayName = "",
+    DeviceConnectionKind ConnectionKind = DeviceConnectionKind.NetworkLan);
