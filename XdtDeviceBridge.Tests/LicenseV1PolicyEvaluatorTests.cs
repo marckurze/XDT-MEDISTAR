@@ -39,6 +39,36 @@ public sealed class LicenseV1PolicyEvaluatorTests
     }
 
     [Fact]
+    public void Evaluate_ShouldBlockUnknownSignatureStatusWithRequiredMessage()
+    {
+        var result = _evaluator.Evaluate(
+            CreatePayload(maxActiveDeviceConnections: 3),
+            CreateInstallationInfo(),
+            LicenseSignatureVerificationStatus.UnknownKeyId,
+            activeDeviceConnectionCount: 1,
+            NowUtc);
+
+        Assert.Equal(LicenseV1PolicyStatus.InvalidSignature, result.Status);
+        Assert.False(result.CanStartDeviceConnections);
+        Assert.Equal(XdtBoxLicenseConstants.InvalidSignatureMessage, result.Message);
+    }
+
+    [Fact]
+    public void Evaluate_ShouldBlockWrongProduct()
+    {
+        var result = _evaluator.Evaluate(
+            CreatePayload(maxActiveDeviceConnections: 3) with { ProductCode = "OTHER_PRODUCT" },
+            CreateInstallationInfo(),
+            LicenseSignatureVerificationStatus.Valid,
+            activeDeviceConnectionCount: 1,
+            NowUtc);
+
+        Assert.Equal(LicenseV1PolicyStatus.WrongProduct, result.Status);
+        Assert.False(result.CanStartDeviceConnections);
+        Assert.Equal("Diese Lizenz ist nicht für XDTBox ausgestellt.", result.Message);
+    }
+
+    [Fact]
     public void Evaluate_ShouldWarnWithinGracePeriodWhenDeviceLimitIsExceeded()
     {
         var graceStartedAtUtc = NowUtc.AddDays(-2);

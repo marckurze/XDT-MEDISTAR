@@ -243,12 +243,13 @@ Der Tab `Lizenz` enthaelt:
 
 - InstallationInfo
 - Lizenzanfrage exportieren
-- Lizenzdatei importieren
+- signierte `.xdtboxlic`-Lizenz importieren
+- Legacy-JSON-Lizenz als unsignierten Uebergang importieren
 - Lizenzstatus anzeigen
 - Bewertung aktiver lizenzpflichtiger Schnittstellenprofile
 - Karenzzeitmodell
 
-Eine harte produktive Lizenzsperre und digitale Signaturpruefung sind nicht aktiv umgesetzt.
+Die echte V1-Signaturpruefung ist vorbereitet: `.xdtboxlic`-Dateien werden als `LicenseEnvelope` gelesen, `RSA-PSS-SHA256` prueft die Signatur ueber die Payload-Bytes, und ProductCode, InstallationId, Ablauf/Karenz sowie `MaxActiveDeviceConnections` werden bewertet. Eine harte produktive Lizenzsperre ist noch nicht aktiv umgesetzt.
 
 Fachliche V1-Entscheidung: Lizenzpflichtig ist nur die Anzahl aktiver Schnittstellenprofile. Nach Ablauf der Karenzzeit duerfen nicht lizenzierte aktive Geraeteanbindungen nicht mehr starten. Bei ungueltiger Signatur soll exakt `Lizenzdatei ist ungültig oder wurde verändert.` angezeigt werden. InstallationId bleibt fuehrend; bei Hardwaretausch ist eine neue Lizenzanforderung noetig, mit 7 Tagen Karenzzeit ab Umzug.
 
@@ -371,7 +372,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 - produktive Aktivierung importierter Schnittstellenprofile; die aktuelle Pruefung, Guard-Schicht und V1-Preview sind rein lesend vorbereitet
 - produktive `ActivationExecutor`-Implementierung mit frischem Laden, finaler Evaluation + Guard und sicherer UserDefined-Speicherung
 - ReplaceExisting fuer bestehende UserDefined-Profile
-- digitale Lizenzsignatur
+- produktiver Lizenz-Issuer und Public-Key-Rollout
 - produktive Lizenzsperre
 - Installer und Deployment
 - optionaler spaeterer Windows-Dienst, Autostart oder FileSystemWatcher
@@ -389,7 +390,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | Templatepaket-Export/-Import und Exportprofil-Wartung | Roadmap/Projektueberblick beschreiben selektiven Export, Analyse, Plan, Dry-Run, UI-Vorschau, Benutzerwahl, UserDefined-Uebernahme und sichere UserDefined-Wartung. | Export waehlt ein Schnittstellenprofil als Paketbasis und nimmt nur benoetigte Abhaengigkeiten auf; Import-Services, UI-Glue, stabilisierte Preview-Erstellung, sicherer Default `Ueberspringen`, editierbare Kopie-Zielnamen, deutscher Leerzustand fuer Abhaengigkeiten und E2E-nahe Tests sind vorhanden. UserDefined-Exportprofile koennen nur unreferenziert geloescht werden; Exportregeln koennen nur aus UserDefined-Exportprofilen entfernt werden. | passt | Praktischen selektiven App-Export und erneuten App-Import pruefen; Loeschen/Entfernen mit UserDefined-Kopien testen; ReplaceExisting offen fuehren; Aktivierungsassistent vorerst parken. |
 | MEDISTAR/NIDEK ARK1S | Als validierter Kernworkflow beschrieben. | BuiltIn-Profile, Parser, Mapping und Tests vorhanden. | passt | Als stabilen Kern beibehalten. |
 | V2-Geraeteprofile | Als vorbereitet, nicht produktiv validiert beschrieben. | BuiltIn-Profile und Beispiel-Doku vorhanden; keine Praxisvalidierung behauptet. | passt | Pro Geraet Validierungsplan abarbeiten. |
-| Lizenzsystem | Anzeige, Lizenzdatei, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige und Karenzzeitservices; keine harte Durchsetzung. | passt | Signatur und Sperrregeln separat spezifizieren. |
+| Lizenzsystem | Anzeige, `.xdtboxlic`-Import, RSA-PSS/SHA-256-Signaturpruefung, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige, Import-/Signaturservices und Karenzzeitservices; keine harte Durchsetzung. | passt | Issuer-Tool, produktiven Public Key und Sperrregeln separat umsetzen. |
 | Installer/Deployment | In Roadmap als offen. | Kein Installer-Projekt erkennbar. | passt | Deployment-Konzept spaeter erstellen. |
 | SQLite/JSON-Speicherung | Pflichtenheft nennt SQLite als Ziel, Projektueberblick beschreibt JSON/AppData. | Code nutzt JSON-Dateien unter LocalAppData. | unklar | Architekturentscheidung treffen: JSON bewusst beibehalten oder SQLite neu planen. |
 | Profil-Assistent | Roadmap fuehrt Assistent als offen. | Schlanke V1-Anlage fuer AIS-, Geraete- und Exportprofile als UserDefined ist vorhanden; kein vollstaendiger Assistent und keine Aktivierung. | passt | Geraete-Datei-Explorer als naechsten vorbereitenden Schritt planen. |
@@ -408,7 +409,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | hoch | Fertige Geraeteprofile und Templatepakete | BuiltIn-Geraeteprofile und MEDISTAR-Exportprofile sind fuer die zentralen Geraete beziehungsweise Workflows vorhanden; praktisch validiert sind MEDISTAR + NIDEK ARK1S, die AR360-Auto-Refraktor-XDT-Rueckgabe, die LM7-Lensmeter-XDT-Rueckgabe, TOPCON CL300, TOPCON KR800S, TOPCON TRK2P inklusive TM/CCT-only-Teilmessung und TOPCON CT1P. NT530P, Solos, KR-1 und CT800A sind testseitig mit echten XML-Fixtures, korrigierter MEDISTAR-Ausgabe und selektivem Templatepaket-Kandidaten direkt nutzbar. Matrix, Referenz-/Kandidatendokumentation, selektiver Export, reproduzierbare Export-/Import-Tests und stabilisierter App-Preview-Pfad sind vorhanden. | Dauerhafte ARK1S-/AR360-/LM7-/CL300-/KR800S-/KR1-/TRK2P-/CT1P-/CT800A-ZIP-Release-Artefakte, AR360-XDT-Anhangfall, weitere LM7-Prisma-/PD-Faelle und die praktische NT530P-/Solos-/KR1-/CT800A-Abnahme fehlen. Fuer CL300 bleibt die H/V-Prisma-Darstellung weiter zu beobachten; fuer KR800S/TRK2P bleiben weitere SBJ-/Funktionstestfaelle zu beobachten; fuer KR-1 fehlen echte KM/KRT-/periphere-KRT-Dateien; fuer CT1P fehlt eine echte beidseitige CorrectedIOP/CCT-Fixture. | Release-Regel fuer ARK1S/AR360 anwenden, LM7-Prisma-/PD-Beispielfaelle sammeln, NT530P in MEDISTAR praktisch mit `6220`/`6205` abnehmen, Solos/KR-1/CT800A praktisch abnehmen und CL300-/KR800S-/TRK2P-/CT1P-Praxisprotokolle als Referenz halten. | Anwender muessen sonst weiterhin den Baukasten nutzen. | BuiltIn-Profile, TemplatePackageExporter, Testdaten |
 | mittel | Templatepaket-Import Aktivierungsassistent | Sicherer Import als UserDefined vorhanden; Backend-Bewertung, UI-Pruefvorschau, vorbereitende Aktivierungsvorschau und Guard-Schicht sind read-only vorhanden. | Bewusste Benutzerfreigabe und eigentliche Aktivierung fehlen weiterhin. | Vorerst parken; nur als Sicherheits-/Regressionsstand beibehalten. | Importierte Profile bleiben sicher, aber noch nicht per finalem V1-Klick aktivierbar. | Profilkatalog, Evaluation, Guard |
 | niedrig | Geraeteanbindungsfenster V1 ausbauen | V1 ist praktisch abgenommen: Systray, manuelles Abdocken/Andocken, Auto-Oeffnung auch bei spaeteren Durchlaeufen mit gleichem Dateinamen und neuer Dateiversion sowie nach Reset + X-Andocken, Auto-Zurueckandocken, Signalton nur bei Geraetedatei, Reset, Pin/TopMost, Positionsmerken, Radar und Buttonlayout funktionieren profilgetrennt. | Komfortthemen fehlen bewusst: Autostart, Windows-Dienst, UI-Einstellung fuer Rueckdock-Zeit, sichtbarer Countdown-Hinweis, UI-Schalter fuer Signalton und ggf. eigenes Systray-Icon. | V1 beibehalten; Komfortthemen nur nach weiterem Praxisfeedback priorisieren. | Reset leert nur die AIS-/Geraete-/optionalen XDT-Anhang-Eingangsordner des gewaehlten Schnittstellenprofils top-level; Export-, Archiv- und Fehlerordner sowie Unterordner bleiben unangetastet. | `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`, Verarbeitungstab, Monitoring-Karten |
-| hoch | Lizenzsignatur | Lizenzanzeige und Karenzzeitmodell vorhanden. | Digitale Signaturpruefung, Schluesselmodell, Manipulationsschutz. | Signaturformat und Validierungsservice spezifizieren. | Lizenzdateien sind vor produktiver Sperre nicht ausreichend gesichert. | Lizenzmodell, Supportprozess |
+| hoch | Lizenzsignatur und Lizenz-Gates | `.xdtboxlic`-Import, RSA-PSS/SHA-256-Signaturpruefung, Public-Key-Provider, V1-Policy-Bewertung und Legacy-Hinweis sind vorhanden. | Produktiver Public Key, internes Issuer-Tool, zentrale Start-/Aktivierungs-Gates und finale Blockadeanzeige fehlen. | Issuer-Tool und zentrales Gate als eigenen Folgeschritt bauen. | Ohne Gate wird weiterhin nur angezeigt/gewarnt; ohne Issuer-Tool koennen keine echten Kundenlizenzen ausgestellt werden. | Lizenzmodell, Supportprozess |
 | mittel | ReplaceExisting fuer UserDefined | Bewusst deaktiviert; Executor blockiert/ueberspringt. | Konfliktloesungsdialog, Sicherung/Backup, explizite Benutzerentscheidung. | Erst nach konkreter Profil-/Templatepaket-Arbeit als separates Import-Epic planen. | Anwender muessen Konflikte ueber Kopien loesen, Katalog kann wachsen. | Importvorschau, SelectionService |
 | mittel | Manuelle Zielnamen-/ID-Bearbeitung im Templateimport | Automatische Kopienamen vorhanden. | UI zum Bearbeiten vorgeschlagener Namen/IDs. | Nur ergaenzen, wenn Anwenderfeedback Bedarf zeigt. | Importnamen koennen weniger sprechend sein. | Importplan, SelectionService |
 | mittel | Geraete-Datei-Explorer | Noch kein vollstaendiger Explorer. | Datei anzeigen, SourcePaths untersuchen, Messwerte markieren, Kandidaten fuer Exportregeln uebernehmen. | Kleinen read-only Explorer fuer XML/Geraetedateien bauen. | Neue Geraeteprofile bleiben Codex-/Entwickleraufgabe. | XmlDeviceParser, PlaceholderDisplayHelper |
@@ -491,8 +492,8 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 ### Phase 7: Lizenzierung haerten
 
-- Digitale Signaturpruefung.
-- Manipulationsschutz.
+- Produktives Issuer-Tool und Public-Key-Prozess.
+- Zentrales Aktivierungs-/Start-Gate auf Basis der vorhandenen Signaturpruefung.
 - Klare Sperrregeln und Karenzlogik.
 - Optional spaeter Online-Lizenzierung.
 

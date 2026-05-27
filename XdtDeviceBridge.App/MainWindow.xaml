@@ -2615,7 +2615,7 @@
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
-                            <Button Content="Lizenzdatei importieren" Width="190" Margin="0,0,8,0" Click="ImportLicenseFile_Click"/>
+                            <Button Content="Lizenz importieren" Width="190" Margin="0,0,8,0" Click="ImportLicenseFile_Click"/>
                             <Button Content="Karenzzeiten aktualisieren" Width="210" Click="UpdateGracePeriods_Click"/>
                         </StackPanel>
 

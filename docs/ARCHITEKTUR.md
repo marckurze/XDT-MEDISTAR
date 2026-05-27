@@ -103,10 +103,12 @@ Aktueller Stand:
 - aktive lizenzpflichtige Schnittstellenprofile werden bewertet
 - Karenzzeiten sind modelliert und können aktualisiert werden
 - keine Online-Lizenzierung
-- keine digitale Signaturprüfung
+- digitale Signaturpruefung fuer `.xdtboxlic` ist vorbereitet: `RSA-PSS-SHA256` ueber die Payload-Bytes, Public Key in der App, privater Schluessel nur beim Hersteller
+- Legacy-`license.json` bleibt nur als unsignierter Uebergang sichtbar und wird nicht als signiert gueltig angezeigt
 - keine harte produktive Lizenzsperre
 - `docs/LIZENZIERUNG_PRODUKTIVPLAN.md` beschreibt den Iststand, die fachlichen V1-Entscheidungen, die Manipulations-/Datenschutzrisiken und das Zielmodell fuer eine signierte Offline-Lizenzdatei
 - V1 lizenziert ausschliesslich die Anzahl aktiver Geraeteanbindungen; LAN/UNC, `SerialRs232`, Dokumentanhang und Test-/Analysebereiche sind keine separaten Lizenzmodule
+- `.xdtboxlic`-Import prueft Envelope, Payload, Signatur, ProductCode, InstallationId, Ablauf/Karenz und `MaxActiveDeviceConnections`, aktiviert aber noch kein produktives Gate
 - der Lizenz-Tab zeigt den Hinweis: `Achtung: Bei Hardwaretausch bitte neue Lizenz anfordern, Karenzzeit 7 Tage ab Umzug der Hardware.`
 
 ### 1.6 NIDEK LM7/LM7P architektonisch

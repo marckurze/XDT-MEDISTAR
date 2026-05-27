@@ -22,7 +22,7 @@ public sealed class LicenseV1PolicyEvaluator
             throw new ArgumentException("NowUtc must not be default.", nameof(nowUtc));
         }
 
-        if (signatureStatus is LicenseSignatureVerificationStatus.Invalid or LicenseSignatureVerificationStatus.NotChecked)
+        if (signatureStatus != LicenseSignatureVerificationStatus.Valid)
         {
             return Blocked(
                 LicenseV1PolicyStatus.InvalidSignature,
@@ -34,6 +34,13 @@ public sealed class LicenseV1PolicyEvaluator
             return Blocked(
                 LicenseV1PolicyStatus.MissingLicense,
                 "Keine Lizenz vorhanden.");
+        }
+
+        if (!string.Equals(payload.ProductCode, XdtBoxLicenseConstants.ProductCode, StringComparison.Ordinal))
+        {
+            return Blocked(
+                LicenseV1PolicyStatus.WrongProduct,
+                "Diese Lizenz ist nicht für XDTBox ausgestellt.");
         }
 
         if (!string.Equals(payload.InstallationId, installation.InstallationId, StringComparison.Ordinal))

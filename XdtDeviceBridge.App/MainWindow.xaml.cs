@@ -67,6 +67,7 @@ public partial class MainWindow : Window
     private readonly LicenseFileRepository _licenseFileRepository = new();
     private readonly LicensedDeviceGracePeriodRepository _licensedDeviceGracePeriodRepository = new();
     private readonly LicenseEvaluator _licenseEvaluator = new();
+    private readonly LicenseImportService _licenseImportService = new();
     private readonly LicensedDeviceStateEvaluator _licensedDeviceStateEvaluator = new();
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
@@ -4167,6 +4168,13 @@ public partial class MainWindow : Window
             var installation = _installationInfoProvider.GetOrCreate(paths.BaseFolder);
             _installationInfo = installation;
             var activeLicensedDeviceCount = CountActiveLicensedDevices();
+            var signedLicenseFile = GetSignedLicenseFilePath(paths);
+
+            if (File.Exists(signedLicenseFile))
+            {
+                ShowSignedLicenseStatus(signedLicenseFile, installation);
+                return;
+            }
 
             if (!File.Exists(paths.LicenseFile))
             {
@@ -4191,7 +4199,7 @@ public partial class MainWindow : Window
                     FormatLicenseStatus(evaluation),
                     evaluation.ActiveLicensedDeviceCount,
                     evaluation.LicensedDeviceCount);
-                LicenseMessagesTextBox.Text = "Lizenzstatus geladen.";
+                LicenseMessagesTextBox.Text = "Legacy-Lizenzstatus geladen (Signatur nicht kryptografisch geprüft).";
             }
             catch (Exception ex)
             {
@@ -4224,6 +4232,12 @@ public partial class MainWindow : Window
         return _profileCatalog?.InterfaceProfiles.Count(profile => profile.IsActive && profile.IsLicenseRequired) ?? 0;
     }
 
+    private int CountActiveDeviceConnectionsForLicenseV1()
+    {
+        return LicenseV1DeviceConnectionCounter.CountActiveDeviceConnections(
+            _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>());
+    }
+
     private void ShowLicenseStatus(
         InstallationInfo installation,
         string status,
@@ -4245,6 +4259,13 @@ public partial class MainWindow : Window
         {
             LicenseInfo? license = null;
             var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var signedLicenseFile = GetSignedLicenseFilePath(paths);
+            if (_installationInfo is not null && File.Exists(signedLicenseFile))
+            {
+                ShowSignedLicenseStatus(signedLicenseFile, _installationInfo);
+                return;
+            }
+
             if (File.Exists(paths.LicenseFile))
             {
                 license = _licenseFileRepository.Load(paths.LicenseFile);
@@ -4379,6 +4400,60 @@ public partial class MainWindow : Window
         {
             return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
+    }
+
+    private static string GetSignedLicenseFilePath(AppDataPaths paths)
+    {
+        return Path.Combine(paths.LicensesFolder, "license.xdtboxlic");
+    }
+
+    private void ShowSignedLicenseStatus(string licenseFile, InstallationInfo installation)
+    {
+        var result = _licenseImportService.ImportFromFile(
+            licenseFile,
+            installation,
+            CountActiveDeviceConnectionsForLicenseV1(),
+            DateTime.UtcNow);
+
+        var license = result.Payload is not null && result.SignatureStatus == LicenseSignatureVerificationStatus.Valid
+            ? CreateDisplayLicenseInfo(result.Payload, "RSA-PSS-SHA256 geprüft")
+            : null;
+
+        ShowLicensedDeviceStates(license);
+        ShowLicenseStatus(
+            installation,
+            result.UserMessage,
+            CountActiveDeviceConnectionsForLicenseV1(),
+            result.Payload?.MaxActiveDeviceConnections ?? 0);
+        LicenseMessagesTextBox.Text = result.UserMessage;
+    }
+
+    private static LicenseInfo CreateDisplayLicenseInfo(LicensePayload payload, string signatureLabel)
+    {
+        return new LicenseInfo(
+            LicenseId: payload.LicenseId,
+            CustomerName: payload.LicenseeName,
+            CustomerNumber: payload.CustomerNumber ?? string.Empty,
+            InstallationId: payload.InstallationId,
+            LicensedDeviceCount: payload.MaxActiveDeviceConnections,
+            ValidFrom: payload.ValidFromUtc,
+            ValidUntil: payload.ValidUntilUtc,
+            LicenseType: MapLicenseType(payload.LicenseType),
+            ProductCode: payload.ProductCode,
+            MinimumAppVersion: string.Empty,
+            IssuedAt: payload.IssuedAtUtc,
+            Signature: signatureLabel);
+    }
+
+    private static LicenseType MapLicenseType(string? licenseType)
+    {
+        return (licenseType ?? string.Empty).Trim() switch
+        {
+            var value when value.Equals("Trial", StringComparison.OrdinalIgnoreCase) => LicenseType.Trial,
+            var value when value.Equals("Monthly", StringComparison.OrdinalIgnoreCase) => LicenseType.Monthly,
+            var value when value.Equals("Perpetual", StringComparison.OrdinalIgnoreCase) => LicenseType.Perpetual,
+            _ => LicenseType.Annual
+        };
     }
 
     private void LoadFloatingWindowStates()
@@ -6504,7 +6579,7 @@ public partial class MainWindow : Window
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
             Filter = "Lizenzanfrage (*.json)|*.json|Alle Dateien (*.*)|*.*",
-            FileName = "XdtDeviceBridge_Lizenzanfrage.json",
+            FileName = "XDTBox_Lizenzanfrage.json",
             DefaultExt = ".json",
             AddExtension = true,
             OverwritePrompt = true
@@ -6520,7 +6595,7 @@ public partial class MainWindow : Window
             var request = _licenseRequestBuilder.Build(
                 _installationInfo,
                 _profileCatalog.InterfaceProfiles,
-                "XDT_DEVICE_BRIDGE",
+                XdtBoxLicenseConstants.ProductCode,
                 "0.1.0",
                 DateTime.UtcNow);
 
@@ -6537,7 +6612,7 @@ public partial class MainWindow : Window
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Filter = "Lizenzdatei (*.json)|*.json|Alle Dateien (*.*)|*.*",
+            Filter = "XDTBox-Lizenz (*.xdtboxlic)|*.xdtboxlic|Legacy-Lizenz (*.json)|*.json|Alle Dateien (*.*)|*.*",
             CheckFileExists = true
         };
 
@@ -6548,6 +6623,12 @@ public partial class MainWindow : Window
 
         try
         {
+            if (string.Equals(Path.GetExtension(dialog.FileName), ".xdtboxlic", StringComparison.OrdinalIgnoreCase))
+            {
+                ImportSignedLicenseFile(dialog.FileName);
+                return;
+            }
+
             var importedLicense = _licenseFileRepository.Load(dialog.FileName);
             var validationIssues = LicenseInfoValidator.Validate(importedLicense);
             if (validationIssues.Count > 0)
@@ -6576,12 +6657,43 @@ public partial class MainWindow : Window
                 evaluation.LicensedDeviceCount);
             ShowLicensedDeviceStates(importedLicense);
 
-            AppendLicenseMessage($"Lizenzdatei erfolgreich importiert: {dialog.FileName}");
+            AppendLicenseMessage($"Legacy-Lizenzdatei importiert (Signatur nicht kryptografisch geprüft): {dialog.FileName}");
         }
         catch (Exception ex)
         {
             AppendLicenseMessage($"Lizenzdatei konnte nicht importiert werden: {ex.Message}");
         }
+    }
+
+    private void ImportSignedLicenseFile(string filePath)
+    {
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        var installation = _installationInfo ?? _installationInfoProvider.GetOrCreate(paths.BaseFolder);
+        _installationInfo = installation;
+
+        var result = _licenseImportService.ImportFromFile(
+            filePath,
+            installation,
+            CountActiveDeviceConnectionsForLicenseV1(),
+            DateTime.UtcNow);
+
+        if (result.CanPersistLicenseFile)
+        {
+            Directory.CreateDirectory(paths.LicensesFolder);
+            File.Copy(filePath, GetSignedLicenseFilePath(paths), overwrite: true);
+        }
+
+        var displayLicense = result.Payload is not null && result.SignatureStatus == LicenseSignatureVerificationStatus.Valid
+            ? CreateDisplayLicenseInfo(result.Payload, "RSA-PSS-SHA256 geprüft")
+            : null;
+
+        ShowLicensedDeviceStates(displayLicense);
+        ShowLicenseStatus(
+            installation,
+            result.UserMessage,
+            CountActiveDeviceConnectionsForLicenseV1(),
+            result.Payload?.MaxActiveDeviceConnections ?? 0);
+        AppendLicenseMessage(result.UserMessage);
     }
 
     private void UpdateGracePeriods_Click(object sender, RoutedEventArgs e)

@@ -2,7 +2,7 @@
 
 Stand: 2026-05-27
 
-Dieser Plan beschreibt den aktuellen Lizenzierungsstand von XDTBox, die festgelegten fachlichen V1-Entscheidungen und die naechsten technischen Schritte fuer eine signierte Offline-Lizenz. Es wurde bewusst noch keine harte produktive Sperre in Parsern, Exportern oder der laufenden Geraeteverarbeitung aktiviert.
+Dieser Plan beschreibt den aktuellen Lizenzierungsstand von XDTBox, die festgelegten fachlichen V1-Entscheidungen und die naechsten technischen Schritte fuer die Durchsetzung der signierten Offline-Lizenz. Die kryptografische Pruefung und der `.xdtboxlic`-Import sind vorbereitet; es wurde bewusst noch keine harte produktive Sperre in Parsern, Exportern oder der laufenden Geraeteverarbeitung aktiviert.
 
 ## 1. Fachliche V1-Entscheidungen
 
@@ -52,22 +52,23 @@ Vorhanden sind:
 - Tab `Lizenz` in `MainWindow.xaml`
 - lokale Installationskennung
 - Lizenzanfrage als JSON
-- Lizenzdatei-Import als JSON
+- Lizenzdatei-Import fuer signierte `.xdtboxlic`-Dateien
+- Legacy-Import alter JSON-Lizenzen als unsignierter Uebergang
 - Lizenzstatusanzeige
 - Bewertung aktiver lizenzpflichtiger Schnittstellenprofile
 - Tabellenanzeige lizenzierter beziehungsweise nicht gedeckter Anbindungen
 - Karenzzeitmodell fuer nicht gedeckte aktive lizenzpflichtige Schnittstellenprofile
 - Aktivierungsvorschau mit Lizenzhinweisen, aber ohne harte Sperre
+- echte kryptografische Signaturpruefung fuer V1-Lizenzen mit RSA-PSS/SHA-256
+- Public-Key-Auswahl ueber `KeyId`
 
 Nicht produktiv vorhanden sind:
 
-- echte kryptografische Signaturpruefung
 - final angeschlossenes Produktiv-Gate fuer Start/Aktivierung
-- manipulationssichere Lizenzdatei
 - Hardwareumzug-Tab
 - Online-Lizenzierung
 
-Wichtig: Das bestehende Feld `Signature` in `LicenseInfo` ist aktuell nur ein JSON-Pflichtfeld und noch keine echte kryptografische Validierung.
+Wichtig: Das bestehende Feld `Signature` in `LicenseInfo` ist Legacy-Anzeige. Produktive V1-Lizenzen verwenden stattdessen `LicenseEnvelope.SignatureBase64Url`; Legacy-JSON-Lizenzen werden nicht als signiert gueltig angezeigt.
 
 ## 3. Beteiligte Klassen und Dateien
 
@@ -98,6 +99,10 @@ Vorbereitete V1-Bausteine:
 
 - `LicenseEnvelope`
 - `LicensePayload`
+- `LicenseEnvelopeReader`
+- `LicenseSignatureVerifier`
+- `LicensePublicKeyProvider`
+- `LicenseImportService`
 - `LicenseSignatureVerificationStatus`
 - `LicenseV1PolicyEvaluator`
 - `LicenseV1DeviceConnectionCounter`
@@ -106,7 +111,8 @@ Vorbereitete V1-Bausteine:
 Persistenzorte laut `AppDataPathProvider`:
 
 - `%LocalAppData%\XdtDeviceBridge\installation.json`
-- `%LocalAppData%\XdtDeviceBridge\licenses\license.json`
+- `%LocalAppData%\XdtDeviceBridge\licenses\license.xdtboxlic`
+- `%LocalAppData%\XdtDeviceBridge\licenses\license.json` fuer Legacy/Uebergang
 - `%LocalAppData%\XdtDeviceBridge\licenses\device-grace-periods.json`
 - `%LocalAppData%\XdtDeviceBridge\license-requests\`
 
@@ -134,12 +140,16 @@ XDTBox V1 verwendet eine offlinefaehige signierte JSON-Lizenz.
 
 Format:
 
-- signierter JSON-Payload
-- asymmetrische Signatur
+- Datei-Endung `.xdtboxlic`
+- JSON-Envelope mit Base64Url-Payload und Base64Url-Signatur
+- asymmetrische Signatur ueber exakt die Payload-Bytes
+- Algorithmus in V1: `RSA-PSS-SHA256`
 - privater Schluessel nur beim Hersteller
 - oeffentlicher Schluessel in der App
 - keine Secrets in der App
 - kein privater Produktionsschluessel im Repository
+
+RSA-PSS mit SHA-256 wurde fuer V1 gewaehlt, weil es in .NET 8 ohne zusaetzliche Kryptografie-Abhaengigkeit verfuegbar ist. Ed25519 bleibt spaeter moeglich, wenn dafuer eine saubere, langfristig gepflegte Abhaengigkeit oder native Plattformunterstuetzung genutzt wird.
 
 ### LicenseEnvelope
 
@@ -187,7 +197,7 @@ Aufgaben:
 - Lizenznehmer, Laufzeit und `MaxActiveDeviceConnections` erfassen
 - `LicensePayload` erzeugen
 - Payload kanonisch serialisieren
-- Payload mit privatem Schluessel signieren
+- Payload mit privatem RSA-PSS-Schluessel signieren
 - `LicenseEnvelope` schreiben
 - Datei mit Endung `.xdtboxlic` erzeugen
 
@@ -197,12 +207,16 @@ Sicherheitsregel:
 - Privater Produktionsschluessel kommt nicht in die App.
 - Testschluessel sind nur fuer Unit-Tests erlaubt und muessen klar als Testschluessel markiert sein.
 - Es wird keine Dummy-Produktionssignatur eingebaut.
+- In der App liegt nur ein Public Key. Der private Produktionsschluessel wird ausschliesslich beim Hersteller gehalten.
 
 ## 7. Lizenzdatei und Lizenzkey
 
 V1 bevorzugt Dateiimport:
 
 - `.xdtboxlic` enthaelt `LicenseEnvelope` als JSON.
+- `PayloadBase64Url` enthaelt die unveraenderten signierten Payload-Bytes.
+- `SignatureBase64Url` enthaelt die Signatur ueber diese Payload-Bytes.
+- Legacy-`license.json` bleibt fuer den Uebergang lesbar, wird aber als unsigniert gekennzeichnet.
 
 Spaeter kann ein Textkey ergaenzt werden:
 
@@ -245,15 +259,15 @@ Nicht empfohlen:
 
 ## 10. Muss vor Produktivbetrieb
 
-- Echte Signaturpruefung implementieren.
-- Public-Key-Validierungsservice implementieren.
+- Produktiven Public Key festlegen und einpflegen.
+- Hersteller-Issuer-Tool mit privatem Schluessel ausserhalb des Repositories erstellen.
 - Private Keys ausserhalb des Repositories halten.
-- Lizenzdatei nur nach Signaturpruefung produktiv akzeptieren.
-- Lizenzrequest auf `ProductCode = XDTBOX` und echte App-Version umstellen.
+- Lizenzdatei nur nach Signaturpruefung produktiv akzeptieren; `.xdtboxlic` ist dafuer vorbereitet.
+- Lizenzrequest auf echte App-Version und finalen datensparsamen Inhalt umstellen.
 - Lizenzrequest datensparsam ueberarbeiten.
 - 7-Tage-Hardwareumzug-Karenz fachlich und technisch modellieren.
 - Zentrales Gate vor Start/Aktivierung anschliessen.
-- Manipulations-, Ablauf-, Installation- und MaxActiveDeviceConnections-Tests ergaenzen.
+- Manipulations-, Ablauf-, Installation- und MaxActiveDeviceConnections-Tests fuer das zentrale Gate ergaenzen.
 - UI-Meldungen fuer ungueltige Signatur, Ablauf, Karenz, falsche Installation und Hardwareumzug finalisieren.
 
 ## 11. Sollte vor Produktivbetrieb
@@ -280,15 +294,14 @@ Nicht empfohlen:
 
 - Wie wird die 7-Tage-Hardwareumzug-Karenz lokal manipulationsarm gespeichert?
 - Wie werden betroffene Geraeteanbindungen im Monitoring-Fenster konkret markiert?
-- Wie werden alte unsignierte Testlizenzen nach Einfuehrung der Signatur behandelt?
+- Wann werden alte unsignierte Testlizenzen im Produktbetrieb vollstaendig deaktiviert?
 - Wird der bestehende Tab `Lizenz` spaeter in `Lizenzierung` umbenannt?
 
 ## 14. Naechste Umsetzungsschritte
 
-1. Signaturpruefung fuer `LicenseEnvelope` implementieren.
-2. Lizenzimport auf `.xdtboxlic` vorbereiten.
-3. Lizenzanforderung auf XDTBox-V1-Payload umstellen.
+1. Internes `XdtBox.LicenseIssuer`-Werkzeug ausserhalb der App bauen.
+2. Produktiven Public Key und Key-Rotation-Prozess festlegen.
+3. Lizenzanforderung final datensparsam machen und echte App-Version setzen.
 4. Zentrale Start-/Aktivierungs-Gates anschliessen.
 5. Monitoring- und Lizenz-Tab-Status fuer blockierte Geraeteanbindungen ergaenzen.
 6. Hardwareumzug-Tab als separaten Folgeschritt spezifizieren.
-

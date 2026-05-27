@@ -4,5 +4,12 @@ public enum LicenseSignatureVerificationStatus
 {
     NotChecked,
     Valid,
-    Invalid
+    Invalid,
+    UnsupportedAlgorithm,
+    UnknownKeyId,
+    MalformedEnvelope,
+    MalformedPayload,
+    MissingSignature,
+    VerificationError,
+    UnsupportedFormatVersion
 }
