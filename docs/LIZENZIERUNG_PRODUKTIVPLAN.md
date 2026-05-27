@@ -210,6 +210,24 @@ XdtBox.LicenseIssuer.exe --request "C:\XDTBox\Lizenzaktivierung\requests\praxis.
 
 Das Tool ist framework-dependent fuer Windows x64 nach `C:\XDTBox\Lizenzaktivierung` veroeffentlichbar. Der private Schluessel wird nur ueber `--private-key` aus einem externen PEM-Pfad geladen.
 
+`XdtBox.LicenseIssuer` ist ein Kommandozeilenwerkzeug. Produktive Nutzung erfolgt aus PowerShell oder CMD mit Parametern. Ein Doppelklick beziehungsweise Start ohne Parameter zeigt Hilfe, Beispiel, Private-Key-Hinweise und wartet in einer interaktiven Konsole auf Tastendruck, damit das Fenster nicht sofort verschwindet. Fuer reine Hilfe kann auch die mitveroeffentlichte Datei `XdtBox.LicenseIssuer.Hilfe.bat` genutzt werden.
+
+Mehrzeiliges CMD-Beispiel:
+
+```bat
+XdtBox.LicenseIssuer.exe ^
+  --request "C:\XDTBox\Lizenzaktivierung\requests\kunde-request.json" ^
+  --licensee "Praxis Muster" ^
+  --max-active-device-connections 3 ^
+  --valid-from "2026-05-27" ^
+  --valid-until "2027-05-27" ^
+  --grace-days 7 ^
+  --license-type "Production" ^
+  --key-id "xdtbox-prod-2026-01" ^
+  --private-key "C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem" ^
+  --out "C:\XDTBox\Lizenzaktivierung\licenses\praxis-muster.xdtboxlic"
+```
+
 Sicherheitsregel:
 
 - Privater Produktionsschluessel kommt nicht ins Repository.

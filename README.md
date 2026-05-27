@@ -268,7 +268,6 @@ Noch nicht final umgesetzt bzw. bewusst noch nicht aktiviert:
 - dauerhafte Hintergrundverarbeitung ohne Benutzerstart
 - automatische Archivloeschung im laufenden Betrieb
 - Online-Lizenzierung
-- digitale Signaturpruefung fuer Lizenzdateien
 - produktive Lizenzsperre
 - vollstaendiger Profil-Assistent fuer unbekannte Geraete
 - `ReplaceExisting` fuer importierte Templatepakete und freie Konfliktloesungsdialoge
@@ -317,10 +316,10 @@ dotnet run --project XdtDeviceBridge.App
 - Die App erzeugt oder laedt lokale `InstallationInfo`-Daten.
 - Angezeigt werden Installation-ID, Computername, Benutzername und Lizenzstatus.
 - Eine Offline-Lizenzanfrage kann als JSON-Datei exportiert werden.
-- Eine Offline-Lizenzdatei kann als JSON-Datei importiert werden.
-- Die Lizenzdatei wird validiert und lokal gespeichert.
+- Eine signierte Offline-Lizenzdatei kann als `.xdtboxlic` importiert werden.
+- Die Lizenzdatei wird mit RSA-PSS/SHA-256 validiert und lokal gespeichert; Legacy-JSON bleibt nur als unsignierter Uebergang erkennbar.
+- Das interne Herstellerwerkzeug `XdtBox.LicenseIssuer.exe` erzeugt `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId. Es ist ein Kommandozeilentool; Doppelklick ohne Parameter zeigt Hilfe und wartet auf Tastendruck.
 - Die Lizenz wird aktuell nur angezeigt, aber noch nicht erzwungen.
-- Es gibt noch keine Signaturpruefung.
 - Es gibt noch keine Online-Lizenzierung.
 - Die MEDISTAR/NIDEK-Verarbeitung bleibt auch ohne Lizenz weiterhin nutzbar.
 

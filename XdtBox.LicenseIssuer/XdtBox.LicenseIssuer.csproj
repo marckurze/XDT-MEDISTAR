@@ -12,4 +12,8 @@
     <ProjectReference Include="..\XdtDeviceBridge.Infrastructure\XdtDeviceBridge.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="XdtBox.LicenseIssuer.Hilfe.bat" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

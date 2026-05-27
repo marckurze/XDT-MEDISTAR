@@ -4,7 +4,36 @@ public static class LicenseIssuerConsole
 {
     public static int Run(string[] args, TextWriter output, TextWriter error)
     {
+        return Run(
+            args,
+            output,
+            error,
+            pauseOnNoArguments: ShouldPauseOnNoArguments(args),
+            pauseAction: WaitForKey);
+    }
+
+    public static int Run(
+        string[] args,
+        TextWriter output,
+        TextWriter error,
+        bool pauseOnNoArguments,
+        Action? pauseAction = null)
+    {
         var parser = new LicenseIssuerCommandLineParser();
+
+        if (args.Length == 0)
+        {
+            error.WriteLine("Fehler: Es wurden keine Parameter angegeben.");
+            error.WriteLine("Bitte starten Sie das Tool aus PowerShell oder CMD mit den erforderlichen Parametern.");
+            error.WriteLine();
+            WriteHelp(output);
+            output.WriteLine();
+            output.WriteLine("Hinweis: Für die Lizenzsignatur wird ein privater Schlüsselpfad über --private-key benötigt.");
+            output.WriteLine("Private Schlüssel dürfen nicht im Repository liegen und werden nicht in die EXE einkompiliert.");
+            PauseBeforeExit(output, pauseOnNoArguments, pauseAction);
+            return 1;
+        }
+
         var parseResult = parser.Parse(args);
 
         if (parseResult.ShowHelp)
@@ -75,5 +104,36 @@ public static class LicenseIssuerConsole
         writer.WriteLine();
         writer.WriteLine("Beispiel:");
         writer.WriteLine("  XdtBox.LicenseIssuer.exe --request \"C:\\XDTBox\\Lizenzaktivierung\\requests\\praxis.json\" --licensee \"Praxis Muster\" --customer-number \"K12345\" --max-active-device-connections 3 --valid-from \"2026-05-27\" --valid-until \"2027-05-27\" --key-id \"xdtbox-prod-2026-01\" --private-key \"C:\\XDTBox\\Lizenzaktivierung\\keys\\xdtbox_private.pem\" --out \"C:\\XDTBox\\Lizenzaktivierung\\licenses\\praxis-muster.xdtboxlic\"");
+    }
+
+    private static bool ShouldPauseOnNoArguments(string[] args)
+    {
+        return args.Length == 0
+            && Environment.UserInteractive
+            && !Console.IsInputRedirected;
+    }
+
+    private static void PauseBeforeExit(TextWriter output, bool shouldPause, Action? pauseAction)
+    {
+        if (!shouldPause)
+        {
+            return;
+        }
+
+        output.WriteLine();
+        output.Write("Drücken Sie eine Taste zum Schließen ...");
+        (pauseAction ?? WaitForKey).Invoke();
+    }
+
+    private static void WaitForKey()
+    {
+        try
+        {
+            Console.ReadKey(intercept: true);
+        }
+        catch (InvalidOperationException)
+        {
+            // In umgeleiteten oder nicht interaktiven Hosts darf die Pause keinen Absturz ausloesen.
+        }
     }
 }
