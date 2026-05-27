@@ -19,6 +19,7 @@ namespace XdtDeviceBridge.App;
 public partial class MainWindow : Window
 {
     private const string MonitoringNotificationSoundRelativePath = @"Assets\Sounds\04_praxis_terminal_signal.wav";
+    private const string AppIconResourcePath = "Assets/App/XDTBox.ico";
     private const bool MonitoringNotificationSoundEnabled = true;
 
     private static readonly HashSet<string> SupportedBuilderAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -345,11 +346,31 @@ public partial class MainWindow : Window
         _trayIcon = new WinForms.NotifyIcon
         {
             Text = "XdtDeviceBridge - XDT Verwaltung",
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = LoadNotifyIcon(),
             ContextMenuStrip = _trayContextMenu,
             Visible = true
         };
         _trayIcon.MouseDoubleClick += TrayIcon_MouseDoubleClick;
+    }
+
+    private static System.Drawing.Icon LoadNotifyIcon()
+    {
+        try
+        {
+            var resourceInfo = System.Windows.Application.GetResourceStream(new Uri(AppIconResourcePath, UriKind.Relative));
+            if (resourceInfo?.Stream is not null)
+            {
+                using var stream = resourceInfo.Stream;
+                using var icon = new System.Drawing.Icon(stream);
+                return (System.Drawing.Icon)icon.Clone();
+            }
+        }
+        catch
+        {
+            // Fallback keeps the tray usable even if the resource cannot be loaded.
+        }
+
+        return System.Drawing.SystemIcons.Application;
     }
 
     private void MinimizeMainWindowToTray()

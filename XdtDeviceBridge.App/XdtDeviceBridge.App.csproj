@@ -6,6 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets\App\XDTBox.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\XdtDeviceBridge.Core\XdtDeviceBridge.Core.csproj" />
@@ -17,6 +18,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Assets\App\XDTBox.ico" />
     <Resource Include="Assets\Devices\Topcon_CV5000_freigestellt.png" />
   </ItemGroup>
 </Project>

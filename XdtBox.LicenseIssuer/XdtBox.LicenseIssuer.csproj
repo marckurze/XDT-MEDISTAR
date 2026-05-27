@@ -5,7 +5,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-</PropertyGroup>
+    <ApplicationIcon>..\XdtDeviceBridge.App\Assets\App\XDTBox.ico</ApplicationIcon>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\XdtDeviceBridge.Core\XdtDeviceBridge.Core.csproj" />

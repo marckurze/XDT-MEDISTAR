@@ -6,7 +6,7 @@ Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Session
 
 ## 1. Kurzbeschreibung
 
-XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die Bridge zwischen Arztinformationssystemen und augenaerztlichen Untersuchungsgeraeten. Der Produktname fuer den spaeteren Einsatz ist XDTBox.
+XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die Bridge zwischen Arztinformationssystemen und augenaerztlichen Untersuchungsgeraeten. Der Produktname fuer den spaeteren Einsatz ist XDTBox. Das offizielle Programmicon `XDTBox.ico` liegt unter `XdtDeviceBridge.App/Assets/App/XDTBox.ico` und wird von Kunden-App, Systray-NotifyIcon sowie den internen Lizenzwerkzeugen verwendet.
 
 Der Fokus liegt aktuell auf:
 
