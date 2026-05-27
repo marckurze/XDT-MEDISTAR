@@ -44,16 +44,25 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 ### Automatische periodische Verarbeitung
 
-- Die Überwachung wird manuell gestartet.
-- Es gibt keinen Windows-Dienst, keinen Autostart und keinen `FileSystemWatcher`.
+- Die Überwachung startet beim Öffnen der XDTBox-App einmalig automatisch fuer aktive Schnittstellenprofile.
+- Der Anwender kann die laufende Überwachung weiterhin manuell stoppen und wieder starten.
+- Es gibt keinen Windows-Dienst, keinen Windows-Autostart und keinen `FileSystemWatcher`.
 - Die Ordnerabfrage erfolgt periodisch.
 - Das Scan-Intervall ist pro Schnittstellenprofil konfigurierbar.
 - Standard: `5` Sekunden.
+- Gefundene passende Dateipaare werden bei laufender Überwachung immer automatisch verarbeitet.
 - Automatische Verarbeitung erfolgt nur bei:
-  - gestarteter Überwachung
-  - aktivierter globaler automatischer Verarbeitung
+  - laufender Überwachung innerhalb der geöffneten App
   - aktivem Schnittstellenprofil
   - stabilen Dateien
+
+### Sicherung/Umzug und lokale Hilfe
+
+- Der Tab `Sicherung/Umzug` erstellt `.xdtboxbackup`-Konfigurationssicherungen als ZIP mit Manifest.
+- Gesichert werden Profile, lokale Gerätebilder, Bild-Overrides, Lizenz-Kundendaten, UI-Komfortdaten und optional die importierte `.xdtboxlic`.
+- Nicht gesichert werden Patientendaten, Messdateien, Import-/Export-/Archiv-/Fehlerordner-Inhalte und private Hersteller-Schlüssel.
+- Restore prüft Manifest/ProductCode und ist nur bei gestoppter Überwachung möglich.
+- Im Header öffnet `?` die lokale Hilfe oder den Info-Dialog mit Herstellerdaten.
 
 ### Geraetequellen: LAN/Datei und RS232
 

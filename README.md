@@ -2,6 +2,8 @@
 
 XdtDeviceBridge ist ein lokaler Windows-Prototyp fuer die dateibasierte Anbindung von Untersuchungsgeraeten an ein Arztinformationssystem ueber GDT/XDT-Dateien. Der Produktname fuer den spaeteren Einsatz ist XDTBox; Kunden-App und grafisches Hersteller-Lizenztool verwenden das offizielle XDTBox-Icon sowie das neue Logo-/Schriftzug-Branding.
 
+In der Kunden-App startet die periodische Überwachung beim Öffnen der App automatisch fuer aktive Schnittstellenprofile. Es gibt weiterhin keinen Windows-Dienst, keinen Windows-Autostart und keinen FileSystemWatcher. XDTBox bringt ausserdem einen Tab `Sicherung/Umzug` fuer lokale Konfigurationssicherungen im Format `.xdtboxbackup` sowie ein lokales Hilfe-/Info-Menue im Header mit.
+
 Der aktuelle Fokus liegt auf dem Workflow MEDISTAR mit einem NIDEK ARK1S / AR-1s Autorefraktometer.
 
 Aktuelle Version:
@@ -36,6 +38,9 @@ Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich 
 - Mapping der Patientendaten und Messwerte in MEDISTAR-kompatible XDT-Felder.
 - Erzeugen einer XDT-Exportvorschau.
 - Manuelles Schreiben einer Exportdatei in einen ausgewaehlten Ordner.
+- Automatisch startende Überwachung innerhalb der geöffneten App; passende Dateipaare werden bei laufender Überwachung automatisch verarbeitet.
+- Lokale Konfigurationssicherung und Wiederherstellung ueber `.xdtboxbackup` ohne Patientendaten oder Messdateien.
+- Lokales Hilfe-Center und Info-Dialog mit Herstellerdaten.
 - Vorbereitete V2-Geraeteprofile fuer NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
 - Unit-Tests fuer Parser, Mapping, Export und Datei-Export.
 

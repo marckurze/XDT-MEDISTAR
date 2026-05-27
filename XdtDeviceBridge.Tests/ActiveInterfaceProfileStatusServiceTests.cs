@@ -212,7 +212,7 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("5 s", row.MonitoringCard.ScanIntervalText);
         Assert.False(row.MonitoringCard.IsScanAnimationActive);
         Assert.Equal("-", row.MonitoringCard.LastScanText);
-        Assert.Equal("Nein", row.MonitoringCard.AutomaticProcessingText);
+        Assert.Equal("Ja", row.MonitoringCard.AutomaticProcessingText);
         Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
         Assert.Equal(string.Empty, row.MonitoringCard.DeviceImagePath);
         Assert.False(row.MonitoringCard.HasDeviceImage);

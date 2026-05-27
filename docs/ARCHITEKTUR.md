@@ -30,15 +30,16 @@ Der fachlich validierte Ablauf ist aktuell:
 - Untersuchungsart: `8402` aus AIS/GDT
 - Ergebnis: zwei `6228`-Textzeilen für rechts und links
 
-### 1.2 Manuell startbare periodische Überwachung
+### 1.2 Automatisch startende periodische Überwachung
 
-Zusätzlich zum manuellen Testmodus besitzt der Prototyp eine manuell startbare Überwachung im Tab `Verarbeitung`.
+Zusätzlich zum manuellen Testmodus besitzt XDTBox eine periodische Überwachung im Tab `Verarbeitung`.
 
 Aktueller Stand:
 
-- Die Überwachung startet nicht beim App-Start.
+- Die Überwachung startet beim Öffnen der XDTBox-App einmalig automatisch, sofern aktive Schnittstellenprofile vorhanden sind.
+- Der Anwender kann die Überwachung weiterhin manuell stoppen und wieder starten.
 - Es gibt keinen Windows-Dienst.
-- Es gibt keinen Autostart.
+- Es gibt keinen Windows-Autostart.
 - Es gibt keinen `FileSystemWatcher`.
 - Die Überwachung basiert auf periodischem Scan aktiver Schnittstellenprofile.
 - Gefundene AIS-/Geräte-Dateipaare werden in den Monitoring-Karten als Paketstatus sichtbar.
@@ -49,13 +50,9 @@ Die Monitoring-Anzeige nutzt pro aktivem Schnittstellenprofil im Tab `Verarbeitu
 
 Die fruehere TOPCON-CV-5000-Pilotdarstellung ist das Standardlayout fuer Monitoring-Karten und Floating-Geraetefenster. Das Displaymodell liefert `UsesPilotDeviceVisual`, `DeviceType`, ein kurzes `DeviceTypeDisplay` fuer den Hauptbereich, `UsesTextAboveImageLayout` als Fallback fuer sehr lange Anzeigenamen und optional `DeviceImagePath`; die WPF-Oberflaeche zeigt Infoblock, Geraetebild oder neutralen Platzhalter und eine Statuskugel. Lange fachliche Geraetetypen bleiben im Profil erhalten, werden in der Karte aber ueber kurze Displaylabels wie `Keratorefraktometer`, `Tonometer` oder `Autorefraktor` lesbar dargestellt. Die Standardkarte nutzt eine breitere 576-px-Darstellung, Floating-Geraetefenster starten mit 744 px und halten mindestens 672 px, damit Textblock und Bild naeher zusammenruecken und weniger frueh gekuerzt werden; Eingangskacheln nutzen moderate Mindest-/Maximalbreiten, damit laengere Bezeichnungen wie `Dokumentdateien` nicht unnoetig mitten im Wort umbrechen. Die Kugel ist eine reine Darstellung auf Basis von `ScanIntervalSeconds`, Dateieingangsstatus und laufender Ueberwachung: gestoppt bleibt sie rot und statisch, aktiv wird sie gruen und pulsiert, und ein Datei-Eingang loest einen kurzen weiss/gelb/weiss-Blitz aus. Sie aendert keine Scan- oder Exportlogik. BuiltIn-Bilder liegen als App-Assets unter `XdtDeviceBridge.App/Assets/Devices/`; UserDefined-Geraete koennen denselben optionalen `DeviceImagePath` nutzen. Bestehende Geraetebilder koennen im Tab `Profile & Templates` ueber `Geraet laden` gepflegt werden: ausgewaehlte Bilder werden in den lokalen AppData-Unterordner `DeviceImages` kopiert, BuiltIn-Geraete erhalten nur einen lokalen Override in `device-image-overrides.json`, und das fachliche BuiltIn-Profil bleibt unveraendert. Bei der Anzeige gilt in Monitoring und `Geraet laden` dieselbe Reihenfolge: lokaler Override mit vorhandener Datei, `DeviceImagePath`/BuiltIn-Asset, danach Platzhalter. Der alte Radar-Zweig bleibt nur als technischer Fallback im XAML und ist fuer regulaere Geraetekarten nicht mehr das Standardlayout.
 
-### 1.3 Optionale automatische Verarbeitung
+### 1.3 Feste automatische Verarbeitung bei laufender Überwachung
 
-Während die manuell gestartete Überwachung läuft, kann der Benutzer die Option `Gefundene Dateipaare automatisch verarbeiten` aktivieren.
-
-Wenn diese Option deaktiviert ist, aktualisiert die Überwachung nur Monitoring-Karten und Ereignisse; es wird kein produktiver Export gestartet.
-
-Wenn diese Option aktiviert ist:
+Die fruehere globale Option `Gefundene Dateipaare automatisch verarbeiten` ist aus der Produktiv-UI entfernt. Sobald die Überwachung läuft, werden passende stabile Dateipaare automatisch verarbeitet:
 
 - stabile gefundene Dateipaare werden nacheinander verarbeitet
 - XDT-Dateien werden in den konfigurierten Exportordner geschrieben
@@ -63,7 +60,15 @@ Wenn diese Option aktiviert ist:
 - Importdateien werden nur gemäß Schnittstellenprofil archiviert
 - Fehlerdateien werden nur gemäß Schnittstellenprofil in den Fehlerordner kopiert
 
-### 1.4 Archivierung, Nachlauf und Fehlerablage
+### 1.4 Sicherung/Umzug und lokale Hilfe
+
+Der neue Tab `Sicherung/Umzug` nutzt `XdtBoxBackupService`, um `.xdtboxbackup`-Dateien als ZIP-Container mit `manifest.json` zu erzeugen. Gesichert werden nur Konfigurationsdaten: Profile, lokale Geraetebilder, Bild-Overrides, Lizenz-Kundendaten, UI-Komfortdaten und optional die importierte `.xdtboxlic`. Patientendaten, Messdateien, Import-/Export-/Archiv-/Fehlerordner-Inhalte und private Hersteller-Schluessel werden nicht gesichert.
+
+Restore prueft Manifest, ProductCode `XDTBOX` und Formatversion. Eine Wiederherstellung ist nur bei gestoppter Überwachung vorgesehen und laedt danach Profile und Lizenzstatus neu. Bei Hardwareumzug bleibt die InstallationId fuehrend; eine wiederhergestellte Lizenz kann auf neuer Hardware ungueltig sein.
+
+Im Header oeffnet ein `?`-Menue das lokale Hilfe-Center oder den Info-Dialog. Die Hilfe ist als App-Resource eingebettet und benoetigt keine Onlineverbindung.
+
+### 1.5 Archivierung, Nachlauf und Fehlerablage
 
 Der Prototyp unterstützt:
 

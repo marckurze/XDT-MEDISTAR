@@ -30,19 +30,34 @@
                 <Image Source="Assets/Branding/XDTBox_Logo_Schriftzug.png"
                        Style="{StaticResource XdtBoxLogoImageStyle}"
                        MaxWidth="360"/>
-                <StackPanel Grid.Column="1"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Right">
+                <DockPanel Grid.Column="1"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Right"
+                           LastChildFill="False">
+                    <Button x:Name="HeaderHelpButton"
+                            DockPanel.Dock="Right"
+                            Content="?"
+                            Width="32"
+                            Height="32"
+                            Margin="16,0,0,0"
+                            FontSize="16"
+                            FontWeight="Bold"
+                            ToolTip="Hilfe und Info"
+                            Click="HeaderHelpButton_Click">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Hilfe" Click="OpenHelpCenter_Click"/>
+                                <MenuItem Header="Info" Click="OpenAboutDialog_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
                     <TextBlock Text="Medizinische Geräte sicher verbinden"
+                               DockPanel.Dock="Right"
                                Foreground="{StaticResource XdtBoxDarkTextBrush}"
                                FontSize="15"
                                FontWeight="SemiBold"
                                HorizontalAlignment="Right"/>
-                    <TextBlock Text="Lokale XDT/GDT-Brücke für Praxis, Geräte und Hersteller-Lizenzen"
-                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
-                               FontSize="12"
-                               HorizontalAlignment="Right"/>
-                </StackPanel>
+                </DockPanel>
             </Grid>
         </Border>
         <TabControl Grid.Row="1">
@@ -204,7 +219,7 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0"
-                                           Text="Diese Übersicht zeigt vorbereitete Schnittstellen für die spätere automatische Ordnerverarbeitung. Die automatische Verarbeitung ist noch nicht aktiv."
+                                           Text="Diese Übersicht zeigt aktive Schnittstellen für die automatische Verarbeitung. XDTBox überwacht die konfigurierten Ordner, sobald die Überwachung läuft."
                                            Foreground="DimGray"
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
@@ -213,11 +228,6 @@
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,8"/>
                                 <WrapPanel Grid.Row="2" Margin="0,0,0,8">
-                                    <Button x:Name="ActiveProfileScanButton"
-                                            Content="Aktive Profile einmalig scannen"
-                                            Width="240"
-                                            Margin="0,0,8,8"
-                                            Click="ScanActiveProfilesOnce_Click"/>
                                     <Button x:Name="StartPeriodicScanButton"
                                             Content="Überwachung starten"
                                             Width="170"
@@ -237,13 +247,8 @@
                                     <TextBlock x:Name="PeriodicScanLastRunText" Text="-" MinWidth="130" Margin="0,3,16,8"/>
                                     <TextBlock Text="Fertige Paare letzter Scan:" FontWeight="Bold" Margin="0,3,4,8"/>
                                     <TextBlock x:Name="PeriodicScanReadyPairsText" Text="0" MinWidth="40" Margin="0,3,0,8"/>
-                                    <CheckBox x:Name="EnableAutomaticPairProcessingCheckBox"
-                                              Content="Gefundene Dateipaare automatisch verarbeiten"
-                                              Margin="0,3,16,8"
-                                              Checked="EnableAutomaticPairProcessingCheckBox_Changed"
-                                              Unchecked="EnableAutomaticPairProcessingCheckBox_Changed"/>
-                                    <TextBlock Text="Automatische Verarbeitung erfolgt nur während der manuell gestarteten Überwachung. Importdateien werden nicht gelöscht oder verschoben."
-                                               Foreground="DarkRed"
+                                    <TextBlock Text="Gefundene passende Dateipaare werden automatisch verarbeitet, sobald die Überwachung läuft. Importdateien werden nur gemäß Schnittstellenprofil behandelt."
+                                               Foreground="DimGray"
                                                FontWeight="Bold"
                                                TextWrapping="Wrap"
                                                Margin="0,3,0,8"/>
@@ -2591,6 +2596,113 @@
                                 </GroupBox>
                              </Grid>
                          </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Sicherung/Umzug">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <GroupBox Header="Sicherung erstellen" Grid.Row="0" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Text="Erstellt eine vollständige XDTBox-Konfigurationssicherung mit Profilen, lokalen Gerätebildern, Lizenz-Kundendaten und optional importierter Lizenzdatei. Es werden keine Patientendaten oder Messdateien gesichert."
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+                                <Grid Grid.Row="1" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Zielpfad:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBox Grid.Column="1" x:Name="BackupTargetPathTextBox" Margin="0,0,8,0"/>
+                                    <Button Grid.Column="2" Content="Auswählen" Width="110" Click="SelectBackupTarget_Click"/>
+                                </Grid>
+                                <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                    <Button Content="Sicherung erstellen" Width="160" Margin="0,0,8,0" Click="CreateBackup_Click"/>
+                                    <TextBlock x:Name="BackupCreateStatusText"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Header="Sicherung wiederherstellen" Grid.Row="1" Margin="0,0,0,8">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Text="Wiederherstellung ersetzt lokale XDTBox-Konfigurationen. Bitte stellen Sie sicher, dass keine Verarbeitung läuft."
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,8"/>
+                                <Grid Grid.Row="1" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Sicherungsdatei:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBox Grid.Column="1" x:Name="BackupRestorePathTextBox" IsReadOnly="True" Margin="0,0,8,0"/>
+                                    <Button Grid.Column="2" Content="Sicherung auswählen" Width="150" Click="SelectBackupRestoreFile_Click"/>
+                                </Grid>
+                                <Border Grid.Row="2"
+                                        BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                                        BorderThickness="1"
+                                        Background="{StaticResource XdtBoxPanelBackgroundBrush}"
+                                        Padding="8"
+                                        Margin="0,0,0,8">
+                                    <TextBlock x:Name="BackupManifestTextBlock"
+                                               Text="Keine Sicherung ausgewählt."
+                                               TextWrapping="Wrap"/>
+                                </Border>
+                                <StackPanel Grid.Row="3" Orientation="Horizontal">
+                                    <Button Content="Wiederherstellen" Width="150" Margin="0,0,8,0" Click="RestoreBackup_Click"/>
+                                    <TextBlock x:Name="BackupRestoreStatusText"
+                                               VerticalAlignment="Center"
+                                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <Border Grid.Row="2"
+                                BorderBrush="#E0A126"
+                                BorderThickness="1"
+                                Background="#FFF4D6"
+                                CornerRadius="4"
+                                Padding="10">
+                            <StackPanel>
+                                <TextBlock Text="Hardwareumzug"
+                                           FontWeight="Bold"
+                                           Foreground="#5A3A00"
+                                           Margin="0,0,0,4"/>
+                                <TextBlock Text="Bei Hardwaretausch bitte neue Lizenz anfordern. Karenzzeit 7 Tage ab Umzug der Hardware."
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           Foreground="#5A3A00"
+                                           Margin="0,0,0,4"/>
+                                <TextBlock Text="Eine wiederhergestellte Lizenz kann auf neuer Hardware ungültig sein. Erzeugen Sie nach dem Umzug eine neue Lizenzanforderung."
+                                           TextWrapping="Wrap"
+                                           Foreground="#5A3A00"/>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </ScrollViewer>
             </TabItem>

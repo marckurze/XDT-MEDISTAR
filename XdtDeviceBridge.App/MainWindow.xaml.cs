@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -113,6 +114,8 @@ public partial class MainWindow : Window
     private readonly InterfaceProfileActivationPreparationPreviewService _interfaceProfileActivationPreparationPreviewService = new();
     private readonly InterfaceProfileActivationGuardService _interfaceProfileActivationGuardService = new();
     private readonly InterfaceProfileFolderSetupService _interfaceProfileFolderSetupService = new();
+    private readonly IXdtBoxBackupService _xdtBoxBackupService = new XdtBoxBackupService();
+    private readonly XdtBoxBackupPathService _xdtBoxBackupPathService = new();
     private readonly ISerialPortDiscoveryService _serialPortDiscoveryService = new SerialPortDiscoveryService();
     private readonly ISerialDeviceCommunicationService _serialDeviceCommunicationService = new SerialDeviceCommunicationService();
     private readonly InterfaceProfileFloatingWindowStateRepository _floatingWindowStateRepository = new();
@@ -169,6 +172,8 @@ public partial class MainWindow : Window
     private DispatcherTimer? _interfaceProfileSaveFeedbackTimer;
     private CancellationTokenSource? _serialTestCancellationTokenSource;
     private bool _hasInterfaceProfileSaveButtonOriginalState;
+    private bool _hasAutoStartedPeriodicScan;
+    private bool _userStoppedPeriodicScan;
     private object? _interfaceProfileSaveButtonOriginalContent;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBackground;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalForeground;
@@ -195,6 +200,7 @@ public partial class MainWindow : Window
         InitializeSerialCommunicationUi();
         InitializeProfileOverview();
         InitializeLicenseOverview();
+        InitializeBackupOverview();
     }
 
     protected override void OnClosing(CancelEventArgs e)
@@ -230,6 +236,7 @@ public partial class MainWindow : Window
     {
         base.OnContentRendered(e);
         RestoreFloatingWindowsOnce();
+        Dispatcher.BeginInvoke((Action)TryAutoStartPeriodicScanOnce, DispatcherPriority.ContextIdle);
     }
 
     private void InitializeSerialCommunicationUi()
@@ -4290,6 +4297,194 @@ public partial class MainWindow : Window
         }
     }
 
+    private void InitializeBackupOverview()
+    {
+        BackupTargetPathTextBox.Text = _xdtBoxBackupPathService.CreateDefaultBackupFilePath();
+        BackupManifestTextBlock.Text = "Keine Sicherung ausgewählt.";
+        BackupCreateStatusText.Text = string.Empty;
+        BackupRestoreStatusText.Text = string.Empty;
+    }
+
+    private void SelectBackupTarget_Click(object sender, RoutedEventArgs e)
+    {
+        var initialPath = string.IsNullOrWhiteSpace(BackupTargetPathTextBox.Text)
+            ? _xdtBoxBackupPathService.CreateDefaultBackupFilePath()
+            : BackupTargetPathTextBox.Text.Trim();
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "XDTBox-Sicherung speichern",
+            Filter = "XDTBox-Sicherung (*.xdtboxbackup)|*.xdtboxbackup|Alle Dateien (*.*)|*.*",
+            DefaultExt = ".xdtboxbackup",
+            FileName = Path.GetFileName(initialPath),
+            InitialDirectory = Directory.Exists(Path.GetDirectoryName(initialPath))
+                ? Path.GetDirectoryName(initialPath)
+                : _xdtBoxBackupPathService.GetDefaultBackupFolder()
+        };
+
+        if (dialog.ShowDialog(this) == true)
+        {
+            BackupTargetPathTextBox.Text = dialog.FileName;
+        }
+    }
+
+    private void CreateBackup_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var installation = _installationInfo ?? _installationInfoProvider.GetOrCreate(paths.BaseFolder);
+            _installationInfo = installation;
+            var backupPath = string.IsNullOrWhiteSpace(BackupTargetPathTextBox.Text)
+                ? _xdtBoxBackupPathService.CreateDefaultBackupFilePath()
+                : BackupTargetPathTextBox.Text.Trim();
+            var result = _xdtBoxBackupService.CreateBackup(
+                paths,
+                backupPath,
+                GetApplicationVersionText(),
+                installation.InstallationId,
+                includeLicenseFile: true);
+
+            BackupCreateStatusText.Text = string.Join(" ", result.Messages);
+            if (result.Success && result.BackupFilePath is not null)
+            {
+                BackupTargetPathTextBox.Text = result.BackupFilePath;
+                BackupCreateStatusText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(47, 111, 78));
+            }
+            else
+            {
+                BackupCreateStatusText.Foreground = System.Windows.Media.Brushes.DarkRed;
+            }
+        }
+        catch (Exception ex)
+        {
+            BackupCreateStatusText.Foreground = System.Windows.Media.Brushes.DarkRed;
+            BackupCreateStatusText.Text = $"Sicherung konnte nicht erstellt werden: {ex.Message}";
+        }
+    }
+
+    private void SelectBackupRestoreFile_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "XDTBox-Sicherung auswählen",
+            Filter = "XDTBox-Sicherung (*.xdtboxbackup)|*.xdtboxbackup|Alle Dateien (*.*)|*.*",
+            DefaultExt = ".xdtboxbackup",
+            InitialDirectory = _xdtBoxBackupPathService.GetDefaultBackupFolder()
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        BackupRestorePathTextBox.Text = dialog.FileName;
+        var preview = _xdtBoxBackupService.PreviewRestore(dialog.FileName);
+        BackupManifestTextBlock.Text = preview.Manifest is null
+            ? string.Join(Environment.NewLine, preview.Messages)
+            : FormatBackupManifest(preview.Manifest, preview.Messages);
+        BackupRestoreStatusText.Text = preview.Success ? "Sicherung ist bereit zur Wiederherstellung." : "Sicherung kann nicht wiederhergestellt werden.";
+        BackupRestoreStatusText.Foreground = preview.Success
+            ? new SolidColorBrush(System.Windows.Media.Color.FromRgb(47, 111, 78))
+            : System.Windows.Media.Brushes.DarkRed;
+    }
+
+    private void RestoreBackup_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(BackupRestorePathTextBox.Text))
+        {
+            BackupRestoreStatusText.Foreground = System.Windows.Media.Brushes.DarkRed;
+            BackupRestoreStatusText.Text = "Bitte zuerst eine Sicherung auswählen.";
+            return;
+        }
+
+        if (_periodicScanCancellationTokenSource is not null)
+        {
+            BackupRestoreStatusText.Foreground = System.Windows.Media.Brushes.DarkRed;
+            BackupRestoreStatusText.Text = "Bitte stoppen Sie zuerst die Überwachung.";
+            return;
+        }
+
+        var confirmation = System.Windows.MessageBox.Show(
+            this,
+            "Die Wiederherstellung ersetzt lokale XDTBox-Konfigurationen. Bitte stellen Sie sicher, dass keine Verarbeitung läuft.",
+            "XDTBox-Sicherung wiederherstellen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        var result = _xdtBoxBackupService.RestoreBackup(paths, BackupRestorePathTextBox.Text.Trim(), isMonitoringRunning: false);
+        BackupRestoreStatusText.Text = string.Join(" ", result.Messages);
+        BackupRestoreStatusText.Foreground = result.Success
+            ? new SolidColorBrush(System.Windows.Media.Color.FromRgb(47, 111, 78))
+            : System.Windows.Media.Brushes.DarkRed;
+
+        if (!result.Success)
+        {
+            return;
+        }
+
+        InitializeProfileOverview();
+        InitializeLicenseOverview();
+        LoadFloatingWindowStates();
+        RefreshInterfaceMonitoringCards();
+    }
+
+    private static string FormatBackupManifest(XdtBoxBackupManifest manifest, IReadOnlyList<string> messages)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Erstellt: {manifest.CreatedAtUtc.ToLocalTime():dd.MM.yyyy HH:mm:ss}");
+        builder.AppendLine($"AppVersion: {manifest.AppVersion}");
+        builder.AppendLine($"SourceInstallationId: {manifest.SourceInstallationId}");
+        builder.AppendLine($"Enthaltene Bereiche: {string.Join(", ", manifest.IncludedAreas)}");
+        builder.AppendLine($"Lizenzdatei enthalten: {(manifest.IncludesLicenseFile ? "Ja" : "Nein")}");
+        builder.AppendLine(manifest.HardwareMigrationNotice);
+        foreach (var message in messages)
+        {
+            builder.AppendLine(message);
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private static string GetApplicationVersionText()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var informationalVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+        return string.IsNullOrWhiteSpace(informationalVersion)
+            ? assembly.GetName().Version?.ToString() ?? "unbekannt"
+            : informationalVersion;
+    }
+
+    private void HeaderHelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        HeaderHelpButton.ContextMenu.PlacementTarget = HeaderHelpButton;
+        HeaderHelpButton.ContextMenu.IsOpen = true;
+    }
+
+    private void OpenHelpCenter_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new HelpCenterWindow
+        {
+            Owner = this
+        };
+        window.Show();
+    }
+
+    private void OpenAboutDialog_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new AboutXdtBoxWindow(GetApplicationVersionText())
+        {
+            Owner = this
+        };
+        window.ShowDialog();
+    }
+
     private void ShowLicenseCustomerData(LicenseRequestCustomer customer)
     {
         LicenseCustomerNameTextBox.Text = customer.CustomerName;
@@ -4634,7 +4829,7 @@ public partial class MainWindow : Window
                     CurrentStatus = runtimeState.CurrentStatus,
                     StatusClass = runtimeState.StatusClass,
                     LastScanText = runtimeState.LastScanText,
-                    AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein",
+                    AutomaticProcessingText = IsAutomaticPairProcessingEnabled() ? "Ja" : "Nein",
                     IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId)
                 }).WithPilotMonitoringActivity(isMonitoringActive);
                 var floatingState = _floatingWindowStateService.GetOrCreate(row.MonitoringCard.InterfaceProfileId);
@@ -5022,7 +5217,7 @@ public partial class MainWindow : Window
             StatusClass = "Waiting",
             LastScanText = lastScanText,
             IsScanAnimationActive = _periodicScanCancellationTokenSource is not null,
-            AutomaticProcessingText = EnableAutomaticPairProcessingCheckBox.IsChecked == true ? "Ja" : "Nein",
+            AutomaticProcessingText = IsAutomaticPairProcessingEnabled() ? "Ja" : "Nein",
             PatientDisplayText = "",
             AisFileName = "",
             DeviceFileName = "",
@@ -5338,7 +5533,7 @@ public partial class MainWindow : Window
                 ScanIntervalText: $"{Math.Max(1, profile.FolderOptions.AutoImportScanIntervalSeconds)} s",
                 IsScanAnimationActive: false,
                 LastScanText: "-",
-                AutomaticProcessingText: "Nein",
+                AutomaticProcessingText: "Ja",
                 PatientDisplayText: "",
                 AisFileName: "",
                 DeviceFileName: "",
@@ -5399,9 +5594,18 @@ public partial class MainWindow : Window
 
     private void StartPeriodicScan_Click(object sender, RoutedEventArgs e)
     {
+        StartPeriodicScan(initiatedByAutoStart: false);
+    }
+
+    private void StartPeriodicScan(bool initiatedByAutoStart)
+    {
         if (_periodicScanCancellationTokenSource is not null)
         {
-            AppendMessage("Überwachung läuft bereits.");
+            if (!initiatedByAutoStart)
+            {
+                AppendMessage("Überwachung läuft bereits.");
+            }
+
             return;
         }
 
@@ -5426,7 +5630,6 @@ public partial class MainWindow : Window
         var token = _periodicScanCancellationTokenSource.Token;
         StartPeriodicScanButton.IsEnabled = false;
         StopPeriodicScanButton.IsEnabled = true;
-        ActiveProfileScanButton.IsEnabled = false;
         PeriodicScanStatusText.Text = "Läuft";
         PeriodicScanLastRunText.Text = "-";
         PeriodicScanReadyPairsText.Text = "0";
@@ -5466,12 +5669,24 @@ public partial class MainWindow : Window
 
     private void StopPeriodicScan_Click(object sender, RoutedEventArgs e)
     {
+        _userStoppedPeriodicScan = true;
         StopPeriodicScan(updateUi: true);
     }
 
-    private void EnableAutomaticPairProcessingCheckBox_Changed(object sender, RoutedEventArgs e)
+    private void TryAutoStartPeriodicScanOnce()
     {
-        RefreshInterfaceMonitoringCards();
+        if (_hasAutoStartedPeriodicScan || _userStoppedPeriodicScan)
+        {
+            return;
+        }
+
+        _hasAutoStartedPeriodicScan = true;
+        StartPeriodicScan(initiatedByAutoStart: true);
+    }
+
+    private static bool IsAutomaticPairProcessingEnabled()
+    {
+        return true;
     }
 
     private void DecreaseMonitoringScanInterval_Click(object sender, RoutedEventArgs e)
@@ -5924,7 +6139,6 @@ public partial class MainWindow : Window
         PeriodicScanStatusText.Text = "Gestoppt";
         StartPeriodicScanButton.IsEnabled = true;
         StopPeriodicScanButton.IsEnabled = false;
-        ActiveProfileScanButton.IsEnabled = true;
         SetAllMonitoringRuntimeStates("Gestoppt", "Neutral");
         RefreshInterfaceMonitoringCards();
         AppendMonitoringEvent("monitoring", "monitoring-state", "Überwachung gestoppt.");
@@ -5970,7 +6184,7 @@ public partial class MainWindow : Window
             result,
             packageEvaluation,
             timestamp,
-            EnableAutomaticPairProcessingCheckBox.IsChecked == true);
+            IsAutomaticPairProcessingEnabled());
         updatedCard = updatedCard with
         {
             IsDetailsExpanded = GetMonitoringDetailsExpanded(profile.Metadata.Id)
@@ -5992,7 +6206,7 @@ public partial class MainWindow : Window
             currentCard,
             result,
             timestamp,
-            EnableAutomaticPairProcessingCheckBox.IsChecked == true);
+            IsAutomaticPairProcessingEnabled());
         updatedCard = updatedCard with
         {
             IsDetailsExpanded = GetMonitoringDetailsExpanded(profile.Metadata.Id)
@@ -6229,7 +6443,7 @@ public partial class MainWindow : Window
         AutoImportScanResult scanResult,
         AutoImportPackageEvaluationResult? packageEvaluation)
     {
-        if (EnableAutomaticPairProcessingCheckBox.IsChecked != true || _periodicScanCancellationTokenSource is null)
+        if (!IsAutomaticPairProcessingEnabled() || _periodicScanCancellationTokenSource is null)
         {
             return null;
         }
@@ -6579,45 +6793,37 @@ public partial class MainWindow : Window
             return;
         }
 
-        ActiveProfileScanButton.IsEnabled = false;
         AppendMonitoringEvent("monitoring", "manual-scan-started", "Einmaliger Scan gestartet.");
 
-        try
-        {
-            var scanTimestampText = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
+        var scanTimestampText = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss");
 
-            foreach (var profile in activeProfiles)
+        foreach (var profile in activeProfiles)
+        {
+            try
             {
-                try
-                {
-                    var result = await _autoImportScannerService
-                        .ScanOnceAsync(profile, TimeSpan.FromMilliseconds(200))
-                        .ConfigureAwait(true);
-                    result = ApplyMonitoringResetState(result, profile);
+                var result = await _autoImportScannerService
+                    .ScanOnceAsync(profile, TimeSpan.FromMilliseconds(200))
+                    .ConfigureAwait(true);
+                result = ApplyMonitoringResetState(result, profile);
 
-                    var packageEvaluation = _autoImportPackageStateService.Evaluate(profile, result.Queue, DateTime.Now);
-                    UpdateMonitoringCardFromScan(profile, result, packageEvaluation, DateTime.Now);
-                    RecordScanMonitoringEvents(profile, profile.Metadata.Name, result);
-                    TryHandleCv5000DeviceOutput(profile, result, DateTime.Now);
-                }
-                catch (Exception ex)
-                {
-                    SetMonitoringRuntimeState(profile.Metadata.Id, "Fehler / blockiert", "Error", scanTimestampText);
-                    AppendMonitoringEvent(
-                        profile.Metadata.Id,
-                        "manual-scan-error",
-                        $"{profile.Metadata.Name}: Scan-Fehler: {ex.Message}",
-                        InterfaceMonitoringEventSeverity.Error);
-                }
+                var packageEvaluation = _autoImportPackageStateService.Evaluate(profile, result.Queue, DateTime.Now);
+                UpdateMonitoringCardFromScan(profile, result, packageEvaluation, DateTime.Now);
+                RecordScanMonitoringEvents(profile, profile.Metadata.Name, result);
+                TryHandleCv5000DeviceOutput(profile, result, DateTime.Now);
             }
+            catch (Exception ex)
+            {
+                SetMonitoringRuntimeState(profile.Metadata.Id, "Fehler / blockiert", "Error", scanTimestampText);
+                AppendMonitoringEvent(
+                    profile.Metadata.Id,
+                    "manual-scan-error",
+                    $"{profile.Metadata.Name}: Scan-Fehler: {ex.Message}",
+                    InterfaceMonitoringEventSeverity.Error);
+            }
+        }
 
-            RefreshInterfaceMonitoringCards();
-            AppendMonitoringEvent("monitoring", "manual-scan-finished", "Einmaliger Scan abgeschlossen.");
-        }
-        finally
-        {
-            ActiveProfileScanButton.IsEnabled = true;
-        }
+        RefreshInterfaceMonitoringCards();
+        AppendMonitoringEvent("monitoring", "manual-scan-finished", "Einmaliger Scan abgeschlossen.");
     }
 
     private static string CreateLicensedDeviceStatusText(

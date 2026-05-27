@@ -264,7 +264,7 @@ public sealed class ActiveInterfaceProfileStatusService
             ScanIntervalText: $"{Math.Max(1, folderOptions.AutoImportScanIntervalSeconds)} s",
             IsScanAnimationActive: false,
             LastScanText: "-",
-            AutomaticProcessingText: "Nein",
+            AutomaticProcessingText: "Ja",
             PatientDisplayText: "",
             AisFileName: "",
             DeviceFileName: "",

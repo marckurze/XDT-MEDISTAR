@@ -50,3 +50,7 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\LoadDevicePr
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\NewInterfaceProfileDialog.baml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\NewInterfaceProfileDialog.g.cs
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\Styles\XdtBoxTheme.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\AboutXdtBoxWindow.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\HelpCenterWindow.baml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\AboutXdtBoxWindow.g.cs
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\obj\Debug\net8.0-windows\HelpCenterWindow.g.cs

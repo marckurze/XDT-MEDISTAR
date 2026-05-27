@@ -21,7 +21,9 @@ Es gibt bewusst:
 - keinen Windows-Dienst
 - keinen Autostart
 - keinen `FileSystemWatcher`
-- keine Verarbeitung beim App-Start
+- keine Verarbeitung, wenn die App geschlossen ist
+
+Konkret bedeutet das fuer den aktuellen Produktivbetrieb: Beim Oeffnen der XDTBox-App startet die interne periodische Ueberwachung automatisch, solange aktive Schnittstellenprofile vorhanden sind. Das ist kein Windows-Autostart und kein Dienst; nach dem Schliessen der App laeuft keine Verarbeitung weiter.
 
 Aktuelle Entwicklungsleitlinie: Fertige Geraeteprofile und Templatepakete haben Vorrang vor weiterer Aktivierungs- oder Assistentenarchitektur. Der Baukasten bleibt Werkzeug fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen, nicht der normale Bedienweg.
 
@@ -73,7 +75,10 @@ Die App besitzt aktuell diese Haupt-Tabs:
 - `Verarbeitung`
 - `Profile & Templates`
 - `Schnittstellenprofile`
+- `Sicherung/Umzug`
 - `Lizenz`
+
+Zusaetzlich gibt es im XDTBox-Header ein `?`-Menue fuer `Hilfe` und `Info`. Die Hilfe ist lokal in der App enthalten; der Info-Dialog zeigt Version und Herstellerdaten.
 
 ## 5. Tab Verarbeitung
 
