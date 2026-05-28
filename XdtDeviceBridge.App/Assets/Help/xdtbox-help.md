@@ -50,6 +50,16 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
+# XDT-Baukasten
+
+Der Tab "XDT-Baukasten" ist eine eigenständige Entwurfs- und Testoberfläche. Er ersetzt noch nicht den alten Tab "Profile & Templates", bereitet aber dessen spätere Ablösung vor.
+
+Im Baukasten wählen Sie AIS-Profil, Geräteprofil und Mapping-/Exportprofil, laden Testdaten und starten eine Vorschau. Diese Vorschau arbeitet nur mit Entwurfsdaten: Es wird keine produktive Datei in den AIS-Exportordner geschrieben, nichts verschoben, nichts archiviert und keine Ordnerüberwachung gestartet.
+
+Die Rohdatenanzeigen zeigen links AIS-Testdaten oder bei RS232-Geräten empfangene COM-Port-Rohdaten und rechts die Gerätetestdatei. "Verarbeitung starten" erzeugt eine Vorschau mit drei Ansichten: "Roh-XDT", "Leseansicht" und bei bidirektionalen Geräten "Geräteausgabe".
+
+Exportregeln werden im Baukasten als Arbeitskopie angezeigt. Platzhalter können in den Exportregel-Entwurf eingefügt werden. BuiltIn-Profile werden dadurch nicht direkt überschrieben.
+
 # Neues Gerät anlegen und Gerät laden
 
 "Neues Gerät anlegen" erstellt ein UserDefined-Geräteprofil. "Gerät laden" zeigt bestehende Geräteprofile und erlaubt, ein Gerätebild zu setzen oder zurückzusetzen.

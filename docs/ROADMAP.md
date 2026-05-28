@@ -100,6 +100,15 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
   - Messwerte prüfen
   - Gesamtexport-Vorschau XDT prüfen
   - Testexport erstellen
+
+### Neuer Tab `XDT-Baukasten`
+
+- Zusaetzlich zum bisherigen Bereich in `Profile & Templates` gibt es nun den Tab `XDT-Baukasten`.
+- Dieser Tab ist als eigenstaendige Entwurfs- und Testdaten-Arbeitsflaeche aufgebaut und soll den alten Sammelbereich spaeter ersetzen.
+- Er verbindet AIS-Profil, Geraeteprofil, Exportprofil-Arbeitskopie, Testdaten, Rohdaten, Ergebnisvorschau, Exportregel-Entwurf und Platzhalter in einer klareren Oberflaeche.
+- `Verarbeitung starten` schreibt im `XDT-Baukasten` keine produktiven Dateien, verschiebt nichts, archiviert nichts und startet keine Ueberwachung.
+- Bei RS232-Geraeten kann ein COM-Port-Abhoerfenster Rohdaten in die linke Rohdatenanzeige uebernehmen; produktiver serieller Export bleibt davon getrennt.
+- Die Ergebnisanzeige bietet `Roh-XDT`, `Leseansicht` und fuer bidirektionale Geraete eine `Geraeteausgabe`-Vorschau.
 - Das verwendete Schnittstellenprofil wird mit AIS-, Geräte-, Exportprofil- und XDT-Anhang-Konfiguration angezeigt.
 - XDT-Anhänge können für den Baukasten-Test aus einem beliebigen Speicherort ausgewählt werden.
 - Die Vorschau simuliert den produktiven Zielpfad aus dem Schnittstellenprofil: `6305` zeigt auf `XDT-Anhang Exportordner` plus erzeugten Dateinamen, nicht auf den Quellpfad.

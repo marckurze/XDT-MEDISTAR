@@ -1878,6 +1878,316 @@
                 </ScrollViewer>
             </TabItem>
 
+            <TabItem Header="XDT-Baukasten">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid x:Name="XdtBaukastenRoot" Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <GroupBox Header="Baukasten-Aktionen">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <UniformGrid Grid.Column="0" Columns="1" Rows="4">
+                                    <Button x:Name="XdtBaukastenLoadTemplatePackageButton" Content="Templatepaket laden" Margin="0,0,0,8" Click="XdtBaukastenLoadTemplatePackage_Click" />
+                                    <Button x:Name="XdtBaukastenImportTemplatePackageButton" Content="Template Paket importieren" Margin="0,0,0,8" Click="XdtBaukastenImportTemplatePackage_Click" />
+                                    <Button x:Name="XdtBaukastenNewAisButton" Content="Neues AIS anlegen" Margin="0,0,0,8" Click="XdtBaukastenNewAis_Click" />
+                                    <Button x:Name="XdtBaukastenLoadDeviceButton" Content="Gerät laden" Click="XdtBaukastenLoadDevice_Click" />
+                                </UniformGrid>
+
+                                <UniformGrid Grid.Column="2" Columns="1" Rows="4">
+                                    <Button x:Name="XdtBaukastenSaveTemplateButton" Content="Konfiguration als Template speichern" Margin="0,0,0,8" Click="XdtBaukastenSaveTemplate_Click" />
+                                    <Button x:Name="XdtBaukastenExportTemplatePackageButton" Content="Template Paket exportieren" Margin="0,0,0,8" Click="XdtBaukastenExportTemplatePackage_Click" />
+                                    <Button x:Name="XdtBaukastenChooseAisButton" Content="AIS wählen" Margin="0,0,0,8" Click="XdtBaukastenChooseAis_Click" />
+                                    <Button x:Name="XdtBaukastenNewDeviceButton" Content="Neues Gerät anlegen" Click="XdtBaukastenNewDevice_Click" />
+                                </UniformGrid>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="1" Header="Geräteidentität">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="210" />
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border BorderBrush="{StaticResource XdtBoxBorderBrush}" BorderThickness="1" CornerRadius="8" Background="White" Padding="10">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="150" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Image x:Name="XdtBaukastenDeviceImage"
+                                               Source="{Binding Text, ElementName=XdtBaukastenDeviceImagePathTextBox, Converter={StaticResource DeviceImageSourceConverter}}"
+                                               Stretch="Uniform"
+                                               MouseLeftButtonUp="XdtBaukastenDeviceImage_MouseLeftButtonUp" />
+                                        <TextBlock x:Name="XdtBaukastenDeviceImagePlaceholder"
+                                                   Text="Geräte Bild&#x0a;&#x0a;Mit Klick austauschbar"
+                                                   TextAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource XdtBoxMutedTextBrush}" />
+                                        <TextBox x:Name="XdtBaukastenDeviceImagePathTextBox" Visibility="Collapsed" />
+                                        <TextBlock Grid.Row="1"
+                                                   Text="Bild per Klick austauschbar"
+                                                   Margin="0,8,0,0"
+                                                   TextAlignment="Center"
+                                                   Foreground="{StaticResource XdtBoxMutedTextBrush}" />
+                                    </Grid>
+                                </Border>
+
+                                <Grid Grid.Column="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Profil:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                    <ComboBox x:Name="XdtBaukastenAisProfileComboBox" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" DisplayMemberPath="Metadata.Name" SelectionChanged="XdtBaukastenAisProfileComboBox_SelectionChanged" Margin="0,0,0,8" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Geräteprofil:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                    <ComboBox x:Name="XdtBaukastenDeviceProfileComboBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" DisplayMemberPath="Metadata.Name" SelectionChanged="XdtBaukastenDeviceProfileComboBox_SelectionChanged" Margin="0,0,0,8" />
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Gerätename:" FontWeight="SemiBold" Margin="0,0,8,6" />
+                                    <TextBlock x:Name="XdtBaukastenDeviceNameText" Grid.Row="2" Grid.Column="1" Margin="0,0,16,6" Text="Kein Gerät geladen" />
+                                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Hersteller:" FontWeight="SemiBold" Margin="0,0,8,6" />
+                                    <TextBlock x:Name="XdtBaukastenManufacturerText" Grid.Row="2" Grid.Column="3" Margin="0,0,0,6" Text="-" />
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Verbindung:" FontWeight="SemiBold" Margin="0,0,8,6" />
+                                    <TextBlock x:Name="XdtBaukastenConnectionKindText" Grid.Row="3" Grid.Column="1" Margin="0,0,16,6" Text="-" />
+                                    <TextBlock Grid.Row="3" Grid.Column="2" Text="Gerätetyp:" FontWeight="SemiBold" Margin="0,0,8,6" />
+                                    <TextBlock x:Name="XdtBaukastenDeviceTypeText" Grid.Row="3" Grid.Column="3" Margin="0,0,0,6" Text="-" />
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Bidirektional:" FontWeight="SemiBold" Margin="0,0,8,6" />
+                                    <TextBlock x:Name="XdtBaukastenBidirectionalText" Grid.Row="4" Grid.Column="1" Margin="0,0,16,6" Text="-" />
+                                    <TextBlock Grid.Row="4" Grid.Column="2" Text="Geräteparser:" FontWeight="SemiBold" Margin="0,0,8,6" />
+                                    <TextBlock x:Name="XdtBaukastenParserText" Grid.Row="4" Grid.Column="3" Margin="0,0,0,6" Text="-" />
+
+                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Profilname:" FontWeight="SemiBold" Margin="0,0,8,6" />
+                                    <TextBlock x:Name="XdtBaukastenProfileNameText" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Text="-" />
+                                </Grid>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="2" Header="Testdaten und Rohdaten">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <Button x:Name="XdtBaukastenLoadAisOrSerialButton" Content="AIS Datei laden" MinWidth="180" Margin="0,0,12,0" Click="XdtBaukastenLoadAisOrSerial_Click" />
+                                    <Button x:Name="XdtBaukastenLoadAttachmentButton" Content="Dateianhang laden" MinWidth="180" Margin="0,0,12,0" Click="XdtBaukastenLoadAttachment_Click" />
+                                    <Button x:Name="XdtBaukastenLoadDeviceFileButton" Content="Gerätedatei laden" MinWidth="180" Click="XdtBaukastenLoadDeviceFile_Click" />
+                                </StackPanel>
+
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <GroupBox x:Name="XdtBaukastenPrimaryRawGroupBox" Header="Anzeige Rohdaten von AIS Datei">
+                                        <TextBox x:Name="XdtBaukastenAisRawTextBox"
+                                                 MinHeight="220"
+                                                 AcceptsReturn="True"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 FontFamily="Consolas"
+                                                 TextWrapping="NoWrap"
+                                                 IsReadOnly="True" />
+                                    </GroupBox>
+                                    <GroupBox Grid.Column="2" Header="Anzeige Rohdaten vom Gerät">
+                                        <TextBox x:Name="XdtBaukastenDeviceRawTextBox"
+                                                 MinHeight="220"
+                                                 AcceptsReturn="True"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 HorizontalScrollBarVisibility="Auto"
+                                                 FontFamily="Consolas"
+                                                 TextWrapping="NoWrap"
+                                                 IsReadOnly="True" />
+                                    </GroupBox>
+                                </Grid>
+
+                                <TextBlock x:Name="XdtBaukastenAttachmentStatusText" Grid.Row="2" Margin="0,8,0,0" Foreground="{StaticResource XdtBoxMutedTextBrush}" Text="Kein Dateianhang geladen." />
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="3" Header="Mapping, Verarbeitung und Ergebnis">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="XdtBaukastenChooseExportProfileButton" Content="Mapping / Exportprofil" MinWidth="180" Margin="0,0,12,0" Click="XdtBaukastenChooseExportProfile_Click" />
+                                    <ComboBox x:Name="XdtBaukastenExportProfileComboBox" MinWidth="380" DisplayMemberPath="Metadata.Name" SelectionChanged="XdtBaukastenExportProfileComboBox_SelectionChanged" />
+                                    <Button x:Name="XdtBaukastenStartProcessingButton" Content="Verarbeitung starten" MinWidth="180" Margin="12,0,0,0" Click="XdtBaukastenStartProcessing_Click" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="Ansicht:" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold" />
+                                    <ComboBox x:Name="XdtBaukastenResultViewComboBox" MinWidth="180" SelectedIndex="0" SelectionChanged="XdtBaukastenResultViewComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="Roh-XDT" Tag="RawXdt" />
+                                        <ComboBoxItem Content="Leseansicht" Tag="Readable" />
+                                        <ComboBoxItem Content="Geräteausgabe" Tag="DeviceOutput" />
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <TextBlock x:Name="XdtBaukastenStatusText" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,8" Foreground="{StaticResource XdtBoxMutedTextBrush}" Text="Baukasten bereit. Bitte Profile und Testdaten laden." />
+
+                                <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Header="Ergebnis der Ausgabe die an das AIS geht">
+                                    <TextBox x:Name="XdtBaukastenResultTextBox"
+                                             MinHeight="260"
+                                             AcceptsReturn="True"
+                                             VerticalScrollBarVisibility="Auto"
+                                             HorizontalScrollBarVisibility="Auto"
+                                             FontFamily="Consolas"
+                                             TextWrapping="NoWrap"
+                                             IsReadOnly="True" />
+                                </GroupBox>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="4" Header="Konfiguration Exportregeln">
+                            <DataGrid x:Name="XdtBaukastenExportRulesGrid"
+                                      MinHeight="220"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      IsReadOnly="True"
+                                      SelectionChanged="XdtBaukastenExportRulesGrid_SelectionChanged">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Aktiv" Binding="{Binding IsEnabled}" Width="70" />
+                                    <DataGridTextColumn Header="Feld" Binding="{Binding TargetFieldCode}" Width="90" />
+                                    <DataGridTextColumn Header="Name" Binding="{Binding TargetName}" Width="180" />
+                                    <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="220" />
+                                    <DataGridTextColumn Header="Template" Binding="{Binding OutputTemplate}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="5" Header="Exportregel Entwurf">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Ziel-Feld:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                <TextBox x:Name="XdtBaukastenDraftTargetFieldCodeTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,16,8" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Zielname:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                <TextBox x:Name="XdtBaukastenDraftTargetNameTextBox" Grid.Row="0" Grid.Column="3" Margin="0,0,0,8" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="SourcePath:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                <TextBox x:Name="XdtBaukastenDraftSourcePathTextBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,8" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Regeltext:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                <TextBox x:Name="XdtBaukastenDraftOutputTemplateTextBox"
+                                         Grid.Row="2"
+                                         Grid.Column="1"
+                                         Grid.ColumnSpan="3"
+                                         MinHeight="88"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas"
+                                         TextWrapping="Wrap" />
+
+                                <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button x:Name="XdtBaukastenApplyDraftRuleButton" Content="Entwurf in Arbeitskopie übernehmen" MinWidth="240" Margin="0,0,12,0" Click="XdtBaukastenApplyDraftRule_Click" />
+                                    <TextBlock x:Name="XdtBaukastenDraftStatusText" VerticalAlignment="Center" Foreground="{StaticResource XdtBoxMutedTextBrush}" Text="Keine Exportregel ausgewählt." />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="6" Header="Verfügbare Platzhalter">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <GroupBox Header="AIS-/Patienten-Platzhalter">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="260">
+                                        <ItemsControl x:Name="XdtBaukastenAisPlaceholderItems">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding DisplayName}" ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Left" Click="XdtBaukastenPlaceholder_Click" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </GroupBox>
+
+                                <GroupBox Grid.Column="2" Header="Geräte-/Messwert-Platzhalter">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="260">
+                                        <ItemsControl x:Name="XdtBaukastenDevicePlaceholderItems">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding DisplayName}" ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Left" Click="XdtBaukastenPlaceholder_Click" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </GroupBox>
+
+                                <GroupBox Grid.Column="4" Header="Ausgabe-an-Gerät-Platzhalter">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="260">
+                                        <ItemsControl x:Name="XdtBaukastenDeviceOutputPlaceholderItems">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="{Binding DisplayName}" ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Left" Click="XdtBaukastenPlaceholder_Click" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </GroupBox>
+                            </Grid>
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
             <TabItem Header="Schnittstellenprofile">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="8">

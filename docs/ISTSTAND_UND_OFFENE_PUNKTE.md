@@ -41,6 +41,8 @@ Besonders stabil wirken aktuell:
 - `XDTBox.ico` liegt als offizielles App-Icon unter `XdtDeviceBridge.App/Assets/App/XDTBox.ico`. Kunden-App, Systray-NotifyIcon, `XdtBox.LicenseManager` und `XdtBox.LicenseIssuer` referenzieren dieses Icon fuer Fenster-, Taskleisten- und EXE-Darstellung.
 - Das neue XDTBox-Logo-/Schriftzugmotiv liegt als Branding-Asset unter `XdtDeviceBridge.App/Assets/Branding/XDTBox_Logo_Schriftzug.png`. Kunden-App und grafisches Hersteller-Lizenztool nutzen einen schmalen Markenheader sowie zentrale Theme-Resources in `XdtDeviceBridge.App/Styles/XdtBoxTheme.xaml`; die Geraeteanbindungsfenster wurden strukturell nicht umgebaut.
 - Der Tab `Verarbeitung` ist produktionsreif vereinfacht: Der Einzelscan-Button und die globale Auto-Verarbeiten-Checkbox sind entfernt. Sobald die geoeffnete XDTBox-App startet, wird die Ueberwachung fuer aktive Schnittstellenprofile einmalig automatisch gestartet; der Anwender kann sie weiter ueber `Ueberwachung stoppen` und `Ueberwachung starten` steuern. Gefundene passende Dateipaare werden bei laufender Ueberwachung immer automatisch verarbeitet.
+- Der Baukasten-Test im Tab `Profile & Templates` verwendet fuer AIS-/Geraetedatei-Vorschau das aktuell ausgewaehlte Exportprofil und loest daraus das passende Geraete-/Schnittstellenprofil auf. Bidirektionale Phoropter-Workflows wie RT-6100 nutzen dort denselben MEDISTAR-Historien-Fallback fuer AIS-Dateien wie die Live-Verarbeitung; die Baukasten-Vorschau bleibt rein lesend und schreibt, archiviert oder verschiebt keine Produktivdateien.
+- Der neue Tab `XDT-Baukasten` ist als eigenstaendige Nachfolge-Arbeitsflaeche fuer den bisherigen Sammelbereich angelegt. Er haelt AIS-Profil, Geraeteprofil, Exportprofil-Arbeitskopie, Testdaten, Rohdatenanzeigen, drei Ergebnisansichten, Exportregel-Entwurf und Platzhalter getrennt von produktiven Schnittstellenprofilen. `Verarbeitung starten` ist dort ein Testlauf im Speicher; es wird keine produktive AIS-Datei geschrieben und keine Ueberwachung gestartet. Der alte Tab `Profile & Templates` bleibt bis zur vollstaendigen Abloesung parallel vorhanden.
 - Der neue Tab `Sicherung/Umzug` erstellt und liest `.xdtboxbackup`-Konfigurationssicherungen. Gesichert werden Profile, lokale Geraetebilder, Bild-Overrides, Lizenz-Kundendaten, UI-Komfortdaten und optional die importierte `.xdtboxlic`. Patientendaten, Messdateien sowie Import-, Export-, Archiv- und Fehlerordner-Inhalte werden nicht gesichert; Restore ist nur bei gestoppter Ueberwachung moeglich, behandelt aktuell verwendete Geraetebilder als Warnung statt als kompletten Abbruch und weist auf neue Lizenzanforderung nach Hardwaretausch hin.
 - Das `?`-Menue mit `Hilfe` und `Info` sitzt jetzt in der Tab-Zeile neben den Registern. Direkt daneben oeffnet ein Zahnrad die App-Einstellungen fuer Autostart-Ueberwachung, Start minimiert ins Systray, Schliessen-ins-Systray und Beenden-Bestaetigung bei laufender Ueberwachung.
 - Die Tabs `Profile & Templates` und `Schnittstellenprofile` sind zur besseren Uebersicht in einklappbare Bereiche gegliedert und starten standardmaessig ausgeklappt; die Vorschau `Pruefung vor Aktivierung` trennt Statusinformationen und Aktionsbuttons layoutseitig, damit keine Textueberlagerungen entstehen.
@@ -107,10 +109,11 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 ### Tabs
 
-Die App hat aktuell fuenf Haupt-Tabs:
+Die App hat aktuell sechs Haupt-Tabs:
 
 - `Verarbeitung`
 - `Profile & Templates`
+- `XDT-Baukasten`
 - `Schnittstellenprofile`
 - `Sicherung/Umzug`
 - `Lizenz`

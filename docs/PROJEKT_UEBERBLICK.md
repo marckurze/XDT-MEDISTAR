@@ -74,6 +74,7 @@ Die App besitzt aktuell diese Haupt-Tabs:
 
 - `Verarbeitung`
 - `Profile & Templates`
+- `XDT-Baukasten`
 - `Schnittstellenprofile`
 - `Sicherung/Umzug`
 - `Lizenz`
@@ -118,6 +119,14 @@ Er enthaelt:
 - Platzhalter
 - Templatepaket-Export per ausgewaehltem Schnittstellenprofil
 - standardmaessig ausgeklappte, aber einklappbare Bereiche fuer bessere Uebersicht
+
+## 6a. Tab XDT-Baukasten
+
+Der neue Tab `XDT-Baukasten` ist eine eigenstaendige Entwurfs- und Testoberflaeche, die den alten Sammelbereich `Profile & Templates` spaeter abloesen soll. Der alte Tab bleibt derzeit parallel bestehen.
+
+Der Baukasten haelt einen Arbeitszustand aus AIS-Profil, Geraeteprofil, Exportprofil-Arbeitskopie, Testdaten, optionalem Dateianhang, Rohdatenanzeigen, Ergebnisvorschau, Exportregel-Entwurf und Platzhaltern. Änderungen an Exportregeln betreffen zunaechst nur die Arbeitskopie und ueberschreiben keine BuiltIn-Profile.
+
+`Verarbeitung starten` ist im `XDT-Baukasten` ein reiner Testlauf. Es wird keine produktive Datei geschrieben, nichts verschoben, nichts archiviert, keine Ordnerueberwachung gestartet und kein AIS-Exportordner beschrieben. Fuer bidirektionale Geraete gibt es neben `Roh-XDT` und `Leseansicht` eine `Geraeteausgabe`-Vorschau, die z. B. RT-6100-/CV-5000-Input-XML im Speicher anzeigen kann.
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
 - Baukastenbereich `Test & Vorschau`
 

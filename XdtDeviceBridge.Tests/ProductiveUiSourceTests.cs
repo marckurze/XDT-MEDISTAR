@@ -84,6 +84,105 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void BuilderManualPreview_ShouldResolveSelectedProfileInsteadOfHardcodedArk1S()
+    {
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var body = ExtractMethodBody(
+            code,
+            "private void RefreshManualProcessingPreview",
+            "private DeviceProfileDefinition? ResolveBuilderDeviceProfile");
+
+        Assert.Contains("BuilderManualProcessingPreviewRequest", body);
+        Assert.Contains("ResolveBuilderDeviceProfile(exportProfile)", body);
+        Assert.Contains("ResolveBuilderInterfaceProfile(exportProfile)", body);
+        Assert.DoesNotContain("DefaultDeviceProfiles.CreateNidekArk1sDefault", body);
+        Assert.DoesNotContain("_pipelineService.ProcessFiles", body);
+    }
+
+    [Fact]
+    public void XdtBaukastenTab_ShouldExposeIndependentWorkflowSurface()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("<TabItem Header=\"XDT-Baukasten\">", xaml);
+        Assert.Contains("<TabItem Header=\"Profile &amp; Templates\">", xaml);
+        Assert.Contains("x:Name=\"XdtBaukastenRoot\"", xaml);
+        Assert.Contains("Templatepaket laden", xaml);
+        Assert.Contains("Template Paket importieren", xaml);
+        Assert.Contains("Neues AIS anlegen", xaml);
+        Assert.Contains("Gerät laden", xaml);
+        Assert.Contains("Konfiguration als Template speichern", xaml);
+        Assert.Contains("Template Paket exportieren", xaml);
+        Assert.Contains("AIS wählen", xaml);
+        Assert.Contains("Neues Gerät anlegen", xaml);
+        Assert.Contains("XdtBaukastenState", code);
+        Assert.Contains("XdtBaukastenPreviewService", code);
+        Assert.Contains("ResolveXdtBaukastenInterfaceProfile", code);
+    }
+
+    [Fact]
+    public void XdtBaukastenTab_ShouldContainSketchSectionsAndThreeResultViews()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var section = ExtractSection(
+            xaml,
+            "<TabItem Header=\"XDT-Baukasten\">",
+            "<TabItem Header=\"Schnittstellenprofile\">");
+
+        Assert.Contains("Geräteidentität", section);
+        Assert.Contains("Testdaten und Rohdaten", section);
+        Assert.Contains("Anzeige Rohdaten von AIS Datei", section);
+        Assert.Contains("Anzeige Rohdaten vom Gerät", section);
+        Assert.Contains("Mapping / Exportprofil", section);
+        Assert.Contains("Verarbeitung starten", section);
+        Assert.Contains("Ergebnis der Ausgabe die an das AIS geht", section);
+        Assert.Contains("Roh-XDT", section);
+        Assert.Contains("Leseansicht", section);
+        Assert.Contains("Geräteausgabe", section);
+        Assert.Contains("Konfiguration Exportregeln", section);
+        Assert.Contains("Exportregel Entwurf", section);
+        Assert.Contains("Verfügbare Platzhalter", section);
+        Assert.Contains("AIS-/Patienten-Platzhalter", section);
+        Assert.Contains("Geräte-/Messwert-Platzhalter", section);
+        Assert.Contains("Ausgabe-an-Gerät-Platzhalter", section);
+    }
+
+    [Fact]
+    public void XdtBaukastenTab_ShouldNotDependOnOldProfileTemplatesControlNames()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var section = ExtractSection(
+            xaml,
+            "<TabItem Header=\"XDT-Baukasten\">",
+            "<TabItem Header=\"Schnittstellenprofile\">");
+
+        Assert.DoesNotContain("BuilderAisFilePathTextBox", section);
+        Assert.DoesNotContain("BuilderDeviceFilePathTextBox", section);
+        Assert.DoesNotContain("SerialTestRawTextBox", section);
+        Assert.DoesNotContain("x:Name=\"ExportRulesGrid\"", section);
+        Assert.Contains("XdtBaukastenExportRulesGrid", section);
+    }
+
+    [Fact]
+    public void XdtBaukastenSerialCaptureWindow_ShouldReturnRawDataToBaukasten()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "XdtBaukastenSerialCaptureWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "XdtBaukastenSerialCaptureWindow.xaml.cs"));
+        var mainCode = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("COM Port abhören", xaml);
+        Assert.Contains("Übernehmen in Baukasten", xaml);
+        Assert.Contains("ParityComboBox", xaml);
+        Assert.Contains("StopBitsComboBox", xaml);
+        Assert.Contains("HandshakeComboBox", xaml);
+        Assert.Contains("CapturedInput", code);
+        Assert.Contains("SerialDeviceCommunicationService.ValidateSettings", code);
+        Assert.Contains("_xdtBaukastenState.SetSerialInput(dialog.CapturedInput)", mainCode);
+        Assert.Contains("XdtBaukastenAisRawTextBox.Text", mainCode);
+    }
+
+    [Fact]
     public void ProfileTemplatesTab_ShouldUseExpandedSectionsByDefault()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
@@ -214,5 +313,14 @@ public sealed class ProductiveUiSourceTests
         Assert.True(end > start, $"Next method {nextMethodName} not found after {startMethodName}.");
 
         return code[start..end];
+    }
+
+    private static string ExtractSection(string text, string startMarker, string endMarker)
+    {
+        var start = text.IndexOf(startMarker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"Start marker {startMarker} not found.");
+        var end = text.IndexOf(endMarker, start + startMarker.Length, StringComparison.Ordinal);
+        Assert.True(end > start, $"End marker {endMarker} not found.");
+        return text[start..end];
     }
 }
