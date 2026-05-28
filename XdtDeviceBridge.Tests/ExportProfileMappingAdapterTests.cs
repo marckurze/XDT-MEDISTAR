@@ -52,7 +52,7 @@ public sealed class ExportProfileMappingAdapterTests
     }
 
     [Fact]
-    public void Adapt_ShouldMapTemplateRuleWithDummySourceWhenSourcePathIsEmpty()
+    public void Adapt_ShouldKeepEmptySourceForLiteralTemplateRule()
     {
         var profile = CreateExportProfile(new ExportRuleDefinition(
             Id: "template-1",
@@ -68,7 +68,7 @@ public sealed class ExportProfileMappingAdapterTests
         var rule = Assert.Single(_adapter.Adapt(profile));
 
         Assert.Equal("6228", rule.TargetFieldCode);
-        Assert.Equal("AIS.PatientNumber", rule.SourcePath);
+        Assert.Equal(string.Empty, rule.SourcePath);
         Assert.Equal("R.:S={Device.R/AR/ARMedian/Sphere}", rule.OutputTemplate);
         Assert.Equal(7, rule.SortOrder);
     }

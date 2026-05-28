@@ -18,7 +18,7 @@ public sealed class ExportProfileMappingAdapter
         var sourcePath = rule.RuleType switch
         {
             ExportRuleType.StaticValue => DummySourcePath,
-            ExportRuleType.Template when string.IsNullOrWhiteSpace(rule.SourcePath) => DummySourcePath,
+            ExportRuleType.Template when string.IsNullOrWhiteSpace(rule.SourcePath) => string.Empty,
             _ => rule.SourcePath ?? string.Empty
         };
 

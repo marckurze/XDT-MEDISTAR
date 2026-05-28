@@ -126,7 +126,9 @@ Der neue Tab `XDT-Baukasten` ist eine eigenstaendige Entwurfs- und Testoberflaec
 
 Der Baukasten haelt einen Arbeitszustand aus AIS-Profil, Geraeteprofil, Exportprofil-Arbeitskopie, Testdaten, optionalem Dateianhang, Rohdatenanzeigen, Ergebnisvorschau, Exportregel-Entwurf und Platzhaltern. Änderungen an Exportregeln betreffen zunaechst nur die Arbeitskopie und ueberschreiben keine BuiltIn-Profile.
 
-`Verarbeitung starten` ist im `XDT-Baukasten` ein reiner Testlauf. Es wird keine produktive Datei geschrieben, nichts verschoben, nichts archiviert, keine Ordnerueberwachung gestartet und kein AIS-Exportordner beschrieben. Fuer bidirektionale Geraete gibt es neben `Roh-XDT` und `Leseansicht` eine `Geraeteausgabe`-Vorschau, die z. B. RT-6100-/CV-5000-Input-XML im Speicher anzeigen kann.
+`Verarbeitung starten` ist im `XDT-Baukasten` ein reiner Testlauf. Es wird keine produktive Datei geschrieben, nichts verschoben, nichts archiviert, keine Ordnerueberwachung gestartet und kein AIS-Exportordner beschrieben. Die Ergebnisanzeige trennt `Roh-XDT`, `Ansicht im AIS`, `Geraeteausgabe` und `Diagnose`; technische SourcePaths und Parserdetails stehen in `Diagnose`, waehrend `Ansicht im AIS` eine fachlich lesbare Karteikartenansicht zeigt. Fuer bidirektionale Geraete kann die `Geraeteausgabe` z. B. RT-6100-/CV-5000-Input-XML im Speicher anzeigen.
+
+Exportregeln im Baukasten sind nur Arbeitskopien. Plus/Muelltonne aendern nicht das BuiltIn-Original, feste Ueberschriften oder Notizen duerfen einen leeren `SourcePath` haben, solange ein Regeltext vorhanden ist. Platzhalter zeigen rechts den aktuell eingelesenen Beispielwert und aktualisieren die Vorschau nach dem Einfuegen; der Undo-Pfeil nimmt Baukasten-Aenderungen schrittweise zurueck.
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
 - Baukastenbereich `Test & Vorschau`
 

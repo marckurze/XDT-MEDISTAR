@@ -118,11 +118,14 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Neues Gerät anlegen", xaml);
         Assert.Contains("XdtBaukastenState", code);
         Assert.Contains("XdtBaukastenPreviewService", code);
+        Assert.Contains("XdtBaukastenUndoBuffer", code);
+        Assert.Contains("TabBaukastenUndoButton", xaml);
+        Assert.Contains("ToolTip=\"Letzte Baukasten-Änderung rückgängig machen\"", xaml);
         Assert.Contains("ResolveXdtBaukastenInterfaceProfile", code);
     }
 
     [Fact]
-    public void XdtBaukastenTab_ShouldContainSketchSectionsAndThreeResultViews()
+    public void XdtBaukastenTab_ShouldContainSketchSectionsAndFourResultViews()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
         var section = ExtractSection(
@@ -136,16 +139,31 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Anzeige Rohdaten vom Gerät", section);
         Assert.Contains("Mapping / Exportprofil", section);
         Assert.Contains("Verarbeitung starten", section);
-        Assert.Contains("Ergebnis der Ausgabe die an das AIS geht", section);
+        Assert.Contains("Roh-XDT-Ausgabe an das AIS", section);
         Assert.Contains("Roh-XDT", section);
-        Assert.Contains("Leseansicht", section);
+        Assert.Contains("Ansicht im AIS", section);
         Assert.Contains("Geräteausgabe", section);
+        Assert.Contains("Diagnose", section);
         Assert.Contains("Konfiguration Exportregeln", section);
+        Assert.Contains("XdtBaukastenAddExportRuleButton", section);
+        Assert.Contains("XdtBaukastenDeleteExportRule_Click", section);
         Assert.Contains("Exportregel Entwurf", section);
         Assert.Contains("Verfügbare Platzhalter", section);
         Assert.Contains("AIS-/Patienten-Platzhalter", section);
         Assert.Contains("Geräte-/Messwert-Platzhalter", section);
         Assert.Contains("Ausgabe-an-Gerät-Platzhalter", section);
+        Assert.Contains("ExampleValue", section);
+        Assert.DoesNotContain("Leseansicht", section);
+    }
+
+    [Fact]
+    public void XdtBaukastenTab_ShouldExposeTemplateLoadMessageAndEncodingSafeReader()
+    {
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("Das Laden lokal gespeicherter Templatepakete ist vorbereitet", code);
+        Assert.Contains("XdtBaukastenTextEncodingReader", code);
+        Assert.Contains("RefreshXdtBaukastenPreviewIfPossible", code);
     }
 
     [Fact]

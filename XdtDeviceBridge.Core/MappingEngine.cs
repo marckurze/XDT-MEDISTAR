@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace XdtDeviceBridge.Core;
@@ -32,6 +33,27 @@ public sealed class MappingEngine
                 continue;
             }
 
+            var template = string.IsNullOrWhiteSpace(rule.OutputTemplate) ? "{value}" : rule.OutputTemplate;
+            if (string.IsNullOrWhiteSpace(rule.SourcePath))
+            {
+                if (string.IsNullOrWhiteSpace(rule.OutputTemplate))
+                {
+                    issues.Add(new MappingIssue(
+                        MappingIssueSeverity.Error,
+                        "SourcePath and OutputTemplate are empty.",
+                        rule.SourcePath,
+                        rule.TargetFieldCode));
+
+                    continue;
+                }
+
+                records.Add(new ExportFieldRecord(
+                    rule.TargetFieldCode,
+                    RenderTemplate(template, string.Empty, patientData, measurementMap),
+                    rule.SortOrder));
+                continue;
+            }
+
             if (!TryResolveSource(rule.SourcePath, patientData, measurementMap, out var sourceValue))
             {
                 if (ShouldSkipMissingOptionalPreparedLine(rule))
@@ -53,7 +75,6 @@ public sealed class MappingEngine
                 continue;
             }
 
-            var template = string.IsNullOrWhiteSpace(rule.OutputTemplate) ? "{value}" : rule.OutputTemplate;
             var rendered = RenderTemplate(template, sourceValue, patientData, measurementMap);
 
             records.Add(new ExportFieldRecord(rule.TargetFieldCode, rendered, rule.SortOrder));
@@ -162,6 +183,16 @@ public sealed class MappingEngine
                 return ApplyFormat(measurementValue, format);
             }
 
+            if (sourceToken.Equals("Date", StringComparison.OrdinalIgnoreCase))
+            {
+                return DateTime.Now.ToString(string.IsNullOrWhiteSpace(format) ? "ddMMyyyy" : format, CultureInfo.InvariantCulture);
+            }
+
+            if (sourceToken.Equals("Time", StringComparison.OrdinalIgnoreCase))
+            {
+                return DateTime.Now.ToString(string.IsNullOrWhiteSpace(format) ? "HHmmss" : format, CultureInfo.InvariantCulture);
+            }
+
             return string.Empty;
         });
     }
@@ -228,17 +259,19 @@ public sealed class MappingEngine
     {
         value = sourcePath switch
         {
-            "AIS.PatientNumber" => patientData.PatientNumber ?? string.Empty,
-            "AIS.LastName" => patientData.LastName ?? string.Empty,
-            "AIS.FirstName" => patientData.FirstName ?? string.Empty,
-            "AIS.BirthDate" => patientData.BirthDate ?? string.Empty,
-            "AIS.Street" => patientData.Street ?? string.Empty,
-            "AIS.PostalCodeCity" => patientData.PostalCodeCity ?? string.Empty,
-            "AIS.GenderCode" => patientData.GenderCode ?? string.Empty,
-            "AIS.SourceSystem" => patientData.SourceSystem ?? string.Empty,
-            "AIS.TargetSystem" => patientData.TargetSystem ?? string.Empty,
-            "AIS.GdtVersion" => patientData.GdtVersion ?? string.Empty,
-            "AIS.ExaminationType" => patientData.ExaminationType ?? string.Empty,
+            var current when current.Equals("AIS.PatientNumber", StringComparison.OrdinalIgnoreCase) => patientData.PatientNumber ?? string.Empty,
+            var current when current.Equals("AIS.LastName", StringComparison.OrdinalIgnoreCase) => patientData.LastName ?? string.Empty,
+            var current when current.Equals("AIS.FirstName", StringComparison.OrdinalIgnoreCase) => patientData.FirstName ?? string.Empty,
+            var current when current.Equals("AIS.BirthDate", StringComparison.OrdinalIgnoreCase)
+                || current.Equals("AIS.DateOfBirth", StringComparison.OrdinalIgnoreCase) => patientData.BirthDate ?? string.Empty,
+            var current when current.Equals("AIS.Street", StringComparison.OrdinalIgnoreCase) => patientData.Street ?? string.Empty,
+            var current when current.Equals("AIS.PostalCodeCity", StringComparison.OrdinalIgnoreCase) => patientData.PostalCodeCity ?? string.Empty,
+            var current when current.Equals("AIS.GenderCode", StringComparison.OrdinalIgnoreCase) => patientData.GenderCode ?? string.Empty,
+            var current when current.Equals("AIS.SourceSystem", StringComparison.OrdinalIgnoreCase) => patientData.SourceSystem ?? string.Empty,
+            var current when current.Equals("AIS.TargetSystem", StringComparison.OrdinalIgnoreCase) => patientData.TargetSystem ?? string.Empty,
+            var current when current.Equals("AIS.GdtVersion", StringComparison.OrdinalIgnoreCase) => patientData.GdtVersion ?? string.Empty,
+            var current when current.Equals("AIS.ExaminationType", StringComparison.OrdinalIgnoreCase)
+                || current.Equals("AIS.ExamType", StringComparison.OrdinalIgnoreCase) => patientData.ExaminationType ?? string.Empty,
             _ => string.Empty
         };
 

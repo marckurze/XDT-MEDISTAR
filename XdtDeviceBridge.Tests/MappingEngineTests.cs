@@ -66,6 +66,61 @@ public sealed class MappingEngineTests
     }
 
     [Fact]
+    public void Map_AllowsLiteralTemplateWithoutSourcePath()
+    {
+        var engine = new MappingEngine();
+        var patient = CreatePatient();
+
+        var result = engine.Map(
+            patient,
+            CreateMeasurements(),
+            new[]
+            {
+                CreateRule("1", "6228", "Hinweis", string.Empty, "Phoropter finaler Verordnungswert")
+            });
+
+        Assert.False(result.HasErrors);
+        var record = Assert.Single(result.Records);
+        Assert.Equal("6228", record.FieldCode);
+        Assert.Equal("Phoropter finaler Verordnungswert", record.Value);
+    }
+
+    [Fact]
+    public void Map_RejectsRuleWithoutSourcePathAndTemplate()
+    {
+        var engine = new MappingEngine();
+
+        var result = engine.Map(
+            CreatePatient(),
+            CreateMeasurements(),
+            new[]
+            {
+                CreateRule("1", "6228", "Leer", string.Empty, string.Empty)
+            });
+
+        Assert.True(result.HasErrors);
+        Assert.Empty(result.Records);
+        Assert.Contains(result.Issues, issue => issue.Message == "SourcePath and OutputTemplate are empty.");
+    }
+
+    [Fact]
+    public void Map_LiteralTemplateCanUseAisAliasPlaceholders()
+    {
+        var engine = new MappingEngine();
+
+        var result = engine.Map(
+            CreatePatient(),
+            CreateMeasurements(),
+            new[]
+            {
+                CreateRule("1", "6228", "Patient", string.Empty, "Patient={AIS.PatientNumber}; Geb={AIS.DateOfBirth}; Art={AIS.ExamType}")
+            });
+
+        Assert.False(result.HasErrors);
+        Assert.Equal("Patient=4701-1; Geb=12061955; Art=", Assert.Single(result.Records).Value);
+    }
+
+    [Fact]
     public void Map_ReplacesMultiplePlaceholders()
     {
         var engine = new MappingEngine();

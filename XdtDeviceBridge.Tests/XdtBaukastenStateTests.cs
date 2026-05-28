@@ -69,4 +69,66 @@ public sealed class XdtBaukastenStateTests
         Assert.Contains("RAW", state.AisInput.RawText);
         Assert.Contains("Hexdump", state.AisInput.RawText);
     }
+
+    [Fact]
+    public void State_ShouldAddAndRemoveWorkingRulesWithoutChangingSourceProfile()
+    {
+        var state = new XdtBaukastenState();
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+        state.SetExportProfile(exportProfile);
+
+        var rule = new ExportRuleDefinition(
+            "baukasten-new",
+            "6228",
+            "Neue Notiz",
+            ExportRuleType.Template,
+            null,
+            "Testüberschrift",
+            999,
+            true,
+            null);
+
+        state.AddWorkingRule(rule);
+        Assert.Contains(state.WorkingExportRules, current => current.Id == "baukasten-new");
+        Assert.DoesNotContain(exportProfile.Rules, current => current.Id == "baukasten-new");
+
+        Assert.True(state.RemoveWorkingRule("baukasten-new"));
+        Assert.DoesNotContain(state.WorkingExportRules, current => current.Id == "baukasten-new");
+    }
+
+    [Fact]
+    public void UndoBuffer_ShouldKeepAtLeastTenStepsAndRestorePreviousState()
+    {
+        var state = new XdtBaukastenState();
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default();
+        state.SetExportProfile(exportProfile);
+        var buffer = new XdtBaukastenUndoBuffer(10);
+
+        for (var i = 0; i < 12; i++)
+        {
+            buffer.Push(state.CreateSnapshot());
+            var rule = state.WorkingExportRules[0] with { OutputTemplate = $"Schritt {i}" };
+            Assert.True(state.UpdateWorkingRule(rule));
+        }
+
+        Assert.Equal(10, buffer.Count);
+        Assert.True(buffer.TryPop(out var snapshot));
+        Assert.NotNull(snapshot);
+        state.RestoreSnapshot(snapshot!);
+
+        Assert.Equal("Schritt 10", state.WorkingExportRules[0].OutputTemplate);
+    }
+
+    [Fact]
+    public void Placeholder_ShouldExposeExampleValueForRightAlignedUi()
+    {
+        var placeholder = new XdtBaukastenPlaceholder(
+            "AIS",
+            "Patientennummer",
+            "{AIS.PatientNumber}",
+            "AIS-Patientennummer",
+            "4701-1");
+
+        Assert.Equal("4701-1", placeholder.ExampleValue);
+    }
 }

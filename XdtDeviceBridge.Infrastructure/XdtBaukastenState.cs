@@ -5,8 +5,9 @@ namespace XdtDeviceBridge.Infrastructure;
 public enum XdtBaukastenResultView
 {
     RawXdt,
-    Readable,
-    DeviceOutput
+    AisView,
+    DeviceOutput,
+    Diagnostics
 }
 
 public sealed record XdtBaukastenLoadedInput(
@@ -16,8 +17,9 @@ public sealed record XdtBaukastenLoadedInput(
 
 public sealed record XdtBaukastenOutputPreview(
     string RawXdt,
-    string Readable,
+    string AisView,
     string DeviceOutput,
+    string Diagnostics,
     IReadOnlyList<string> Messages);
 
 public sealed record XdtBaukastenPreviewResult(
@@ -31,7 +33,63 @@ public sealed record XdtBaukastenPlaceholder(
     string DisplayName,
     string Token,
     string Description,
+    string ExampleValue = "-",
     bool IsPreparedOnly = false);
+
+public sealed record XdtBaukastenStateSnapshot(
+    AisProfile? AisProfile,
+    DeviceProfileDefinition? DeviceProfile,
+    ExportProfileDefinition? SourceExportProfile,
+    IReadOnlyList<ExportRuleDefinition> WorkingExportRules,
+    XdtBaukastenLoadedInput? AisInput,
+    XdtBaukastenLoadedInput? DeviceInput,
+    XdtBaukastenLoadedInput? AttachmentInput,
+    SerialRawDeviceInput? SerialInput,
+    XdtBaukastenPreviewResult? PreviewResult);
+
+public sealed class XdtBaukastenUndoBuffer
+{
+    private readonly int _capacity;
+    private readonly Stack<XdtBaukastenStateSnapshot> _snapshots = new();
+
+    public XdtBaukastenUndoBuffer(int capacity)
+    {
+        if (capacity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(capacity), "Undo capacity must be greater than zero.");
+        }
+
+        _capacity = capacity;
+    }
+
+    public bool CanUndo => _snapshots.Count > 0;
+
+    public int Count => _snapshots.Count;
+
+    public void Push(XdtBaukastenStateSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        var items = _snapshots.Reverse().Append(snapshot).TakeLast(_capacity).ToArray();
+        _snapshots.Clear();
+        foreach (var item in items)
+        {
+            _snapshots.Push(item);
+        }
+    }
+
+    public bool TryPop(out XdtBaukastenStateSnapshot? snapshot)
+    {
+        if (_snapshots.Count == 0)
+        {
+            snapshot = null;
+            return false;
+        }
+
+        snapshot = _snapshots.Pop();
+        return true;
+    }
+}
 
 public sealed class XdtBaukastenState
 {
@@ -129,6 +187,11 @@ public sealed class XdtBaukastenState
         PreviewResult = result;
     }
 
+    public void ClearPreviewResult()
+    {
+        PreviewResult = null;
+    }
+
     public ExportProfileDefinition? CreateWorkingExportProfile()
     {
         return SourceExportProfile is null
@@ -148,5 +211,58 @@ public sealed class XdtBaukastenState
 
         _workingExportRules[index] = rule;
         return true;
+    }
+
+    public void AddWorkingRule(ExportRuleDefinition rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        _workingExportRules.Add(rule);
+    }
+
+    public bool RemoveWorkingRule(string ruleId)
+    {
+        if (string.IsNullOrWhiteSpace(ruleId))
+        {
+            return false;
+        }
+
+        var index = _workingExportRules.FindIndex(existing => string.Equals(existing.Id, ruleId, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return false;
+        }
+
+        _workingExportRules.RemoveAt(index);
+        return true;
+    }
+
+    public XdtBaukastenStateSnapshot CreateSnapshot()
+    {
+        return new XdtBaukastenStateSnapshot(
+            AisProfile,
+            DeviceProfile,
+            SourceExportProfile,
+            _workingExportRules.ToList(),
+            AisInput,
+            DeviceInput,
+            AttachmentInput,
+            SerialInput,
+            PreviewResult);
+    }
+
+    public void RestoreSnapshot(XdtBaukastenStateSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        AisProfile = snapshot.AisProfile;
+        DeviceProfile = snapshot.DeviceProfile;
+        SourceExportProfile = snapshot.SourceExportProfile;
+        _workingExportRules.Clear();
+        _workingExportRules.AddRange(snapshot.WorkingExportRules);
+        AisInput = snapshot.AisInput;
+        DeviceInput = snapshot.DeviceInput;
+        AttachmentInput = snapshot.AttachmentInput;
+        SerialInput = snapshot.SerialInput;
+        PreviewResult = snapshot.PreviewResult;
     }
 }

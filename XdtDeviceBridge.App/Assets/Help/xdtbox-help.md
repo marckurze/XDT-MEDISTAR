@@ -56,9 +56,13 @@ Der Tab "XDT-Baukasten" ist eine eigenständige Entwurfs- und Testoberfläche. E
 
 Im Baukasten wählen Sie AIS-Profil, Geräteprofil und Mapping-/Exportprofil, laden Testdaten und starten eine Vorschau. Diese Vorschau arbeitet nur mit Entwurfsdaten: Es wird keine produktive Datei in den AIS-Exportordner geschrieben, nichts verschoben, nichts archiviert und keine Ordnerüberwachung gestartet.
 
-Die Rohdatenanzeigen zeigen links AIS-Testdaten oder bei RS232-Geräten empfangene COM-Port-Rohdaten und rechts die Gerätetestdatei. "Verarbeitung starten" erzeugt eine Vorschau mit drei Ansichten: "Roh-XDT", "Leseansicht" und bei bidirektionalen Geräten "Geräteausgabe".
+Die Rohdatenanzeigen zeigen links AIS-Testdaten oder bei RS232-Geräten empfangene COM-Port-Rohdaten und rechts die Gerätetestdatei. "Verarbeitung starten" erzeugt eine Vorschau mit vier Ansichten: "Roh-XDT", "Ansicht im AIS", "Geräteausgabe" und "Diagnose".
 
-Exportregeln werden im Baukasten als Arbeitskopie angezeigt. Platzhalter können in den Exportregel-Entwurf eingefügt werden. BuiltIn-Profile werden dadurch nicht direkt überschrieben.
+Die "Ansicht im AIS" zeigt eine fachliche Karteikartenansicht ohne technische SourcePath-Liste. Die Ansicht "Diagnose" zeigt erkannte Rohdaten, SourcePaths, Parserdetails, XDT-Felder und Warnungen.
+
+Exportregeln werden im Baukasten als Arbeitskopie angezeigt. Regeln können über das Plus ergänzt und über die Mülltonne aus der Arbeitskopie entfernt werden. Ein leerer SourcePath ist für feste Überschriften oder Notizen erlaubt, wenn im Regeltext ein fester Text steht. Platzhalter zeigen rechts den aktuell eingelesenen Beispielwert; ein Klick fügt den Platzhalter in den Entwurf ein und aktualisiert die Vorschau. Der Zurück-Pfeil nimmt die letzten Baukasten-Änderungen schrittweise zurück. BuiltIn-Profile werden dadurch nicht direkt überschrieben.
+
+"Templatepaket laden" ist als lokale Paketbibliothek vorbereitet. Bis diese Bibliothek vollständig geführt wird, verwenden Sie "Template Paket importieren" oder wählen AIS, Gerät und Exportprofil manuell.
 
 # Neues Gerät anlegen und Gerät laden
 

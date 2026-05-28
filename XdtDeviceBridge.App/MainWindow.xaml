@@ -2059,14 +2059,15 @@
                                     <TextBlock Text="Ansicht:" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold" />
                                     <ComboBox x:Name="XdtBaukastenResultViewComboBox" MinWidth="180" SelectedIndex="0" SelectionChanged="XdtBaukastenResultViewComboBox_SelectionChanged">
                                         <ComboBoxItem Content="Roh-XDT" Tag="RawXdt" />
-                                        <ComboBoxItem Content="Leseansicht" Tag="Readable" />
+                                        <ComboBoxItem Content="Ansicht im AIS" Tag="AisView" />
                                         <ComboBoxItem Content="Geräteausgabe" Tag="DeviceOutput" />
+                                        <ComboBoxItem Content="Diagnose" Tag="Diagnostics" />
                                     </ComboBox>
                                 </StackPanel>
 
                                 <TextBlock x:Name="XdtBaukastenStatusText" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,8" Foreground="{StaticResource XdtBoxMutedTextBrush}" Text="Baukasten bereit. Bitte Profile und Testdaten laden." />
 
-                                <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Header="Ergebnis der Ausgabe die an das AIS geht">
+                                <GroupBox x:Name="XdtBaukastenResultGroupBox" Grid.Row="2" Grid.ColumnSpan="2" Header="Roh-XDT-Ausgabe an das AIS">
                                     <TextBox x:Name="XdtBaukastenResultTextBox"
                                              MinHeight="260"
                                              AcceptsReturn="True"
@@ -2080,20 +2081,46 @@
                         </GroupBox>
 
                         <GroupBox Grid.Row="4" Header="Konfiguration Exportregeln">
-                            <DataGrid x:Name="XdtBaukastenExportRulesGrid"
-                                      MinHeight="220"
-                                      AutoGenerateColumns="False"
-                                      CanUserAddRows="False"
-                                      IsReadOnly="True"
-                                      SelectionChanged="XdtBaukastenExportRulesGrid_SelectionChanged">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Aktiv" Binding="{Binding IsEnabled}" Width="70" />
-                                    <DataGridTextColumn Header="Feld" Binding="{Binding TargetFieldCode}" Width="90" />
-                                    <DataGridTextColumn Header="Name" Binding="{Binding TargetName}" Width="180" />
-                                    <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="220" />
-                                    <DataGridTextColumn Header="Template" Binding="{Binding OutputTemplate}" Width="*" />
-                                </DataGrid.Columns>
-                            </DataGrid>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <DataGrid x:Name="XdtBaukastenExportRulesGrid"
+                                          MinHeight="220"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          IsReadOnly="True"
+                                          SelectionChanged="XdtBaukastenExportRulesGrid_SelectionChanged">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding IsEnabled}" Width="70" />
+                                        <DataGridTextColumn Header="Feld" Binding="{Binding TargetFieldCode}" Width="90" />
+                                        <DataGridTextColumn Header="Name" Binding="{Binding TargetName}" Width="180" />
+                                        <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="220" />
+                                        <DataGridTextColumn Header="Template" Binding="{Binding OutputTemplate}" Width="*" />
+                                        <DataGridTemplateColumn Header="" Width="54">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="🗑"
+                                                            Tag="{Binding}"
+                                                            ToolTip="Exportregel aus der Baukasten-Arbeitskopie löschen"
+                                                            Click="XdtBaukastenDeleteExportRule_Click" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Button x:Name="XdtBaukastenAddExportRuleButton"
+                                        Grid.Row="1"
+                                        Content="+"
+                                        Width="44"
+                                        HorizontalAlignment="Right"
+                                        Margin="0,8,4,0"
+                                        ToolTip="Neue Exportregel in der Baukasten-Arbeitskopie hinzufügen"
+                                        Click="XdtBaukastenAddExportRule_Click" />
+                            </Grid>
                         </GroupBox>
 
                         <GroupBox Grid.Row="5" Header="Exportregel Entwurf">
@@ -2152,7 +2179,21 @@
                                         <ItemsControl x:Name="XdtBaukastenAisPlaceholderItems">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="{Binding DisplayName}" ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Left" Click="XdtBaukastenPlaceholder_Click" />
+                                                    <Button ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Stretch" Click="XdtBaukastenPlaceholder_Click">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding ExampleValue}"
+                                                                       Margin="12,0,0,0"
+                                                                       HorizontalAlignment="Right"
+                                                                       FontFamily="Consolas"
+                                                                       Foreground="{StaticResource XdtBoxMutedTextBrush}" />
+                                                        </Grid>
+                                                    </Button>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
@@ -2164,7 +2205,21 @@
                                         <ItemsControl x:Name="XdtBaukastenDevicePlaceholderItems">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="{Binding DisplayName}" ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Left" Click="XdtBaukastenPlaceholder_Click" />
+                                                    <Button ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Stretch" Click="XdtBaukastenPlaceholder_Click">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding ExampleValue}"
+                                                                       Margin="12,0,0,0"
+                                                                       HorizontalAlignment="Right"
+                                                                       FontFamily="Consolas"
+                                                                       Foreground="{StaticResource XdtBoxMutedTextBrush}" />
+                                                        </Grid>
+                                                    </Button>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
@@ -2176,7 +2231,21 @@
                                         <ItemsControl x:Name="XdtBaukastenDeviceOutputPlaceholderItems">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="{Binding DisplayName}" ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Left" Click="XdtBaukastenPlaceholder_Click" />
+                                                    <Button ToolTip="{Binding Description}" Tag="{Binding Token}" Margin="0,0,0,6" HorizontalContentAlignment="Stretch" Click="XdtBaukastenPlaceholder_Click">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding ExampleValue}"
+                                                                       Margin="12,0,0,0"
+                                                                       HorizontalAlignment="Right"
+                                                                       FontFamily="Consolas"
+                                                                       Foreground="{StaticResource XdtBoxMutedTextBrush}" />
+                                                        </Grid>
+                                                    </Button>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
@@ -3205,6 +3274,12 @@
                         VerticalAlignment="Top"
                         Margin="0,4,12,0"
                         Panel.ZIndex="10">
+                <Button x:Name="TabBaukastenUndoButton"
+                        Content="↶"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        ToolTip="Letzte Baukasten-Änderung rückgängig machen"
+                        IsEnabled="False"
+                        Click="XdtBaukastenUndo_Click"/>
                 <Button x:Name="TabHelpButton"
                         Content="?"
                         Style="{StaticResource XdtBoxTabUtilityButtonStyle}"

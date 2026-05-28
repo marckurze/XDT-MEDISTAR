@@ -47,11 +47,13 @@ public sealed class XdtBaukastenPreviewService
 
         ProcessingPipelineResult? pipelineResult = null;
         var rawXdt = string.Empty;
-        var readable = string.Empty;
+        var aisView = string.Empty;
+        var diagnostics = string.Empty;
         if (state.SerialInput is not null && state.DeviceInput is null)
         {
             messages.Add("RS232-Rohdaten wurden übernommen. Eine medizinische XDT-Vorschau wird erst erzeugt, wenn passende Parserdaten oder eine Gerätetestdatei vorliegen.");
-            readable = CreateSerialReadableView(state.SerialInput);
+            aisView = "Für reine RS232-Rohdaten ist noch keine AIS-Karteikartenansicht erzeugt.";
+            diagnostics = CreateSerialDiagnosticsView(state.SerialInput);
         }
         else
         {
@@ -69,15 +71,17 @@ public sealed class XdtBaukastenPreviewService
                 DeviceFilePath: state.DeviceInput!.SourcePath));
 
             rawXdt = pipelineResult.ExportContent;
-            readable = CreateReadableView(pipelineResult);
+            aisView = CreateAisCardView(pipelineResult);
+            diagnostics = CreateDiagnosticsView(pipelineResult);
             messages.AddRange(pipelineResult.Issues.Select(issue => $"{issue.Severity}: {issue.Stage}: {issue.Message}"));
         }
 
         var deviceOutput = BuildDeviceOutputPreview(state, interfaceProfile, timestamp, messages);
         var output = new XdtBaukastenOutputPreview(
             RawXdt: rawXdt,
-            Readable: readable,
+            AisView: aisView,
             DeviceOutput: deviceOutput,
+            Diagnostics: diagnostics,
             Messages: messages);
 
         return new XdtBaukastenPreviewResult(
@@ -159,8 +163,9 @@ public sealed class XdtBaukastenPreviewService
     {
         var output = new XdtBaukastenOutputPreview(
             RawXdt: string.Empty,
-            Readable: message,
+            AisView: message,
             DeviceOutput: message,
+            Diagnostics: message,
             Messages: new[] { message });
 
         return new XdtBaukastenPreviewResult(
@@ -170,7 +175,53 @@ public sealed class XdtBaukastenPreviewService
             Messages: new[] { message });
     }
 
-    private static string CreateReadableView(ProcessingPipelineResult result)
+    private static string CreateAisCardView(ProcessingPipelineResult result)
+    {
+        var builder = new StringBuilder();
+        if (result.Patient is not null)
+        {
+            var patientName = string.Join(" ", new[] { result.Patient.FirstName, result.Patient.LastName }
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!.Trim()));
+
+            builder.AppendLine("Patient:");
+            builder.AppendLine(string.IsNullOrWhiteSpace(patientName) ? "-" : patientName);
+            builder.AppendLine($"Geburtsdatum: {DisplayDate(result.Patient.BirthDate)}");
+            builder.AppendLine($"Nr.: {Display(result.Patient.PatientNumber)}");
+            builder.AppendLine();
+
+            builder.AppendLine("Untersuchungsart:");
+            builder.AppendLine(Display(result.Patient.ExaminationType));
+            builder.AppendLine();
+        }
+
+        if (result.ExportRecords.Count == 0)
+        {
+            builder.AppendLine("Noch keine AIS-Ausgabe erzeugt.");
+            return builder.ToString().TrimEnd();
+        }
+
+        builder.AppendLine("Karteikartenansicht:");
+        foreach (var group in result.ExportRecords
+            .Where(record => !IsPatientAdministrativeField(record.FieldCode))
+            .GroupBy(record => record.FieldCode)
+            .OrderBy(group => group.Min(record => record.SortOrder)))
+        {
+            builder.AppendLine();
+            builder.AppendLine($"{group.Key}:");
+            foreach (var record in group.OrderBy(record => record.SortOrder))
+            {
+                if (!string.IsNullOrWhiteSpace(record.Value))
+                {
+                    builder.AppendLine(record.Value);
+                }
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string CreateDiagnosticsView(ProcessingPipelineResult result)
     {
         var builder = new StringBuilder();
         if (result.Patient is not null)
@@ -208,7 +259,7 @@ public sealed class XdtBaukastenPreviewService
         return builder.ToString().TrimEnd();
     }
 
-    private static string CreateSerialReadableView(SerialRawDeviceInput input)
+    private static string CreateSerialDiagnosticsView(SerialRawDeviceInput input)
     {
         var builder = new StringBuilder();
         builder.AppendLine($"COM-Port: {input.PortName}");
@@ -229,5 +280,23 @@ public sealed class XdtBaukastenPreviewService
     private static string Display(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? "-" : value.Trim();
+    }
+
+    private static bool IsPatientAdministrativeField(string fieldCode)
+    {
+        return fieldCode is "3000" or "3101" or "3102" or "3103" or "8000";
+    }
+
+    private static string DisplayDate(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "-";
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length == 8 && trimmed.All(char.IsDigit)
+            ? $"{trimmed[..2]}.{trimmed.Substring(2, 2)}.{trimmed[4..]}"
+            : trimmed;
     }
 }
