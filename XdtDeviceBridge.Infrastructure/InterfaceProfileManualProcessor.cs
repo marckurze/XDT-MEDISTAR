@@ -256,9 +256,13 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 ConvertGdtIssues(gdtResult.Issues, preserveErrorSeverity: true));
         }
 
-        if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null))
+        if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null)
+            || InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null))
         {
-            return ReadCv5000HistoryAisPatientData(aisFilePath, gdtResult);
+            var label = InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null)
+                ? "RT-6100"
+                : "CV-5000";
+            return ReadPhoropterHistoryAisPatientData(aisFilePath, gdtResult, label);
         }
 
         return AisPatientDataReadForProcessingResult.CreateFailure(
@@ -267,9 +271,10 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             CreateGdtFailureMessages(gdtResult.Issues));
     }
 
-    private AisPatientDataReadForProcessingResult ReadCv5000HistoryAisPatientData(
+    private AisPatientDataReadForProcessingResult ReadPhoropterHistoryAisPatientData(
         string aisFilePath,
-        GdtParseResult strictGdtResult)
+        GdtParseResult strictGdtResult,
+        string deviceLabel)
     {
         MedistarHistoricalMeasurementParseResult historyResult;
         try
@@ -279,7 +284,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
             var messages = CreateGdtFailureMessages(strictGdtResult.Issues).ToList();
-            messages.Insert(0, $"CV-5000-Historien-AIS-Datei konnte nicht gelesen werden: {ex.Message}");
+            messages.Insert(0, $"{deviceLabel}-Historien-AIS-Datei konnte nicht gelesen werden: {ex.Message}");
             return AisPatientDataReadForProcessingResult.CreateFailure(
                 null,
                 ConvertGdtIssues(strictGdtResult.Issues, preserveErrorSeverity: true),
@@ -291,13 +296,13 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             new(
                 ProcessingIssueSeverity.Warning,
                 ProcessingStage.GdtParsing,
-                "CV-5000-Rueckweg: Standard-GDT-Leser meldete MEDISTAR-Historienzeilen; Patientenkontext wurde mit dem CV-5000-Historienparser gelesen.")
+                $"{deviceLabel}-Rueckweg: Standard-GDT-Leser meldete MEDISTAR-Historienzeilen; Patientenkontext wurde mit dem Phoropter-Historienparser gelesen.")
         };
         issues.AddRange(ConvertGdtIssues(strictGdtResult.Issues.Take(5), preserveErrorSeverity: false));
         issues.AddRange(historyResult.Warnings.Select(warning => new ProcessingIssue(
             ProcessingIssueSeverity.Warning,
             ProcessingStage.GdtParsing,
-            $"CV-5000-Historienparser: {warning}")));
+            $"{deviceLabel}-Historienparser: {warning}")));
 
         var missingFields = GetMissingRequiredAisPatientFields(historyResult.Patient);
         if (missingFields.Count > 0)

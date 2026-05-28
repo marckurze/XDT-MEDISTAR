@@ -99,7 +99,22 @@ Die App wird als Produkt unter dem Namen XDTBox gefuehrt. Bei Geraetequellen unt
 
 Fuer die NIDEK-RS232-Familie ist eine konservative Protokollschicht vorbereitet. `NidekRs232FrameReader` liest ASCII-Frames mit `SOH`, `STX`, `ETB`, `EOT`, optionalem `CR/LF` und optionaler NCP10-Checksumme. `NidekRs232CommandBuilder` erzeugt dokumentnahe RS/SD/RD/RSD/CL-Kommandos fuer spaetere bidirektionale Workflows, wird aber nicht automatisch produktiv benutzt. `NidekRs232PayloadParser` erkennt erste LM-, NT- und PM-Rohdaten als technische Kandidaten: LM fuer `6228`, NT-Tonometrie fuer `6205`, PM/Pachymetrie fuer `6220`. Unbekannte Segmente, UV/Transmission, Prisma-Details und Fehlercodes bleiben roh beziehungsweise als Fehlersegment erhalten und werden nicht als Messwert exportiert. Der RS232-Testbereich kann NIDEK-Rohdaten/Hexdumps in Frames, Segmente, Checksumme, Modell und Messwertkandidaten zerlegen. Ein produktiver serieller Dauerbetrieb und produktive medizinische XDT-Ausgabe aus RS232 bleiben bis zu echten Rohdaten und Praxistest bewusst offen.
 
-### 1.5 Lizenzanzeige
+### 1.6 NIDEK RT-6100 bidirektional
+
+NIDEK RT-6100 ist als bidirektionaler LAN-/MEM-200-Phoropter-Kandidat vorbereitet. Die Architektur folgt dem CV-5000-Zweiphasenmodell, bleibt aber geraetespezifisch:
+
+- `NetworkLan` bleibt der Dateifreigabe-/UNC-Workflow.
+- Phase 1 nutzt AIS-/MEDISTAR-Historienwerte und erzeugt eine RT-6100-Ophthalmology-XML-Datei.
+- Der Zielordner ist die im Schnittstellenprofil konfigurierte Ausgabe an Geraet, in der Praxis ein MEM-200-Unterordner wie `DIRECT_RT_0A\TXT`, `DIRECT_RT_1A\TXT` bis `DIRECT_RT_3B\TXT`.
+- Der RT-6100-Writer gibt konservativ nur `LM_Base` aus MEDISTAR `V0` und `REF_Base` aus `V1` aus; weitere Historienwerte werden nicht geraten.
+- Phase 2 liest RT-6100-Rueckgabe-XML `NIDEK_RT`.
+- `Corrected CorrectionType="Best"` wird als finaler Verordnungswert ueber `6228` exportiert.
+- `Corrected CorrectionType="Full"` wird als Maximalwert/Vollkorrektion ueber `6227` exportiert.
+- `6330`, kuenstliche Trennzeilen und neu erfundene Werte werden nicht erzeugt; `8402` kommt weiterhin aus AIS.
+
+Die bereitgestellte OCR-XML ist als malformed diagnostiziert und wird nicht als positive Produktivfixture verwendet. Positive Tests nutzen PDF-nahe wohlgeformte Fixtures. Praktische Abnahme am RT-6100/MEM-200 und in MEDISTAR ist offen.
+
+### 1.7 Lizenzanzeige
 
 Der Lizenzbereich zeigt den lokalen Lizenzstatus, Lizenzanfragen, importierte Lizenzdateien, lizenzierte Geräte/Anbindungen und Karenzzeiten für neue Anbindungen.
 
@@ -120,7 +135,7 @@ Aktueller Stand:
 - Lizenzanfragen enthalten Kundendaten und Geraetenamen nur zur Herstellerdokumentation; technisch lizenzbindend bleibt ausschliesslich `MaxActiveDeviceConnections`.
 - der Lizenz-Tab zeigt den Hinweis: `Achtung: Bei Hardwaretausch bitte neue Lizenz anfordern, Karenzzeit 7 Tage ab Umzug der Hardware.`
 
-### 1.6 NIDEK LM7/LM7P architektonisch
+### 1.8 NIDEK LM7/LM7P architektonisch
 
 NIDEK LM7/LM7P ist als vorbereitetes Lensmeter-Profil eingeordnet.
 

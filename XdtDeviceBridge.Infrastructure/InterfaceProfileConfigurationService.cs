@@ -228,14 +228,27 @@ public sealed class InterfaceProfileConfigurationService
 
     private static DeviceOutputConfiguration? CreateDefaultDeviceOutputForExportProfile(ExportProfileDefinition exportProfile)
     {
-        return string.Equals(exportProfile.SourceDeviceProfileId, "device-topcon-cv5000-default", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(exportProfile.Metadata.Id, "export-medistar-topcon-cv5000-default", StringComparison.OrdinalIgnoreCase)
-            ? new DeviceOutputConfiguration(
+        if (string.Equals(exportProfile.SourceDeviceProfileId, "device-topcon-cv5000-default", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfile.Metadata.Id, "export-medistar-topcon-cv5000-default", StringComparison.OrdinalIgnoreCase))
+        {
+            return new DeviceOutputConfiguration(
                 IsEnabled: false,
                 OutputFolder: string.Empty,
                 FileNameTemplate: "CVImport.xml",
-                Format: "TOPCON CV-5000 XML")
-            : null;
+                Format: "TOPCON CV-5000 XML");
+        }
+
+        if (string.Equals(exportProfile.SourceDeviceProfileId, "device-nidek-rt6100-default", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfile.Metadata.Id, "export-medistar-nidek-rt6100-default", StringComparison.OrdinalIgnoreCase))
+        {
+            return new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: NidekRt6100InputXmlWriter.DefaultFileNameTemplate,
+                Format: NidekRt6100InputXmlWriter.DeviceOutputFormat);
+        }
+
+        return null;
     }
 
     private static InterfaceFolderOptions CreateEmptyFolderOptions()

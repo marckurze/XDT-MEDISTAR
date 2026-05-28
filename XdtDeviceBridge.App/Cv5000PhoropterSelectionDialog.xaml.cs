@@ -20,22 +20,28 @@ public partial class Cv5000PhoropterSelectionDialog : Window
         new MeasurementGroupDefinition("Y", "Tonometrie (Y)")
     };
 
-    private static readonly HashSet<string> DefaultSelectionPrefixes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "V0",
-        "V1",
-        "V2"
-    };
-
     private readonly List<SelectionRow> _rows = new();
     private readonly Cv5000PhoropterSelectionState _selectionState = new();
+    private readonly Cv5000PhoropterSelectionDialogOptions _options;
 
     public Cv5000PhoropterSelectionDialog(MedistarHistoricalMeasurementParseResult parseResult)
+        : this(parseResult, Cv5000PhoropterSelectionDialogOptions.CreateTopconCv5000())
+    {
+    }
+
+    public Cv5000PhoropterSelectionDialog(
+        MedistarHistoricalMeasurementParseResult parseResult,
+        Cv5000PhoropterSelectionDialogOptions options)
     {
         ArgumentNullException.ThrowIfNull(parseResult);
+        ArgumentNullException.ThrowIfNull(options);
 
         InitializeComponent();
 
+        _options = options;
+        Title = options.Title;
+        IntroTextBlock.Text = options.IntroText;
+        ExportButton.Content = options.ExportButtonText;
         Topmost = _selectionState.IsTopMost;
         SelectedMeasurements = Array.Empty<AisHistoricalMeasurementRecord>();
         PopulatePatientHeader(parseResult.Patient);
@@ -93,12 +99,14 @@ public partial class Cv5000PhoropterSelectionDialog : Window
             var newestExportable = groupRecords.FirstOrDefault(record => record.IsExportableToCv5000);
             foreach (var record in groupRecords)
             {
-                var isDefaultSelected = record.IsExportableToCv5000
+                var isExportableForTarget = record.IsExportableToCv5000
+                    && _options.ExportableSourceKinds.Contains(record.SourceKind);
+                var isDefaultSelected = isExportableForTarget
                     && ReferenceEquals(record, newestExportable)
-                    && DefaultSelectionPrefixes.Contains(record.SourcePrefix);
+                    && _options.DefaultSelectionPrefixes.Contains(record.SourcePrefix);
                 var checkBox = new WpfCheckBox
                 {
-                    IsEnabled = record.IsExportableToCv5000,
+                    IsEnabled = isExportableForTarget,
                     IsChecked = isDefaultSelected,
                     Margin = new Thickness(0, 2, 0, 2),
                     Content = CreateDisplayText(record),
@@ -109,7 +117,7 @@ public partial class Cv5000PhoropterSelectionDialog : Window
                 stackPanel.Children.Add(checkBox);
                 _rows.Add(new SelectionRow(record, checkBox));
 
-                if (!record.IsExportableToCv5000)
+                if (!isExportableForTarget)
                 {
                     stackPanel.Children.Add(new TextBlock
                     {
@@ -127,9 +135,9 @@ public partial class Cv5000PhoropterSelectionDialog : Window
     private void PopulateStatus(MedistarHistoricalMeasurementParseResult parseResult)
     {
         var messages = new List<string>();
-        if (!_rows.Any(row => row.Record.IsExportableToCv5000))
+        if (!_rows.Any(row => row.CheckBox.IsEnabled))
         {
-            messages.Add("Keine an CV-5000 übergebbaren refraktiven Werte gefunden.");
+            messages.Add(_options.NoExportableMessage);
         }
 
         if (parseResult.Warnings.Count > 0)
@@ -188,13 +196,18 @@ public partial class Cv5000PhoropterSelectionDialog : Window
         parts.Add(text);
     }
 
-    private static string CreateDisabledReason(AisHistoricalMeasurementRecord record)
+    private string CreateDisabledReason(AisHistoricalMeasurementRecord record)
     {
         if (record.SourceKind is AisHistoricalMeasurementSourceKind.Keratometry
             or AisHistoricalMeasurementSourceKind.Pachymetry
             or AisHistoricalMeasurementSourceKind.Tonometry)
         {
-            return "Für CV-5000-Import noch nicht freigegeben.";
+            return _options.UnsupportedSourceMessage;
+        }
+
+        if (!_options.ExportableSourceKinds.Contains(record.SourceKind))
+        {
+            return _options.UnsupportedSourceMessage;
         }
 
         return record.ParseWarnings.Count == 0
@@ -270,4 +283,83 @@ public partial class Cv5000PhoropterSelectionDialog : Window
     private sealed record MeasurementGroupDefinition(string Prefix, string Header);
 
     private sealed record SelectionRow(AisHistoricalMeasurementRecord Record, WpfCheckBox CheckBox);
+}
+
+public sealed class Cv5000PhoropterSelectionDialogOptions
+{
+    private Cv5000PhoropterSelectionDialogOptions(
+        string title,
+        string introText,
+        string exportButtonText,
+        string noExportableMessage,
+        string unsupportedSourceMessage,
+        IReadOnlySet<AisHistoricalMeasurementSourceKind> exportableSourceKinds,
+        IReadOnlySet<string> defaultSelectionPrefixes)
+    {
+        Title = title;
+        IntroText = introText;
+        ExportButtonText = exportButtonText;
+        NoExportableMessage = noExportableMessage;
+        UnsupportedSourceMessage = unsupportedSourceMessage;
+        ExportableSourceKinds = exportableSourceKinds;
+        DefaultSelectionPrefixes = defaultSelectionPrefixes;
+    }
+
+    public string Title { get; }
+
+    public string IntroText { get; }
+
+    public string ExportButtonText { get; }
+
+    public string NoExportableMessage { get; }
+
+    public string UnsupportedSourceMessage { get; }
+
+    public IReadOnlySet<AisHistoricalMeasurementSourceKind> ExportableSourceKinds { get; }
+
+    public IReadOnlySet<string> DefaultSelectionPrefixes { get; }
+
+    public static Cv5000PhoropterSelectionDialogOptions CreateTopconCv5000()
+    {
+        return new Cv5000PhoropterSelectionDialogOptions(
+            "Werte an Phoropter übergeben",
+            "Bitte wählen Sie die vorhandenen MEDISTAR-Karteikartenwerte aus, die an TOPCON CV-5000/CV-5000S übergeben werden sollen.",
+            "An Phoropter ausgeben",
+            "Keine an CV-5000 übergebbaren refraktiven Werte gefunden.",
+            "Für CV-5000-Import noch nicht freigegeben.",
+            new HashSet<AisHistoricalMeasurementSourceKind>
+            {
+                AisHistoricalMeasurementSourceKind.Lensmeter,
+                AisHistoricalMeasurementSourceKind.Autorefraction,
+                AisHistoricalMeasurementSourceKind.Phoropter,
+                AisHistoricalMeasurementSourceKind.Prescription,
+                AisHistoricalMeasurementSourceKind.AutorefractionSubjective
+            },
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "V0",
+                "V1",
+                "V2"
+            });
+    }
+
+    public static Cv5000PhoropterSelectionDialogOptions CreateNidekRt6100()
+    {
+        return new Cv5000PhoropterSelectionDialogOptions(
+            "Werte an NIDEK RT-6100 übergeben",
+            "Bitte wählen Sie die vorhandenen MEDISTAR-Karteikartenwerte aus, die als LM_Base oder REF_Base an NIDEK RT-6100 übergeben werden sollen.",
+            "An RT-6100 ausgeben",
+            "Keine an RT-6100 übergebbaren LM-/AR-Refraktionswerte gefunden.",
+            "Für RT-6100-XML-Eingabe zunächst nicht freigegeben.",
+            new HashSet<AisHistoricalMeasurementSourceKind>
+            {
+                AisHistoricalMeasurementSourceKind.Lensmeter,
+                AisHistoricalMeasurementSourceKind.Autorefraction
+            },
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "V0",
+                "V1"
+            });
+    }
 }

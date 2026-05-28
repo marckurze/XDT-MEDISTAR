@@ -277,6 +277,51 @@ public static class DefaultDeviceProfileDefinitions
             CanContainMultipleExaminationTypes: true);
     }
 
+    public static DeviceProfileDefinition CreateNidekRt6100Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 28, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-nidek-rt6100-default",
+                Name: "NIDEK RT-6100",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for bidirectional NIDEK RT-6100 LAN/MEM-200 phoropter XML workflows. LM_Base and REF_Base can be written to the device; returned Best values are exported with 6228 and Full values with 6227.",
+                Vendor: "NIDEK",
+                Product: "RT-6100",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: "RT-6100",
+            DeviceType: "Phoropter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("rt6100-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "NIDEK RT-6100 common company field."),
+                new DeviceMeasurementDefinition("rt6100-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "NIDEK RT-6100 common model field."),
+                new DeviceMeasurementDefinition("rt6100-version", "Version", "Common/Version", "Common", string.Empty, string.Empty, true, "NIDEK RT-6100 XML format version."),
+                new DeviceMeasurementDefinition("rt6100-date", "Date", "Common/Date", "Common", string.Empty, string.Empty, false, "NIDEK RT-6100 measurement date."),
+                new DeviceMeasurementDefinition("rt6100-time", "Time", "Common/Time", "Common", string.Empty, string.Empty, false, "NIDEK RT-6100 measurement time."),
+                new DeviceMeasurementDefinition("rt6100-patient-no", "Patient No", "Common/Patient/No", "Common", string.Empty, string.Empty, false, "Patient number stored by the RT-6100 XML file; not exported to MEDISTAR."),
+                new DeviceMeasurementDefinition("rt6100-patient-id", "Patient ID", "Common/Patient/ID", "Common", string.Empty, string.Empty, false, "Patient ID stored by the RT-6100 XML file; not exported to MEDISTAR."),
+                new DeviceMeasurementDefinition("rt6100-corrected-type", "Corrected CorrectionType", "Measure[@Type='RT']/Phoropter/Corrected/@CorrectionType", "RT", string.Empty, string.Empty, false, "RT-6100 corrected block type such as LM_Base, REF_Base, Full or Best."),
+                new DeviceMeasurementDefinition("rt6100-best-header", "Best MEDISTAR-Header", "Measure[@Type='RT']/Best/HeaderLine", "RT", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 header for NIDEK RT-6100 Best / final prescription values."),
+                new DeviceMeasurementDefinition("rt6100-best-r-line", "Best R MEDISTAR-Zeile", "Measure[@Type='RT']/Best/R/MedistarLine", "RT", "R", string.Empty, false, "Computed MEDISTAR 6228 right-eye line for NIDEK RT-6100 Best."),
+                new DeviceMeasurementDefinition("rt6100-best-l-line", "Best L MEDISTAR-Zeile", "Measure[@Type='RT']/Best/L/MedistarLine", "RT", "L", string.Empty, false, "Computed MEDISTAR 6228 left-eye line for NIDEK RT-6100 Best."),
+                new DeviceMeasurementDefinition("rt6100-full-header", "Full MEDISTAR-Header", "Measure[@Type='RT']/Full/HeaderLine", "RT", string.Empty, string.Empty, false, "Computed MEDISTAR 6227 header for NIDEK RT-6100 Full / full correction values."),
+                new DeviceMeasurementDefinition("rt6100-full-r-line", "Full R MEDISTAR-Zeile", "Measure[@Type='RT']/Full/R/MedistarLine", "RT", "R", string.Empty, false, "Computed MEDISTAR 6227 right-eye line for NIDEK RT-6100 Full."),
+                new DeviceMeasurementDefinition("rt6100-full-l-line", "Full L MEDISTAR-Zeile", "Measure[@Type='RT']/Full/L/MedistarLine", "RT", "L", string.Empty, false, "Computed MEDISTAR 6227 left-eye line for NIDEK RT-6100 Full.")
+            },
+            SupportedExaminationTypes: new[] { "RT", "Phoropter", "Refraktion", "Best", "Full", "LM_Base", "REF_Base" },
+            CanContainMultipleExaminationTypes: true,
+            IsBidirectional: true,
+            ConnectionKind: DeviceConnectionKind.NetworkLan);
+    }
+
     public static DeviceProfileDefinition CreateTopconCl300Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);

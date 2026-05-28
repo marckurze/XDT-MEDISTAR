@@ -46,6 +46,8 @@ public sealed class UserDefinedProfileCreationService
     private const string MedistarSystemName = "MEDISTAR";
     private const string Cv5000DeviceProfileId = "device-topcon-cv5000-default";
     private const string Cv5000ExportProfileId = "export-medistar-topcon-cv5000-default";
+    private const string NidekRt6100DeviceProfileId = "device-nidek-rt6100-default";
+    private const string NidekRt6100ExportProfileId = "export-medistar-nidek-rt6100-default";
     private const string DocumentAttachmentDeviceProfileId = "device-document-attachment-default";
     private const string DocumentAttachmentExportProfileId = "export-medistar-document-attachment-default";
     private const string ManualDocumentSelectionDeviceProfileId = "device-manual-document-selection-default";
@@ -402,14 +404,27 @@ public sealed class UserDefinedProfileCreationService
 
     private static DeviceOutputConfiguration? CreateDefaultDeviceOutput(string deviceProfileId, string exportProfileId)
     {
-        return string.Equals(deviceProfileId, Cv5000DeviceProfileId, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(exportProfileId, Cv5000ExportProfileId, StringComparison.OrdinalIgnoreCase)
-            ? new DeviceOutputConfiguration(
+        if (string.Equals(deviceProfileId, Cv5000DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfileId, Cv5000ExportProfileId, StringComparison.OrdinalIgnoreCase))
+        {
+            return new DeviceOutputConfiguration(
                 IsEnabled: false,
                 OutputFolder: string.Empty,
                 FileNameTemplate: "CVImport.xml",
-                Format: "TOPCON CV-5000 XML")
-            : null;
+                Format: "TOPCON CV-5000 XML");
+        }
+
+        if (string.Equals(deviceProfileId, NidekRt6100DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfileId, NidekRt6100ExportProfileId, StringComparison.OrdinalIgnoreCase))
+        {
+            return new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: NidekRt6100InputXmlWriter.DefaultFileNameTemplate,
+                Format: NidekRt6100InputXmlWriter.DeviceOutputFormat);
+        }
+
+        return null;
     }
 
     private static InterfaceFolderOptions CreateDefaultInterfaceFolderOptions(string deviceProfileId, string exportProfileId)

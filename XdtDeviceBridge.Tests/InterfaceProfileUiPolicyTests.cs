@@ -28,6 +28,17 @@ public sealed class InterfaceProfileUiPolicyTests
         Assert.False(InterfaceProfileUiPolicy.ShouldShowAisAttachmentOptions(interfaceProfile, deviceProfile));
     }
 
+    [Fact]
+    public void ShouldShowDeviceOutput_ForRt6100AndHideAisAttachmentOptions()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt6100Default();
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekRt6100Default();
+
+        Assert.True(InterfaceProfileUiPolicy.ShouldShowDeviceOutput(interfaceProfile, deviceProfile));
+        Assert.False(InterfaceProfileUiPolicy.ShouldShowAisAttachmentOptions(interfaceProfile, deviceProfile));
+        Assert.True(InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile));
+    }
+
     [Theory]
     [InlineData("ARK1S")]
     [InlineData("NT530P")]
@@ -80,6 +91,24 @@ public sealed class InterfaceProfileUiPolicyTests
     }
 
     [Fact]
+    public void ShouldTriggerRt6100DeviceOutput_WhenRt6100OutputIsEnabled()
+    {
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekRt6100Default();
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt6100Default() with
+        {
+            DeviceOutput = new DeviceOutputConfiguration(
+                IsEnabled: true,
+                OutputFolder: @"C:\MEM-200\DATA\DIRECT_RT_0A\TXT",
+                FileNameTemplate: NidekRt6100InputXmlWriter.DefaultFileNameTemplate,
+                Format: NidekRt6100InputXmlWriter.DeviceOutputFormat)
+        };
+
+        Assert.True(InterfaceProfileUiPolicy.ShouldTriggerNidekRt6100DeviceOutput(interfaceProfile, deviceProfile));
+        Assert.Null(InterfaceProfileUiPolicy.ValidateNidekRt6100DeviceOutput(interfaceProfile, deviceProfile));
+        Assert.False(InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile));
+    }
+
+    [Fact]
     public void ShouldNotTriggerCv5000DeviceOutput_WhenOutputIsDisabled()
     {
         var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default();
@@ -106,6 +135,23 @@ public sealed class InterfaceProfileUiPolicyTests
 
         Assert.True(InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile));
         Assert.Equal("Ausgabeordner an Gerät fehlt.", InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile));
+    }
+
+    [Fact]
+    public void ShouldRejectRt6100DeviceOutput_WhenOutputFolderIsMissing()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt6100Default() with
+        {
+            DeviceOutput = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt6100Default().DeviceOutput! with
+            {
+                IsEnabled = true,
+                OutputFolder = string.Empty
+            }
+        };
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekRt6100Default();
+
+        Assert.True(InterfaceProfileUiPolicy.ShouldTriggerNidekRt6100DeviceOutput(interfaceProfile, deviceProfile));
+        Assert.Equal("Ausgabeordner an RT-6100 fehlt.", InterfaceProfileUiPolicy.ValidateNidekRt6100DeviceOutput(interfaceProfile, deviceProfile));
     }
 
     [Theory]

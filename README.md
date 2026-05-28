@@ -41,7 +41,8 @@ Der Tab `Profile & Templates` enthält einen schrittweise organisierten Bereich 
 - Konfigurierbar automatisch startende Überwachung innerhalb der geöffneten App; passende Dateipaare werden bei laufender Überwachung automatisch verarbeitet.
 - Lokale Konfigurationssicherung und Wiederherstellung ueber `.xdtboxbackup` ohne Patientendaten oder Messdateien; verwendete Geraetebilder blockieren den Restore nicht mehr vollstaendig, sondern werden als Warnung gemeldet.
 - Lokales Hilfe-Center und Info-Dialog mit Herstellerdaten in der Tab-Zeile sowie Zahnrad-Einstellungen fuer Autostart- und Systray-Verhalten.
-- Vorbereitete V2-Geraeteprofile fuer NIDEK LM7/LM7P, NIDEK NT530P, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
+- Vorbereitete V2-Geraeteprofile fuer NIDEK LM7/LM7P, NIDEK NT530P, NIDEK RT-6100, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
+- Bidirektionaler Phoropter-Kandidat NIDEK RT-6100: XDTBox kann aus MEDISTAR-Historienwerten konservativ LM_Base/REF_Base-XML fuer den MEM-200-/DIRECT_RT_xx/TXT-Ordner erzeugen und RT-6100-Rueckgabe-XML mit `Best -> 6228` sowie `Full -> 6227` auswerten. Die praktische RT-6100-/MEDISTAR-Abnahme steht noch aus.
 - Unit-Tests fuer Parser, Mapping, Export und Datei-Export.
 
 ## MEDISTAR/NIDEK-Workflow

@@ -4,6 +4,8 @@ public static class InterfaceProfileUiPolicy
 {
     private const string Cv5000InterfaceProfileId = "interface-medistar-topcon-cv5000-default";
     private const string Cv5000DeviceProfileId = "device-topcon-cv5000-default";
+    private const string NidekRt6100InterfaceProfileId = "interface-medistar-nidek-rt6100-default";
+    private const string NidekRt6100DeviceProfileId = "device-nidek-rt6100-default";
     public const double PilotMonitoringCardWidth = 576;
     public const double PilotFloatingWindowMinWidth = 672;
     public const double PilotFloatingWindowDefaultWidth = 744;
@@ -27,7 +29,8 @@ public static class InterfaceProfileUiPolicy
         InterfaceProfileDefinition? interfaceProfile,
         DeviceProfileDefinition? deviceProfile)
     {
-        return !IsCv5000(interfaceProfile, deviceProfile);
+        return !IsCv5000(interfaceProfile, deviceProfile)
+            && !IsNidekRt6100(interfaceProfile, deviceProfile);
     }
 
     public static bool ShouldTriggerCv5000DeviceOutput(
@@ -35,6 +38,14 @@ public static class InterfaceProfileUiPolicy
         DeviceProfileDefinition? deviceProfile)
     {
         return IsCv5000(interfaceProfile, deviceProfile)
+            && interfaceProfile?.DeviceOutput?.IsEnabled == true;
+    }
+
+    public static bool ShouldTriggerNidekRt6100DeviceOutput(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        return IsNidekRt6100(interfaceProfile, deviceProfile)
             && interfaceProfile?.DeviceOutput?.IsEnabled == true;
     }
 
@@ -190,6 +201,28 @@ public static class InterfaceProfileUiPolicy
         return null;
     }
 
+    public static string? ValidateNidekRt6100DeviceOutput(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        if (!ShouldTriggerNidekRt6100DeviceOutput(interfaceProfile, deviceProfile))
+        {
+            return "Ausgabe an Gerät ist für dieses Schnittstellenprofil nicht aktiv.";
+        }
+
+        if (string.IsNullOrWhiteSpace(interfaceProfile?.DeviceOutput?.OutputFolder))
+        {
+            return "Ausgabeordner an RT-6100 fehlt.";
+        }
+
+        if (string.IsNullOrWhiteSpace(interfaceProfile?.DeviceOutput?.FileNameTemplate))
+        {
+            return "Dateiname für RT-6100-Importdatei fehlt.";
+        }
+
+        return null;
+    }
+
     public static bool IsCv5000(
         InterfaceProfileDefinition? interfaceProfile,
         DeviceProfileDefinition? deviceProfile)
@@ -201,11 +234,29 @@ public static class InterfaceProfileUiPolicy
             || ContainsCv5000(deviceProfile?.Metadata.Product);
     }
 
+    public static bool IsNidekRt6100(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        return string.Equals(interfaceProfile?.Metadata.Id, NidekRt6100InterfaceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(interfaceProfile?.DeviceProfileId, NidekRt6100DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(deviceProfile?.Metadata.Id, NidekRt6100DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || ContainsRt6100(deviceProfile?.Model)
+            || ContainsRt6100(deviceProfile?.Metadata.Product);
+    }
+
     private static bool ContainsCv5000(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
             && (value.Contains("CV-5000", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("CV5000", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ContainsRt6100(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && (value.Contains("RT-6100", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("RT6100", StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool ContainsAny(string? value, params string[] needles)

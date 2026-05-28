@@ -16,7 +16,7 @@ Der Plan prüft insbesondere:
 - Verpflichtende XDT-Anhänge blockieren bei fehlender oder uneindeutiger Zuordnung.
 - Instabile Dateien werden nicht verarbeitet, verschoben oder verlinkt.
 - Neuere AIS-Dateien ersetzen ältere wartende AIS-Aufträge.
-- Es gibt weiterhin keinen FileSystemWatcher, keinen Windows-Dienst, keinen Autostart und keine Verarbeitung beim App-Start.
+- Es gibt weiterhin keinen FileSystemWatcher, keinen Windows-Dienst und keinen Windows-Autostart. Die periodische Ueberwachung kann beim Start der geoeffneten XDTBox-App per App-Einstellung automatisch beginnen; ausserhalb der App laeuft keine Verarbeitung.
 
 Praxisvalidierung vom 2026-05-11:
 
@@ -31,8 +31,8 @@ Praxisvalidierung vom 2026-05-11:
 - Testsuite ist erfolgreich.
 - Anwendung ist lokal startbar.
 - Schnittstellenprofil für MEDISTAR + NIDEK ARK1S ist konfiguriert.
-- Manuell startbare Überwachung wird im Tab `Verarbeitung` gestartet.
-- Automatische Verarbeitung wird nur über den Haken `Gefundene Dateipaare automatisch verarbeiten` aktiviert.
+- Die Ueberwachung kann im Tab `Verarbeitung` manuell gestartet/gestoppt werden oder beim App-Start per App-Einstellung automatisch starten.
+- Gefundene passende Dateipaare werden bei laufender Ueberwachung immer automatisch verarbeitet; einen separaten Auto-Verarbeiten-Haken gibt es nicht mehr.
 - Testdateien enthalten keine echten Patientendaten.
 - Alle Testordner sind Arbeitsordner, keine Root-, System- oder Benutzerprofil-Wurzeln.
 
@@ -114,8 +114,8 @@ Standardkonfiguration für die manuellen Testfälle:
 | Einstellung | Wert |
 |---|---|
 | Schnittstellenprofil aktiv | ja |
-| globale automatische Verarbeitung | ja |
-| Überwachung | manuell starten |
+| automatische Verarbeitung | immer aktiv bei laufender Ueberwachung |
+| Überwachung | manuell starten oder per App-Einstellung automatisch beim App-Start |
 | Archivierung | aktiv |
 | Archivmodus | `Move` / `Verschieben` |
 | XDT-Anhänge für AIS automatisch verarbeiten | je Testfall ja/nein |
@@ -147,17 +147,16 @@ Sofern der jeweilige Testfall nichts anderes vorgibt, ist dieser Ablauf zu verwe
    - Dateistabilität
    - Ordnerabfrage-Intervall
 9. Tab `Verarbeitung` öffnen.
-10. Überwachung starten.
-11. Haken `Gefundene Dateipaare automatisch verarbeiten` gemäß Testfall setzen.
-12. Dateien in der im Testfall angegebenen Reihenfolge ablegen.
-13. Statusmeldung im Tab `Verarbeitung` abwarten.
-14. Exportordner prüfen.
-15. Exportdatei mit Texteditor prüfen.
-16. Archivordner prüfen.
-17. Fehlerordner prüfen.
-18. XDT-Anhang Exportordner prüfen.
-19. Ergebnis in `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` eintragen.
-20. Überwachung stoppen, bevor der nächste Testfall vorbereitet wird.
+10. Überwachung starten, falls sie nicht bereits per App-Einstellung automatisch laeuft.
+11. Dateien in der im Testfall angegebenen Reihenfolge ablegen.
+12. Statusmeldung im Tab `Verarbeitung` abwarten.
+13. Exportordner prüfen.
+14. Exportdatei mit Texteditor prüfen.
+15. Archivordner prüfen.
+16. Fehlerordner prüfen.
+17. XDT-Anhang Exportordner prüfen.
+18. Ergebnis in `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` eintragen.
+19. Überwachung stoppen, bevor der nächste Testfall vorbereitet wird.
 
 ## 7. Hinweise zu Timing und Dateistabilität
 
@@ -493,6 +492,42 @@ Zu erwartende Statusmeldungen:
 - `XDT-Anhang Pflicht: Timeout erreicht, Verarbeitung blockiert.`
 - `XDT-Anhänge vorbereitet: <n> Datei(en).`
 - `XDT-Anhang ist noch nicht stabil; wird später erneut geprüft.`
+
+## 13.1 Bidirektionaler Phoropter-Test NIDEK RT-6100
+
+Dieser Zusatztest prueft den vorbereiteten RT-6100-LAN-/MEM-200-Workflow. Er ersetzt nicht die allgemeine Dateipaar-/Anhangabnahme, sondern ergaenzt sie fuer den zweiphasigen Phoropterbetrieb.
+
+Voraussetzungen:
+
+- Schnittstellenprofil `MEDISTAR + NIDEK RT-6100` ist vorhanden und fuer Testordner konfiguriert.
+- Im Bereich `Ausgabe an Geraet` ist ein MEM-200-/Shared-Folder-Zielordner gesetzt, typischerweise einer der Unterordner `DIRECT_RT_0A\TXT`, `DIRECT_RT_1A\TXT`, `DIRECT_RT_1B\TXT`, `DIRECT_RT_2A\TXT`, `DIRECT_RT_2B\TXT`, `DIRECT_RT_3A\TXT` oder `DIRECT_RT_3B\TXT`.
+- Die AIS-Testdatei enthaelt synthetische Patientendaten und, falls die Geraeteuebergabe getestet wird, MEDISTAR-Historienzeilen `V0`/Lensmeter und/oder `V1`/Autorefraktion.
+- Fuer den Rueckweg wird eine echte wohlgeformte RT-6100-Ophthalmology-XML-Rueckgabedatei benoetigt. Die OCR-erzeugte Beispiel-XML aus der PDF ist malformed und nur als Diagnosefall geeignet.
+
+Ablauf:
+
+1. Ueberwachung stoppen und Testordner vorbereiten.
+2. Schnittstellenprofil `MEDISTAR + NIDEK RT-6100` aktivieren beziehungsweise als Testprofil konfigurieren.
+3. Ausgabeordner an Geraet auf den MEM-200-Zielordner setzen; der Ordner wird nicht automatisch durch den Test angelegt.
+4. Ueberwachung starten.
+5. AIS-Testdatei ablegen.
+6. Im Phoropter-Auswahldialog pruefen, dass nur vorhandene Lensmeter-/Autorefraktor-Historienwerte fuer `LM_Base`/`REF_Base` angeboten werden.
+7. `An RT-6100 ausgeben` waehlen und die erzeugte `RTImport_...xml` im Ausgabeordner pruefen.
+8. Optional am echten RT-6100/MEM-200 einlesen.
+9. Echte RT-6100-Rueckgabedatei im Geraete-Importordner ablegen.
+10. Exportdatei an AIS pruefen.
+
+Erwartung:
+
+- Die RT-6100-Inputdatei ist wohlgeformtes Ophthalmology-XML mit `Company=NIDEK`, `ModelName=RT-6100`, `Version=NIDEK_RT_V1.00` und `Measure Type="RT"`.
+- `V0`/Lensmeter wird als `CorrectionType="LM_Base"` geschrieben.
+- `V1`/Autorefraktion wird als `CorrectionType="REF_Base"` geschrieben.
+- Es werden keine nicht vorhandenen Messwerte erfunden.
+- Die Rueckgabe wird nur als RT-6100 erkannt, wenn NIDEK, RT-6100, `NIDEK_RT...` und `Measure Type="RT"` zusammen passen.
+- `Best` wird als finaler Verordnungswert ueber `6228` exportiert.
+- `Full` wird als Maximalwert/Vollkorrektion ueber `6227` exportiert.
+- Es werden keine `6330`-Zeilen und keine kuenstliche Trennzeile erzeugt.
+- `8402` kommt weiterhin aus AIS/MEDISTAR.
 
 ## 14. Automatisierte Testabdeckung
 

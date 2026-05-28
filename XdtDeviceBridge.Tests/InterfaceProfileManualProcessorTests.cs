@@ -69,7 +69,7 @@ public sealed class InterfaceProfileManualProcessorTests
         Assert.Contains(result.PipelineResult!.Issues, issue =>
             issue.Severity == ProcessingIssueSeverity.Warning
             && issue.Stage == ProcessingStage.GdtParsing
-            && issue.Message.Contains("CV-5000-Historienparser", StringComparison.OrdinalIgnoreCase));
+            && issue.Message.Contains("Phoropter-Historienparser", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(result.PipelineResult.Issues, issue => issue.Severity == ProcessingIssueSeverity.Error);
         Assert.True(File.Exists(aisFilePath));
         Assert.True(File.Exists(deviceFilePath));

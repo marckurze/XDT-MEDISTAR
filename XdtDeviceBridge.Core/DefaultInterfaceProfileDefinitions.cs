@@ -451,6 +451,48 @@ public static class DefaultInterfaceProfileDefinitions
                 Format: "TOPCON CV-5000 XML"));
     }
 
+    public static InterfaceProfileDefinition CreateMedistarNidekRt6100Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 28, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-nidek-rt6100-default",
+                Name: "MEDISTAR + NIDEK RT-6100",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for the bidirectional MEDISTAR and NIDEK RT-6100 LAN/MEM-200 phoropter workflow.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK RT-6100",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-nidek-rt6100-default",
+            ExportProfileId: "export-medistar-nidek-rt6100-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: "Built-in inactive candidate for NIDEK RT-6100: AIS LM/AR history can be prepared for MEM-200 RT import; RT return XML exports Best entirely as 6228 and Full entirely as 6227.",
+            DeviceOutput: new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: NidekRt6100InputXmlWriter.DefaultFileNameTemplate,
+                Format: NidekRt6100InputXmlWriter.DeviceOutputFormat));
+    }
+
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

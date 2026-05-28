@@ -75,7 +75,8 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
+            <TextBlock x:Name="IntroTextBlock"
+                       Grid.Column="0"
                        VerticalAlignment="Center"
                        Text="Bitte wählen Sie die vorhandenen MEDISTAR-Karteikartenwerte aus, die an TOPCON CV-5000/CV-5000S übergeben werden sollen."
                        TextWrapping="Wrap" />

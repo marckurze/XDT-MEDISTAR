@@ -2179,6 +2179,7 @@
                                                   Margin="0,0,0,8"
                                                   ToolTip="Format der Ausgabe an das Gerät.">
                                             <ComboBoxItem Content="TOPCON CV-5000 XML" Tag="TOPCON CV-5000 XML"/>
+                                            <ComboBoxItem Content="NIDEK RT-6100 XML" Tag="NIDEK RT-6100 XML"/>
                                         </ComboBox>
 
                                         <TextBlock Grid.Row="4"

@@ -86,6 +86,7 @@ public partial class MainWindow : Window
     private readonly AttachmentImportFolderDiagnosticService _attachmentImportFolderDiagnosticService = new();
     private readonly MedistarHistoricalMeasurementParser _cv5000HistoryParser = new();
     private readonly TopconCv5000ImportXmlWriter _cv5000ImportWriter = new();
+    private readonly NidekRt6100InputXmlWriter _nidekRt6100ImportWriter = new();
     private readonly BuilderTestExportService _builderTestExportService = new();
     private readonly AttachmentFileNameBuilder _attachmentFileNameBuilder = new();
     private readonly ExternalAisLinkFieldBuilder _externalAisLinkFieldBuilder = new();
@@ -6412,10 +6413,15 @@ public partial class MainWindow : Window
 
         var deviceProfile = _profileCatalog.DeviceProfiles.FirstOrDefault(profile =>
             string.Equals(profile.Metadata.Id, interfaceProfile.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
-        if (!InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile))
+        var isCv5000Output = InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile);
+        var isRt6100Output = InterfaceProfileUiPolicy.ShouldTriggerNidekRt6100DeviceOutput(interfaceProfile, deviceProfile);
+        if (!isCv5000Output && !isRt6100Output)
         {
             return false;
         }
+        var deviceOutputKey = isRt6100Output ? "rt6100-device-output" : "cv5000-device-output";
+        var deviceDisplayName = isRt6100Output ? "RT-6100" : "CV-5000";
+        var writerDisplayName = isRt6100Output ? "RT-6100-Importdatei" : "CV-5000-Importdatei";
 
         var aisFile = scanResult.Queue.GetAll()
             .Where(IsStableAisImportFile)
@@ -6428,18 +6434,20 @@ public partial class MainWindow : Window
             return false;
         }
 
-        var aisKey = CreateCv5000DeviceOutputAisKey(interfaceProfile.Metadata.Id, aisFile);
+        var aisKey = CreateDeviceOutputAisKey(interfaceProfile.Metadata.Id, deviceOutputKey, aisFile);
         if (_cv5000DeviceOutputHandledAisKeys.Contains(aisKey))
         {
             return false;
         }
 
-        var validationMessage = InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile);
+        var validationMessage = isRt6100Output
+            ? InterfaceProfileUiPolicy.ValidateNidekRt6100DeviceOutput(interfaceProfile, deviceProfile)
+            : InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile);
         if (!string.IsNullOrWhiteSpace(validationMessage))
         {
             AppendMonitoringEvent(
                 interfaceProfile.Metadata.Id,
-                $"cv5000-device-output-missing-config:{validationMessage}",
+                $"{deviceOutputKey}-missing-config:{validationMessage}",
                 $"{interfaceProfile.Metadata.Name}: {validationMessage}",
                 InterfaceMonitoringEventSeverity.Warning);
             return false;
@@ -6457,13 +6465,16 @@ public partial class MainWindow : Window
         {
             AppendMonitoringEvent(
                 interfaceProfile.Metadata.Id,
-                $"cv5000-device-output-read-error:{aisKey}",
+                $"{deviceOutputKey}-read-error:{aisKey}",
                 $"{interfaceProfile.Metadata.Name}: AIS-Historienwerte konnten nicht gelesen werden: {ex.Message}",
                 InterfaceMonitoringEventSeverity.Error);
             return true;
         }
 
-        var dialog = new Cv5000PhoropterSelectionDialog(parseResult)
+        var dialogOptions = isRt6100Output
+            ? Cv5000PhoropterSelectionDialogOptions.CreateNidekRt6100()
+            : Cv5000PhoropterSelectionDialogOptions.CreateTopconCv5000();
+        var dialog = new Cv5000PhoropterSelectionDialog(parseResult, dialogOptions)
         {
             Owner = this
         };
@@ -6472,7 +6483,7 @@ public partial class MainWindow : Window
         if (dialogAction == Cv5000DeviceOutputDialogAction.WaitForDeviceResultWithoutImport)
         {
             _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
-            _autoImportPackageStateService.MarkCv5000WaitingForDeviceResult(
+            _autoImportPackageStateService.MarkBidirectionalPhoropterWaitingForDeviceResult(
                 interfaceProfile.Metadata.Id,
                 aisFile,
                 scanResult.Queue,
@@ -6484,8 +6495,8 @@ public partial class MainWindow : Window
                 DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
             AppendMonitoringEvent(
                 interfaceProfile.Metadata.Id,
-                $"cv5000-device-output-send-nothing:{aisKey}",
-                $"{interfaceProfile.Metadata.Name}: Keine Werte an den Phoropter gesendet. Warte auf Phoropter-Rückgabe.");
+                $"{deviceOutputKey}-send-nothing:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Keine Werte an den {deviceDisplayName} gesendet. Warte auf {deviceDisplayName}-Rückgabe.");
             return true;
         }
 
@@ -6494,36 +6505,36 @@ public partial class MainWindow : Window
             _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
             AppendMonitoringEvent(
                 interfaceProfile.Metadata.Id,
-                $"cv5000-device-output-canceled:{aisKey}",
-                $"{interfaceProfile.Metadata.Name}: Ausgabe an Phoropter abgebrochen.");
+                $"{deviceOutputKey}-canceled:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Ausgabe an {deviceDisplayName} abgebrochen.");
             return true;
         }
 
-        var writeResult = _cv5000ImportWriter.WriteFile(
-            new Cv5000ImportSelection(parseResult.Patient, dialog.SelectedMeasurements, null, null),
-            interfaceProfile,
-            new DateTimeOffset(timestamp));
+        var selection = new Cv5000ImportSelection(parseResult.Patient, dialog.SelectedMeasurements, null, null);
+        var writeResult = isRt6100Output
+            ? _nidekRt6100ImportWriter.WriteFile(selection, interfaceProfile, new DateTimeOffset(timestamp))
+            : _cv5000ImportWriter.WriteFile(selection, interfaceProfile, new DateTimeOffset(timestamp));
         if (!writeResult.Success)
         {
             AppendMonitoringEvent(
                 interfaceProfile.Metadata.Id,
-                $"cv5000-device-output-failed:{aisKey}:{writeResult.ErrorMessage}",
-                $"{interfaceProfile.Metadata.Name}: CV-5000-Importdatei konnte nicht erzeugt werden: {writeResult.ErrorMessage}",
+                $"{deviceOutputKey}-failed:{aisKey}:{writeResult.ErrorMessage}",
+                $"{interfaceProfile.Metadata.Name}: {writerDisplayName} konnte nicht erzeugt werden: {writeResult.ErrorMessage}",
                 InterfaceMonitoringEventSeverity.Error);
             return true;
         }
 
         _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
-        _autoImportPackageStateService.MarkCv5000WaitingForDeviceResult(
+        _autoImportPackageStateService.MarkBidirectionalPhoropterWaitingForDeviceResult(
             interfaceProfile.Metadata.Id,
             aisFile,
             scanResult.Queue,
             timestamp);
-        SetMonitoringRuntimeState(interfaceProfile.Metadata.Id, "CV-5000-Importdatei erzeugt", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+        SetMonitoringRuntimeState(interfaceProfile.Metadata.Id, $"{writerDisplayName} erzeugt", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
         AppendMonitoringEvent(
             interfaceProfile.Metadata.Id,
-            $"cv5000-device-output-success:{aisKey}",
-            $"{interfaceProfile.Metadata.Name}: CVImport.xml wurde für TOPCON CV-5000/CV-5000S erzeugt: {writeResult.TargetPath}");
+            $"{deviceOutputKey}-success:{aisKey}",
+            $"{interfaceProfile.Metadata.Name}: {writerDisplayName} wurde für {deviceDisplayName} erzeugt: {writeResult.TargetPath}");
         return true;
     }
 
@@ -6533,9 +6544,9 @@ public partial class MainWindow : Window
             && file.Kind.IsAisImportFile();
     }
 
-    private static string CreateCv5000DeviceOutputAisKey(string interfaceProfileId, PendingImportFile aisFile)
+    private static string CreateDeviceOutputAisKey(string interfaceProfileId, string outputKind, PendingImportFile aisFile)
     {
-        return string.Join("|", interfaceProfileId, "cv5000-device-output", ImportFileFingerprint.Create(aisFile));
+        return string.Join("|", interfaceProfileId, outputKind, ImportFileFingerprint.Create(aisFile));
     }
 
     private AutoImportPairProcessingBatchResult? TryProcessReadyPairsAutomatically(
@@ -6591,6 +6602,13 @@ public partial class MainWindow : Window
                 interfaceProfile.Metadata.Id,
                 "cv5000-ready-pair-processing-start",
                 $"{interfaceProfile.Metadata.Name}: CV-5000-Paar vollständig, Export wird gestartet.");
+        }
+        else if (readyPairs.Count > 0 && InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null))
+        {
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                "rt6100-ready-pair-processing-start",
+                $"{interfaceProfile.Metadata.Name}: RT-6100-Paar vollständig, Export wird gestartet.");
         }
 
         var batchResult = _autoImportPairProcessingCoordinator.ProcessReadyPairs(

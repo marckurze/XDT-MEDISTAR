@@ -4,7 +4,7 @@
 
 Dieses Dokument sammelt Erkenntnisse aus bereitgestellten Beispielordnern verschiedener ophthalmologischer Geräte. Es dient als Grundlage für Geräteprofile, Export-/Mapping-Profile, Geräte-Dateianhänge, externe AIS-Links und spätere PDF-Dokumentenerzeugung.
 
-Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. MEDISTAR + TOPCON Solos ist als weiterer TOPCON-Lensmeter-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON KR-1 ist als Keratorefraktometer-Kandidat mit REF-`6228` testseitig vorbereitet; KM/KRT bleibt ohne echte Fixture offen. MEDISTAR + TOPCON CT800A ist als TOPCON-Non-Contact-Tonometer-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON CV5000 ist als erster bidirektionaler Phoropter-Kandidat testseitig vorbereitet, muss aber noch praktisch mit MEDISTAR und CV-5000/CV-5000S validiert werden.
+Hinweis zum Stand `0.1.0-prototype`: BuiltIn-Geraeteprofile fuer die hier beschriebenen Geraete sind teilweise vorbereitet. Praktisch validiert sind MEDISTAR + NIDEK ARK1S, MEDISTAR + NIDEK AR360 fuer Auto-Refraktor-XDT-Rueckgabe, MEDISTAR + NIDEK LM7 fuer Lensmeter-XDT-Rueckgabe, MEDISTAR + TOPCON CL300 als erster TOPCON-Lensmeter-Referenzkandidat, MEDISTAR + TOPCON KR800S fuer REF/KM/SBJ-XDT-Rueckgabe, MEDISTAR + TOPCON TRK2P fuer REF/KM/TM/CCT inklusive Teilmessung und MEDISTAR + TOPCON CT1P fuer Tonometrie/Pachymetrie. MEDISTAR + TOPCON Solos ist als weiterer TOPCON-Lensmeter-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON KR-1 ist als Keratorefraktometer-Kandidat mit REF-`6228` testseitig vorbereitet; KM/KRT bleibt ohne echte Fixture offen. MEDISTAR + TOPCON CT800A ist als TOPCON-Non-Contact-Tonometer-Kandidat testseitig vorbereitet. MEDISTAR + TOPCON CV5000 und MEDISTAR + NIDEK RT-6100 sind als bidirektionale Phoropter-Kandidaten testseitig vorbereitet und muessen praktisch mit MEDISTAR sowie dem jeweiligen Phoropter validiert werden.
 
 Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPLATE_MATRIX.md`. Dieses Dokument bleibt die fachliche Detailsammlung; die Matrix ist die Arbeitsliste fuer fertige Geraeteprofile und Templatepakete.
 
@@ -16,6 +16,7 @@ Die kompakte Status- und Prioritaetenmatrix steht in `docs/GERAETE_PROFILE_TEMPL
 | NIDEK | AR360 / AR-360A | Autorefraktometer | NIDEK-LAN-XML, Dateiendung `.XML` | Refraktion, PD, VD | keine im aktuellen Standardfall | Auto-Refraktor-Zeilen wie ARK1S, mit ARMedian, FarPD und VD | praktisch validiert fuer MEDISTAR-XDT-Rueckgabe, Anhangfall offen |
 | NIDEK | LM7 | Lensmeter / Scheitelbrechwertmesser | NIDEK-LAN-XML | Brillenwerte, Sphäre, Zylinder, Achse, Addition, Prisma, Basisrichtung, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen mit Sphäre/Zylinder/Achse/Addition; Prisma/PD datenabhaengig | praktisch validierter Referenzkandidat fuer Lensmeter-XDT-Rueckgabe |
 | NIDEK | NT530P | Non-Contact-Tonometer / Pachymeter | XML, JPG | Tonometrie, Pachymetrie, korrigierter IOP, Messbilder/Protokollverweise | JPG-Bilder, ggf. XML-Verweise wie `PACHYImage` | `6220` Pachymetrie und `6205` Tonometrie; keine `6228`-Geraetewerte | testseitig direkt nutzbarer MEDISTAR-Kandidat, praktische MEDISTAR-Validierung offen |
+| NIDEK | RT-6100 | Phoropter, bidirektional | NIDEK Ophthalmology XML ueber LAN/CIFS/MEM-200 | Phoropterwerte, LM_Base, REF_Base, Full, Best | optional JPEG/Shared-Folder-Ausgaben laut Hersteller, aktuell nicht als Anhangsworkflow eingebunden | Richtung Geraet: RT-6100-XML mit LM_Base/REF_Base in `DIRECT_RT_xx\TXT`; Richtung MEDISTAR: `Best -> 6228`, `Full -> 6227`, keine `6330` | testseitig vorbereiteter bidirektionaler NIDEK-Phoropter-Kandidat |
 | TOPCON | CL300 | Lensmeter | Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphäre, Zylinder, Achse, PD | keine zwingend erkennbar | Lensmeter-Ergebniszeilen ähnlich LM7 | erster praktisch validierter TOPCON-Referenzkandidat mit Namespace- und Attributanforderungen |
 | TOPCON | Solos | Lensmeter | TOPCON-Lensmeter-XML, Ophthalmology-/JOIA-XML | Lensmeterdaten, Sphaere, Zylinder, Achse, PD, H/V-Prisma, optionale Transmission | PDF-Berichte moeglich, aber in diesem Schritt ohne echte Fixture nicht angebunden | Lensmeter-Ergebniszeilen ueber `6228` | fixture-validierter TOPCON-Lensmeter-Kandidat, praktische MEDISTAR-Abnahme offen |
 | TOPCON | KR800S | Autorefraktometer / Keratometer / Subjektivtest | Ophthalmology-/JOIA-XML, Shift-JIS | `REF`, `KM`, `SBJ` | keine zwingend erkennbar | `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen | praktisch validierter TOPCON-Referenzkandidat fuer REF/KM/SBJ |
@@ -600,6 +601,34 @@ Die XML-Dateien verweisen direkt über den Textinhalt von `PACHYImage` auf JPG-D
 - Ob fehlende Bilder die Verarbeitung blockieren, muss pro Profil konfigurierbar sein.
 - `PACHYImage` sollte als Attachment-SourcePath in einem späteren `AttachmentDefinition`- oder `DocumentExportRule`-Modell abbildbar sein.
 - Die genaue praktische MEDISTAR-Übergabe von NT530P-JPGs als externe AIS-Links bleibt weiterhin zu validieren.
+
+## 5.2 NIDEK RT-6100
+
+Geraetetyp: Phoropter, bidirektional.
+
+Anbindung laut Herstellerdokument: LAN/CIFS/Windows-Freigabe ueber MEM-200-Ordnerlogik. Daten vom Computer an den RT-6100 werden als RT-6100-Ophthalmology-XML in den passenden Shared-Folder-Unterordner geschrieben, typischerweise `DIRECT_RT_0A\TXT`, `DIRECT_RT_1A\TXT`, `DIRECT_RT_1B\TXT`, `DIRECT_RT_2A\TXT`, `DIRECT_RT_2B\TXT`, `DIRECT_RT_3A\TXT` oder `DIRECT_RT_3B\TXT`. Der konkrete Ordner bleibt Schnittstellenprofil-Konfiguration und wird nicht hart angenommen.
+
+Erkannte XML-Struktur fuer Rueckgaben:
+
+- Root `Ophthalmology`
+- `Common/Company = NIDEK`
+- `Common/ModelName = RT-6100`
+- `Common/Version` beginnt tolerant mit `NIDEK_RT`
+- `Measure Type="RT"`
+- `Phoropter/Corrected` mit `CorrectionType` wie `LM_Base`, `REF_Base`, `Full` und `Best`
+
+Umsetzung:
+
+- BuiltIn-Geraeteprofil `device-nidek-rt6100-default`
+- BuiltIn-Exportprofil `export-medistar-nidek-rt6100-default`
+- BuiltIn-Schnittstellenprofil `interface-medistar-nidek-rt6100-default`
+- Richtung Geraet: `NidekRt6100InputXmlWriter` erzeugt konservativ nur `LM_Base` aus MEDISTAR `V0` und `REF_Base` aus `V1`.
+- Richtung MEDISTAR: `Best` wird ueber `6228` als finaler Verordnungswert ausgegeben, `Full` ueber `6227` als Maximalwert/Vollkorrektion.
+- `6330` wird nicht erzeugt, und `8402` kommt weiterhin aus AIS.
+
+Hinweis zur bereitgestellten OCR-Datei `NIDEK  RT6100.XML`: Sie ist nicht als erfolgreiche Produktivfixture geeignet. Die Datei deklariert `UTF-16`, liegt aber ohne UTF-16-BOM vor und ist im XML-Aufbau abgeschnitten beziehungsweise nicht wohlgeformt. XDTBox behandelt solche Dateien als Fehlerdiagnose mit klarer XML-Parse-Meldung. Fuer die positiven Tests wurden PDF-nahe, wohlgeformte synthetische Fixtures verwendet.
+
+Status: testseitig vorbereiteter bidirektionaler Phoropter-Kandidat. Praktische Abnahme am RT-6100/MEM-200 und in MEDISTAR steht noch aus.
 
 ## 6. TOPCON CL300
 

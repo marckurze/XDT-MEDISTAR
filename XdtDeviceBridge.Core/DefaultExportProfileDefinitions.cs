@@ -1107,4 +1107,96 @@ public static class DefaultExportProfileDefinitions
                     "MEDISTAR 6227 left-eye Full Correction value from TOPCON CV-5000.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarNidekRt6100Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 5, 28, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-nidek-rt6100-default",
+                Name: "MEDISTAR + NIDEK RT-6100 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and NIDEK RT-6100 phoropter RT XML return files. Best is emitted entirely with 6228; Full is emitted entirely with 6227.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/NIDEK RT-6100",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-nidek-rt6100-default",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition(
+                    "7",
+                    "6228",
+                    "BestHeader",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='RT']/Best/HeaderLine",
+                    "{value}",
+                    7,
+                    true,
+                    "MEDISTAR 6228 header for NIDEK RT-6100 Best / final prescription value."),
+                new ExportRuleDefinition(
+                    "8",
+                    "6228",
+                    "BestRight",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='RT']/Best/R/MedistarLine",
+                    "{value}",
+                    8,
+                    true,
+                    "MEDISTAR 6228 right-eye Best value from NIDEK RT-6100."),
+                new ExportRuleDefinition(
+                    "9",
+                    "6228",
+                    "BestLeft",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='RT']/Best/L/MedistarLine",
+                    "{value}",
+                    9,
+                    true,
+                    "MEDISTAR 6228 left-eye Best value from NIDEK RT-6100."),
+                new ExportRuleDefinition(
+                    "10",
+                    "6227",
+                    "FullHeader",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='RT']/Full/HeaderLine",
+                    "{value}",
+                    10,
+                    true,
+                    "MEDISTAR header for NIDEK RT-6100 Full / maximum correction value."),
+                new ExportRuleDefinition(
+                    "11",
+                    "6227",
+                    "FullRight",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='RT']/Full/R/MedistarLine",
+                    "{value}",
+                    11,
+                    true,
+                    "MEDISTAR 6227 right-eye Full value from NIDEK RT-6100."),
+                new ExportRuleDefinition(
+                    "12",
+                    "6227",
+                    "FullLeft",
+                    ExportRuleType.Template,
+                    "Device.Measure[@Type='RT']/Full/L/MedistarLine",
+                    "{value}",
+                    12,
+                    true,
+                    "MEDISTAR 6227 left-eye Full value from NIDEK RT-6100.")
+            });
+    }
 }

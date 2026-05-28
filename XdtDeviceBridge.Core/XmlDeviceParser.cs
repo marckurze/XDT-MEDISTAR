@@ -9,7 +9,7 @@ public sealed class XmlDeviceParser
     private static readonly HashSet<string> KnownGroups = new(StringComparer.OrdinalIgnoreCase)
     {
         "ARMedian", "ARList", "TrialLens", "ContactLens", "PDList", "LM", "PD", "NT", "PACHY", "CorrectedIOP",
-        "REF", "KM", "TM", "CCT", "SBJ"
+        "REF", "KM", "TM", "CCT", "SBJ", "RT"
     };
 
     public DeviceParseResult ParseFile(string path)
@@ -25,7 +25,7 @@ public sealed class XmlDeviceParser
         try
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            var document = XDocument.Load(path, LoadOptions.PreserveWhitespace);
+            var document = LoadXmlDocument(path);
             if (document.Root is null)
             {
                 issues.Add(new DeviceParseIssue(DeviceParseIssueSeverity.Error, "XML document has no root element.", "/", null));
@@ -45,6 +45,7 @@ public sealed class XmlDeviceParser
             AddTopconCt1PMedistarLines(document.Root, measurements);
             AddTopconCt800AMedistarLines(document.Root, measurements);
             AddTopconCv5000MedistarLines(document.Root, measurements);
+            AddNidekRt6100MedistarLines(document.Root, measurements);
             AddNidekNt530PMedistarLines(document.Root, measurements);
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or IOException or UnauthorizedAccessException)
@@ -53,6 +54,74 @@ public sealed class XmlDeviceParser
         }
 
         return new DeviceParseResult(measurements, issues);
+    }
+
+    private static XDocument LoadXmlDocument(string path)
+    {
+        try
+        {
+            return XDocument.Load(path, LoadOptions.PreserveWhitespace);
+        }
+        catch (System.Xml.XmlException)
+        {
+            var bytes = File.ReadAllBytes(path);
+            var text = DecodeXmlBytes(bytes);
+            return XDocument.Parse(NormalizeXmlDeclarationForStringParse(text), LoadOptions.PreserveWhitespace);
+        }
+    }
+
+    private static string DecodeXmlBytes(byte[] bytes)
+    {
+        if (bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+        {
+            return Encoding.Unicode.GetString(bytes);
+        }
+
+        if (bytes.Length >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
+        {
+            return Encoding.BigEndianUnicode.GetString(bytes);
+        }
+
+        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+        {
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        if (bytes.Take(Math.Min(bytes.Length, 256)).Count(value => value == 0) > 8)
+        {
+            return Encoding.Unicode.GetString(bytes);
+        }
+
+        try
+        {
+            return new UTF8Encoding(false, true).GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            return Encoding.GetEncoding(1252).GetString(bytes);
+        }
+    }
+
+    private static string NormalizeXmlDeclarationForStringParse(string text)
+    {
+        if (!text.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase))
+        {
+            return text;
+        }
+
+        var declarationEnd = text.IndexOf("?>", StringComparison.Ordinal);
+        if (declarationEnd < 0)
+        {
+            return text;
+        }
+
+        var declaration = text[..(declarationEnd + 2)];
+        if (!declaration.Contains("encoding", StringComparison.OrdinalIgnoreCase))
+        {
+            return text;
+        }
+
+        return "<?xml version=\"1.0\"?>" + text[(declarationEnd + 2)..];
     }
 
     private static void ParseElement(XElement element, string parentPath, List<MeasurementValue> measurements)
@@ -557,6 +626,107 @@ public sealed class XmlDeviceParser
 
         AddCv5000OptionalMedistarLine(measurements, pathSegment, "R", rightLine);
         AddCv5000OptionalMedistarLine(measurements, pathSegment, "L", leftLine);
+    }
+
+    private static void AddNidekRt6100MedistarLines(XElement root, List<MeasurementValue> measurements)
+    {
+        if (!string.Equals(root.Name.LocalName, "Ophthalmology", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var common = FindChild(root, "Common");
+        var company = common is null ? null : GetChildValue(common, "Company");
+        var modelName = common is null ? null : GetChildValue(common, "ModelName");
+        var version = common is null ? null : GetChildValue(common, "Version");
+        if (!string.Equals(company?.Trim(), "NIDEK", StringComparison.OrdinalIgnoreCase)
+            || !IsNidekRt6100Model(modelName)
+            || !IsNidekRt6100Version(version))
+        {
+            return;
+        }
+
+        var rtMeasure = FindMeasure(root, "RT");
+        var phoropter = rtMeasure is null ? null : FindChild(rtMeasure, "Phoropter");
+        if (phoropter is null)
+        {
+            return;
+        }
+
+        AddNidekRt6100CorrectedMedistarLines(
+            measurements,
+            phoropter,
+            "Best",
+            "Phoropter finaler Verordnungswert");
+        AddNidekRt6100CorrectedMedistarLines(
+            measurements,
+            phoropter,
+            "Full",
+            "Phoropter Maximalwert (Vollkorrektion)");
+    }
+
+    private static void AddNidekRt6100CorrectedMedistarLines(
+        List<MeasurementValue> measurements,
+        XElement phoropter,
+        string correctionType,
+        string headerLine)
+    {
+        var corrected = FindChildren(phoropter, "Corrected")
+            .Where(element => string.Equals(GetAttributeValue(element, "CorrectionType")?.Trim(), correctionType, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(IsRt6100DistantStandard)
+            .FirstOrDefault();
+        if (corrected is null)
+        {
+            return;
+        }
+
+        var pd = GetRt6100BinocularPd(corrected);
+        var vd = GetChildValue(corrected, "VD");
+        var rightLine = BuildRt6100EyeLine("R", FindChild(corrected, "R"), pd, vd);
+        var leftLine = BuildRt6100EyeLine("L", FindChild(corrected, "L"), null, null);
+        if (string.IsNullOrWhiteSpace(rightLine) && string.IsNullOrWhiteSpace(leftLine))
+        {
+            return;
+        }
+
+        AddMeasurement(
+            measurements,
+            $"Measure[@Type='RT']/{correctionType}/HeaderLine",
+            $"MEDISTAR NIDEK RT-6100 {correctionType}-Header",
+            headerLine,
+            null,
+            null,
+            "RT");
+
+        AddRt6100OptionalMedistarLine(measurements, correctionType, "R", rightLine);
+        AddRt6100OptionalMedistarLine(measurements, correctionType, "L", leftLine);
+    }
+
+    private static bool IsRt6100DistantStandard(XElement corrected)
+    {
+        return string.Equals(GetAttributeValue(corrected, "Vision")?.Trim(), "Distant", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(GetAttributeValue(corrected, "Situation")?.Trim(), "Standard", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void AddRt6100OptionalMedistarLine(
+        List<MeasurementValue> measurements,
+        string pathSegment,
+        string eye,
+        string? line)
+    {
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return;
+        }
+
+        AddMeasurement(
+            measurements,
+            $"Measure[@Type='RT']/{pathSegment}/{eye}/MedistarLine",
+            $"MEDISTAR NIDEK RT-6100 {pathSegment} {eye}-Zeile",
+            line,
+            null,
+            null,
+            "RT");
     }
 
     private static void AddCv5000OptionalMedistarLine(
@@ -1691,6 +1861,32 @@ public sealed class XmlDeviceParser
         return line;
     }
 
+    private static string? BuildRt6100EyeLine(string eye, XElement? eyeElement, string? binocularPd, string? vd)
+    {
+        var line = BuildRefractionEyeLine(eye, eyeElement);
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return null;
+        }
+
+        line = AppendAddition(line, "A", GetChildValue(eyeElement!, "ADD", "Add1"));
+        line = AppendAddition(line, "A2", GetChildValue(eyeElement!, "ADD2", "Add2"));
+
+        var eyePd = GetChildValue(eyeElement!, "PD");
+        var pd = string.IsNullOrWhiteSpace(binocularPd) ? eyePd : binocularPd;
+        if (!string.IsNullOrWhiteSpace(pd))
+        {
+            line += $" PD= {FormatPd(pd)}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(vd))
+        {
+            line += $" VD= {FormatTwoDecimal(vd)}";
+        }
+
+        return line;
+    }
+
     private static string? GetCv5000BinocularPd(XElement? pdElement)
     {
         if (pdElement is null)
@@ -1709,6 +1905,25 @@ public sealed class XmlDeviceParser
         return TryParseDecimal(rightPd ?? string.Empty, out var right)
             && TryParseDecimal(leftPd ?? string.Empty, out var left)
             ? (right + left).ToString("0.00", CultureInfo.InvariantCulture)
+            : null;
+    }
+
+    private static string? GetRt6100BinocularPd(XElement corrected)
+    {
+        var binocular = FindChild(corrected, "B");
+        var binocularPd = binocular is null ? null : GetChildValue(binocular, "PD");
+        if (!string.IsNullOrWhiteSpace(binocularPd))
+        {
+            return binocularPd;
+        }
+
+        var rightElement = FindChild(corrected, "R");
+        var leftElement = FindChild(corrected, "L");
+        var rightPd = rightElement is null ? null : GetChildValue(rightElement, "PD");
+        var leftPd = leftElement is null ? null : GetChildValue(leftElement, "PD");
+        return TryParseDecimal(rightPd ?? string.Empty, out var rightValue)
+            && TryParseDecimal(leftPd ?? string.Empty, out var leftValue)
+            ? (rightValue + leftValue).ToString("0.00", CultureInfo.InvariantCulture)
             : null;
     }
 
@@ -1893,6 +2108,26 @@ public sealed class XmlDeviceParser
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "CV5000", StringComparison.OrdinalIgnoreCase)
             || string.Equals(normalized, "CV5000S", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsNidekRt6100Model(string? modelName)
+    {
+        var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "RT6100", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsNidekRt6100Version(string? version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return false;
+        }
+
+        var normalized = version
+            .Replace("_", string.Empty, StringComparison.Ordinal)
+            .Replace(" ", string.Empty, StringComparison.Ordinal)
+            .Trim();
+        return normalized.StartsWith("NIDEKRT", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddLensmeterLine(

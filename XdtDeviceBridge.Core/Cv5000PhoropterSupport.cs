@@ -209,6 +209,29 @@ public sealed class MedistarHistoricalMeasurementParser
             .ToArray();
     }
 
+    public IReadOnlyList<AisHistoricalMeasurementRecord> CreateDefaultRt6100Selection(
+        IEnumerable<AisHistoricalMeasurementRecord> records)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+
+        var candidates = records
+            .Where(record => record.IsExportableToCv5000)
+            .ToList();
+
+        return new[]
+            {
+                AisHistoricalMeasurementSourceKind.Lensmeter,
+                AisHistoricalMeasurementSourceKind.Autorefraction
+            }
+            .Select(kind => candidates
+                .Where(record => record.SourceKind == kind)
+                .OrderByDescending(record => record.Date)
+                .FirstOrDefault())
+            .Where(record => record is not null)
+            .Select(record => record!)
+            .ToArray();
+    }
+
     private static AisHistoricalMeasurementRecord CreateRecord(
         HistoricalGroupKey key,
         IReadOnlyList<RawHistoricalLine> lines,
@@ -621,5 +644,274 @@ public sealed class TopconCv5000ImportXmlWriter
         }
 
         return Path.Combine(targetFolder, Path.GetFileName(targetFileName));
+    }
+}
+
+public sealed class NidekRt6100InputXmlWriter
+{
+    public const string DefaultFileNameTemplate = "RTImport_{PatientNumber}_{yyyyMMdd}_{HHmmss}.xml";
+    public const string DeviceOutputFormat = "NIDEK RT-6100 XML";
+
+    public Cv5000ImportWriteResult BuildXml(Cv5000ImportSelection selection, DateTimeOffset? timestamp = null)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+
+        var exportableRecords = selection.SelectedMeasurements
+            .Where(IsRt6100InputSource)
+            .Where(record => record.IsExportableToCv5000)
+            .ToArray();
+        if (exportableRecords.Length == 0)
+        {
+            return new Cv5000ImportWriteResult(
+                Success: false,
+                TargetPath: null,
+                XmlContent: null,
+                Warnings: Array.Empty<string>(),
+                ErrorMessage: "Keine exportierbaren LM-/AR-Messdatensätze für den RT-6100-Import ausgewählt.");
+        }
+
+        var now = timestamp ?? DateTimeOffset.Now;
+        var document = new XDocument(
+            new XDeclaration("1.0", "UTF-16", null),
+            new XElement(
+                "Ophthalmology",
+                CreateCommonElement(selection.Patient, now),
+                new XElement(
+                    "Measure",
+                    new XAttribute("Type", "RT"),
+                    new XElement(
+                        "Phoropter",
+                        exportableRecords.Select(CreateCorrectedElement)))));
+
+        return new Cv5000ImportWriteResult(
+            Success: true,
+            TargetPath: CreateTargetPath(selection.TargetFolder, selection.TargetFileName, selection.Patient, now),
+            XmlContent: document.ToString(SaveOptions.None),
+            Warnings: Array.Empty<string>(),
+            ErrorMessage: null);
+    }
+
+    public Cv5000ImportWriteResult WriteFile(Cv5000ImportSelection selection, DateTimeOffset? timestamp = null)
+    {
+        var result = BuildXml(selection, timestamp);
+        if (!result.Success || string.IsNullOrWhiteSpace(result.XmlContent))
+        {
+            return result;
+        }
+
+        if (string.IsNullOrWhiteSpace(result.TargetPath))
+        {
+            return result with
+            {
+                Success = false,
+                ErrorMessage = "Kein Zielpfad für die RT-6100-Importdatei angegeben."
+            };
+        }
+
+        var folder = Path.GetDirectoryName(result.TargetPath);
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+        {
+            return result with
+            {
+                Success = false,
+                ErrorMessage = "Ausgabeordner an RT-6100 existiert nicht."
+            };
+        }
+
+        File.WriteAllText(result.TargetPath, result.XmlContent, Encoding.Unicode);
+        return result;
+    }
+
+    public Cv5000ImportWriteResult WriteFile(
+        Cv5000ImportSelection selection,
+        InterfaceProfileDefinition interfaceProfile,
+        DateTimeOffset? timestamp = null)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+        ArgumentNullException.ThrowIfNull(interfaceProfile);
+
+        var output = interfaceProfile.DeviceOutput;
+        if (output is null)
+        {
+            return new Cv5000ImportWriteResult(
+                Success: false,
+                TargetPath: null,
+                XmlContent: null,
+                Warnings: Array.Empty<string>(),
+                ErrorMessage: "Keine Ausgabe-an-Gerät-Konfiguration im Schnittstellenprofil vorhanden.");
+        }
+
+        if (!output.IsEnabled)
+        {
+            return new Cv5000ImportWriteResult(
+                Success: false,
+                TargetPath: null,
+                XmlContent: null,
+                Warnings: Array.Empty<string>(),
+                ErrorMessage: "Ausgabe an Gerät ist im Schnittstellenprofil nicht aktiv.");
+        }
+
+        if (string.IsNullOrWhiteSpace(output.OutputFolder))
+        {
+            return new Cv5000ImportWriteResult(
+                Success: false,
+                TargetPath: null,
+                XmlContent: null,
+                Warnings: Array.Empty<string>(),
+                ErrorMessage: "Ausgabeordner an RT-6100 fehlt.");
+        }
+
+        var configuredSelection = selection with
+        {
+            TargetFolder = output.OutputFolder,
+            TargetFileName = string.IsNullOrWhiteSpace(output.FileNameTemplate)
+                ? DefaultFileNameTemplate
+                : output.FileNameTemplate
+        };
+
+        return WriteFile(configuredSelection, timestamp);
+    }
+
+    private static bool IsRt6100InputSource(AisHistoricalMeasurementRecord record)
+    {
+        return record.SourceKind is AisHistoricalMeasurementSourceKind.Lensmeter
+            or AisHistoricalMeasurementSourceKind.Autorefraction;
+    }
+
+    private static XElement CreateCommonElement(PatientData patient, DateTimeOffset now)
+    {
+        var patientNumber = string.IsNullOrWhiteSpace(patient.PatientNumber)
+            ? "NO_ID"
+            : patient.PatientNumber.Trim();
+
+        return new XElement(
+            "Common",
+            new XElement("Company", "NIDEK"),
+            new XElement("ModelName", "RT-6100"),
+            new XElement("Version", "NIDEK_RT_V1.00"),
+            new XElement("Date", now.ToString("yyyy.MM.dd", CultureInfo.InvariantCulture)),
+            new XElement("Time", now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)),
+            new XElement(
+                "Patient",
+                new XElement("No", patientNumber),
+                new XElement("ID", patientNumber),
+                new XElement("FirstName", patient.FirstName ?? string.Empty),
+                new XElement("LastName", patient.LastName ?? string.Empty),
+                new XElement("DOB", FormatDateOfBirth(patient.BirthDate))));
+    }
+
+    private static XElement CreateCorrectedElement(AisHistoricalMeasurementRecord record)
+    {
+        var corrected = new XElement(
+            "Corrected",
+            new XAttribute("CorrectionType", record.SourceKind == AisHistoricalMeasurementSourceKind.Lensmeter ? "LM_Base" : "REF_Base"),
+            new XAttribute("Vision", "Distant"),
+            new XAttribute("Situation", "Standard"),
+            new XElement("DisplayName", record.SourceKind == AisHistoricalMeasurementSourceKind.Lensmeter ? "Lensmeter" : "Autorefraction"));
+
+        if (!string.IsNullOrWhiteSpace(record.Vd))
+        {
+            corrected.Add(new XElement("VD", FormatXmlDecimal(record.Vd)));
+        }
+
+        AddEyeElement(corrected, "R", record.RightEye, record.Pd);
+        AddEyeElement(corrected, "L", record.LeftEye, null);
+
+        if (!string.IsNullOrWhiteSpace(record.Pd))
+        {
+            corrected.Add(new XElement("B", new XElement("PD", FormatXmlDecimal(record.Pd))));
+        }
+
+        return corrected;
+    }
+
+    private static void AddEyeElement(XElement corrected, string eye, AisHistoricalEyeRefraction? values, string? pd)
+    {
+        if (values?.HasExportableRefraction != true)
+        {
+            return;
+        }
+
+        var eyeElement = new XElement(
+            eye,
+            new XElement("Sphere", FormatXmlDecimal(values.Sphere)),
+            new XElement("Cylinder", FormatXmlDecimal(values.Cylinder)),
+            new XElement("Axis", NormalizeAxis(values.Axis)));
+
+        if (!string.IsNullOrWhiteSpace(values.Add))
+        {
+            eyeElement.Add(new XElement("ADD", FormatXmlDecimal(values.Add)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(pd))
+        {
+            eyeElement.Add(new XElement("PD", FormatXmlDecimal(pd)));
+        }
+
+        corrected.Add(eyeElement);
+    }
+
+    private static string FormatDateOfBirth(string? birthDate)
+    {
+        return DateTime.TryParseExact(
+            birthDate,
+            "ddMMyyyy",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var parsed)
+            ? parsed.ToString("yyyy.MM.dd", CultureInfo.InvariantCulture)
+            : birthDate?.Trim() ?? string.Empty;
+    }
+
+    private static string FormatXmlDecimal(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Replace(" ", string.Empty, StringComparison.Ordinal).Replace(',', '.').Trim();
+        return decimal.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+            ? number.ToString("0.00", CultureInfo.InvariantCulture)
+            : normalized;
+    }
+
+    private static string NormalizeAxis(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+    }
+
+    private static string? CreateTargetPath(string? targetFolder, string? targetFileName, PatientData patient, DateTimeOffset timestamp)
+    {
+        if (string.IsNullOrWhiteSpace(targetFolder) || string.IsNullOrWhiteSpace(targetFileName))
+        {
+            return null;
+        }
+
+        var fileName = ExpandFileNameTemplate(targetFileName, patient, timestamp);
+        return Path.Combine(targetFolder, Path.GetFileName(fileName));
+    }
+
+    private static string ExpandFileNameTemplate(string template, PatientData patient, DateTimeOffset timestamp)
+    {
+        var patientNumber = SanitizeFileNamePart(string.IsNullOrWhiteSpace(patient.PatientNumber) ? "NO_ID" : patient.PatientNumber.Trim());
+        var expanded = template
+            .Replace("{PatientNumber}", patientNumber, StringComparison.OrdinalIgnoreCase)
+            .Replace("{Date:yyyyMMdd}", timestamp.ToString("yyyyMMdd", CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+            .Replace("{Time:HHmmss}", timestamp.ToString("HHmmss", CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+            .Replace("{yyyyMMdd}", timestamp.ToString("yyyyMMdd", CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase)
+            .Replace("{HHmmss}", timestamp.ToString("HHmmss", CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
+
+        return string.IsNullOrWhiteSpace(Path.GetExtension(expanded))
+            ? $"{expanded}.xml"
+            : expanded;
+    }
+
+    private static string SanitizeFileNamePart(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var chars = value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray();
+        var sanitized = new string(chars).Trim();
+        return string.IsNullOrWhiteSpace(sanitized) ? "NO_ID" : sanitized;
     }
 }

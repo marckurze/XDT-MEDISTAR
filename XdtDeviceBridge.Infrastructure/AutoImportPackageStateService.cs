@@ -79,12 +79,17 @@ public sealed class AutoImportPackageStateService
 
         var selectedAis = latestAisFile;
         var isCv5000 = InterfaceProfileUiPolicy.IsCv5000(profile, deviceProfile: null);
+        var isRt6100 = InterfaceProfileUiPolicy.IsNidekRt6100(profile, deviceProfile: null);
         var selectedDevice = deviceFiles[^1];
 
         var pair = new PendingImportPair(selectedAis, selectedDevice, IsReady: true);
         if (isCv5000 && pendingAis.IsCv5000DeviceOutputPhaseStarted)
         {
             messages.Add("CV-5000-Phoropter-Rueckgabe liegt stabil vor; Export wird gestartet.");
+        }
+        else if (isRt6100 && pendingAis.IsCv5000DeviceOutputPhaseStarted)
+        {
+            messages.Add("RT-6100-Phoropter-Rueckgabe liegt stabil vor; Export wird gestartet.");
         }
 
         messages.Add("AIS-/Geräte-Dateipaar vollständig.");
@@ -103,6 +108,15 @@ public sealed class AutoImportPackageStateService
     }
 
     public void MarkCv5000WaitingForDeviceResult(
+        string interfaceProfileId,
+        PendingImportFile aisFile,
+        PendingImportQueue queue,
+        DateTime nowUtc)
+    {
+        MarkBidirectionalPhoropterWaitingForDeviceResult(interfaceProfileId, aisFile, queue, nowUtc);
+    }
+
+    public void MarkBidirectionalPhoropterWaitingForDeviceResult(
         string interfaceProfileId,
         PendingImportFile aisFile,
         PendingImportQueue queue,
