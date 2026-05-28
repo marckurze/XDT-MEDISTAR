@@ -78,6 +78,30 @@ public sealed class XdtBaukastenPreviewServiceTests
     }
 
     [Fact]
+    public void BuildPreview_ShouldWarnInsteadOfBlockingOnWorkbenchModelMismatch()
+    {
+        using var temp = new TempFolder();
+        var aisPath = WriteGdt(temp.Path);
+        var devicePath = CopyLm7Fixture(temp.Path);
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateTopconCl300Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default());
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("Baukasten-Vorschau wird trotzdem erzeugt", string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("R.:S=+ 6.25 Z=- 3.25*  3", result.Output.AisView);
+        Assert.Contains("Status: ModelMismatchWarning", result.Output.Diagnostics);
+        Assert.Contains("Profil: TOPCON CL300", result.Output.Diagnostics);
+        Assert.Contains("Datei-ModelName: LM-7", result.Output.Diagnostics);
+        Assert.Contains("Baukastenmodus: Modellabweichungen blockieren nicht", result.Output.Diagnostics);
+    }
+
+    [Fact]
     public void BuildPreview_ShouldCreateCv5000PhoropterPreview()
     {
         using var temp = new TempFolder();

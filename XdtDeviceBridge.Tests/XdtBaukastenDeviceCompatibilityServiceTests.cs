@@ -61,15 +61,20 @@ public sealed class XdtBaukastenDeviceCompatibilityServiceTests
     }
 
     [Fact]
-    public void Evaluate_ShouldNotTreatLm7FileAsCl300Compatible()
+    public void EvaluateForWorkbench_ShouldWarnButAllowPreviewForBuiltInModelMismatch()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
         var measurements = Parse(DeviceFixture("Nidek", "LM7", "NIDEK LM7.xml"));
 
-        var result = _service.Evaluate(profile, measurements);
+        var result = _service.EvaluateForWorkbench(profile, measurements);
 
-        Assert.Equal(XdtBaukastenDeviceCompatibilityStatus.Incompatible, result.Status);
-        Assert.Contains("passt nicht", result.Message);
+        Assert.Equal(XdtBaukastenDeviceCompatibilityStatus.ModelMismatchWarning, result.Status);
+        Assert.False(result.IsCompatible);
+        Assert.True(result.AllowsPreview);
+        Assert.True(result.IsWarning);
+        Assert.Equal("NIDEK", result.DetectedCompany);
+        Assert.Equal("LM-7", result.DetectedModelName);
+        Assert.Contains("Baukasten-Vorschau wird trotzdem erzeugt", result.Message);
     }
 
     [Fact]
@@ -78,9 +83,47 @@ public sealed class XdtBaukastenDeviceCompatibilityServiceTests
         var profile = CreateUserDefinedDraftProfile();
         var measurements = Parse(DeviceFixture("Nidek", "LM7", "NIDEK LM7.xml"));
 
-        var result = _service.Evaluate(profile, measurements);
+        var result = _service.EvaluateForWorkbench(profile, measurements);
 
-        Assert.True(result.IsCompatible, result.Message);
+        Assert.Equal(XdtBaukastenDeviceCompatibilityStatus.UnknownButParseable, result.Status);
+        Assert.False(result.IsCompatible);
+        Assert.True(result.AllowsPreview);
+    }
+
+    [Fact]
+    public void EvaluateForWorkbench_ShouldReportNoExportableValuesForEmptyParsedData()
+    {
+        var result = _service.EvaluateForWorkbench(
+            DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
+            Array.Empty<MeasurementValue>());
+
+        Assert.Equal(XdtBaukastenDeviceCompatibilityStatus.NoExportableValues, result.Status);
+        Assert.False(result.AllowsPreview);
+        Assert.Contains("keine exportierbaren Werte", result.Message);
+    }
+
+    [Fact]
+    public void EvaluateForWorkbench_ShouldReportNotReadableFile()
+    {
+        var result = _service.EvaluateForWorkbench(
+            DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
+            Path.Combine(Path.GetTempPath(), "missing-xdtbox-device-file.xml"));
+
+        Assert.Equal(XdtBaukastenDeviceCompatibilityStatus.NotReadable, result.Status);
+        Assert.False(result.AllowsPreview);
+    }
+
+    [Fact]
+    public void EvaluateForProduction_ShouldStayStrictForModelMismatch()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
+        var measurements = Parse(DeviceFixture("Nidek", "LM7", "NIDEK LM7.xml"));
+
+        var result = _service.EvaluateForProduction(profile, measurements);
+
+        Assert.Equal(XdtBaukastenDeviceCompatibilityStatus.Incompatible, result.Status);
+        Assert.False(result.IsCompatible);
+        Assert.False(result.AllowsPreview);
     }
 
     [Fact]

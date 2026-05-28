@@ -168,6 +168,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("XdtBaukastenTextEncodingReader", code);
         Assert.Contains("XdtBaukastenPlaceholderValueService", code);
         Assert.Contains("RefreshXdtBaukastenPreviewIfPossible", code);
+        Assert.Contains("Baukastenmodus: Modellabweichungen", xaml);
+        Assert.Contains("compatibility.AllowsPreview", code);
     }
 
     [Fact]

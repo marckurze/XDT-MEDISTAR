@@ -30,10 +30,11 @@ public sealed class XdtBaukastenPlaceholderValueService
             };
         }
 
-        var compatibleMeasurements = _compatibilityService.IsCompatibleWithDeviceProfile(deviceProfile, measurements)
+        var compatibility = _compatibilityService.EvaluateForWorkbench(deviceProfile, measurements);
+        var visibleMeasurements = compatibility.AllowsPreview
             ? measurements
             : Array.Empty<MeasurementValue>();
-        var measurementValues = CreateMeasurementValueMap(compatibleMeasurements);
+        var measurementValues = CreateMeasurementValueMap(visibleMeasurements);
 
         var selectedDefinitions = deviceProfile.Measurements
             .Select((measurement, index) => new MeasurementDefinitionCandidate(
@@ -57,11 +58,18 @@ public sealed class XdtBaukastenPlaceholderValueService
             .Select(item => CreatePlaceholder(item.Definition, measurementValues))
             .ToList();
 
-        if (!deviceProfile.Metadata.IsBuiltIn
-            && compatibleMeasurements.Count > 0
-            && (selectedDefinitions.Count == 0 || selectedDefinitions.All(placeholder => placeholder.ExampleValue == "-")))
+        if (visibleMeasurements.Count > 0
+            && (compatibility.IsWarning
+                || !deviceProfile.Metadata.IsBuiltIn
+                || selectedDefinitions.Count == 0
+                || selectedDefinitions.All(placeholder => placeholder.ExampleValue == "-")))
         {
-            selectedDefinitions = CreateDynamicParsedPlaceholders(compatibleMeasurements).ToList();
+            var dynamicPlaceholders = CreateDynamicParsedPlaceholders(visibleMeasurements).ToList();
+            if (dynamicPlaceholders.Count > 0
+                && (compatibility.IsWarning || selectedDefinitions.Count == 0 || selectedDefinitions.All(placeholder => placeholder.ExampleValue == "-")))
+            {
+                selectedDefinitions = dynamicPlaceholders;
+            }
         }
 
         if (selectedDefinitions.Count == 0)

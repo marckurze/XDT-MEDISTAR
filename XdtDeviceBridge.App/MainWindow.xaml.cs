@@ -8429,9 +8429,10 @@ public partial class MainWindow : Window
             _xdtBaukastenState.ClearPreviewResult();
             if (_xdtBaukastenState.DeviceInput is not null)
             {
-                _xdtBaukastenState.ClearDeviceInput();
-                XdtBaukastenDeviceRawTextBox.Text = string.Empty;
-                SetXdtBaukastenStatus("Geräteprofil geändert. Bitte passende Gerätedatei laden.");
+                var compatibility = EvaluateCurrentDeviceInputCompatibility();
+                SetXdtBaukastenStatus(compatibility.IsWarning
+                    ? compatibility.Message
+                    : "Geräteprofil geändert. Geladene Gerätedatei bleibt im Baukasten erhalten und wurde neu bewertet.");
             }
         }
 
@@ -8797,9 +8798,11 @@ public partial class MainWindow : Window
                 _xdtBaukastenState.ClearPreviewResult();
                 XdtBaukastenDeviceRawTextBox.Text = rawText;
                 var compatibility = EvaluateCurrentDeviceInputCompatibility();
-                SetXdtBaukastenStatus(compatibility.IsCompatible
-                    ? $"Gerätetestdatei geladen: {filePath}"
-                    : compatibility.Message);
+                SetXdtBaukastenStatus(compatibility.IsWarning
+                    ? compatibility.Message
+                    : compatibility.AllowsPreview
+                        ? $"Gerätetestdatei geladen: {filePath}"
+                        : compatibility.Message);
             }
 
             UpdateXdtBaukastenPlaceholders();
@@ -8853,7 +8856,7 @@ public partial class MainWindow : Window
     private void RunXdtBaukastenPreview()
     {
         var compatibility = EvaluateCurrentDeviceInputCompatibility();
-        if (!compatibility.IsCompatible)
+        if (!compatibility.AllowsPreview)
         {
             _xdtBaukastenState.ClearPreviewResult();
             UpdateXdtBaukastenResultView();
@@ -8867,9 +8870,20 @@ public partial class MainWindow : Window
             ResolveXdtBaukastenInterfaceProfile(),
             DateTimeOffset.Now);
         _xdtBaukastenState.SetPreviewResult(result);
-        SetXdtBaukastenStatus(result.Success
-            ? "Baukasten-Vorschau aktualisiert. Es wurde keine produktive Datei geschrieben."
-            : string.Join(Environment.NewLine, result.Messages.Take(4)));
+        if (result.Success)
+        {
+            const string successMessage = "Baukasten-Vorschau aktualisiert. Es wurde keine produktive Datei geschrieben.";
+            SetXdtBaukastenStatus(compatibility.IsWarning
+                ? $"{compatibility.Message} {successMessage}"
+                : successMessage);
+        }
+        else
+        {
+            var message = string.Join(Environment.NewLine, result.Messages.Take(4));
+            SetXdtBaukastenStatus(compatibility.IsWarning
+                ? $"{compatibility.Message}{Environment.NewLine}{message}"
+                : message);
+        }
         UpdateXdtBaukastenResultView();
         UpdateXdtBaukastenPlaceholders();
     }
@@ -8884,7 +8898,7 @@ public partial class MainWindow : Window
         }
 
         var compatibility = EvaluateCurrentDeviceInputCompatibility();
-        if (!compatibility.IsCompatible)
+        if (!compatibility.AllowsPreview)
         {
             _xdtBaukastenState.ClearPreviewResult();
             UpdateXdtBaukastenResultView();
@@ -9158,7 +9172,7 @@ public partial class MainWindow : Window
             return true;
         }
 
-        return EvaluateCurrentDeviceInputCompatibility().IsCompatible;
+        return EvaluateCurrentDeviceInputCompatibility().AllowsPreview;
     }
 
     private XdtBaukastenDeviceCompatibilityResult EvaluateCurrentDeviceInputCompatibility()
@@ -9168,7 +9182,7 @@ public partial class MainWindow : Window
             return XdtBaukastenDeviceCompatibilityResult.Compatible(Array.Empty<MeasurementValue>());
         }
 
-        return _xdtBaukastenDeviceCompatibilityService.Evaluate(
+        return _xdtBaukastenDeviceCompatibilityService.EvaluateForWorkbench(
             _xdtBaukastenState.DeviceProfile,
             _xdtBaukastenState.DeviceInput.SourcePath);
     }

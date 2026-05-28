@@ -23,7 +23,7 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
     }
 
     [Fact]
-    public void CreateDevicePlaceholders_ShouldNotBindLm7ValuesToCl300Profile()
+    public void CreateDevicePlaceholders_ShouldShowLoadedFileValuesWhenProfileMismatchesInWorkbench()
     {
         var cl300Profile = DefaultDeviceProfileDefinitions.CreateTopconCl300Default();
         var lm7Measurements = ParseFixture("Nidek", "LM7", "NIDEK LM7.xml");
@@ -31,7 +31,12 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
         var placeholders = _service.CreateDevicePlaceholders(cl300Profile, lm7Measurements);
 
         Assert.False(_service.IsCompatibleWithDeviceProfile(cl300Profile, lm7Measurements));
-        Assert.DoesNotContain(placeholders, placeholder => placeholder.ExampleValue is "NIDEK" or "LM-7" or "+6.25");
+        Assert.Contains(placeholders, placeholder =>
+            placeholder.Token == "{Device.Measure[@type='LM']/LM/R/Sphare}"
+            && placeholder.ExampleValue == "+6.25");
+        Assert.Contains(placeholders, placeholder =>
+            placeholder.Token == "{Device.Measure[@type='LM']/LM/L/ADD}"
+            && placeholder.ExampleValue == "+1.50");
     }
 
     [Fact]

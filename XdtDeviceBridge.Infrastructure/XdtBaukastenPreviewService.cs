@@ -9,13 +9,15 @@ public sealed class XdtBaukastenPreviewService
     private readonly MedistarHistoricalMeasurementParser _historyParser;
     private readonly TopconCv5000ImportXmlWriter _cv5000Writer;
     private readonly NidekRt6100InputXmlWriter _rt6100Writer;
+    private readonly XdtBaukastenDeviceCompatibilityService _compatibilityService;
 
     public XdtBaukastenPreviewService()
         : this(
             new BuilderManualProcessingPreviewService(),
             new MedistarHistoricalMeasurementParser(),
             new TopconCv5000ImportXmlWriter(),
-            new NidekRt6100InputXmlWriter())
+            new NidekRt6100InputXmlWriter(),
+            new XdtBaukastenDeviceCompatibilityService())
     {
     }
 
@@ -24,11 +26,27 @@ public sealed class XdtBaukastenPreviewService
         MedistarHistoricalMeasurementParser historyParser,
         TopconCv5000ImportXmlWriter cv5000Writer,
         NidekRt6100InputXmlWriter rt6100Writer)
+        : this(
+            manualPreviewService,
+            historyParser,
+            cv5000Writer,
+            rt6100Writer,
+            new XdtBaukastenDeviceCompatibilityService())
+    {
+    }
+
+    public XdtBaukastenPreviewService(
+        BuilderManualProcessingPreviewService manualPreviewService,
+        MedistarHistoricalMeasurementParser historyParser,
+        TopconCv5000ImportXmlWriter cv5000Writer,
+        NidekRt6100InputXmlWriter rt6100Writer,
+        XdtBaukastenDeviceCompatibilityService compatibilityService)
     {
         _manualPreviewService = manualPreviewService ?? throw new ArgumentNullException(nameof(manualPreviewService));
         _historyParser = historyParser ?? throw new ArgumentNullException(nameof(historyParser));
         _cv5000Writer = cv5000Writer ?? throw new ArgumentNullException(nameof(cv5000Writer));
         _rt6100Writer = rt6100Writer ?? throw new ArgumentNullException(nameof(rt6100Writer));
+        _compatibilityService = compatibilityService ?? throw new ArgumentNullException(nameof(compatibilityService));
     }
 
     public XdtBaukastenPreviewResult BuildPreview(
@@ -63,6 +81,17 @@ public sealed class XdtBaukastenPreviewService
                 return CreateFailure(fileValidation);
             }
 
+            var compatibility = _compatibilityService.EvaluateForWorkbench(state.DeviceProfile, state.DeviceInput!.SourcePath);
+            if (!compatibility.AllowsPreview)
+            {
+                return CreateFailure(compatibility.Message);
+            }
+
+            if (compatibility.IsWarning)
+            {
+                messages.Add(compatibility.Message);
+            }
+
             pipelineResult = _manualPreviewService.BuildPreview(new BuilderManualProcessingPreviewRequest(
                 InterfaceProfile: interfaceProfile,
                 DeviceProfile: state.DeviceProfile,
@@ -72,7 +101,7 @@ public sealed class XdtBaukastenPreviewService
 
             rawXdt = pipelineResult.ExportContent;
             aisView = CreateAisCardView(pipelineResult);
-            diagnostics = CreateDiagnosticsView(pipelineResult);
+            diagnostics = CreateDiagnosticsView(pipelineResult, state, exportProfile, compatibility);
             messages.AddRange(pipelineResult.Issues.Select(issue => $"{issue.Severity}: {issue.Stage}: {issue.Message}"));
         }
 
@@ -197,9 +226,15 @@ public sealed class XdtBaukastenPreviewService
         return string.Join(Environment.NewLine, visibleLines);
     }
 
-    private static string CreateDiagnosticsView(ProcessingPipelineResult result)
+    private static string CreateDiagnosticsView(
+        ProcessingPipelineResult result,
+        XdtBaukastenState state,
+        ExportProfileDefinition exportProfile,
+        XdtBaukastenDeviceCompatibilityResult compatibility)
     {
         var builder = new StringBuilder();
+        AppendCompatibilityDiagnostics(builder, state, exportProfile, compatibility);
+
         if (result.Patient is not null)
         {
             builder.AppendLine("Patient");
@@ -233,6 +268,31 @@ public sealed class XdtBaukastenPreviewService
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendCompatibilityDiagnostics(
+        StringBuilder builder,
+        XdtBaukastenState state,
+        ExportProfileDefinition exportProfile,
+        XdtBaukastenDeviceCompatibilityResult compatibility)
+    {
+        builder.AppendLine("Kompatibilität");
+        builder.AppendLine($"- Profil: {Display(state.DeviceProfile?.Metadata.Name)}");
+        builder.AppendLine($"- Profil-Hersteller: {Display(state.DeviceProfile?.Manufacturer)}");
+        builder.AppendLine($"- Datei-Hersteller: {Display(compatibility.DetectedCompany)}");
+        builder.AppendLine($"- Profil-Modell: {Display(state.DeviceProfile?.Model)}");
+        builder.AppendLine($"- Datei-ModelName: {Display(compatibility.DetectedModelName)}");
+        builder.AppendLine($"- Parser: {Display(state.DeviceProfile?.ParserMode)}");
+        builder.AppendLine($"- Exportprofil: {Display(exportProfile.Metadata.Name)}");
+        builder.AppendLine($"- Status: {compatibility.Status}");
+        builder.AppendLine($"- Preview trotz Abweichung: {(compatibility.IsWarning && compatibility.AllowsPreview ? "Ja" : "Nein")}");
+        if (compatibility.IsWarning)
+        {
+            builder.AppendLine($"- Hinweis: {compatibility.Message}");
+            builder.AppendLine("- Baukastenmodus: Modellabweichungen blockieren nicht. Produktive Verarbeitung prüft strenger.");
+        }
+
+        builder.AppendLine();
     }
 
     private static string CreateSerialDiagnosticsView(SerialRawDeviceInput input)

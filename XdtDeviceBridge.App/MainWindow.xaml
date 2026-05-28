@@ -1925,10 +1925,17 @@
                                         BorderBrush="{StaticResource XdtBoxBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="6">
-                                    <TextBlock x:Name="XdtBaukastenTopStatusText"
-                                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
-                                               TextWrapping="Wrap"
-                                               Text="Baukasten bereit. Bitte Profile und Testdaten laden." />
+                                    <StackPanel>
+                                        <TextBlock x:Name="XdtBaukastenTopStatusText"
+                                                   Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Text="Baukasten bereit. Bitte Profile und Testdaten laden." />
+                                        <TextBlock Margin="0,4,0,0"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Text="Baukastenmodus: Modellabweichungen werden als Warnung angezeigt, blockieren die Vorschau aber nicht. Die produktive Verarbeitung prüft strenger." />
+                                    </StackPanel>
                                 </Border>
                             </Grid>
                         </GroupBox>
