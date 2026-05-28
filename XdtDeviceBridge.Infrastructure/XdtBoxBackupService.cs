@@ -14,6 +14,8 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
     private const string DeviceImageOverridesFileName = "device-image-overrides.json";
     private const string SignedLicenseFileName = "license.xdtboxlic";
     private const string LicenseCustomerDataFileName = "license-customer-data.json";
+    private const string DeviceImageLockWarning =
+        "Einige Gerätebilder konnten nicht ersetzt werden, weil sie aktuell von XDTBox oder Windows verwendet werden. Bitte XDTBox neu starten und die Wiederherstellung bei Bedarf erneut ausführen.";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -142,6 +144,8 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
         {
             using var archive = ZipFile.OpenRead(backupFilePath);
             var manifest = ReadManifest(archive);
+            var messages = new List<string>();
+            var warnings = new List<string>();
             var validation = ValidateManifest(manifest);
             if (validation.Count > 0)
             {
@@ -150,7 +154,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
 
             RestoreDirectory(archive, "profiles/", paths.ProfilesFolder);
             RestoreDirectory(archive, "template-packages/", paths.TemplatePackagesFolder);
-            RestoreDirectory(archive, "device-images/", GetDeviceImagesFolder(paths));
+            RestoreDirectoryTolerant(archive, "device-images/", GetDeviceImagesFolder(paths), warnings);
             RestoreFile(archive, "settings/device-image-overrides.json", GetDeviceImageOverridesFilePath(paths));
             RestoreFile(archive, "settings/ui/floating-interface-windows.json", GetFloatingWindowStateFilePath(paths));
             RestoreFile(archive, "settings/ui/app-settings.json", GetAppSettingsFilePath(paths));
@@ -158,16 +162,26 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             RestoreFile(archive, "license/device-grace-periods.json", paths.DeviceGracePeriodsFile);
             RestoreFile(archive, "license/license.xdtboxlic", GetSignedLicenseFilePath(paths));
 
-            return new XdtBoxRestoreResult(true, manifest, new[]
+            messages.Add(warnings.Count == 0
+                ? "Sicherung wurde erfolgreich wiederhergestellt."
+                : "Sicherung wurde wiederhergestellt, jedoch mit Hinweisen.");
+            messages.AddRange(warnings.Distinct(StringComparer.OrdinalIgnoreCase));
+            messages.Add(HardwareMigrationNotice);
+            messages.Add("Eine wiederhergestellte Lizenz kann auf neuer Hardware ungültig sein.");
+
+            return new XdtBoxRestoreResult(true, manifest, messages);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return new XdtBoxRestoreResult(false, null, new[]
             {
-                "Sicherung wurde wiederhergestellt.",
-                HardwareMigrationNotice,
-                "Eine wiederhergestellte Lizenz kann auf neuer Hardware ungültig sein."
+                "Wiederherstellung fehlgeschlagen: Eine oder mehrere Dateien konnten nicht ersetzt werden. Bitte schließen Sie geöffnete XDTBox-Fenster und versuchen Sie es erneut.",
+                $"Technisches Detail: {ex.Message}"
             });
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or JsonException or NotSupportedException)
+        catch (Exception ex) when (ex is InvalidDataException or JsonException or NotSupportedException)
         {
-            return new XdtBoxRestoreResult(false, null, new[] { $"Wiederherstellung fehlgeschlagen: {ex.Message}" });
+            return new XdtBoxRestoreResult(false, null, new[] { $"Wiederherstellung fehlgeschlagen: {CreateGermanRestoreErrorMessage(ex)}" });
         }
     }
 
@@ -264,6 +278,36 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
         }
     }
 
+    private static void RestoreDirectoryTolerant(
+        ZipArchive archive,
+        string entryPrefix,
+        string targetFolder,
+        List<string> warnings)
+    {
+        var entries = archive.Entries
+            .Where(entry => entry.FullName.StartsWith(entryPrefix, StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(entry.Name))
+            .ToArray();
+        if (entries.Length == 0)
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(targetFolder);
+        foreach (var entry in entries)
+        {
+            var relativePath = entry.FullName[entryPrefix.Length..];
+            try
+            {
+                ExtractEntry(entry, Path.Combine(targetFolder, relativePath), targetFolder);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                warnings.Add(DeviceImageLockWarning);
+            }
+        }
+    }
+
     private static void RestoreFile(ZipArchive archive, string entryName, string targetPath)
     {
         var entry = archive.GetEntry(entryName);
@@ -292,7 +336,42 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             ?? throw new InvalidDataException("Zielpfad ist ungültig.");
         Directory.CreateDirectory(targetDirectory);
 
-        entry.ExtractToFile(normalizedTargetPath, overwrite: true);
+        ExtractEntryViaTemporaryFile(entry, normalizedTargetPath);
+    }
+
+    private static void ExtractEntryViaTemporaryFile(ZipArchiveEntry entry, string normalizedTargetPath)
+    {
+        var targetDirectory = Path.GetDirectoryName(normalizedTargetPath)
+            ?? throw new InvalidDataException("Zielpfad ist ungültig.");
+        var tempPath = Path.Combine(targetDirectory, $".xdtbox-restore-{Guid.NewGuid():N}.tmp");
+
+        try
+        {
+            entry.ExtractToFile(tempPath, overwrite: true);
+            if (File.Exists(normalizedTargetPath))
+            {
+                File.Copy(tempPath, normalizedTargetPath, overwrite: true);
+                File.Delete(tempPath);
+                return;
+            }
+
+            File.Move(tempPath, normalizedTargetPath);
+        }
+        finally
+        {
+            TryDeleteFile(tempPath);
+        }
+    }
+
+    private static string CreateGermanRestoreErrorMessage(Exception ex)
+    {
+        return ex switch
+        {
+            InvalidDataException => ex.Message,
+            JsonException => "Die Sicherungsdatei enthält ungültige JSON-Daten.",
+            NotSupportedException => "Die Sicherungsdatei enthält einen nicht unterstützten Pfad oder ein nicht unterstütztes Format.",
+            _ => "Die Sicherung konnte nicht wiederhergestellt werden."
+        };
     }
 
     private static string GetDeviceImagesFolder(AppDataPaths paths)

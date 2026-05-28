@@ -84,33 +84,48 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
-    public void ProfileTemplatesTab_ShouldUseCollapsedSectionsByDefault()
+    public void ProfileTemplatesTab_ShouldUseExpandedSectionsByDefault()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
 
-        Assert.Contains("Header=\"Profilübersicht\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("Header=\"Templatepakete, neue Profile und RS232-Test\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("Header=\"Profilnamen\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("Header=\"Exportregeln\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("Header=\"Exportregel-Entwurf\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("Header=\"Regelvorschau\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("Header=\"Test &amp; Vorschau\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Profilübersicht\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("Header=\"Templatepakete, neue Profile und RS232-Test\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("Header=\"Profilnamen\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("Header=\"Exportregeln\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("Header=\"Exportregel-Entwurf\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("Header=\"Regelvorschau\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("Header=\"Test &amp; Vorschau\" IsExpanded=\"True\"", xaml);
         Assert.Contains("Header=\"Verfügbare Platzhalter\"", xaml);
-        Assert.Contains("Header=\"Profil- und Template-Meldungen\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("Header=\"Profil- und Template-Meldungen\" IsExpanded=\"True\"", xaml);
     }
 
     [Fact]
-    public void InterfaceProfilesTab_ShouldUseCollapsedEditableSectionsByDefault()
+    public void InterfaceProfilesTab_ShouldUseExpandedEditableSectionsByDefault()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
 
-        Assert.Contains("<Expander Header=\"Ordner\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("x:Name=\"InterfaceSerialCommunicationGroupBox\" Header=\"Serielle Gerätekommunikation / COM-Port\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("x:Name=\"InterfaceDeviceOutputGroupBox\" Header=\"Ausgabe an Gerät\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("x:Name=\"InterfaceAttachmentSettingsGroupBox\" Header=\"XDT-Anhänge für AIS\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("<Expander Header=\"Ordnerbereinigung\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("<Expander Header=\"Archivierung\" IsExpanded=\"False\"", xaml);
-        Assert.Contains("<Expander Header=\"Prüfung vor Aktivierung\" IsExpanded=\"False\"", xaml);
+        Assert.Contains("<Expander Header=\"Ordner\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceSerialCommunicationGroupBox\" Header=\"Serielle Gerätekommunikation / COM-Port\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceDeviceOutputGroupBox\" Header=\"Ausgabe an Gerät\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceAttachmentSettingsGroupBox\" Header=\"XDT-Anhänge für AIS\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("<Expander Header=\"Ordnerbereinigung\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("<Expander Header=\"Archivierung\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("<Expander Header=\"Prüfung vor Aktivierung\" IsExpanded=\"True\"", xaml);
+        Assert.Contains("Header=\"Alle Prüfpunkte\" IsExpanded=\"True\"", xaml);
+    }
+
+    [Fact]
+    public void DeviceImages_ShouldLoadThroughNoLockConverter()
+    {
+        var mainWindow = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var floatingWindow = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "FloatingInterfaceProfileWindow.xaml"));
+        var converter = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "DeviceImageSourceConverter.cs"));
+
+        Assert.Contains("Converter={StaticResource DeviceImageSourceConverter}", mainWindow);
+        Assert.Contains("Converter={StaticResource DeviceImageSourceConverter}", floatingWindow);
+        Assert.Contains("BitmapCacheOption.OnLoad", converter);
+        Assert.Contains("FileShare.ReadWrite | FileShare.Delete", converter);
+        Assert.Contains("bitmap.Freeze()", converter);
     }
 
     [Fact]

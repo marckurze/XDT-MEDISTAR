@@ -62,6 +62,37 @@ public sealed class XdtBoxBackupServiceTests
     }
 
     [Fact]
+    public void RestoreBackup_ShouldContinueWithWarningWhenDeviceImageIsLocked()
+    {
+        using var temp = new TempFolder();
+        var sourcePaths = _pathProvider.GetPaths(Path.Combine(temp.Path, "source"));
+        var targetPaths = _pathProvider.GetPaths(Path.Combine(temp.Path, "target"));
+        SeedConfiguration(sourcePaths);
+        var backupPath = Path.Combine(temp.Path, "backup.xdtboxbackup");
+        var backup = _service.CreateBackup(sourcePaths, backupPath, "1.2.3", "installation-1");
+        Assert.True(backup.Success);
+
+        var targetDeviceImagesFolder = Path.Combine(targetPaths.BaseFolder, "DeviceImages");
+        Directory.CreateDirectory(targetDeviceImagesFolder);
+        var lockedImagePath = Path.Combine(targetDeviceImagesFolder, "device-user.png");
+        File.WriteAllText(lockedImagePath, "locked-image");
+
+        XdtBoxRestoreResult restore;
+        using (new FileStream(lockedImagePath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            restore = _service.RestoreBackup(targetPaths, backupPath, isMonitoringRunning: false);
+        }
+
+        Assert.True(restore.Success);
+        Assert.Contains("Sicherung wurde wiederhergestellt, jedoch mit Hinweisen.", restore.Messages);
+        Assert.Contains("Gerätebilder konnten nicht ersetzt werden", string.Join(" ", restore.Messages));
+        Assert.DoesNotContain("The process cannot access", restore.Messages.First());
+        Assert.True(File.Exists(Path.Combine(targetPaths.ProfilesFolder, "interfaces", "interface-user.json")));
+        Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license.xdtboxlic")));
+        Assert.Equal("locked-image", File.ReadAllText(lockedImagePath));
+    }
+
+    [Fact]
     public void RestoreBackup_ShouldRejectActiveMonitoring()
     {
         using var temp = new TempFolder();

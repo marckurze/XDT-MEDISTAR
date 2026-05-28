@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:core="clr-namespace:XdtDeviceBridge.Core;assembly=XdtDeviceBridge.Core"
+        xmlns:local="clr-namespace:XdtDeviceBridge.App"
         Title="Geräteanbindung"
         Width="{x:Static core:InterfaceProfileUiPolicy.PilotFloatingWindowDefaultWidth}"
         Height="430"
@@ -9,6 +10,7 @@
         MinHeight="260"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <local:DeviceImageSourceConverter x:Key="DeviceImageSourceConverter"/>
         <Style x:Key="FloatingSymbolButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="30"/>
             <Setter Property="Height" Value="28"/>
@@ -258,7 +260,7 @@
                             </Grid.Style>
                             <Border Background="#10FFFFFF"
                                     CornerRadius="8"/>
-                            <Image Source="{Binding DeviceImagePath}"
+                            <Image Source="{Binding DeviceImagePath, Converter={StaticResource DeviceImageSourceConverter}}"
                                    Stretch="Uniform"
                                    RenderOptions.BitmapScalingMode="HighQuality">
                                 <Image.Style>

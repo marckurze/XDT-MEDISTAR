@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:core="clr-namespace:XdtDeviceBridge.Core;assembly=XdtDeviceBridge.Core"
+        xmlns:local="clr-namespace:XdtDeviceBridge.App"
         Title="XDTBox"
         Icon="Assets/App/XDTBox.ico"
         Height="900"
@@ -14,6 +15,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Styles/XdtBoxTheme.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <local:DeviceImageSourceConverter x:Key="DeviceImageSourceConverter"/>
         </ResourceDictionary>
     </Window.Resources>
     <Grid Margin="12" Style="{StaticResource XdtBoxRootGridStyle}">
@@ -371,7 +373,7 @@
                                                                 </Grid.Style>
                                                                 <Border Background="#10FFFFFF"
                                                                         CornerRadius="8"/>
-                                                                <Image Source="{Binding DeviceImagePath}"
+                                                                <Image Source="{Binding DeviceImagePath, Converter={StaticResource DeviceImageSourceConverter}}"
                                                                        Stretch="Uniform"
                                                                        RenderOptions.BitmapScalingMode="HighQuality">
                                                                     <Image.Style>
@@ -829,7 +831,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Expander Header="Profilübersicht" IsExpanded="False" Grid.Row="0" Margin="0,0,0,8">
+                        <Expander Header="Profilübersicht" IsExpanded="True" Grid.Row="0" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -858,7 +860,7 @@
                             </Grid>
                         </Expander>
 
-                        <Expander Header="Templatepakete, neue Profile und RS232-Test" IsExpanded="False" Grid.Row="1" Margin="0,0,0,8">
+                        <Expander Header="Templatepakete, neue Profile und RS232-Test" IsExpanded="True" Grid.Row="1" Margin="0,0,0,8">
                         <Grid Margin="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -1173,7 +1175,7 @@
                         </Grid>
                         </Expander>
 
-                        <Expander Header="Profilnamen" IsExpanded="False" Grid.Row="2" Margin="0,0,0,8">
+                        <Expander Header="Profilnamen" IsExpanded="True" Grid.Row="2" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1225,7 +1227,7 @@
                             </Grid>
                         </Expander>
 
-                        <Expander Header="Exportregeln" IsExpanded="False" Grid.Row="3" Margin="0,0,0,8">
+                        <Expander Header="Exportregeln" IsExpanded="True" Grid.Row="3" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1380,7 +1382,7 @@
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <Expander Header="Exportregel-Entwurf" IsExpanded="False" Grid.Row="5" Margin="0,0,0,8">
+                        <Expander Header="Exportregel-Entwurf" IsExpanded="True" Grid.Row="5" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1448,7 +1450,7 @@
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <Expander Header="Regelvorschau" IsExpanded="False" Grid.Row="7" Margin="0,0,0,8">
+                        <Expander Header="Regelvorschau" IsExpanded="True" Grid.Row="7" Margin="0,0,0,8">
                             <TextBox x:Name="ExportRulePreviewTextBox"
                                      Margin="8"
                                      MinHeight="150"
@@ -1465,7 +1467,7 @@
                                       ResizeDirection="Rows"
                                       ShowsPreview="True"/>
 
-                        <Expander Header="Test &amp; Vorschau" IsExpanded="False" Grid.Row="9" Margin="0,0,0,8">
+                        <Expander Header="Test &amp; Vorschau" IsExpanded="True" Grid.Row="9" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1677,7 +1679,7 @@
                                 <Expander x:Name="BuilderMeasurementsExpander"
                                           Header="Schritt 4 - Messwerte prüfen"
                                           Grid.Row="4"
-                                          IsExpanded="False"
+                                          IsExpanded="True"
                                           Margin="0,0,0,8">
                                     <DataGrid x:Name="BuilderMeasurementsGrid"
                                               AutoGenerateColumns="False"
@@ -1749,7 +1751,7 @@
                                       ShowsPreview="True"/>
 
                         <Expander Header="Verfügbare Platzhalter"
-                                  IsExpanded="False"
+                                  IsExpanded="True"
                                   Grid.Row="11"
                                   Margin="0,0,0,8"
                                   ToolTip="Diese Werte können in OutputTemplates verwendet werden. Platzhalter müssen mit geschweiften Klammern geschrieben werden.">
@@ -1863,7 +1865,7 @@
                             </Grid>
                         </Expander>
 
-                        <Expander Header="Profil- und Template-Meldungen" IsExpanded="False" Grid.Row="12">
+                        <Expander Header="Profil- und Template-Meldungen" IsExpanded="True" Grid.Row="12">
                             <TextBox x:Name="ProfileMessagesTextBox"
                                      Margin="8"
                                      MinHeight="160"
@@ -1977,7 +1979,7 @@
                                     <CheckBox x:Name="InterfaceIsLicenseRequiredCheckBox" Content="Lizenzpflichtig" Margin="0,0,24,8"/>
                                 </WrapPanel>
 
-                                <Expander Header="Ordner" IsExpanded="False" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Ordner" IsExpanded="True" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2055,7 +2057,7 @@
                                     </Grid>
                                 </Expander>
 
-                                <Expander x:Name="InterfaceSerialCommunicationGroupBox" Header="Serielle Gerätekommunikation / COM-Port" IsExpanded="False" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander x:Name="InterfaceSerialCommunicationGroupBox" Header="Serielle Gerätekommunikation / COM-Port" IsExpanded="True" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2123,7 +2125,7 @@
                                     </Grid>
                                 </Expander>
 
-                                <Expander x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" IsExpanded="False" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" IsExpanded="True" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2188,7 +2190,7 @@
                                     </Grid>
                                 </Expander>
 
-                                <Expander x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" IsExpanded="False" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander x:Name="InterfaceAttachmentSettingsGroupBox" Header="XDT-Anhänge für AIS" IsExpanded="True" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2394,7 +2396,7 @@
                                      </Grid>
                                  </Expander>
 
-                                <Expander Header="Ordnerbereinigung" IsExpanded="False" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Ordnerbereinigung" IsExpanded="True" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <StackPanel Margin="8">
                                         <TextBlock Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
                                                    Foreground="DarkRed"
@@ -2416,7 +2418,7 @@
                                     </StackPanel>
                                 </Expander>
 
-                                <Expander Header="Archivierung" IsExpanded="False" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Archivierung" IsExpanded="True" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2461,7 +2463,7 @@
                                     </Grid>
                                 </Expander>
 
-                                <Expander Header="Prüfung vor Aktivierung" IsExpanded="False" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Prüfung vor Aktivierung" IsExpanded="True" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2584,7 +2586,7 @@
                                                        TextWrapping="Wrap"
                                                        Foreground="DimGray"
                                                        Margin="0,0,0,6"/>
-                                            <Expander Grid.Row="1" Header="Alle Prüfpunkte" IsExpanded="False">
+                                            <Expander Grid.Row="1" Header="Alle Prüfpunkte" IsExpanded="True">
                                                 <DataGrid x:Name="InterfaceActivationPreviewChecksGrid"
                                                           AutoGenerateColumns="False"
                                                           IsReadOnly="True"
