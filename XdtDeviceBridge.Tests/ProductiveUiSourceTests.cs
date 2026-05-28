@@ -159,10 +159,14 @@ public sealed class ProductiveUiSourceTests
     [Fact]
     public void XdtBaukastenTab_ShouldExposeTemplateLoadMessageAndEncodingSafeReader()
     {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
         Assert.Contains("Das Laden lokal gespeicherter Templatepakete ist vorbereitet", code);
+        Assert.Contains("XdtBaukastenTopStatusText", xaml);
+        Assert.Contains("SetXdtBaukastenStatus(message, showDialog: true)", code);
         Assert.Contains("XdtBaukastenTextEncodingReader", code);
+        Assert.Contains("XdtBaukastenPlaceholderValueService", code);
         Assert.Contains("RefreshXdtBaukastenPreviewIfPossible", code);
     }
 

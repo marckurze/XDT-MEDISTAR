@@ -139,6 +139,8 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<XdtBaukastenPlaceholder> _xdtBaukastenDeviceOutputPlaceholders = new();
     private readonly XdtBaukastenUndoBuffer _xdtBaukastenUndoBuffer = new(10);
     private readonly XdtBaukastenTextEncodingReader _xdtBaukastenTextEncodingReader = new();
+    private readonly XdtBaukastenPlaceholderValueService _xdtBaukastenPlaceholderValueService = new();
+    private readonly XmlDeviceParser _xdtBaukastenDeviceParser = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
@@ -8418,7 +8420,20 @@ public partial class MainWindow : Window
     private void UpdateXdtBaukastenDeviceProfileFromSelection()
     {
         var profile = XdtBaukastenDeviceProfileComboBox.SelectedItem as DeviceProfileDefinition;
+        var previousProfileId = _xdtBaukastenState.DeviceProfile?.Metadata.Id;
+        var profileChanged = !string.Equals(previousProfileId, profile?.Metadata.Id, StringComparison.OrdinalIgnoreCase);
         _xdtBaukastenState.SetDeviceProfile(profile);
+        if (profileChanged)
+        {
+            _xdtBaukastenState.ClearPreviewResult();
+            if (_xdtBaukastenState.DeviceInput is not null)
+            {
+                _xdtBaukastenState.ClearDeviceInput();
+                XdtBaukastenDeviceRawTextBox.Text = string.Empty;
+                SetXdtBaukastenStatus("Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
+            }
+        }
+
         UpdateXdtBaukastenDeviceIdentity(profile);
         UpdateXdtBaukastenPlaceholders();
         XdtBaukastenLoadAisOrSerialButton.Content = _xdtBaukastenState.PrimaryInputButtonText;
@@ -8436,9 +8451,9 @@ public partial class MainWindow : Window
             _xdtBaukastenExportRules.Add(rule);
         }
 
-        XdtBaukastenStatusText.Text = profile is null
+        SetXdtBaukastenStatus(profile is null
             ? "Bitte ein Mapping-/Exportprofil auswählen."
-            : $"Exportprofil als Arbeitskopie geladen: {profile.Metadata.Name}. BuiltIn-Profile werden nicht direkt verändert.";
+            : $"Exportprofil als Arbeitskopie geladen: {profile.Metadata.Name}. BuiltIn-Profile werden nicht direkt verändert.");
         XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
         RefreshXdtBaukastenPreviewIfPossible();
     }
@@ -8492,7 +8507,8 @@ public partial class MainWindow : Window
 
     private void XdtBaukastenLoadTemplatePackage_Click(object sender, RoutedEventArgs e)
     {
-        XdtBaukastenStatusText.Text = "Das Laden lokal gespeicherter Templatepakete ist vorbereitet. Bitte verwenden Sie vorerst „Template Paket importieren“ oder wählen Sie AIS, Gerät und Exportprofil manuell.";
+        const string message = "Das Laden lokal gespeicherter Templatepakete ist vorbereitet. Bitte verwenden Sie vorerst „Template Paket importieren“ oder wählen Sie AIS, Gerät und Exportprofil manuell.";
+        SetXdtBaukastenStatus(message, showDialog: true);
     }
 
     private async void XdtBaukastenImportTemplatePackage_Click(object sender, RoutedEventArgs e)
@@ -8770,14 +8786,18 @@ public partial class MainWindow : Window
             if (isAisFile)
             {
                 _xdtBaukastenState.SetAisInput(input);
+                _xdtBaukastenState.ClearPreviewResult();
                 XdtBaukastenAisRawTextBox.Text = rawText;
-                XdtBaukastenStatusText.Text = $"AIS-Testdatei geladen: {filePath}";
+                SetXdtBaukastenStatus($"AIS-Testdatei geladen: {filePath}");
             }
             else
             {
                 _xdtBaukastenState.SetDeviceInput(input);
+                _xdtBaukastenState.ClearPreviewResult();
                 XdtBaukastenDeviceRawTextBox.Text = rawText;
-                XdtBaukastenStatusText.Text = $"Gerätetestdatei geladen: {filePath}";
+                SetXdtBaukastenStatus(IsCurrentDeviceInputCompatible()
+                    ? $"Gerätetestdatei geladen: {filePath}"
+                    : "Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
             }
 
             UpdateXdtBaukastenPlaceholders();
@@ -8785,13 +8805,36 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            XdtBaukastenStatusText.Text = $"Testdatei konnte nicht gelesen werden: {ex.Message}";
+            SetXdtBaukastenStatus($"Testdatei konnte nicht gelesen werden: {ex.Message}");
         }
     }
 
     private string ReadTextFilePreview(string filePath)
     {
         return _xdtBaukastenTextEncodingReader.ReadText(filePath);
+    }
+
+    private void SetXdtBaukastenStatus(string message, bool showDialog = false)
+    {
+        if (XdtBaukastenStatusText is not null)
+        {
+            XdtBaukastenStatusText.Text = message;
+        }
+
+        if (XdtBaukastenTopStatusText is not null)
+        {
+            XdtBaukastenTopStatusText.Text = message;
+        }
+
+        if (showDialog)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                message,
+                "XDT-Baukasten",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
     }
 
     private void XdtBaukastenChooseExportProfile_Click(object sender, RoutedEventArgs e)
@@ -8807,14 +8850,23 @@ public partial class MainWindow : Window
 
     private void RunXdtBaukastenPreview()
     {
+        if (!IsCurrentDeviceInputCompatible())
+        {
+            _xdtBaukastenState.ClearPreviewResult();
+            UpdateXdtBaukastenResultView();
+            UpdateXdtBaukastenPlaceholders();
+            SetXdtBaukastenStatus("Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
+            return;
+        }
+
         var result = _xdtBaukastenPreviewService.BuildPreview(
             _xdtBaukastenState,
             ResolveXdtBaukastenInterfaceProfile(),
             DateTimeOffset.Now);
         _xdtBaukastenState.SetPreviewResult(result);
-        XdtBaukastenStatusText.Text = result.Success
+        SetXdtBaukastenStatus(result.Success
             ? "Baukasten-Vorschau aktualisiert. Es wurde keine produktive Datei geschrieben."
-            : string.Join(Environment.NewLine, result.Messages.Take(4));
+            : string.Join(Environment.NewLine, result.Messages.Take(4)));
         UpdateXdtBaukastenResultView();
         UpdateXdtBaukastenPlaceholders();
     }
@@ -8825,6 +8877,15 @@ public partial class MainWindow : Window
             || _xdtBaukastenState.AisInput is null
             || _xdtBaukastenState.DeviceInput is null)
         {
+            return;
+        }
+
+        if (!IsCurrentDeviceInputCompatible())
+        {
+            _xdtBaukastenState.ClearPreviewResult();
+            UpdateXdtBaukastenResultView();
+            UpdateXdtBaukastenPlaceholders();
+            SetXdtBaukastenStatus("Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
             return;
         }
 
@@ -8999,7 +9060,7 @@ public partial class MainWindow : Window
     private void UpdateXdtBaukastenPlaceholders()
     {
         var patient = GetXdtBaukastenPatientForPlaceholderValues();
-        var measurementValues = GetXdtBaukastenMeasurementValuesForPlaceholders();
+        var measurements = GetXdtBaukastenMeasurementsForPlaceholders();
 
         _xdtBaukastenAisPlaceholders.Clear();
         foreach (var placeholder in CreateXdtBaukastenAisPlaceholders(patient))
@@ -9008,7 +9069,7 @@ public partial class MainWindow : Window
         }
 
         _xdtBaukastenDevicePlaceholders.Clear();
-        foreach (var placeholder in CreateXdtBaukastenDevicePlaceholders(_xdtBaukastenState.DeviceProfile, measurementValues))
+        foreach (var placeholder in _xdtBaukastenPlaceholderValueService.CreateDevicePlaceholders(_xdtBaukastenState.DeviceProfile, measurements))
         {
             _xdtBaukastenDevicePlaceholders.Add(placeholder);
         }
@@ -9052,21 +9113,19 @@ public partial class MainWindow : Window
         }
     }
 
-    private Dictionary<string, string> GetXdtBaukastenMeasurementValuesForPlaceholders()
+    private IReadOnlyList<MeasurementValue> GetXdtBaukastenMeasurementsForPlaceholders()
     {
         var measurements = _xdtBaukastenState.PreviewResult?.PipelineResult?.Measurements
             ?? Array.Empty<MeasurementValue>();
 
-        var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var measurement in measurements)
+        if (_xdtBaukastenPlaceholderValueService.IsCompatibleWithDeviceProfile(_xdtBaukastenState.DeviceProfile, measurements))
         {
-            if (!string.IsNullOrWhiteSpace(measurement.SourcePath))
-            {
-                values.TryAdd(measurement.SourcePath, measurement.Value);
-            }
+            return measurements.ToArray();
         }
 
-        return values;
+        return TryParseCurrentDeviceInputMeasurements(out var parsedMeasurements)
+            ? parsedMeasurements
+            : Array.Empty<MeasurementValue>();
     }
 
     private static IReadOnlyList<XdtBaukastenPlaceholder> CreateXdtBaukastenAisPlaceholders(PatientData? patient)
@@ -9083,34 +9142,47 @@ public partial class MainWindow : Window
         };
     }
 
-    private static IReadOnlyList<XdtBaukastenPlaceholder> CreateXdtBaukastenDevicePlaceholders(
-        DeviceProfileDefinition? deviceProfile,
-        IReadOnlyDictionary<string, string> measurementValues)
+    private bool IsCurrentDeviceInputCompatible()
     {
-        if (deviceProfile is null)
+        if (_xdtBaukastenState.DeviceProfile is null)
         {
-            return new[]
+            return true;
+        }
+
+        if (_xdtBaukastenState.DeviceInput is null)
+        {
+            return true;
+        }
+
+        return TryParseCurrentDeviceInputMeasurements(out var measurements)
+            && _xdtBaukastenPlaceholderValueService.IsCompatibleWithDeviceProfile(_xdtBaukastenState.DeviceProfile, measurements);
+    }
+
+    private bool TryParseCurrentDeviceInputMeasurements(out IReadOnlyList<MeasurementValue> measurements)
+    {
+        measurements = Array.Empty<MeasurementValue>();
+        if (_xdtBaukastenState.DeviceInput is null
+            || string.IsNullOrWhiteSpace(_xdtBaukastenState.DeviceInput.SourcePath)
+            || !File.Exists(_xdtBaukastenState.DeviceInput.SourcePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            var result = _xdtBaukastenDeviceParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath);
+            if (result.HasErrors)
             {
-                new XdtBaukastenPlaceholder("Gerät", "Kein Gerät geladen", "{Device.Value}", "Bitte zuerst ein Geräteprofil laden.", IsPreparedOnly: true)
-            };
+                return false;
+            }
+
+            measurements = result.Measurements;
+            return true;
         }
-
-        var measurementPlaceholders = deviceProfile.Measurements
-            .Take(80)
-            .Select(measurement => new XdtBaukastenPlaceholder(
-                "Gerät",
-                string.IsNullOrWhiteSpace(measurement.DisplayName) ? measurement.SourcePath : measurement.DisplayName,
-                "{Device." + measurement.SourcePath + "}",
-                $"{measurement.SourcePath} ({measurement.Unit ?? "ohne Einheit"})",
-                measurementValues.TryGetValue(measurement.SourcePath, out var value) ? DisplayPlaceholderValue(value) : "-"))
-            .ToList();
-
-        if (measurementPlaceholders.Count == 0)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            measurementPlaceholders.Add(new XdtBaukastenPlaceholder("Gerät", "Gerätewert", "{Device.Value}", "Generischer Messwert-Platzhalter für Entwürfe.", IsPreparedOnly: true));
+            return false;
         }
-
-        return measurementPlaceholders;
     }
 
     private static IReadOnlyList<XdtBaukastenPlaceholder> CreateXdtBaukastenDeviceOutputPlaceholders(

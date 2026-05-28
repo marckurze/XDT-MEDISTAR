@@ -1894,6 +1894,10 @@
 
                         <GroupBox Header="Baukasten-Aktionen">
                             <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="24" />
@@ -1913,6 +1917,19 @@
                                     <Button x:Name="XdtBaukastenChooseAisButton" Content="AIS wählen" Margin="0,0,0,8" Click="XdtBaukastenChooseAis_Click" />
                                     <Button x:Name="XdtBaukastenNewDeviceButton" Content="Neues Gerät anlegen" Click="XdtBaukastenNewDevice_Click" />
                                 </UniformGrid>
+                                <Border Grid.Row="1"
+                                        Grid.ColumnSpan="3"
+                                        Margin="0,10,0,0"
+                                        Padding="10,8"
+                                        Background="{StaticResource XdtBoxPanelBackgroundBrush}"
+                                        BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6">
+                                    <TextBlock x:Name="XdtBaukastenTopStatusText"
+                                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Text="Baukasten bereit. Bitte Profile und Testdaten laden." />
+                                </Border>
                             </Grid>
                         </GroupBox>
 

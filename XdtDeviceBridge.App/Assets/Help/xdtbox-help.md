@@ -58,11 +58,11 @@ Im Baukasten wählen Sie AIS-Profil, Geräteprofil und Mapping-/Exportprofil, la
 
 Die Rohdatenanzeigen zeigen links AIS-Testdaten oder bei RS232-Geräten empfangene COM-Port-Rohdaten und rechts die Gerätetestdatei. "Verarbeitung starten" erzeugt eine Vorschau mit vier Ansichten: "Roh-XDT", "Ansicht im AIS", "Geräteausgabe" und "Diagnose".
 
-Die "Ansicht im AIS" zeigt eine fachliche Karteikartenansicht ohne technische SourcePath-Liste. Die Ansicht "Diagnose" zeigt erkannte Rohdaten, SourcePaths, Parserdetails, XDT-Felder und Warnungen.
+Die "Ansicht im AIS" zeigt nur die fachlich sichtbaren Karteikartenzeilen. Patientendaten, Untersuchungsart-Feldnummern, technische Feldnummern wie 8402 oder 6228, SourcePaths und Parserdetails erscheinen dort nicht. Diese Informationen bleiben in "Roh-XDT" und "Diagnose" verfügbar.
 
-Exportregeln werden im Baukasten als Arbeitskopie angezeigt. Regeln können über das Plus ergänzt und über die Mülltonne aus der Arbeitskopie entfernt werden. Ein leerer SourcePath ist für feste Überschriften oder Notizen erlaubt, wenn im Regeltext ein fester Text steht. Platzhalter zeigen rechts den aktuell eingelesenen Beispielwert; ein Klick fügt den Platzhalter in den Entwurf ein und aktualisiert die Vorschau. Der Zurück-Pfeil nimmt die letzten Baukasten-Änderungen schrittweise zurück. BuiltIn-Profile werden dadurch nicht direkt überschrieben.
+Exportregeln werden im Baukasten als Arbeitskopie angezeigt. Regeln können über das Plus ergänzt und über die Mülltonne aus der Arbeitskopie entfernt werden. Ein leerer SourcePath ist für feste Überschriften oder Notizen erlaubt, wenn im Regeltext ein fester Text steht. Platzhalter zeigen rechts den aktuell eingelesenen Beispielwert; Geräteplatzhalter werden nur aus einer zum gewählten Geräteprofil passenden Testdatei befüllt. Ein Klick fügt den Platzhalter in den Entwurf ein und aktualisiert die Vorschau. Der Zurück-Pfeil nimmt die letzten Baukasten-Änderungen schrittweise zurück. BuiltIn-Profile werden dadurch nicht direkt überschrieben.
 
-"Templatepaket laden" ist als lokale Paketbibliothek vorbereitet. Bis diese Bibliothek vollständig geführt wird, verwenden Sie "Template Paket importieren" oder wählen AIS, Gerät und Exportprofil manuell.
+"Templatepaket laden" ist als lokale Paketbibliothek vorbereitet und zeigt in V1 eine sichtbare Hinweismeldung. Bis diese Bibliothek vollständig geführt wird, verwenden Sie "Template Paket importieren" oder wählen AIS, Gerät und Exportprofil manuell.
 
 # Neues Gerät anlegen und Gerät laden
 

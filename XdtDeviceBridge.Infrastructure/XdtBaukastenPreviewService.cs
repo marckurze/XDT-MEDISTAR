@@ -177,48 +177,24 @@ public sealed class XdtBaukastenPreviewService
 
     private static string CreateAisCardView(ProcessingPipelineResult result)
     {
-        var builder = new StringBuilder();
-        if (result.Patient is not null)
-        {
-            var patientName = string.Join(" ", new[] { result.Patient.FirstName, result.Patient.LastName }
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Select(value => value!.Trim()));
-
-            builder.AppendLine("Patient:");
-            builder.AppendLine(string.IsNullOrWhiteSpace(patientName) ? "-" : patientName);
-            builder.AppendLine($"Geburtsdatum: {DisplayDate(result.Patient.BirthDate)}");
-            builder.AppendLine($"Nr.: {Display(result.Patient.PatientNumber)}");
-            builder.AppendLine();
-
-            builder.AppendLine("Untersuchungsart:");
-            builder.AppendLine(Display(result.Patient.ExaminationType));
-            builder.AppendLine();
-        }
-
         if (result.ExportRecords.Count == 0)
         {
-            builder.AppendLine("Noch keine AIS-Ausgabe erzeugt.");
-            return builder.ToString().TrimEnd();
+            return "Noch keine fachlich sichtbare AIS-Ausgabe erzeugt.";
         }
 
-        builder.AppendLine("Karteikartenansicht:");
-        foreach (var group in result.ExportRecords
-            .Where(record => !IsPatientAdministrativeField(record.FieldCode))
-            .GroupBy(record => record.FieldCode)
-            .OrderBy(group => group.Min(record => record.SortOrder)))
+        var visibleLines = result.ExportRecords
+            .Where(record => !IsHiddenInAisCardView(record.FieldCode))
+            .OrderBy(record => record.SortOrder)
+            .Select(record => record.Value?.Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToArray();
+
+        if (visibleLines.Length == 0)
         {
-            builder.AppendLine();
-            builder.AppendLine($"{group.Key}:");
-            foreach (var record in group.OrderBy(record => record.SortOrder))
-            {
-                if (!string.IsNullOrWhiteSpace(record.Value))
-                {
-                    builder.AppendLine(record.Value);
-                }
-            }
+            return "Noch keine fachlich sichtbare AIS-Ausgabe erzeugt.";
         }
 
-        return builder.ToString().TrimEnd();
+        return string.Join(Environment.NewLine, visibleLines);
     }
 
     private static string CreateDiagnosticsView(ProcessingPipelineResult result)
@@ -282,21 +258,8 @@ public sealed class XdtBaukastenPreviewService
         return string.IsNullOrWhiteSpace(value) ? "-" : value.Trim();
     }
 
-    private static bool IsPatientAdministrativeField(string fieldCode)
+    private static bool IsHiddenInAisCardView(string fieldCode)
     {
-        return fieldCode is "3000" or "3101" or "3102" or "3103" or "8000";
-    }
-
-    private static string DisplayDate(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return "-";
-        }
-
-        var trimmed = value.Trim();
-        return trimmed.Length == 8 && trimmed.All(char.IsDigit)
-            ? $"{trimmed[..2]}.{trimmed.Substring(2, 2)}.{trimmed[4..]}"
-            : trimmed;
+        return fieldCode is "3000" or "3100" or "3101" or "3102" or "3103" or "3110" or "3622" or "8000" or "8402";
     }
 }

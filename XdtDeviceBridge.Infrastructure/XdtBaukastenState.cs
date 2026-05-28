@@ -175,6 +175,11 @@ public sealed class XdtBaukastenState
         DeviceInput = input;
     }
 
+    public void ClearDeviceInput()
+    {
+        DeviceInput = null;
+    }
+
     public void SetAttachmentInput(XdtBaukastenLoadedInput input)
     {
         ArgumentNullException.ThrowIfNull(input);

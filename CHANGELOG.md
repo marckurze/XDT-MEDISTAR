@@ -4,6 +4,7 @@
 
 ### Hinzugefuegt
 
+- XDT-Baukasten-Praxistest-Korrekturen ergaenzt: `Templatepaket laden` gibt jetzt sichtbar im oberen Baukastenstatus und per Info-Dialog Rueckmeldung, `Ansicht im AIS` zeigt nur noch fachlich sichtbare Karteikartenzeilen ohne Patientendaten, Feldnummern oder technische Strukturueberschriften, und Geraete-/Messwert-Platzhalter werden getrennt nach Definition und aktuellem Messwert aus der geladenen passenden Geraetedatei befuellt. Bei Geraeteprofilwechsel werden alte Geraetedaten verworfen, damit z. B. LM7-Werte nicht unter einem CL-300-Profil erscheinen.
 - Erste read-only Bewertungslogik fuer einen spaeteren Aktivierungsassistenten importierter Schnittstellenprofile ergaenzt: Abhaengigkeiten, Ordner, XDT-Anhang-Konfiguration und Lizenzhinweise werden bewertet, ohne Profile zu aendern oder Verarbeitung zu starten.
 - Erste UI-Pruefansicht fuer die Aktivierungsbewertung im Tab `Schnittstellenprofile` ergaenzt; sie zeigt Gesamtstatus, Aktivierbarkeit, Blocker, Warnungen und Hinweise, fuehrt aber weiterhin keine Aktivierung aus.
 - Aktivierungspruefung um strukturierte Detailanzeigen fuer Ordnerpruefung und XDT-Anhang-Konfiguration erweitert; die Anzeige bleibt reine Vorschau ohne Datei-/Ordneroperationen.

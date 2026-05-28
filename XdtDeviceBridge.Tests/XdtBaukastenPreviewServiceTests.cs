@@ -18,8 +18,12 @@ public sealed class XdtBaukastenPreviewServiceTests
         var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default());
 
         Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
-        Assert.Contains("Karteikartenansicht", result.Output.AisView);
         Assert.Contains("R.:S=+ 6.25 Z=- 3.25*  3", result.Output.AisView);
+        Assert.DoesNotContain("Patient:", result.Output.AisView);
+        Assert.DoesNotContain("Untersuchungsart:", result.Output.AisView);
+        Assert.DoesNotContain("Karteikartenansicht", result.Output.AisView);
+        Assert.DoesNotContain("8402:", result.Output.AisView);
+        Assert.DoesNotContain("6228:", result.Output.AisView);
         Assert.DoesNotContain("Measure[@Type='LM']", result.Output.AisView);
         Assert.Contains("Messwerte erkannt:", result.Output.Diagnostics);
         Assert.Contains("Measure[@Type='LM']", result.Output.Diagnostics);
