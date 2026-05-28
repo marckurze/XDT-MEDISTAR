@@ -56,18 +56,76 @@ public sealed class XdtBaukastenPreviewServiceTests
         Assert.Contains("Phoropter finaler Verordnungswert", result.Output.AisView);
     }
 
+    [Fact]
+    public void BuildPreview_ShouldKeepAr360BaukastenReferenceWorking()
+    {
+        using var temp = new TempFolder();
+        var aisPath = WriteGdt(temp.Path, "AR360");
+        var devicePath = CopyFixture(temp.Path, "Devices", "Nidek", "AR360", "AR360.xml");
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateNidekAr360Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekAr360Default());
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("6228", result.Output.RawXdt);
+        Assert.Contains("R.:", result.Output.AisView);
+        Assert.DoesNotContain("passt nicht", string.Join(Environment.NewLine, result.Messages), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void BuildPreview_ShouldCreateCv5000PhoropterPreview()
+    {
+        using var temp = new TempFolder();
+        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var devicePath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml");
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("6228Phoropter finaler Verordnungswert", result.Output.RawXdt);
+        Assert.Contains("6227Phoropter Maximalwert", result.Output.RawXdt);
+        Assert.DoesNotContain("6330", result.Output.RawXdt);
+        Assert.Contains("Phoropter finaler Verordnungswert", result.Output.AisView);
+        Assert.DoesNotContain("6228:", result.Output.AisView);
+        Assert.Contains("<Ophthalmology", result.Output.DeviceOutput);
+    }
+
     private static XdtBaukastenState CreateLm7State(string aisPath, string devicePath)
+    {
+        return CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default());
+    }
+
+    private static XdtBaukastenState CreateState(
+        string aisPath,
+        string devicePath,
+        DeviceProfileDefinition deviceProfile,
+        ExportProfileDefinition exportProfile)
     {
         var state = new XdtBaukastenState();
         state.SetAisProfile(DefaultAisProfiles.CreateMedistarDefault());
-        state.SetDeviceProfile(DefaultDeviceProfileDefinitions.CreateNidekLm7Default());
-        state.SetExportProfile(DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default());
+        state.SetDeviceProfile(deviceProfile);
+        state.SetExportProfile(exportProfile);
         state.SetAisInput(new XdtBaukastenLoadedInput(aisPath, Path.GetFileName(aisPath), File.ReadAllText(aisPath, Encoding.UTF8)));
         state.SetDeviceInput(new XdtBaukastenLoadedInput(devicePath, Path.GetFileName(devicePath), File.ReadAllText(devicePath, Encoding.UTF8)));
         return state;
     }
 
-    private static string WriteGdt(string folder)
+    private static string WriteGdt(string folder, string examType = "LM7")
     {
         var path = Path.Combine(folder, "patient.gdt");
         File.WriteAllText(path, string.Concat(
@@ -75,7 +133,7 @@ public sealed class XdtBaukastenPreviewServiceTests
             BuildGdtLine("3101", "Testfrau"),
             BuildGdtLine("3102", "Anna"),
             BuildGdtLine("3103", "12061955"),
-            BuildGdtLine("8402", "LM7")), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            BuildGdtLine("8402", examType)), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         return path;
     }
 
@@ -87,8 +145,13 @@ public sealed class XdtBaukastenPreviewServiceTests
 
     private static string CopyLm7Fixture(string folder)
     {
-        var source = Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Nidek", "LM7", "NIDEK LM7.xml");
-        var target = Path.Combine(folder, "NIDEK LM7.xml");
+        return CopyFixture(folder, "Devices", "Nidek", "LM7", "NIDEK LM7.xml");
+    }
+
+    private static string CopyFixture(string folder, params string[] pathParts)
+    {
+        var source = Path.Combine(new[] { AppContext.BaseDirectory, "TestData" }.Concat(pathParts).ToArray());
+        var target = Path.Combine(folder, Path.GetFileName(source));
         File.Copy(source, target);
         return target;
     }

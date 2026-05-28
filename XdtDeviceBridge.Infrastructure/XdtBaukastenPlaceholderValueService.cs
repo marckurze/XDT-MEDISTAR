@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Infrastructure;
@@ -7,6 +6,17 @@ namespace XdtDeviceBridge.Infrastructure;
 public sealed class XdtBaukastenPlaceholderValueService
 {
     private const int MaximumDevicePlaceholders = 80;
+    private readonly XdtBaukastenDeviceCompatibilityService _compatibilityService;
+
+    public XdtBaukastenPlaceholderValueService()
+        : this(new XdtBaukastenDeviceCompatibilityService())
+    {
+    }
+
+    public XdtBaukastenPlaceholderValueService(XdtBaukastenDeviceCompatibilityService compatibilityService)
+    {
+        _compatibilityService = compatibilityService ?? throw new ArgumentNullException(nameof(compatibilityService));
+    }
 
     public IReadOnlyList<XdtBaukastenPlaceholder> CreateDevicePlaceholders(
         DeviceProfileDefinition? deviceProfile,
@@ -20,7 +30,7 @@ public sealed class XdtBaukastenPlaceholderValueService
             };
         }
 
-        var compatibleMeasurements = IsCompatibleWithDeviceProfile(deviceProfile, measurements)
+        var compatibleMeasurements = _compatibilityService.IsCompatibleWithDeviceProfile(deviceProfile, measurements)
             ? measurements
             : Array.Empty<MeasurementValue>();
         var measurementValues = CreateMeasurementValueMap(compatibleMeasurements);
@@ -47,6 +57,13 @@ public sealed class XdtBaukastenPlaceholderValueService
             .Select(item => CreatePlaceholder(item.Definition, measurementValues))
             .ToList();
 
+        if (!deviceProfile.Metadata.IsBuiltIn
+            && compatibleMeasurements.Count > 0
+            && (selectedDefinitions.Count == 0 || selectedDefinitions.All(placeholder => placeholder.ExampleValue == "-")))
+        {
+            selectedDefinitions = CreateDynamicParsedPlaceholders(compatibleMeasurements).ToList();
+        }
+
         if (selectedDefinitions.Count == 0)
         {
             selectedDefinitions.Add(new XdtBaukastenPlaceholder("Gerät", "Gerätewert", "{Device.Value}", "Generischer Messwert-Platzhalter für Entwürfe.", IsPreparedOnly: true));
@@ -57,26 +74,7 @@ public sealed class XdtBaukastenPlaceholderValueService
 
     public bool IsCompatibleWithDeviceProfile(DeviceProfileDefinition? deviceProfile, IReadOnlyList<MeasurementValue> measurements)
     {
-        if (deviceProfile is null || measurements.Count == 0)
-        {
-            return false;
-        }
-
-        var modelName = measurements.FirstOrDefault(measurement =>
-            string.Equals(measurement.SourcePath, "Common/ModelName", StringComparison.OrdinalIgnoreCase))?.Value;
-        if (!string.IsNullOrWhiteSpace(modelName) && !string.IsNullOrWhiteSpace(deviceProfile.Model))
-        {
-            return NormalizeModelName(modelName) == NormalizeModelName(deviceProfile.Model);
-        }
-
-        var profileSourcePaths = deviceProfile.Measurements
-            .Where(measurement => !IsCommonMeasurement(measurement.SourcePath))
-            .Select(measurement => measurement.SourcePath)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        return measurements.Any(measurement =>
-            !IsCommonMeasurement(measurement.SourcePath)
-            && profileSourcePaths.Contains(measurement.SourcePath));
+        return _compatibilityService.IsCompatibleWithDeviceProfile(deviceProfile, measurements);
     }
 
     private static XdtBaukastenPlaceholder CreatePlaceholder(
@@ -105,14 +103,62 @@ public sealed class XdtBaukastenPlaceholderValueService
         return values;
     }
 
-    private static bool IsCommonMeasurement(string sourcePath)
+    private static IEnumerable<XdtBaukastenPlaceholder> CreateDynamicParsedPlaceholders(IReadOnlyList<MeasurementValue> measurements)
     {
-        return sourcePath.StartsWith("Common/", StringComparison.OrdinalIgnoreCase);
+        return measurements
+            .Where(measurement => !IsCommonParsedMeasurement(measurement.SourcePath))
+            .Where(measurement => !IsAttributeMeasurement(measurement.SourcePath))
+            .Where(measurement => !string.IsNullOrWhiteSpace(measurement.Value))
+            .GroupBy(measurement => measurement.SourcePath, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .OrderBy(measurement => GetDynamicPlaceholderSortRank(measurement.SourcePath))
+            .ThenBy(measurement => measurement.SourcePath, StringComparer.OrdinalIgnoreCase)
+            .Take(MaximumDevicePlaceholders)
+            .Select(measurement => new XdtBaukastenPlaceholder(
+                "Gerät",
+                string.IsNullOrWhiteSpace(measurement.DisplayName) ? measurement.SourcePath : measurement.DisplayName,
+                "{Device." + measurement.SourcePath + "}",
+                $"{measurement.SourcePath} ({measurement.Unit ?? "ohne Einheit"})",
+                DisplayPlaceholderValue(FormatParsedMeasurementValue(measurement))));
     }
 
-    private static string NormalizeModelName(string value)
+    private static bool IsCommonParsedMeasurement(string sourcePath)
     {
-        return Regex.Replace(value, "[^A-Za-z0-9]", string.Empty).ToUpperInvariant();
+        return sourcePath.StartsWith("Common/", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourcePath, "Company", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourcePath, "ModelName", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourcePath, "MachineNo", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourcePath, "ROMVersion", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourcePath, "Version", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourcePath, "Date", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(sourcePath, "Time", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAttributeMeasurement(string sourcePath)
+    {
+        return sourcePath.Contains("/@", StringComparison.Ordinal);
+    }
+
+    private static int GetDynamicPlaceholderSortRank(string sourcePath)
+    {
+        if (sourcePath.Contains("/MedistarLine", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/Sphere", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/Sphare", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/Cylinder", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/Axis", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/ADD", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/PD", StringComparison.OrdinalIgnoreCase))
+        {
+            return 0;
+        }
+
+        if (sourcePath.Contains("/R/", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.Contains("/L/", StringComparison.OrdinalIgnoreCase))
+        {
+            return 1;
+        }
+
+        return 2;
     }
 
     private static string DisplayPlaceholderValue(string? value)
@@ -129,7 +175,7 @@ public sealed class XdtBaukastenPlaceholderValueService
     private static string FormatMeasurementValue(DeviceMeasurementDefinition measurement, string value)
     {
         var trimmed = value.Trim();
-        if (!string.Equals(measurement.Unit, "dpt", StringComparison.OrdinalIgnoreCase)
+        if (!IsDiopterUnit(measurement.Unit)
             || !decimal.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out var numericValue)
             || numericValue <= 0
             || trimmed.StartsWith('+'))
@@ -138,6 +184,26 @@ public sealed class XdtBaukastenPlaceholderValueService
         }
 
         return "+" + trimmed;
+    }
+
+    private static string FormatParsedMeasurementValue(MeasurementValue measurement)
+    {
+        var trimmed = measurement.Value.Trim();
+        if (!IsDiopterUnit(measurement.Unit)
+            || !decimal.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out var numericValue)
+            || numericValue <= 0
+            || trimmed.StartsWith('+'))
+        {
+            return trimmed;
+        }
+
+        return "+" + trimmed;
+    }
+
+    private static bool IsDiopterUnit(string? unit)
+    {
+        return string.Equals(unit, "dpt", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(unit, "D", StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record MeasurementDefinitionCandidate(

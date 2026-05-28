@@ -141,6 +141,7 @@ public partial class MainWindow : Window
     private readonly XdtBaukastenTextEncodingReader _xdtBaukastenTextEncodingReader = new();
     private readonly XdtBaukastenPlaceholderValueService _xdtBaukastenPlaceholderValueService = new();
     private readonly XmlDeviceParser _xdtBaukastenDeviceParser = new();
+    private readonly XdtBaukastenDeviceCompatibilityService _xdtBaukastenDeviceCompatibilityService = new();
     private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
@@ -8430,7 +8431,7 @@ public partial class MainWindow : Window
             {
                 _xdtBaukastenState.ClearDeviceInput();
                 XdtBaukastenDeviceRawTextBox.Text = string.Empty;
-                SetXdtBaukastenStatus("Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
+                SetXdtBaukastenStatus("Geräteprofil geändert. Bitte passende Gerätedatei laden.");
             }
         }
 
@@ -8795,9 +8796,10 @@ public partial class MainWindow : Window
                 _xdtBaukastenState.SetDeviceInput(input);
                 _xdtBaukastenState.ClearPreviewResult();
                 XdtBaukastenDeviceRawTextBox.Text = rawText;
-                SetXdtBaukastenStatus(IsCurrentDeviceInputCompatible()
+                var compatibility = EvaluateCurrentDeviceInputCompatibility();
+                SetXdtBaukastenStatus(compatibility.IsCompatible
                     ? $"Gerätetestdatei geladen: {filePath}"
-                    : "Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
+                    : compatibility.Message);
             }
 
             UpdateXdtBaukastenPlaceholders();
@@ -8850,12 +8852,13 @@ public partial class MainWindow : Window
 
     private void RunXdtBaukastenPreview()
     {
-        if (!IsCurrentDeviceInputCompatible())
+        var compatibility = EvaluateCurrentDeviceInputCompatibility();
+        if (!compatibility.IsCompatible)
         {
             _xdtBaukastenState.ClearPreviewResult();
             UpdateXdtBaukastenResultView();
             UpdateXdtBaukastenPlaceholders();
-            SetXdtBaukastenStatus("Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
+            SetXdtBaukastenStatus(compatibility.Message);
             return;
         }
 
@@ -8880,12 +8883,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (!IsCurrentDeviceInputCompatible())
+        var compatibility = EvaluateCurrentDeviceInputCompatibility();
+        if (!compatibility.IsCompatible)
         {
             _xdtBaukastenState.ClearPreviewResult();
             UpdateXdtBaukastenResultView();
             UpdateXdtBaukastenPlaceholders();
-            SetXdtBaukastenStatus("Die geladene Gerätedatei passt nicht zum aktuell gewählten Geräteprofil. Bitte passende Gerätedatei laden.");
+            SetXdtBaukastenStatus(compatibility.Message);
             return;
         }
 
@@ -9154,8 +9158,19 @@ public partial class MainWindow : Window
             return true;
         }
 
-        return TryParseCurrentDeviceInputMeasurements(out var measurements)
-            && _xdtBaukastenPlaceholderValueService.IsCompatibleWithDeviceProfile(_xdtBaukastenState.DeviceProfile, measurements);
+        return EvaluateCurrentDeviceInputCompatibility().IsCompatible;
+    }
+
+    private XdtBaukastenDeviceCompatibilityResult EvaluateCurrentDeviceInputCompatibility()
+    {
+        if (_xdtBaukastenState.DeviceProfile is null || _xdtBaukastenState.DeviceInput is null)
+        {
+            return XdtBaukastenDeviceCompatibilityResult.Compatible(Array.Empty<MeasurementValue>());
+        }
+
+        return _xdtBaukastenDeviceCompatibilityService.Evaluate(
+            _xdtBaukastenState.DeviceProfile,
+            _xdtBaukastenState.DeviceInput.SourcePath);
     }
 
     private bool TryParseCurrentDeviceInputMeasurements(out IReadOnlyList<MeasurementValue> measurements)
