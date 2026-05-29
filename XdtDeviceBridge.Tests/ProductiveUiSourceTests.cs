@@ -226,6 +226,9 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("InterfaceSerialRtsCheckBox", mainXaml);
         Assert.Contains("NIDEK-RT Sendemodus", mainXaml);
         Assert.Contains("InterfaceNidekRtSerialSendModeComboBox", mainXaml);
+        Assert.Contains("NIDEK-RT Sendeinhalt", mainXaml);
+        Assert.Contains("InterfaceNidekRtSerialFrameVariantComboBox", mainXaml);
+        Assert.Contains("LmOnlyWithoutAdd", mainXaml);
         Assert.Contains("DirectWriterFrame", mainXaml);
         Assert.Contains("SerialTestDtrCheckBox", mainXaml);
         Assert.Contains("SerialTestRtsCheckBox", mainXaml);
@@ -234,6 +237,9 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("RS anfordern", floatingXaml);
         Assert.Contains("Direkt Writer-Frame senden", floatingXaml);
         Assert.Contains("RS + Writer ohne SD-Warten", floatingXaml);
+        Assert.Contains("Frame-Variante", floatingXaml);
+        Assert.Contains("NidekRtFrameVariantComboBox", floatingXaml);
+        Assert.Contains("CR nach EOT", floatingXaml);
         Assert.Contains("Serielle Diagnose", floatingXaml);
         Assert.Contains("SerialDiagnosticsText", floatingXaml);
         Assert.Contains("Rückgabe abhören und verarbeiten", floatingXaml);
@@ -241,6 +247,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("SerialListenOnlyRequested", floatingCode);
         Assert.Contains("SerialProcessReturnRequested", floatingCode);
         Assert.Contains("SerialDirectWriterRequested", floatingCode);
+        Assert.Contains("SelectedNidekRtSerialOutputFrameVariant", floatingCode);
+        Assert.Contains("AppendCarriageReturnAfterEot", floatingCode);
         Assert.Contains("RunNidekRtSerialListenOnlyAsync", mainCode);
         Assert.Contains("RunNidekRtSerialProcessReturnAsync", mainCode);
         Assert.Contains("RunNidekRtSerialSendTestAsync", mainCode);
@@ -252,6 +260,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Writer-Frame gesendet", mainCode);
         Assert.Contains("AppendNidekRtSerialDiagnostic", mainCode);
         Assert.Contains("NidekRtSerialSendModeInfo.Resolve", mainCode);
+        Assert.Contains("NidekRtSerialOutputFrameVariantInfo.Resolve", mainCode);
         Assert.Contains("SendCompleted", mainCode);
         Assert.Contains("Nur-Abhören abgeschlossen", mainCode);
         Assert.Contains("Es wurde keine XDT-Ausgabe erzeugt", mainCode);

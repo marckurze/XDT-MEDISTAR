@@ -10,7 +10,8 @@ public interface INidekRtSerialPhoropterCommunicationService
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialSendMode sendMode,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
 
     Task<NidekRtSerialPhoropterCommunicationResult> ReceiveReturnAsync(
         SerialCommunicationSettings settings,
@@ -20,7 +21,8 @@ public interface INidekRtSerialPhoropterCommunicationService
         SerialCommunicationSettings settings,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
 
     Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionDirectAsync(
         SerialCommunicationSettings settings,
@@ -28,14 +30,16 @@ public interface INidekRtSerialPhoropterCommunicationService
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
 
     Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionDirectWithoutReturnAsync(
         SerialCommunicationSettings settings,
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
 
     Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionWithoutWaitingForSdAsync(
         SerialCommunicationSettings settings,
@@ -43,12 +47,14 @@ public interface INidekRtSerialPhoropterCommunicationService
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
 
     NidekRtSerialPhoropterOutputResult BuildSelectionFrame(
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
-        NidekRtSerialPhoropterModel model);
+        NidekRtSerialPhoropterModel model,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
 }
 
 public sealed record NidekRtSerialPhoropterCommunicationOptions(
@@ -141,7 +147,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialSendMode sendMode,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(patient);
@@ -164,7 +171,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 SendCompleted: false));
         }
 
-        var writerResult = _writer.BuildFrame(patient, selectedMeasurements, model);
+        var variant = NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant);
+        var writerResult = _writer.BuildFrame(patient, selectedMeasurements, model, variant);
         if (!writerResult.Success)
         {
             return Task.FromResult(new NidekRtSerialPhoropterCommunicationResult(
@@ -187,6 +195,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             writerResult.Warnings,
             model,
             sendMode,
+            variant,
             cancellationToken);
     }
 
@@ -203,6 +212,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             Array.Empty<string>(),
             NidekRtSerialPhoropterModel.Rt3100,
             NidekRtSerialPhoropterSendTestOptions.None,
+            NidekRtSerialOutputFrameVariant.FullSelectedData,
             continueWithoutHandshake: false,
             receiveResponse: true,
             handshakeTimeoutOverride: null,
@@ -214,7 +224,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         SerialCommunicationSettings settings,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
     {
         ArgumentNullException.ThrowIfNull(settings);
         return ExchangeAsync(
@@ -225,6 +236,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             Array.Empty<string>(),
             model,
             options,
+            NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant),
             continueWithoutHandshake: false,
             receiveResponse: false,
             handshakeTimeoutOverride: null,
@@ -238,7 +250,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
     {
         return SendSelectionDirectCoreAsync(
             settings,
@@ -246,6 +259,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             selectedMeasurements,
             model,
             options,
+            NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant),
             receiveResponse: true,
             productiveSendMode: null,
             cancellationToken: cancellationToken);
@@ -256,7 +270,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
     {
         return SendSelectionDirectCoreAsync(
             settings,
@@ -264,6 +279,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             selectedMeasurements,
             model,
             NidekRtSerialPhoropterSendTestOptions.None,
+            NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant),
             receiveResponse: false,
             productiveSendMode: NidekRtSerialSendMode.DirectWriterFrame,
             cancellationToken: cancellationToken);
@@ -275,7 +291,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
     {
         var adjustedOptions = options with
         {
@@ -289,6 +306,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             selectedMeasurements,
             model,
             adjustedOptions,
+            NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant),
             requestBytes: RsRequestBytes,
             expectedHandshakeBytes: ReadyToSendMarker,
             continueWithoutHandshake: true,
@@ -300,11 +318,12 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
     public NidekRtSerialPhoropterOutputResult BuildSelectionFrame(
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
-        NidekRtSerialPhoropterModel model)
+        NidekRtSerialPhoropterModel model,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
     {
         ArgumentNullException.ThrowIfNull(patient);
         ArgumentNullException.ThrowIfNull(selectedMeasurements);
-        return _writer.BuildFrame(patient, selectedMeasurements, model);
+        return _writer.BuildFrame(patient, selectedMeasurements, model, NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant));
     }
 
     private Task<NidekRtSerialPhoropterCommunicationResult> ExchangeProductiveSendAsync(
@@ -313,6 +332,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<string> writerWarnings,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialSendMode sendMode,
+        NidekRtSerialOutputFrameVariant frameVariant,
         CancellationToken cancellationToken)
     {
         return sendMode switch
@@ -325,6 +345,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 writerWarnings,
                 model,
                 NidekRtSerialPhoropterSendTestOptions.None,
+                frameVariant,
                 continueWithoutHandshake: false,
                 receiveResponse: true,
                 handshakeTimeoutOverride: null,
@@ -338,6 +359,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 writerWarnings,
                 model,
                 NidekRtSerialPhoropterSendTestOptions.None with { SendDelayAfterRequest = TimeSpan.FromMilliseconds(300) },
+                frameVariant,
                 continueWithoutHandshake: true,
                 receiveResponse: true,
                 handshakeTimeoutOverride: TimeSpan.FromMilliseconds(300),
@@ -351,6 +373,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 writerWarnings,
                 model,
                 NidekRtSerialPhoropterSendTestOptions.None,
+                frameVariant,
                 continueWithoutHandshake: false,
                 receiveResponse: true,
                 handshakeTimeoutOverride: null,
@@ -375,6 +398,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
+        NidekRtSerialOutputFrameVariant frameVariant,
         byte[] requestBytes,
         byte[] expectedHandshakeBytes,
         bool continueWithoutHandshake,
@@ -402,7 +426,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 Messages: new[] { message, $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}" }));
         }
 
-        var writerResult = _writer.BuildFrame(patient, selectedMeasurements, model);
+        var variant = NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant);
+        var writerResult = _writer.BuildFrame(patient, selectedMeasurements, model, variant);
         if (!writerResult.Success)
         {
             return Task.FromResult(new NidekRtSerialPhoropterCommunicationResult(
@@ -426,6 +451,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             writerResult.Warnings,
             model,
             options,
+            variant,
             continueWithoutHandshake,
             receiveResponse,
             handshakeTimeoutOverride,
@@ -439,6 +465,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
+        NidekRtSerialOutputFrameVariant frameVariant,
         bool receiveResponse,
         NidekRtSerialSendMode? productiveSendMode,
         CancellationToken cancellationToken)
@@ -463,7 +490,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 Messages: new[] { message, $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}" }));
         }
 
-        var writerResult = BuildSelectionFrame(patient, selectedMeasurements, model);
+        var variant = NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant);
+        var writerResult = BuildSelectionFrame(patient, selectedMeasurements, model, variant);
         if (!writerResult.Success)
         {
             return Task.FromResult(new NidekRtSerialPhoropterCommunicationResult(
@@ -487,6 +515,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             writerResult.Warnings,
             model,
             options,
+            variant,
             continueWithoutHandshake: false,
             receiveResponse: receiveResponse,
             handshakeTimeoutOverride: null,
@@ -502,6 +531,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<string> writerWarnings,
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
+        NidekRtSerialOutputFrameVariant frameVariant,
         bool continueWithoutHandshake,
         bool receiveResponse,
         TimeSpan? handshakeTimeoutOverride,
@@ -540,6 +570,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 continueWithoutHandshake,
                 receiveResponse,
                 options,
+                frameVariant,
                 productiveSendMode)
             .ToArray();
         var sendCompleted = payloadBytes.Length > 0
@@ -570,9 +601,11 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         bool continueWithoutHandshake,
         bool receiveResponse,
         NidekRtSerialPhoropterSendTestOptions options,
+        NidekRtSerialOutputFrameVariant frameVariant,
         NidekRtSerialSendMode? productiveSendMode)
     {
         yield return $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}";
+        yield return $"Frame-Variante: {NidekRtSerialOutputFrameVariantInfo.ToDisplayName(frameVariant)}.";
         if (productiveSendMode is { } sendMode)
         {
             yield return $"Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}.";
@@ -695,26 +728,85 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
 
     private static string DescribeWriterBlocks(byte[] payloadBytes)
     {
-        var visible = SerialDiagnosticsFormatter.ToVisibleControlText(payloadBytes);
         var blocks = new List<string>();
-        AddIfContains(blocks, visible, "DRL<STX>", "ID");
-        AddIfContains(blocks, visible, "DRM<STX>", "AR SCA");
-        AddIfContains(blocks, visible, "DWF<STX>", "WF SCA");
-        AddIfContains(blocks, visible, "DLM<STX> R", "LM SCA");
-        AddIfContains(blocks, visible, "ALM<STX>", "LM ADD");
-        AddIfContains(blocks, visible, "DPM<STX>PD", "AR PD");
-        AddIfContains(blocks, visible, "DLM<STX>PD", "LM PD");
-        AddIfContains(blocks, visible, "PR", "LM PRISM");
+        foreach (var segment in SplitPayloadSegments(payloadBytes))
+        {
+            if (StartsWithAscii(segment, "DRL"))
+            {
+                blocks.Add("ID");
+            }
+            else if (StartsWithAscii(segment, "DRM"))
+            {
+                blocks.Add("AR SCA");
+            }
+            else if (StartsWithAscii(segment, "DWF"))
+            {
+                blocks.Add("WF SCA");
+            }
+            else if (StartsWithAscii(segment, "DLM") && segment.Contains(NidekRtSerialControlChars.SX) && ContainsAscii(segment, "PD"))
+            {
+                blocks.Add("LM PD");
+            }
+            else if (StartsWithAscii(segment, "DLM"))
+            {
+                blocks.Add("LM SCA");
+            }
+            else if (StartsWithAscii(segment, "DPM"))
+            {
+                blocks.Add("AR PD");
+            }
+            else if (StartsWithAscii(segment, "AR") || StartsWithAscii(segment, "AL"))
+            {
+                blocks.Add("LM ADD");
+            }
+            else if (StartsWithAscii(segment, "PR") || StartsWithAscii(segment, "PL") || StartsWithAscii(segment, "BR") || StartsWithAscii(segment, "BL"))
+            {
+                blocks.Add("LM PRISM");
+            }
+        }
 
         return blocks.Count == 0 ? "keine erkannten Nutzdatenblöcke" : string.Join(", ", blocks.Distinct(StringComparer.Ordinal));
     }
 
-    private static void AddIfContains(List<string> blocks, string text, string marker, string displayName)
+    private static IEnumerable<byte[]> SplitPayloadSegments(byte[] payloadBytes)
     {
-        if (text.Contains(marker, StringComparison.Ordinal))
+        var segment = new List<byte>();
+        foreach (var value in payloadBytes)
         {
-            blocks.Add(displayName);
+            if (value is NidekRtSerialControlChars.SH or NidekRtSerialControlChars.ET)
+            {
+                continue;
+            }
+
+            if (value == NidekRtSerialControlChars.EB)
+            {
+                if (segment.Count > 0)
+                {
+                    yield return segment.ToArray();
+                    segment.Clear();
+                }
+
+                continue;
+            }
+
+            segment.Add(value);
         }
+
+        if (segment.Count > 0)
+        {
+            yield return segment.ToArray();
+        }
+    }
+
+    private static bool StartsWithAscii(byte[] bytes, string value)
+    {
+        var marker = System.Text.Encoding.ASCII.GetBytes(value);
+        return bytes.Length >= marker.Length && bytes.Take(marker.Length).SequenceEqual(marker);
+    }
+
+    private static bool ContainsAscii(byte[] bytes, string value)
+    {
+        return SerialDiagnosticsFormatter.ToVisibleControlText(bytes).Contains(value, StringComparison.Ordinal);
     }
 }
 

@@ -218,14 +218,17 @@ public sealed class ProfileJsonSerializerTests
     {
         var profile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault() with
         {
-            NidekRtSerialSendMode = NidekRtSerialSendMode.RsSdHandshake
+            NidekRtSerialSendMode = NidekRtSerialSendMode.RsSdHandshake,
+            NidekRtSerialOutputFrameVariant = NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd
         };
 
         var json = _serializer.SerializeInterfaceProfileDefinition(profile);
         var deserialized = _serializer.DeserializeInterfaceProfileDefinition(json);
 
         Assert.Contains("\"NidekRtSerialSendMode\": \"RsSdHandshake\"", json);
+        Assert.Contains("\"NidekRtSerialOutputFrameVariant\": \"LmOnlyWithoutAdd\"", json);
         Assert.Equal(NidekRtSerialSendMode.RsSdHandshake, deserialized.NidekRtSerialSendMode);
+        Assert.Equal(NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd, deserialized.NidekRtSerialOutputFrameVariant);
     }
 
     [Fact]

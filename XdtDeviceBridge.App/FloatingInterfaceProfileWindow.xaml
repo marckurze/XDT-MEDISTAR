@@ -626,6 +626,44 @@
                                    FontSize="11"
                                    TextWrapping="Wrap"
                                    Margin="0,0,0,6"/>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="260"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Frame-Variante:"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,6"/>
+                            <ComboBox Grid.Column="1"
+                                      x:Name="NidekRtFrameVariantComboBox"
+                                      SelectedValuePath="Tag"
+                                      SelectedValue="FullSelectedData"
+                                      Margin="0,0,10,6"
+                                      ToolTip="Sendeinhalt für den Diagnose-Writer-Frame. Ändert nicht das gespeicherte Schnittstellenprofil.">
+                                <ComboBoxItem Content="Alle ausgewählten Werte" Tag="FullSelectedData"/>
+                                <ComboBoxItem Content="Nur Autoref" Tag="ArOnly"/>
+                                <ComboBoxItem Content="Nur Lensmeter" Tag="LmOnly"/>
+                                <ComboBoxItem Content="Nur Lensmeter ohne ADD" Tag="LmOnlyWithoutAdd"/>
+                                <ComboBoxItem Content="Alle ausgewählten Werte ohne ID" Tag="FullWithoutId"/>
+                                <ComboBoxItem Content="Nur Autoref ohne ID" Tag="ArOnlyWithoutId"/>
+                                <ComboBoxItem Content="Nur Lensmeter ohne ID" Tag="LmOnlyWithoutId"/>
+                                <ComboBoxItem Content="Minimal rechts" Tag="MinimalRightOnly"/>
+                            </ComboBox>
+                            <CheckBox Grid.Column="2"
+                                      x:Name="NidekRtAppendCrAfterEotCheckBox"
+                                      Content="CR nach EOT"
+                                      Margin="0,0,0,6"
+                                      VerticalAlignment="Center"
+                                      ToolTip="Testoption: hängt nach EOT zusätzlich CR an den Writer-Frame an."/>
+                        </Grid>
+                        <TextBlock Text="Live-Testplan: Wenn alle ausgewählten Werte nicht übernommen werden, zuerst Nur Lensmeter ohne ADD testen, dann Nur Lensmeter, Nur Autoref, danach Varianten ohne ID und optional CR nach EOT."
+                                   Foreground="#4B5563"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,6"/>
                         <WrapPanel>
                             <Button Content="RS anfordern"
                                     Margin="0,0,6,6"

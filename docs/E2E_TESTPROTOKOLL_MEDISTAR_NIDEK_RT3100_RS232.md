@@ -18,6 +18,7 @@ Dieses Protokoll dokumentiert den ersten echten RS232-Mitschnitt eines NIDEK RT-
 - Kommunikation: `NidekRtSerialPhoropterCommunicationService`
 - Live-Diagnose: RT-Floating-Fenster mit COM-Parametern, DTR/RTS/Handshake, RS/SD/Writer-Hexdump und `COM-Port nur abhoeren`
 - Schnittstellenprofil-Sendemodus: `NidekRtSerialSendMode`, Default fuer RT-3100 `DirectWriterFrame`
+- Schnittstellenprofil-Sendeinhalt: `NidekRtSerialOutputFrameVariant`, Default `FullSelectedData`; Live-Testvarianten fuer AR-only, LM-only, LM ohne ADD, ohne ID und Minimal rechts sind vorhanden
 - Presets: RT-3100 Type1 2400 7E2 und Type2 9600 8O1
 
 ## Testdaten
@@ -64,12 +65,13 @@ Noch offen:
 5. V0/Lensmeter und/oder V1/Autorefraktion auswaehlen.
 6. Optional im RT-Fenster `COM-Port nur abhoeren` testen: Profil-Port und Profil-Parameter werden verwendet, es wird nichts gesendet und kein Export erzeugt.
 7. Im Schnittstellenprofil den `NIDEK-RT Sendemodus` pruefen. Praxisdefault fuer den bestaetigten RT-3100-Aufbau: `Direkt Writer-Frame senden`.
-8. `An RT-3100 senden` klicken.
-9. Bei `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame ohne RS und ohne SD-Erwartung. Diagnosefenster pruefen: gespeicherter Sendemodus, Writer-Frame, Hexdump, CTS/DSR/DCD/RI und Status `Warte auf Rueckgabe vom RT-3100`.
-10. Bei `RS/SD-Handshake` sendet XDTBox RS als `01 43 20 20 20 02 52 53 17 04` (`SH C   SX RS EB ET`), wartet auf SD und schreibt den Writer-Frame nur bei SD. Dieser Modus bleibt fuer andere Installationen verfuegbar.
-11. Wenn keine sofortige Rueckgabe kommt, bleibt der Vorgang wartend: Untersuchung am RT durchfuehren und danach PRINT/SEND ausloesen. XDTBox erzeugt ohne Rueckgabe kein leeres XDT.
-12. `COM-Port nur abhoeren` bleibt Diagnose und erzeugt keinen Export. Fuer den produktiven Rueckweg im Wartestatus `Rueckgabe abhoeren und verarbeiten` starten; die empfangene Rueckgabe wird mit dem gespeicherten AIS-Kontext geparst und als MEDISTAR-XDT erzeugt.
-13. Die Sendetestmodi `RS anfordern`, `DTR-Toggle + RS`, `Direkt Writer-Frame senden`, `RS + Writer ohne SD-Warten` bleiben reine Diagnosemodi. Sie senden nur nach explizitem Klick, erzeugen keinen XDT-Export und aendern den gespeicherten Sendemodus nicht.
+8. Im Schnittstellenprofil den `NIDEK-RT Sendeinhalt` pruefen. Default: `Alle ausgewaehlten Werte`; bei Annahmeproblemen fuer den Live-Test zuerst `Nur Lensmeter ohne ADD`, danach `Nur Lensmeter`, `Nur Autoref` und Varianten ohne ID testen.
+9. `An RT-3100 senden` klicken.
+10. Bei `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame ohne RS und ohne SD-Erwartung. Diagnosefenster pruefen: gespeicherter Sendemodus, gespeicherter Sendeinhalt, Writer-Frame, Hexdump, CTS/DSR/DCD/RI und Status `Warte auf Rueckgabe vom RT-3100`.
+11. Bei `RS/SD-Handshake` sendet XDTBox RS als `01 43 20 20 20 02 52 53 17 04` (`SH C   SX RS EB ET`), wartet auf SD und schreibt den Writer-Frame nur bei SD. Dieser Modus bleibt fuer andere Installationen verfuegbar.
+12. Wenn keine sofortige Rueckgabe kommt, bleibt der Vorgang wartend: Untersuchung am RT durchfuehren und danach PRINT/SEND ausloesen. XDTBox erzeugt ohne Rueckgabe kein leeres XDT.
+13. `COM-Port nur abhoeren` bleibt Diagnose und erzeugt keinen Export. Fuer den produktiven Rueckweg im Wartestatus `Rueckgabe abhoeren und verarbeiten` starten; die empfangene Rueckgabe wird mit dem gespeicherten AIS-Kontext geparst und als MEDISTAR-XDT erzeugt.
+14. Die Sendetestmodi `RS anfordern`, `DTR-Toggle + RS`, `Direkt Writer-Frame senden`, `RS + Writer ohne SD-Warten` bleiben reine Diagnosemodi. Sie senden nur nach explizitem Klick, erzeugen keinen XDT-Export und aendern den gespeicherten Sendemodus nicht.
 
 ## Ergebnis
 
@@ -85,6 +87,8 @@ Noch offen:
 - Der Sendemodus wird im Schnittstellenprofil gespeichert. `DirectWriterFrame` ist fuer RT-3100 der BuiltIn-Default; Testmodi im RT-Fenster aendern diesen Wert nicht automatisch.
 - Die RS-Anforderung sendet Handbuch-`*` als Leerzeichen und enthaelt keine ASCII-Sternchen `2A 2A`.
 - Der Writer sendet LM-SCA-Augenpraefixe als Leerzeichen + `R`/`L` (`20 52`, `20 4C`) und nicht als ASCII-Sternchen.
+- Der PC->RT-Writer sendet LM ADD laut Herstellerformat als `AR`/`AL`, nicht als `RA`/`LA`, und beendet den Nutzdatenrahmen mit `EB ET`.
+- Fuer die naechste Live-Abnahme sind speicherbare Sendeinhaltsvarianten und Diagnosevarianten vorhanden: alle Werte, AR-only, LM-only, LM ohne ADD, ohne ID und Minimal rechts; optional kann im Sendetest `CR nach EOT` angehaengt werden.
 - Modemstatussignale CTS, DSR, DCD und RI werden in der seriellen Diagnose protokolliert, soweit der Adapter sie liefert.
 - Nach erfolgreichem Senden ohne sofortige Rueckgabe bleibt der Workflow im Wartestatus; kein leerer Export und kein harter Sendefehler.
 - Der wartende Workflow haelt den AIS-Patientenkontext. `Rueckgabe abhoeren und verarbeiten` nutzt diesen Kontext fuer den spaeteren produktiven Export, waehrend `COM-Port nur abhoeren` weiterhin nur Mitschnittdiagnose ist.

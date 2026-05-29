@@ -71,6 +71,7 @@ public sealed class InterfaceProfileConfigurationService
             originalProfile.DeviceOutput,
             originalProfile.SerialSettings,
             originalProfile.NidekRtSerialSendMode,
+            originalProfile.NidekRtSerialOutputFrameVariant,
             timestamp,
             createdBy,
             idFactory);
@@ -94,6 +95,7 @@ public sealed class InterfaceProfileConfigurationService
             deviceOutput,
             originalProfile.SerialSettings,
             originalProfile.NidekRtSerialSendMode,
+            originalProfile.NidekRtSerialOutputFrameVariant,
             timestamp,
             createdBy,
             idFactory);
@@ -118,6 +120,7 @@ public sealed class InterfaceProfileConfigurationService
             deviceOutput,
             serialSettings,
             originalProfile.NidekRtSerialSendMode,
+            originalProfile.NidekRtSerialOutputFrameVariant,
             timestamp,
             createdBy,
             idFactory);
@@ -135,12 +138,39 @@ public sealed class InterfaceProfileConfigurationService
         string? createdBy,
         Func<string>? idFactory = null)
     {
+        return CreateConfiguredProfile(
+            originalProfile,
+            folderOptions,
+            isActive,
+            isLicenseRequired,
+            deviceOutput,
+            serialSettings,
+            nidekRtSerialSendMode,
+            originalProfile.NidekRtSerialOutputFrameVariant,
+            timestamp,
+            createdBy,
+            idFactory);
+    }
+
+    public InterfaceProfileConfigurationResult CreateConfiguredProfile(
+        InterfaceProfileDefinition originalProfile,
+        InterfaceFolderOptions folderOptions,
+        bool isActive,
+        bool isLicenseRequired,
+        DeviceOutputConfiguration? deviceOutput,
+        SerialCommunicationSettings? serialSettings,
+        NidekRtSerialSendMode? nidekRtSerialSendMode,
+        NidekRtSerialOutputFrameVariant? nidekRtSerialOutputFrameVariant,
+        DateTimeOffset timestamp,
+        string? createdBy,
+        Func<string>? idFactory = null)
+    {
         ArgumentNullException.ThrowIfNull(originalProfile);
         ArgumentNullException.ThrowIfNull(folderOptions);
 
         var profile = originalProfile.Metadata.IsBuiltIn
-            ? CreateUserDefinedCopy(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, serialSettings, nidekRtSerialSendMode, timestamp, createdBy, idFactory)
-            : UpdateUserDefinedProfile(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, serialSettings, nidekRtSerialSendMode, timestamp);
+            ? CreateUserDefinedCopy(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, serialSettings, nidekRtSerialSendMode, nidekRtSerialOutputFrameVariant, timestamp, createdBy, idFactory)
+            : UpdateUserDefinedProfile(originalProfile, folderOptions, isActive, isLicenseRequired, deviceOutput, serialSettings, nidekRtSerialSendMode, nidekRtSerialOutputFrameVariant, timestamp);
 
         var issues = ValidateConfiguration(profile);
         return issues.Any(issue => issue.Severity == InterfaceProfileConfigurationIssueSeverity.Error)
@@ -196,6 +226,7 @@ public sealed class InterfaceProfileConfigurationService
         DeviceOutputConfiguration? deviceOutput,
         SerialCommunicationSettings? serialSettings,
         NidekRtSerialSendMode? nidekRtSerialSendMode,
+        NidekRtSerialOutputFrameVariant? nidekRtSerialOutputFrameVariant,
         DateTimeOffset timestamp,
         string? createdBy,
         Func<string>? idFactory)
@@ -226,7 +257,8 @@ public sealed class InterfaceProfileConfigurationService
             IsLicenseRequired = isLicenseRequired,
             DeviceOutput = deviceOutput,
             SerialSettings = serialSettings,
-            NidekRtSerialSendMode = nidekRtSerialSendMode
+            NidekRtSerialSendMode = nidekRtSerialSendMode,
+            NidekRtSerialOutputFrameVariant = nidekRtSerialOutputFrameVariant
         };
     }
 
@@ -238,6 +270,7 @@ public sealed class InterfaceProfileConfigurationService
         DeviceOutputConfiguration? deviceOutput,
         SerialCommunicationSettings? serialSettings,
         NidekRtSerialSendMode? nidekRtSerialSendMode,
+        NidekRtSerialOutputFrameVariant? nidekRtSerialOutputFrameVariant,
         DateTimeOffset timestamp)
     {
         return originalProfile with
@@ -253,7 +286,8 @@ public sealed class InterfaceProfileConfigurationService
             IsLicenseRequired = isLicenseRequired,
             DeviceOutput = deviceOutput,
             SerialSettings = serialSettings,
-            NidekRtSerialSendMode = nidekRtSerialSendMode
+            NidekRtSerialSendMode = nidekRtSerialSendMode,
+            NidekRtSerialOutputFrameVariant = nidekRtSerialOutputFrameVariant
         };
     }
 

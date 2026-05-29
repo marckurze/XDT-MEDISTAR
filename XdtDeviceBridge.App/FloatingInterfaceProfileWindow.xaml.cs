@@ -40,6 +40,19 @@ public partial class FloatingInterfaceProfileWindow : Window
 
     public string InterfaceProfileId { get; }
 
+    public NidekRtSerialOutputFrameVariant SelectedNidekRtSerialOutputFrameVariant
+    {
+        get
+        {
+            var value = NidekRtFrameVariantComboBox.SelectedValue as string;
+            return Enum.TryParse<NidekRtSerialOutputFrameVariant>(value, ignoreCase: true, out var variant)
+                ? variant
+                : NidekRtSerialOutputFrameVariantInfo.Default;
+        }
+    }
+
+    public bool AppendCarriageReturnAfterEot => NidekRtAppendCrAfterEotCheckBox.IsChecked == true;
+
     public void ApplyState(InterfaceProfileFloatingWindowState state)
     {
         if (!string.Equals(state.InterfaceProfileId, InterfaceProfileId, StringComparison.OrdinalIgnoreCase))

@@ -11,7 +11,8 @@ public sealed record InterfaceProfileDefinition(
     string? Description,
     DeviceOutputConfiguration? DeviceOutput = null,
     SerialCommunicationSettings? SerialSettings = null,
-    NidekRtSerialSendMode? NidekRtSerialSendMode = null)
+    NidekRtSerialSendMode? NidekRtSerialSendMode = null,
+    NidekRtSerialOutputFrameVariant? NidekRtSerialOutputFrameVariant = null)
 {
     public IReadOnlyList<string> Validate()
     {

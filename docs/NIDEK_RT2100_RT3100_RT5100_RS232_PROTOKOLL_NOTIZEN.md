@@ -128,6 +128,13 @@ Unterstuetzt in V1:
 
 RT-2100 nutzt keinen ID-Block. RT-3100 und RT-5100 koennen einen ID-Block enthalten. Fehlende Werte werden weggelassen; es werden keine leeren medizinischen Bloecke erfunden. Prisma wird erst nach echter Datenlage aktiviert.
 
+Herstellerabgleich PC->RT, insbesondere RT-3100-PDF Abschnitt 6:
+
+- Gesamtformat: `SH ID No. block EB AR SCA block EB AR PD block EB LM SCA block EB LM ADD block EB LM PRISM block EB LM PD block EB ET`; nicht vorhandene Bloecke werden entfernt.
+- LM SCA: `DLM SX  R... EB  L...`; die im Diagramm gezeichneten `*R`/`*L` bedeuten Leerzeichen + Auge und werden als `20 52`/`20 4C` gesendet.
+- LM ADD: rechts `AR+..`, links `AL+..`; es gibt keinen `ALM`-Header und keine `RA`-/`LA`-Kodierung.
+- XDTBox beendet den erzeugten Nutzdatenrahmen dokumentnah mit `EB ET`; die optionale Testfunktion `CR nach EOT` haengt nur fuer Live-Diagnosen zusaetzlich `CR` an.
+
 RS-Anforderung:
 
 - Die in den NIDEK-Formatdiagrammen dargestellten `*` sind Leerzeichen-Platzhalter und werden nicht als ASCII-Sternchen gesendet.
@@ -135,6 +142,7 @@ RS-Anforderung:
 - Hexdump: `01 43 20 20 20 02 52 53 17 04`.
 - Die alte Diagnose `<SOH>C **<STX>RS<ETB><EOT>` war irrefuehrend, weil sie echte `2A 2A`-Bytes beschrieb.
 - Auch in LM-SCA-Bloecken sind die gezeichneten Sternchen Platzhalter: XDTBox sendet `DLM SX  R... EB  L...` mit `20 52` und `20 4C`, nicht `2A 52`/`2A 4C`.
+- LM-ADD-Bloecke werden als `AR`/`AL` erzeugt. Der vorher beobachtete Testframe mit `LA+01.50` war nicht dokumentnah und wurde auf `AL+01.50` korrigiert.
 - Die Diagnose nennt erkannte Writer-Bloecke wie ID, AR SCA, AR PD, LM SCA, LM ADD, LM PD und Prism anhand des erzeugten Frames.
 
 Live-Sendetestmodi im RT-Fenster:
@@ -152,6 +160,17 @@ Die serielle Diagnose protokolliert zusaetzlich CTS, DSR, DCD und RI, soweit die
 
 Die BuiltIn-Schnittstellenprofile fuer RT-2100/RT-3100/RT-5100 verwenden `Direkt Writer-Frame senden` als Default, weil dieser Modus am RT-3100 praktisch bestaetigt wurde. Die Sendetestmodi im RT-Fenster bleiben davon getrennt und aendern den gespeicherten Schnittstellenprofilwert nicht.
 
+Der zusaetzliche Schnittstellenprofilwert `NIDEK-RT Sendeinhalt` steuert, welche dokumentnahen PC->RT-Bloecke produktiv in den Writer-Frame kommen:
+
+- `Alle ausgewaehlten Werte`: ID, AR, LM, ADD/PD soweit vorhanden.
+- `Nur Autoref`: AR SCA und ggf. AR PD.
+- `Nur Lensmeter`: LM SCA, LM ADD und ggf. LM PD.
+- `Nur Lensmeter ohne ADD`: LM SCA und ggf. LM PD; wichtig, falls das Praxisgeraet den ADD-Block nicht akzeptiert.
+- Varianten `ohne ID`: gleiche Nutzdaten, aber ohne `DRL`-ID-Block.
+- `Minimal rechts`: konservativer rechter LM-Testframe.
+
+Im Diagnosebereich koennen diese Varianten unabhaengig vom gespeicherten Profilwert ausprobiert werden. Empfohlene Reihenfolge fuer den naechsten Live-Test, wenn `Alle ausgewaehlten Werte` nicht uebernommen wird: `Nur Lensmeter ohne ADD`, `Nur Lensmeter`, `Nur Autoref`, Varianten ohne ID, optional `CR nach EOT`.
+
 ## Produktiver Ablauf in XDTBox
 
 - Beim Start der Ueberwachung wird kein RT-Phoropterfenster geoeffnet.
@@ -159,6 +178,7 @@ Die BuiltIn-Schnittstellenprofile fuer RT-2100/RT-3100/RT-5100 verwenden `Direkt
 - Der Dialog bietet LM-/AR-Historienwerte an; produktiv gesendet werden zunaechst V0/Lensmeter und V1/Autorefraktion.
 - Senden erfolgt nur nach ausdruecklichem Anwenderklick ueber den im Schnittstellenprofil konfigurierten COM-Port.
 - Der Schnittstellenprofilwert `NIDEK-RT Sendemodus` steuert den produktiven Ablauf. Im Praxisdefault `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame direkt, sendet keinen `RS` und erwartet keine `SD`-Bestaetigung. In `RS/SD-Handshake` sendet XDTBox `SH C   SX RS EB ET` (`01 43 20 20 20 02 52 53 17 04`), erwartet `SX SD` und schreibt erst danach den PC->RT-Frame. In `RS senden, dann Writer ohne SD` wird `RS` gesendet, kurz gewartet und der Writer-Frame auch ohne `SD` geschrieben.
+- Der Schnittstellenprofilwert `NIDEK-RT Sendeinhalt` bestimmt den produktiven Writer-Inhalt; Standard bleibt `Alle ausgewaehlten Werte`.
 - Nach erfolgreichem Senden wechselt XDTBox in `Warte auf Rueckgabe vom Phoropter`. Eine ausbleibende sofortige Rueckgabe ist kein Sendefehler: Der Anwender fuehrt die Untersuchung am RT durch und loest danach PRINT/SEND aus. Ohne Rueckgabe wird kein leeres XDT erzeugt.
 - Sobald eine Rueckgabe empfangen wird, wird sie bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
 - Serielle RT-Schnittstellenprofile brauchen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner.

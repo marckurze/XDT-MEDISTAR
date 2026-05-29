@@ -443,6 +443,7 @@ public partial class MainWindow : Window
         InterfaceSerialParityComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceSerialHandshakeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceNidekRtSerialSendModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceNidekRtSerialFrameVariantComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
     }
 
     private void RefreshInterfaceActivationPreviewForDraftChange()
@@ -1514,6 +1515,7 @@ public partial class MainWindow : Window
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = profile.FolderOptions.DeviceFileWaitTimeoutMinutes.ToString();
         ApplySerialSettingsToInterfaceEditor(GetSerialSettingsForProfile(profile));
         ApplyNidekRtSerialSendModeToInterfaceEditor(profile);
+        ApplyNidekRtSerialOutputFrameVariantToInterfaceEditor(profile);
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
@@ -1564,6 +1566,7 @@ public partial class MainWindow : Window
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = "10";
         ApplySerialSettingsToInterfaceEditor(SerialCommunicationSettings.Default);
         ApplyNidekRtSerialSendModeToInterfaceEditor(null);
+        ApplyNidekRtSerialOutputFrameVariantToInterfaceEditor(null);
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
@@ -1683,6 +1686,9 @@ public partial class MainWindow : Window
         InterfaceNidekRtSerialSendModeLabel.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
         InterfaceNidekRtSerialSendModeComboBox.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
         InterfaceNidekRtSerialSendModeHintTextBlock.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceNidekRtSerialFrameVariantLabel.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceNidekRtSerialFrameVariantComboBox.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceNidekRtSerialFrameVariantHintTextBlock.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
         InterfaceDeviceOutputGroupBox.Visibility = showDeviceOutput ? Visibility.Visible : Visibility.Collapsed;
         InterfaceAttachmentSettingsGroupBox.Visibility = showAttachmentOptions ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -1743,6 +1749,12 @@ public partial class MainWindow : Window
         InterfaceNidekRtSerialSendModeComboBox.SelectedValue = mode.ToString();
     }
 
+    private void ApplyNidekRtSerialOutputFrameVariantToInterfaceEditor(InterfaceProfileDefinition? profile)
+    {
+        var variant = NidekRtSerialOutputFrameVariantInfo.Resolve(profile?.NidekRtSerialOutputFrameVariant);
+        InterfaceNidekRtSerialFrameVariantComboBox.SelectedValue = variant.ToString();
+    }
+
     private void RefreshInterfaceActivationPreview()
     {
         if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
@@ -1780,6 +1792,7 @@ public partial class MainWindow : Window
             DeviceOutput = CreateInterfaceDeviceOutputFromEditor(profile),
             SerialSettings = CreateInterfaceSerialSettingsFromEditor(profile),
             NidekRtSerialSendMode = CreateNidekRtSerialSendModeFromEditor(profile),
+            NidekRtSerialOutputFrameVariant = CreateNidekRtSerialOutputFrameVariantFromEditor(profile),
             IsActive = InterfaceIsActiveCheckBox.IsChecked == true,
             IsLicenseRequired = InterfaceIsLicenseRequiredCheckBox.IsChecked == true
         };
@@ -1942,11 +1955,13 @@ public partial class MainWindow : Window
         InterfaceFolderOptions folderOptions;
         SerialCommunicationSettings? serialSettings;
         NidekRtSerialSendMode? nidekRtSerialSendMode;
+        NidekRtSerialOutputFrameVariant? nidekRtSerialOutputFrameVariant;
         try
         {
             folderOptions = CreateInterfaceFolderOptionsFromEditor();
             serialSettings = CreateInterfaceSerialSettingsFromEditor(selectedProfile);
             nidekRtSerialSendMode = CreateNidekRtSerialSendModeFromEditor(selectedProfile);
+            nidekRtSerialOutputFrameVariant = CreateNidekRtSerialOutputFrameVariantFromEditor(selectedProfile);
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException)
         {
@@ -1962,6 +1977,7 @@ public partial class MainWindow : Window
             CreateInterfaceDeviceOutputFromEditor(selectedProfile),
             serialSettings,
             nidekRtSerialSendMode,
+            nidekRtSerialOutputFrameVariant,
             DateTimeOffset.UtcNow,
             Environment.UserName);
 
@@ -2207,6 +2223,20 @@ public partial class MainWindow : Window
         return Enum.TryParse<NidekRtSerialSendMode>(value, ignoreCase: true, out var mode)
             ? mode
             : NidekRtSerialSendModeInfo.Default;
+    }
+
+    private NidekRtSerialOutputFrameVariant? CreateNidekRtSerialOutputFrameVariantFromEditor(InterfaceProfileDefinition selectedProfile)
+    {
+        var deviceProfile = GetDeviceProfile(selectedProfile.DeviceProfileId);
+        if (!InterfaceProfileUiPolicy.IsNidekRtSerialPhoropter(selectedProfile, deviceProfile))
+        {
+            return null;
+        }
+
+        var value = InterfaceNidekRtSerialFrameVariantComboBox.SelectedValue as string;
+        return Enum.TryParse<NidekRtSerialOutputFrameVariant>(value, ignoreCase: true, out var variant)
+            ? variant
+            : NidekRtSerialOutputFrameVariantInfo.Default;
     }
 
     private static string DefaultIfWhiteSpace(string? value, string fallback)
@@ -5695,7 +5725,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.DirectWriter).ConfigureAwait(true);
+        await RunNidekRtSerialSendTestAsync(
+            window.InterfaceProfileId,
+            NidekRtSerialSendTestMode.DirectWriter,
+            window.SelectedNidekRtSerialOutputFrameVariant,
+            window.AppendCarriageReturnAfterEot).ConfigureAwait(true);
     }
 
     private async void FloatingMonitoringWindow_SerialRsWriterWithoutSdRequested(object? sender, EventArgs e)
@@ -5705,7 +5739,11 @@ public partial class MainWindow : Window
             return;
         }
 
-        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.RsWriterWithoutSd).ConfigureAwait(true);
+        await RunNidekRtSerialSendTestAsync(
+            window.InterfaceProfileId,
+            NidekRtSerialSendTestMode.RsWriterWithoutSd,
+            window.SelectedNidekRtSerialOutputFrameVariant,
+            window.AppendCarriageReturnAfterEot).ConfigureAwait(true);
     }
 
     private void CloseFloatingMonitoringWindow(string interfaceProfileId)
@@ -7216,7 +7254,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task RunNidekRtSerialSendTestAsync(string interfaceProfileId, NidekRtSerialSendTestMode mode)
+    private async Task RunNidekRtSerialSendTestAsync(
+        string interfaceProfileId,
+        NidekRtSerialSendTestMode mode,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData,
+        bool appendCarriageReturnAfterEot = false)
     {
         if (_profileCatalog is null)
         {
@@ -7276,6 +7318,12 @@ public partial class MainWindow : Window
             var options = mode == NidekRtSerialSendTestMode.RequestReadyWithDtrToggle
                 ? NidekRtSerialPhoropterSendTestOptions.WithDtrToggle
                 : NidekRtSerialPhoropterSendTestOptions.None;
+            if (appendCarriageReturnAfterEot)
+            {
+                options = options with { AppendCarriageReturnToPayload = true };
+            }
+
+            var resolvedFrameVariant = NidekRtSerialOutputFrameVariantInfo.Resolve(frameVariant);
             if (mode is NidekRtSerialSendTestMode.DirectWriter or NidekRtSerialSendTestMode.RsWriterWithoutSd
                 && !ConfirmNidekRtSerialSendTest(mode, deviceDisplayName))
             {
@@ -7287,14 +7335,14 @@ public partial class MainWindow : Window
             AppendNidekRtSerialDiagnostic(
                 interfaceProfile,
                 $"nidek-rt-serial-send-test-start:{mode}:{DateTime.UtcNow.Ticks}",
-                $"{modeText} für {deviceDisplayName} startet. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
+                $"{modeText} für {deviceDisplayName} startet. Frame-Variante: {NidekRtSerialOutputFrameVariantInfo.ToDisplayName(resolvedFrameVariant)}. CR nach EOT: {(appendCarriageReturnAfterEot ? "Ja" : "Nein")}. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
             RefreshInterfaceMonitoringCards();
 
             NidekRtSerialPhoropterCommunicationResult result;
             if (mode is NidekRtSerialSendTestMode.RequestReady or NidekRtSerialSendTestMode.RequestReadyWithDtrToggle)
             {
                 result = await _nidekRtSerialCommunicationService
-                    .RequestReadyToSendAsync(settings, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                        .RequestReadyToSendAsync(settings, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
                     .ConfigureAwait(true);
             }
             else
@@ -7313,10 +7361,10 @@ public partial class MainWindow : Window
 
                 result = mode == NidekRtSerialSendTestMode.DirectWriter
                     ? await _nidekRtSerialCommunicationService
-                        .SendSelectionDirectAsync(settings, context.Patient, context.SelectedMeasurements, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                        .SendSelectionDirectAsync(settings, context.Patient, context.SelectedMeasurements, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None, resolvedFrameVariant)
                         .ConfigureAwait(true)
                     : await _nidekRtSerialCommunicationService
-                        .SendSelectionWithoutWaitingForSdAsync(settings, context.Patient, context.SelectedMeasurements, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                        .SendSelectionWithoutWaitingForSdAsync(settings, context.Patient, context.SelectedMeasurements, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None, resolvedFrameVariant)
                         .ConfigureAwait(true);
             }
 
@@ -7378,6 +7426,7 @@ public partial class MainWindow : Window
             var cancellationToken = _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None;
             var settings = GetSerialSettingsForProfile(interfaceProfile);
             var sendMode = NidekRtSerialSendModeInfo.Resolve(interfaceProfile.NidekRtSerialSendMode);
+            var frameVariant = NidekRtSerialOutputFrameVariantInfo.Resolve(interfaceProfile.NidekRtSerialOutputFrameVariant);
             var model = DetectNidekRtSerialModel(deviceProfile);
             var directWriterSendOnly = sendSelectedValues && sendMode == NidekRtSerialSendMode.DirectWriterFrame;
             NidekRtSerialPhoropterCommunicationResult communicationResult;
@@ -7391,7 +7440,7 @@ public partial class MainWindow : Window
                 AppendNidekRtSerialDiagnostic(
                     interfaceProfile,
                     $"{deviceOutputKey}-send-mode:{aisKey}",
-                    $"Sende Daten an {deviceDisplayName} über {settings.PortName}. Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
+                    $"Sende Daten an {deviceDisplayName} über {settings.PortName}. Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}. Frame-Variante: {NidekRtSerialOutputFrameVariantInfo.ToDisplayName(frameVariant)}. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
                 if (selectedMeasurements.Count == 0)
                 {
                     SetMonitoringRuntimeState(profileId, $"Senden an {deviceDisplayName} abgebrochen", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
@@ -7412,7 +7461,7 @@ public partial class MainWindow : Window
                     interfaceProfile,
                     $"{deviceOutputKey}-writer-build-start:{aisKey}",
                     "Writer-Frame wird erzeugt.");
-                var writerFrame = _nidekRtSerialCommunicationService.BuildSelectionFrame(parseResult.Patient, selectedMeasurements, model);
+                var writerFrame = _nidekRtSerialCommunicationService.BuildSelectionFrame(parseResult.Patient, selectedMeasurements, model, frameVariant);
                 if (!writerFrame.Success)
                 {
                     SetMonitoringRuntimeState(profileId, $"Senden an {deviceDisplayName} abgebrochen", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
@@ -7453,14 +7502,16 @@ public partial class MainWindow : Window
                         parseResult.Patient,
                         selectedMeasurements,
                         model,
-                        cancellationToken)
+                        cancellationToken,
+                        frameVariant)
                     : await _nidekRtSerialCommunicationService.SendSelectionAndReceiveAsync(
                         settings,
                         parseResult.Patient,
                         selectedMeasurements,
                         model,
                         sendMode,
-                        cancellationToken);
+                        cancellationToken,
+                        frameVariant);
             }
             else
             {

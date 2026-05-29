@@ -149,7 +149,8 @@ public sealed class ProfileCatalogServiceTests
         var paths = CreateAppDataPaths();
         var legacy = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault() with
         {
-            NidekRtSerialSendMode = null
+            NidekRtSerialSendMode = null,
+            NidekRtSerialOutputFrameVariant = null
         };
         _service.Save(paths, new ProfileCatalog(
             AisProfiles: Array.Empty<AisProfile>(),
@@ -164,6 +165,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.True(profile.Metadata.IsBuiltIn);
         Assert.False(profile.Metadata.IsUserDefined);
         Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, profile.NidekRtSerialSendMode);
+        Assert.Equal(NidekRtSerialOutputFrameVariant.FullSelectedData, profile.NidekRtSerialOutputFrameVariant);
     }
 
     [Fact]
@@ -177,7 +179,8 @@ public sealed class ProfileCatalogServiceTests
                 IsBuiltIn = false,
                 IsUserDefined = true
             },
-            NidekRtSerialSendMode = NidekRtSerialSendMode.RsSdHandshake
+            NidekRtSerialSendMode = NidekRtSerialSendMode.RsSdHandshake,
+            NidekRtSerialOutputFrameVariant = NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd
         };
         _service.Save(paths, new ProfileCatalog(
             AisProfiles: Array.Empty<AisProfile>(),
@@ -192,6 +195,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.False(profile.Metadata.IsBuiltIn);
         Assert.True(profile.Metadata.IsUserDefined);
         Assert.Equal(NidekRtSerialSendMode.RsSdHandshake, profile.NidekRtSerialSendMode);
+        Assert.Equal(NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd, profile.NidekRtSerialOutputFrameVariant);
     }
 
     [Fact]

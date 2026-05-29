@@ -366,6 +366,63 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
     }
 
     [Fact]
+    public async Task SendSelectionDirectAsync_ShouldUseFrameVariantAndCrAfterEotOption()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: CreatePracticeReturnBytes())
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionDirectAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            new NidekRtSerialPhoropterSendTestOptions(AppendCarriageReturnToPayload: true),
+            CancellationToken.None,
+            NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        var visiblePayload = SerialDiagnosticsFormatter.ToVisibleControlText(fakeSerial.LastExchangeRequest.PayloadBytes);
+        Assert.Contains("DLM<STX>", visiblePayload, StringComparison.Ordinal);
+        Assert.DoesNotContain("DRM<STX>", visiblePayload, StringComparison.Ordinal);
+        Assert.DoesNotContain("AR+01.50", visiblePayload, StringComparison.Ordinal);
+        Assert.DoesNotContain("AL+01.50", visiblePayload, StringComparison.Ordinal);
+        Assert.True(fakeSerial.LastExchangeRequest.AppendCarriageReturnToPayload);
+        Assert.Contains(result.Messages, message => message.Contains("Frame-Variante: Nur Lensmeter ohne ADD", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("CR wird nach EOT", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SendSelectionAndReceiveAsync_ShouldUseStoredFrameVariant()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: CreatePracticeReturnBytes(), bytesWritten: 4096)
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionAndReceiveAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.DirectWriterFrame,
+            CancellationToken.None,
+            NidekRtSerialOutputFrameVariant.FullWithoutId);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        var visiblePayload = SerialDiagnosticsFormatter.ToVisibleControlText(fakeSerial.LastExchangeRequest.PayloadBytes);
+        Assert.DoesNotContain("DRL<STX>", visiblePayload, StringComparison.Ordinal);
+        Assert.Contains("DRM<STX>", visiblePayload, StringComparison.Ordinal);
+        Assert.Contains("DLM<STX>", visiblePayload, StringComparison.Ordinal);
+        Assert.Contains(result.Messages, message => message.Contains("Frame-Variante: Alle ausgewählten Werte ohne ID", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task SendSelectionWithoutWaitingForSdAsync_ShouldContinueAfterShortSdWait()
     {
         var fakeSerial = new FakeSerialDeviceCommunicationService

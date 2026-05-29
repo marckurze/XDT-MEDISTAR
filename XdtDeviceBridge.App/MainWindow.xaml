@@ -2537,6 +2537,9 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
@@ -2615,7 +2618,36 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,8,8"/>
 
+                                        <TextBlock Grid.Row="5" Grid.Column="0" x:Name="InterfaceNidekRtSerialFrameVariantLabel" Text="NIDEK-RT Sendeinhalt:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="5"
+                                                  Grid.Column="1"
+                                                  Grid.ColumnSpan="2"
+                                                  x:Name="InterfaceNidekRtSerialFrameVariantComboBox"
+                                                  SelectedValuePath="Tag"
+                                                  SelectedValue="FullSelectedData"
+                                                  Width="260"
+                                                  HorizontalAlignment="Left"
+                                                  Margin="0,0,8,8"
+                                                  ToolTip="Welche PC-zu-RT-Blöcke produktiv gesendet werden. Für Live-Abnahmen können damit LM-only, ohne ADD oder ohne ID getestet und gespeichert werden.">
+                                            <ComboBoxItem Content="Alle ausgewählten Werte" Tag="FullSelectedData"/>
+                                            <ComboBoxItem Content="Nur Autoref" Tag="ArOnly"/>
+                                            <ComboBoxItem Content="Nur Lensmeter" Tag="LmOnly"/>
+                                            <ComboBoxItem Content="Nur Lensmeter ohne ADD" Tag="LmOnlyWithoutAdd"/>
+                                            <ComboBoxItem Content="Alle ausgewählten Werte ohne ID" Tag="FullWithoutId"/>
+                                            <ComboBoxItem Content="Nur Autoref ohne ID" Tag="ArOnlyWithoutId"/>
+                                            <ComboBoxItem Content="Nur Lensmeter ohne ID" Tag="LmOnlyWithoutId"/>
+                                            <ComboBoxItem Content="Minimal rechts" Tag="MinimalRightOnly"/>
+                                        </ComboBox>
                                         <TextBlock Grid.Row="5"
+                                                   Grid.Column="3"
+                                                   Grid.ColumnSpan="2"
+                                                   x:Name="InterfaceNidekRtSerialFrameVariantHintTextBlock"
+                                                   Text="Default: alle ausgewählten Werte. Für Praxisdiagnose bei Annahmeproblemen zuerst Nur Lensmeter ohne ADD, dann Nur Lensmeter, Nur Autoref und Varianten ohne ID testen."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,8,8"/>
+
+                                        <TextBlock Grid.Row="6"
                                                    Grid.Column="0"
                                                    Grid.ColumnSpan="5"
                                                    x:Name="InterfaceSerialStatusTextBlock"

@@ -292,7 +292,11 @@ public sealed class NidekRtSerialPhoropterTests
         Assert.Contains("DRM<SX>OR+01.00-01.25007", result.VisibleContent, StringComparison.Ordinal);
         Assert.Contains("DLM<SX> R+06.25-03.25003", result.VisibleContent, StringComparison.Ordinal);
         Assert.DoesNotContain("DLM<SX>*R", result.VisibleContent, StringComparison.Ordinal);
-        Assert.Contains("ALM<SX>RA+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.Contains("AR+01.50<EB>AL+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("ALM", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("RA+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("LA+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.Contains("<EB><ET>", result.VisibleContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -306,14 +310,70 @@ public sealed class NidekRtSerialPhoropterTests
         Assert.Contains("<SH>DRL<SX>", result.VisibleContent, StringComparison.Ordinal);
         Assert.Contains("DRM<SX>OR+01.00-01.25007", result.VisibleContent, StringComparison.Ordinal);
         Assert.Contains(" L+06.50-02.75170", result.VisibleContent, StringComparison.Ordinal);
+        Assert.Contains("AR+01.50<EB>AL+01.50", result.VisibleContent, StringComparison.Ordinal);
         Assert.DoesNotContain("*L+06.50-02.75170", result.VisibleContent, StringComparison.Ordinal);
         Assert.DoesNotContain("2A 52", result.HexDump, StringComparison.Ordinal);
         Assert.DoesNotContain("2A 4C", result.HexDump, StringComparison.Ordinal);
+        Assert.Contains("41 52 2B 30 31 2E 35 30", result.HexDump, StringComparison.Ordinal);
+        Assert.Contains("41 4C 2B 30 31 2E 35 30", result.HexDump, StringComparison.Ordinal);
+        Assert.DoesNotContain("4C 41 2B 30 31 2E 35 30", result.HexDump, StringComparison.Ordinal);
+        Assert.Contains("17 04", result.HexDump, StringComparison.Ordinal);
         Assert.Contains("<ET>", result.VisibleContent, StringComparison.Ordinal);
         Assert.Equal(NidekRtSerialControlChars.SH, result.Bytes.First());
         Assert.Equal(NidekRtSerialControlChars.ET, result.Bytes.Last());
         Assert.Contains("01", result.HexDump, StringComparison.Ordinal);
         Assert.Contains("04", result.HexDump, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void OutputWriter_ShouldEncodeLmAddAsArAndAlWithoutAlmHeader()
+    {
+        var history = CreateHistoricalRecords();
+
+        var result = _writer.BuildFrame(CreatePatientData(), history, NidekRtSerialPhoropterModel.Rt3100);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Contains("AR+01.50<EB>AL+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("ALM<SX>", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("RA+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("LA+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("4C 41 2B", result.HexDump, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(NidekRtSerialOutputFrameVariant.ArOnly, true, true, false, false)]
+    [InlineData(NidekRtSerialOutputFrameVariant.LmOnly, true, false, true, true)]
+    [InlineData(NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd, true, false, true, false)]
+    [InlineData(NidekRtSerialOutputFrameVariant.ArOnlyWithoutId, false, true, false, false)]
+    [InlineData(NidekRtSerialOutputFrameVariant.LmOnlyWithoutId, false, false, true, true)]
+    [InlineData(NidekRtSerialOutputFrameVariant.FullWithoutId, false, true, true, true)]
+    [InlineData(NidekRtSerialOutputFrameVariant.MinimalRightOnly, false, false, true, true)]
+    public void OutputWriter_ShouldBuildConfiguredFrameVariants(
+        NidekRtSerialOutputFrameVariant variant,
+        bool expectId,
+        bool expectAr,
+        bool expectLm,
+        bool expectLmAdd)
+    {
+        var history = CreateHistoricalRecords();
+
+        var result = _writer.BuildFrame(CreatePatientData(), history, NidekRtSerialPhoropterModel.Rt3100, variant);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(expectId, result.VisibleContent.Contains("DRL<SX>", StringComparison.Ordinal));
+        Assert.Equal(expectAr, result.VisibleContent.Contains("DRM<SX>", StringComparison.Ordinal));
+        Assert.Equal(expectLm, result.VisibleContent.Contains("DLM<SX>", StringComparison.Ordinal));
+        Assert.Equal(expectLmAdd, result.VisibleContent.Contains("AR+01.50", StringComparison.Ordinal)
+            || result.VisibleContent.Contains("AL+01.50", StringComparison.Ordinal));
+        Assert.DoesNotContain("*R", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("*L", result.VisibleContent, StringComparison.Ordinal);
+        Assert.Contains("<EB><ET>", result.VisibleContent, StringComparison.Ordinal);
+
+        if (variant == NidekRtSerialOutputFrameVariant.MinimalRightOnly)
+        {
+            Assert.Contains(" R+06.25-03.25003", result.VisibleContent, StringComparison.Ordinal);
+            Assert.DoesNotContain(" L+06.50-02.75170", result.VisibleContent, StringComparison.Ordinal);
+        }
     }
 
     [Fact]
@@ -359,6 +419,7 @@ public sealed class NidekRtSerialPhoropterTests
             Assert.Equal(2400, interfaceProfile.SerialSettings.BaudRate);
             Assert.Equal(7, interfaceProfile.SerialSettings.DataBits);
             Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, interfaceProfile.NidekRtSerialSendMode);
+            Assert.Equal(NidekRtSerialOutputFrameVariant.FullSelectedData, interfaceProfile.NidekRtSerialOutputFrameVariant);
             Assert.Empty(InterfaceProfileDefinitionValidator.Validate(interfaceProfile));
         }
     }

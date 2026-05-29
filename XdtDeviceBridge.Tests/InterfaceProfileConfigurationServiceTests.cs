@@ -116,12 +116,14 @@ public sealed class InterfaceProfileConfigurationServiceTests
             builtInProfile.DeviceOutput,
             builtInProfile.SerialSettings,
             NidekRtSerialSendMode.RsSdHandshake,
+            NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd,
             _timestamp,
             "TestUser",
             idFactory: () => "interface-rt3100-config");
 
         Assert.True(result.Success);
         Assert.Equal(NidekRtSerialSendMode.RsSdHandshake, result.Profile!.NidekRtSerialSendMode);
+        Assert.Equal(NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd, result.Profile.NidekRtSerialOutputFrameVariant);
         Assert.False(result.Profile.Metadata.IsBuiltIn);
         Assert.True(result.Profile.Metadata.IsUserDefined);
     }

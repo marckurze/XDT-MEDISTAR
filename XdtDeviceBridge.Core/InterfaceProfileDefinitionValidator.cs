@@ -192,6 +192,12 @@ public static class InterfaceProfileDefinitionValidator
             issues.Add("NidekRtSerialSendMode must be a valid value.");
         }
 
+        if (profile.NidekRtSerialOutputFrameVariant is { } frameVariant
+            && !Enum.IsDefined(frameVariant))
+        {
+            issues.Add("NidekRtSerialOutputFrameVariant must be a valid value.");
+        }
+
         if (profile.FolderOptions.ArchiveProcessedFiles
             && profile.FolderOptions.ArchiveRetentionDays > 0
             && string.IsNullOrWhiteSpace(profile.FolderOptions.ArchiveFolder))
