@@ -193,6 +193,8 @@ public static class NidekRs232CommunicationPresets
             StopBits = SerialStopBitsSetting.Two,
             Parity = SerialParitySetting.Even,
             Handshake = SerialHandshakeSetting.None,
+            DtrEnable = true,
+            RtsEnable = true,
             IsBidirectional = true,
             LineTerminator = SerialLineTerminatorSetting.CR
         };
@@ -208,6 +210,8 @@ public static class NidekRs232CommunicationPresets
             StopBits = SerialStopBitsSetting.One,
             Parity = SerialParitySetting.Odd,
             Handshake = SerialHandshakeSetting.None,
+            DtrEnable = true,
+            RtsEnable = true,
             IsBidirectional = true,
             LineTerminator = SerialLineTerminatorSetting.CR
         };

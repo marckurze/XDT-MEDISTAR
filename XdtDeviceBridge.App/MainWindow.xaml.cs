@@ -151,6 +151,7 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PendingImportQueue> _lastMonitoringScanQueuesByProfileId = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, bool> _monitoringDetailsExpandedByProfileId = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _nidekRtSerialListenOnlyProfiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
@@ -400,6 +401,10 @@ public partial class MainWindow : Window
         InterfaceAttachmentShowDocumentationDialogCheckBox.Unchecked += routedHandler;
         InterfaceSerialBidirectionalCheckBox.Checked += routedHandler;
         InterfaceSerialBidirectionalCheckBox.Unchecked += routedHandler;
+        InterfaceSerialDtrCheckBox.Checked += routedHandler;
+        InterfaceSerialDtrCheckBox.Unchecked += routedHandler;
+        InterfaceSerialRtsCheckBox.Checked += routedHandler;
+        InterfaceSerialRtsCheckBox.Unchecked += routedHandler;
         InterfaceClearAisImportFolderCheckBox.Checked += routedHandler;
         InterfaceClearAisImportFolderCheckBox.Unchecked += routedHandler;
         InterfaceClearDeviceImportFolderCheckBox.Checked += routedHandler;
@@ -1699,6 +1704,8 @@ public partial class MainWindow : Window
         InterfaceSerialParityComboBox.SelectedValue = settings.Parity.ToString();
         InterfaceSerialHandshakeComboBox.SelectedValue = settings.Handshake.ToString();
         InterfaceSerialBidirectionalCheckBox.IsChecked = settings.IsBidirectional;
+        InterfaceSerialDtrCheckBox.IsChecked = settings.DtrEnable;
+        InterfaceSerialRtsCheckBox.IsChecked = settings.RtsEnable;
         InterfaceSerialReadTimeoutTextBox.Text = settings.ReadTimeoutMilliseconds.ToString(CultureInfo.InvariantCulture);
         InterfaceSerialWriteTimeoutTextBox.Text = settings.WriteTimeoutMilliseconds.ToString(CultureInfo.InvariantCulture);
     }
@@ -2144,6 +2151,8 @@ public partial class MainWindow : Window
             InterfaceSerialStopBitsComboBox.SelectedValue as string,
             InterfaceSerialParityComboBox.SelectedValue as string,
             InterfaceSerialHandshakeComboBox.SelectedValue as string,
+            InterfaceSerialDtrCheckBox.IsChecked == true,
+            InterfaceSerialRtsCheckBox.IsChecked == true,
             InterfaceSerialBidirectionalCheckBox.IsChecked == true,
             InterfaceSerialReadTimeoutTextBox.Text,
             InterfaceSerialWriteTimeoutTextBox.Text);
@@ -2161,6 +2170,8 @@ public partial class MainWindow : Window
         string? stopBits,
         string? parity,
         string? handshake,
+        bool dtrEnable,
+        bool rtsEnable,
         bool isBidirectional,
         string? readTimeout,
         string? writeTimeout)
@@ -2172,6 +2183,8 @@ public partial class MainWindow : Window
             StopBits: ReadEnumOrDefault(stopBits, SerialStopBitsSetting.One),
             Parity: ReadEnumOrDefault(parity, SerialParitySetting.None),
             Handshake: ReadEnumOrDefault(handshake, SerialHandshakeSetting.None),
+            DtrEnable: dtrEnable,
+            RtsEnable: rtsEnable,
             IsBidirectional: isBidirectional,
             ReadTimeoutMilliseconds: ReadNonNegativeIntOrDefault(readTimeout, 1000, "ReadTimeout"),
             WriteTimeoutMilliseconds: ReadNonNegativeIntOrDefault(writeTimeout, 1000, "WriteTimeout"));
@@ -2727,6 +2740,8 @@ public partial class MainWindow : Window
             SerialTestStopBitsComboBox.SelectedValue as string,
             SerialTestParityComboBox.SelectedValue as string,
             SerialTestHandshakeComboBox.SelectedValue as string,
+            SerialTestDtrCheckBox.IsChecked == true,
+            SerialTestRtsCheckBox.IsChecked == true,
             isBidirectional: true,
             readTimeout: "1000",
             writeTimeout: "1000");
@@ -5172,6 +5187,7 @@ public partial class MainWindow : Window
             window.PositionRememberRequested += FloatingMonitoringWindow_PositionRememberRequested;
             window.ScanIntervalChangeRequested += FloatingMonitoringWindow_ScanIntervalChangeRequested;
             window.ResetRequested += FloatingMonitoringWindow_ResetRequested;
+            window.SerialListenOnlyRequested += FloatingMonitoringWindow_SerialListenOnlyRequested;
             _floatingMonitoringWindows[card.InterfaceProfileId] = window;
             ApplyFloatingWindowPlacement(window, state);
             window.Show();
@@ -5574,6 +5590,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void FloatingMonitoringWindow_SerialListenOnlyRequested(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        await RunNidekRtSerialListenOnlyAsync(window.InterfaceProfileId).ConfigureAwait(true);
+    }
+
     private void CloseFloatingMonitoringWindow(string interfaceProfileId)
     {
         if (!_floatingMonitoringWindows.Remove(interfaceProfileId, out var window))
@@ -5587,6 +5613,7 @@ public partial class MainWindow : Window
         window.PositionRememberRequested -= FloatingMonitoringWindow_PositionRememberRequested;
         window.ScanIntervalChangeRequested -= FloatingMonitoringWindow_ScanIntervalChangeRequested;
         window.ResetRequested -= FloatingMonitoringWindow_ResetRequested;
+        window.SerialListenOnlyRequested -= FloatingMonitoringWindow_SerialListenOnlyRequested;
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
         EnsureAutoRedockTimerState();
         window.CloseWithoutDockRequest();
@@ -5689,7 +5716,8 @@ public partial class MainWindow : Window
             ExportFileName = runtimeCard.ExportFileName,
             LastSuccessfulExportText = runtimeCard.LastSuccessfulExportText,
             LastMessage = runtimeCard.LastMessage,
-            ExpectedInputs = runtimeCard.ExpectedInputs
+            ExpectedInputs = runtimeCard.ExpectedInputs,
+            SerialDiagnosticsText = runtimeCard.SerialDiagnosticsText
         };
     }
 
@@ -5773,6 +5801,82 @@ public partial class MainWindow : Window
                 LastScanText = string.IsNullOrWhiteSpace(lastScanText) ? card.LastScanText : lastScanText
             };
         }
+    }
+
+    private void AppendNidekRtSerialDiagnostic(
+        InterfaceProfileDefinition interfaceProfile,
+        string eventKey,
+        string message,
+        InterfaceMonitoringEventSeverity severity = InterfaceMonitoringEventSeverity.Info)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        var profileId = interfaceProfile.Metadata.Id;
+        var currentCard = GetRuntimeMonitoringCard(interfaceProfile);
+        var timestamp = DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+        var diagnosticEntry = $"{timestamp} {message.Trim()}";
+        var combinedDiagnostics = string.IsNullOrWhiteSpace(currentCard.SerialDiagnosticsText)
+            ? diagnosticEntry
+            : $"{currentCard.SerialDiagnosticsText.TrimEnd()}{Environment.NewLine}{diagnosticEntry}";
+        combinedDiagnostics = TrimSerialDiagnostics(combinedDiagnostics);
+
+        _monitoringDetailsExpandedByProfileId[profileId] = true;
+        _interfaceMonitoringRuntimeCards[profileId] = currentCard with
+        {
+            LastMessage = CreateShortSerialDiagnosticMessage(message),
+            IsDetailsExpanded = true,
+            UsesSerialDevice = true,
+            SerialDiagnosticsText = combinedDiagnostics
+        };
+
+        AppendMonitoringEvent(
+            profileId,
+            eventKey,
+            $"{interfaceProfile.Metadata.Name}: {CreateShortSerialDiagnosticMessage(message)}",
+            severity);
+    }
+
+    private static string TrimSerialDiagnostics(string text)
+    {
+        const int maxCharacters = 24000;
+        const int maxLines = 140;
+        var lines = text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n');
+        if (lines.Length > maxLines)
+        {
+            text = string.Join(Environment.NewLine, lines.Skip(lines.Length - maxLines));
+        }
+
+        if (text.Length <= maxCharacters)
+        {
+            return text;
+        }
+
+        return text[^maxCharacters..];
+    }
+
+    private static string CreateShortSerialDiagnosticMessage(string message)
+    {
+        var firstLine = message
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault()
+            ?.Trim();
+        if (string.IsNullOrWhiteSpace(firstLine))
+        {
+            return "Serielle Diagnose aktualisiert.";
+        }
+
+        const int maxLength = 220;
+        return firstLine.Length <= maxLength
+            ? firstLine
+            : firstLine[..maxLength] + "...";
     }
 
     private void StartPeriodicScan_Click(object sender, RoutedEventArgs e)
@@ -6727,6 +6831,118 @@ public partial class MainWindow : Window
         return true;
     }
 
+    private async Task RunNidekRtSerialListenOnlyAsync(string interfaceProfileId)
+    {
+        if (_profileCatalog is null)
+        {
+            AppendMessage("COM-Port nur abhören nicht möglich: Profilkatalog ist nicht geladen.");
+            return;
+        }
+
+        var interfaceProfile = _profileCatalog.InterfaceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (interfaceProfile is null)
+        {
+            AppendMessage("COM-Port nur abhören nicht möglich: Schnittstellenprofil wurde nicht gefunden.");
+            return;
+        }
+
+        var deviceProfile = _profileCatalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfile.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (!InterfaceProfileUiPolicy.ShouldTriggerNidekRtSerialPhoropterWorkflow(interfaceProfile, deviceProfile))
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                "nidek-rt-serial-listen-only-not-supported",
+                "COM-Port nur abhören ist für den produktiven NIDEK-RT-Phoropterworkflow vorgesehen.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        if (!_nidekRtSerialListenOnlyProfiles.Add(interfaceProfileId))
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                "nidek-rt-serial-listen-only-already-running",
+                "COM-Port nur abhören läuft bereits für dieses Profil.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        var deviceDisplayName = CreateNidekRtSerialDisplayName(deviceProfile);
+        try
+        {
+            var settings = GetSerialSettingsForProfile(interfaceProfile);
+            var validationMessage = SerialDeviceCommunicationService.ValidateSettings(settings, requirePortName: true);
+            if (!string.IsNullOrWhiteSpace(validationMessage))
+            {
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    "nidek-rt-serial-listen-only-validation",
+                    validationMessage,
+                    InterfaceMonitoringEventSeverity.Warning);
+                RefreshInterfaceMonitoringCards();
+                return;
+            }
+
+            SetMonitoringRuntimeState(interfaceProfileId, "COM-Port nur abhören", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-listen-only-start:{DateTime.UtcNow.Ticks}",
+                $"Nur-Abhören für {deviceDisplayName} startet. Es wird nichts gesendet. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
+            RefreshInterfaceMonitoringCards();
+
+            var result = await _nidekRtSerialCommunicationService
+                .ReceiveReturnAsync(settings, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                .ConfigureAwait(true);
+
+            var index = 0;
+            foreach (var message in result.Messages.Where(message => !string.IsNullOrWhiteSpace(message)))
+            {
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-listen-only-message:{DateTime.UtcNow.Ticks}:{index++}",
+                    message,
+                    result.Success ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
+            }
+
+            if (result.Success)
+            {
+                SetMonitoringRuntimeState(interfaceProfileId, "COM-Mitschnitt empfangen", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-listen-only-success:{DateTime.UtcNow.Ticks}",
+                    $"Nur-Abhören abgeschlossen: {result.ReceivedBytes.Length} Bytes vom {deviceDisplayName} empfangen. Es wurde keine XDT-Ausgabe erzeugt.");
+            }
+            else
+            {
+                SetMonitoringRuntimeState(interfaceProfileId, "COM-Abhören ohne Rückgabe", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-listen-only-error:{DateTime.UtcNow.Ticks}",
+                    result.ErrorMessage ?? $"Keine Daten vom {deviceDisplayName} empfangen.",
+                    InterfaceMonitoringEventSeverity.Error);
+            }
+
+            RefreshInterfaceMonitoringCards();
+        }
+        catch (OperationCanceledException)
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-listen-only-canceled:{DateTime.UtcNow.Ticks}",
+                $"Nur-Abhören für {deviceDisplayName} wurde abgebrochen.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+        }
+        finally
+        {
+            _nidekRtSerialListenOnlyProfiles.Remove(interfaceProfileId);
+        }
+    }
+
     private async Task RunNidekRtSerialWorkflowAsync(
         InterfaceProfileDefinition interfaceProfile,
         DeviceProfileDefinition? deviceProfile,
@@ -6749,10 +6965,10 @@ public partial class MainWindow : Window
             if (sendSelectedValues)
             {
                 SetMonitoringRuntimeState(profileId, $"Sende Daten an {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-                AppendMonitoringEvent(
-                    profileId,
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
                     $"{deviceOutputKey}-send-start:{aisKey}",
-                    $"{interfaceProfile.Metadata.Name}: Sende Daten an {deviceDisplayName} über {settings.PortName}.");
+                    $"Sende Daten an {deviceDisplayName} über {settings.PortName}. Der COM-Port bleibt für RS/SD, Sendeframe und anschließenden Empfang in einem Austausch geöffnet. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
                 communicationResult = await _nidekRtSerialCommunicationService.SendSelectionAndReceiveAsync(
                     settings,
                     parseResult.Patient,
@@ -6763,12 +6979,21 @@ public partial class MainWindow : Window
             else
             {
                 SetMonitoringRuntimeState(profileId, $"Warte auf Rückgabe vom {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-receive-start:{aisKey}",
+                    $"Warte auf serielle Rückgabe vom {deviceDisplayName}; es wird nichts gesendet. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
                 communicationResult = await _nidekRtSerialCommunicationService.ReceiveReturnAsync(settings, cancellationToken);
             }
 
+            var messageIndex = 0;
             foreach (var message in communicationResult.Messages.Where(message => !string.IsNullOrWhiteSpace(message)))
             {
-                AppendMonitoringEvent(profileId, $"{deviceOutputKey}-serial-message:{aisKey}:{message}", $"{interfaceProfile.Metadata.Name}: {message}");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-serial-message:{aisKey}:{messageIndex++}",
+                    message,
+                    communicationResult.Success ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
             }
 
             if (!communicationResult.Success)
@@ -6777,20 +7002,20 @@ public partial class MainWindow : Window
                     ? $"Keine Rückgabe vom {deviceDisplayName} empfangen."
                     : communicationResult.ErrorMessage!;
                 SetMonitoringRuntimeState(profileId, $"Fehler beim {deviceDisplayName}-Austausch", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-                AppendMonitoringEvent(
-                    profileId,
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
                     $"{deviceOutputKey}-serial-error:{aisKey}:{errorMessage}",
-                    $"{interfaceProfile.Metadata.Name}: {errorMessage}",
+                    errorMessage,
                     InterfaceMonitoringEventSeverity.Error);
                 RefreshInterfaceMonitoringCards();
                 return;
             }
 
             SetMonitoringRuntimeState(profileId, "Rückgabe vollständig, Verarbeitung startet", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-            AppendMonitoringEvent(
-                profileId,
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
                 $"{deviceOutputKey}-return-stable:{aisKey}",
-                $"{interfaceProfile.Metadata.Name}: Rückgabe vom {deviceDisplayName} vollständig empfangen, Verarbeitung startet.");
+                $"Rückgabe vom {deviceDisplayName} vollständig empfangen, Verarbeitung startet.");
 
             temporaryReturnPath = WriteNidekRtSerialReturnTempFile(profileId, communicationResult.ReceivedBytes, DateTime.Now);
             ProcessNidekRtSerialReturn(
@@ -6804,10 +7029,10 @@ public partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
-            AppendMonitoringEvent(
-                profileId,
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
                 $"{deviceOutputKey}-canceled-by-stop:{aisKey}",
-                $"{interfaceProfile.Metadata.Name}: Serieller {deviceDisplayName}-Workflow wurde abgebrochen.",
+                $"Serieller {deviceDisplayName}-Workflow wurde abgebrochen.",
                 InterfaceMonitoringEventSeverity.Warning);
         }
         catch (Exception ex) when (ex is IOException
@@ -6817,10 +7042,10 @@ public partial class MainWindow : Window
             or InvalidOperationException)
         {
             SetMonitoringRuntimeState(profileId, $"Fehler beim {deviceDisplayName}-Workflow", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-            AppendMonitoringEvent(
-                profileId,
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
                 $"{deviceOutputKey}-workflow-error:{aisKey}:{ex.Message}",
-                $"{interfaceProfile.Metadata.Name}: Serieller {deviceDisplayName}-Workflow fehlgeschlagen: {ex.Message}",
+                $"Serieller {deviceDisplayName}-Workflow fehlgeschlagen: {ex.Message}",
                 InterfaceMonitoringEventSeverity.Error);
             RefreshInterfaceMonitoringCards();
         }

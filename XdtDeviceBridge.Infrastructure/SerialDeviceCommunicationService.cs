@@ -250,14 +250,22 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
         SerialCommunicationExchangeRequest request,
         CancellationToken cancellationToken)
     {
+        var messages = new List<string>
+        {
+            $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}"
+        };
+
         try
         {
             using var handle = OpenConfiguredPort(settings);
             using var stream = new FileStream(handle, FileAccess.ReadWrite, bufferSize: 4096, isAsync: false);
+            messages.Add($"COM-Port geöffnet: {settings.PortName}.");
 
             var bytesWritten = 0;
             if (request.RequestBytes.Length > 0)
             {
+                messages.Add($"RS-Anforderung gesendet: {SerialDiagnosticsFormatter.ToVisibleControlText(request.RequestBytes)}");
+                messages.Add($"RS-Hexdump: {SerialDiagnosticsFormatter.ToHexDump(request.RequestBytes)}");
                 stream.Write(request.RequestBytes, 0, request.RequestBytes.Length);
                 stream.Flush();
                 bytesWritten += request.RequestBytes.Length;
@@ -266,6 +274,7 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             var handshakeBytes = Array.Empty<byte>();
             if (request.ExpectedHandshakeBytes.Length > 0)
             {
+                messages.Add($"Warte auf SD-Bestätigung, Marker: {SerialDiagnosticsFormatter.ToVisibleControlText(request.ExpectedHandshakeBytes)}.");
                 handshakeBytes = ReadUntil(
                     stream,
                     buffer => ContainsSequence(buffer, request.ExpectedHandshakeBytes),
@@ -277,6 +286,15 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                 if (!ContainsSequence(handshakeBytes, request.ExpectedHandshakeBytes))
                 {
                     var message = "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestätigung fehlt.";
+                    messages.Add(message);
+                    messages.Add(string.IsNullOrWhiteSpace(CreateHexDump(handshakeBytes))
+                        ? "Empfangene SD-Antwort: keine Bytes."
+                        : $"Empfangene SD-Antwort: {SerialDiagnosticsFormatter.ToVisibleControlText(handshakeBytes)}");
+                    if (handshakeBytes.Length > 0)
+                    {
+                        messages.Add($"SD-Hexdump: {CreateHexDump(handshakeBytes)}");
+                    }
+
                     return new SerialCommunicationExchangeResult(
                         Success: false,
                         ErrorMessage: message,
@@ -286,17 +304,24 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                         ReceivedBytes: Array.Empty<byte>(),
                         RawText: string.Empty,
                         HexDump: CreateHexDump(handshakeBytes),
-                        Messages: new[] { message });
+                        Messages: messages);
                 }
+
+                messages.Add($"SD-Bestätigung empfangen: {SerialDiagnosticsFormatter.ToVisibleControlText(handshakeBytes)}");
+                messages.Add($"SD-Hexdump: {CreateHexDump(handshakeBytes)}");
             }
 
             if (request.PayloadBytes.Length > 0)
             {
+                messages.Add($"Sendeframe gesendet: {request.PayloadBytes.Length} Bytes.");
+                messages.Add($"Sendeframe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(request.PayloadBytes)}");
+                messages.Add($"Sendeframe-Hexdump: {CreateHexDump(request.PayloadBytes)}");
                 stream.Write(request.PayloadBytes, 0, request.PayloadBytes.Length);
                 stream.Flush();
                 bytesWritten += request.PayloadBytes.Length;
             }
 
+            messages.Add($"Warte auf Rückgabe bis EOT 0x{request.EndOfTransmissionByte:X2}, Timeout {request.ReceiveTimeout.TotalSeconds:0} s.");
             var receivedBytes = ReadUntil(
                 stream,
                 buffer => buffer.Contains(request.EndOfTransmissionByte),
@@ -308,6 +333,7 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             if (receivedBytes.Length == 0)
             {
                 var message = "Keine Rückgabe vom Phoropter empfangen.";
+                messages.Add(message);
                 return new SerialCommunicationExchangeResult(
                     Success: false,
                     ErrorMessage: message,
@@ -317,12 +343,15 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                     ReceivedBytes: Array.Empty<byte>(),
                     RawText: string.Empty,
                     HexDump: string.Empty,
-                    Messages: new[] { message });
+                    Messages: messages);
             }
 
             if (!receivedBytes.Contains(request.EndOfTransmissionByte))
             {
                 var message = "Rückgabe vom Phoropter war unvollständig: EOT wurde nicht empfangen.";
+                messages.Add(message);
+                messages.Add($"Empfangene Rückgabe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(receivedBytes)}");
+                messages.Add($"Empfangene Rückgabe Hexdump: {CreateHexDump(receivedBytes)}");
                 return new SerialCommunicationExchangeResult(
                     Success: false,
                     ErrorMessage: message,
@@ -332,9 +361,13 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                     ReceivedBytes: receivedBytes,
                     RawText: DecodeText(receivedBytes),
                     HexDump: CreateHexDump(receivedBytes),
-                    Messages: new[] { message });
+                    Messages: messages);
             }
 
+            messages.Add("EOT empfangen; Stabilitätswartezeit abgeschlossen.");
+            messages.Add($"Rückgabe vollständig: {receivedBytes.Length} Bytes.");
+            messages.Add($"Empfangene Rückgabe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(receivedBytes)}");
+            messages.Add($"Empfangene Rückgabe Hexdump: {CreateHexDump(receivedBytes)}");
             return new SerialCommunicationExchangeResult(
                 Success: true,
                 ErrorMessage: null,
@@ -344,11 +377,12 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                 ReceivedBytes: receivedBytes,
                 RawText: DecodeText(receivedBytes),
                 HexDump: CreateHexDump(receivedBytes),
-                Messages: Array.Empty<string>());
+                Messages: messages);
         }
         catch (Exception ex) when (IsExpectedSerialException(ex))
         {
             var message = CreateFriendlyErrorMessage(settings.PortName!, ex);
+            messages.Add(message);
             return new SerialCommunicationExchangeResult(
                 Success: false,
                 ErrorMessage: message,
@@ -358,7 +392,7 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                 ReceivedBytes: Array.Empty<byte>(),
                 RawText: string.Empty,
                 HexDump: string.Empty,
-                Messages: new[] { message });
+                Messages: messages);
         }
     }
 
@@ -500,6 +534,8 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
         const uint outxCtsFlow = 0x00000004;
         const uint outX = 0x00000100;
         const uint inX = 0x00000200;
+        const uint dtrControlMask = 0x00000030;
+        const uint dtrControlEnable = 0x00000010;
         const uint rtsControlMask = 0x00003000;
         const uint rtsControlEnable = 0x00001000;
         const uint rtsControlHandshake = 0x00002000;
@@ -509,14 +545,18 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             ? flags & ~parity
             : flags | parity;
 
-        flags &= ~(outxCtsFlow | outX | inX | rtsControlMask);
+        flags &= ~(outxCtsFlow | outX | inX | dtrControlMask | rtsControlMask);
+        if (settings.DtrEnable)
+        {
+            flags |= dtrControlEnable;
+        }
 
         return settings.Handshake switch
         {
             SerialHandshakeSetting.RequestToSend => flags | outxCtsFlow | rtsControlHandshake,
-            SerialHandshakeSetting.XOnXOff => flags | outX | inX | rtsControlEnable,
+            SerialHandshakeSetting.XOnXOff => flags | outX | inX | (settings.RtsEnable ? rtsControlEnable : 0),
             SerialHandshakeSetting.RequestToSendXOnXOff => flags | outxCtsFlow | outX | inX | rtsControlHandshake,
-            _ => flags | rtsControlEnable
+            _ => settings.RtsEnable ? flags | rtsControlEnable : flags
         };
     }
 

@@ -215,6 +215,27 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void ProductiveNidekRtSerialWindow_ShouldExposeLiveDiagnosticsAndListenOnly()
+    {
+        var mainXaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var floatingXaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "FloatingInterfaceProfileWindow.xaml"));
+        var floatingCode = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "FloatingInterfaceProfileWindow.xaml.cs"));
+        var mainCode = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("InterfaceSerialDtrCheckBox", mainXaml);
+        Assert.Contains("InterfaceSerialRtsCheckBox", mainXaml);
+        Assert.Contains("SerialTestDtrCheckBox", mainXaml);
+        Assert.Contains("SerialTestRtsCheckBox", mainXaml);
+        Assert.Contains("COM-Port nur abhören", floatingXaml);
+        Assert.Contains("Serielle Diagnose", floatingXaml);
+        Assert.Contains("SerialDiagnosticsText", floatingXaml);
+        Assert.Contains("SerialListenOnlyRequested", floatingCode);
+        Assert.Contains("RunNidekRtSerialListenOnlyAsync", mainCode);
+        Assert.Contains("AppendNidekRtSerialDiagnostic", mainCode);
+        Assert.Contains("RS/SD", mainCode);
+    }
+
+    [Fact]
     public void ProfileTemplatesTab_ShouldUseExpandedSectionsByDefault()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));

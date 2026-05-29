@@ -33,6 +33,12 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.Equal(TimeSpan.FromMilliseconds(800), fakeSerial.LastExchangeRequest.StableAfterEndOfTransmission);
         Assert.Contains("DRL", Encoding.ASCII.GetString(fakeSerial.LastExchangeRequest.PayloadBytes), StringComparison.Ordinal);
         Assert.Equal(CreatePracticeReturnBytes(), result.ReceivedBytes);
+        Assert.NotNull(fakeSerial.LastSettings);
+        Assert.True(fakeSerial.LastSettings!.DtrEnable);
+        Assert.True(fakeSerial.LastSettings.RtsEnable);
+        Assert.Contains(result.Messages, message => message.Contains("RS-Anforderung Hexdump", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("PC->RT-Writer Hexdump", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("PC->RT-Blöcke", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -55,6 +61,8 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.Empty(fakeSerial.LastExchangeRequest.PayloadBytes);
         Assert.Equal(NidekRtSerialControlChars.ET, fakeSerial.LastExchangeRequest.EndOfTransmissionByte);
         Assert.Contains("NIDEK RT-3100", result.ReceivedText, StringComparison.Ordinal);
+        Assert.Contains(result.Messages, message => message.Contains("Nur-Abhören aktiv", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("COM-Einstellungen", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -97,19 +105,25 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.False(result.Success);
         Assert.Contains("SD-Bestätigung", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.Contains(result.Messages, message => message.Contains("Keine SD-Bestätigung vom RT-3100", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("PC-Port-Einstellung", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("PRINT/SEND", StringComparison.Ordinal));
     }
 
     private static SerialCommunicationExchangeResult CreateExchangeResult(
         bool success,
         byte[] receivedBytes,
-        string? errorMessage = null)
+        string? errorMessage = null,
+        byte[]? handshakeBytes = null)
     {
         return new SerialCommunicationExchangeResult(
             Success: success,
             ErrorMessage: errorMessage,
             PortName: "COM7",
             BytesWritten: 42,
-            HandshakeBytes: NidekRtSerialPhoropterCommunicationService.CreateReadyToSendMarker(),
+            HandshakeBytes: handshakeBytes ?? (success
+                ? NidekRtSerialPhoropterCommunicationService.CreateReadyToSendMarker()
+                : Array.Empty<byte>()),
             ReceivedBytes: receivedBytes,
             RawText: Encoding.ASCII.GetString(receivedBytes),
             HexDump: string.Join(" ", receivedBytes.Select(value => value.ToString("X2"))),
@@ -181,6 +195,8 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
     {
         public SerialCommunicationExchangeRequest? LastExchangeRequest { get; private set; }
 
+        public SerialCommunicationSettings? LastSettings { get; private set; }
+
         public SerialCommunicationExchangeResult? ExchangeResult { get; set; }
 
         public Task<SerialCommunicationSessionResult> ListenAsync(
@@ -204,6 +220,7 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
             SerialCommunicationExchangeRequest request,
             CancellationToken cancellationToken)
         {
+            LastSettings = settings;
             LastExchangeRequest = request;
             return Task.FromResult(ExchangeResult ?? CreateExchangeResult(success: true, receivedBytes: Array.Empty<byte>()));
         }

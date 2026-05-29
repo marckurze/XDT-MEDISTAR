@@ -564,6 +564,25 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
+                <Button Content="COM-Port nur abhören"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,8"
+                        Padding="12,5"
+                        Click="SerialListenOnlyButton_Click"
+                        ToolTip="Öffnet den im Schnittstellenprofil konfigurierten COM-Port, sendet nichts und zeigt die empfangenen Bytes in der Diagnose."
+                        AutomationProperties.Name="COM-Port nur abhören">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesSerialDevice}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <Expander Header="Details" IsExpanded="{Binding IsDetailsExpanded, Mode=OneWay}">
                     <StackPanel Margin="0,6,0,0">
                         <TextBlock Text="{Binding DeviceName, StringFormat=Gerät: {0}}" TextWrapping="Wrap"/>
@@ -574,6 +593,29 @@
                         <TextBlock Text="{Binding LastMessage, StringFormat=Letzte Meldung: {0}}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding PatientDisplayText, StringFormat=Patient: {0}}" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding LastSuccessfulExportText, StringFormat=Letzter Erfolg: {0}}" TextWrapping="Wrap"/>
+                        <Expander Header="Serielle Diagnose" IsExpanded="True" Margin="0,8,0,0">
+                            <Expander.Style>
+                                <Style TargetType="Expander">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasSerialDiagnostics}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Expander.Style>
+                            <TextBox Text="{Binding SerialDiagnosticsText}"
+                                     IsReadOnly="True"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     MinHeight="110"
+                                     MaxHeight="220"
+                                     FontFamily="Consolas"
+                                     FontSize="11"
+                                     BorderBrush="#CFE8DA"
+                                     Background="#F9FFFB"/>
+                        </Expander>
                     </StackPanel>
                 </Expander>
             </StackPanel>

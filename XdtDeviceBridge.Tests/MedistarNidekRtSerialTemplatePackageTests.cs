@@ -54,6 +54,9 @@ public sealed class MedistarNidekRtSerialTemplatePackageTests
         Assert.NotNull(interfaceProfile.DeviceOutput);
         Assert.False(interfaceProfile.DeviceOutput!.IsEnabled);
         Assert.Equal(NidekRtSerialPhoropterOutputWriter.DeviceOutputFormat, interfaceProfile.DeviceOutput.Format);
+        Assert.NotNull(interfaceProfile.SerialSettings);
+        Assert.True(interfaceProfile.SerialSettings!.DtrEnable);
+        Assert.True(interfaceProfile.SerialSettings.RtsEnable);
     }
 
     [Theory]

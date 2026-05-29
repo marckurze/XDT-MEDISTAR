@@ -31,6 +31,7 @@ public partial class FloatingInterfaceProfileWindow : Window
     public event EventHandler? PositionRememberRequested;
     public event EventHandler<int>? ScanIntervalChangeRequested;
     public event EventHandler? ResetRequested;
+    public event EventHandler? SerialListenOnlyRequested;
 
     public string InterfaceProfileId { get; }
 
@@ -101,6 +102,11 @@ public partial class FloatingInterfaceProfileWindow : Window
     private void ResetButton_Click(object sender, RoutedEventArgs e)
     {
         ResetRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SerialListenOnlyButton_Click(object sender, RoutedEventArgs e)
+    {
+        SerialListenOnlyRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void DecreaseScanIntervalButton_Click(object sender, RoutedEventArgs e)

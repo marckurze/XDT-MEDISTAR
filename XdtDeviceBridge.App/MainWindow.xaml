@@ -951,6 +951,10 @@
                                         <ComboBoxItem Content="Mark" Tag="Mark"/>
                                         <ComboBoxItem Content="Space" Tag="Space"/>
                                     </ComboBox>
+                                    <StackPanel Grid.Row="2" Grid.Column="5" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <CheckBox x:Name="SerialTestDtrCheckBox" Content="DTR" Margin="0,0,12,0" ToolTip="DTR-Leitung beim Öffnen des COM-Ports aktivieren."/>
+                                        <CheckBox x:Name="SerialTestRtsCheckBox" Content="RTS" IsChecked="True" ToolTip="RTS-Leitung beim Öffnen des COM-Ports aktivieren."/>
+                                    </StackPanel>
 
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Protokoll:" FontWeight="Bold" Margin="0,0,8,8"/>
                                     <ComboBox Grid.Row="3" Grid.Column="1" x:Name="SerialTestProtocolComboBox" SelectedValuePath="Tag" SelectedValue="Raw" Width="170" HorizontalAlignment="Left" Margin="0,0,8,8">
@@ -2573,7 +2577,11 @@
                                         </ComboBox>
 
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Bidirektional:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                        <CheckBox Grid.Row="3" Grid.Column="1" x:Name="InterfaceSerialBidirectionalCheckBox" Content="Senden und Empfangen" Margin="0,0,8,8"/>
+                                        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,8">
+                                            <CheckBox x:Name="InterfaceSerialBidirectionalCheckBox" Content="Senden und Empfangen" Margin="0,0,12,0"/>
+                                            <CheckBox x:Name="InterfaceSerialDtrCheckBox" Content="DTR" Margin="0,0,12,0" ToolTip="DTR-Leitung beim Öffnen des COM-Ports aktivieren."/>
+                                            <CheckBox x:Name="InterfaceSerialRtsCheckBox" Content="RTS" ToolTip="RTS-Leitung beim Öffnen des COM-Ports aktivieren."/>
+                                        </StackPanel>
                                         <TextBlock Grid.Row="3" Grid.Column="3" Text="Timeouts:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <StackPanel Grid.Row="3" Grid.Column="4" Orientation="Horizontal" Margin="0,0,8,8">
                                             <TextBox x:Name="InterfaceSerialReadTimeoutTextBox" Text="1000" Width="80" ToolTip="ReadTimeout in Millisekunden."/>

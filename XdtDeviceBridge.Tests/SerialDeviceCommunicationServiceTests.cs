@@ -16,6 +16,36 @@ public sealed class SerialDeviceCommunicationServiceTests
     }
 
     [Fact]
+    public void SerialDiagnosticsFormatter_ShouldExposeControlLinesAndTimeouts()
+    {
+        var settings = SerialCommunicationSettings.Default with
+        {
+            PortName = "COM7",
+            BaudRate = 2400,
+            DataBits = 7,
+            StopBits = SerialStopBitsSetting.Two,
+            Parity = SerialParitySetting.Even,
+            Handshake = SerialHandshakeSetting.RequestToSend,
+            DtrEnable = true,
+            RtsEnable = false,
+            ReadTimeoutMilliseconds = 1500,
+            WriteTimeoutMilliseconds = 2500
+        };
+
+        var display = SerialDiagnosticsFormatter.FormatSettings(settings);
+
+        Assert.Contains("COM7", display, StringComparison.Ordinal);
+        Assert.Contains("2400 Baud", display, StringComparison.Ordinal);
+        Assert.Contains("7 Datenbits", display, StringComparison.Ordinal);
+        Assert.Contains("Even", display, StringComparison.Ordinal);
+        Assert.Contains("RequestToSend", display, StringComparison.Ordinal);
+        Assert.Contains("DTR aktiv", display, StringComparison.Ordinal);
+        Assert.Contains("RTS aus", display, StringComparison.Ordinal);
+        Assert.Contains("ReadTimeout 1500 ms", display, StringComparison.Ordinal);
+        Assert.Contains("WriteTimeout 2500 ms", display, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ValidateSettings_ShouldReportMissingPortWhenRequired()
     {
         var issue = SerialDeviceCommunicationService.ValidateSettings(

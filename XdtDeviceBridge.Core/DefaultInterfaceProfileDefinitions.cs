@@ -585,6 +585,8 @@ public static class DefaultInterfaceProfileDefinitions
             StopBits: SerialStopBitsSetting.Two,
             Parity: SerialParitySetting.Even,
             Handshake: SerialHandshakeSetting.None,
+            DtrEnable: true,
+            RtsEnable: true,
             IsBidirectional: true,
             LineTerminator: SerialLineTerminatorSetting.CR);
     }

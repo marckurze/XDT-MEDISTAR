@@ -275,6 +275,8 @@ public sealed class NidekRs232ProtocolTests
         Assert.Equal(SerialStopBitsSetting.Two, preset.StopBits);
         Assert.Equal(SerialLineTerminatorSetting.CR, preset.LineTerminator);
         Assert.True(preset.IsBidirectional);
+        Assert.True(preset.DtrEnable);
+        Assert.True(preset.RtsEnable);
     }
 
     private static void AssertRtType2Preset(SerialCommunicationSettings preset)
@@ -285,6 +287,8 @@ public sealed class NidekRs232ProtocolTests
         Assert.Equal(SerialStopBitsSetting.One, preset.StopBits);
         Assert.Equal(SerialLineTerminatorSetting.CR, preset.LineTerminator);
         Assert.True(preset.IsBidirectional);
+        Assert.True(preset.DtrEnable);
+        Assert.True(preset.RtsEnable);
     }
 
     private static NidekRs232FrameReadResult ReadFixture(

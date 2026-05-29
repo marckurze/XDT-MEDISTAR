@@ -39,6 +39,8 @@ public sealed record SerialCommunicationSettings(
     SerialStopBitsSetting StopBits = SerialStopBitsSetting.One,
     SerialParitySetting Parity = SerialParitySetting.None,
     SerialHandshakeSetting Handshake = SerialHandshakeSetting.None,
+    bool DtrEnable = false,
+    bool RtsEnable = true,
     bool IsBidirectional = false,
     string? InitialCommand = null,
     SerialLineTerminatorSetting LineTerminator = SerialLineTerminatorSetting.CRLF,

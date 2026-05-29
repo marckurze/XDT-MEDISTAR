@@ -16,6 +16,7 @@ Dieses Protokoll dokumentiert den ersten echten RS232-Mitschnitt eines NIDEK RT-
 - Parser: `NidekRtSerialPhoropterParser`
 - Writer: `NidekRtSerialPhoropterOutputWriter`
 - Kommunikation: `NidekRtSerialPhoropterCommunicationService`
+- Live-Diagnose: RT-Floating-Fenster mit COM-Parametern, DTR/RTS/Handshake, RS/SD/Writer-Hexdump und `COM-Port nur abhoeren`
 - Presets: RT-3100 Type1 2400 7E2 und Type2 9600 8O1
 
 ## Testdaten
@@ -58,9 +59,10 @@ Noch offen:
 3. AIS-Patientendatei ablegen.
 4. XDTBox liest Patient und Historie und oeffnet den RT-Auswahldialog.
 5. V0/Lensmeter und/oder V1/Autorefraktion auswaehlen.
-6. `An RT-3100 senden` klicken.
-7. XDTBox sendet RS, wartet auf SD, schreibt den PC->RT-Frame und wartet danach auf die RT-Rueckgabe bis EOT plus Stabilitaetswartezeit.
-8. Die Rueckgabe wird geparst und als MEDISTAR-XDT erzeugt.
+6. Optional im RT-Fenster `COM-Port nur abhoeren` testen: Profil-Port und Profil-Parameter werden verwendet, es wird nichts gesendet und kein Export erzeugt.
+7. `An RT-3100 senden` klicken.
+8. XDTBox sendet RS, wartet auf SD, schreibt den PC->RT-Frame und wartet danach auf die RT-Rueckgabe bis EOT plus Stabilitaetswartezeit. Diagnosefenster pruefen: RS-Hexdump, SD-Antwort, Writer-Frame, Empfangs-Hexdump.
+9. Die Rueckgabe wird geparst und als MEDISTAR-XDT erzeugt.
 
 ## Ergebnis
 
@@ -70,11 +72,12 @@ Noch offen:
 - Es entstehen keine `6330`-Zeilen und keine kuenstliche Trennzeile.
 - `WD40` wird als WorkingDistance diagnostisch erfasst und nicht als Vertex Distance in die MEDISTAR-Zeile umgedeutet.
 - RS232-Scanhinweise beim Start der Ueberwachung werden als Information behandelt und oeffnen das RT-Fenster nicht vor Patienteneingang.
+- Die Live-Diagnose macht sichtbar, ob der Profil-COM-Port geoeffnet wurde, welche DTR-/RTS-/Handshake-Werte gesetzt sind und ob Bytes vom RT eintreffen.
 
 ## Offene Punkte
 
 - weitere echte Mitschnitte, insbesondere Type2 und andere RT-Varianten
-- DTR/DSR-Verhalten vor Ort pruefen
+- DTR/DSR-/RTS-/Handshake-Verhalten vor Ort pruefen
 - PC-port-Parameter am Geraet pruefen
 - Live-Senden an den Phoropter und die echte Rueckgabe nach Sendung separat freigeben
 - MEDISTAR-Import der erzeugten `6228`-Rueckgabe praktisch pruefen

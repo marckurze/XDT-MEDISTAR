@@ -34,6 +34,8 @@ Die Auswertung dient Parser, Writer, BuiltIn-Profilen, XDT-Baukasten-Vorschau un
 | RT-5100 | Type 1 | 2400 | 7 | Even | 2 | konservativer Standard |
 | RT-5100 | Type 2 | 9600 | 8 | Odd | 1 | direkter Output ohne erste DTR/DSR-Schritte moeglich |
 
+Die RT-Type1-/Type2-Presets aktivieren DTR und RTS in XDTBox standardmaessig, weil die Handbuecher DTR/DSR-Sequenzen zeigen und der Praxisaufbau sonst je nach Adapter keine Daten liefert. DTR, RTS und Handshake bleiben im Schnittstellenprofil und im RS232-Testbereich sichtbar steuerbar.
+
 ## RT -> PC
 
 Der Parser `NidekRtSerialPhoropterParser` ist tolerant gegen Standard- und Expanded-Header:
@@ -111,6 +113,8 @@ RT-2100 nutzt keinen ID-Block. RT-3100 und RT-5100 koennen einen ID-Block enthal
 - XDTBox sendet `SH C ** SX RS EB ET`, erwartet `SX SD`, schreibt danach den PC->RT-Frame und wechselt in den Empfang.
 - Die Rueckgabe wird bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
 - Serielle RT-Schnittstellenprofile brauchen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner.
+- Das RT-Floating-Fenster enthaelt fuer Live-Abnahmen eine serielle Diagnose: verwendete COM-Parameter, DTR/RTS/Handshake, Port-Status, RS-Anforderung, erwartete/empfangene SD-Bestaetigung, PC->RT-Writer-Frame, Hexdump und sichtbare Steuerzeichen werden angezeigt. `COM-Port nur abhoeren` oeffnet denselben Profil-Port, sendet nichts und zeigt empfangene Bytes ohne XDT-Export.
+- Wenn keine SD-Bestaetigung oder keine Rueckgabe eintrifft, zeigt XDTBox eine konkrete Pruefliste zu COM-Port, Type1/Type2, PC-Port-Parameter am RT, DTR/RTS/Handshake, Portbelegung und PRINT/SEND am Phoropter.
 
 ## XDT-Baukasten
 

@@ -281,7 +281,9 @@ public sealed class ActiveInterfaceProfileStatusService
             DeviceImagePath: InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(profile, deviceProfile, deviceImageOverridePath),
             UsesPilotDeviceVisual: usesPilotDeviceVisual,
             DeviceTypeDisplay: InterfaceProfileUiPolicy.GetMonitoringDeviceTypeDisplay(deviceProfile),
-            UsesTextAboveImageLayout: InterfaceProfileUiPolicy.ShouldUseTextAboveImageMonitoringLayout(profile, deviceProfile));
+            UsesTextAboveImageLayout: InterfaceProfileUiPolicy.ShouldUseTextAboveImageMonitoringLayout(profile, deviceProfile),
+            UsesSerialDevice: usesSerialDevice,
+            SerialDiagnosticsText: usesSerialDevice ? FormatSerialDetail(profile.SerialSettings) : string.Empty);
     }
 
     private static ExpectedInputDisplayItem CreateExpectedInput(
@@ -356,7 +358,7 @@ public sealed class ActiveInterfaceProfileStatusService
         }
 
         var portName = string.IsNullOrWhiteSpace(settings.PortName) ? "COM-Port fehlt" : settings.PortName;
-        return $"{portName}, {settings.BaudRate} Baud, {settings.DataBits} Datenbits, {settings.StopBits}, {settings.Handshake}";
+        return $"{portName}, {settings.BaudRate} Baud, {settings.DataBits} Datenbits, {settings.StopBits}, {settings.Parity}, {settings.Handshake}, DTR {(settings.DtrEnable ? "aktiv" : "aus")}, RTS {(settings.RtsEnable ? "aktiv" : "aus")}";
     }
 
     private static string DisplayOrMissing(string? value, string missingMessage)

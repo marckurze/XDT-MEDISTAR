@@ -30,9 +30,12 @@ public sealed record InterfaceMonitoringCardDisplay(
     string DeviceImagePath = "",
     bool UsesPilotDeviceVisual = false,
     string DeviceTypeDisplay = "",
-    bool UsesTextAboveImageLayout = false)
+    bool UsesTextAboveImageLayout = false,
+    bool UsesSerialDevice = false,
+    string SerialDiagnosticsText = "")
 {
     public bool HasDeviceImage => IsUsableDeviceImagePath(DeviceImagePath);
+    public bool HasSerialDiagnostics => UsesSerialDevice && !string.IsNullOrWhiteSpace(SerialDiagnosticsText);
 
     public bool ShouldPulseStatusOrb => UsesPilotDeviceVisual && IsScanAnimationActive;
 

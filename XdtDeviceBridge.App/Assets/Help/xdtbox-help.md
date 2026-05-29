@@ -18,7 +18,7 @@ Import-, Export-, Archiv- und Fehlerordner werden im Tab "Schnittstellenprofile"
 
 # Serielle RS232-Geräteanbindung
 
-SerialRs232 ist als zusätzliche Gerätequelle vorbereitet. COM-Port, Baudrate, Datenbits, Stoppbits, Parität, Flusskontrolle und bidirektionale Option können im Schnittstellenprofil gepflegt werden.
+SerialRs232 ist als zusätzliche Gerätequelle vorbereitet. COM-Port, Baudrate, Datenbits, Stoppbits, Parität, Flusskontrolle, DTR, RTS und bidirektionale Option können im Schnittstellenprofil gepflegt werden.
 
 Der RS232-Testbereich zeigt Rohtext, Hexdump und bei NIDEK RS232 erkannte Frames, Segmente und Messwertkandidaten. Produktive serielle Messwertausgabe muss pro Gerät mit echten Rohdaten praktisch validiert werden.
 
@@ -192,6 +192,8 @@ NIDEK RT-2100, RT-3100 und RT-5100 sind als serielle bidirektionale Phoropterfam
 
 Im produktiven Ablauf oeffnet XDTBox das RT-Fenster nicht schon beim Start der Ueberwachung. Erst wenn eine AIS-Patientendatei ankommt, werden Patient und Historie gelesen und ein Auswahlfenster geoeffnet. Dort koennen Lensmeter- und Autorefraktor-Historienwerte ausgewaehlt werden. Senden erfolgt nur nach Klick auf "An RT senden" ueber den im Schnittstellenprofil gepflegten COM-Port. Danach wartet XDTBox auf die Rueckgabe des Phoropters bis EOT und eine kurze Stabilitaetswartezeit.
 
+Das RT-Fenster enthaelt fuer die Praxisabnahme eine einklappbare serielle Diagnose. Sie zeigt COM-Port, Baudrate, Datenbits, Paritaet, Stoppbits, Flusskontrolle, DTR/RTS, RS-Anforderung, erwartete und empfangene SD-Bestaetigung, den PC->RT-Writer-Frame, Hexdump, sichtbare Steuerzeichen und den Empfang bis EOT. "COM-Port nur abhoeren" oeffnet denselben Profil-Port, sendet nichts und erzeugt keinen XDT-Export.
+
 Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Ein Geraete-Eingangsordner und ein dateibasierter Ausgabeordner an das Geraet sind fuer diese seriellen Phoropter nicht erforderlich. Vor der endgueltigen Praxisfreigabe muessen echtes Senden, Rueckgabe nach Sendung und MEDISTAR-Import am Geraet geprueft werden.
 
 # Fehlerbehebung
@@ -212,6 +214,8 @@ Lizenz ungültig oder für andere Installation: Importieren Sie die passende .xd
 
 COM-Port nicht gefunden oder belegt: Prüfen Sie Gerätemanager, Kabel, Adapter und andere Programme.
 
-RS232 keine Daten empfangen: Prüfen Sie Baudrate, Datenbits, Stoppbits, Parität, Flusskontrolle und ob das Gerät Daten sendet.
+RS232 keine Daten empfangen: Prüfen Sie Baudrate, Datenbits, Stoppbits, Parität, Flusskontrolle, DTR, RTS und ob das Gerät Daten sendet.
+
+RT-3100 keine SD-Bestaetigung oder keine Rueckgabe: Pruefen Sie den richtigen COM-Port, Type1/Type2, PC-Port-Einstellung am Phoropter, DTR/RTS/Handshake, Portbelegung durch andere Programme und ob am Phoropter PRINT/SEND ausgeloest wurde.
 
 MEDISTAR zeigt Werte nicht an: Prüfen Sie Exportordner, Rückgabedatei, 8402 aus AIS und die importierten XDT-Ergebniszeilen.
