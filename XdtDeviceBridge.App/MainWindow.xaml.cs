@@ -2795,38 +2795,41 @@ public partial class MainWindow : Window
             return;
         }
 
-        _xdtBaukastenExportRules.Remove(rule);
-        _xdtBaukastenSelectedRuleId = null;
-        XdtBaukastenDraftTargetFieldCodeTextBox.Text = string.Empty;
-        XdtBaukastenDraftTargetNameTextBox.Text = string.Empty;
-        XdtBaukastenDraftSourcePathTextBox.Text = string.Empty;
-        XdtBaukastenDraftOutputTemplateTextBox.Text = string.Empty;
-        XdtBaukastenDraftStatusText.Text = "Exportregel aus der Baukasten-Arbeitskopie gelöscht. Das Originalprofil bleibt unverändert.";
+        RefreshXdtBaukastenRuleGrid();
+        XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+            ? "Geräteausgabe-Regel aus der Baukasten-Arbeitskopie gelöscht. Das Originalprofil bleibt unverändert."
+            : "Exportregel aus der Baukasten-Arbeitskopie gelöscht. Das Originalprofil bleibt unverändert.";
         RefreshXdtBaukastenPreviewIfPossible();
     }
 
     private void XdtBaukastenAddExportRule_Click(object sender, RoutedEventArgs e)
     {
         PushXdtBaukastenUndoState();
-        var nextSortOrder = _xdtBaukastenState.WorkingExportRules.Count == 0
+        var currentRules = _xdtBaukastenState.CurrentWorkingRules;
+        var nextSortOrder = currentRules.Count == 0
             ? 1
-            : _xdtBaukastenState.WorkingExportRules.Max(rule => rule.SortOrder) + 10;
+            : currentRules.Max(rule => rule.SortOrder) + 10;
+        var isDeviceOutput = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput;
         var rule = new ExportRuleDefinition(
             Id: $"baukasten-rule-{Guid.NewGuid():N}",
-            TargetFieldCode: "6228",
-            TargetName: "Neue Regel",
+            TargetFieldCode: isDeviceOutput ? "DeviceOutput/Custom" : "6228",
+            TargetName: isDeviceOutput ? "Neue Geräteausgabe" : "Neue Regel",
             RuleType: ExportRuleType.Template,
             SourcePath: null,
-            OutputTemplate: "Neue feste Notiz",
+            OutputTemplate: isDeviceOutput ? "Neue Geräteausgabe" : "Neue feste Notiz",
             SortOrder: nextSortOrder,
             IsEnabled: true,
-            Description: "Neue Baukasten-Regel in der Arbeitskopie.");
+            Description: isDeviceOutput
+                ? "Neue Geräteausgabe-Regel in der Baukasten-Arbeitskopie."
+                : "Neue Baukasten-Regel in der Arbeitskopie.");
 
         _xdtBaukastenState.AddWorkingRule(rule);
-        _xdtBaukastenExportRules.Add(rule);
+        RefreshXdtBaukastenRuleGrid();
         XdtBaukastenExportRulesGrid.SelectedItem = rule;
         XdtBaukastenExportRulesGrid.ScrollIntoView(rule);
-        XdtBaukastenDraftStatusText.Text = "Neue Exportregel in der Baukasten-Arbeitskopie angelegt.";
+        XdtBaukastenDraftStatusText.Text = isDeviceOutput
+            ? "Neue Geräteausgabe-Regel in der Baukasten-Arbeitskopie angelegt."
+            : "Neue Exportregel in der Baukasten-Arbeitskopie angelegt.";
         RefreshXdtBaukastenPreviewIfPossible();
     }
 
@@ -8437,6 +8440,8 @@ public partial class MainWindow : Window
         }
 
         UpdateXdtBaukastenDeviceIdentity(profile);
+        RefreshXdtBaukastenRuleDirectionUi();
+        RefreshXdtBaukastenRuleGrid();
         UpdateXdtBaukastenPlaceholders();
         XdtBaukastenLoadAisOrSerialButton.Content = _xdtBaukastenState.PrimaryInputButtonText;
         XdtBaukastenPrimaryRawGroupBox.Header = _xdtBaukastenState.PrimaryRawInputTitle;
@@ -8447,17 +8452,119 @@ public partial class MainWindow : Window
     {
         var profile = XdtBaukastenExportProfileComboBox.SelectedItem as ExportProfileDefinition;
         _xdtBaukastenState.SetExportProfile(profile);
-        _xdtBaukastenExportRules.Clear();
-        foreach (var rule in _xdtBaukastenState.WorkingExportRules)
-        {
-            _xdtBaukastenExportRules.Add(rule);
-        }
+        RefreshXdtBaukastenRuleDirectionUi();
+        RefreshXdtBaukastenRuleGrid();
 
         SetXdtBaukastenStatus(profile is null
             ? "Bitte ein Mapping-/Exportprofil auswählen."
             : $"Exportprofil als Arbeitskopie geladen: {profile.Metadata.Name}. BuiltIn-Profile werden nicht direkt verändert.");
         XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
         RefreshXdtBaukastenPreviewIfPossible();
+    }
+
+    private void XdtBaukastenRuleDirection_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_updatingXdtBaukastenSelection)
+        {
+            return;
+        }
+
+        var direction = sender == XdtBaukastenRuleDirectionDeviceOutputRadioButton
+            ? XdtBaukastenRuleDirection.DeviceOutput
+            : XdtBaukastenRuleDirection.AisExport;
+
+        if (direction == _xdtBaukastenState.CurrentRuleDirection)
+        {
+            return;
+        }
+
+        _xdtBaukastenState.SetRuleDirection(direction);
+        RefreshXdtBaukastenRuleDirectionUi();
+        RefreshXdtBaukastenRuleGrid();
+        RefreshXdtBaukastenPreviewIfPossible();
+    }
+
+    private void RefreshXdtBaukastenRuleDirectionUi()
+    {
+        if (XdtBaukastenRuleDirectionAisRadioButton is null
+            || XdtBaukastenRuleDirectionDeviceOutputRadioButton is null)
+        {
+            return;
+        }
+
+        _updatingXdtBaukastenSelection = true;
+        try
+        {
+            XdtBaukastenRuleDirectionAisRadioButton.IsChecked = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.AisExport;
+            XdtBaukastenRuleDirectionDeviceOutputRadioButton.IsChecked = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput;
+            XdtBaukastenRuleDirectionDeviceOutputRadioButton.IsEnabled = _xdtBaukastenState.IsBidirectionalDevice;
+        }
+        finally
+        {
+            _updatingXdtBaukastenSelection = false;
+        }
+
+        if (XdtBaukastenRuleTargetColumn is not null)
+        {
+            XdtBaukastenRuleTargetColumn.Header = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                ? "Ziel / Target"
+                : "Feld";
+        }
+
+        if (XdtBaukastenDraftTargetLabel is not null)
+        {
+            XdtBaukastenDraftTargetLabel.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                ? "Ziel-Element:"
+                : "Ziel-Feld:";
+        }
+
+        if (XdtBaukastenAddExportRuleButton is not null)
+        {
+            XdtBaukastenAddExportRuleButton.ToolTip = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                ? "Neue Geräteausgabe-Regel in der Baukasten-Arbeitskopie hinzufügen"
+                : "Neue Exportregel in der Baukasten-Arbeitskopie hinzufügen";
+        }
+
+        if (XdtBaukastenRuleDirectionHintText is not null)
+        {
+            XdtBaukastenRuleDirectionHintText.Text = _xdtBaukastenState.IsBidirectionalDevice
+                ? _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                    ? "Export an Gerät ist aktiv. Änderungen betreffen nur die Baukasten-Arbeitskopie und schreiben keine produktive Datei."
+                    : "Export an AIS ist aktiv. Die Geräteausgabe-Regeln bleiben separat erhalten."
+                : "Dieses Gerät hat keine Ausgabe an das Gerät.";
+        }
+    }
+
+    private void RefreshXdtBaukastenRuleGrid()
+    {
+        var selectedRuleId = _xdtBaukastenSelectedRuleId;
+        _xdtBaukastenExportRules.Clear();
+        foreach (var rule in _xdtBaukastenState.CurrentWorkingRules.OrderBy(rule => rule.SortOrder).ThenBy(rule => rule.Id, StringComparer.OrdinalIgnoreCase))
+        {
+            _xdtBaukastenExportRules.Add(rule);
+        }
+
+        var selected = string.IsNullOrWhiteSpace(selectedRuleId)
+            ? null
+            : _xdtBaukastenExportRules.FirstOrDefault(rule => string.Equals(rule.Id, selectedRuleId, StringComparison.OrdinalIgnoreCase));
+        if (selected is not null)
+        {
+            XdtBaukastenExportRulesGrid.SelectedItem = selected;
+            return;
+        }
+
+        _xdtBaukastenSelectedRuleId = null;
+        XdtBaukastenExportRulesGrid.SelectedItem = null;
+        ClearXdtBaukastenRuleDraft();
+    }
+
+    private void ClearXdtBaukastenRuleDraft()
+    {
+        XdtBaukastenDraftTargetFieldCodeTextBox.Text = string.Empty;
+        XdtBaukastenDraftTargetNameTextBox.Text = string.Empty;
+        XdtBaukastenDraftSourcePathTextBox.Text = string.Empty;
+        XdtBaukastenDraftOutputTemplateTextBox.Text = string.Empty;
+        XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
     }
 
     private void UpdateXdtBaukastenDeviceIdentity(DeviceProfileDefinition? profile)
@@ -8982,7 +9089,9 @@ public partial class MainWindow : Window
         XdtBaukastenDraftTargetNameTextBox.Text = rule.TargetName;
         XdtBaukastenDraftSourcePathTextBox.Text = rule.SourcePath ?? string.Empty;
         XdtBaukastenDraftOutputTemplateTextBox.Text = rule.OutputTemplate;
-        XdtBaukastenDraftStatusText.Text = $"Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}";
+        XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+            ? $"Geräteausgabe-Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}"
+            : $"Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}";
     }
 
     private void XdtBaukastenApplyDraftRule_Click(object sender, RoutedEventArgs e)
@@ -9000,19 +9109,23 @@ public partial class MainWindow : Window
         {
             if (updateStatus)
             {
-                XdtBaukastenDraftStatusText.Text = "Bitte zuerst eine Exportregel auswählen.";
+                XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                    ? "Bitte zuerst eine Geräteausgabe-Regel auswählen."
+                    : "Bitte zuerst eine Exportregel auswählen.";
             }
 
             return false;
         }
 
-        var existing = _xdtBaukastenState.WorkingExportRules.FirstOrDefault(rule =>
+        var existing = _xdtBaukastenState.CurrentWorkingRules.FirstOrDefault(rule =>
             string.Equals(rule.Id, _xdtBaukastenSelectedRuleId, StringComparison.OrdinalIgnoreCase));
         if (existing is null)
         {
             if (updateStatus)
             {
-                XdtBaukastenDraftStatusText.Text = "Die ausgewählte Exportregel wurde in der Arbeitskopie nicht gefunden.";
+                XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                    ? "Die ausgewählte Geräteausgabe-Regel wurde in der Arbeitskopie nicht gefunden."
+                    : "Die ausgewählte Exportregel wurde in der Arbeitskopie nicht gefunden.";
             }
 
             return false;
@@ -9023,7 +9136,9 @@ public partial class MainWindow : Window
         {
             if (updateStatus)
             {
-                XdtBaukastenDraftStatusText.Text = "TargetFieldCode darf nicht leer sein.";
+                XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                    ? "Ziel-Element darf nicht leer sein."
+                    : "TargetFieldCode darf nicht leer sein.";
             }
 
             return false;
@@ -9054,7 +9169,9 @@ public partial class MainWindow : Window
         {
             if (updateStatus)
             {
-                XdtBaukastenDraftStatusText.Text = "Exportregel konnte nicht aktualisiert werden.";
+                XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                    ? "Geräteausgabe-Regel konnte nicht aktualisiert werden."
+                    : "Exportregel konnte nicht aktualisiert werden.";
             }
 
             return false;
@@ -9069,7 +9186,9 @@ public partial class MainWindow : Window
 
         if (updateStatus)
         {
-            XdtBaukastenDraftStatusText.Text = "Entwurf wurde in die Baukasten-Arbeitskopie übernommen. Das Originalprofil bleibt unverändert.";
+            XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                ? "Geräteausgabe-Entwurf wurde in die Baukasten-Arbeitskopie übernommen. Das Originalprofil bleibt unverändert."
+                : "Entwurf wurde in die Baukasten-Arbeitskopie übernommen. Das Originalprofil bleibt unverändert.";
         }
 
         return true;
@@ -9093,7 +9212,10 @@ public partial class MainWindow : Window
         }
 
         _xdtBaukastenDeviceOutputPlaceholders.Clear();
-        foreach (var placeholder in CreateXdtBaukastenDeviceOutputPlaceholders(_xdtBaukastenState.DeviceProfile, patient))
+        foreach (var placeholder in XdtBaukastenDeviceOutputRuleService.CreatePlaceholders(
+                     _xdtBaukastenState.DeviceProfile,
+                     patient,
+                     GetXdtBaukastenHistoricalRecordsForDeviceOutput()))
         {
             _xdtBaukastenDeviceOutputPlaceholders.Add(placeholder);
         }
@@ -9160,6 +9282,25 @@ public partial class MainWindow : Window
         };
     }
 
+    private IReadOnlyList<AisHistoricalMeasurementRecord> GetXdtBaukastenHistoricalRecordsForDeviceOutput()
+    {
+        if (_xdtBaukastenState.AisInput is null
+            || string.IsNullOrWhiteSpace(_xdtBaukastenState.AisInput.SourcePath)
+            || !File.Exists(_xdtBaukastenState.AisInput.SourcePath))
+        {
+            return Array.Empty<AisHistoricalMeasurementRecord>();
+        }
+
+        try
+        {
+            return _cv5000HistoryParser.ParseFile(_xdtBaukastenState.AisInput.SourcePath).Records;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return Array.Empty<AisHistoricalMeasurementRecord>();
+        }
+    }
+
     private bool IsCurrentDeviceInputCompatible()
     {
         if (_xdtBaukastenState.DeviceProfile is null)
@@ -9214,45 +9355,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private static IReadOnlyList<XdtBaukastenPlaceholder> CreateXdtBaukastenDeviceOutputPlaceholders(
-        DeviceProfileDefinition? deviceProfile,
-        PatientData? patient)
-    {
-        if (deviceProfile is null || !deviceProfile.IsBidirectional)
-        {
-            return new[]
-            {
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "Keine Geräteausgabe", "{DeviceOutput.NotAvailable}", "Für nicht bidirektionale Geräte gibt es keine Ausgabe-an-Gerät-Platzhalter.", IsPreparedOnly: true)
-            };
-        }
-
-        if (deviceProfile.Model.Contains("RT-6100", StringComparison.OrdinalIgnoreCase))
-        {
-            return new[]
-            {
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "RT6100 Patient ID", "{RT6100Input.Patient.ID}", "Patienten-ID in der RT-6100-Input-XML.", DisplayPlaceholderValue(patient?.PatientNumber)),
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "LM_Base rechts Sphäre", "{PhoropterInput.LM_Base.Right.Sphere}", "Lensmeter-Basiswert rechts."),
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "LM_Base links Cylinder", "{PhoropterInput.LM_Base.Left.Cylinder}", "Lensmeter-Basiswert links."),
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "REF_Base rechts Achse", "{PhoropterInput.REF_Base.Right.Axis}", "Autorefraktor-Basiswert rechts.")
-            };
-        }
-
-        if (deviceProfile.Model.Contains("CV-5000", StringComparison.OrdinalIgnoreCase))
-        {
-            return new[]
-            {
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "CV5000 PatientNumber", "{CV5000Input.PatientNumber}", "Patientennummer in CVImport.xml.", DisplayPlaceholderValue(patient?.PatientNumber)),
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "CV5000 Lensmeter rechts", "{PhoropterInput.Lensmeter.Right.Sphere}", "Lensmeter-Basiswert rechts."),
-                new XdtBaukastenPlaceholder("Ausgabe an Gerät", "CV5000 Autoref links", "{PhoropterInput.Autoref.Left.Cylinder}", "Autorefraktor-Basiswert links.")
-            };
-        }
-
-        return new[]
-        {
-            new XdtBaukastenPlaceholder("Ausgabe an Gerät", "Geräteausgabe vorbereitet", "{DeviceOutput.Prepared}", "Bidirektionale Geräteausgabe ist vorbereitet; spezifische Platzhalter folgen mit dem Gerätewriter.", IsPreparedOnly: true)
-        };
-    }
-
     private static string DisplayPlaceholderValue(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -9266,12 +9368,25 @@ public partial class MainWindow : Window
 
     private void XdtBaukastenPlaceholder_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not System.Windows.Controls.Button { Tag: string token } || string.IsNullOrWhiteSpace(token))
+        if (sender is not System.Windows.Controls.Button { Tag: string token } button || string.IsNullOrWhiteSpace(token))
         {
             return;
         }
 
         PushXdtBaukastenUndoState();
+        if (button.DataContext is XdtBaukastenPlaceholder { Category: "Ausgabe an Gerät" }
+            && _xdtBaukastenState.IsBidirectionalDevice
+            && _xdtBaukastenState.CurrentRuleDirection != XdtBaukastenRuleDirection.DeviceOutput)
+        {
+            _xdtBaukastenState.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+            RefreshXdtBaukastenRuleDirectionUi();
+            RefreshXdtBaukastenRuleGrid();
+            if (_xdtBaukastenExportRules.Count > 0)
+            {
+                XdtBaukastenExportRulesGrid.SelectedItem = _xdtBaukastenExportRules[0];
+            }
+        }
+
         var textBox = XdtBaukastenDraftOutputTemplateTextBox;
         var caret = textBox.CaretIndex;
         textBox.Text = textBox.Text.Insert(caret, token);
@@ -9349,18 +9464,10 @@ public partial class MainWindow : Window
             ? "Kein Dateianhang geladen."
             : $"Dateianhang geladen: {_xdtBaukastenState.AttachmentInput.DisplayName} ({_xdtBaukastenState.AttachmentInput.SourcePath})";
 
-        _xdtBaukastenExportRules.Clear();
-        foreach (var rule in _xdtBaukastenState.WorkingExportRules)
-        {
-            _xdtBaukastenExportRules.Add(rule);
-        }
-
+        RefreshXdtBaukastenRuleDirectionUi();
+        RefreshXdtBaukastenRuleGrid();
         _xdtBaukastenSelectedRuleId = null;
-        XdtBaukastenDraftTargetFieldCodeTextBox.Text = string.Empty;
-        XdtBaukastenDraftTargetNameTextBox.Text = string.Empty;
-        XdtBaukastenDraftSourcePathTextBox.Text = string.Empty;
-        XdtBaukastenDraftOutputTemplateTextBox.Text = string.Empty;
-        XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
+        ClearXdtBaukastenRuleDraft();
         UpdateXdtBaukastenResultView();
         UpdateXdtBaukastenPlaceholders();
     }

@@ -10,6 +10,12 @@ public enum XdtBaukastenResultView
     Diagnostics
 }
 
+public enum XdtBaukastenRuleDirection
+{
+    AisExport,
+    DeviceOutput
+}
+
 public sealed record XdtBaukastenLoadedInput(
     string SourcePath,
     string DisplayName,
@@ -40,7 +46,9 @@ public sealed record XdtBaukastenStateSnapshot(
     AisProfile? AisProfile,
     DeviceProfileDefinition? DeviceProfile,
     ExportProfileDefinition? SourceExportProfile,
+    XdtBaukastenRuleDirection CurrentRuleDirection,
     IReadOnlyList<ExportRuleDefinition> WorkingExportRules,
+    IReadOnlyList<ExportRuleDefinition> WorkingDeviceOutputRules,
     XdtBaukastenLoadedInput? AisInput,
     XdtBaukastenLoadedInput? DeviceInput,
     XdtBaukastenLoadedInput? AttachmentInput,
@@ -94,6 +102,7 @@ public sealed class XdtBaukastenUndoBuffer
 public sealed class XdtBaukastenState
 {
     private readonly List<ExportRuleDefinition> _workingExportRules = new();
+    private readonly List<ExportRuleDefinition> _workingDeviceOutputRules = new();
 
     public AisProfile? AisProfile { get; private set; }
 
@@ -101,7 +110,16 @@ public sealed class XdtBaukastenState
 
     public ExportProfileDefinition? SourceExportProfile { get; private set; }
 
+    public XdtBaukastenRuleDirection CurrentRuleDirection { get; private set; } = XdtBaukastenRuleDirection.AisExport;
+
     public IReadOnlyList<ExportRuleDefinition> WorkingExportRules => _workingExportRules;
+
+    public IReadOnlyList<ExportRuleDefinition> WorkingDeviceOutputRules => _workingDeviceOutputRules;
+
+    public IReadOnlyList<ExportRuleDefinition> CurrentWorkingRules =>
+        CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+            ? _workingDeviceOutputRules
+            : _workingExportRules;
 
     public XdtBaukastenLoadedInput? AisInput { get; private set; }
 
@@ -130,8 +148,25 @@ public sealed class XdtBaukastenState
 
     public void SetDeviceProfile(DeviceProfileDefinition? profile)
     {
+        var profileChanged = !string.Equals(DeviceProfile?.Metadata.Id, profile?.Metadata.Id, StringComparison.OrdinalIgnoreCase);
         DeviceProfile = profile;
         SerialInput = null;
+        if (profileChanged)
+        {
+            _workingDeviceOutputRules.Clear();
+            _workingDeviceOutputRules.AddRange(XdtBaukastenDeviceOutputRuleService.CreateDefaultRules(profile));
+            if (profile?.IsBidirectional != true)
+            {
+                CurrentRuleDirection = XdtBaukastenRuleDirection.AisExport;
+            }
+        }
+    }
+
+    public void SetRuleDirection(XdtBaukastenRuleDirection direction)
+    {
+        CurrentRuleDirection = direction == XdtBaukastenRuleDirection.DeviceOutput && !IsBidirectionalDevice
+            ? XdtBaukastenRuleDirection.AisExport
+            : direction;
     }
 
     public void SetExportProfile(ExportProfileDefinition? profile)
@@ -208,20 +243,21 @@ public sealed class XdtBaukastenState
     {
         ArgumentNullException.ThrowIfNull(rule);
 
-        var index = _workingExportRules.FindIndex(existing => string.Equals(existing.Id, rule.Id, StringComparison.OrdinalIgnoreCase));
+        var rules = GetCurrentMutableRules();
+        var index = rules.FindIndex(existing => string.Equals(existing.Id, rule.Id, StringComparison.OrdinalIgnoreCase));
         if (index < 0)
         {
             return false;
         }
 
-        _workingExportRules[index] = rule;
+        rules[index] = rule;
         return true;
     }
 
     public void AddWorkingRule(ExportRuleDefinition rule)
     {
         ArgumentNullException.ThrowIfNull(rule);
-        _workingExportRules.Add(rule);
+        GetCurrentMutableRules().Add(rule);
     }
 
     public bool RemoveWorkingRule(string ruleId)
@@ -231,14 +267,22 @@ public sealed class XdtBaukastenState
             return false;
         }
 
-        var index = _workingExportRules.FindIndex(existing => string.Equals(existing.Id, ruleId, StringComparison.OrdinalIgnoreCase));
+        var rules = GetCurrentMutableRules();
+        var index = rules.FindIndex(existing => string.Equals(existing.Id, ruleId, StringComparison.OrdinalIgnoreCase));
         if (index < 0)
         {
             return false;
         }
 
-        _workingExportRules.RemoveAt(index);
+        rules.RemoveAt(index);
         return true;
+    }
+
+    private List<ExportRuleDefinition> GetCurrentMutableRules()
+    {
+        return CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+            ? _workingDeviceOutputRules
+            : _workingExportRules;
     }
 
     public XdtBaukastenStateSnapshot CreateSnapshot()
@@ -247,7 +291,9 @@ public sealed class XdtBaukastenState
             AisProfile,
             DeviceProfile,
             SourceExportProfile,
+            CurrentRuleDirection,
             _workingExportRules.ToList(),
+            _workingDeviceOutputRules.ToList(),
             AisInput,
             DeviceInput,
             AttachmentInput,
@@ -262,8 +308,16 @@ public sealed class XdtBaukastenState
         AisProfile = snapshot.AisProfile;
         DeviceProfile = snapshot.DeviceProfile;
         SourceExportProfile = snapshot.SourceExportProfile;
+        CurrentRuleDirection = snapshot.CurrentRuleDirection;
         _workingExportRules.Clear();
         _workingExportRules.AddRange(snapshot.WorkingExportRules);
+        _workingDeviceOutputRules.Clear();
+        _workingDeviceOutputRules.AddRange(snapshot.WorkingDeviceOutputRules);
+        if (!IsBidirectionalDevice && CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput)
+        {
+            CurrentRuleDirection = XdtBaukastenRuleDirection.AisExport;
+        }
+
         AisInput = snapshot.AisInput;
         DeviceInput = snapshot.DeviceInput;
         AttachmentInput = snapshot.AttachmentInput;

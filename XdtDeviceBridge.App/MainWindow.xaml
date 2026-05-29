@@ -2107,11 +2107,45 @@
                         <GroupBox Grid.Row="4" Header="Konfiguration Exportregeln">
                             <Grid>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
+                                <Border x:Name="XdtBaukastenRuleDirectionPanel"
+                                        Grid.Row="0"
+                                        Margin="0,0,0,8"
+                                        Padding="8"
+                                        Background="{StaticResource XdtBoxPanelBackgroundBrush}"
+                                        BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                                        BorderThickness="1">
+                                    <DockPanel LastChildFill="True">
+                                        <TextBlock Text="Richtung:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                                            <RadioButton x:Name="XdtBaukastenRuleDirectionAisRadioButton"
+                                                         Content="Export an AIS"
+                                                         GroupName="XdtBaukastenRuleDirection"
+                                                         IsChecked="True"
+                                                         Margin="0,0,16,0"
+                                                         VerticalAlignment="Center"
+                                                         Checked="XdtBaukastenRuleDirection_Checked" />
+                                            <RadioButton x:Name="XdtBaukastenRuleDirectionDeviceOutputRadioButton"
+                                                         Content="Export an Gerät"
+                                                         GroupName="XdtBaukastenRuleDirection"
+                                                         Margin="0,0,16,0"
+                                                         VerticalAlignment="Center"
+                                                         Checked="XdtBaukastenRuleDirection_Checked" />
+                                        </StackPanel>
+                                        <TextBlock x:Name="XdtBaukastenRuleDirectionHintText"
+                                                   Text="Export an AIS ist aktiv."
+                                                   Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
+
                                 <DataGrid x:Name="XdtBaukastenExportRulesGrid"
+                                          Grid.Row="1"
                                           MinHeight="220"
                                           AutoGenerateColumns="False"
                                           CanUserAddRows="False"
@@ -2119,8 +2153,8 @@
                                           SelectionChanged="XdtBaukastenExportRulesGrid_SelectionChanged">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Aktiv" Binding="{Binding IsEnabled}" Width="70" />
-                                        <DataGridTextColumn Header="Feld" Binding="{Binding TargetFieldCode}" Width="90" />
-                                        <DataGridTextColumn Header="Name" Binding="{Binding TargetName}" Width="180" />
+                                        <DataGridTextColumn x:Name="XdtBaukastenRuleTargetColumn" Header="Feld" Binding="{Binding TargetFieldCode}" Width="130" />
+                                        <DataGridTextColumn x:Name="XdtBaukastenRuleTargetNameColumn" Header="Name" Binding="{Binding TargetName}" Width="180" />
                                         <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="220" />
                                         <DataGridTextColumn Header="Template" Binding="{Binding OutputTemplate}" Width="*" />
                                         <DataGridTemplateColumn Header="" Width="54">
@@ -2137,7 +2171,7 @@
                                 </DataGrid>
 
                                 <Button x:Name="XdtBaukastenAddExportRuleButton"
-                                        Grid.Row="1"
+                                        Grid.Row="2"
                                         Content="+"
                                         Width="44"
                                         HorizontalAlignment="Right"
@@ -2162,12 +2196,12 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Ziel-Feld:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                <TextBlock x:Name="XdtBaukastenDraftTargetLabel" Grid.Row="0" Grid.Column="0" Text="Ziel-Feld:" FontWeight="SemiBold" Margin="0,0,8,8" />
                                 <TextBox x:Name="XdtBaukastenDraftTargetFieldCodeTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,16,8" />
                                 <TextBlock Grid.Row="0" Grid.Column="2" Text="Zielname:" FontWeight="SemiBold" Margin="0,0,8,8" />
                                 <TextBox x:Name="XdtBaukastenDraftTargetNameTextBox" Grid.Row="0" Grid.Column="3" Margin="0,0,0,8" />
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="SourcePath:" FontWeight="SemiBold" Margin="0,0,8,8" />
+                                <TextBlock x:Name="XdtBaukastenDraftSourceLabel" Grid.Row="1" Grid.Column="0" Text="SourcePath:" FontWeight="SemiBold" Margin="0,0,8,8" />
                                 <TextBox x:Name="XdtBaukastenDraftSourcePathTextBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,8" />
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Regeltext:" FontWeight="SemiBold" Margin="0,0,8,8" />

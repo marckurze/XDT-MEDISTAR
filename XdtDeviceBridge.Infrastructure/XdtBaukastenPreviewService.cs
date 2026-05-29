@@ -163,9 +163,19 @@ public sealed class XdtBaukastenPreviewService
                     new Cv5000ImportSelection(history.Patient, selected, null, NidekRt6100InputXmlWriter.DefaultFileNameTemplate),
                     timestamp);
                 messages.AddRange(result.Warnings.Select(warning => $"Geräteausgabe RT-6100: {warning}"));
-                return result.Success && !string.IsNullOrWhiteSpace(result.XmlContent)
-                    ? result.XmlContent
-                    : result.ErrorMessage ?? "RT-6100-Geräteausgabe konnte nicht erzeugt werden.";
+                if (!result.Success || string.IsNullOrWhiteSpace(result.XmlContent))
+                {
+                    return result.ErrorMessage ?? "RT-6100-Geräteausgabe konnte nicht erzeugt werden.";
+                }
+
+                var projected = XdtBaukastenDeviceOutputRuleService.ApplyRulesToXml(
+                    result.XmlContent,
+                    state.WorkingDeviceOutputRules,
+                    history.Patient,
+                    selected,
+                    state.DeviceProfile);
+                messages.AddRange(projected.Warnings.Select(warning => $"Geräteausgabe RT-6100: {warning}"));
+                return projected.Content;
             }
 
             if (isCv5000)
@@ -175,12 +185,28 @@ public sealed class XdtBaukastenPreviewService
                     new Cv5000ImportSelection(history.Patient, selected, null, "CVImport.xml"),
                     timestamp);
                 messages.AddRange(result.Warnings.Select(warning => $"Geräteausgabe CV-5000: {warning}"));
-                return result.Success && !string.IsNullOrWhiteSpace(result.XmlContent)
-                    ? result.XmlContent
-                    : result.ErrorMessage ?? "CV-5000-Geräteausgabe konnte nicht erzeugt werden.";
+                if (!result.Success || string.IsNullOrWhiteSpace(result.XmlContent))
+                {
+                    return result.ErrorMessage ?? "CV-5000-Geräteausgabe konnte nicht erzeugt werden.";
+                }
+
+                var projected = XdtBaukastenDeviceOutputRuleService.ApplyRulesToXml(
+                    result.XmlContent,
+                    state.WorkingDeviceOutputRules,
+                    history.Patient,
+                    selected,
+                    state.DeviceProfile);
+                messages.AddRange(projected.Warnings.Select(warning => $"Geräteausgabe CV-5000: {warning}"));
+                return projected.Content;
             }
 
-            return "Für dieses bidirektionale Gerät ist die Geräteausgabe-Vorschau im Baukasten vorbereitet, aber noch nicht implementiert.";
+            var textPreview = XdtBaukastenDeviceOutputRuleService.BuildRuleTextPreview(
+                state.WorkingDeviceOutputRules,
+                history.Patient,
+                history.Records,
+                state.DeviceProfile);
+            messages.AddRange(textPreview.Warnings.Select(warning => $"Geräteausgabe: {warning}"));
+            return textPreview.Content;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {

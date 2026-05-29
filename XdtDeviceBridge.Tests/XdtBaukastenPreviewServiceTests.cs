@@ -125,6 +125,57 @@ public sealed class XdtBaukastenPreviewServiceTests
         Assert.Contains("<Ophthalmology", result.Output.DeviceOutput);
     }
 
+    [Fact]
+    public void BuildPreview_ShouldApplyCv5000DeviceOutputWorkingRules()
+    {
+        using var temp = new TempFolder();
+        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var devicePath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml");
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+        state.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+        var idRule = state.WorkingDeviceOutputRules.Single(rule => rule.TargetFieldCode == "Common/Patient/ID") with
+        {
+            OutputTemplate = "BAUKASTEN-ID"
+        };
+        Assert.True(state.UpdateWorkingRule(idRule));
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("BAUKASTEN-ID", result.Output.DeviceOutput);
+        Assert.DoesNotContain("<nsCommon:ID>4701-1</nsCommon:ID>", result.Output.DeviceOutput);
+    }
+
+    [Fact]
+    public void BuildPreview_ShouldApplyRt6100DeviceOutputWorkingRules()
+    {
+        using var temp = new TempFolder();
+        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var devicePath = WriteTempXml(temp.Path, BuilderManualProcessingPreviewServiceTests_CreateRt6100ReturnXml());
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateNidekRt6100Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt6100Default());
+        state.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+        var idRule = state.WorkingDeviceOutputRules.Single(rule => rule.TargetFieldCode == "Common/Patient/ID") with
+        {
+            OutputTemplate = "RT-BAUKASTEN-ID"
+        };
+        Assert.True(state.UpdateWorkingRule(idRule));
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt6100Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("<ID>RT-BAUKASTEN-ID</ID>", result.Output.DeviceOutput);
+    }
+
     private static XdtBaukastenState CreateLm7State(string aisPath, string devicePath)
     {
         return CreateState(
@@ -178,6 +229,73 @@ public sealed class XdtBaukastenPreviewServiceTests
         var target = Path.Combine(folder, Path.GetFileName(source));
         File.Copy(source, target);
         return target;
+    }
+
+    private static string WriteTempXml(string folder, string xml)
+    {
+        var path = Path.Combine(folder, "rt6100.xml");
+        File.WriteAllText(path, xml, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        return path;
+    }
+
+    private static string BuilderManualProcessingPreviewServiceTests_CreateRt6100ReturnXml()
+    {
+        return """
+<?xml version="1.0" encoding="UTF-8"?>
+<Ophthalmology>
+  <Common>
+    <Company>NIDEK</Company>
+    <ModelName>RT-6100</ModelName>
+    <Version>NIDEK_RT_V1.00</Version>
+    <Date>2026.05.28</Date>
+    <Time>12:00:00</Time>
+    <Patient>
+      <No>4701-1</No>
+      <ID>4701-1</ID>
+      <FirstName>Anna</FirstName>
+      <LastName>Testfrau</LastName>
+      <DOB>1955.06.12</DOB>
+    </Patient>
+  </Common>
+  <Measure Type="RT">
+    <Phoropter>
+      <Corrected CorrectionType="Full" Vision="Distant" Situation="Standard">
+        <DisplayName>Full Correction</DisplayName>
+        <R>
+          <Sphere>-8.25</Sphere>
+          <Cylinder>-1.50</Cylinder>
+          <Axis>170</Axis>
+          <ADD>1.50</ADD>
+          <PD>32.5</PD>
+        </R>
+        <L>
+          <Sphere>-7.75</Sphere>
+          <Cylinder>-0.75</Cylinder>
+          <Axis>30</Axis>
+          <ADD>1.50</ADD>
+          <PD>33.0</PD>
+        </L>
+        <B>
+          <PD>65.5</PD>
+        </B>
+      </Corrected>
+      <Corrected CorrectionType="Best" Vision="Distant" Situation="Standard">
+        <DisplayName>Best</DisplayName>
+        <R>
+          <Sphere>-8.00</Sphere>
+          <Cylinder>-1.25</Cylinder>
+          <Axis>168</Axis>
+        </R>
+        <L>
+          <Sphere>-7.50</Sphere>
+          <Cylinder>-0.50</Cylinder>
+          <Axis>28</Axis>
+        </L>
+      </Corrected>
+    </Phoropter>
+  </Measure>
+</Ophthalmology>
+""";
     }
 
     private sealed class TempFolder : IDisposable

@@ -97,6 +97,59 @@ public sealed class XdtBaukastenStateTests
     }
 
     [Fact]
+    public void State_ShouldHoldAisAndDeviceOutputRulesSeparately()
+    {
+        var state = new XdtBaukastenState();
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default();
+
+        state.SetDeviceProfile(DefaultDeviceProfileDefinitions.CreateTopconCv5000Default());
+        state.SetExportProfile(exportProfile);
+
+        Assert.Equal(XdtBaukastenRuleDirection.AisExport, state.CurrentRuleDirection);
+        Assert.NotEmpty(state.WorkingExportRules);
+        Assert.NotEmpty(state.WorkingDeviceOutputRules);
+
+        state.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+        var deviceRule = new ExportRuleDefinition(
+            "device-output-custom",
+            "DeviceOutput/Custom",
+            "Custom",
+            ExportRuleType.Template,
+            null,
+            "Custom",
+            999,
+            true,
+            null);
+
+        state.AddWorkingRule(deviceRule);
+
+        Assert.Contains(state.WorkingDeviceOutputRules, rule => rule.Id == "device-output-custom");
+        Assert.DoesNotContain(state.WorkingExportRules, rule => rule.Id == "device-output-custom");
+
+        state.SetRuleDirection(XdtBaukastenRuleDirection.AisExport);
+        Assert.Equal(exportProfile.Rules.Count, state.CurrentWorkingRules.Count);
+    }
+
+    [Fact]
+    public void UndoBuffer_ShouldRestoreDeviceOutputRuleChanges()
+    {
+        var state = new XdtBaukastenState();
+        state.SetDeviceProfile(DefaultDeviceProfileDefinitions.CreateTopconCv5000Default());
+        state.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+        var buffer = new XdtBaukastenUndoBuffer(10);
+
+        buffer.Push(state.CreateSnapshot());
+        var rule = state.WorkingDeviceOutputRules[0] with { OutputTemplate = "Geändert" };
+        Assert.True(state.UpdateWorkingRule(rule));
+
+        Assert.True(buffer.TryPop(out var snapshot));
+        state.RestoreSnapshot(snapshot!);
+
+        Assert.Equal(XdtBaukastenRuleDirection.DeviceOutput, state.CurrentRuleDirection);
+        Assert.NotEqual("Geändert", state.WorkingDeviceOutputRules[0].OutputTemplate);
+    }
+
+    [Fact]
     public void UndoBuffer_ShouldKeepAtLeastTenStepsAndRestorePreviousState()
     {
         var state = new XdtBaukastenState();

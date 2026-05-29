@@ -145,6 +145,10 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Geräteausgabe", section);
         Assert.Contains("Diagnose", section);
         Assert.Contains("Konfiguration Exportregeln", section);
+        Assert.Contains("XdtBaukastenRuleDirectionPanel", section);
+        Assert.Contains("Export an AIS", section);
+        Assert.Contains("Export an Gerät", section);
+        Assert.Contains("XdtBaukastenDraftTargetLabel", section);
         Assert.Contains("XdtBaukastenAddExportRuleButton", section);
         Assert.Contains("XdtBaukastenDeleteExportRule_Click", section);
         Assert.Contains("Exportregel Entwurf", section);
