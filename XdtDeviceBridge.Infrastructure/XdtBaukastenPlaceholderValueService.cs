@@ -155,7 +155,9 @@ public sealed class XdtBaukastenPlaceholderValueService
             || sourcePath.EndsWith("/Cylinder", StringComparison.OrdinalIgnoreCase)
             || sourcePath.EndsWith("/Axis", StringComparison.OrdinalIgnoreCase)
             || sourcePath.EndsWith("/ADD", StringComparison.OrdinalIgnoreCase)
-            || sourcePath.EndsWith("/PD", StringComparison.OrdinalIgnoreCase))
+            || sourcePath.EndsWith("/PD", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/VA", StringComparison.OrdinalIgnoreCase)
+            || sourcePath.EndsWith("/WorkingDistance", StringComparison.OrdinalIgnoreCase))
         {
             return 0;
         }

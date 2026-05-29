@@ -285,6 +285,40 @@ public sealed class XdtBaukastenPreviewServiceTests
         Assert.False(File.Exists(Path.Combine(temp.Path, NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate)));
     }
 
+    [Fact]
+    public void BuildPreview_ShouldUseRt3100PracticeCaptureForFinalPrescription()
+    {
+        using var temp = new TempFolder();
+        var aisPath = WriteGdt(temp.Path, "Phoro");
+        var devicePath = WriteBytes(
+            temp.Path,
+            "rt3100-practice.bin",
+            LoadHexFixture("rt3100-final-prescription-practice-capture-202606xx.hex"));
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt3100SerialDefault());
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("6228Phoropter finaler Verordnungswert", result.Output.RawXdt);
+        Assert.Contains("6228R.:S=- 1.50 Z=- 0.75*180 A=+ 0.75 PD= 64", result.Output.RawXdt);
+        Assert.Contains("6228L.:S=- 1.50 Z=- 1.50*175 A=+ 1.25 PD= 64", result.Output.RawXdt);
+        Assert.DoesNotContain("6227", result.Output.RawXdt);
+        Assert.DoesNotContain("6330", result.Output.RawXdt);
+        Assert.Contains("Phoropter finaler Verordnungswert", result.Output.AisView);
+        Assert.Contains("R.:S=- 1.50 Z=- 0.75*180 A=+ 0.75 PD= 64", result.Output.AisView);
+        Assert.Contains("L.:S=- 1.50 Z=- 1.50*175 A=+ 1.25 PD= 64", result.Output.AisView);
+        Assert.Contains("RT-3100", result.Output.Diagnostics);
+        Assert.Contains("Measure[@Type='RTSERIAL']/Source: RT", result.Output.Diagnostics);
+        Assert.Contains("Measure[@Type='RTSERIAL']/Final/R/VA: 0.1", result.Output.Diagnostics);
+        Assert.Contains("Measure[@Type='RTSERIAL']/Final/R/WorkingDistance: 40", result.Output.Diagnostics);
+        Assert.False(File.Exists(Path.Combine(temp.Path, NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate)));
+    }
+
     private static XdtBaukastenState CreateLm7State(string aisPath, string devicePath)
     {
         return CreateState(
@@ -368,6 +402,22 @@ public sealed class XdtBaukastenPreviewServiceTests
         var path = Path.Combine(folder, fileName);
         File.WriteAllText(path, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         return path;
+    }
+
+    private static string WriteBytes(string folder, string fileName, byte[] bytes)
+    {
+        var path = Path.Combine(folder, fileName);
+        File.WriteAllBytes(path, bytes);
+        return path;
+    }
+
+    private static byte[] LoadHexFixture(string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Nidek", "RS232", fileName);
+        return File.ReadAllText(path, Encoding.UTF8)
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(token => Convert.ToByte(token, 16))
+            .ToArray();
     }
 
     private static string CreateRtSerialFrame()

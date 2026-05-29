@@ -29,6 +29,48 @@ public sealed class NidekRtSerialPhoropterTests
         AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/L/MedistarLine", "L.:S=+ 2.00 Z=- 0.25* 85 PD= 60");
     }
 
+    [Fact]
+    public void Parser_ShouldParseRt3100PracticeCaptureLineBasedStxFrame()
+    {
+        var bytes = LoadHexFixture("rt3100-final-prescription-practice-capture-202606xx.hex");
+
+        var parsed = _parser.Parse(bytes);
+        var result = _parser.ParseDeviceText(Encoding.ASCII.GetString(bytes), "rt3100-practice.bin");
+
+        Assert.Equal(NidekRtSerialPhoropterModel.Rt3100, parsed.Model);
+        Assert.Equal(new DateOnly(2002, 6, 16), parsed.MeasurementDate);
+        Assert.Null(parsed.PatientId);
+        Assert.Contains(NidekRtSerialDataSource.Refractor, parsed.Sources);
+        var right = Assert.Single(parsed.Refractions, refraction => refraction.Kind == NidekRtSerialRefractionKind.Final && refraction.Eye == "R");
+        var left = Assert.Single(parsed.Refractions, refraction => refraction.Kind == NidekRtSerialRefractionKind.Final && refraction.Eye == "L");
+        Assert.Equal(-1.50m, right.Sphere);
+        Assert.Equal(-0.75m, right.Cylinder);
+        Assert.Equal(180, right.Axis);
+        Assert.Equal(0.75m, right.Add);
+        Assert.Equal(0.1m, right.VisualAcuity);
+        Assert.Equal(64.0m, right.Pd);
+        Assert.Equal(40m, right.WorkingDistance);
+        Assert.Equal(-1.50m, left.Sphere);
+        Assert.Equal(-1.50m, left.Cylinder);
+        Assert.Equal(175, left.Axis);
+        Assert.Equal(1.25m, left.Add);
+        Assert.Equal(1.25m, left.VisualAcuity);
+        Assert.Equal(64.0m, left.Pd);
+        Assert.Equal(40m, left.WorkingDistance);
+        Assert.DoesNotContain(result.Issues, issue => issue.Severity == DeviceParseIssueSeverity.Error);
+        AssertMeasurement(result, "Common/ModelName", "RT-3100");
+        AssertMeasurement(result, "Common/Date", "2002-06-16");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Source", "RT");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/Sphere", "-1.50");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/Cylinder", "-0.75");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/Axis", "180");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/ADD", "+0.75");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/VA", "0.1");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/PD", "64.0");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/WorkingDistance", "40");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/HeaderLine", "Phoropter finaler Verordnungswert");
+    }
+
     [Theory]
     [InlineData(NidekRtSerialPhoropterModel.Rt2100, "NIDEK RT-2100 0000004711 DAY2026/05/29", "RT-2100")]
     [InlineData(NidekRtSerialPhoropterModel.Rt3100, "NIDEK_RT-3100", "RT-3100")]
@@ -85,6 +127,22 @@ public sealed class NidekRtSerialPhoropterTests
         Assert.DoesNotContain("Phoropter Maximalwert", content, StringComparison.Ordinal);
         Assert.DoesNotContain("6227R.:S=", content, StringComparison.Ordinal);
         Assert.DoesNotContain("6330", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MedistarExport_WithRt3100PracticeCapture_ShouldUseOnlyFinal6228()
+    {
+        var content = BuildExportContent(
+            Encoding.ASCII.GetString(LoadHexFixture("rt3100-final-prescription-practice-capture-202606xx.hex")),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt3100SerialDefault());
+
+        Assert.Contains("8402Phoro", content, StringComparison.Ordinal);
+        Assert.Contains("6228Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=- 1.50 Z=- 0.75*180 A=+ 0.75 PD= 64", content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 1.50 Z=- 1.50*175 A=+ 1.25 PD= 64", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", content, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -217,6 +275,15 @@ public sealed class NidekRtSerialPhoropterTests
             "RF+02.25-00.50008",
             "LF+02.00-00.25085",
             "PD0060");
+    }
+
+    private static byte[] LoadHexFixture(string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Nidek", "RS232", fileName);
+        return File.ReadAllText(path, Encoding.UTF8)
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(token => Convert.ToByte(token, 16))
+            .ToArray();
     }
 
     private static string BuildFrame(params string[] lines)

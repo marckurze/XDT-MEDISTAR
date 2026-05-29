@@ -156,3 +156,4 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseIssu
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseIssuer.dll
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseIssuer.pdb
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseIssuer.Hilfe.bat
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Nidek\RS232\rt3100-final-prescription-practice-capture-202606xx.hex

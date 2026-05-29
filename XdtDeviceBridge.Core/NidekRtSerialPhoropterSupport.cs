@@ -56,6 +56,8 @@ public sealed record NidekRtSerialEyeRefraction(
     int? Axis,
     decimal? Add,
     decimal? Pd,
+    decimal? VisualAcuity,
+    decimal? WorkingDistance,
     string RawLine)
 {
     public bool HasSphericalCylinderAxis => Sphere is not null && Cylinder is not null && Axis is not null;
@@ -101,12 +103,28 @@ public sealed class NidekRtSerialPhoropterParser
         @"^(?<eye>[RL])(?<code>[A-Za-z]{0,2})(?<sph>[ +-]\d{2}\.\d{2})(?<cyl>[ +-]\d{2}\.\d{2})(?<axis>[ 0-9]{3})",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private static readonly Regex CodeFirstRefractionLineRegex = new(
+        @"^(?<code>[A-Za-z]{1,2})(?<eye>[RL])(?<sph>[ +-]?\s*\d{1,2}\.\d{2})(?<cyl>[ +-]?\s*\d{1,2}\.\d{2})(?<axis>[ 0-9]{3})",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     private static readonly Regex AddLineRegex = new(
         @"^(?<eye>[RL])(?<code>[aA])(?<add>[ +-]\d{2}\.\d{2})",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private static readonly Regex CodeFirstAddLineRegex = new(
+        @"^(?<code>[aA])(?<eye>[RL])(?<add>[ +-]?\s*\d{1,2}\.\d{2})",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     private static readonly Regex PdLineRegex = new(
-        @"^(?<code>pD|PD)(?<pd>[ 0-9]{4})(?<right>[ 0-9]{4})?(?<left>[ 0-9]{4})?",
+        @"^(?<code>pD|PD)(?<values>.*)$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex VisualAcuityLineRegex = new(
+        @"^(?<code>[vV])(?<eye>[RL])(?<va>.*)$|^(?<eyeLegacy>[RL])(?<codeLegacy>[vV])(?<vaLegacy>.*)$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex WorkingDistanceLineRegex = new(
+        @"^(?<code>[wW]D)(?<wd>.*)$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public static bool IsParserMode(string? parserMode)
@@ -176,7 +194,7 @@ public sealed class NidekRtSerialPhoropterParser
                 systemNo ??= detectedSystemNo;
             }
 
-            if (patientId is null && TryReadPatientId(line, out var detectedId))
+            if (patientId is null && currentSource == NidekRtSerialDataSource.Unknown && TryReadPatientId(line, out var detectedId))
             {
                 patientId = detectedId;
             }
@@ -215,6 +233,26 @@ public sealed class NidekRtSerialPhoropterParser
             }
 
             if (TryReadPd(line, currentSource, currentNight, refractions, out addWarning))
+            {
+                if (!string.IsNullOrWhiteSpace(addWarning))
+                {
+                    warnings.Add(addWarning);
+                }
+
+                continue;
+            }
+
+            if (TryReadVisualAcuity(line, currentSource, currentNight, refractions, out addWarning))
+            {
+                if (!string.IsNullOrWhiteSpace(addWarning))
+                {
+                    warnings.Add(addWarning);
+                }
+
+                continue;
+            }
+
+            if (TryReadWorkingDistance(line, currentSource, currentNight, refractions, out addWarning))
             {
                 if (!string.IsNullOrWhiteSpace(addWarning))
                 {
@@ -267,6 +305,11 @@ public sealed class NidekRtSerialPhoropterParser
     {
         AddMeasurement(measurements, "Common/Company", "Company", "NIDEK", null, null, "Common");
         AddMeasurement(measurements, "Common/ModelName", "ModelName", FormatModel(result.Model), null, null, "Common");
+        if (result.Sources.Count > 0)
+        {
+            AddMeasurement(measurements, "Measure[@Type='RTSERIAL']/Source", "RT Serial Datenquelle", string.Join(", ", result.Sources.Select(FormatSource)), null, null, "RTSERIAL");
+        }
+
         if (!string.IsNullOrWhiteSpace(result.PatientId))
         {
             AddMeasurement(measurements, "Common/Patient/ID", "Patient ID", result.PatientId, null, null, "Common");
@@ -292,7 +335,9 @@ public sealed class NidekRtSerialPhoropterParser
         AddMeasurement(measurements, $"{path}/Cylinder", $"{measurement.Kind} {measurement.Eye} Cylinder", FormatDecimal(measurement.Cylinder), "dpt", measurement.Eye, "RTSERIAL");
         AddMeasurement(measurements, $"{path}/Axis", $"{measurement.Kind} {measurement.Eye} Axis", measurement.Axis?.ToString(CultureInfo.InvariantCulture), "deg", measurement.Eye, "RTSERIAL");
         AddMeasurement(measurements, $"{path}/ADD", $"{measurement.Kind} {measurement.Eye} ADD", FormatDecimal(measurement.Add), "dpt", measurement.Eye, "RTSERIAL");
-        AddMeasurement(measurements, $"{path}/PD", $"{measurement.Kind} {measurement.Eye} PD", FormatDecimal(measurement.Pd), "mm", measurement.Eye, "RTSERIAL");
+        AddMeasurement(measurements, $"{path}/PD", $"{measurement.Kind} {measurement.Eye} PD", FormatPdMeasurement(measurement.Pd), "mm", measurement.Eye, "RTSERIAL");
+        AddMeasurement(measurements, $"{path}/VA", $"{measurement.Kind} {measurement.Eye} VA", FormatPlainDecimal(measurement.VisualAcuity), null, measurement.Eye, "RTSERIAL");
+        AddMeasurement(measurements, $"{path}/WorkingDistance", $"{measurement.Kind} {measurement.Eye} WD", FormatPlainDecimal(measurement.WorkingDistance), "cm", measurement.Eye, "RTSERIAL");
         AddMeasurement(measurements, $"{path}/RawLine", $"{measurement.Kind} {measurement.Eye} Rohzeile", measurement.RawLine, null, measurement.Eye, "RTSERIAL");
     }
 
@@ -508,6 +553,11 @@ public sealed class NidekRtSerialPhoropterParser
             return false;
         }
 
+        if (value.StartsWith('@'))
+        {
+            value = value[1..].Trim();
+        }
+
         isNight = value.Length > 0 && value.All(character => !char.IsLetter(character) || char.IsLower(character));
         switch (value.ToUpperInvariant())
         {
@@ -545,7 +595,11 @@ public sealed class NidekRtSerialPhoropterParser
         var match = RefractionLineRegex.Match(line);
         if (!match.Success)
         {
-            return false;
+            match = CodeFirstRefractionLineRegex.Match(line);
+            if (!match.Success)
+            {
+                return false;
+            }
         }
 
         var code = match.Groups["code"].Value;
@@ -565,6 +619,8 @@ public sealed class NidekRtSerialPhoropterParser
             ParseAxis(match.Groups["axis"].Value),
             Add: null,
             Pd: null,
+            VisualAcuity: null,
+            WorkingDistance: null,
             line);
         return true;
     }
@@ -580,7 +636,11 @@ public sealed class NidekRtSerialPhoropterParser
         var match = AddLineRegex.Match(line);
         if (!match.Success)
         {
-            return false;
+            match = CodeFirstAddLineRegex.Match(line);
+            if (!match.Success)
+            {
+                return false;
+            }
         }
 
         var kind = CreateKind(source, match.Groups["code"].Value);
@@ -625,13 +685,98 @@ public sealed class NidekRtSerialPhoropterParser
             return false;
         }
 
-        var pd = ParseCompactDecimal(match.Groups["pd"].Value);
+        var pd = ParsePdValue(match.Groups["values"].Value);
+        if (pd is null)
+        {
+            warning = $"PD-Zeile ohne lesbaren PD-Wert ignoriert: {line}";
+            return true;
+        }
+
         foreach (var current in refractions.Where(refraction => refraction.Kind == kind).ToArray())
         {
             var index = refractions.IndexOf(current);
             refractions[index] = current with
             {
                 Pd = pd,
+                IsNight = current.IsNight || isNight
+            };
+        }
+
+        return true;
+    }
+
+    private static bool TryReadVisualAcuity(
+        string line,
+        NidekRtSerialDataSource source,
+        bool isNight,
+        List<NidekRtSerialEyeRefraction> refractions,
+        out string? warning)
+    {
+        warning = null;
+        var match = VisualAcuityLineRegex.Match(line);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        var code = match.Groups["code"].Success ? match.Groups["code"].Value : match.Groups["codeLegacy"].Value;
+        var eye = (match.Groups["eye"].Success ? match.Groups["eye"].Value : match.Groups["eyeLegacy"].Value).ToUpperInvariant();
+        var valueText = match.Groups["va"].Success ? match.Groups["va"].Value : match.Groups["vaLegacy"].Value;
+        var kind = CreateKind(source, code);
+        if (kind is null)
+        {
+            return false;
+        }
+
+        var va = ParseCompactDecimal(valueText);
+        var current = refractions.LastOrDefault(refraction => refraction.Kind == kind && refraction.Eye == eye);
+        if (current is null)
+        {
+            warning = $"VA-Zeile ohne passende SCA-Zeile ignoriert: {line}";
+            return true;
+        }
+
+        refractions[refractions.IndexOf(current)] = current with
+        {
+            VisualAcuity = va,
+            IsNight = current.IsNight || isNight
+        };
+        return true;
+    }
+
+    private static bool TryReadWorkingDistance(
+        string line,
+        NidekRtSerialDataSource source,
+        bool isNight,
+        List<NidekRtSerialEyeRefraction> refractions,
+        out string? warning)
+    {
+        warning = null;
+        var match = WorkingDistanceLineRegex.Match(line);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        var kind = CreateKind(source, match.Groups["code"].Value);
+        if (kind is null)
+        {
+            return false;
+        }
+
+        var workingDistance = ParseCompactDecimal(match.Groups["wd"].Value);
+        if (workingDistance is null)
+        {
+            warning = $"WD-Zeile ohne lesbaren Working-Distance-Wert ignoriert: {line}";
+            return true;
+        }
+
+        foreach (var current in refractions.Where(refraction => refraction.Kind == kind).ToArray())
+        {
+            var index = refractions.IndexOf(current);
+            refractions[index] = current with
+            {
+                WorkingDistance = workingDistance,
                 IsNight = current.IsNight || isNight
             };
         }
@@ -666,7 +811,9 @@ public sealed class NidekRtSerialPhoropterParser
         refractions[existing] = measurement with
         {
             Add = refractions[existing].Add,
-            Pd = refractions[existing].Pd
+            Pd = refractions[existing].Pd,
+            VisualAcuity = refractions[existing].VisualAcuity,
+            WorkingDistance = refractions[existing].WorkingDistance
         };
     }
 
@@ -699,6 +846,29 @@ public sealed class NidekRtSerialPhoropterParser
         return decimal.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
             ? parsed
             : null;
+    }
+
+    private static decimal? ParsePdValue(string text)
+    {
+        var normalized = text.Trim();
+        if (normalized.Length == 0)
+        {
+            return null;
+        }
+
+        if (normalized.Contains('.', StringComparison.Ordinal))
+        {
+            var token = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            return string.IsNullOrWhiteSpace(token) ? null : ParseCompactDecimal(token);
+        }
+
+        var digits = new string(normalized.Where(char.IsDigit).ToArray());
+        return digits.Length switch
+        {
+            >= 4 => ParseCompactDecimal(digits[..4]),
+            > 0 => ParseCompactDecimal(digits),
+            _ => null
+        };
     }
 
     private static int? ParseAxis(string text)
@@ -738,6 +908,20 @@ public sealed class NidekRtSerialPhoropterParser
         };
     }
 
+    private static string FormatSource(NidekRtSerialDataSource source)
+    {
+        return source switch
+        {
+            NidekRtSerialDataSource.Lensmeter => "LM",
+            NidekRtSerialDataSource.Autorefraction => "RM/AR",
+            NidekRtSerialDataSource.Wavefront => "WF",
+            NidekRtSerialDataSource.Refractor => "RT",
+            NidekRtSerialDataSource.Keratometry => "KM",
+            NidekRtSerialDataSource.Tonometry => "NT",
+            _ => source.ToString()
+        };
+    }
+
     private static string FormatDecimal(decimal? value)
     {
         return value?.ToString("+0.00;-0.00;0.00", CultureInfo.InvariantCulture) ?? string.Empty;
@@ -746,6 +930,11 @@ public sealed class NidekRtSerialPhoropterParser
     private static string FormatPlainDecimal(decimal? value)
     {
         return value?.ToString("0.##", CultureInfo.InvariantCulture) ?? string.Empty;
+    }
+
+    private static string FormatPdMeasurement(decimal? value)
+    {
+        return value?.ToString("0.0#", CultureInfo.InvariantCulture) ?? string.Empty;
     }
 }
 

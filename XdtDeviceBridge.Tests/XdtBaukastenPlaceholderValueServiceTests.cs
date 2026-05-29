@@ -1,3 +1,4 @@
+using System.Text;
 using XdtDeviceBridge.Core;
 using XdtDeviceBridge.Infrastructure;
 
@@ -82,6 +83,28 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
     }
 
     [Fact]
+    public void CreateDevicePlaceholders_ShouldShowRt3100PracticeCaptureValues()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault();
+        var measurements = new NidekRtSerialPhoropterParser()
+            .ParseDeviceText(Encoding.ASCII.GetString(LoadHexFixture("rt3100-final-prescription-practice-capture-202606xx.hex")))
+            .Measurements;
+
+        var placeholders = _service.CreateDevicePlaceholders(profile, measurements);
+
+        Assert.Equal("-1.50", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R Sphere").ExampleValue);
+        Assert.Equal("-0.75", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R Cylinder").ExampleValue);
+        Assert.Equal("180", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R Axis").ExampleValue);
+        Assert.Equal("+0.75", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R ADD").ExampleValue);
+        Assert.Equal("-1.50", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final L Sphere").ExampleValue);
+        Assert.Equal("-1.50", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final L Cylinder").ExampleValue);
+        Assert.Equal("175", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final L Axis").ExampleValue);
+        Assert.Equal("+1.25", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final L ADD").ExampleValue);
+        Assert.Equal("64.0", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R PD").ExampleValue);
+        Assert.Equal("40", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R WD").ExampleValue);
+    }
+
+    [Fact]
     public void CreateDevicePlaceholders_ShouldShowParsedValuesForUserDefinedDraftProfile()
     {
         var profile = CreateUserDefinedDraftProfile();
@@ -101,6 +124,15 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
         var result = _parser.ParseFile(path);
         Assert.Empty(result.Issues);
         return result.Measurements;
+    }
+
+    private static byte[] LoadHexFixture(string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Nidek", "RS232", fileName);
+        return File.ReadAllText(path, Encoding.UTF8)
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(token => Convert.ToByte(token, 16))
+            .ToArray();
     }
 
     private static DeviceProfileDefinition CreateUserDefinedDraftProfile()

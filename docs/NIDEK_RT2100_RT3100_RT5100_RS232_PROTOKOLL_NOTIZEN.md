@@ -8,7 +8,7 @@ Diese Notizen fassen die Auswertung der bereitgestellten Herstellerdokumente zus
 - `RT-3100(RT-11)_IntE_34090-P982-A2.pdf`
 - `RT-5100_IntME_34085-P992-A0.pdf`
 
-Die Auswertung dient der Vorbereitung von Parser, Writer, BuiltIn-Profilen und XDT-Baukasten-Vorschau. Eine produktive Live-Sendung an echte Geraete ist damit noch nicht freigegeben.
+Die Auswertung dient der Vorbereitung von Parser, Writer, BuiltIn-Profilen und XDT-Baukasten-Vorschau. Am 2026-05-29 wurde zusaetzlich ein erster echter RT-3100-Praxismitschnitt als Fixture uebernommen. Eine produktive Live-Sendung an echte Geraete ist damit noch nicht freigegeben.
 
 ## Gemeinsame Familie
 
@@ -42,7 +42,43 @@ Der Parser `NidekRtSerialPhoropterParser` ist tolerant gegen Standard- und Expan
 - RT-3100: Standard-/Kompatibilitaetszeilen und Expanded-Header `SH NIDEK_RT-3100 CR`, danach `SX ID... CR` und `SX DAYYYY/MM/DD_SN CR`
 - RT-5100: Standard `NIDEK_RT-5100 ...` und Expanded-Header analog RT-3100
 
-Refraktionsdaten werden zuerst fuer SCA/ADD/PD sicher ausgewertet. Sonstige Paketdaten, VA-/Plus-Package-/KM-/NT-Details bleiben je nach Erkennung roh oder diagnostisch, bis echte Praxisdaten vorliegen.
+Refraktionsdaten werden zuerst fuer SCA/ADD/PD sicher ausgewertet. Der erste echte RT-3100-Mitschnitt bestaetigt zudem VA (`VR`/`VL`) und WorkingDistance (`WD`) als diagnostisch nutzbare Werte. Plus-Package-/KM-/NT-Details bleiben je nach Erkennung roh oder diagnostisch, bis echte Praxisdaten vorliegen.
+
+## Bestaetigter RT-3100-Praxismitschnitt
+
+Fixture:
+
+`XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-practice-capture-202606xx.hex`
+
+Bestaetigtes Frameformat:
+
+- `SH` Header `CR`
+- `SX @RT CR`
+- je Datenzeile `SX <Daten> CR`
+- `ET CR`
+- kein `EB`/ETB zwischen den Datenzeilen
+
+Erkannte Inhalte:
+
+- Header: `NIDEK RT-3100 ID             DA2002/06/16`
+- Modell: `RT-3100`
+- Datum: `2002-06-16`
+- ID: leer beziehungsweise nur Spaces
+- Datenquelle: `@RT` / Refractor
+- `FR- 1.50- 0.75180`: Final Right, S=-1.50, Z=-0.75, Achse 180
+- `FL- 1.50- 1.50175`: Final Left, S=-1.50, Z=-1.50, Achse 175
+- `AR+ 0.75`, `AL+ 1.25`: ADD rechts/links
+- `VR 0.1`, `VL 1.25`: VA rechts/links, diagnostisch
+- `PD64.0`: binokulare PD 64.0
+- `WD40`: WorkingDistance 40, diagnostisch; nicht als Vertex Distance umgedeutet
+
+MEDISTAR-Mapping fuer diesen Mitschnitt:
+
+- nur `Final` vorhanden -> nur `6228`
+- Header: `Phoropter finaler Verordnungswert`
+- R/L-6228-Zeilen enthalten S, Z, Achse, ADD und PD
+- keine `6227`, keine `6330`, keine kuenstliche Trennzeile
+- `8402` kommt weiterhin aus AIS/MEDISTAR
 
 MEDISTAR-Mapping:
 
