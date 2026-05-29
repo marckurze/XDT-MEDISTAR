@@ -9,6 +9,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         "Hinweis: Die geladene Gerätedatei passt nicht eindeutig zum gewählten Geräteprofil. Die Baukasten-Vorschau wird trotzdem erzeugt. Bitte prüfen Sie Mapping und Ausgabe sorgfältig.";
 
     private readonly XmlDeviceParser _parser;
+    private readonly NidekRtSerialPhoropterParser _rtSerialParser = new();
 
     public XdtBaukastenDeviceCompatibilityService()
         : this(new XmlDeviceParser())
@@ -46,6 +47,21 @@ public sealed class XdtBaukastenDeviceCompatibilityService
 
         try
         {
+            if (NidekRtSerialPhoropterParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var serialResult = _rtSerialParser.ParseFile(deviceFilePath);
+                if (serialResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
+                        serialResult.Measurements,
+                        FindCompany(serialResult.Measurements),
+                        FindModelName(serialResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, serialResult.Measurements);
+            }
+
             var parseResult = _parser.ParseFile(deviceFilePath);
             if (parseResult.HasErrors)
             {
@@ -213,6 +229,9 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         AddAliasIfContains(aliases, normalizedProfileText, "LM7", "LM7", "LM7P");
         AddAliasIfContains(aliases, normalizedProfileText, "NT530P", "NT530P", "NT530");
         AddAliasIfContains(aliases, normalizedProfileText, "RT6100", "RT6100");
+        AddAliasIfContains(aliases, normalizedProfileText, "RT2100", "RT2100");
+        AddAliasIfContains(aliases, normalizedProfileText, "RT3100", "RT3100");
+        AddAliasIfContains(aliases, normalizedProfileText, "RT5100", "RT5100");
         AddAliasIfContains(aliases, normalizedProfileText, "CL300", "CL300");
         AddAliasIfContains(aliases, normalizedProfileText, "SOLOS", "SOLOS");
         AddAliasIfContains(aliases, normalizedProfileText, "KR800", "KR800S", "KR800");

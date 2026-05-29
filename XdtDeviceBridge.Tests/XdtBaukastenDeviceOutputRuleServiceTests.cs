@@ -32,6 +32,17 @@ public sealed class XdtBaukastenDeviceOutputRuleServiceTests
     }
 
     [Fact]
+    public void CreateDefaultRules_ShouldInitializeNidekRtSerialDeviceOutputRules()
+    {
+        var rules = XdtBaukastenDeviceOutputRuleService.CreateDefaultRules(DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault());
+
+        Assert.Contains(rules, rule => rule.TargetFieldCode == "Serial/ID" && rule.SourcePath == "NidekRtSerial.PatientNumber");
+        Assert.Contains(rules, rule => rule.TargetFieldCode == "Serial/AR/R/Sphere" && rule.SourcePath == "PhoropterInput.Autoref.Right.Sphere");
+        Assert.Contains(rules, rule => rule.TargetFieldCode == "Serial/LM/L/Cylinder" && rule.SourcePath == "PhoropterInput.Lensmeter.Left.Cylinder");
+        Assert.True(rules.Count > 10);
+    }
+
+    [Fact]
     public void CreatePlaceholders_ShouldExposeExpandedCv5000Values()
     {
         var history = ParseCv5000History();
@@ -45,6 +56,23 @@ public sealed class XdtBaukastenDeviceOutputRuleServiceTests
         Assert.Contains(placeholders, placeholder => placeholder.Token == "{PhoropterInput.Lensmeter.Right.Sphere}" && placeholder.ExampleValue == "+6.25");
         Assert.Contains(placeholders, placeholder => placeholder.Token == "{PhoropterInput.Autoref.Left.Cylinder}" && placeholder.ExampleValue != "-");
         Assert.True(placeholders.Count > 10);
+    }
+
+    [Fact]
+    public void CreatePlaceholders_ShouldExposeNidekRtSerialLmAndArValues()
+    {
+        var history = ParseCv5000History();
+
+        var placeholders = XdtBaukastenDeviceOutputRuleService.CreatePlaceholders(
+            DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault(),
+            history.Patient,
+            history.Records);
+
+        Assert.Contains(placeholders, placeholder => placeholder.Token == "{NidekRtSerial.PatientNumber}" && placeholder.ExampleValue == "4701-1");
+        Assert.Contains(placeholders, placeholder => placeholder.Token == "{PhoropterInput.Lensmeter.Right.Sphere}" && placeholder.ExampleValue == "+6.25");
+        Assert.Contains(placeholders, placeholder => placeholder.Token == "{PhoropterInput.Lensmeter.Left.Cylinder}" && placeholder.ExampleValue == "-2.75");
+        Assert.Contains(placeholders, placeholder => placeholder.Token == "{PhoropterInput.Autoref.Left.Axis}" && placeholder.ExampleValue != "-");
+        Assert.True(placeholders.Count > 15);
     }
 
     [Fact]

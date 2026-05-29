@@ -157,4 +157,59 @@ public static class NidekRs232CommunicationPresets
             Handshake = SerialHandshakeSetting.None
         };
     }
+
+    public static SerialCommunicationSettings CreateRt2100Type1Preset(string? portName = null)
+    {
+        return CreateRtType1Preset(portName);
+    }
+
+    public static SerialCommunicationSettings CreateRt3100Type1Preset(string? portName = null)
+    {
+        return CreateRtType1Preset(portName);
+    }
+
+    public static SerialCommunicationSettings CreateRt3100Type2Preset(string? portName = null)
+    {
+        return CreateRtType2Preset(portName);
+    }
+
+    public static SerialCommunicationSettings CreateRt5100Type1Preset(string? portName = null)
+    {
+        return CreateRtType1Preset(portName);
+    }
+
+    public static SerialCommunicationSettings CreateRt5100Type2Preset(string? portName = null)
+    {
+        return CreateRtType2Preset(portName);
+    }
+
+    private static SerialCommunicationSettings CreateRtType1Preset(string? portName)
+    {
+        return SerialCommunicationSettings.Default with
+        {
+            PortName = portName,
+            BaudRate = 2400,
+            DataBits = 7,
+            StopBits = SerialStopBitsSetting.Two,
+            Parity = SerialParitySetting.Even,
+            Handshake = SerialHandshakeSetting.None,
+            IsBidirectional = true,
+            LineTerminator = SerialLineTerminatorSetting.CR
+        };
+    }
+
+    private static SerialCommunicationSettings CreateRtType2Preset(string? portName)
+    {
+        return SerialCommunicationSettings.Default with
+        {
+            PortName = portName,
+            BaudRate = 9600,
+            DataBits = 8,
+            StopBits = SerialStopBitsSetting.One,
+            Parity = SerialParitySetting.Odd,
+            Handshake = SerialHandshakeSetting.None,
+            IsBidirectional = true,
+            LineTerminator = SerialLineTerminatorSetting.CR
+        };
+    }
 }

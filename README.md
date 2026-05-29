@@ -43,8 +43,9 @@ Neu ist der zusätzliche Tab `XDT-Baukasten`. Er ist als eigenständige Arbeitso
 - Konfigurierbar automatisch startende Überwachung innerhalb der geöffneten App; passende Dateipaare werden bei laufender Überwachung automatisch verarbeitet.
 - Lokale Konfigurationssicherung und Wiederherstellung ueber `.xdtboxbackup` ohne Patientendaten oder Messdateien; verwendete Geraetebilder blockieren den Restore nicht mehr vollstaendig, sondern werden als Warnung gemeldet.
 - Lokales Hilfe-Center und Info-Dialog mit Herstellerdaten in der Tab-Zeile sowie Zahnrad-Einstellungen fuer Autostart- und Systray-Verhalten.
-- Vorbereitete V2-Geraeteprofile fuer NIDEK LM7/LM7P, NIDEK NT530P, NIDEK RT-6100, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
+- Vorbereitete V2-Geraeteprofile fuer NIDEK LM7/LM7P, NIDEK NT530P, NIDEK RT-6100, NIDEK RT-2100/RT-3100/RT-5100 RS232, TOPCON CL300, TOPCON KR800 und TOPCON TRK2P.
 - Bidirektionaler Phoropter-Kandidat NIDEK RT-6100: XDTBox kann aus MEDISTAR-Historienwerten konservativ LM_Base/REF_Base-XML fuer den MEM-200-/DIRECT_RT_xx/TXT-Ordner erzeugen und RT-6100-Rueckgabe-XML mit `Best -> 6228` sowie `Full -> 6227` auswerten. Die praktische RT-6100-/MEDISTAR-Abnahme steht noch aus.
+- Serielle bidirektionale Phoropter-Kandidaten NIDEK RT-2100 / RT-3100 / RT-5100: XDTBox kennt PDF-basierte RS232-Presets, kann synthetische dokumentnahe RT->PC-Rohdaten parsen, `Final -> 6228` und `Subjective -> 6227` in MEDISTAR-Vorschauen abbilden und im XDT-Baukasten PC->RT-Sendedaten fuer LM-/AR-Uebergabe als reine Vorschau anzeigen. Echte Praxis-Mitschnitte und Live-Senden sind noch nicht validiert und nicht produktiv aktiviert.
 - Unit-Tests fuer Parser, Mapping, Export und Datei-Export.
 
 ## MEDISTAR/NIDEK-Workflow

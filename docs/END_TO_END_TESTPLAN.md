@@ -529,6 +529,46 @@ Erwartung:
 - Es werden keine `6330`-Zeilen und keine kuenstliche Trennzeile erzeugt.
 - `8402` kommt weiterhin aus AIS/MEDISTAR.
 
+## 13.2 Serieller Phoropter-Test NIDEK RT-2100 / RT-3100 / RT-5100
+
+Dieser Zusatztest prueft die vorbereitete serielle NIDEK-RT-Phoropterfamilie. Er ist bis zu echten Praxis-Mitschnitten ein Vorbereitungs- und Abnahmeplan, kein produktiver Live-Sendepfad.
+
+Voraussetzungen:
+
+- Schnittstellenprofil `MEDISTAR + NIDEK RT-2100 RS232`, `MEDISTAR + NIDEK RT-3100 RS232` oder `MEDISTAR + NIDEK RT-5100 RS232` ist vorhanden.
+- Der COM-Port ist am Geraet korrekt konfiguriert.
+- Fuer RT-2100 wird konservativ `2400 7E2` verwendet.
+- Fuer RT-3100/RT-5100 wird je nach Geraet Type 1 `2400 7E2` oder Type 2 `9600 8O1` verwendet.
+- Testdaten enthalten keine echten Patientendaten.
+
+Ablauf:
+
+1. Ueberwachung stoppen.
+2. Im XDT-Baukasten das passende RT-Serial-Geraeteprofil laden.
+3. `COM Port abhoeren` oeffnen und das passende NIDEK-RT-Preset setzen.
+4. Passives Abhoeren oder, falls vor Ort sicher freigegeben, den vorbereiteten Anforderungsablauf testen.
+5. Eine Ausgabe am Phoropter ausloesen und Rohtext/Hexdump sichern.
+6. Rohdaten in den Baukasten uebernehmen.
+7. `Verarbeitung starten` im Baukasten ausfuehren.
+8. `Roh-XDT`, `Ansicht im AIS`, `Geraeteausgabe` und `Diagnose` pruefen.
+
+Erwartung:
+
+- SH/SX/EB/ET/CR-Steuerzeichen werden erkannt.
+- RT-2100-, RT-3100- oder RT-5100-Header wird erkannt, soweit im Mitschnitt enthalten.
+- `Final`-SCA-Werte werden als `6228`-Kandidaten ausgegeben.
+- `Subjective`-SCA-Werte werden als `6227`-Kandidaten ausgegeben.
+- Es werden keine `6330`-Zeilen und keine kuenstliche Trennzeile erzeugt.
+- `8402` kommt weiterhin aus AIS/MEDISTAR.
+- PC->RT-Sendedaten fuer vorhandene LM-/AR-Historienwerte erscheinen nur als Baukasten-Geraeteausgabe-Vorschau.
+- Es wird keine produktive serielle Sendung ohne explizite spaetere Live-Freigabe durchgefuehrt.
+
+Offen:
+
+- Echte RT-2100-/RT-3100-/RT-5100-Rohmitschnitte aus der Praxis.
+- Live-Pruefung von Type1/Type2 am konkreten Geraet.
+- Fachliche MEDISTAR-Abnahme der finalen `6228`-/`6227`-Ausgabe.
+
 ## 14. Automatisierte Testabdeckung
 
 Aktuell relevante automatisierte Tests:

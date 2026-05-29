@@ -88,6 +88,23 @@ public sealed class BuilderManualProcessingPreviewService
         }
 
         var parserMode = deviceProfile?.ParserMode;
+        if (NidekRtSerialPhoropterParser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return new NidekRtSerialPhoropterParser().ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                    });
+            }
+        }
+
         if (!string.Equals(parserMode, nameof(DeviceParserMode.Xml), StringComparison.OrdinalIgnoreCase)
             && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {

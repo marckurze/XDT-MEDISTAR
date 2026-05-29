@@ -247,6 +247,11 @@ public sealed class NidekRs232ProtocolTests
     {
         var ntPreset = NidekRs232CommunicationPresets.CreateNtPreset("COM7");
         var lmPreset = NidekRs232CommunicationPresets.CreateLm7Preset();
+        var rt2100Type1 = NidekRs232CommunicationPresets.CreateRt2100Type1Preset();
+        var rt3100Type1 = NidekRs232CommunicationPresets.CreateRt3100Type1Preset();
+        var rt3100Type2 = NidekRs232CommunicationPresets.CreateRt3100Type2Preset();
+        var rt5100Type1 = NidekRs232CommunicationPresets.CreateRt5100Type1Preset();
+        var rt5100Type2 = NidekRs232CommunicationPresets.CreateRt5100Type2Preset();
 
         Assert.Equal("COM7", ntPreset.PortName);
         Assert.Equal(9600, ntPreset.BaudRate);
@@ -254,6 +259,32 @@ public sealed class NidekRs232ProtocolTests
         Assert.Equal(SerialStopBitsSetting.One, ntPreset.StopBits);
         Assert.Equal(SerialParitySetting.Odd, ntPreset.Parity);
         Assert.Equal(SerialParitySetting.None, lmPreset.Parity);
+
+        AssertRtType1Preset(rt2100Type1);
+        AssertRtType1Preset(rt3100Type1);
+        AssertRtType1Preset(rt5100Type1);
+        AssertRtType2Preset(rt3100Type2);
+        AssertRtType2Preset(rt5100Type2);
+    }
+
+    private static void AssertRtType1Preset(SerialCommunicationSettings preset)
+    {
+        Assert.Equal(2400, preset.BaudRate);
+        Assert.Equal(7, preset.DataBits);
+        Assert.Equal(SerialParitySetting.Even, preset.Parity);
+        Assert.Equal(SerialStopBitsSetting.Two, preset.StopBits);
+        Assert.Equal(SerialLineTerminatorSetting.CR, preset.LineTerminator);
+        Assert.True(preset.IsBidirectional);
+    }
+
+    private static void AssertRtType2Preset(SerialCommunicationSettings preset)
+    {
+        Assert.Equal(9600, preset.BaudRate);
+        Assert.Equal(8, preset.DataBits);
+        Assert.Equal(SerialParitySetting.Odd, preset.Parity);
+        Assert.Equal(SerialStopBitsSetting.One, preset.StopBits);
+        Assert.Equal(SerialLineTerminatorSetting.CR, preset.LineTerminator);
+        Assert.True(preset.IsBidirectional);
     }
 
     private static NidekRs232FrameReadResult ReadFixture(

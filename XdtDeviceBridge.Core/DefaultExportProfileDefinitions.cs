@@ -1199,4 +1199,79 @@ public static class DefaultExportProfileDefinitions
                     "MEDISTAR 6227 left-eye Full value from NIDEK RT-6100.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarNidekRt2100SerialDefault()
+    {
+        return CreateMedistarNidekRtSerialDefault(
+            id: "export-medistar-nidek-rt2100-serial-default",
+            name: "MEDISTAR + NIDEK RT-2100 RS232 Export",
+            product: "MEDISTAR/NIDEK RT-2100 RS232",
+            deviceProfileId: "device-nidek-rt2100-serial-default",
+            description: "Prepared MEDISTAR export profile for NIDEK RT-2100 RS232 phoropter captures. Final prescription maps to 6228; Subjective maps to 6227; 6330 and artificial separators are not emitted.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekRt3100SerialDefault()
+    {
+        return CreateMedistarNidekRtSerialDefault(
+            id: "export-medistar-nidek-rt3100-serial-default",
+            name: "MEDISTAR + NIDEK RT-3100 RS232 Export",
+            product: "MEDISTAR/NIDEK RT-3100 RS232",
+            deviceProfileId: "device-nidek-rt3100-serial-default",
+            description: "Prepared MEDISTAR export profile for NIDEK RT-3100 RS232 phoropter captures. Final prescription maps to 6228; Subjective maps to 6227; practical validation with real captures remains open.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekRt5100SerialDefault()
+    {
+        return CreateMedistarNidekRtSerialDefault(
+            id: "export-medistar-nidek-rt5100-serial-default",
+            name: "MEDISTAR + NIDEK RT-5100 RS232 Export",
+            product: "MEDISTAR/NIDEK RT-5100 RS232",
+            deviceProfileId: "device-nidek-rt5100-serial-default",
+            description: "Prepared MEDISTAR export profile for NIDEK RT-5100 RS232 phoropter captures. Final prescription maps to 6228; Subjective maps to 6227; Plus-Package details stay diagnostic until validated.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static ExportProfileDefinition CreateMedistarNidekRtSerialDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        DateTimeOffset timestamp)
+    {
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+                new ExportRuleDefinition("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+                new ExportRuleDefinition("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+                new ExportRuleDefinition("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+                new ExportRuleDefinition("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+                new ExportRuleDefinition("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+                new ExportRuleDefinition("7", "6228", "FinalHeader", ExportRuleType.Template, "Device.Measure[@Type='RTSERIAL']/Final/HeaderLine", "{value}", 7, true, "MEDISTAR 6228 header for NIDEK RT serial final prescription."),
+                new ExportRuleDefinition("8", "6228", "FinalRight", ExportRuleType.Template, "Device.Measure[@Type='RTSERIAL']/Final/R/MedistarLine", "{value}", 8, true, "MEDISTAR 6228 right-eye final prescription from NIDEK RT serial data."),
+                new ExportRuleDefinition("9", "6228", "FinalLeft", ExportRuleType.Template, "Device.Measure[@Type='RTSERIAL']/Final/L/MedistarLine", "{value}", 9, true, "MEDISTAR 6228 left-eye final prescription from NIDEK RT serial data."),
+                new ExportRuleDefinition("10", "6227", "SubjectiveHeader", ExportRuleType.Template, "Device.Measure[@Type='RTSERIAL']/Subjective/HeaderLine", "{value}", 10, true, "MEDISTAR 6227 header for NIDEK RT serial Subjective/Full Correction."),
+                new ExportRuleDefinition("11", "6227", "SubjectiveRight", ExportRuleType.Template, "Device.Measure[@Type='RTSERIAL']/Subjective/R/MedistarLine", "{value}", 11, true, "MEDISTAR 6227 right-eye Subjective/Full Correction from NIDEK RT serial data."),
+                new ExportRuleDefinition("12", "6227", "SubjectiveLeft", ExportRuleType.Template, "Device.Measure[@Type='RTSERIAL']/Subjective/L/MedistarLine", "{value}", 12, true, "MEDISTAR 6227 left-eye Subjective/Full Correction from NIDEK RT serial data.")
+            });
+    }
 }

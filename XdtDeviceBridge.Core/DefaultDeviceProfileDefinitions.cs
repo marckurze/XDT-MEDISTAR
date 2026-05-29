@@ -847,6 +847,104 @@ public static class DefaultDeviceProfileDefinitions
             DeviceImagePath: InterfaceProfileUiPolicy.TopconCv5000DeviceImagePath);
     }
 
+    public static DeviceProfileDefinition CreateNidekRt2100SerialDefault()
+    {
+        return CreateNidekRtSerialDefault(
+            id: "device-nidek-rt2100-serial-default",
+            name: "NIDEK RT-2100 RS232",
+            product: "RT-2100 RS232",
+            model: "RT-2100",
+            description: "Default device profile definition for the prepared bidirectional NIDEK RT-2100 serial RS232 phoropter workflow. Final prescription is exported with 6228 and Subjective/Full Correction with 6227 after real practice captures are validated.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateNidekRt3100SerialDefault()
+    {
+        return CreateNidekRtSerialDefault(
+            id: "device-nidek-rt3100-serial-default",
+            name: "NIDEK RT-3100 RS232",
+            product: "RT-3100 RS232",
+            model: "RT-3100",
+            description: "Default device profile definition for the prepared bidirectional NIDEK RT-3100 serial RS232 phoropter workflow. Type 1 uses 2400 7E2; Type 2 can be selected on site with 9600 8O1.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateNidekRt5100SerialDefault()
+    {
+        return CreateNidekRtSerialDefault(
+            id: "device-nidek-rt5100-serial-default",
+            name: "NIDEK RT-5100 RS232",
+            product: "RT-5100 RS232",
+            model: "RT-5100",
+            description: "Default device profile definition for the prepared bidirectional NIDEK RT-5100 serial RS232 phoropter workflow. The shared NIDEK-RT serial parser reads Final and Subjective refraction candidates; live validation remains open.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static DeviceProfileDefinition CreateNidekRtSerialDefault(
+        string id,
+        string name,
+        string product,
+        string model,
+        string description,
+        DateTimeOffset timestamp)
+    {
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "NIDEK",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: model,
+            DeviceType: "Phoropter",
+            ParserMode: NidekRtSerialPhoropterConstants.ParserMode,
+            Measurements: CreateNidekRtSerialMeasurements(model),
+            SupportedExaminationTypes: new[] { "RT", "Phoropter", "Refraktion", "Final", "Subjective", "LM", "RM", "AR" },
+            CanContainMultipleExaminationTypes: true,
+            IsBidirectional: true,
+            DeviceImagePath: string.Empty,
+            ConnectionKind: DeviceConnectionKind.SerialRs232,
+            SerialSettings: new SerialCommunicationSettings(
+                BaudRate: 2400,
+                DataBits: 7,
+                StopBits: SerialStopBitsSetting.Two,
+                Parity: SerialParitySetting.Even,
+                Handshake: SerialHandshakeSetting.None,
+                IsBidirectional: true,
+                LineTerminator: SerialLineTerminatorSetting.CR));
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateNidekRtSerialMeasurements(string model)
+    {
+        var prefix = model.Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase).ToLowerInvariant();
+        return new[]
+        {
+            new DeviceMeasurementDefinition($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "NIDEK RT serial common company field."),
+            new DeviceMeasurementDefinition($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "NIDEK RT serial model name."),
+            new DeviceMeasurementDefinition($"{prefix}-patient-id", "Patient ID", "Common/Patient/ID", "Common", string.Empty, string.Empty, false, "Patient or ID number from the serial header, when present."),
+            new DeviceMeasurementDefinition($"{prefix}-date", "Date", "Common/Date", "Common", string.Empty, string.Empty, false, "Measurement date from the serial header, when present."),
+            new DeviceMeasurementDefinition($"{prefix}-system-no", "SystemNo", "Common/SystemNo", "Common", string.Empty, string.Empty, false, "System number from RT-3100/RT-5100 header, when present."),
+            new DeviceMeasurementDefinition($"{prefix}-final-header", "Final MEDISTAR-Header", "Measure[@Type='RTSERIAL']/Final/HeaderLine", "RTSERIAL", string.Empty, string.Empty, false, "Computed MEDISTAR 6228 header for NIDEK RT serial final prescription."),
+            new DeviceMeasurementDefinition($"{prefix}-final-r-line", "Final R MEDISTAR-Zeile", "Measure[@Type='RTSERIAL']/Final/R/MedistarLine", "RTSERIAL", "R", string.Empty, false, "Computed MEDISTAR 6228 right-eye final prescription line."),
+            new DeviceMeasurementDefinition($"{prefix}-final-l-line", "Final L MEDISTAR-Zeile", "Measure[@Type='RTSERIAL']/Final/L/MedistarLine", "RTSERIAL", "L", string.Empty, false, "Computed MEDISTAR 6228 left-eye final prescription line."),
+            new DeviceMeasurementDefinition($"{prefix}-subjective-header", "Subjective MEDISTAR-Header", "Measure[@Type='RTSERIAL']/Subjective/HeaderLine", "RTSERIAL", string.Empty, string.Empty, false, "Computed MEDISTAR 6227 header for NIDEK RT serial subjective/full correction."),
+            new DeviceMeasurementDefinition($"{prefix}-subjective-r-line", "Subjective R MEDISTAR-Zeile", "Measure[@Type='RTSERIAL']/Subjective/R/MedistarLine", "RTSERIAL", "R", string.Empty, false, "Computed MEDISTAR 6227 right-eye subjective/full correction line."),
+            new DeviceMeasurementDefinition($"{prefix}-subjective-l-line", "Subjective L MEDISTAR-Zeile", "Measure[@Type='RTSERIAL']/Subjective/L/MedistarLine", "RTSERIAL", "L", string.Empty, false, "Computed MEDISTAR 6227 left-eye subjective/full correction line."),
+            new DeviceMeasurementDefinition($"{prefix}-lm-r-sphere", "LM R Sphere", "Measure[@Type='RTSERIAL']/Lensmeter/R/Sphere", "RTSERIAL", "R", "dpt", false, "Lensmeter right sphere from serial RT data."),
+            new DeviceMeasurementDefinition($"{prefix}-lm-l-sphere", "LM L Sphere", "Measure[@Type='RTSERIAL']/Lensmeter/L/Sphere", "RTSERIAL", "L", "dpt", false, "Lensmeter left sphere from serial RT data."),
+            new DeviceMeasurementDefinition($"{prefix}-ar-r-sphere", "AR R Sphere", "Measure[@Type='RTSERIAL']/Objective/R/Sphere", "RTSERIAL", "R", "dpt", false, "Objective/autorefraction right sphere from serial RT data."),
+            new DeviceMeasurementDefinition($"{prefix}-ar-l-sphere", "AR L Sphere", "Measure[@Type='RTSERIAL']/Objective/L/Sphere", "RTSERIAL", "L", "dpt", false, "Objective/autorefraction left sphere from serial RT data.")
+        };
+    }
+
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

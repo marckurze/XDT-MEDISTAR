@@ -109,6 +109,7 @@ public sealed class MedistarHistoricalMeasurementParser
         while (reader.ReadLine() is { } line)
         {
             lineNumber++;
+            var historicalCandidate = line.Trim();
             if (TryReadGdtField(line, out var fieldCode, out var value))
             {
                 switch (fieldCode)
@@ -130,10 +131,10 @@ public sealed class MedistarHistoricalMeasurementParser
                         break;
                 }
 
-                continue;
+                historicalCandidate = value.Trim();
             }
 
-            var match = HistoricalLineRegex.Match(line.Trim());
+            var match = HistoricalLineRegex.Match(historicalCandidate);
             if (!match.Success)
             {
                 continue;

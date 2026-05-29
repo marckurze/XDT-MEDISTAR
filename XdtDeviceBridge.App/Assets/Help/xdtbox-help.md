@@ -186,6 +186,12 @@ Die manuelle Dokumentübergabe öffnet ein Übertragungsfenster nach AIS-Dateiei
 
 Die NIDEK-RS232-Familie nutzt ASCII-Frames mit Steuerzeichen wie SOH, STX, ETB und EOT. Der Testbereich zeigt Frames und Kandidaten an; produktiver Export erfolgt erst nach Gerätevalidierung.
 
+# NIDEK RT-2100/RT-3100/RT-5100 RS232
+
+NIDEK RT-2100, RT-3100 und RT-5100 sind als serielle bidirektionale Phoropterfamilie vorbereitet. Fuer RT-2100 ist 2400 7E2 der konservative Standard. RT-3100 und RT-5100 koennen Type 1 mit 2400 7E2 oder Type 2 mit 9600 8O1 verwenden.
+
+Im XDT-Baukasten kann die Geraeteausgabe als Vorschau angezeigt werden: vorhandene Lensmeter- und Autorefraktor-Historienwerte koennen als PC-zu-RT-Sendeframe vorbereitet werden. Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Vor produktivem Senden sind echte Praxis-Mitschnitte und ein Live-Test erforderlich.
+
 # Fehlerbehebung
 
 Keine AIS-Datei gefunden: Prüfen Sie den Ordner "AIS-Patienten Datei an XDTBox" und ob das AIS eine Datei schreibt.

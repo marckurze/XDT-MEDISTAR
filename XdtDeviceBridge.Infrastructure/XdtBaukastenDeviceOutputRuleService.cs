@@ -31,6 +31,11 @@ public static class XdtBaukastenDeviceOutputRuleService
             return CreateRt6100Rules();
         }
 
+        if (IsNidekRtSerial(profile))
+        {
+            return CreateNidekRtSerialRules();
+        }
+
         if (IsCv5000(profile))
         {
             return CreateCv5000Rules();
@@ -74,6 +79,12 @@ public static class XdtBaukastenDeviceOutputRuleService
         {
             var selected = SelectRt6100Records(historicalRecords);
             return CreatePlaceholders(CreateRt6100PlaceholderSpecs(), patient, selected, isRt6100: true);
+        }
+
+        if (IsNidekRtSerial(profile))
+        {
+            var selected = SelectNidekRtSerialRecords(historicalRecords);
+            return CreatePlaceholders(CreateNidekRtSerialPlaceholderSpecs(), patient, selected, isRt6100: false);
         }
 
         if (IsCv5000(profile))
@@ -207,6 +218,30 @@ public static class XdtBaukastenDeviceOutputRuleService
         return rules;
     }
 
+    private static IReadOnlyList<ExportRuleDefinition> CreateNidekRtSerialRules()
+    {
+        var rules = new List<ExportRuleDefinition>();
+        AddRule(rules, "nidek-rtserial-patient-id", "Serial/ID", "Patient ID", "NidekRtSerial.PatientNumber", "Patienten-ID im seriellen PC-zu-RT-Block.");
+        AddRule(rules, "nidek-rtserial-patient-firstname", "Serial/Patient/FirstName", "Vorname", "NidekRtSerial.Patient.FirstName", "Patientenvorname fuer vorbereitete serielle Ausgabe.");
+        AddRule(rules, "nidek-rtserial-patient-lastname", "Serial/Patient/LastName", "Nachname", "NidekRtSerial.Patient.LastName", "Patientennachname fuer vorbereitete serielle Ausgabe.");
+        AddRtSerialEyeRules(rules, "LM", "Lensmeter", "PhoropterInput.Lensmeter");
+        AddRtSerialEyeRules(rules, "AR", "Autoref", "PhoropterInput.Autoref");
+        return rules;
+    }
+
+    private static void AddRtSerialEyeRules(List<ExportRuleDefinition> rules, string targetPrefix, string namePrefix, string sourcePrefix)
+    {
+        foreach (var eye in new[] { ("R", "Right", "rechts"), ("L", "Left", "links") })
+        {
+            AddRule(rules, CreateId("nidek-rtserial", targetPrefix, eye.Item2, "sphere"), $"Serial/{targetPrefix}/{eye.Item1}/Sphere", $"{namePrefix} {eye.Item3} Sphere", $"{sourcePrefix}.{eye.Item2}.Sphere", $"{namePrefix} {eye.Item3} Sphaere.");
+            AddRule(rules, CreateId("nidek-rtserial", targetPrefix, eye.Item2, "cylinder"), $"Serial/{targetPrefix}/{eye.Item1}/Cylinder", $"{namePrefix} {eye.Item3} Cylinder", $"{sourcePrefix}.{eye.Item2}.Cylinder", $"{namePrefix} {eye.Item3} Zylinder.");
+            AddRule(rules, CreateId("nidek-rtserial", targetPrefix, eye.Item2, "axis"), $"Serial/{targetPrefix}/{eye.Item1}/Axis", $"{namePrefix} {eye.Item3} Axis", $"{sourcePrefix}.{eye.Item2}.Axis", $"{namePrefix} {eye.Item3} Achse.");
+            AddRule(rules, CreateId("nidek-rtserial", targetPrefix, eye.Item2, "add"), $"Serial/{targetPrefix}/{eye.Item1}/ADD", $"{namePrefix} {eye.Item3} ADD", $"{sourcePrefix}.{eye.Item2}.ADD", $"{namePrefix} {eye.Item3} Addition.");
+        }
+
+        AddRule(rules, CreateId("nidek-rtserial", targetPrefix, "pd"), $"Serial/{targetPrefix}/PD", $"{namePrefix} PD", $"{sourcePrefix}.PD", $"{namePrefix} Binokular-PD.");
+    }
+
     private static void AddCvRefractionRules(List<ExportRuleDefinition> rules, string typeName, string sourcePrefix)
     {
         var targetPrefix = $"SBJ/{typeName}";
@@ -280,6 +315,15 @@ public static class XdtBaukastenDeviceOutputRuleService
     private static IReadOnlyList<PlaceholderSpec> CreateRt6100PlaceholderSpecs()
     {
         return CreateRt6100Rules()
+            .GroupBy(rule => rule.SourcePath ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key))
+            .Select(group => new PlaceholderSpec(group.First().TargetName, group.Key, group.First().Description ?? group.Key))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<PlaceholderSpec> CreateNidekRtSerialPlaceholderSpecs()
+    {
+        return CreateNidekRtSerialRules()
             .GroupBy(rule => rule.SourcePath ?? string.Empty, StringComparer.OrdinalIgnoreCase)
             .Where(group => !string.IsNullOrWhiteSpace(group.Key))
             .Select(group => new PlaceholderSpec(group.First().TargetName, group.Key, group.First().Description ?? group.Key))
@@ -442,6 +486,11 @@ public static class XdtBaukastenDeviceOutputRuleService
         AddValue(values, "AIS.FirstName", patient.FirstName);
         AddValue(values, "AIS.LastName", patient.LastName);
         AddValue(values, "AIS.DateOfBirth", patient.BirthDate);
+        AddValue(values, "NidekRtSerial.PatientNumber", patient.PatientNumber);
+        AddValue(values, "NidekRtSerial.Patient.ID", patient.PatientNumber);
+        AddValue(values, "NidekRtSerial.Patient.FirstName", patient.FirstName);
+        AddValue(values, "NidekRtSerial.Patient.LastName", patient.LastName);
+        AddValue(values, "NidekRtSerial.Patient.DOB", patient.BirthDate);
 
         if (isRt6100)
         {
@@ -541,6 +590,14 @@ public static class XdtBaukastenDeviceOutputRuleService
             AisHistoricalMeasurementSourceKind.Autorefraction);
     }
 
+    private static IReadOnlyList<AisHistoricalMeasurementRecord> SelectNidekRtSerialRecords(IEnumerable<AisHistoricalMeasurementRecord> records)
+    {
+        return SelectRecords(
+            records,
+            AisHistoricalMeasurementSourceKind.Lensmeter,
+            AisHistoricalMeasurementSourceKind.Autorefraction);
+    }
+
     private static IReadOnlyList<AisHistoricalMeasurementRecord> SelectRecords(
         IEnumerable<AisHistoricalMeasurementRecord> records,
         params AisHistoricalMeasurementSourceKind[] kinds)
@@ -564,6 +621,14 @@ public static class XdtBaukastenDeviceOutputRuleService
     private static bool IsRt6100(DeviceProfileDefinition? profile)
     {
         return NormalizeProfileText(profile).Contains("RT6100", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool IsNidekRtSerial(DeviceProfileDefinition? profile)
+    {
+        return NidekRtSerialPhoropterParser.IsParserMode(profile?.ParserMode)
+            || NormalizeProfileText(profile).Contains("RT2100", StringComparison.OrdinalIgnoreCase)
+            || NormalizeProfileText(profile).Contains("RT3100", StringComparison.OrdinalIgnoreCase)
+            || NormalizeProfileText(profile).Contains("RT5100", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeProfileText(DeviceProfileDefinition? profile)

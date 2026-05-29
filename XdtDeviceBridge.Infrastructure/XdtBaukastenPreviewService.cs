@@ -10,6 +10,7 @@ public sealed class XdtBaukastenPreviewService
     private readonly MedistarHistoricalMeasurementParser _historyParser;
     private readonly TopconCv5000ImportXmlWriter _cv5000Writer;
     private readonly NidekRt6100InputXmlWriter _rt6100Writer;
+    private readonly NidekRtSerialPhoropterOutputWriter _rtSerialWriter = new();
     private readonly XdtBaukastenDeviceCompatibilityService _compatibilityService;
 
     public XdtBaukastenPreviewService()
@@ -209,6 +210,38 @@ public sealed class XdtBaukastenPreviewService
                     state.DeviceProfile);
                 messages.AddRange(projected.Warnings.Select(warning => $"Geräteausgabe CV-5000: {warning}"));
                 return projected.Content;
+            }
+
+            if (XdtBaukastenDeviceOutputRuleService.IsNidekRtSerial(state.DeviceProfile))
+            {
+                var selected = _historyParser.CreateDefaultRt6100Selection(history.Records);
+                var model = DetectRtSerialModel(state.DeviceProfile);
+                var result = _rtSerialWriter.BuildFrame(history.Patient, selected, model);
+                if (!result.Success)
+                {
+                    return result.ErrorMessage ?? "NIDEK-RT-RS232-Geräteausgabe konnte nicht erzeugt werden.";
+                }
+
+                var rulePreview = XdtBaukastenDeviceOutputRuleService.BuildRuleTextPreview(
+                    state.WorkingDeviceOutputRules,
+                    history.Patient,
+                    selected,
+                    state.DeviceProfile);
+                messages.AddRange(rulePreview.Warnings.Select(warning => $"Geräteausgabe NIDEK RT Serial: {warning}"));
+                return "NIDEK RT-2100/3100/5100 RS232 ist vorbereitet. Bitte echte Praxis-Mitschnitte prüfen, bevor produktiv gesendet wird."
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + result.VisibleContent
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + "Hexdump:"
+                    + Environment.NewLine
+                    + result.HexDump
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + "Baukasten-Regelwerte:"
+                    + Environment.NewLine
+                    + rulePreview.Content;
             }
 
             var textPreview = XdtBaukastenDeviceOutputRuleService.BuildRuleTextPreview(
@@ -580,6 +613,28 @@ public sealed class XdtBaukastenPreviewService
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static NidekRtSerialPhoropterModel DetectRtSerialModel(DeviceProfileDefinition? profile)
+    {
+        var text = string.Join(" ", profile?.Metadata.Id, profile?.Metadata.Name, profile?.Model, profile?.Metadata.Product);
+        var normalized = Regex.Replace(text, "[^A-Za-z0-9]", string.Empty).ToUpperInvariant();
+        if (normalized.Contains("RT2100", StringComparison.Ordinal))
+        {
+            return NidekRtSerialPhoropterModel.Rt2100;
+        }
+
+        if (normalized.Contains("RT3100", StringComparison.Ordinal))
+        {
+            return NidekRtSerialPhoropterModel.Rt3100;
+        }
+
+        if (normalized.Contains("RT5100", StringComparison.Ordinal))
+        {
+            return NidekRtSerialPhoropterModel.Rt5100;
+        }
+
+        return NidekRtSerialPhoropterModel.Unknown;
     }
 
     private static string Display(string? value)

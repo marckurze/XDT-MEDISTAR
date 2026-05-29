@@ -129,7 +129,7 @@ public sealed class XdtBaukastenPreviewServiceTests
     public void BuildPreview_ShouldApplyCv5000DeviceOutputWorkingRules()
     {
         using var temp = new TempFolder();
-        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var aisPath = WriteHistoricalGdt(temp.Path);
         var devicePath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml");
         var state = CreateState(
             aisPath,
@@ -255,6 +255,36 @@ public sealed class XdtBaukastenPreviewServiceTests
         Assert.Contains("<ID>RT-BAUKASTEN-ID</ID>", result.Output.DeviceOutput);
     }
 
+    [Fact]
+    public void BuildPreview_ShouldCreateNidekRtSerialDeviceOutputPreviewWithoutWritingProductiveFile()
+    {
+        using var temp = new TempFolder();
+        var aisPath = WriteHistoricalGdt(temp.Path);
+        var devicePath = WriteText(temp.Path, "rt3100.txt", CreateRtSerialFrame());
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt3100SerialDefault());
+        state.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+        var patientRule = state.WorkingDeviceOutputRules.Single(rule => rule.TargetFieldCode == "Serial/ID") with
+        {
+            OutputTemplate = "RTSERIAL-TEST-ID"
+        };
+        Assert.True(state.UpdateWorkingRule(patientRule));
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("<SH>", result.Output.DeviceOutput);
+        Assert.Contains("DRL<SX>", result.Output.DeviceOutput);
+        Assert.Contains("Hexdump:", result.Output.DeviceOutput);
+        Assert.Contains("RTSERIAL-TEST-ID", result.Output.DeviceOutput);
+        Assert.Contains("NIDEK RT-2100/3100/5100 RS232 ist vorbereitet", result.Output.DeviceOutput);
+        Assert.False(File.Exists(Path.Combine(temp.Path, NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate)));
+    }
+
     private static XdtBaukastenState CreateLm7State(string aisPath, string devicePath)
     {
         return CreateState(
@@ -291,6 +321,22 @@ public sealed class XdtBaukastenPreviewServiceTests
         return path;
     }
 
+    private static string WriteHistoricalGdt(string folder)
+    {
+        var path = Path.Combine(folder, "patient-history.gdt");
+        File.WriteAllText(path, string.Concat(
+            BuildGdtLine("3000", "4701-1"),
+            BuildGdtLine("3101", "Testfrau"),
+            BuildGdtLine("3102", "Anna"),
+            BuildGdtLine("3103", "12061955"),
+            BuildGdtLine("8402", "Phoro"),
+            BuildGdtLine("9999", "18.05.2026 V0 L.:S=+ 6.50 Z=- 2.75*170 A=+ 1.50"),
+            BuildGdtLine("9999", "18.05.2026 V0 R.:S=+ 6.25 Z=- 3.25*  3"),
+            BuildGdtLine("9999", "18.05.2026 V1 L.:S=+ 1.50 Z=- 0.75* 90"),
+            BuildGdtLine("9999", "18.05.2026 V1 R.:S=+ 1.00 Z=- 1.25*  7")), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        return path;
+    }
+
     private static string BuildGdtLine(string fieldCode, string value)
     {
         var length = 3 + fieldCode.Length + value.Length;
@@ -315,6 +361,43 @@ public sealed class XdtBaukastenPreviewServiceTests
         var path = Path.Combine(folder, "rt6100.xml");
         File.WriteAllText(path, xml, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         return path;
+    }
+
+    private static string WriteText(string folder, string fileName, string text)
+    {
+        var path = Path.Combine(folder, fileName);
+        File.WriteAllText(path, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        return path;
+    }
+
+    private static string CreateRtSerialFrame()
+    {
+        var builder = new StringBuilder();
+        builder.Append((char)NidekRtSerialControlChars.SH);
+        foreach (var line in new[]
+                 {
+                     "NIDEK_RT-3100",
+                     "ID0000004711",
+                     "DAY2026/05/29_02",
+                     "@",
+                     "RT",
+                     "RF+02.25-00.50008",
+                     "LF+02.00-00.25085",
+                     "PD0060"
+                 })
+        {
+            if (!line.StartsWith("NIDEK", StringComparison.Ordinal))
+            {
+                builder.Append((char)NidekRtSerialControlChars.SX);
+            }
+
+            builder.Append(line);
+            builder.Append((char)NidekRtSerialControlChars.CR);
+        }
+
+        builder.Append((char)NidekRtSerialControlChars.EB);
+        builder.Append((char)NidekRtSerialControlChars.ET);
+        return builder.ToString();
     }
 
     private static string BuilderManualProcessingPreviewServiceTests_CreateRt6100ReturnXml()

@@ -493,6 +493,89 @@ public static class DefaultInterfaceProfileDefinitions
                 Format: NidekRt6100InputXmlWriter.DeviceOutputFormat));
     }
 
+    public static InterfaceProfileDefinition CreateMedistarNidekRt2100SerialDefault()
+    {
+        return CreateMedistarNidekRtSerialDefault(
+            id: "interface-medistar-nidek-rt2100-serial-default",
+            name: "MEDISTAR + NIDEK RT-2100 RS232",
+            product: "MEDISTAR/NIDEK RT-2100 RS232",
+            deviceProfileId: "device-nidek-rt2100-serial-default",
+            exportProfileId: "export-medistar-nidek-rt2100-serial-default",
+            description: "Built-in inactive candidate for NIDEK RT-2100 serial RS232 phoropter captures. PC-to-RT LM/AR output is prepared for Baukasten preview only until live validation.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekRt3100SerialDefault()
+    {
+        return CreateMedistarNidekRtSerialDefault(
+            id: "interface-medistar-nidek-rt3100-serial-default",
+            name: "MEDISTAR + NIDEK RT-3100 RS232",
+            product: "MEDISTAR/NIDEK RT-3100 RS232",
+            deviceProfileId: "device-nidek-rt3100-serial-default",
+            exportProfileId: "export-medistar-nidek-rt3100-serial-default",
+            description: "Built-in inactive candidate for NIDEK RT-3100 serial RS232 phoropter captures with Type1/Type2 communication presets prepared.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekRt5100SerialDefault()
+    {
+        return CreateMedistarNidekRtSerialDefault(
+            id: "interface-medistar-nidek-rt5100-serial-default",
+            name: "MEDISTAR + NIDEK RT-5100 RS232",
+            product: "MEDISTAR/NIDEK RT-5100 RS232",
+            deviceProfileId: "device-nidek-rt5100-serial-default",
+            exportProfileId: "export-medistar-nidek-rt5100-serial-default",
+            description: "Built-in inactive candidate for NIDEK RT-5100 serial RS232 phoropter captures with extended data sources kept diagnostic until practice captures are available.",
+            timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarNidekRtSerialDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description,
+        DateTimeOffset timestamp)
+    {
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description,
+            DeviceOutput: new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate,
+                Format: NidekRtSerialPhoropterOutputWriter.DeviceOutputFormat));
+    }
+
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);
