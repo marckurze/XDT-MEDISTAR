@@ -8,7 +8,7 @@ Diese Notizen fassen die Auswertung der bereitgestellten Herstellerdokumente zus
 - `RT-3100(RT-11)_IntE_34090-P982-A2.pdf`
 - `RT-5100_IntME_34085-P992-A0.pdf`
 
-Die Auswertung dient der Vorbereitung von Parser, Writer, BuiltIn-Profilen und XDT-Baukasten-Vorschau. Am 2026-05-29 wurde zusaetzlich ein erster echter RT-3100-Praxismitschnitt als Fixture uebernommen. Eine produktive Live-Sendung an echte Geraete ist damit noch nicht freigegeben.
+Die Auswertung dient Parser, Writer, BuiltIn-Profilen, XDT-Baukasten-Vorschau und dem produktiven patientengetriggerten RS232-Ablauf. Am 2026-05-29 wurde zusaetzlich ein erster echter RT-3100-Praxismitschnitt als Fixture uebernommen. Eine echte Live-Sendung an ein Praxisgeraet und die Rueckgabe nach Sendung muessen weiterhin praktisch freigegeben werden.
 
 ## Gemeinsame Familie
 
@@ -90,7 +90,7 @@ MEDISTAR-Mapping:
 
 ## PC -> RT
 
-Der Writer `NidekRtSerialPhoropterOutputWriter` erzeugt Vorschauframes fuer die Uebergabe von vorhandenen AIS-Historienwerten an das Geraet.
+Der Writer `NidekRtSerialPhoropterOutputWriter` erzeugt Frames fuer die Uebergabe von vorhandenen AIS-Historienwerten an das Geraet; im Baukasten bleiben sie Vorschau, im Produktivdialog werden sie erst nach Anwenderklick gesendet.
 
 Unterstuetzt in V1:
 
@@ -102,6 +102,16 @@ Unterstuetzt in V1:
 
 RT-2100 nutzt keinen ID-Block. RT-3100 und RT-5100 koennen einen ID-Block enthalten. Fehlende Werte werden weggelassen; es werden keine leeren medizinischen Bloecke erfunden. Prisma wird erst nach echter Datenlage aktiviert.
 
+## Produktiver Ablauf in XDTBox
+
+- Beim Start der Ueberwachung wird kein RT-Phoropterfenster geoeffnet.
+- Erst eine stabile AIS-Patientendatei startet den Auswahl-/Sendedialog.
+- Der Dialog bietet LM-/AR-Historienwerte an; produktiv gesendet werden zunaechst V0/Lensmeter und V1/Autorefraktion.
+- Senden erfolgt nur nach ausdruecklichem Anwenderklick ueber den im Schnittstellenprofil konfigurierten COM-Port.
+- XDTBox sendet `SH C ** SX RS EB ET`, erwartet `SX SD`, schreibt danach den PC->RT-Frame und wechselt in den Empfang.
+- Die Rueckgabe wird bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
+- Serielle RT-Schnittstellenprofile brauchen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner.
+
 ## XDT-Baukasten
 
 Im XDT-Baukasten zeigt die Ansicht `Geraeteausgabe` den sichtbaren Steuerzeichen-Text und einen Hexdump. Die Vorschau schreibt keine produktive Datei und sendet nichts an einen COM-Port.
@@ -112,8 +122,9 @@ Warnhinweis im Baukasten:
 
 ## Offene Praxispunkte
 
-- echte RT-2100-/RT-3100-/RT-5100-RS232-Mitschnitte
+- weitere echte RT-2100-/RT-3100-/RT-5100-RS232-Mitschnitte
 - Pruefung, welche Header-Variante das konkrete Praxisgeraet sendet
 - Pruefung von Type1/Type2 und DTR/DSR-Verhalten
 - Live-Abnahme des PC->RT-Sendeframes
+- Rueckgabe nach einer echten Sendung am RT-3100/RT-2100/RT-5100
 - MEDISTAR-Abnahme der `6228`-/`6227`-Rueckgabe

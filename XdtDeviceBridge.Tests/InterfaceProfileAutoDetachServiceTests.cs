@@ -231,6 +231,26 @@ public sealed class InterfaceProfileAutoDetachServiceTests
     }
 
     [Fact]
+    public void Evaluate_ShouldIgnoreInformationalRs232ScanMessages()
+    {
+        var autoDetachService = new InterfaceProfileAutoDetachService();
+        var state = new InterfaceProfileFloatingWindowState("interface-medistar-nidek-rt3100-serial-default");
+
+        var decision = autoDetachService.Evaluate(
+            Event(
+                "interface-medistar-nidek-rt3100-serial-default",
+                "scan-message:RS232-Profil: COM-Port wird nicht beim Ordnerscan abgehört.",
+                BaseTime,
+                "RS232-Profil: COM-Port wird nicht beim Ordnerscan abgehört.",
+                InterfaceMonitoringEventSeverity.Info),
+            state);
+
+        Assert.False(decision.IsRelevantActivity);
+        Assert.False(decision.ShouldDetach);
+        Assert.False(decision.ShouldBringToFront);
+    }
+
+    [Fact]
     public void ResetProfile_ShouldClearCooldownOnlyForSelectedProfile()
     {
         var autoDetachService = new InterfaceProfileAutoDetachService();

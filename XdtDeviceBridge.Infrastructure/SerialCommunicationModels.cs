@@ -18,6 +18,11 @@ public interface ISerialDeviceCommunicationService
         SerialCommunicationSettings settings,
         string command,
         CancellationToken cancellationToken);
+
+    Task<SerialCommunicationExchangeResult> ExchangeAsync(
+        SerialCommunicationSettings settings,
+        SerialCommunicationExchangeRequest request,
+        CancellationToken cancellationToken);
 }
 
 public sealed record SerialCommunicationSessionResult(
@@ -36,6 +41,27 @@ public sealed record SerialCommunicationWriteResult(
     string? ErrorMessage,
     string PortName,
     int BytesWritten);
+
+public sealed record SerialCommunicationExchangeRequest(
+    byte[] RequestBytes,
+    byte[] ExpectedHandshakeBytes,
+    byte[] PayloadBytes,
+    byte EndOfTransmissionByte,
+    TimeSpan HandshakeTimeout,
+    TimeSpan ReceiveTimeout,
+    TimeSpan StableAfterEndOfTransmission,
+    int MaxReceiveBytes);
+
+public sealed record SerialCommunicationExchangeResult(
+    bool Success,
+    string? ErrorMessage,
+    string PortName,
+    int BytesWritten,
+    byte[] HandshakeBytes,
+    byte[] ReceivedBytes,
+    string RawText,
+    string HexDump,
+    IReadOnlyList<string> Messages);
 
 public sealed record SerialRawDeviceInput(
     string PortName,

@@ -39,6 +39,25 @@ public sealed class InterfaceProfileUiPolicyTests
         Assert.True(InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile));
     }
 
+    [Fact]
+    public void ShouldUseSerialWorkflow_ForNidekRtSerialPhoropterWithoutFileDeviceOutput()
+    {
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault() with
+        {
+            SerialSettings = SerialCommunicationSettings.Default with
+            {
+                PortName = "COM7",
+                IsBidirectional = true
+            }
+        };
+        var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault();
+
+        Assert.True(InterfaceProfileUiPolicy.IsNidekRtSerialPhoropter(interfaceProfile, deviceProfile));
+        Assert.True(InterfaceProfileUiPolicy.ShouldTriggerNidekRtSerialPhoropterWorkflow(interfaceProfile, deviceProfile));
+        Assert.False(InterfaceProfileUiPolicy.ShouldShowDeviceOutput(interfaceProfile, deviceProfile));
+        Assert.True(InterfaceProfileUiPolicy.ShouldShowAisAttachmentOptions(interfaceProfile, deviceProfile));
+    }
+
     [Theory]
     [InlineData("ARK1S")]
     [InlineData("NT530P")]

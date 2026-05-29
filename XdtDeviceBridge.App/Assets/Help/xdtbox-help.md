@@ -190,7 +190,9 @@ Die NIDEK-RS232-Familie nutzt ASCII-Frames mit Steuerzeichen wie SOH, STX, ETB u
 
 NIDEK RT-2100, RT-3100 und RT-5100 sind als serielle bidirektionale Phoropterfamilie vorbereitet. Fuer RT-2100 ist 2400 7E2 der konservative Standard. RT-3100 und RT-5100 koennen Type 1 mit 2400 7E2 oder Type 2 mit 9600 8O1 verwenden.
 
-Im XDT-Baukasten kann die Geraeteausgabe als Vorschau angezeigt werden: vorhandene Lensmeter- und Autorefraktor-Historienwerte koennen als PC-zu-RT-Sendeframe vorbereitet werden. Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Vor produktivem Senden sind echte Praxis-Mitschnitte und ein Live-Test erforderlich.
+Im produktiven Ablauf oeffnet XDTBox das RT-Fenster nicht schon beim Start der Ueberwachung. Erst wenn eine AIS-Patientendatei ankommt, werden Patient und Historie gelesen und ein Auswahlfenster geoeffnet. Dort koennen Lensmeter- und Autorefraktor-Historienwerte ausgewaehlt werden. Senden erfolgt nur nach Klick auf "An RT senden" ueber den im Schnittstellenprofil gepflegten COM-Port. Danach wartet XDTBox auf die Rueckgabe des Phoropters bis EOT und eine kurze Stabilitaetswartezeit.
+
+Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Ein Geraete-Eingangsordner und ein dateibasierter Ausgabeordner an das Geraet sind fuer diese seriellen Phoropter nicht erforderlich. Vor der endgueltigen Praxisfreigabe muessen echtes Senden, Rueckgabe nach Sendung und MEDISTAR-Import am Geraet geprueft werden.
 
 # Fehlerbehebung
 

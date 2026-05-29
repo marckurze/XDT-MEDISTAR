@@ -6,6 +6,18 @@ public static class InterfaceProfileUiPolicy
     private const string Cv5000DeviceProfileId = "device-topcon-cv5000-default";
     private const string NidekRt6100InterfaceProfileId = "interface-medistar-nidek-rt6100-default";
     private const string NidekRt6100DeviceProfileId = "device-nidek-rt6100-default";
+    private static readonly string[] NidekRtSerialInterfaceProfileIds =
+    {
+        "interface-medistar-nidek-rt2100-serial-default",
+        "interface-medistar-nidek-rt3100-serial-default",
+        "interface-medistar-nidek-rt5100-serial-default"
+    };
+    private static readonly string[] NidekRtSerialDeviceProfileIds =
+    {
+        "device-nidek-rt2100-serial-default",
+        "device-nidek-rt3100-serial-default",
+        "device-nidek-rt5100-serial-default"
+    };
     public const double PilotMonitoringCardWidth = 576;
     public const double PilotFloatingWindowMinWidth = 672;
     public const double PilotFloatingWindowDefaultWidth = 744;
@@ -20,6 +32,11 @@ public static class InterfaceProfileUiPolicy
         InterfaceProfileDefinition? interfaceProfile,
         DeviceProfileDefinition? deviceProfile)
     {
+        if (deviceProfile?.ConnectionKind == DeviceConnectionKind.SerialRs232)
+        {
+            return false;
+        }
+
         return IsCv5000(interfaceProfile, deviceProfile)
             || deviceProfile?.IsBidirectional == true
             || interfaceProfile?.DeviceOutput is not null;
@@ -47,6 +64,20 @@ public static class InterfaceProfileUiPolicy
     {
         return IsNidekRt6100(interfaceProfile, deviceProfile)
             && interfaceProfile?.DeviceOutput?.IsEnabled == true;
+    }
+
+    public static bool ShouldTriggerNidekRtSerialPhoropterWorkflow(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        if (!IsNidekRtSerialPhoropter(interfaceProfile, deviceProfile))
+        {
+            return false;
+        }
+
+        return interfaceProfile?.SerialSettings?.IsBidirectional == true
+            || deviceProfile?.SerialSettings?.IsBidirectional == true
+            || deviceProfile?.IsBidirectional == true;
     }
 
     public static bool ShouldUsePilotMonitoringVisual(
@@ -245,6 +276,17 @@ public static class InterfaceProfileUiPolicy
             || ContainsRt6100(deviceProfile?.Metadata.Product);
     }
 
+    public static bool IsNidekRtSerialPhoropter(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        return ContainsId(NidekRtSerialInterfaceProfileIds, interfaceProfile?.Metadata.Id)
+            || ContainsId(NidekRtSerialDeviceProfileIds, interfaceProfile?.DeviceProfileId)
+            || ContainsId(NidekRtSerialDeviceProfileIds, deviceProfile?.Metadata.Id)
+            || (deviceProfile?.ConnectionKind == DeviceConnectionKind.SerialRs232
+                && ContainsNidekRtSerialModel(deviceProfile.Model, deviceProfile.Metadata.Product));
+    }
+
     private static bool ContainsCv5000(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
@@ -257,6 +299,20 @@ public static class InterfaceProfileUiPolicy
         return !string.IsNullOrWhiteSpace(value)
             && (value.Contains("RT-6100", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("RT6100", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ContainsNidekRtSerialModel(params string?[] values)
+    {
+        return values.Any(value => !string.IsNullOrWhiteSpace(value)
+            && (ContainsAny(value, "RT-2100", "RT2100")
+                || ContainsAny(value, "RT-3100", "RT3100")
+                || ContainsAny(value, "RT-5100", "RT5100")));
+    }
+
+    private static bool ContainsId(IReadOnlyList<string> ids, string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && ids.Contains(value.Trim(), StringComparer.OrdinalIgnoreCase);
     }
 
     private static bool ContainsAny(string? value, params string[] needles)

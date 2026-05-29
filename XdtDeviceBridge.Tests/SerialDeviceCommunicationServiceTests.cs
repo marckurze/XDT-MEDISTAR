@@ -94,6 +94,30 @@ public sealed class SerialDeviceCommunicationServiceTests
     }
 
     [Fact]
+    public async Task ExchangeAsync_ShouldReturnFriendlyErrorForMissingPortName()
+    {
+        var service = new SerialDeviceCommunicationService();
+        var request = new SerialCommunicationExchangeRequest(
+            RequestBytes: Array.Empty<byte>(),
+            ExpectedHandshakeBytes: Array.Empty<byte>(),
+            PayloadBytes: Array.Empty<byte>(),
+            EndOfTransmissionByte: 0x04,
+            HandshakeTimeout: TimeSpan.FromMilliseconds(50),
+            ReceiveTimeout: TimeSpan.FromMilliseconds(50),
+            StableAfterEndOfTransmission: TimeSpan.FromMilliseconds(10),
+            MaxReceiveBytes: 1024);
+
+        var result = await service.ExchangeAsync(
+            SerialCommunicationSettings.Default,
+            request,
+            CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Bitte einen COM-Port auswählen.", result.ErrorMessage);
+        Assert.Empty(result.ReceivedBytes);
+    }
+
+    [Fact]
     public void SerialPortDiscoveryService_ShouldReturnListWithoutThrowing()
     {
         var service = new SerialPortDiscoveryService();

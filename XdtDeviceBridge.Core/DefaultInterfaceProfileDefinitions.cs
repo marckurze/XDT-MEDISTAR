@@ -573,7 +573,20 @@ public static class DefaultInterfaceProfileDefinitions
                 IsEnabled: false,
                 OutputFolder: string.Empty,
                 FileNameTemplate: NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate,
-                Format: NidekRtSerialPhoropterOutputWriter.DeviceOutputFormat));
+                Format: NidekRtSerialPhoropterOutputWriter.DeviceOutputFormat),
+            SerialSettings: CreateNidekRtSerialDefaultSettings());
+    }
+
+    private static SerialCommunicationSettings CreateNidekRtSerialDefaultSettings()
+    {
+        return new SerialCommunicationSettings(
+            BaudRate: 2400,
+            DataBits: 7,
+            StopBits: SerialStopBitsSetting.Two,
+            Parity: SerialParitySetting.Even,
+            Handshake: SerialHandshakeSetting.None,
+            IsBidirectional: true,
+            LineTerminator: SerialLineTerminatorSetting.CR);
     }
 
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()

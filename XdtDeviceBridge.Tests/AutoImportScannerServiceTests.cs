@@ -74,7 +74,7 @@ public sealed class AutoImportScannerServiceTests
         Assert.Equal(1, result.AisFilesDetected);
         Assert.Equal(0, result.DeviceFilesDetected);
         Assert.Equal(1, result.FilesQueued);
-        Assert.Contains(result.Messages, message => message.Contains("RS232-Profil", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("RS232-Profil: COM-Port wird nicht beim Ordnerscan abgehört.", result.Messages);
         Assert.DoesNotContain("Geräte-Importordner fehlt.", result.Messages);
     }
 

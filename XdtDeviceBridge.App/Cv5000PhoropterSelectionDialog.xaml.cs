@@ -362,4 +362,27 @@ public sealed class Cv5000PhoropterSelectionDialogOptions
                 "V1"
             });
     }
+
+    public static Cv5000PhoropterSelectionDialogOptions CreateNidekRtSerial(string modelName)
+    {
+        var displayModel = string.IsNullOrWhiteSpace(modelName)
+            ? "NIDEK RT"
+            : modelName.Trim();
+        return new Cv5000PhoropterSelectionDialogOptions(
+            $"Werte an {displayModel} senden",
+            $"Bitte wählen Sie die vorhandenen MEDISTAR-Karteikartenwerte aus, die als LM- oder AR-Daten über den konfigurierten COM-Port an {displayModel} gesendet werden sollen. Danach wartet XDTBox auf die Rückgabe des Phoropters.",
+            $"An {displayModel} senden",
+            $"Keine an {displayModel} sendbaren LM-/AR-Refraktionswerte gefunden.",
+            "Für die serielle NIDEK-RT-Übergabe werden produktiv zunächst V0/Lensmeter und V1/Autorefraktor unterstützt.",
+            new HashSet<AisHistoricalMeasurementSourceKind>
+            {
+                AisHistoricalMeasurementSourceKind.Lensmeter,
+                AisHistoricalMeasurementSourceKind.Autorefraction
+            },
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "V0",
+                "V1"
+            });
+    }
 }

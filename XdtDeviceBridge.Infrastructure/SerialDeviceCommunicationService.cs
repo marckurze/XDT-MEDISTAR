@@ -78,6 +78,47 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
         }, CancellationToken.None);
     }
 
+    public Task<SerialCommunicationExchangeResult> ExchangeAsync(
+        SerialCommunicationSettings settings,
+        SerialCommunicationExchangeRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var validationIssue = ValidateSettings(settings, requirePortName: true)
+            ?? ValidateExchangeRequest(request);
+        if (validationIssue is not null)
+        {
+            return Task.FromResult(new SerialCommunicationExchangeResult(
+                Success: false,
+                ErrorMessage: validationIssue,
+                PortName: settings.PortName ?? string.Empty,
+                BytesWritten: 0,
+                HandshakeBytes: Array.Empty<byte>(),
+                ReceivedBytes: Array.Empty<byte>(),
+                RawText: string.Empty,
+                HexDump: string.Empty,
+                Messages: new[] { validationIssue }));
+        }
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromResult(new SerialCommunicationExchangeResult(
+                Success: false,
+                ErrorMessage: "Vorgang wurde abgebrochen.",
+                PortName: settings.PortName!,
+                BytesWritten: 0,
+                HandshakeBytes: Array.Empty<byte>(),
+                ReceivedBytes: Array.Empty<byte>(),
+                RawText: string.Empty,
+                HexDump: string.Empty,
+                Messages: new[] { "Vorgang wurde abgebrochen." }));
+        }
+
+        return Task.Run(() => ExchangeCore(settings, request, cancellationToken), CancellationToken.None);
+    }
+
     public static string? ValidateSettings(SerialCommunicationSettings settings, bool requirePortName)
     {
         ArgumentNullException.ThrowIfNull(settings);
@@ -202,6 +243,195 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
         {
             return CreateListenFailure(settings, startedAt, CreateFriendlyErrorMessage(settings.PortName!, ex));
         }
+    }
+
+    private static SerialCommunicationExchangeResult ExchangeCore(
+        SerialCommunicationSettings settings,
+        SerialCommunicationExchangeRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var handle = OpenConfiguredPort(settings);
+            using var stream = new FileStream(handle, FileAccess.ReadWrite, bufferSize: 4096, isAsync: false);
+
+            var bytesWritten = 0;
+            if (request.RequestBytes.Length > 0)
+            {
+                stream.Write(request.RequestBytes, 0, request.RequestBytes.Length);
+                stream.Flush();
+                bytesWritten += request.RequestBytes.Length;
+            }
+
+            var handshakeBytes = Array.Empty<byte>();
+            if (request.ExpectedHandshakeBytes.Length > 0)
+            {
+                handshakeBytes = ReadUntil(
+                    stream,
+                    buffer => ContainsSequence(buffer, request.ExpectedHandshakeBytes),
+                    request.HandshakeTimeout,
+                    request.MaxReceiveBytes,
+                    stableAfterMatch: TimeSpan.Zero,
+                    cancellationToken);
+
+                if (!ContainsSequence(handshakeBytes, request.ExpectedHandshakeBytes))
+                {
+                    var message = "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestätigung fehlt.";
+                    return new SerialCommunicationExchangeResult(
+                        Success: false,
+                        ErrorMessage: message,
+                        PortName: settings.PortName!,
+                        BytesWritten: bytesWritten,
+                        HandshakeBytes: handshakeBytes,
+                        ReceivedBytes: Array.Empty<byte>(),
+                        RawText: string.Empty,
+                        HexDump: CreateHexDump(handshakeBytes),
+                        Messages: new[] { message });
+                }
+            }
+
+            if (request.PayloadBytes.Length > 0)
+            {
+                stream.Write(request.PayloadBytes, 0, request.PayloadBytes.Length);
+                stream.Flush();
+                bytesWritten += request.PayloadBytes.Length;
+            }
+
+            var receivedBytes = ReadUntil(
+                stream,
+                buffer => buffer.Contains(request.EndOfTransmissionByte),
+                request.ReceiveTimeout,
+                request.MaxReceiveBytes,
+                request.StableAfterEndOfTransmission,
+                cancellationToken);
+
+            if (receivedBytes.Length == 0)
+            {
+                var message = "Keine Rückgabe vom Phoropter empfangen.";
+                return new SerialCommunicationExchangeResult(
+                    Success: false,
+                    ErrorMessage: message,
+                    PortName: settings.PortName!,
+                    BytesWritten: bytesWritten,
+                    HandshakeBytes: handshakeBytes,
+                    ReceivedBytes: Array.Empty<byte>(),
+                    RawText: string.Empty,
+                    HexDump: string.Empty,
+                    Messages: new[] { message });
+            }
+
+            if (!receivedBytes.Contains(request.EndOfTransmissionByte))
+            {
+                var message = "Rückgabe vom Phoropter war unvollständig: EOT wurde nicht empfangen.";
+                return new SerialCommunicationExchangeResult(
+                    Success: false,
+                    ErrorMessage: message,
+                    PortName: settings.PortName!,
+                    BytesWritten: bytesWritten,
+                    HandshakeBytes: handshakeBytes,
+                    ReceivedBytes: receivedBytes,
+                    RawText: DecodeText(receivedBytes),
+                    HexDump: CreateHexDump(receivedBytes),
+                    Messages: new[] { message });
+            }
+
+            return new SerialCommunicationExchangeResult(
+                Success: true,
+                ErrorMessage: null,
+                PortName: settings.PortName!,
+                BytesWritten: bytesWritten,
+                HandshakeBytes: handshakeBytes,
+                ReceivedBytes: receivedBytes,
+                RawText: DecodeText(receivedBytes),
+                HexDump: CreateHexDump(receivedBytes),
+                Messages: Array.Empty<string>());
+        }
+        catch (Exception ex) when (IsExpectedSerialException(ex))
+        {
+            var message = CreateFriendlyErrorMessage(settings.PortName!, ex);
+            return new SerialCommunicationExchangeResult(
+                Success: false,
+                ErrorMessage: message,
+                PortName: settings.PortName!,
+                BytesWritten: 0,
+                HandshakeBytes: Array.Empty<byte>(),
+                ReceivedBytes: Array.Empty<byte>(),
+                RawText: string.Empty,
+                HexDump: string.Empty,
+                Messages: new[] { message });
+        }
+    }
+
+    private static string? ValidateExchangeRequest(SerialCommunicationExchangeRequest request)
+    {
+        if (request.HandshakeTimeout <= TimeSpan.Zero)
+        {
+            return "Handshake-Timeout muss größer als 0 sein.";
+        }
+
+        if (request.ReceiveTimeout <= TimeSpan.Zero)
+        {
+            return "Empfangs-Timeout muss größer als 0 sein.";
+        }
+
+        if (request.StableAfterEndOfTransmission < TimeSpan.Zero)
+        {
+            return "Stabilitätswartezeit darf nicht negativ sein.";
+        }
+
+        if (request.MaxReceiveBytes <= 0)
+        {
+            return "Maximale Empfangsgröße muss größer als 0 sein.";
+        }
+
+        return null;
+    }
+
+    private static byte[] ReadUntil(
+        FileStream stream,
+        Func<byte[], bool> isComplete,
+        TimeSpan timeout,
+        int maxReceiveBytes,
+        TimeSpan stableAfterMatch,
+        CancellationToken cancellationToken)
+    {
+        using var memory = new MemoryStream();
+        var buffer = new byte[4096];
+        var endAt = DateTime.UtcNow + timeout;
+        DateTime? completedAt = null;
+
+        while (DateTime.UtcNow < endAt && !cancellationToken.IsCancellationRequested)
+        {
+            var read = stream.Read(buffer, 0, Math.Min(buffer.Length, Math.Max(1, maxReceiveBytes - (int)memory.Length)));
+            if (read > 0)
+            {
+                memory.Write(buffer, 0, read);
+                if (memory.Length >= maxReceiveBytes)
+                {
+                    break;
+                }
+
+                var snapshot = memory.ToArray();
+                if (isComplete(snapshot))
+                {
+                    completedAt = DateTime.UtcNow;
+                    if (stableAfterMatch == TimeSpan.Zero)
+                    {
+                        break;
+                    }
+                }
+            }
+            else if (completedAt is not null && DateTime.UtcNow - completedAt >= stableAfterMatch)
+            {
+                break;
+            }
+            else
+            {
+                Thread.Sleep(25);
+            }
+        }
+
+        return memory.ToArray();
     }
 
     private static SafeFileHandle OpenConfiguredPort(SerialCommunicationSettings settings)
@@ -359,6 +589,39 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             .Select(line => line.Trim())
             .Where(line => line.Length > 0)
             .ToArray();
+    }
+
+    private static bool ContainsSequence(byte[] buffer, byte[] expected)
+    {
+        if (expected.Length == 0)
+        {
+            return true;
+        }
+
+        if (buffer.Length < expected.Length)
+        {
+            return false;
+        }
+
+        for (var index = 0; index <= buffer.Length - expected.Length; index++)
+        {
+            var matches = true;
+            for (var expectedIndex = 0; expectedIndex < expected.Length; expectedIndex++)
+            {
+                if (buffer[index + expectedIndex] != expected[expectedIndex])
+                {
+                    matches = false;
+                    break;
+                }
+            }
+
+            if (matches)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsExpectedSerialException(Exception ex)

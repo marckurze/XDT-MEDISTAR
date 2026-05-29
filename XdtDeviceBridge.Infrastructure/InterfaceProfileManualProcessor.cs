@@ -8,6 +8,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     private readonly PatientDataMapper _patientDataMapper = new();
     private readonly MedistarHistoricalMeasurementParser _medistarHistoricalMeasurementParser = new();
     private readonly XmlDeviceParser _xmlDeviceParser = new();
+    private readonly NidekRtSerialPhoropterParser _nidekRtSerialParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -30,6 +31,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 
         var messages = new List<string>();
         var issues = new List<ProcessingIssue>();
+        var usesNidekRtSerialParser = UsesNidekRtSerialParser(interfaceProfile, exportProfile);
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ExportFolder))
         {
@@ -46,6 +48,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
 
         var isAttachmentOnlyMode = interfaceProfile.FolderOptions.IsAttachmentOnlyMode;
         if (!isAttachmentOnlyMode
+            && !usesNidekRtSerialParser
             && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {
             return CreateFailureResult(
@@ -79,6 +82,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var documentationText = string.Empty;
         var deviceResult = isAttachmentOnlyMode
             ? CreateAttachmentOnlyDeviceResult(documentationTextProvider?.Invoke(patient), out documentationText)
+            : usesNidekRtSerialParser
+                ? _nidekRtSerialParser.ParseFile(deviceFilePath)
             : _xmlDeviceParser.ParseFile(deviceFilePath);
         if (!isAttachmentOnlyMode)
         {
@@ -257,9 +262,14 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         }
 
         if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null)
-            || InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null))
+            || InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null)
+            || IsNidekRtSerialId(interfaceProfile.DeviceProfileId)
+            || IsNidekRtSerialId(interfaceProfile.ExportProfileId))
         {
-            var label = InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null)
+            var label = IsNidekRtSerialId(interfaceProfile.DeviceProfileId)
+                || IsNidekRtSerialId(interfaceProfile.ExportProfileId)
+                ? "NIDEK RT-RS232"
+                : InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null)
                 ? "RT-6100"
                 : "CV-5000";
             return ReadPhoropterHistoryAisPatientData(aisFilePath, gdtResult, label);
@@ -814,5 +824,20 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     {
         return interfaceProfile.FolderOptions.IsAttachmentOnlyMode
             && interfaceProfile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection;
+    }
+
+    private static bool UsesNidekRtSerialParser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsNidekRtSerialId(interfaceProfile.DeviceProfileId)
+            || IsNidekRtSerialId(exportProfile.SourceDeviceProfileId);
+    }
+
+    private static bool IsNidekRtSerialId(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("nidek-rt", StringComparison.OrdinalIgnoreCase)
+            && value.Contains("serial", StringComparison.OrdinalIgnoreCase);
     }
 }

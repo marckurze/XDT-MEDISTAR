@@ -76,6 +76,38 @@ public sealed class InterfaceProfileManualProcessorTests
     }
 
     [Fact]
+    public void Process_NidekRtSerialReturnShouldAcceptTextDeviceReturnAndUseHistoryAisFallback()
+    {
+        var exportFolder = CreateTempFolder();
+        var aisFilePath = CopyCv5000TestDataToTemp("Patient_mit_Phoropter_Daten.XDT", "Patient.XDT");
+        var deviceFilePath = CopyNidekRs232HexFixtureToTemp(
+            "rt3100-final-prescription-practice-capture-202606xx.hex",
+            "rt3100-return.txt");
+
+        var result = _processor.Process(
+            CreateNidekRt3100SerialInterfaceProfile(exportFolder),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt3100SerialDefault(),
+            aisFilePath,
+            deviceFilePath,
+            new DateTime(2026, 5, 29, 14, 0, 0));
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.NotNull(result.ExportContent);
+        Assert.Contains("8402Phoro", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228Phoropter finaler Verordnungswert", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=- 1.50 Z=- 0.75*180 A=+ 0.75 PD= 64", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 1.50 Z=- 1.50*175 A=+ 1.25 PD= 64", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains(result.PipelineResult!.Issues, issue =>
+            issue.Stage == ProcessingStage.GdtParsing
+            && issue.Message.Contains("NIDEK RT-RS232", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.PipelineResult.Measurements, measurement =>
+            measurement.SourcePath == "Measure[@Type='RTSERIAL']/Final/R/Sphere"
+            && measurement.Value == "-1.50");
+    }
+
+    [Fact]
     public void Process_Cv5000HistoryAisWithoutRequiredPatientDataShouldReturnSpecificFailure()
     {
         var aisFilePath = CreateTempFile(
@@ -708,6 +740,32 @@ public sealed class InterfaceProfileManualProcessorTests
         };
     }
 
+    private static InterfaceProfileDefinition CreateNidekRt3100SerialInterfaceProfile(string exportFolder)
+    {
+        var template = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault();
+        return template with
+        {
+            Metadata = template.Metadata with
+            {
+                Id = "interface-medistar-nidek-rt3100-serial-test",
+                Name = "MEDISTAR + NIDEK RT-3100 RS232",
+                IsBuiltIn = false,
+                IsUserDefined = true
+            },
+            FolderOptions = template.FolderOptions with
+            {
+                ExportFolder = exportFolder,
+                ErrorFolder = CreateTempFolder(),
+                MoveFailedFilesToErrorFolder = true
+            },
+            SerialSettings = NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM5") with
+            {
+                IsBidirectional = true
+            },
+            IsActive = true
+        };
+    }
+
     private static AttachmentProcessingStatus CreateAttachmentStatus(IReadOnlyList<ExportFieldRecord> fields)
     {
         return new AttachmentProcessingStatus(
@@ -789,6 +847,18 @@ public sealed class InterfaceProfileManualProcessorTests
         return targetFilePath;
     }
 
+    private static string CopyNidekRs232HexFixtureToTemp(string testDataFileName, string targetFileName)
+    {
+        var folder = CreateTempFolder();
+        var targetFilePath = Path.Combine(folder, targetFileName);
+        var bytes = File.ReadAllText(GetNidekRs232TestDataPath(testDataFileName))
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(token => Convert.ToByte(token, 16))
+            .ToArray();
+        File.WriteAllBytes(targetFilePath, bytes);
+        return targetFilePath;
+    }
+
     private static string CreateTempFile(string fileName, string content)
     {
         var folder = CreateTempFolder();
@@ -800,6 +870,11 @@ public sealed class InterfaceProfileManualProcessorTests
     private static string GetCv5000TestDataPath(string fileName)
     {
         return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Topcon", "CV5000", fileName);
+    }
+
+    private static string GetNidekRs232TestDataPath(string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Nidek", "RS232", fileName);
     }
 
     private static string CreateDeviceDocumentFile(string fileName, string content = "attachment")

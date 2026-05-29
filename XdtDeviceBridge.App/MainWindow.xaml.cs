@@ -123,6 +123,7 @@ public partial class MainWindow : Window
     private readonly XdtBoxAppSettingsRepository _appSettingsRepository = new();
     private readonly ISerialPortDiscoveryService _serialPortDiscoveryService = new SerialPortDiscoveryService();
     private readonly ISerialDeviceCommunicationService _serialDeviceCommunicationService = new SerialDeviceCommunicationService();
+    private readonly INidekRtSerialPhoropterCommunicationService _nidekRtSerialCommunicationService;
     private readonly InterfaceProfileFloatingWindowStateRepository _floatingWindowStateRepository = new();
     private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
     private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
@@ -202,6 +203,7 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        _nidekRtSerialCommunicationService = new NidekRtSerialPhoropterCommunicationService(_serialDeviceCommunicationService);
         InitializeComponent();
         LoadAppSettings();
         LoadFloatingWindowStates();
@@ -6501,13 +6503,20 @@ public partial class MainWindow : Window
             string.Equals(profile.Metadata.Id, interfaceProfile.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
         var isCv5000Output = InterfaceProfileUiPolicy.ShouldTriggerCv5000DeviceOutput(interfaceProfile, deviceProfile);
         var isRt6100Output = InterfaceProfileUiPolicy.ShouldTriggerNidekRt6100DeviceOutput(interfaceProfile, deviceProfile);
-        if (!isCv5000Output && !isRt6100Output)
+        var isNidekRtSerialOutput = InterfaceProfileUiPolicy.ShouldTriggerNidekRtSerialPhoropterWorkflow(interfaceProfile, deviceProfile);
+        if (!isCv5000Output && !isRt6100Output && !isNidekRtSerialOutput)
         {
             return false;
         }
-        var deviceOutputKey = isRt6100Output ? "rt6100-device-output" : "cv5000-device-output";
-        var deviceDisplayName = isRt6100Output ? "RT-6100" : "CV-5000";
-        var writerDisplayName = isRt6100Output ? "RT-6100-Importdatei" : "CV-5000-Importdatei";
+        var deviceOutputKey = isNidekRtSerialOutput
+            ? "nidek-rt-serial-com-workflow"
+            : isRt6100Output ? "rt6100-device-output" : "cv5000-device-output";
+        var deviceDisplayName = isNidekRtSerialOutput
+            ? CreateNidekRtSerialDisplayName(deviceProfile)
+            : isRt6100Output ? "RT-6100" : "CV-5000";
+        var writerDisplayName = isNidekRtSerialOutput
+            ? $"{deviceDisplayName}-COM-Übergabe"
+            : isRt6100Output ? "RT-6100-Importdatei" : "CV-5000-Importdatei";
 
         var aisFile = scanResult.Queue.GetAll()
             .Where(IsStableAisImportFile)
@@ -6526,7 +6535,9 @@ public partial class MainWindow : Window
             return false;
         }
 
-        var validationMessage = isRt6100Output
+        var validationMessage = isNidekRtSerialOutput
+            ? ValidateNidekRtSerialWorkflow(interfaceProfile, deviceProfile)
+            : isRt6100Output
             ? InterfaceProfileUiPolicy.ValidateNidekRt6100DeviceOutput(interfaceProfile, deviceProfile)
             : InterfaceProfileUiPolicy.ValidateCv5000DeviceOutput(interfaceProfile, deviceProfile);
         if (!string.IsNullOrWhiteSpace(validationMessage))
@@ -6557,15 +6568,33 @@ public partial class MainWindow : Window
             return true;
         }
 
-        var dialogOptions = isRt6100Output
-            ? Cv5000PhoropterSelectionDialogOptions.CreateNidekRt6100()
-            : Cv5000PhoropterSelectionDialogOptions.CreateTopconCv5000();
+        var dialogOptions = isNidekRtSerialOutput
+            ? Cv5000PhoropterSelectionDialogOptions.CreateNidekRtSerial(deviceDisplayName)
+            : isRt6100Output
+                ? Cv5000PhoropterSelectionDialogOptions.CreateNidekRt6100()
+                : Cv5000PhoropterSelectionDialogOptions.CreateTopconCv5000();
         var dialog = new Cv5000PhoropterSelectionDialog(parseResult, dialogOptions)
         {
             Owner = this
         };
         var dialogResult = dialog.ShowDialog();
         var dialogAction = Cv5000DeviceOutputDialogDecision.FromDialogResult(dialogResult, dialog.SelectionOutcome);
+        if (isNidekRtSerialOutput)
+        {
+            return TryStartNidekRtSerialWorkflow(
+                interfaceProfile,
+                deviceProfile,
+                scanResult,
+                aisFile,
+                aisKey,
+                dialogAction,
+                dialog.SelectedMeasurements,
+                parseResult,
+                deviceDisplayName,
+                deviceOutputKey,
+                timestamp);
+        }
+
         if (dialogAction == Cv5000DeviceOutputDialogAction.WaitForDeviceResultWithoutImport)
         {
             _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
@@ -6633,6 +6662,366 @@ public partial class MainWindow : Window
     private static string CreateDeviceOutputAisKey(string interfaceProfileId, string outputKind, PendingImportFile aisFile)
     {
         return string.Join("|", interfaceProfileId, outputKind, ImportFileFingerprint.Create(aisFile));
+    }
+
+    private bool TryStartNidekRtSerialWorkflow(
+        InterfaceProfileDefinition interfaceProfile,
+        DeviceProfileDefinition? deviceProfile,
+        AutoImportScanResult scanResult,
+        PendingImportFile aisFile,
+        string aisKey,
+        Cv5000DeviceOutputDialogAction dialogAction,
+        IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
+        MedistarHistoricalMeasurementParseResult parseResult,
+        string deviceDisplayName,
+        string deviceOutputKey,
+        DateTime timestamp)
+    {
+        _ = scanResult;
+
+        if (dialogAction == Cv5000DeviceOutputDialogAction.CancelSelection)
+        {
+            _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
+            SetMonitoringRuntimeState(
+                interfaceProfile.Metadata.Id,
+                $"Auswahl für {deviceDisplayName} abgebrochen",
+                "Neutral",
+                DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"{deviceOutputKey}-canceled:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Ausgabe an {deviceDisplayName} abgebrochen.");
+            RefreshInterfaceMonitoringCards();
+            return true;
+        }
+
+        _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
+        var sendSelectedValues = dialogAction == Cv5000DeviceOutputDialogAction.WriteImportFile;
+        var initialStatus = sendSelectedValues
+            ? $"Sende Daten an {deviceDisplayName}"
+            : $"Warte auf Rückgabe vom {deviceDisplayName}";
+        SetMonitoringRuntimeState(
+            interfaceProfile.Metadata.Id,
+            initialStatus,
+            "Active",
+            DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+        AppendMonitoringEvent(
+            interfaceProfile.Metadata.Id,
+            $"{deviceOutputKey}-workflow-start:{aisKey}",
+            sendSelectedValues
+                ? $"{interfaceProfile.Metadata.Name}: Sende ausgewählte LM-/AR-Werte an {deviceDisplayName} und warte danach auf Rückgabe."
+                : $"{interfaceProfile.Metadata.Name}: Keine Werte an {deviceDisplayName} gesendet. XDTBox wartet auf die serielle Rückgabe.");
+        RefreshInterfaceMonitoringCards();
+
+        _ = RunNidekRtSerialWorkflowAsync(
+            interfaceProfile,
+            deviceProfile,
+            aisFile,
+            aisKey,
+            selectedMeasurements,
+            parseResult,
+            deviceDisplayName,
+            deviceOutputKey,
+            timestamp,
+            sendSelectedValues);
+        return true;
+    }
+
+    private async Task RunNidekRtSerialWorkflowAsync(
+        InterfaceProfileDefinition interfaceProfile,
+        DeviceProfileDefinition? deviceProfile,
+        PendingImportFile aisFile,
+        string aisKey,
+        IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
+        MedistarHistoricalMeasurementParseResult parseResult,
+        string deviceDisplayName,
+        string deviceOutputKey,
+        DateTime timestamp,
+        bool sendSelectedValues)
+    {
+        var profileId = interfaceProfile.Metadata.Id;
+        string? temporaryReturnPath = null;
+        try
+        {
+            var cancellationToken = _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None;
+            var settings = GetSerialSettingsForProfile(interfaceProfile);
+            NidekRtSerialPhoropterCommunicationResult communicationResult;
+            if (sendSelectedValues)
+            {
+                SetMonitoringRuntimeState(profileId, $"Sende Daten an {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendMonitoringEvent(
+                    profileId,
+                    $"{deviceOutputKey}-send-start:{aisKey}",
+                    $"{interfaceProfile.Metadata.Name}: Sende Daten an {deviceDisplayName} über {settings.PortName}.");
+                communicationResult = await _nidekRtSerialCommunicationService.SendSelectionAndReceiveAsync(
+                    settings,
+                    parseResult.Patient,
+                    selectedMeasurements,
+                    DetectNidekRtSerialModel(deviceProfile),
+                    cancellationToken);
+            }
+            else
+            {
+                SetMonitoringRuntimeState(profileId, $"Warte auf Rückgabe vom {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                communicationResult = await _nidekRtSerialCommunicationService.ReceiveReturnAsync(settings, cancellationToken);
+            }
+
+            foreach (var message in communicationResult.Messages.Where(message => !string.IsNullOrWhiteSpace(message)))
+            {
+                AppendMonitoringEvent(profileId, $"{deviceOutputKey}-serial-message:{aisKey}:{message}", $"{interfaceProfile.Metadata.Name}: {message}");
+            }
+
+            if (!communicationResult.Success)
+            {
+                var errorMessage = string.IsNullOrWhiteSpace(communicationResult.ErrorMessage)
+                    ? $"Keine Rückgabe vom {deviceDisplayName} empfangen."
+                    : communicationResult.ErrorMessage!;
+                SetMonitoringRuntimeState(profileId, $"Fehler beim {deviceDisplayName}-Austausch", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendMonitoringEvent(
+                    profileId,
+                    $"{deviceOutputKey}-serial-error:{aisKey}:{errorMessage}",
+                    $"{interfaceProfile.Metadata.Name}: {errorMessage}",
+                    InterfaceMonitoringEventSeverity.Error);
+                RefreshInterfaceMonitoringCards();
+                return;
+            }
+
+            SetMonitoringRuntimeState(profileId, "Rückgabe vollständig, Verarbeitung startet", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendMonitoringEvent(
+                profileId,
+                $"{deviceOutputKey}-return-stable:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Rückgabe vom {deviceDisplayName} vollständig empfangen, Verarbeitung startet.");
+
+            temporaryReturnPath = WriteNidekRtSerialReturnTempFile(profileId, communicationResult.ReceivedBytes, DateTime.Now);
+            ProcessNidekRtSerialReturn(
+                interfaceProfile,
+                aisFile,
+                temporaryReturnPath,
+                timestamp,
+                deviceDisplayName,
+                deviceOutputKey,
+                aisKey);
+        }
+        catch (OperationCanceledException)
+        {
+            AppendMonitoringEvent(
+                profileId,
+                $"{deviceOutputKey}-canceled-by-stop:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Serieller {deviceDisplayName}-Workflow wurde abgebrochen.",
+                InterfaceMonitoringEventSeverity.Warning);
+        }
+        catch (Exception ex) when (ex is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException
+            or InvalidOperationException)
+        {
+            SetMonitoringRuntimeState(profileId, $"Fehler beim {deviceDisplayName}-Workflow", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendMonitoringEvent(
+                profileId,
+                $"{deviceOutputKey}-workflow-error:{aisKey}:{ex.Message}",
+                $"{interfaceProfile.Metadata.Name}: Serieller {deviceDisplayName}-Workflow fehlgeschlagen: {ex.Message}",
+                InterfaceMonitoringEventSeverity.Error);
+            RefreshInterfaceMonitoringCards();
+        }
+        finally
+        {
+            TryDeleteTemporaryNidekRtSerialReturnFile(temporaryReturnPath);
+        }
+    }
+
+    private void ProcessNidekRtSerialReturn(
+        InterfaceProfileDefinition interfaceProfile,
+        PendingImportFile aisFile,
+        string temporaryReturnPath,
+        DateTime timestamp,
+        string deviceDisplayName,
+        string deviceOutputKey,
+        string aisKey)
+    {
+        if (_profileCatalog is null)
+        {
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"{deviceOutputKey}-export-profile-missing:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Verarbeitung nicht möglich, Profilkatalog ist nicht geladen.",
+                InterfaceMonitoringEventSeverity.Error);
+            return;
+        }
+
+        var exportProfile = _profileCatalog.ExportProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfile.ExportProfileId, StringComparison.OrdinalIgnoreCase));
+        if (exportProfile is null)
+        {
+            AppendMonitoringEvent(
+                interfaceProfile.Metadata.Id,
+                $"{deviceOutputKey}-export-profile-missing:{aisKey}",
+                $"{interfaceProfile.Metadata.Name}: Verarbeitung nicht möglich, Exportprofil fehlt.",
+                InterfaceMonitoringEventSeverity.Error);
+            return;
+        }
+
+        var detectedAt = timestamp.ToUniversalTime();
+        var deviceFile = new PendingImportFile(
+            FilePath: temporaryReturnPath,
+            FileName: Path.GetFileName(temporaryReturnPath),
+            Kind: ImportFileKind.DeviceText,
+            Status: PendingImportFileStatus.Stable,
+            DetectedAtUtc: detectedAt,
+            StableAtUtc: detectedAt,
+            Message: $"{deviceDisplayName}-Rückgabe aus COM-Port.");
+        var pair = new PendingImportPair(aisFile, deviceFile, IsReady: true);
+        var batchResult = _autoImportPairProcessingCoordinator.ProcessReadyPairs(
+            interfaceProfile,
+            exportProfile,
+            new[] { pair },
+            automaticProcessingEnabled: true,
+            timestamp,
+            isMonitoringRunning: _periodicScanCancellationTokenSource is not null,
+            attachmentOnlyConfirmationProvider: RequestAttachmentOnlyConfirmation);
+
+        foreach (var result in batchResult.Results)
+        {
+            if (result.WasSkipped)
+            {
+                UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
+                AppendPairMonitoringEvent(interfaceProfile, result, "status", $"{interfaceProfile.Metadata.Name}: {result.Status}");
+                foreach (var message in result.Messages)
+                {
+                    AppendPairMonitoringEvent(interfaceProfile, result, $"message:{message}", message);
+                }
+
+                continue;
+            }
+
+            if (result.Success)
+            {
+                _lastMonitoringScanQueuesByProfileId[interfaceProfile.Metadata.Id] = new PendingImportQueue();
+                _autoImportPackageStateService.ResetProfile(interfaceProfile.Metadata.Id);
+                _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfile.Metadata.Id);
+                _cv5000DeviceOutputHandledAisKeys.RemoveWhere(key => key.StartsWith($"{interfaceProfile.Metadata.Id}|", StringComparison.OrdinalIgnoreCase));
+                CompleteManualDocumentTransferState(interfaceProfile);
+                UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
+                NotifyAutoRedockProcessingCompleted(interfaceProfile.Metadata.Id, timestamp);
+                AppendPairMonitoringEvent(
+                    interfaceProfile,
+                    result,
+                    "status",
+                    $"{interfaceProfile.Metadata.Name}: Ausgabedatei an AIS erstellt: {result.ExportFilePath}");
+            }
+            else
+            {
+                UpdateMonitoringCardFromProcessingResult(interfaceProfile, result, timestamp);
+                AppendPairMonitoringEvent(
+                    interfaceProfile,
+                    result,
+                    "status",
+                    $"{interfaceProfile.Metadata.Name}: {deviceDisplayName}-Rückgabe konnte nicht verarbeitet werden.",
+                    InterfaceMonitoringEventSeverity.Error);
+            }
+
+            foreach (var message in result.Messages)
+            {
+                AppendPairMonitoringEvent(interfaceProfile, result, $"message:{message}", message);
+            }
+        }
+
+        RefreshInterfaceMonitoringCards();
+    }
+
+    private string? ValidateNidekRtSerialWorkflow(
+        InterfaceProfileDefinition interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        if (!InterfaceProfileUiPolicy.ShouldTriggerNidekRtSerialPhoropterWorkflow(interfaceProfile, deviceProfile))
+        {
+            return "Serieller NIDEK-RT-Phoropterworkflow ist für dieses Profil nicht aktiv.";
+        }
+
+        var settings = GetSerialSettingsForProfile(interfaceProfile);
+        return SerialDeviceCommunicationService.ValidateSettings(settings, requirePortName: true);
+    }
+
+    private static string CreateNidekRtSerialDisplayName(DeviceProfileDefinition? deviceProfile)
+    {
+        var model = deviceProfile?.Model;
+        if (!string.IsNullOrWhiteSpace(model))
+        {
+            return model.Trim();
+        }
+
+        var product = deviceProfile?.Metadata.Product;
+        if (!string.IsNullOrWhiteSpace(product))
+        {
+            return product.Trim();
+        }
+
+        return "NIDEK RT";
+    }
+
+    private static NidekRtSerialPhoropterModel DetectNidekRtSerialModel(DeviceProfileDefinition? deviceProfile)
+    {
+        var combined = string.Join(
+            " ",
+            deviceProfile?.Metadata.Id,
+            deviceProfile?.Metadata.Name,
+            deviceProfile?.Metadata.Product,
+            deviceProfile?.Model);
+        if (combined.Contains("2100", StringComparison.OrdinalIgnoreCase))
+        {
+            return NidekRtSerialPhoropterModel.Rt2100;
+        }
+
+        if (combined.Contains("5100", StringComparison.OrdinalIgnoreCase))
+        {
+            return NidekRtSerialPhoropterModel.Rt5100;
+        }
+
+        if (combined.Contains("3100", StringComparison.OrdinalIgnoreCase))
+        {
+            return NidekRtSerialPhoropterModel.Rt3100;
+        }
+
+        return NidekRtSerialPhoropterModel.Rt3100;
+    }
+
+    private static string WriteNidekRtSerialReturnTempFile(string interfaceProfileId, byte[] bytes, DateTime timestamp)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "XDTBox", "SerialReturns");
+        Directory.CreateDirectory(folder);
+        var fileName = $"{CreateSafeFileName(interfaceProfileId)}_{timestamp:yyyyMMdd_HHmmss_fff}_RT_Return.txt";
+        var path = Path.Combine(folder, fileName);
+        File.WriteAllBytes(path, bytes);
+        return path;
+    }
+
+    private static string CreateSafeFileName(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value)
+        {
+            builder.Append(invalid.Contains(character) ? '_' : character);
+        }
+
+        return builder.Length == 0 ? "interface" : builder.ToString();
+    }
+
+    private static void TryDeleteTemporaryNidekRtSerialReturnFile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            // Temporäre Rückgabedateien dürfen liegen bleiben, falls ein Virenscanner oder Archivlauf sie kurz hält.
+        }
     }
 
     private AutoImportPairProcessingBatchResult? TryProcessReadyPairsAutomatically(
@@ -10071,8 +10460,15 @@ public partial class MainWindow : Window
                 result.InterfaceProfileId,
                 $"scan-message:{message}",
                 $"{profileName}: {message}",
-                InterfaceMonitoringEventSeverity.Warning);
+                IsInformationalScanMessage(message)
+                    ? InterfaceMonitoringEventSeverity.Info
+                    : InterfaceMonitoringEventSeverity.Warning);
         }
+    }
+
+    private static bool IsInformationalScanMessage(string message)
+    {
+        return message.StartsWith("RS232-Profil:", StringComparison.OrdinalIgnoreCase);
     }
 
     private void AppendPairMonitoringEvent(
