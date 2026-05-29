@@ -244,6 +244,12 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("RunNidekRtSerialListenOnlyAsync", mainCode);
         Assert.Contains("RunNidekRtSerialProcessReturnAsync", mainCode);
         Assert.Contains("RunNidekRtSerialSendTestAsync", mainCode);
+        Assert.Contains("SendSelectionDirectWithoutReturnAsync", mainCode);
+        Assert.Contains("Senden angefordert", mainCode);
+        Assert.Contains("Writer-Frame wird erzeugt", mainCode);
+        Assert.Contains("Writer-Hexdump", mainCode);
+        Assert.Contains("COM-Port wird geöffnet", mainCode);
+        Assert.Contains("Writer-Frame gesendet", mainCode);
         Assert.Contains("AppendNidekRtSerialDiagnostic", mainCode);
         Assert.Contains("NidekRtSerialSendModeInfo.Resolve", mainCode);
         Assert.Contains("SendCompleted", mainCode);

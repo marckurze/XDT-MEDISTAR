@@ -225,19 +225,17 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         var productiveFakeSerial = new FakeSerialDeviceCommunicationService
         {
             ExchangeResult = CreateExchangeResult(
-                success: false,
+                success: true,
                 receivedBytes: Array.Empty<byte>(),
-                errorMessage: "Noch keine Rückgabe vom Phoropter empfangen.",
                 bytesWritten: 4096)
         };
         var productiveService = new NidekRtSerialPhoropterCommunicationService(productiveFakeSerial);
 
-        await productiveService.SendSelectionAndReceiveAsync(
+        var productiveResult = await productiveService.SendSelectionDirectWithoutReturnAsync(
             NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
             CreatePatient(),
             CreateHistoricalRecords(),
             NidekRtSerialPhoropterModel.Rt3100,
-            NidekRtSerialSendMode.DirectWriterFrame,
             CancellationToken.None);
 
         var diagnosticFakeSerial = new FakeSerialDeviceCommunicationService
@@ -256,11 +254,16 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
 
         Assert.NotNull(productiveFakeSerial.LastExchangeRequest);
         Assert.NotNull(diagnosticFakeSerial.LastExchangeRequest);
+        Assert.True(productiveResult.Success, productiveResult.ErrorMessage);
+        Assert.True(productiveResult.SendCompleted);
         Assert.Empty(productiveFakeSerial.LastExchangeRequest.RequestBytes);
         Assert.Empty(diagnosticFakeSerial.LastExchangeRequest.RequestBytes);
         Assert.Empty(productiveFakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
         Assert.Empty(diagnosticFakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
+        Assert.False(productiveFakeSerial.LastExchangeRequest.ReceiveResponse);
+        Assert.True(diagnosticFakeSerial.LastExchangeRequest.ReceiveResponse);
         Assert.Equal(diagnosticFakeSerial.LastExchangeRequest.PayloadBytes, productiveFakeSerial.LastExchangeRequest.PayloadBytes);
+        Assert.Contains(productiveResult.Messages, message => message.Contains("Produktiver Sendeschritt aktiv", StringComparison.Ordinal));
     }
 
     [Fact]

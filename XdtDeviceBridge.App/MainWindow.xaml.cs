@@ -7378,6 +7378,8 @@ public partial class MainWindow : Window
             var cancellationToken = _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None;
             var settings = GetSerialSettingsForProfile(interfaceProfile);
             var sendMode = NidekRtSerialSendModeInfo.Resolve(interfaceProfile.NidekRtSerialSendMode);
+            var model = DetectNidekRtSerialModel(deviceProfile);
+            var directWriterSendOnly = sendSelectedValues && sendMode == NidekRtSerialSendMode.DirectWriterFrame;
             NidekRtSerialPhoropterCommunicationResult communicationResult;
             if (sendSelectedValues)
             {
@@ -7385,14 +7387,80 @@ public partial class MainWindow : Window
                 AppendNidekRtSerialDiagnostic(
                     interfaceProfile,
                     $"{deviceOutputKey}-send-start:{aisKey}",
+                    "Senden angefordert.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-send-mode:{aisKey}",
                     $"Sende Daten an {deviceDisplayName} über {settings.PortName}. Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
-                communicationResult = await _nidekRtSerialCommunicationService.SendSelectionAndReceiveAsync(
-                    settings,
-                    parseResult.Patient,
-                    selectedMeasurements,
-                    DetectNidekRtSerialModel(deviceProfile),
-                    sendMode,
-                    cancellationToken);
+                if (selectedMeasurements.Count == 0)
+                {
+                    SetMonitoringRuntimeState(profileId, $"Senden an {deviceDisplayName} abgebrochen", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
+                        $"{deviceOutputKey}-send-no-selection:{aisKey}",
+                        "Senden abgebrochen: Es wurden keine V0/V1-Werte ausgewählt.",
+                        InterfaceMonitoringEventSeverity.Error);
+                    RefreshInterfaceMonitoringCards();
+                    return;
+                }
+
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-send-selected-values:{aisKey}",
+                    $"Ausgewählte Werte: {CreateNidekRtSerialSelectionSummary(selectedMeasurements)}");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-writer-build-start:{aisKey}",
+                    "Writer-Frame wird erzeugt.");
+                var writerFrame = _nidekRtSerialCommunicationService.BuildSelectionFrame(parseResult.Patient, selectedMeasurements, model);
+                if (!writerFrame.Success)
+                {
+                    SetMonitoringRuntimeState(profileId, $"Senden an {deviceDisplayName} abgebrochen", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
+                        $"{deviceOutputKey}-writer-build-failed:{aisKey}",
+                        $"Senden abgebrochen: Kein Writer-Frame erzeugt. {writerFrame.ErrorMessage}",
+                        InterfaceMonitoringEventSeverity.Error);
+                    RefreshInterfaceMonitoringCards();
+                    return;
+                }
+
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-writer-built:{aisKey}",
+                    $"Writer-Frame erzeugt: {writerFrame.Bytes.Length} Bytes.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-writer-visible:{aisKey}",
+                    $"Writer-Frame sichtbar: {writerFrame.VisibleContent}");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-writer-hex:{aisKey}",
+                    $"Writer-Hexdump: {writerFrame.HexDump}");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-port-open-start:{aisKey}",
+                    $"COM-Port wird geöffnet: {settings.PortName}.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-writer-send-start:{aisKey}",
+                    "Writer-Frame wird gesendet.");
+                RefreshInterfaceMonitoringCards();
+
+                communicationResult = directWriterSendOnly
+                    ? await _nidekRtSerialCommunicationService.SendSelectionDirectWithoutReturnAsync(
+                        settings,
+                        parseResult.Patient,
+                        selectedMeasurements,
+                        model,
+                        cancellationToken)
+                    : await _nidekRtSerialCommunicationService.SendSelectionAndReceiveAsync(
+                        settings,
+                        parseResult.Patient,
+                        selectedMeasurements,
+                        model,
+                        sendMode,
+                        cancellationToken);
             }
             else
             {
@@ -7454,6 +7522,33 @@ public partial class MainWindow : Window
                 return;
             }
 
+            if (directWriterSendOnly)
+            {
+                if (!communicationResult.SendCompleted)
+                {
+                    SetMonitoringRuntimeState(profileId, $"Fehler beim {deviceDisplayName}-Senden", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
+                        $"{deviceOutputKey}-writer-send-not-confirmed:{aisKey}",
+                        "Senden abgebrochen: Der Writer-Frame wurde vom seriellen Schreibpfad nicht vollständig bestätigt.",
+                        InterfaceMonitoringEventSeverity.Error);
+                    RefreshInterfaceMonitoringCards();
+                    return;
+                }
+
+                SetMonitoringRuntimeState(profileId, $"Warte auf Rückgabe vom {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-writer-send-complete:{aisKey}",
+                    "Writer-Frame gesendet.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-send-step-complete:{aisKey}",
+                    $"Sendeschritt abgeschlossen. Daten wurden an {deviceDisplayName} gesendet; XDTBox wartet auf die spätere Rückgabe vom Phoropter.");
+                RefreshInterfaceMonitoringCards();
+                return;
+            }
+
             SetMonitoringRuntimeState(profileId, "Rückgabe vollständig, Verarbeitung startet", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
             AppendNidekRtSerialDiagnostic(
                 interfaceProfile,
@@ -7492,6 +7587,16 @@ public partial class MainWindow : Window
                 interfaceProfile,
                 $"{deviceOutputKey}-workflow-error:{aisKey}:{ex.Message}",
                 $"Serieller {deviceDisplayName}-Workflow fehlgeschlagen: {ex.Message}",
+                InterfaceMonitoringEventSeverity.Error);
+            RefreshInterfaceMonitoringCards();
+        }
+        catch (Exception ex)
+        {
+            SetMonitoringRuntimeState(profileId, $"Fehler beim {deviceDisplayName}-Workflow", "Error", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"{deviceOutputKey}-workflow-unexpected-error:{aisKey}:{ex.GetType().Name}:{ex.Message}",
+                $"Senden abgebrochen: Unerwarteter Fehler im seriellen {deviceDisplayName}-Workflow: {ex.Message}",
                 InterfaceMonitoringEventSeverity.Error);
             RefreshInterfaceMonitoringCards();
         }
@@ -7620,6 +7725,31 @@ public partial class MainWindow : Window
 
         var settings = GetSerialSettingsForProfile(interfaceProfile);
         return SerialDeviceCommunicationService.ValidateSettings(settings, requirePortName: true);
+    }
+
+    private static string CreateNidekRtSerialSelectionSummary(IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements)
+    {
+        if (selectedMeasurements.Count == 0)
+        {
+            return "keine Werte";
+        }
+
+        return string.Join("; ", selectedMeasurements.Select(record =>
+        {
+            var source = record.SourceKind == AisHistoricalMeasurementSourceKind.Lensmeter
+                ? "LM"
+                : record.SourceKind == AisHistoricalMeasurementSourceKind.Autorefraction
+                    ? "AR"
+                    : record.SourceKind.ToString();
+            var date = record.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var right = record.RightEye?.HasExportableRefraction == true
+                ? $"R S={record.RightEye.Sphere} Z={record.RightEye.Cylinder} A={record.RightEye.Axis}"
+                : "R -";
+            var left = record.LeftEye?.HasExportableRefraction == true
+                ? $"L S={record.LeftEye.Sphere} Z={record.LeftEye.Cylinder} A={record.LeftEye.Axis}"
+                : "L -";
+            return $"{source} {date}: {right}, {left}";
+        }));
     }
 
     private static string CreateNidekRtSerialSendTestModeText(NidekRtSerialSendTestMode mode)

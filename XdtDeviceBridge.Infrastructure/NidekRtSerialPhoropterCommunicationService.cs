@@ -30,6 +30,13 @@ public interface INidekRtSerialPhoropterCommunicationService
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken);
 
+    Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionDirectWithoutReturnAsync(
+        SerialCommunicationSettings settings,
+        PatientData patient,
+        IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
+        NidekRtSerialPhoropterModel model,
+        CancellationToken cancellationToken);
+
     Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionWithoutWaitingForSdAsync(
         SerialCommunicationSettings settings,
         PatientData patient,
@@ -37,6 +44,11 @@ public interface INidekRtSerialPhoropterCommunicationService
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken);
+
+    NidekRtSerialPhoropterOutputResult BuildSelectionFrame(
+        PatientData patient,
+        IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
+        NidekRtSerialPhoropterModel model);
 }
 
 public sealed record NidekRtSerialPhoropterCommunicationOptions(
@@ -228,17 +240,32 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken)
     {
-        return SendSelectionWithModeAsync(
+        return SendSelectionDirectCoreAsync(
             settings,
             patient,
             selectedMeasurements,
             model,
             options,
-            requestBytes: Array.Empty<byte>(),
-            expectedHandshakeBytes: Array.Empty<byte>(),
-            continueWithoutHandshake: false,
             receiveResponse: true,
-            handshakeTimeoutOverride: null,
+            productiveSendMode: null,
+            cancellationToken: cancellationToken);
+    }
+
+    public Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionDirectWithoutReturnAsync(
+        SerialCommunicationSettings settings,
+        PatientData patient,
+        IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
+        NidekRtSerialPhoropterModel model,
+        CancellationToken cancellationToken)
+    {
+        return SendSelectionDirectCoreAsync(
+            settings,
+            patient,
+            selectedMeasurements,
+            model,
+            NidekRtSerialPhoropterSendTestOptions.None,
+            receiveResponse: false,
+            productiveSendMode: NidekRtSerialSendMode.DirectWriterFrame,
             cancellationToken: cancellationToken);
     }
 
@@ -268,6 +295,16 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             receiveResponse: true,
             handshakeTimeoutOverride: TimeSpan.FromMilliseconds(300),
             cancellationToken: cancellationToken);
+    }
+
+    public NidekRtSerialPhoropterOutputResult BuildSelectionFrame(
+        PatientData patient,
+        IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
+        NidekRtSerialPhoropterModel model)
+    {
+        ArgumentNullException.ThrowIfNull(patient);
+        ArgumentNullException.ThrowIfNull(selectedMeasurements);
+        return _writer.BuildFrame(patient, selectedMeasurements, model);
     }
 
     private Task<NidekRtSerialPhoropterCommunicationResult> ExchangeProductiveSendAsync(
@@ -396,6 +433,67 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             cancellationToken);
     }
 
+    private Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionDirectCoreAsync(
+        SerialCommunicationSettings settings,
+        PatientData patient,
+        IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
+        NidekRtSerialPhoropterModel model,
+        NidekRtSerialPhoropterSendTestOptions options,
+        bool receiveResponse,
+        NidekRtSerialSendMode? productiveSendMode,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(patient);
+        ArgumentNullException.ThrowIfNull(selectedMeasurements);
+
+        if (selectedMeasurements.Count == 0)
+        {
+            const string message = "Keine LM-/AR-Daten für die NIDEK-RT-Sendung ausgewählt.";
+            return Task.FromResult(new NidekRtSerialPhoropterCommunicationResult(
+                Success: false,
+                ErrorMessage: message,
+                PortName: settings.PortName ?? string.Empty,
+                RequestBytes: Array.Empty<byte>(),
+                SentBytes: Array.Empty<byte>(),
+                HandshakeBytes: Array.Empty<byte>(),
+                ReceivedBytes: Array.Empty<byte>(),
+                ReceivedText: string.Empty,
+                ReceivedHexDump: string.Empty,
+                Messages: new[] { message, $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}" }));
+        }
+
+        var writerResult = BuildSelectionFrame(patient, selectedMeasurements, model);
+        if (!writerResult.Success)
+        {
+            return Task.FromResult(new NidekRtSerialPhoropterCommunicationResult(
+                Success: false,
+                ErrorMessage: writerResult.ErrorMessage,
+                PortName: settings.PortName ?? string.Empty,
+                RequestBytes: Array.Empty<byte>(),
+                SentBytes: writerResult.Bytes,
+                HandshakeBytes: Array.Empty<byte>(),
+                ReceivedBytes: Array.Empty<byte>(),
+                ReceivedText: string.Empty,
+                ReceivedHexDump: string.Empty,
+                Messages: writerResult.Warnings.Concat(new[] { writerResult.ErrorMessage ?? "NIDEK-RT-Sendedaten konnten nicht erzeugt werden." }).ToArray()));
+        }
+
+        return ExchangeAsync(
+            settings,
+            Array.Empty<byte>(),
+            Array.Empty<byte>(),
+            writerResult.Bytes,
+            writerResult.Warnings,
+            model,
+            options,
+            continueWithoutHandshake: false,
+            receiveResponse: receiveResponse,
+            handshakeTimeoutOverride: null,
+            productiveSendMode: productiveSendMode,
+            cancellationToken: cancellationToken);
+    }
+
     private async Task<NidekRtSerialPhoropterCommunicationResult> ExchangeAsync(
         SerialCommunicationSettings settings,
         byte[] requestBytes,
@@ -510,7 +608,9 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
 
         if (!receiveResponse)
         {
-            yield return "Sendetestmodus aktiv: Nach diesem Test wird keine RT-Rückgabe abgewartet.";
+            yield return productiveSendMode is null
+                ? "Sendetestmodus aktiv: Nach diesem Test wird keine RT-Rückgabe abgewartet."
+                : "Produktiver Sendeschritt aktiv: Nach dem Writer-Frame wird in diesem Schritt keine RT-Rückgabe abgewartet.";
         }
 
         if (requestBytes.Length > 0)
