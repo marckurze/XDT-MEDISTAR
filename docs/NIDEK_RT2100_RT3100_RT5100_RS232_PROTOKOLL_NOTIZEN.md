@@ -34,7 +34,7 @@ Die Auswertung dient Parser, Writer, BuiltIn-Profilen, XDT-Baukasten-Vorschau un
 | RT-5100 | Type 1 | 2400 | 7 | Even | 2 | konservativer Standard |
 | RT-5100 | Type 2 | 9600 | 8 | Odd | 1 | direkter Output ohne erste DTR/DSR-Schritte moeglich |
 
-Die RT-Type1-/Type2-Presets aktivieren DTR und RTS in XDTBox standardmaessig, weil die Handbuecher DTR/DSR-Sequenzen zeigen und der Praxisaufbau sonst je nach Adapter keine Daten liefert. DTR, RTS und Handshake bleiben im Schnittstellenprofil und im RS232-Testbereich sichtbar steuerbar.
+Die RT-Type1-/Type2-Presets aktivieren DTR und RTS in XDTBox standardmaessig, weil die Handbuecher DTR/DSR-Sequenzen zeigen und der Praxisaufbau sonst je nach Adapter keine Daten liefert. Der RT-3100-Livebefund vom 2026-05-29 bestaetigt: Mit DTR aus wurde keine Rueckgabe empfangen, mit DTR aktiv/RTS aktiv kam ein vollstaendiger RT-3100-Frame. DTR, RTS und Handshake bleiben im Schnittstellenprofil und im RS232-Testbereich sichtbar steuerbar.
 
 ## RT -> PC
 
@@ -51,6 +51,10 @@ Refraktionsdaten werden zuerst fuer SCA/ADD/PD sicher ausgewertet. Der erste ech
 Fixture:
 
 `XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-practice-capture-202606xx.hex`
+
+Zusaetzliches Nur-Abhoeren-Fixture mit DTR aktiv:
+
+`XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-dtr-listen-only-practice-capture-20260529.hex`
 
 Bestaetigtes Frameformat:
 
@@ -73,6 +77,13 @@ Erkannte Inhalte:
 - `VR 0.1`, `VL 1.25`: VA rechts/links, diagnostisch
 - `PD64.0`: binokulare PD 64.0
 - `WD40`: WorkingDistance 40, diagnostisch; nicht als Vertex Distance umgedeutet
+
+Das DTR-Nur-Abhoeren-Fixture enthaelt dieselbe Struktur, aber ohne ADD/VA:
+
+- `FR- 1.25  0.00  0`: Final Right, S=-1.25, Z=0.00, Achse 0
+- `FL- 1.25  0.00  0`: Final Left, S=-1.25, Z=0.00, Achse 0
+- `PD64.0`: binokulare PD 64.0
+- `WD40`: WorkingDistance 40
 
 MEDISTAR-Mapping fuer diesen Mitschnitt:
 
@@ -104,13 +115,20 @@ Unterstuetzt in V1:
 
 RT-2100 nutzt keinen ID-Block. RT-3100 und RT-5100 koennen einen ID-Block enthalten. Fehlende Werte werden weggelassen; es werden keine leeren medizinischen Bloecke erfunden. Prisma wird erst nach echter Datenlage aktiviert.
 
+RS-Anforderung:
+
+- Die in den NIDEK-Formatdiagrammen dargestellten `*` sind Leerzeichen-Platzhalter und werden nicht als ASCII-Sternchen gesendet.
+- XDTBox sendet fuer `RS` daher `SH C   SX RS EB ET`.
+- Hexdump: `01 43 20 20 20 02 52 53 17 04`.
+- Die alte Diagnose `<SOH>C **<STX>RS<ETB><EOT>` war irrefuehrend, weil sie echte `2A 2A`-Bytes beschrieb.
+
 ## Produktiver Ablauf in XDTBox
 
 - Beim Start der Ueberwachung wird kein RT-Phoropterfenster geoeffnet.
 - Erst eine stabile AIS-Patientendatei startet den Auswahl-/Sendedialog.
 - Der Dialog bietet LM-/AR-Historienwerte an; produktiv gesendet werden zunaechst V0/Lensmeter und V1/Autorefraktion.
 - Senden erfolgt nur nach ausdruecklichem Anwenderklick ueber den im Schnittstellenprofil konfigurierten COM-Port.
-- XDTBox sendet `SH C ** SX RS EB ET`, erwartet `SX SD`, schreibt danach den PC->RT-Frame und wechselt in den Empfang.
+- XDTBox sendet `SH C   SX RS EB ET` (`01 43 20 20 20 02 52 53 17 04`), erwartet `SX SD`, schreibt danach den PC->RT-Frame und wechselt in den Empfang.
 - Die Rueckgabe wird bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
 - Serielle RT-Schnittstellenprofile brauchen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner.
 - Das RT-Floating-Fenster enthaelt fuer Live-Abnahmen eine serielle Diagnose: verwendete COM-Parameter, DTR/RTS/Handshake, Port-Status, RS-Anforderung, erwartete/empfangene SD-Bestaetigung, PC->RT-Writer-Frame, Hexdump und sichtbare Steuerzeichen werden angezeigt. `COM-Port nur abhoeren` oeffnet denselben Profil-Port, sendet nichts und zeigt empfangene Bytes ohne XDT-Export.

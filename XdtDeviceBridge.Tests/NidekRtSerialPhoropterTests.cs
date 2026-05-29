@@ -71,6 +71,44 @@ public sealed class NidekRtSerialPhoropterTests
         AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/HeaderLine", "Phoropter finaler Verordnungswert");
     }
 
+    [Fact]
+    public void Parser_ShouldParseRt3100DtrListenOnlyPracticeCaptureWithoutAdd()
+    {
+        var bytes = LoadHexFixture("rt3100-final-prescription-dtr-listen-only-practice-capture-20260529.hex");
+
+        var parsed = _parser.Parse(bytes);
+        var result = _parser.ParseDeviceText(Encoding.ASCII.GetString(bytes), "rt3100-dtr-listen-only.bin");
+
+        Assert.Equal(NidekRtSerialPhoropterModel.Rt3100, parsed.Model);
+        Assert.Equal(new DateOnly(2002, 6, 16), parsed.MeasurementDate);
+        Assert.Null(parsed.PatientId);
+        Assert.Contains(NidekRtSerialDataSource.Refractor, parsed.Sources);
+        var right = Assert.Single(parsed.Refractions, refraction => refraction.Kind == NidekRtSerialRefractionKind.Final && refraction.Eye == "R");
+        var left = Assert.Single(parsed.Refractions, refraction => refraction.Kind == NidekRtSerialRefractionKind.Final && refraction.Eye == "L");
+        Assert.Equal(-1.25m, right.Sphere);
+        Assert.Equal(0.00m, right.Cylinder);
+        Assert.Equal(0, right.Axis);
+        Assert.Null(right.Add);
+        Assert.Equal(64.0m, right.Pd);
+        Assert.Equal(40m, right.WorkingDistance);
+        Assert.Equal(-1.25m, left.Sphere);
+        Assert.Equal(0.00m, left.Cylinder);
+        Assert.Equal(0, left.Axis);
+        Assert.Null(left.Add);
+        Assert.Equal(64.0m, left.Pd);
+        Assert.Equal(40m, left.WorkingDistance);
+        Assert.DoesNotContain(result.Issues, issue => issue.Severity == DeviceParseIssueSeverity.Error);
+        AssertMeasurement(result, "Common/ModelName", "RT-3100");
+        AssertMeasurement(result, "Common/Date", "2002-06-16");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Source", "RT");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/Sphere", "-1.25");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/Cylinder", "0.00");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/Axis", "0");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/PD", "64.0");
+        AssertMeasurement(result, "Measure[@Type='RTSERIAL']/Final/R/WorkingDistance", "40");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath.Contains("/ADD", StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData(NidekRtSerialPhoropterModel.Rt2100, "NIDEK RT-2100 0000004711 DAY2026/05/29", "RT-2100")]
     [InlineData(NidekRtSerialPhoropterModel.Rt3100, "NIDEK_RT-3100", "RT-3100")]
@@ -140,6 +178,23 @@ public sealed class NidekRtSerialPhoropterTests
         Assert.Contains("6228Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
         Assert.Contains("6228R.:S=- 1.50 Z=- 0.75*180 A=+ 0.75 PD= 64", content, StringComparison.Ordinal);
         Assert.Contains("6228L.:S=- 1.50 Z=- 1.50*175 A=+ 1.25 PD= 64", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MedistarExport_WithRt3100DtrListenOnlyPracticeCapture_ShouldUseOnlyFinal6228WithoutAdd()
+    {
+        var content = BuildExportContent(
+            Encoding.ASCII.GetString(LoadHexFixture("rt3100-final-prescription-dtr-listen-only-practice-capture-20260529.hex")),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt3100SerialDefault());
+
+        Assert.Contains("8402Phoro", content, StringComparison.Ordinal);
+        Assert.Contains("6228Phoropter finaler Verordnungswert", content, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=- 1.25 Z=+ 0.00*  0 PD= 64", content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 1.25 Z=+ 0.00*  0 PD= 64", content, StringComparison.Ordinal);
+        Assert.DoesNotContain(" A=", content, StringComparison.Ordinal);
         Assert.DoesNotContain("6227", content, StringComparison.Ordinal);
         Assert.DoesNotContain("6330", content, StringComparison.Ordinal);
         Assert.DoesNotContain("--", content, StringComparison.Ordinal);

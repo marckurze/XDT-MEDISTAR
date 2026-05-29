@@ -37,8 +37,27 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.True(fakeSerial.LastSettings!.DtrEnable);
         Assert.True(fakeSerial.LastSettings.RtsEnable);
         Assert.Contains(result.Messages, message => message.Contains("RS-Anforderung Hexdump", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("01 43 20 20 20 02 52 53 17 04", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Messages, message => message.Contains("01 43 20 2A 2A 02 52 53 17 04", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("PC->RT-Writer Hexdump", StringComparison.Ordinal));
-        Assert.Contains(result.Messages, message => message.Contains("PC->RT-Blöcke", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("PC->RT-Blöcke", StringComparison.Ordinal) && message.Contains("LM ADD", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Messages, message => message.Contains("R ADD/AR-Zeile", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void CreateRsRequestBytes_ShouldUseSpacePlaceholdersInsteadOfAsterisks()
+    {
+        var request = NidekRtSerialPhoropterCommunicationService.CreateRsRequestBytes();
+
+        Assert.Equal(
+            new byte[]
+            {
+                0x01, 0x43, 0x20, 0x20, 0x20, 0x02, 0x52, 0x53, 0x17, 0x04
+            },
+            request);
+        Assert.DoesNotContain((byte)'*', request);
+        Assert.Equal("<SOH>C   <STX>RS<ETB><EOT>", SerialDiagnosticsFormatter.ToVisibleControlText(request));
+        Assert.Equal("01 43 20 20 20 02 52 53 17 04", SerialDiagnosticsFormatter.ToHexDump(request));
     }
 
     [Fact]
@@ -110,6 +129,55 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.Contains(result.Messages, message => message.Contains("PRINT/SEND", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task SendSelectionAndReceiveAsync_ShouldExposeBytesWithoutSdConfirmation()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(
+                success: false,
+                receivedBytes: Array.Empty<byte>(),
+                errorMessage: "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestätigung fehlt.",
+                handshakeBytes: Encoding.ASCII.GetBytes("NACK"))
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionAndReceiveAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal(Encoding.ASCII.GetBytes("NACK"), result.HandshakeBytes);
+        Assert.Contains(result.Messages, message => message.Contains("Bytes empfangen, aber keine SD-Bestätigung erkannt", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("NACK", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SendSelectionAndReceiveAsync_ShouldWarnWhenRt3100DtrIsDisabled()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(
+                success: false,
+                receivedBytes: Array.Empty<byte>(),
+                errorMessage: "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestätigung fehlt.")
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionAndReceiveAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7") with { DtrEnable = false },
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Messages, message => message.Contains("letzten erfolgreichen RT-3100-Abhören war DTR aktiv", StringComparison.Ordinal));
+    }
+
     private static SerialCommunicationExchangeResult CreateExchangeResult(
         bool success,
         byte[] receivedBytes,
@@ -129,7 +197,23 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
             HexDump: string.Join(" ", receivedBytes.Select(value => value.ToString("X2"))),
             Messages: string.IsNullOrWhiteSpace(errorMessage)
                 ? new[] { "Rückgabe vollständig empfangen." }
-                : new[] { errorMessage });
+                : CreateExchangeMessages(errorMessage, handshakeBytes));
+    }
+
+    private static IReadOnlyList<string> CreateExchangeMessages(string errorMessage, byte[]? handshakeBytes)
+    {
+        if (handshakeBytes is null || handshakeBytes.Length == 0)
+        {
+            return new[] { errorMessage, "Keine Bytes empfangen.", "Empfangene SD-Antwort: keine Bytes." };
+        }
+
+        return new[]
+        {
+            errorMessage,
+            "Bytes empfangen, aber keine SD-Bestätigung erkannt.",
+            $"Empfangene SD-Antwort: {SerialDiagnosticsFormatter.ToVisibleControlText(handshakeBytes)}",
+            $"SD-Hexdump: {SerialDiagnosticsFormatter.ToHexDump(handshakeBytes)}"
+        };
     }
 
     private static PatientData CreatePatient()

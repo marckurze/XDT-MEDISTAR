@@ -190,9 +190,11 @@ Die NIDEK-RS232-Familie nutzt ASCII-Frames mit Steuerzeichen wie SOH, STX, ETB u
 
 NIDEK RT-2100, RT-3100 und RT-5100 sind als serielle bidirektionale Phoropterfamilie vorbereitet. Fuer RT-2100 ist 2400 7E2 der konservative Standard. RT-3100 und RT-5100 koennen Type 1 mit 2400 7E2 oder Type 2 mit 9600 8O1 verwenden.
 
+Die RT-Presets setzen DTR und RTS standardmaessig aktiv. Beim RT-3100 wurde im Praxisaufbau bestaetigt, dass mit DTR aus keine Rueckgabe empfangen wurde, mit DTR aktiv aber ein vollstaendiger Frame ankam.
+
 Im produktiven Ablauf oeffnet XDTBox das RT-Fenster nicht schon beim Start der Ueberwachung. Erst wenn eine AIS-Patientendatei ankommt, werden Patient und Historie gelesen und ein Auswahlfenster geoeffnet. Dort koennen Lensmeter- und Autorefraktor-Historienwerte ausgewaehlt werden. Senden erfolgt nur nach Klick auf "An RT senden" ueber den im Schnittstellenprofil gepflegten COM-Port. Danach wartet XDTBox auf die Rueckgabe des Phoropters bis EOT und eine kurze Stabilitaetswartezeit.
 
-Das RT-Fenster enthaelt fuer die Praxisabnahme eine einklappbare serielle Diagnose. Sie zeigt COM-Port, Baudrate, Datenbits, Paritaet, Stoppbits, Flusskontrolle, DTR/RTS, RS-Anforderung, erwartete und empfangene SD-Bestaetigung, den PC->RT-Writer-Frame, Hexdump, sichtbare Steuerzeichen und den Empfang bis EOT. "COM-Port nur abhoeren" oeffnet denselben Profil-Port, sendet nichts und erzeugt keinen XDT-Export.
+Das RT-Fenster enthaelt fuer die Praxisabnahme eine einklappbare serielle Diagnose. Sie zeigt COM-Port, Baudrate, Datenbits, Paritaet, Stoppbits, Flusskontrolle, DTR/RTS, RS-Anforderung, erwartete und empfangene SD-Bestaetigung, den PC->RT-Writer-Frame, Hexdump, sichtbare Steuerzeichen und den Empfang bis EOT. Die RS-Anforderung wird als `<SOH>C   <STX>RS<ETB><EOT>` beziehungsweise `01 43 20 20 20 02 52 53 17 04` gesendet; die im Handbuch gezeichneten `*` sind Leerzeichen-Platzhalter. "COM-Port nur abhoeren" oeffnet denselben Profil-Port, sendet nichts und erzeugt keinen XDT-Export.
 
 Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Ein Geraete-Eingangsordner und ein dateibasierter Ausgabeordner an das Geraet sind fuer diese seriellen Phoropter nicht erforderlich. Vor der endgueltigen Praxisfreigabe muessen echtes Senden, Rueckgabe nach Sendung und MEDISTAR-Import am Geraet geprueft werden.
 
@@ -216,6 +218,6 @@ COM-Port nicht gefunden oder belegt: Prüfen Sie Gerätemanager, Kabel, Adapter 
 
 RS232 keine Daten empfangen: Prüfen Sie Baudrate, Datenbits, Stoppbits, Parität, Flusskontrolle, DTR, RTS und ob das Gerät Daten sendet.
 
-RT-3100 keine SD-Bestaetigung oder keine Rueckgabe: Pruefen Sie den richtigen COM-Port, Type1/Type2, PC-Port-Einstellung am Phoropter, DTR/RTS/Handshake, Portbelegung durch andere Programme und ob am Phoropter PRINT/SEND ausgeloest wurde.
+RT-3100 keine SD-Bestaetigung oder keine Rueckgabe: Pruefen Sie den richtigen COM-Port, Type1/Type2, PC-Port-Einstellung am Phoropter, DTR/RTS/Handshake, Portbelegung durch andere Programme und ob am Phoropter PRINT/SEND ausgeloest wurde. Wenn keine Daten ankommen, DTR aktivieren; der letzte erfolgreiche RT-3100-Abhoertest lief mit DTR aktiv.
 
 MEDISTAR zeigt Werte nicht an: Prüfen Sie Exportordner, Rückgabedatei, 8402 aus AIS und die importierten XDT-Ergebniszeilen.

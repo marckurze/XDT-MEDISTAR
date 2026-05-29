@@ -48,8 +48,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialControlChars.SH,
         (byte)'C',
         (byte)' ',
-        (byte)'*',
-        (byte)'*',
+        (byte)' ',
+        (byte)' ',
         NidekRtSerialControlChars.SX,
         (byte)'R',
         (byte)'S',
@@ -209,11 +209,16 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialPhoropterModel model)
     {
         yield return $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}";
+        if (model == NidekRtSerialPhoropterModel.Rt3100 && !settings.DtrEnable)
+        {
+            yield return "Hinweis: Beim letzten erfolgreichen RT-3100-Abhören war DTR aktiv. Bitte DTR aktivieren, wenn keine Daten empfangen werden.";
+        }
 
         if (requestBytes.Length > 0)
         {
             yield return $"RS-Anforderung erwartet: {SerialDiagnosticsFormatter.ToVisibleControlText(requestBytes)}";
             yield return $"RS-Anforderung Hexdump: {SerialDiagnosticsFormatter.ToHexDump(requestBytes)}";
+            yield return "RS-Anforderung Hinweis: Die im Handbuch dargestellten * werden als Leerzeichen-Platzhalter gesendet.";
         }
         else
         {
@@ -274,14 +279,14 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
     {
         var visible = SerialDiagnosticsFormatter.ToVisibleControlText(payloadBytes);
         var blocks = new List<string>();
-        AddIfContains(blocks, visible, "DRL", "ID");
-        AddIfContains(blocks, visible, "DRM", "AR SCA");
-        AddIfContains(blocks, visible, "DWF", "WF SCA");
-        AddIfContains(blocks, visible, "DLM", "LM SCA");
-        AddIfContains(blocks, visible, "AR", "R ADD/AR-Zeile");
-        AddIfContains(blocks, visible, "AL", "L ADD");
-        AddIfContains(blocks, visible, "PD", "PD");
-        AddIfContains(blocks, visible, "PR", "Prisma");
+        AddIfContains(blocks, visible, "DRL<STX>", "ID");
+        AddIfContains(blocks, visible, "DRM<STX>", "AR SCA");
+        AddIfContains(blocks, visible, "DWF<STX>", "WF SCA");
+        AddIfContains(blocks, visible, "DLM<STX>*R", "LM SCA");
+        AddIfContains(blocks, visible, "ALM<STX>", "LM ADD");
+        AddIfContains(blocks, visible, "DPM<STX>PD", "AR PD");
+        AddIfContains(blocks, visible, "DLM<STX>PD", "LM PD");
+        AddIfContains(blocks, visible, "PR", "LM PRISM");
 
         return blocks.Count == 0 ? "keine erkannten Nutzdatenblöcke" : string.Join(", ", blocks.Distinct(StringComparer.Ordinal));
     }

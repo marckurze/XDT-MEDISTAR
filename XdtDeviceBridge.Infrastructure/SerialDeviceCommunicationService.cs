@@ -287,11 +287,15 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                 {
                     var message = "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestätigung fehlt.";
                     messages.Add(message);
-                    messages.Add(string.IsNullOrWhiteSpace(CreateHexDump(handshakeBytes))
-                        ? "Empfangene SD-Antwort: keine Bytes."
-                        : $"Empfangene SD-Antwort: {SerialDiagnosticsFormatter.ToVisibleControlText(handshakeBytes)}");
-                    if (handshakeBytes.Length > 0)
+                    if (handshakeBytes.Length == 0)
                     {
+                        messages.Add("Keine Bytes empfangen.");
+                        messages.Add("Empfangene SD-Antwort: keine Bytes.");
+                    }
+                    else
+                    {
+                        messages.Add("Bytes empfangen, aber keine SD-Bestätigung erkannt.");
+                        messages.Add($"Empfangene SD-Antwort: {SerialDiagnosticsFormatter.ToVisibleControlText(handshakeBytes)}");
                         messages.Add($"SD-Hexdump: {CreateHexDump(handshakeBytes)}");
                     }
 
