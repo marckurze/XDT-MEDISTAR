@@ -16,6 +16,23 @@ public enum XdtBaukastenRuleDirection
     DeviceOutput
 }
 
+public sealed record XdtBaukastenPreviewLine(
+    int LineNumber,
+    string Text,
+    XdtBaukastenResultView ViewKind,
+    XdtBaukastenRuleDirection Direction,
+    string? RuleId = null,
+    int? RuleIndex = null,
+    string? RuleName = null,
+    string? Target = null,
+    bool IsWarning = false,
+    bool IsHighlighted = false);
+
+public sealed record XdtBaukastenPreviewDocument(
+    XdtBaukastenResultView ViewKind,
+    string PlainText,
+    IReadOnlyList<XdtBaukastenPreviewLine> Lines);
+
 public sealed record XdtBaukastenLoadedInput(
     string SourcePath,
     string DisplayName,
@@ -26,7 +43,8 @@ public sealed record XdtBaukastenOutputPreview(
     string AisView,
     string DeviceOutput,
     string Diagnostics,
-    IReadOnlyList<string> Messages);
+    IReadOnlyList<string> Messages,
+    IReadOnlyDictionary<XdtBaukastenResultView, XdtBaukastenPreviewDocument>? Documents = null);
 
 public sealed record XdtBaukastenPreviewResult(
     bool Success,

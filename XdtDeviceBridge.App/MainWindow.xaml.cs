@@ -17,6 +17,8 @@ using WinForms = System.Windows.Forms;
 
 namespace XdtDeviceBridge.App;
 
+public sealed record XdtBaukastenRuleGridRow(int RowNumber, ExportRuleDefinition Rule);
+
 public partial class MainWindow : Window
 {
     private const string MonitoringNotificationSoundRelativePath = @"Assets\Sounds\04_praxis_terminal_signal.wav";
@@ -133,7 +135,8 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<InterfaceProfileActivationPreviewRow> _interfaceProfileActivationPreviewRows = new();
     private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly XdtBaukastenState _xdtBaukastenState = new();
-    private readonly ObservableCollection<ExportRuleDefinition> _xdtBaukastenExportRules = new();
+    private readonly ObservableCollection<XdtBaukastenRuleGridRow> _xdtBaukastenExportRules = new();
+    private readonly ObservableCollection<XdtBaukastenPreviewLine> _xdtBaukastenResultLines = new();
     private readonly ObservableCollection<XdtBaukastenPlaceholder> _xdtBaukastenAisPlaceholders = new();
     private readonly ObservableCollection<XdtBaukastenPlaceholder> _xdtBaukastenDevicePlaceholders = new();
     private readonly ObservableCollection<XdtBaukastenPlaceholder> _xdtBaukastenDeviceOutputPlaceholders = new();
@@ -213,6 +216,7 @@ public partial class MainWindow : Window
         InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         XdtBaukastenExportRulesGrid.ItemsSource = _xdtBaukastenExportRules;
+        XdtBaukastenResultLinesGrid.ItemsSource = _xdtBaukastenResultLines;
         XdtBaukastenAisPlaceholderItems.ItemsSource = _xdtBaukastenAisPlaceholders;
         XdtBaukastenDevicePlaceholderItems.ItemsSource = _xdtBaukastenDevicePlaceholders;
         XdtBaukastenDeviceOutputPlaceholderItems.ItemsSource = _xdtBaukastenDeviceOutputPlaceholders;
@@ -2825,8 +2829,12 @@ public partial class MainWindow : Window
 
         _xdtBaukastenState.AddWorkingRule(rule);
         RefreshXdtBaukastenRuleGrid();
-        XdtBaukastenExportRulesGrid.SelectedItem = rule;
-        XdtBaukastenExportRulesGrid.ScrollIntoView(rule);
+        var addedRow = _xdtBaukastenExportRules.FirstOrDefault(row => string.Equals(row.Rule.Id, rule.Id, StringComparison.OrdinalIgnoreCase));
+        if (addedRow is not null)
+        {
+            XdtBaukastenExportRulesGrid.SelectedItem = addedRow;
+            XdtBaukastenExportRulesGrid.ScrollIntoView(addedRow);
+        }
         XdtBaukastenDraftStatusText.Text = isDeviceOutput
             ? "Neue Geräteausgabe-Regel in der Baukasten-Arbeitskopie angelegt."
             : "Neue Exportregel in der Baukasten-Arbeitskopie angelegt.";
@@ -8481,6 +8489,7 @@ public partial class MainWindow : Window
         _xdtBaukastenState.SetRuleDirection(direction);
         RefreshXdtBaukastenRuleDirectionUi();
         RefreshXdtBaukastenRuleGrid();
+        SelectXdtBaukastenResultViewForCurrentRuleDirection();
         RefreshXdtBaukastenPreviewIfPossible();
     }
 
@@ -8539,14 +8548,15 @@ public partial class MainWindow : Window
     {
         var selectedRuleId = _xdtBaukastenSelectedRuleId;
         _xdtBaukastenExportRules.Clear();
+        var rowNumber = 1;
         foreach (var rule in _xdtBaukastenState.CurrentWorkingRules.OrderBy(rule => rule.SortOrder).ThenBy(rule => rule.Id, StringComparer.OrdinalIgnoreCase))
         {
-            _xdtBaukastenExportRules.Add(rule);
+            _xdtBaukastenExportRules.Add(new XdtBaukastenRuleGridRow(rowNumber++, rule));
         }
 
         var selected = string.IsNullOrWhiteSpace(selectedRuleId)
             ? null
-            : _xdtBaukastenExportRules.FirstOrDefault(rule => string.Equals(rule.Id, selectedRuleId, StringComparison.OrdinalIgnoreCase));
+            : _xdtBaukastenExportRules.FirstOrDefault(row => string.Equals(row.Rule.Id, selectedRuleId, StringComparison.OrdinalIgnoreCase));
         if (selected is not null)
         {
             XdtBaukastenExportRulesGrid.SelectedItem = selected;
@@ -9019,7 +9029,7 @@ public partial class MainWindow : Window
 
     private void XdtBaukastenResultViewComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (XdtBaukastenResultTextBox is not null)
+        if (XdtBaukastenResultLinesGrid is not null)
         {
             UpdateXdtBaukastenResultView();
         }
@@ -9031,19 +9041,153 @@ public partial class MainWindow : Window
         if (output is null)
         {
             XdtBaukastenResultGroupBox.Header = GetXdtBaukastenResultHeader();
-            XdtBaukastenResultTextBox.Text = "Noch keine Vorschau erzeugt.";
+            SetXdtBaukastenResultDocument(new XdtBaukastenPreviewDocument(
+                GetSelectedXdtBaukastenResultView(),
+                "Noch keine Vorschau erzeugt.",
+                new[]
+                {
+                    new XdtBaukastenPreviewLine(
+                        1,
+                        "Noch keine Vorschau erzeugt.",
+                        GetSelectedXdtBaukastenResultView(),
+                        _xdtBaukastenState.CurrentRuleDirection)
+                }));
             return;
         }
 
         var selectedTag = (XdtBaukastenResultViewComboBox.SelectedItem as ComboBoxItem)?.Tag as string;
         XdtBaukastenResultGroupBox.Header = GetXdtBaukastenResultHeader(selectedTag);
-        XdtBaukastenResultTextBox.Text = selectedTag switch
+        var viewKind = GetSelectedXdtBaukastenResultView(selectedTag);
+        if (output.Documents?.TryGetValue(viewKind, out var document) == true)
+        {
+            SetXdtBaukastenResultDocument(HighlightXdtBaukastenDocument(document));
+            return;
+        }
+
+        var plainText = selectedTag switch
         {
             "AisView" => output.AisView,
             "DeviceOutput" => output.DeviceOutput,
             "Diagnostics" => output.Diagnostics,
             _ => output.RawXdt
         };
+        SetXdtBaukastenResultDocument(HighlightXdtBaukastenDocument(CreateFallbackXdtBaukastenDocument(viewKind, plainText)));
+    }
+
+    private void SetXdtBaukastenResultDocument(XdtBaukastenPreviewDocument document)
+    {
+        XdtBaukastenResultTextBox.Text = document.PlainText;
+        _xdtBaukastenResultLines.Clear();
+        foreach (var line in document.Lines)
+        {
+            _xdtBaukastenResultLines.Add(line);
+        }
+
+        var highlighted = _xdtBaukastenResultLines.FirstOrDefault(line => line.IsHighlighted);
+        if (highlighted is not null)
+        {
+            XdtBaukastenResultLinesGrid.ScrollIntoView(highlighted);
+        }
+
+        UpdateXdtBaukastenRuleOutputStatus(document);
+    }
+
+    private XdtBaukastenPreviewDocument HighlightXdtBaukastenDocument(XdtBaukastenPreviewDocument document)
+    {
+        if (string.IsNullOrWhiteSpace(_xdtBaukastenSelectedRuleId))
+        {
+            return document;
+        }
+
+        var lines = document.Lines
+            .Select(line => line with { IsHighlighted = string.Equals(line.RuleId, _xdtBaukastenSelectedRuleId, StringComparison.OrdinalIgnoreCase) })
+            .ToArray();
+        return document with { Lines = lines };
+    }
+
+    private void UpdateXdtBaukastenRuleOutputStatus(XdtBaukastenPreviewDocument document)
+    {
+        if (string.IsNullOrWhiteSpace(_xdtBaukastenSelectedRuleId)
+            || XdtBaukastenExportRulesGrid.SelectedItem is not XdtBaukastenRuleGridRow row)
+        {
+            return;
+        }
+
+        var hasHighlightedLine = document.Lines.Any(line => line.IsHighlighted);
+        if (hasHighlightedLine)
+        {
+            var firstLine = document.Lines.First(line => line.IsHighlighted);
+            XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                ? $"Geräteausgabe-Regel {row.RowNumber} markiert Ausgabezeile {firstLine.LineNumber}."
+                : $"Exportregel {row.RowNumber} markiert Ausgabezeile {firstLine.LineNumber}.";
+            return;
+        }
+
+        XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+            ? $"Geräteausgabe-Regel {row.RowNumber} erzeugt aktuell keine Ausgabezeile in dieser Ansicht."
+            : $"Exportregel {row.RowNumber} erzeugt aktuell keine Ausgabezeile in dieser Ansicht.";
+    }
+
+    private static XdtBaukastenPreviewDocument CreateFallbackXdtBaukastenDocument(XdtBaukastenResultView viewKind, string plainText)
+    {
+        var lines = SplitXdtBaukastenPreviewLines(plainText)
+            .Select((line, index) => new XdtBaukastenPreviewLine(
+                index + 1,
+                line,
+                viewKind,
+                viewKind == XdtBaukastenResultView.DeviceOutput ? XdtBaukastenRuleDirection.DeviceOutput : XdtBaukastenRuleDirection.AisExport))
+            .ToArray();
+        return new XdtBaukastenPreviewDocument(viewKind, plainText, lines);
+    }
+
+    private static IReadOnlyList<string> SplitXdtBaukastenPreviewLines(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return Array.Empty<string>();
+        }
+
+        return text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n');
+    }
+
+    private XdtBaukastenResultView GetSelectedXdtBaukastenResultView(string? selectedTag = null)
+    {
+        selectedTag ??= (XdtBaukastenResultViewComboBox.SelectedItem as ComboBoxItem)?.Tag as string;
+        return selectedTag switch
+        {
+            "AisView" => XdtBaukastenResultView.AisView,
+            "DeviceOutput" => XdtBaukastenResultView.DeviceOutput,
+            "Diagnostics" => XdtBaukastenResultView.Diagnostics,
+            _ => XdtBaukastenResultView.RawXdt
+        };
+    }
+
+    private void SelectXdtBaukastenResultViewForCurrentRuleDirection()
+    {
+        var desiredTag = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+            ? "DeviceOutput"
+            : GetSelectedXdtBaukastenResultView() == XdtBaukastenResultView.DeviceOutput
+                ? "RawXdt"
+                : null;
+        if (desiredTag is not null)
+        {
+            SelectXdtBaukastenResultViewByTag(desiredTag);
+        }
+    }
+
+    private void SelectXdtBaukastenResultViewByTag(string tag)
+    {
+        foreach (var item in XdtBaukastenResultViewComboBox.Items.OfType<ComboBoxItem>())
+        {
+            if (string.Equals(item.Tag as string, tag, StringComparison.OrdinalIgnoreCase))
+            {
+                XdtBaukastenResultViewComboBox.SelectedItem = item;
+                return;
+            }
+        }
     }
 
     private string GetXdtBaukastenResultHeader(string? selectedTag = null)
@@ -9077,13 +9221,15 @@ public partial class MainWindow : Window
 
     private void XdtBaukastenExportRulesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (XdtBaukastenExportRulesGrid.SelectedItem is not ExportRuleDefinition rule)
+        if (XdtBaukastenExportRulesGrid.SelectedItem is not XdtBaukastenRuleGridRow row)
         {
             _xdtBaukastenSelectedRuleId = null;
             XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
+            UpdateXdtBaukastenResultView();
             return;
         }
 
+        var rule = row.Rule;
         _xdtBaukastenSelectedRuleId = rule.Id;
         XdtBaukastenDraftTargetFieldCodeTextBox.Text = rule.TargetFieldCode;
         XdtBaukastenDraftTargetNameTextBox.Text = rule.TargetName;
@@ -9092,6 +9238,8 @@ public partial class MainWindow : Window
         XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
             ? $"Geräteausgabe-Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}"
             : $"Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}";
+        SelectXdtBaukastenResultViewForCurrentRuleDirection();
+        UpdateXdtBaukastenResultView();
     }
 
     private void XdtBaukastenApplyDraftRule_Click(object sender, RoutedEventArgs e)
@@ -9177,11 +9325,12 @@ public partial class MainWindow : Window
             return false;
         }
 
-        var index = _xdtBaukastenExportRules.ToList().FindIndex(rule => string.Equals(rule.Id, updated.Id, StringComparison.OrdinalIgnoreCase));
+        var index = _xdtBaukastenExportRules.ToList().FindIndex(row => string.Equals(row.Rule.Id, updated.Id, StringComparison.OrdinalIgnoreCase));
         if (index >= 0)
         {
-            _xdtBaukastenExportRules[index] = updated;
-            XdtBaukastenExportRulesGrid.SelectedItem = updated;
+            var updatedRow = _xdtBaukastenExportRules[index] with { Rule = updated };
+            _xdtBaukastenExportRules[index] = updatedRow;
+            XdtBaukastenExportRulesGrid.SelectedItem = updatedRow;
         }
 
         if (updateStatus)

@@ -140,6 +140,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Mapping / Exportprofil", section);
         Assert.Contains("Verarbeitung starten", section);
         Assert.Contains("Roh-XDT-Ausgabe an das AIS", section);
+        Assert.Contains("XdtBaukastenResultLinesGrid", section);
+        Assert.Contains("Binding=\"{Binding LineNumber}\"", section);
         Assert.Contains("Roh-XDT", section);
         Assert.Contains("Ansicht im AIS", section);
         Assert.Contains("Geräteausgabe", section);
@@ -148,6 +150,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("XdtBaukastenRuleDirectionPanel", section);
         Assert.Contains("Export an AIS", section);
         Assert.Contains("Export an Gerät", section);
+        Assert.Contains("x:Name=\"XdtBaukastenRuleNumberColumn\"", section);
+        Assert.Contains("Binding=\"{Binding RowNumber}\"", section);
         Assert.Contains("XdtBaukastenDraftTargetLabel", section);
         Assert.Contains("XdtBaukastenAddExportRuleButton", section);
         Assert.Contains("XdtBaukastenDeleteExportRule_Click", section);

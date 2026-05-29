@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Infrastructure;
@@ -106,12 +107,22 @@ public sealed class XdtBaukastenPreviewService
         }
 
         var deviceOutput = BuildDeviceOutputPreview(state, interfaceProfile, timestamp, messages);
+        diagnostics = AppendDeviceOutputDiagnostics(diagnostics, messages);
+        var documents = CreatePreviewDocuments(
+            rawXdt,
+            aisView,
+            deviceOutput,
+            diagnostics,
+            pipelineResult,
+            exportProfile,
+            state.WorkingDeviceOutputRules);
         var output = new XdtBaukastenOutputPreview(
             RawXdt: rawXdt,
             AisView: aisView,
             DeviceOutput: deviceOutput,
             Diagnostics: diagnostics,
-            Messages: messages);
+            Messages: messages,
+            Documents: documents);
 
         return new XdtBaukastenPreviewResult(
             Success: pipelineResult is null || !pipelineResult.HasErrors,
@@ -221,13 +232,41 @@ public sealed class XdtBaukastenPreviewService
             AisView: message,
             DeviceOutput: message,
             Diagnostics: message,
-            Messages: new[] { message });
+            Messages: new[] { message },
+            Documents: CreateFailureDocuments(message));
 
         return new XdtBaukastenPreviewResult(
             Success: false,
             PipelineResult: null,
             Output: output,
             Messages: new[] { message });
+    }
+
+    private static string AppendDeviceOutputDiagnostics(string diagnostics, IReadOnlyList<string> messages)
+    {
+        var deviceOutputMessages = messages
+            .Where(message => message.StartsWith("Geräteausgabe", StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (deviceOutputMessages.Length == 0)
+        {
+            return diagnostics;
+        }
+
+        var builder = new StringBuilder(diagnostics.TrimEnd());
+        if (builder.Length > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine();
+        }
+
+        builder.AppendLine("Geräteausgabe-Regeln");
+        foreach (var message in deviceOutputMessages)
+        {
+            builder.AppendLine($"- {message}");
+        }
+
+        return builder.ToString().TrimEnd();
     }
 
     private static string CreateAisCardView(ProcessingPipelineResult result)
@@ -250,6 +289,210 @@ public sealed class XdtBaukastenPreviewService
         }
 
         return string.Join(Environment.NewLine, visibleLines);
+    }
+
+    private static IReadOnlyDictionary<XdtBaukastenResultView, XdtBaukastenPreviewDocument> CreatePreviewDocuments(
+        string rawXdt,
+        string aisView,
+        string deviceOutput,
+        string diagnostics,
+        ProcessingPipelineResult? pipelineResult,
+        ExportProfileDefinition exportProfile,
+        IReadOnlyList<ExportRuleDefinition> deviceOutputRules)
+    {
+        return new Dictionary<XdtBaukastenResultView, XdtBaukastenPreviewDocument>
+        {
+            [XdtBaukastenResultView.RawXdt] = CreateRawXdtDocument(rawXdt, pipelineResult, exportProfile),
+            [XdtBaukastenResultView.AisView] = CreateAisViewDocument(aisView, pipelineResult, exportProfile),
+            [XdtBaukastenResultView.DeviceOutput] = CreateDeviceOutputDocument(deviceOutput, deviceOutputRules),
+            [XdtBaukastenResultView.Diagnostics] = CreatePlainDocument(
+                XdtBaukastenResultView.Diagnostics,
+                diagnostics,
+                XdtBaukastenRuleDirection.AisExport,
+                warningPredicate: line => line.Contains("Fehler", StringComparison.OrdinalIgnoreCase)
+                    || line.Contains("Warning", StringComparison.OrdinalIgnoreCase)
+                    || line.Contains("Warnung", StringComparison.OrdinalIgnoreCase))
+        };
+    }
+
+    private static IReadOnlyDictionary<XdtBaukastenResultView, XdtBaukastenPreviewDocument> CreateFailureDocuments(string message)
+    {
+        return new Dictionary<XdtBaukastenResultView, XdtBaukastenPreviewDocument>
+        {
+            [XdtBaukastenResultView.RawXdt] = CreatePlainDocument(XdtBaukastenResultView.RawXdt, string.Empty, XdtBaukastenRuleDirection.AisExport),
+            [XdtBaukastenResultView.AisView] = CreatePlainDocument(XdtBaukastenResultView.AisView, message, XdtBaukastenRuleDirection.AisExport, _ => true),
+            [XdtBaukastenResultView.DeviceOutput] = CreatePlainDocument(XdtBaukastenResultView.DeviceOutput, message, XdtBaukastenRuleDirection.DeviceOutput, _ => true),
+            [XdtBaukastenResultView.Diagnostics] = CreatePlainDocument(XdtBaukastenResultView.Diagnostics, message, XdtBaukastenRuleDirection.AisExport, _ => true)
+        };
+    }
+
+    private static XdtBaukastenPreviewDocument CreateRawXdtDocument(
+        string plainText,
+        ProcessingPipelineResult? pipelineResult,
+        ExportProfileDefinition exportProfile)
+    {
+        var records = pipelineResult?.ExportRecords.OrderBy(record => record.SortOrder).ToArray()
+            ?? Array.Empty<ExportFieldRecord>();
+        var lines = SplitPreviewLines(plainText);
+        var previewLines = new List<XdtBaukastenPreviewLine>(lines.Count);
+        for (var index = 0; index < lines.Count; index++)
+        {
+            var record = index < records.Length ? records[index] : null;
+            var rule = record is null ? null : FindRuleForRecord(exportProfile, record);
+            previewLines.Add(new XdtBaukastenPreviewLine(
+                index + 1,
+                lines[index],
+                XdtBaukastenResultView.RawXdt,
+                XdtBaukastenRuleDirection.AisExport,
+                rule?.Id,
+                rule is null ? null : IndexOfRule(exportProfile.Rules, rule),
+                rule?.TargetName,
+                record?.FieldCode));
+        }
+
+        return new XdtBaukastenPreviewDocument(XdtBaukastenResultView.RawXdt, plainText, previewLines);
+    }
+
+    private static XdtBaukastenPreviewDocument CreateAisViewDocument(
+        string plainText,
+        ProcessingPipelineResult? pipelineResult,
+        ExportProfileDefinition exportProfile)
+    {
+        var records = pipelineResult?.ExportRecords
+            .Where(record => !IsHiddenInAisCardView(record.FieldCode))
+            .OrderBy(record => record.SortOrder)
+            .Where(record => !string.IsNullOrWhiteSpace(record.Value?.Trim()))
+            .ToArray()
+            ?? Array.Empty<ExportFieldRecord>();
+        var lines = SplitPreviewLines(plainText);
+        var previewLines = new List<XdtBaukastenPreviewLine>(lines.Count);
+        for (var index = 0; index < lines.Count; index++)
+        {
+            var record = index < records.Length ? records[index] : null;
+            var rule = record is null ? null : FindRuleForRecord(exportProfile, record);
+            previewLines.Add(new XdtBaukastenPreviewLine(
+                index + 1,
+                lines[index],
+                XdtBaukastenResultView.AisView,
+                XdtBaukastenRuleDirection.AisExport,
+                rule?.Id,
+                rule is null ? null : IndexOfRule(exportProfile.Rules, rule),
+                rule?.TargetName,
+                record?.FieldCode));
+        }
+
+        return new XdtBaukastenPreviewDocument(XdtBaukastenResultView.AisView, plainText, previewLines);
+    }
+
+    private static XdtBaukastenPreviewDocument CreateDeviceOutputDocument(
+        string plainText,
+        IReadOnlyList<ExportRuleDefinition> deviceOutputRules)
+    {
+        var activeRules = deviceOutputRules
+            .Where(rule => rule.IsEnabled)
+            .OrderBy(rule => rule.SortOrder)
+            .ThenBy(rule => rule.Id, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var lines = SplitPreviewLines(plainText);
+        var previewLines = new List<XdtBaukastenPreviewLine>(lines.Count);
+        for (var index = 0; index < lines.Count; index++)
+        {
+            var line = lines[index];
+            var rule = activeRules.FirstOrDefault(current => MatchesDeviceOutputLine(line, current));
+            previewLines.Add(new XdtBaukastenPreviewLine(
+                index + 1,
+                line,
+                XdtBaukastenResultView.DeviceOutput,
+                XdtBaukastenRuleDirection.DeviceOutput,
+                rule?.Id,
+                rule is null ? null : IndexOfRule(deviceOutputRules, rule),
+                rule?.TargetName,
+                rule?.TargetFieldCode));
+        }
+
+        return new XdtBaukastenPreviewDocument(XdtBaukastenResultView.DeviceOutput, plainText, previewLines);
+    }
+
+    private static XdtBaukastenPreviewDocument CreatePlainDocument(
+        XdtBaukastenResultView viewKind,
+        string plainText,
+        XdtBaukastenRuleDirection direction,
+        Func<string, bool>? warningPredicate = null)
+    {
+        var lines = SplitPreviewLines(plainText);
+        var previewLines = lines
+            .Select((line, index) => new XdtBaukastenPreviewLine(
+                index + 1,
+                line,
+                viewKind,
+                direction,
+                IsWarning: warningPredicate?.Invoke(line) == true))
+            .ToArray();
+
+        return new XdtBaukastenPreviewDocument(viewKind, plainText, previewLines);
+    }
+
+    private static IReadOnlyList<string> SplitPreviewLines(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return Array.Empty<string>();
+        }
+
+        return text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n');
+    }
+
+    private static ExportRuleDefinition? FindRuleForRecord(ExportProfileDefinition exportProfile, ExportFieldRecord record)
+    {
+        return exportProfile.Rules
+            .Where(rule => rule.IsEnabled)
+            .OrderBy(rule => rule.SortOrder)
+            .ThenBy(rule => rule.Id, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(rule =>
+                rule.SortOrder == record.SortOrder
+                && string.Equals(rule.TargetFieldCode, record.FieldCode, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static int IndexOfRule(IReadOnlyList<ExportRuleDefinition> rules, ExportRuleDefinition rule)
+    {
+        var ordered = rules
+            .OrderBy(current => current.SortOrder)
+            .ThenBy(current => current.Id, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        for (var index = 0; index < ordered.Length; index++)
+        {
+            if (string.Equals(ordered[index].Id, rule.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                return index + 1;
+            }
+        }
+
+        return 0;
+    }
+
+    private static bool MatchesDeviceOutputLine(string line, ExportRuleDefinition rule)
+    {
+        if (string.IsNullOrWhiteSpace(rule.TargetFieldCode))
+        {
+            return false;
+        }
+
+        if (line.StartsWith(rule.TargetFieldCode + ":", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var leaf = rule.TargetFieldCode.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).LastOrDefault();
+        if (string.IsNullOrWhiteSpace(leaf))
+        {
+            return false;
+        }
+
+        var pattern = $@"<[^<>\s/]*:?{Regex.Escape(leaf)}(?:\s|>|/)";
+        return Regex.IsMatch(line, pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     }
 
     private static string CreateDiagnosticsView(

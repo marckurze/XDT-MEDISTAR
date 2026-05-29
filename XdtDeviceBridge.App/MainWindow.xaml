@@ -2092,14 +2092,43 @@
                                 <TextBlock x:Name="XdtBaukastenStatusText" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,8" Foreground="{StaticResource XdtBoxMutedTextBrush}" Text="Baukasten bereit. Bitte Profile und Testdaten laden." />
 
                                 <GroupBox x:Name="XdtBaukastenResultGroupBox" Grid.Row="2" Grid.ColumnSpan="2" Header="Roh-XDT-Ausgabe an das AIS">
-                                    <TextBox x:Name="XdtBaukastenResultTextBox"
-                                             MinHeight="260"
-                                             AcceptsReturn="True"
-                                             VerticalScrollBarVisibility="Auto"
-                                             HorizontalScrollBarVisibility="Auto"
-                                             FontFamily="Consolas"
-                                             TextWrapping="NoWrap"
-                                             IsReadOnly="True" />
+                                    <Grid>
+                                        <DataGrid x:Name="XdtBaukastenResultLinesGrid"
+                                                  MinHeight="260"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  IsReadOnly="True"
+                                                  HeadersVisibility="Column"
+                                                  GridLinesVisibility="Horizontal"
+                                                  FontFamily="Consolas"
+                                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                  SelectionMode="Extended"
+                                                  SelectionUnit="FullRow">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="{x:Type DataGridRow}">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                                                            <Setter Property="Background" Value="#FFF4C2" />
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsWarning}" Value="True">
+                                                            <Setter Property="Foreground" Value="#8A4B00" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="#" Binding="{Binding LineNumber}" Width="54" />
+                                                <DataGridTextColumn Header="Ausgabe" Binding="{Binding Text}" Width="*" />
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                        <TextBox x:Name="XdtBaukastenResultTextBox"
+                                                 Visibility="Collapsed"
+                                                 IsReadOnly="True" />
+                                    </Grid>
                                 </GroupBox>
                             </Grid>
                         </GroupBox>
@@ -2152,16 +2181,17 @@
                                           IsReadOnly="True"
                                           SelectionChanged="XdtBaukastenExportRulesGrid_SelectionChanged">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding IsEnabled}" Width="70" />
-                                        <DataGridTextColumn x:Name="XdtBaukastenRuleTargetColumn" Header="Feld" Binding="{Binding TargetFieldCode}" Width="130" />
-                                        <DataGridTextColumn x:Name="XdtBaukastenRuleTargetNameColumn" Header="Name" Binding="{Binding TargetName}" Width="180" />
-                                        <DataGridTextColumn Header="SourcePath" Binding="{Binding SourcePath}" Width="220" />
-                                        <DataGridTextColumn Header="Template" Binding="{Binding OutputTemplate}" Width="*" />
+                                        <DataGridTextColumn x:Name="XdtBaukastenRuleNumberColumn" Header="#" Binding="{Binding RowNumber}" Width="46" />
+                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding Rule.IsEnabled}" Width="70" />
+                                        <DataGridTextColumn x:Name="XdtBaukastenRuleTargetColumn" Header="Feld" Binding="{Binding Rule.TargetFieldCode}" Width="130" />
+                                        <DataGridTextColumn x:Name="XdtBaukastenRuleTargetNameColumn" Header="Name" Binding="{Binding Rule.TargetName}" Width="180" />
+                                        <DataGridTextColumn Header="SourcePath" Binding="{Binding Rule.SourcePath}" Width="220" />
+                                        <DataGridTextColumn Header="Template" Binding="{Binding Rule.OutputTemplate}" Width="*" />
                                         <DataGridTemplateColumn Header="" Width="54">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Button Content="🗑"
-                                                            Tag="{Binding}"
+                                                            Tag="{Binding Rule}"
                                                             ToolTip="Exportregel aus der Baukasten-Arbeitskopie löschen"
                                                             Click="XdtBaukastenDeleteExportRule_Click" />
                                                 </DataTemplate>

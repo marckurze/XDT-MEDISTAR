@@ -337,6 +337,8 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 ### Phase 3: Baukasten schlank halten
 
 - Der Baukasten bleibt fuer Tests, Vorschau und Sonderfaelle.
+- Ausgabeansichten und Exportregeln zeigen Baukasten-Zeilennummern; Regel-Auswahl markiert die zugehoerige Vorschauzeile. Diese Orientierung bleibt reine UI und veraendert keine XDT-/XML-Ausgabe.
+- Bidirektionale `Export an Geraet`-Regeln duerfen im Baukasten weiter als Arbeitskopie wachsen, solange CV-5000/RT-6100-Writer produktiv unveraendert bleiben und keine Geraeteordner beschrieben werden.
 - Keine zusaetzlichen Assistenten- oder Wizard-Ebenen einbauen, solange fertige Profile/Templatepakete fehlen.
 - Wenn ein Geraete-Datei-Explorer entsteht, zunaechst read-only: Datei laden, SourcePaths anzeigen, keine Profiländerung.
 

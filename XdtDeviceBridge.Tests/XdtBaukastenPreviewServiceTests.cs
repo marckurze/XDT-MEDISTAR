@@ -152,6 +152,85 @@ public sealed class XdtBaukastenPreviewServiceTests
     }
 
     [Fact]
+    public void BuildPreview_ShouldApplyCv5000DeviceOutputPlaceholderRuleChanges()
+    {
+        using var temp = new TempFolder();
+        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var devicePath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml");
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+        state.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+        var idRule = state.WorkingDeviceOutputRules.Single(rule => rule.TargetFieldCode == "Common/Patient/ID") with
+        {
+            SourcePath = null,
+            OutputTemplate = "{CV5000Input.PatientNumber}-BAUKASTEN"
+        };
+        Assert.True(state.UpdateWorkingRule(idRule));
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains("<nsCommon:ID>4701-1-BAUKASTEN</nsCommon:ID>", result.Output.DeviceOutput);
+    }
+
+    [Fact]
+    public void BuildPreview_ShouldCreateLineNumberedDocumentsWithoutChangingPlainText()
+    {
+        using var temp = new TempFolder();
+        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var devicePath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml");
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.NotNull(result.Output.Documents);
+        var rawDocument = result.Output.Documents![XdtBaukastenResultView.RawXdt];
+        var aisDocument = result.Output.Documents![XdtBaukastenResultView.AisView];
+        var deviceDocument = result.Output.Documents![XdtBaukastenResultView.DeviceOutput];
+        Assert.Equal(result.Output.RawXdt, rawDocument.PlainText);
+        Assert.Equal(result.Output.AisView, aisDocument.PlainText);
+        Assert.Equal(result.Output.DeviceOutput, deviceDocument.PlainText);
+        Assert.Equal(1, rawDocument.Lines.First().LineNumber);
+        Assert.Equal(1, aisDocument.Lines.First().LineNumber);
+        Assert.Equal(1, deviceDocument.Lines.First().LineNumber);
+        Assert.False(rawDocument.PlainText.StartsWith("1 ", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BuildPreview_ShouldLinkRulesToPreviewLines()
+    {
+        using var temp = new TempFolder();
+        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var devicePath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml");
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconCv5000Default());
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarTopconCv5000Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        var rawDocument = result.Output.Documents![XdtBaukastenResultView.RawXdt];
+        var aisDocument = result.Output.Documents![XdtBaukastenResultView.AisView];
+        var deviceDocument = result.Output.Documents![XdtBaukastenResultView.DeviceOutput];
+        Assert.Contains(rawDocument.Lines, line => line.Text.Contains("6228Phoropter finaler Verordnungswert", StringComparison.Ordinal) && line.RuleName == "PrescriptionHeader");
+        Assert.Contains(aisDocument.Lines, line => line.Text.Contains("Phoropter finaler Verordnungswert", StringComparison.Ordinal) && line.RuleName == "PrescriptionHeader");
+        Assert.Contains(deviceDocument.Lines, line => line.Text.Contains("<nsCommon:ID>", StringComparison.Ordinal) && line.RuleId == "cv5000-patient-id");
+    }
+
+    [Fact]
     public void BuildPreview_ShouldApplyRt6100DeviceOutputWorkingRules()
     {
         using var temp = new TempFolder();
