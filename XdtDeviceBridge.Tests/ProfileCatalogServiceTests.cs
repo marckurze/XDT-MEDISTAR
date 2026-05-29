@@ -144,6 +144,57 @@ public sealed class ProfileCatalogServiceTests
     }
 
     [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairBuiltInNidekRtSerialSendMode()
+    {
+        var paths = CreateAppDataPaths();
+        var legacy = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault() with
+        {
+            NidekRtSerialSendMode = null
+        };
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            InterfaceProfiles: new[] { legacy }));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt3100-serial-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, profile.NidekRtSerialSendMode);
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldNotRepairUserDefinedNidekRtSerialSendMode()
+    {
+        var paths = CreateAppDataPaths();
+        var userDefined = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault() with
+        {
+            Metadata = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault().Metadata with
+            {
+                IsBuiltIn = false,
+                IsUserDefined = true
+            },
+            NidekRtSerialSendMode = NidekRtSerialSendMode.RsSdHandshake
+        };
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: Array.Empty<DeviceProfileDefinition>(),
+            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            InterfaceProfiles: new[] { userDefined }));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt3100-serial-default");
+        Assert.False(profile.Metadata.IsBuiltIn);
+        Assert.True(profile.Metadata.IsUserDefined);
+        Assert.Equal(NidekRtSerialSendMode.RsSdHandshake, profile.NidekRtSerialSendMode);
+    }
+
+    [Fact]
     public void EnsureDefaultProfiles_ShouldRepairLegacyLm7BuiltInExportProfile()
     {
         var paths = CreateAppDataPaths();

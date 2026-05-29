@@ -8,7 +8,7 @@ Diese Notizen fassen die Auswertung der bereitgestellten Herstellerdokumente zus
 - `RT-3100(RT-11)_IntE_34090-P982-A2.pdf`
 - `RT-5100_IntME_34085-P992-A0.pdf`
 
-Die Auswertung dient Parser, Writer, BuiltIn-Profilen, XDT-Baukasten-Vorschau und dem produktiven patientengetriggerten RS232-Ablauf. Am 2026-05-29 wurde zusaetzlich ein erster echter RT-3100-Praxismitschnitt als Fixture uebernommen. Eine echte Live-Sendung an ein Praxisgeraet und die Rueckgabe nach Sendung muessen weiterhin praktisch freigegeben werden.
+Die Auswertung dient Parser, Writer, BuiltIn-Profilen, XDT-Baukasten-Vorschau und dem produktiven patientengetriggerten RS232-Ablauf. Am 2026-05-29 wurden echte RT-3100-Praxismitschnitte als Fixtures uebernommen. Der Live-Test bestaetigt ausserdem, dass der direkte PC->RT-Writer-Frame vom RT-3100 empfangen wird; der RS/SD-Handshake lieferte in dieser Praxisinstallation keine SD-Antwort. Rueckgabe nach Sendung und MEDISTAR-Import muessen weiterhin praktisch freigegeben werden.
 
 ## Gemeinsame Familie
 
@@ -144,7 +144,13 @@ Live-Sendetestmodi im RT-Fenster:
 - `Direkt Writer-Frame senden`: sendet den PC->RT-Frame ohne RS/SD, nur nach Warnbestaetigung.
 - `RS + Writer ohne SD-Warten`: sendet `RS`, wartet kurz und sendet den Writer-Frame auch ohne SD, nur nach Warnbestaetigung.
 
-Die serielle Diagnose protokolliert zusaetzlich CTS, DSR, DCD und RI, soweit die Windows-API sie fuer den Adapter liefert. Wenn keine SD-Antwort kommt, bleibt der normale Workflow defensiv: Er sendet keinen Writer-Frame automatisch nach; direkte Sendungen sind nur Testmodus.
+Die serielle Diagnose protokolliert zusaetzlich CTS, DSR, DCD und RI, soweit die Windows-API sie fuer den Adapter liefert. Der direkte Writer-Frame wurde am RT-3100 live empfangen. Deshalb ist der produktive Sendemodus nicht im Geraeteprofil fest verdrahtet, sondern pro Schnittstellenprofil gespeichert:
+
+- `RS/SD-Handshake`: `RS` senden, `SD` erwarten, danach Writer-Frame senden.
+- `Direkt Writer-Frame senden`: keinen `RS` senden, keine `SD`-Bestaetigung erwarten, Writer-Frame direkt senden.
+- `RS senden, dann Writer ohne SD`: `RS` senden, kurz warten und den Writer-Frame auch ohne `SD` senden.
+
+Die BuiltIn-Schnittstellenprofile fuer RT-2100/RT-3100/RT-5100 verwenden `Direkt Writer-Frame senden` als Default, weil dieser Modus am RT-3100 praktisch bestaetigt wurde. Die Sendetestmodi im RT-Fenster bleiben davon getrennt und aendern den gespeicherten Schnittstellenprofilwert nicht.
 
 ## Produktiver Ablauf in XDTBox
 
@@ -152,12 +158,13 @@ Die serielle Diagnose protokolliert zusaetzlich CTS, DSR, DCD und RI, soweit die
 - Erst eine stabile AIS-Patientendatei startet den Auswahl-/Sendedialog.
 - Der Dialog bietet LM-/AR-Historienwerte an; produktiv gesendet werden zunaechst V0/Lensmeter und V1/Autorefraktion.
 - Senden erfolgt nur nach ausdruecklichem Anwenderklick ueber den im Schnittstellenprofil konfigurierten COM-Port.
-- XDTBox sendet `SH C   SX RS EB ET` (`01 43 20 20 20 02 52 53 17 04`), erwartet `SX SD`, schreibt danach den PC->RT-Frame und wechselt in den Empfang.
-- Die Rueckgabe wird bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
+- Der Schnittstellenprofilwert `NIDEK-RT Sendemodus` steuert den produktiven Ablauf. Im Praxisdefault `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame direkt, sendet keinen `RS` und erwartet keine `SD`-Bestaetigung. In `RS/SD-Handshake` sendet XDTBox `SH C   SX RS EB ET` (`01 43 20 20 20 02 52 53 17 04`), erwartet `SX SD` und schreibt erst danach den PC->RT-Frame. In `RS senden, dann Writer ohne SD` wird `RS` gesendet, kurz gewartet und der Writer-Frame auch ohne `SD` geschrieben.
+- Nach erfolgreichem Senden wechselt XDTBox in `Warte auf Rueckgabe vom Phoropter`. Eine ausbleibende sofortige Rueckgabe ist kein Sendefehler: Der Anwender fuehrt die Untersuchung am RT durch und loest danach PRINT/SEND aus. Ohne Rueckgabe wird kein leeres XDT erzeugt.
+- Sobald eine Rueckgabe empfangen wird, wird sie bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
 - Serielle RT-Schnittstellenprofile brauchen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner.
 - Das RT-Floating-Fenster enthaelt fuer Live-Abnahmen eine serielle Diagnose: verwendete COM-Parameter, DTR/RTS/Handshake, Port-Status, RS-Anforderung, erwartete/empfangene SD-Bestaetigung, PC->RT-Writer-Frame, Hexdump und sichtbare Steuerzeichen werden angezeigt. `COM-Port nur abhoeren` oeffnet denselben Profil-Port, sendet nichts und zeigt empfangene Bytes ohne XDT-Export.
 - Der einklappbare Bereich `Sendetest` im RT-Fenster dient nur der Praxisdiagnose. Er kann RS-only, DTR-Toggle, direkten Writer-Frame und RS+Writer-ohne-SD ausloesen; dadurch wird kein produktiver XDT-Export erzeugt.
-- Wenn keine SD-Bestaetigung oder keine Rueckgabe eintrifft, zeigt XDTBox eine konkrete Pruefliste zu COM-Port, Type1/Type2, PC-Port-Parameter am RT, DTR/RTS/Handshake, Portbelegung und PRINT/SEND am Phoropter.
+- Wenn im `RS/SD-Handshake` keine SD-Bestaetigung eintrifft, zeigt XDTBox eine konkrete Pruefliste zu COM-Port, Type1/Type2, PC-Port-Parameter am RT, DTR/RTS/Handshake und Portbelegung. Im `DirectWriterFrame`-Modus gibt es keine SD-Fehlermeldung; dort zeigt XDTBox den gesendeten Writer-Frame und den anschliessenden Wartestatus auf PRINT/SEND-Rueckgabe.
 
 ## XDT-Baukasten
 
@@ -172,6 +179,6 @@ Warnhinweis im Baukasten:
 - weitere echte RT-2100-/RT-3100-/RT-5100-RS232-Mitschnitte
 - Pruefung, welche Header-Variante das konkrete Praxisgeraet sendet
 - Pruefung von Type1/Type2 und DTR/DSR-Verhalten
-- Live-Abnahme des PC->RT-Sendeframes
+- weitere Live-Abnahmen des PC->RT-Sendeframes an RT-2100 und RT-5100; am RT-3100 ist `DirectWriterFrame` empfangen worden
 - Rueckgabe nach einer echten Sendung am RT-3100/RT-2100/RT-5100
 - MEDISTAR-Abnahme der `6228`-/`6227`-Rueckgabe

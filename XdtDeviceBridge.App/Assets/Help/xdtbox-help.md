@@ -190,15 +190,21 @@ Die NIDEK-RS232-Familie nutzt ASCII-Frames mit Steuerzeichen wie SOH, STX, ETB u
 
 NIDEK RT-2100, RT-3100 und RT-5100 sind als serielle bidirektionale Phoropterfamilie vorbereitet. Fuer RT-2100 ist 2400 7E2 der konservative Standard. RT-3100 und RT-5100 koennen Type 1 mit 2400 7E2 oder Type 2 mit 9600 8O1 verwenden.
 
-Die RT-Presets setzen DTR und RTS standardmaessig aktiv. Beim RT-3100 wurde im Praxisaufbau bestaetigt, dass mit DTR aus keine Rueckgabe empfangen wurde, mit DTR aktiv aber ein vollstaendiger Frame ankam.
+Die RT-Presets setzen DTR und RTS standardmaessig aktiv. Beim RT-3100 wurde im Praxisaufbau bestaetigt, dass mit DTR aus keine Rueckgabe empfangen wurde, mit DTR aktiv aber ein vollstaendiger Frame ankam. Der gleiche Praxisaufbau hat den direkten PC->RT-Writer-Frame empfangen; der RS/SD-Handshake lieferte dort keine SD-Bestaetigung.
+
+Im Tab "Schnittstellenprofile" gibt es fuer diese seriellen RT-Profile die Auswahl "NIDEK-RT Sendemodus":
+
+- "Direkt Writer-Frame senden": XDTBox sendet den Writer-Frame direkt, erwartet keine SD-Bestaetigung und wartet danach auf die spaetere Rueckgabe. Das ist der aktuelle Praxisdefault fuer RT-2100/RT-3100/RT-5100.
+- "RS/SD-Handshake": XDTBox sendet zuerst RS, erwartet SD und sendet den Writer-Frame nur bei Bestaetigung.
+- "RS senden, dann Writer ohne SD": XDTBox sendet RS, wartet kurz und sendet den Writer-Frame auch ohne SD.
 
 Im produktiven Ablauf oeffnet XDTBox das RT-Fenster nicht schon beim Start der Ueberwachung. Erst wenn eine AIS-Patientendatei ankommt, werden Patient und Historie gelesen und ein Auswahlfenster geoeffnet. Dort koennen Lensmeter- und Autorefraktor-Historienwerte ausgewaehlt werden. Senden erfolgt nur nach Klick auf "An RT senden" ueber den im Schnittstellenprofil gepflegten COM-Port. Danach wartet XDTBox auf die Rueckgabe des Phoropters bis EOT und eine kurze Stabilitaetswartezeit.
 
 Das RT-Fenster enthaelt fuer die Praxisabnahme eine einklappbare serielle Diagnose. Sie zeigt COM-Port, Baudrate, Datenbits, Paritaet, Stoppbits, Flusskontrolle, DTR/RTS, CTS/DSR/DCD/RI, RS-Anforderung, erwartete und empfangene SD-Bestaetigung, den PC->RT-Writer-Frame, Hexdump, sichtbare Steuerzeichen und den Empfang bis EOT. Die RS-Anforderung wird als `<SOH>C   <STX>RS<ETB><EOT>` beziehungsweise `01 43 20 20 20 02 52 53 17 04` gesendet; die im Handbuch gezeichneten `*` sind Leerzeichen-Platzhalter. Auch LM-SCA-Augenpraefixe werden als Leerzeichen + `R`/`L` gesendet, nicht als ASCII-Sternchen. "COM-Port nur abhoeren" oeffnet denselben Profil-Port, sendet nichts und erzeugt keinen XDT-Export.
 
-Der Bereich "Sendetest" im RT-Fenster ist nur fuer die Praxisdiagnose: "RS anfordern" sendet nur RS und wartet auf SD, "DTR-Toggle + RS" schaltet DTR kurz aus/ein und fordert danach RS an, "Direkt Writer-Frame senden" sendet den PC->RT-Frame ohne RS/SD und "RS + Writer ohne SD-Warten" sendet nach kurzer Wartezeit auch ohne SD. Diese Modi laufen nur nach explizitem Klick und erzeugen keinen produktiven XDT-Export.
+Der Bereich "Sendetest" im RT-Fenster ist nur fuer die Praxisdiagnose: "RS anfordern" sendet nur RS und wartet auf SD, "DTR-Toggle + RS" schaltet DTR kurz aus/ein und fordert danach RS an, "Direkt Writer-Frame senden" sendet den PC->RT-Frame ohne RS/SD und "RS + Writer ohne SD-Warten" sendet nach kurzer Wartezeit auch ohne SD. Diese Modi laufen nur nach explizitem Klick, erzeugen keinen produktiven XDT-Export und aendern den gespeicherten Sendemodus im Schnittstellenprofil nicht.
 
-Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Ein Geraete-Eingangsordner und ein dateibasierter Ausgabeordner an das Geraet sind fuer diese seriellen Phoropter nicht erforderlich. Vor der endgueltigen Praxisfreigabe muessen echtes Senden, Rueckgabe nach Sendung und MEDISTAR-Import am Geraet geprueft werden.
+Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Ein Geraete-Eingangsordner und ein dateibasierter Ausgabeordner an das Geraet sind fuer diese seriellen Phoropter nicht erforderlich. Wenn nach dem Senden nicht sofort eine Rueckgabe kommt, bleibt XDTBox im Wartestatus: Fuehren Sie die Untersuchung am Phoropter durch und loesen Sie danach PRINT/SEND aus. Ohne Rueckgabe erzeugt XDTBox kein leeres XDT. Rueckgabe nach Sendung und MEDISTAR-Import muessen am Geraet weiter praktisch geprueft werden.
 
 # Fehlerbehebung
 

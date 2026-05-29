@@ -2536,6 +2536,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
@@ -2590,7 +2591,31 @@
                                             <TextBlock Text=" ms" VerticalAlignment="Center" Margin="6,0,0,0"/>
                                         </StackPanel>
 
+                                        <TextBlock Grid.Row="4" Grid.Column="0" x:Name="InterfaceNidekRtSerialSendModeLabel" Text="NIDEK-RT Sendemodus:" FontWeight="Bold" Margin="0,0,8,8"/>
+                                        <ComboBox Grid.Row="4"
+                                                  Grid.Column="1"
+                                                  Grid.ColumnSpan="2"
+                                                  x:Name="InterfaceNidekRtSerialSendModeComboBox"
+                                                  SelectedValuePath="Tag"
+                                                  SelectedValue="DirectWriterFrame"
+                                                  Width="260"
+                                                  HorizontalAlignment="Left"
+                                                  Margin="0,0,8,8"
+                                                  ToolTip="Der Sendemodus hängt von der konkreten Phoropter-/Relaisbox-Konfiguration ab. Im RT-3100-Praxistest wurde der direkte Writer-Frame empfangen, während der RS/SD-Handshake keine SD-Antwort lieferte.">
+                                            <ComboBoxItem Content="RS/SD-Handshake" Tag="RsSdHandshake"/>
+                                            <ComboBoxItem Content="Direkt Writer-Frame senden" Tag="DirectWriterFrame"/>
+                                            <ComboBoxItem Content="RS senden, dann Writer ohne SD" Tag="RsThenWriterWithoutSd"/>
+                                        </ComboBox>
                                         <TextBlock Grid.Row="4"
+                                                   Grid.Column="3"
+                                                   Grid.ColumnSpan="2"
+                                                   x:Name="InterfaceNidekRtSerialSendModeHintTextBlock"
+                                                   Text="Praxisdefault für RT-2100/3100/5100: Direkt Writer-Frame senden. Testmodi im Gerätefenster ändern diesen gespeicherten Modus nicht."
+                                                   Foreground="DimGray"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,8,8"/>
+
+                                        <TextBlock Grid.Row="5"
                                                    Grid.Column="0"
                                                    Grid.ColumnSpan="5"
                                                    x:Name="InterfaceSerialStatusTextBlock"

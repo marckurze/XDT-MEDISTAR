@@ -103,6 +103,30 @@ public sealed class InterfaceProfileConfigurationServiceTests
     }
 
     [Fact]
+    public void CreateConfiguredProfile_ShouldPersistNidekRtSerialSendMode()
+    {
+        var builtInProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault();
+        var options = CreateFolderOptions(aisImportFolder: @"\\SERVER\Freigabe\XDT\AIS");
+
+        var result = _service.CreateConfiguredProfile(
+            builtInProfile,
+            options,
+            isActive: false,
+            isLicenseRequired: true,
+            builtInProfile.DeviceOutput,
+            builtInProfile.SerialSettings,
+            NidekRtSerialSendMode.RsSdHandshake,
+            _timestamp,
+            "TestUser",
+            idFactory: () => "interface-rt3100-config");
+
+        Assert.True(result.Success);
+        Assert.Equal(NidekRtSerialSendMode.RsSdHandshake, result.Profile!.NidekRtSerialSendMode);
+        Assert.False(result.Profile.Metadata.IsBuiltIn);
+        Assert.True(result.Profile.Metadata.IsUserDefined);
+    }
+
+    [Fact]
     public void CreateConfiguredProfile_ShouldPreserveAttachmentFolders()
     {
         var userProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with

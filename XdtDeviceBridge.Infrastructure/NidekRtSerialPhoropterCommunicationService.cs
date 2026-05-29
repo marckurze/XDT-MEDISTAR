@@ -9,6 +9,7 @@ public interface INidekRtSerialPhoropterCommunicationService
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
+        NidekRtSerialSendMode sendMode,
         CancellationToken cancellationToken);
 
     Task<NidekRtSerialPhoropterCommunicationResult> ReceiveReturnAsync(
@@ -77,7 +78,8 @@ public sealed record NidekRtSerialPhoropterCommunicationResult(
     byte[] ReceivedBytes,
     string ReceivedText,
     string ReceivedHexDump,
-    IReadOnlyList<string> Messages);
+    IReadOnlyList<string> Messages,
+    bool SendCompleted = false);
 
 public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialPhoropterCommunicationService
 {
@@ -126,6 +128,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
+        NidekRtSerialSendMode sendMode,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(settings);
@@ -145,7 +148,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 ReceivedBytes: Array.Empty<byte>(),
                 ReceivedText: string.Empty,
                 ReceivedHexDump: string.Empty,
-                Messages: new[] { message, $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}" }));
+                Messages: new[] { message, $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}" },
+                SendCompleted: false));
         }
 
         var writerResult = _writer.BuildFrame(patient, selectedMeasurements, model);
@@ -161,10 +165,17 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 ReceivedBytes: Array.Empty<byte>(),
                 ReceivedText: string.Empty,
                 ReceivedHexDump: string.Empty,
-                Messages: writerResult.Warnings.Concat(new[] { writerResult.ErrorMessage ?? "NIDEK-RT-Sendedaten konnten nicht erzeugt werden." }).ToArray()));
+                Messages: writerResult.Warnings.Concat(new[] { writerResult.ErrorMessage ?? "NIDEK-RT-Sendedaten konnten nicht erzeugt werden." }).ToArray(),
+                SendCompleted: false));
         }
 
-        return ExchangeAsync(settings, RsRequestBytes, ReadyToSendMarker, writerResult.Bytes, writerResult.Warnings, model, NidekRtSerialPhoropterSendTestOptions.None, continueWithoutHandshake: false, receiveResponse: true, handshakeTimeoutOverride: null, cancellationToken: cancellationToken);
+        return ExchangeProductiveSendAsync(
+            settings,
+            writerResult.Bytes,
+            writerResult.Warnings,
+            model,
+            sendMode,
+            cancellationToken);
     }
 
     public Task<NidekRtSerialPhoropterCommunicationResult> ReceiveReturnAsync(
@@ -183,6 +194,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             continueWithoutHandshake: false,
             receiveResponse: true,
             handshakeTimeoutOverride: null,
+            productiveSendMode: null,
             cancellationToken: cancellationToken);
     }
 
@@ -204,6 +216,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             continueWithoutHandshake: false,
             receiveResponse: false,
             handshakeTimeoutOverride: null,
+            productiveSendMode: null,
             cancellationToken: cancellationToken);
     }
 
@@ -255,6 +268,58 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             receiveResponse: true,
             handshakeTimeoutOverride: TimeSpan.FromMilliseconds(300),
             cancellationToken: cancellationToken);
+    }
+
+    private Task<NidekRtSerialPhoropterCommunicationResult> ExchangeProductiveSendAsync(
+        SerialCommunicationSettings settings,
+        byte[] payloadBytes,
+        IReadOnlyList<string> writerWarnings,
+        NidekRtSerialPhoropterModel model,
+        NidekRtSerialSendMode sendMode,
+        CancellationToken cancellationToken)
+    {
+        return sendMode switch
+        {
+            NidekRtSerialSendMode.RsSdHandshake => ExchangeAsync(
+                settings,
+                RsRequestBytes,
+                ReadyToSendMarker,
+                payloadBytes,
+                writerWarnings,
+                model,
+                NidekRtSerialPhoropterSendTestOptions.None,
+                continueWithoutHandshake: false,
+                receiveResponse: true,
+                handshakeTimeoutOverride: null,
+                productiveSendMode: sendMode,
+                cancellationToken: cancellationToken),
+            NidekRtSerialSendMode.RsThenWriterWithoutSd => ExchangeAsync(
+                settings,
+                RsRequestBytes,
+                ReadyToSendMarker,
+                payloadBytes,
+                writerWarnings,
+                model,
+                NidekRtSerialPhoropterSendTestOptions.None with { SendDelayAfterRequest = TimeSpan.FromMilliseconds(300) },
+                continueWithoutHandshake: true,
+                receiveResponse: true,
+                handshakeTimeoutOverride: TimeSpan.FromMilliseconds(300),
+                productiveSendMode: sendMode,
+                cancellationToken: cancellationToken),
+            _ => ExchangeAsync(
+                settings,
+                Array.Empty<byte>(),
+                Array.Empty<byte>(),
+                payloadBytes,
+                writerWarnings,
+                model,
+                NidekRtSerialPhoropterSendTestOptions.None,
+                continueWithoutHandshake: false,
+                receiveResponse: true,
+                handshakeTimeoutOverride: null,
+                productiveSendMode: NidekRtSerialSendMode.DirectWriterFrame,
+                cancellationToken: cancellationToken)
+        };
     }
 
     public static byte[] CreateRsRequestBytes()
@@ -327,6 +392,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             continueWithoutHandshake,
             receiveResponse,
             handshakeTimeoutOverride,
+            productiveSendMode: null,
             cancellationToken);
     }
 
@@ -341,6 +407,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         bool continueWithoutHandshake,
         bool receiveResponse,
         TimeSpan? handshakeTimeoutOverride,
+        NidekRtSerialSendMode? productiveSendMode,
         CancellationToken cancellationToken)
     {
         var exchangeRequest = new SerialCommunicationExchangeRequest(
@@ -374,8 +441,11 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
                 model,
                 continueWithoutHandshake,
                 receiveResponse,
-                options)
+                options,
+                productiveSendMode)
             .ToArray();
+        var sendCompleted = payloadBytes.Length > 0
+            && exchangeResult.BytesWritten >= requestBytes.Length + payloadBytes.Length;
 
         return new NidekRtSerialPhoropterCommunicationResult(
             Success: exchangeResult.Success,
@@ -387,7 +457,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             ReceivedBytes: exchangeResult.ReceivedBytes,
             ReceivedText: exchangeResult.RawText,
             ReceivedHexDump: exchangeResult.HexDump,
-            Messages: messages);
+            Messages: messages,
+            SendCompleted: sendCompleted);
     }
 
     private static IEnumerable<string> CreateDiagnosticMessages(
@@ -400,9 +471,25 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialPhoropterModel model,
         bool continueWithoutHandshake,
         bool receiveResponse,
-        NidekRtSerialPhoropterSendTestOptions options)
+        NidekRtSerialPhoropterSendTestOptions options,
+        NidekRtSerialSendMode? productiveSendMode)
     {
         yield return $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}";
+        if (productiveSendMode is { } sendMode)
+        {
+            yield return $"Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}.";
+            if (sendMode == NidekRtSerialSendMode.DirectWriterFrame)
+            {
+                yield return "Keine RS-Anforderung gesendet.";
+                yield return "Keine SD-Bestätigung erwartet.";
+            }
+            else if (sendMode == NidekRtSerialSendMode.RsThenWriterWithoutSd)
+            {
+                yield return "RS wurde gesendet; SD wird nicht zwingend erwartet.";
+                yield return "Writer-Frame wird nach kurzer Wartezeit auch ohne SD-Bestätigung gesendet.";
+            }
+        }
+
         if (model == NidekRtSerialPhoropterModel.Rt3100 && !settings.DtrEnable)
         {
             yield return "Hinweis: Beim letzten erfolgreichen RT-3100-Abhören war DTR aktiv. Bitte DTR aktivieren, wenn keine Daten empfangen werden.";
@@ -415,7 +502,9 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
 
         if (continueWithoutHandshake)
         {
-            yield return "Sendetestmodus aktiv: Writer-Frame wird auch ohne SD-Bestätigung gesendet.";
+            yield return productiveSendMode is null
+                ? "Sendetestmodus aktiv: Writer-Frame wird auch ohne SD-Bestätigung gesendet."
+                : "Produktiver Sendemodus aktiv: Writer-Frame wird auch ohne SD-Bestätigung gesendet.";
         }
 
         if (!receiveResponse)
@@ -435,9 +524,16 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         }
         else
         {
-            yield return payloadBytes.Length > 0
-                ? "Direkt-Sendetest aktiv: Es wird keine RS-Anforderung gesendet."
-                : "Nur-Abhören aktiv: Es wird keine RS-Anforderung gesendet.";
+            if (payloadBytes.Length > 0)
+            {
+                yield return productiveSendMode is null
+                    ? "Direkt-Sendetest aktiv: Es wird keine RS-Anforderung gesendet."
+                    : "Direkt Writer-Frame aktiv: Es wird keine RS-Anforderung gesendet.";
+            }
+            else
+            {
+                yield return "Nur-Abhören aktiv: Es wird keine RS-Anforderung gesendet.";
+            }
         }
 
         if (expectedHandshakeBytes.Length > 0)

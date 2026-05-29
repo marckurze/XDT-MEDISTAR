@@ -574,7 +574,8 @@ public static class DefaultInterfaceProfileDefinitions
                 OutputFolder: string.Empty,
                 FileNameTemplate: NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate,
                 Format: NidekRtSerialPhoropterOutputWriter.DeviceOutputFormat),
-            SerialSettings: CreateNidekRtSerialDefaultSettings());
+            SerialSettings: CreateNidekRtSerialDefaultSettings(),
+            NidekRtSerialSendMode: NidekRtSerialSendMode.DirectWriterFrame);
     }
 
     private static SerialCommunicationSettings CreateNidekRtSerialDefaultSettings()

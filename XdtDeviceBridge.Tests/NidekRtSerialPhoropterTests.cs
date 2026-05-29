@@ -358,6 +358,7 @@ public sealed class NidekRtSerialPhoropterTests
             Assert.True(interfaceProfile.SerialSettings!.IsBidirectional);
             Assert.Equal(2400, interfaceProfile.SerialSettings.BaudRate);
             Assert.Equal(7, interfaceProfile.SerialSettings.DataBits);
+            Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, interfaceProfile.NidekRtSerialSendMode);
             Assert.Empty(InterfaceProfileDefinitionValidator.Validate(interfaceProfile));
         }
     }

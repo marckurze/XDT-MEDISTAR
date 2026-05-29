@@ -10,7 +10,8 @@ public sealed record InterfaceProfileDefinition(
     bool IsLicenseRequired,
     string? Description,
     DeviceOutputConfiguration? DeviceOutput = null,
-    SerialCommunicationSettings? SerialSettings = null)
+    SerialCommunicationSettings? SerialSettings = null,
+    NidekRtSerialSendMode? NidekRtSerialSendMode = null)
 {
     public IReadOnlyList<string> Validate()
     {

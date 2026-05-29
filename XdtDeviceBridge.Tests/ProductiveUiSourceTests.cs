@@ -224,6 +224,9 @@ public sealed class ProductiveUiSourceTests
 
         Assert.Contains("InterfaceSerialDtrCheckBox", mainXaml);
         Assert.Contains("InterfaceSerialRtsCheckBox", mainXaml);
+        Assert.Contains("NIDEK-RT Sendemodus", mainXaml);
+        Assert.Contains("InterfaceNidekRtSerialSendModeComboBox", mainXaml);
+        Assert.Contains("DirectWriterFrame", mainXaml);
         Assert.Contains("SerialTestDtrCheckBox", mainXaml);
         Assert.Contains("SerialTestRtsCheckBox", mainXaml);
         Assert.Contains("COM-Port nur abhören", floatingXaml);
@@ -238,6 +241,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("RunNidekRtSerialListenOnlyAsync", mainCode);
         Assert.Contains("RunNidekRtSerialSendTestAsync", mainCode);
         Assert.Contains("AppendNidekRtSerialDiagnostic", mainCode);
+        Assert.Contains("NidekRtSerialSendModeInfo.Resolve", mainCode);
+        Assert.Contains("SendCompleted", mainCode);
         Assert.Contains("RS/SD", mainCode);
     }
 

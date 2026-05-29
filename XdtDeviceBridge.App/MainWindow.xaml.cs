@@ -214,7 +214,12 @@ public partial class MainWindow : Window
 
     private sealed record NidekRtSerialSendContext(
         PatientData Patient,
-        IReadOnlyList<AisHistoricalMeasurementRecord> SelectedMeasurements);
+        IReadOnlyList<AisHistoricalMeasurementRecord> SelectedMeasurements,
+        PendingImportFile AisFile,
+        string AisKey,
+        string DeviceDisplayName,
+        string DeviceOutputKey,
+        DateTime Timestamp);
 
     public MainWindow()
     {
@@ -436,6 +441,7 @@ public partial class MainWindow : Window
         InterfaceSerialStopBitsComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceSerialParityComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceSerialHandshakeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
+        InterfaceNidekRtSerialSendModeComboBox.SelectionChanged += (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
     }
 
     private void RefreshInterfaceActivationPreviewForDraftChange()
@@ -1506,6 +1512,7 @@ public partial class MainWindow : Window
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = profile.FolderOptions.AutoImportScanIntervalSeconds.ToString();
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = profile.FolderOptions.DeviceFileWaitTimeoutMinutes.ToString();
         ApplySerialSettingsToInterfaceEditor(GetSerialSettingsForProfile(profile));
+        ApplyNidekRtSerialSendModeToInterfaceEditor(profile);
         InterfaceAttachmentImportFolderTextBox.Text = profile.FolderOptions.AttachmentImportFolder;
         InterfaceAttachmentExportFolderTextBox.Text = profile.FolderOptions.AttachmentExportFolder;
         InterfaceAttachmentFileNameTemplateTextBox.Text = profile.FolderOptions.AttachmentFileNameTemplate ?? string.Empty;
@@ -1555,6 +1562,7 @@ public partial class MainWindow : Window
         InterfaceAutoImportScanIntervalSecondsTextBox.Text = "5";
         InterfaceDeviceFileWaitTimeoutMinutesTextBox.Text = "10";
         ApplySerialSettingsToInterfaceEditor(SerialCommunicationSettings.Default);
+        ApplyNidekRtSerialSendModeToInterfaceEditor(null);
         InterfaceAttachmentImportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentExportFolderTextBox.Text = string.Empty;
         InterfaceAttachmentFileNameTemplateTextBox.Text = string.Empty;
@@ -1668,8 +1676,12 @@ public partial class MainWindow : Window
         var showDeviceOutput = InterfaceProfileUiPolicy.ShouldShowDeviceOutput(profile, deviceProfile);
         var showAttachmentOptions = InterfaceProfileUiPolicy.ShouldShowAisAttachmentOptions(profile, deviceProfile);
         var showSerialCommunication = IsSerialInterfaceProfile(profile);
+        var showNidekRtSerialSendMode = InterfaceProfileUiPolicy.IsNidekRtSerialPhoropter(profile, deviceProfile);
 
         InterfaceSerialCommunicationGroupBox.Visibility = showSerialCommunication ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceNidekRtSerialSendModeLabel.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceNidekRtSerialSendModeComboBox.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
+        InterfaceNidekRtSerialSendModeHintTextBlock.Visibility = showNidekRtSerialSendMode ? Visibility.Visible : Visibility.Collapsed;
         InterfaceDeviceOutputGroupBox.Visibility = showDeviceOutput ? Visibility.Visible : Visibility.Collapsed;
         InterfaceAttachmentSettingsGroupBox.Visibility = showAttachmentOptions ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -1724,6 +1736,12 @@ public partial class MainWindow : Window
         InterfaceSerialWriteTimeoutTextBox.Text = settings.WriteTimeoutMilliseconds.ToString(CultureInfo.InvariantCulture);
     }
 
+    private void ApplyNidekRtSerialSendModeToInterfaceEditor(InterfaceProfileDefinition? profile)
+    {
+        var mode = NidekRtSerialSendModeInfo.Resolve(profile?.NidekRtSerialSendMode);
+        InterfaceNidekRtSerialSendModeComboBox.SelectedValue = mode.ToString();
+    }
+
     private void RefreshInterfaceActivationPreview()
     {
         if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
@@ -1760,6 +1778,7 @@ public partial class MainWindow : Window
             FolderOptions = CreateInterfaceFolderOptionsFromEditor(),
             DeviceOutput = CreateInterfaceDeviceOutputFromEditor(profile),
             SerialSettings = CreateInterfaceSerialSettingsFromEditor(profile),
+            NidekRtSerialSendMode = CreateNidekRtSerialSendModeFromEditor(profile),
             IsActive = InterfaceIsActiveCheckBox.IsChecked == true,
             IsLicenseRequired = InterfaceIsLicenseRequiredCheckBox.IsChecked == true
         };
@@ -1921,10 +1940,12 @@ public partial class MainWindow : Window
         var selectedExportProfileId = (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id;
         InterfaceFolderOptions folderOptions;
         SerialCommunicationSettings? serialSettings;
+        NidekRtSerialSendMode? nidekRtSerialSendMode;
         try
         {
             folderOptions = CreateInterfaceFolderOptionsFromEditor();
             serialSettings = CreateInterfaceSerialSettingsFromEditor(selectedProfile);
+            nidekRtSerialSendMode = CreateNidekRtSerialSendModeFromEditor(selectedProfile);
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException)
         {
@@ -1939,6 +1960,7 @@ public partial class MainWindow : Window
             InterfaceIsLicenseRequiredCheckBox.IsChecked == true,
             CreateInterfaceDeviceOutputFromEditor(selectedProfile),
             serialSettings,
+            nidekRtSerialSendMode,
             DateTimeOffset.UtcNow,
             Environment.UserName);
 
@@ -2170,6 +2192,20 @@ public partial class MainWindow : Window
             InterfaceSerialBidirectionalCheckBox.IsChecked == true,
             InterfaceSerialReadTimeoutTextBox.Text,
             InterfaceSerialWriteTimeoutTextBox.Text);
+    }
+
+    private NidekRtSerialSendMode? CreateNidekRtSerialSendModeFromEditor(InterfaceProfileDefinition selectedProfile)
+    {
+        var deviceProfile = GetDeviceProfile(selectedProfile.DeviceProfileId);
+        if (!InterfaceProfileUiPolicy.IsNidekRtSerialPhoropter(selectedProfile, deviceProfile))
+        {
+            return null;
+        }
+
+        var value = InterfaceNidekRtSerialSendModeComboBox.SelectedValue as string;
+        return Enum.TryParse<NidekRtSerialSendMode>(value, ignoreCase: true, out var mode)
+            ? mode
+            : NidekRtSerialSendModeInfo.Default;
     }
 
     private static string DefaultIfWhiteSpace(string? value, string fallback)
@@ -6865,7 +6901,12 @@ public partial class MainWindow : Window
         var sendSelectedValues = dialogAction == Cv5000DeviceOutputDialogAction.WriteImportFile;
         _nidekRtSerialSendContexts[interfaceProfile.Metadata.Id] = new NidekRtSerialSendContext(
             parseResult.Patient,
-            selectedMeasurements.ToArray());
+            selectedMeasurements.ToArray(),
+            aisFile,
+            aisKey,
+            deviceDisplayName,
+            deviceOutputKey,
+            timestamp);
         var initialStatus = sendSelectedValues
             ? $"Sende Daten an {deviceDisplayName}"
             : $"Warte auf Rückgabe vom {deviceDisplayName}";
@@ -6975,11 +7016,41 @@ public partial class MainWindow : Window
 
             if (result.Success)
             {
-                SetMonitoringRuntimeState(interfaceProfileId, "COM-Mitschnitt empfangen", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-                AppendNidekRtSerialDiagnostic(
-                    interfaceProfile,
-                    $"nidek-rt-serial-listen-only-success:{DateTime.UtcNow.Ticks}",
-                    $"Nur-Abhören abgeschlossen: {result.ReceivedBytes.Length} Bytes vom {deviceDisplayName} empfangen. Es wurde keine XDT-Ausgabe erzeugt.");
+                if (_nidekRtSerialSendContexts.TryGetValue(interfaceProfileId, out var context)
+                    && result.ReceivedBytes.Length > 0)
+                {
+                    string? temporaryReturnPath = null;
+                    try
+                    {
+                        SetMonitoringRuntimeState(interfaceProfileId, "Rückgabe vollständig, Verarbeitung startet", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                        AppendNidekRtSerialDiagnostic(
+                            interfaceProfile,
+                            $"nidek-rt-serial-listen-only-return:{DateTime.UtcNow.Ticks}",
+                            $"Rückgabe über COM-Port empfangen: {result.ReceivedBytes.Length} Bytes. Die MEDISTAR-Ausgabe wird jetzt aus dem wartenden Patientenkontext erzeugt.");
+                        temporaryReturnPath = WriteNidekRtSerialReturnTempFile(interfaceProfileId, result.ReceivedBytes, DateTime.Now);
+                        ProcessNidekRtSerialReturn(
+                            interfaceProfile,
+                            context.AisFile,
+                            temporaryReturnPath,
+                            DateTime.Now,
+                            context.DeviceDisplayName,
+                            context.DeviceOutputKey,
+                            context.AisKey);
+                        _nidekRtSerialSendContexts.Remove(interfaceProfileId);
+                    }
+                    finally
+                    {
+                        TryDeleteTemporaryNidekRtSerialReturnFile(temporaryReturnPath);
+                    }
+                }
+                else
+                {
+                    SetMonitoringRuntimeState(interfaceProfileId, "COM-Mitschnitt empfangen", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
+                        $"nidek-rt-serial-listen-only-success:{DateTime.UtcNow.Ticks}",
+                        $"Nur-Abhören abgeschlossen: {result.ReceivedBytes.Length} Bytes vom {deviceDisplayName} empfangen. Es wurde keine XDT-Ausgabe erzeugt.");
+                }
             }
             else
             {
@@ -7169,6 +7240,7 @@ public partial class MainWindow : Window
         {
             var cancellationToken = _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None;
             var settings = GetSerialSettingsForProfile(interfaceProfile);
+            var sendMode = NidekRtSerialSendModeInfo.Resolve(interfaceProfile.NidekRtSerialSendMode);
             NidekRtSerialPhoropterCommunicationResult communicationResult;
             if (sendSelectedValues)
             {
@@ -7176,12 +7248,13 @@ public partial class MainWindow : Window
                 AppendNidekRtSerialDiagnostic(
                     interfaceProfile,
                     $"{deviceOutputKey}-send-start:{aisKey}",
-                    $"Sende Daten an {deviceDisplayName} über {settings.PortName}. Der COM-Port bleibt für RS/SD, Sendeframe und anschließenden Empfang in einem Austausch geöffnet. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
+                    $"Sende Daten an {deviceDisplayName} über {settings.PortName}. Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
                 communicationResult = await _nidekRtSerialCommunicationService.SendSelectionAndReceiveAsync(
                     settings,
                     parseResult.Patient,
                     selectedMeasurements,
                     DetectNidekRtSerialModel(deviceProfile),
+                    sendMode,
                     cancellationToken);
             }
             else
@@ -7194,6 +7267,9 @@ public partial class MainWindow : Window
                 communicationResult = await _nidekRtSerialCommunicationService.ReceiveReturnAsync(settings, cancellationToken);
             }
 
+            var sendCompletedWithoutImmediateReturn = sendSelectedValues
+                && communicationResult.SendCompleted
+                && communicationResult.ReceivedBytes.Length == 0;
             var messageIndex = 0;
             foreach (var message in communicationResult.Messages.Where(message => !string.IsNullOrWhiteSpace(message)))
             {
@@ -7201,11 +7277,26 @@ public partial class MainWindow : Window
                     interfaceProfile,
                     $"{deviceOutputKey}-serial-message:{aisKey}:{messageIndex++}",
                     message,
-                    communicationResult.Success ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
+                    communicationResult.Success || sendCompletedWithoutImmediateReturn ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
             }
 
             if (!communicationResult.Success)
             {
+                if (sendCompletedWithoutImmediateReturn)
+                {
+                    SetMonitoringRuntimeState(profileId, $"Warte auf Rückgabe vom {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
+                        $"{deviceOutputKey}-send-complete-waiting:{aisKey}",
+                        $"Daten wurden an {deviceDisplayName} gesendet. XDTBox wartet auf die spätere Rückgabe vom Phoropter. Bitte Untersuchung durchführen und danach PRINT/SEND am Phoropter auslösen.");
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
+                        $"{deviceOutputKey}-send-complete-waiting-action:{aisKey}",
+                        "Noch keine Rückgabe empfangen. Sie können weiter warten, COM-Port nur abhören/Rückgabe erneut abhören oder den Vorgang abbrechen. Es wurde kein leeres XDT erzeugt.");
+                    RefreshInterfaceMonitoringCards();
+                    return;
+                }
+
                 var errorMessage = string.IsNullOrWhiteSpace(communicationResult.ErrorMessage)
                     ? $"Keine Rückgabe vom {deviceDisplayName} empfangen."
                     : communicationResult.ErrorMessage!;
@@ -7234,6 +7325,7 @@ public partial class MainWindow : Window
                 deviceDisplayName,
                 deviceOutputKey,
                 aisKey);
+            _nidekRtSerialSendContexts.Remove(profileId);
         }
         catch (OperationCanceledException)
         {

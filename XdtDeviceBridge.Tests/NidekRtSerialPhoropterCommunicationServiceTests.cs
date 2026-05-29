@@ -20,6 +20,7 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
             CreatePatient(),
             CreateHistoricalRecords(),
             NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.RsSdHandshake,
             CancellationToken.None);
 
         Assert.True(result.Success, result.ErrorMessage);
@@ -96,6 +97,7 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
             CreatePatient(),
             Array.Empty<AisHistoricalMeasurementRecord>(),
             NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.RsSdHandshake,
             CancellationToken.None);
 
         Assert.False(result.Success);
@@ -120,6 +122,7 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
             CreatePatient(),
             CreateHistoricalRecords(),
             NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.RsSdHandshake,
             CancellationToken.None);
 
         Assert.False(result.Success);
@@ -148,6 +151,7 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
             CreatePatient(),
             CreateHistoricalRecords(),
             NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.RsSdHandshake,
             CancellationToken.None);
 
         Assert.False(result.Success);
@@ -173,10 +177,72 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
             CreatePatient(),
             CreateHistoricalRecords(),
             NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.RsSdHandshake,
             CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Contains(result.Messages, message => message.Contains("letzten erfolgreichen RT-3100-Abhören war DTR aktiv", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SendSelectionAndReceiveAsync_WithDirectWriterFrame_ShouldSendPayloadWithoutRsOrSd()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(
+                success: false,
+                receivedBytes: Array.Empty<byte>(),
+                errorMessage: "Noch keine Rückgabe vom Phoropter empfangen.",
+                bytesWritten: 4096)
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionAndReceiveAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.DirectWriterFrame,
+            CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.True(result.SendCompleted);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.Empty(fakeSerial.LastExchangeRequest.RequestBytes);
+        Assert.Empty(fakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
+        Assert.NotEmpty(fakeSerial.LastExchangeRequest.PayloadBytes);
+        Assert.False(fakeSerial.LastExchangeRequest.ContinueWithoutHandshake);
+        Assert.Contains(result.Messages, message => message.Contains("Sendemodus: Direkt Writer-Frame senden", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("Keine RS-Anforderung gesendet", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("Keine SD-Bestätigung erwartet", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Messages, message => message.Contains("Keine SD-Bestätigung vom RT-3100", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SendSelectionAndReceiveAsync_WithRsThenWriterWithoutSd_ShouldSendRsAndPayloadWithoutSdRequirement()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: CreatePracticeReturnBytes(), bytesWritten: 4096)
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionAndReceiveAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.RsThenWriterWithoutSd,
+            CancellationToken.None);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.True(result.SendCompleted);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.Equal(NidekRtSerialPhoropterCommunicationService.CreateRsRequestBytes(), fakeSerial.LastExchangeRequest.RequestBytes);
+        Assert.True(fakeSerial.LastExchangeRequest.ContinueWithoutHandshake);
+        Assert.Equal(TimeSpan.FromMilliseconds(300), fakeSerial.LastExchangeRequest.HandshakeTimeout);
+        Assert.Contains(result.Messages, message => message.Contains("Sendemodus: RS senden, dann Writer ohne SD", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("SD wird nicht zwingend erwartet", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -281,13 +347,14 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         bool success,
         byte[] receivedBytes,
         string? errorMessage = null,
-        byte[]? handshakeBytes = null)
+        byte[]? handshakeBytes = null,
+        int bytesWritten = 42)
     {
         return new SerialCommunicationExchangeResult(
             Success: success,
             ErrorMessage: errorMessage,
             PortName: "COM7",
-            BytesWritten: 42,
+            BytesWritten: bytesWritten,
             HandshakeBytes: handshakeBytes ?? (success
                 ? NidekRtSerialPhoropterCommunicationService.CreateReadyToSendMarker()
                 : Array.Empty<byte>()),

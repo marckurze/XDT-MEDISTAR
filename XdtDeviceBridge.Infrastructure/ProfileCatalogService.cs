@@ -17,6 +17,9 @@ public sealed class ProfileCatalogService
     private const string TopconTrk2PDefaultExportProfileId = "export-medistar-topcon-trk2p-default";
     private const string TopconCv5000DefaultDeviceProfileId = "device-topcon-cv5000-default";
     private const string TopconCv5000DefaultExportProfileId = "export-medistar-topcon-cv5000-default";
+    private const string NidekRt2100SerialDefaultInterfaceProfileId = "interface-medistar-nidek-rt2100-serial-default";
+    private const string NidekRt3100SerialDefaultInterfaceProfileId = "interface-medistar-nidek-rt3100-serial-default";
+    private const string NidekRt5100SerialDefaultInterfaceProfileId = "interface-medistar-nidek-rt5100-serial-default";
 
     private readonly ProfileFileRepository _repository;
 
@@ -273,7 +276,9 @@ public sealed class ProfileCatalogService
 
         foreach (var profile in CreateDefaultInterfaceProfiles())
         {
-            SaveDefaultIfMissing(GetInterfacesFolder(paths), profile, _repository.SaveInterfaceProfileDefinition);
+            var interfacesFolder = GetInterfacesFolder(paths);
+            SaveDefaultIfMissing(interfacesFolder, profile, _repository.SaveInterfaceProfileDefinition);
+            RepairBuiltInInterfaceProfileIfNeeded(interfacesFolder, profile);
         }
     }
 
@@ -462,6 +467,33 @@ public sealed class ProfileCatalogService
         _repository.SaveExportProfileDefinition(filePath, defaultProfile);
     }
 
+    private void RepairBuiltInInterfaceProfileIfNeeded(string folder, InterfaceProfileDefinition defaultProfile)
+    {
+        if (!IsNidekRtSerialDefaultInterfaceProfileId(defaultProfile.Metadata.Id))
+        {
+            return;
+        }
+
+        var filePath = CreateProfilePath(folder, defaultProfile.Metadata.Id);
+        if (!File.Exists(filePath))
+        {
+            return;
+        }
+
+        var existingProfile = _repository.LoadInterfaceProfileDefinition(filePath);
+        if (!existingProfile.Metadata.IsBuiltIn || existingProfile.Metadata.IsUserDefined)
+        {
+            return;
+        }
+
+        if (existingProfile.NidekRtSerialSendMode == NidekRtSerialSendMode.DirectWriterFrame)
+        {
+            return;
+        }
+
+        _repository.SaveInterfaceProfileDefinition(filePath, defaultProfile);
+    }
+
     private static bool NeedsBuiltInExportProfileRepair(ExportProfileDefinition profile)
     {
         return NeedsLm7ExportProfileRepair(profile)
@@ -470,6 +502,13 @@ public sealed class ProfileCatalogService
             || NeedsTopconKr800SExportProfileRepair(profile)
             || NeedsTopconTrk2PExportProfileRepair(profile)
             || NeedsTopconCv5000ExportProfileRepair(profile);
+    }
+
+    private static bool IsNidekRtSerialDefaultInterfaceProfileId(string profileId)
+    {
+        return string.Equals(profileId, NidekRt2100SerialDefaultInterfaceProfileId, StringComparison.Ordinal)
+            || string.Equals(profileId, NidekRt3100SerialDefaultInterfaceProfileId, StringComparison.Ordinal)
+            || string.Equals(profileId, NidekRt5100SerialDefaultInterfaceProfileId, StringComparison.Ordinal);
     }
 
     private static bool NeedsBuiltInDeviceProfileRepair(DeviceProfileDefinition profile)

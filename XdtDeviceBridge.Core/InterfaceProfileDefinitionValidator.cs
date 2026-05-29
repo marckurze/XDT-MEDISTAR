@@ -186,6 +186,12 @@ public static class InterfaceProfileDefinitionValidator
             }
         }
 
+        if (profile.NidekRtSerialSendMode is { } sendMode
+            && !Enum.IsDefined(sendMode))
+        {
+            issues.Add("NidekRtSerialSendMode must be a valid value.");
+        }
+
         if (profile.FolderOptions.ArchiveProcessedFiles
             && profile.FolderOptions.ArchiveRetentionDays > 0
             && string.IsNullOrWhiteSpace(profile.FolderOptions.ArchiveFolder))
