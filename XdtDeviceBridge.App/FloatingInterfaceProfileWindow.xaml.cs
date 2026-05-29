@@ -32,6 +32,7 @@ public partial class FloatingInterfaceProfileWindow : Window
     public event EventHandler<int>? ScanIntervalChangeRequested;
     public event EventHandler? ResetRequested;
     public event EventHandler? SerialListenOnlyRequested;
+    public event EventHandler? SerialProcessReturnRequested;
     public event EventHandler? SerialRequestReadyRequested;
     public event EventHandler? SerialRequestReadyWithDtrToggleRequested;
     public event EventHandler? SerialDirectWriterRequested;
@@ -111,6 +112,11 @@ public partial class FloatingInterfaceProfileWindow : Window
     private void SerialListenOnlyButton_Click(object sender, RoutedEventArgs e)
     {
         SerialListenOnlyRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void SerialProcessReturnButton_Click(object sender, RoutedEventArgs e)
+    {
+        SerialProcessReturnRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void SerialRequestReadyButton_Click(object sender, RoutedEventArgs e)

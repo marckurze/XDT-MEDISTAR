@@ -68,7 +68,7 @@ Noch offen:
 9. Bei `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame ohne RS und ohne SD-Erwartung. Diagnosefenster pruefen: gespeicherter Sendemodus, Writer-Frame, Hexdump, CTS/DSR/DCD/RI und Status `Warte auf Rueckgabe vom RT-3100`.
 10. Bei `RS/SD-Handshake` sendet XDTBox RS als `01 43 20 20 20 02 52 53 17 04` (`SH C   SX RS EB ET`), wartet auf SD und schreibt den Writer-Frame nur bei SD. Dieser Modus bleibt fuer andere Installationen verfuegbar.
 11. Wenn keine sofortige Rueckgabe kommt, bleibt der Vorgang wartend: Untersuchung am RT durchfuehren und danach PRINT/SEND ausloesen. XDTBox erzeugt ohne Rueckgabe kein leeres XDT.
-12. Bei Bedarf `COM-Port nur abhoeren`/`Rueckgabe erneut abhoeren` im RT-Fenster nutzen; die empfangene Rueckgabe wird geparst und als MEDISTAR-XDT erzeugt.
+12. `COM-Port nur abhoeren` bleibt Diagnose und erzeugt keinen Export. Fuer den produktiven Rueckweg im Wartestatus `Rueckgabe abhoeren und verarbeiten` starten; die empfangene Rueckgabe wird mit dem gespeicherten AIS-Kontext geparst und als MEDISTAR-XDT erzeugt.
 13. Die Sendetestmodi `RS anfordern`, `DTR-Toggle + RS`, `Direkt Writer-Frame senden`, `RS + Writer ohne SD-Warten` bleiben reine Diagnosemodi. Sie senden nur nach explizitem Klick, erzeugen keinen XDT-Export und aendern den gespeicherten Sendemodus nicht.
 
 ## Ergebnis
@@ -87,6 +87,7 @@ Noch offen:
 - Der Writer sendet LM-SCA-Augenpraefixe als Leerzeichen + `R`/`L` (`20 52`, `20 4C`) und nicht als ASCII-Sternchen.
 - Modemstatussignale CTS, DSR, DCD und RI werden in der seriellen Diagnose protokolliert, soweit der Adapter sie liefert.
 - Nach erfolgreichem Senden ohne sofortige Rueckgabe bleibt der Workflow im Wartestatus; kein leerer Export und kein harter Sendefehler.
+- Der wartende Workflow haelt den AIS-Patientenkontext. `Rueckgabe abhoeren und verarbeiten` nutzt diesen Kontext fuer den spaeteren produktiven Export, waehrend `COM-Port nur abhoeren` weiterhin nur Mitschnittdiagnose ist.
 
 ## Offene Punkte
 
@@ -94,5 +95,5 @@ Noch offen:
 - DTR/DSR-/RTS-/Handshake-Verhalten vor Ort weiter pruefen; DTR aktiv ist fuer den getesteten RT-3100-Type1-Aufbau aktuell der bestaetigte Startpunkt
 - PC-port-Parameter am Geraet pruefen
 - PC->RT-Live-Senden mit `DirectWriterFrame` wurde am RT-3100 empfangen; RS/SD weiter nur bei Bedarf als alternativer Schnittstellenprofilmodus oder Diagnose pruefen
-- echte Rueckgabe nach Sendung separat freigeben
-- MEDISTAR-Import der erzeugten `6228`-Rueckgabe praktisch pruefen
+- echte Rueckgabe nach Sendung mit `Rueckgabe abhoeren und verarbeiten` separat freigeben
+- MEDISTAR-Import der produktiv erzeugten `6228`-Rueckgabe praktisch pruefen

@@ -163,6 +163,7 @@ Die BuiltIn-Schnittstellenprofile fuer RT-2100/RT-3100/RT-5100 verwenden `Direkt
 - Sobald eine Rueckgabe empfangen wird, wird sie bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
 - Serielle RT-Schnittstellenprofile brauchen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner.
 - Das RT-Floating-Fenster enthaelt fuer Live-Abnahmen eine serielle Diagnose: verwendete COM-Parameter, DTR/RTS/Handshake, Port-Status, RS-Anforderung, erwartete/empfangene SD-Bestaetigung, PC->RT-Writer-Frame, Hexdump und sichtbare Steuerzeichen werden angezeigt. `COM-Port nur abhoeren` oeffnet denselben Profil-Port, sendet nichts und zeigt empfangene Bytes ohne XDT-Export.
+- Fuer den wartenden Produktivzustand nach einer Sendung gibt es zusaetzlich `Rueckgabe abhoeren und verarbeiten`. Diese Funktion sendet nichts, empfaengt aber die spaetere RT-Rueckgabe produktiv, verwendet den gespeicherten AIS-Patientenkontext des Pending-Workflows und erzeugt erst bei gueltiger Rueckgabe die MEDISTAR-XDT-Ausgabe. `COM-Port nur abhoeren` bleibt reine Diagnose und exportiert nicht.
 - Der einklappbare Bereich `Sendetest` im RT-Fenster dient nur der Praxisdiagnose. Er kann RS-only, DTR-Toggle, direkten Writer-Frame und RS+Writer-ohne-SD ausloesen; dadurch wird kein produktiver XDT-Export erzeugt.
 - Wenn im `RS/SD-Handshake` keine SD-Bestaetigung eintrifft, zeigt XDTBox eine konkrete Pruefliste zu COM-Port, Type1/Type2, PC-Port-Parameter am RT, DTR/RTS/Handshake und Portbelegung. Im `DirectWriterFrame`-Modus gibt es keine SD-Fehlermeldung; dort zeigt XDTBox den gesendeten Writer-Frame und den anschliessenden Wartestatus auf PRINT/SEND-Rueckgabe.
 
@@ -180,5 +181,5 @@ Warnhinweis im Baukasten:
 - Pruefung, welche Header-Variante das konkrete Praxisgeraet sendet
 - Pruefung von Type1/Type2 und DTR/DSR-Verhalten
 - weitere Live-Abnahmen des PC->RT-Sendeframes an RT-2100 und RT-5100; am RT-3100 ist `DirectWriterFrame` empfangen worden
-- Rueckgabe nach einer echten Sendung am RT-3100/RT-2100/RT-5100
-- MEDISTAR-Abnahme der `6228`-/`6227`-Rueckgabe
+- Rueckgabe nach einer echten Sendung am RT-3100/RT-2100/RT-5100 mit `Rueckgabe abhoeren und verarbeiten` praktisch freigeben
+- MEDISTAR-Abnahme der produktiv erzeugten `6228`-/`6227`-Rueckgabe

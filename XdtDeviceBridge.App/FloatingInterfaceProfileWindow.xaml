@@ -583,6 +583,29 @@
                     </Button.Style>
                 </Button>
 
+                <Button Content="Rückgabe abhören und verarbeiten"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,8"
+                        Padding="12,5"
+                        Click="SerialProcessReturnButton_Click"
+                        ToolTip="Produktiver Workflow: hört die spätere RT-Rückgabe ab, verarbeitet sie mit dem wartenden Patientenkontext und erzeugt die MEDISTAR-XDT-Ausgabe."
+                        AutomationProperties.Name="Rückgabe abhören und verarbeiten">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesSerialDevice}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding HasNidekRtSerialPendingReturn}" Value="True">
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <Expander Header="Sendetest"
                           IsExpanded="False"
                           Margin="0,0,0,8"

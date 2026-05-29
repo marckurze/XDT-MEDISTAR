@@ -32,7 +32,8 @@ public sealed record InterfaceMonitoringCardDisplay(
     string DeviceTypeDisplay = "",
     bool UsesTextAboveImageLayout = false,
     bool UsesSerialDevice = false,
-    string SerialDiagnosticsText = "")
+    string SerialDiagnosticsText = "",
+    bool HasNidekRtSerialPendingReturn = false)
 {
     public bool HasDeviceImage => IsUsableDeviceImagePath(DeviceImagePath);
     public bool HasSerialDiagnostics => UsesSerialDevice && !string.IsNullOrWhiteSpace(SerialDiagnosticsText);

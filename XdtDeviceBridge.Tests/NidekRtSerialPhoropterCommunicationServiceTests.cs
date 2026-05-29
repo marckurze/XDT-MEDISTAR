@@ -213,9 +213,54 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.NotEmpty(fakeSerial.LastExchangeRequest.PayloadBytes);
         Assert.False(fakeSerial.LastExchangeRequest.ContinueWithoutHandshake);
         Assert.Contains(result.Messages, message => message.Contains("Sendemodus: Direkt Writer-Frame senden", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("denselben Writer-/Bytepfad wie der Diagnosemodus", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("Keine RS-Anforderung gesendet", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("Keine SD-Bestätigung erwartet", StringComparison.Ordinal));
         Assert.DoesNotContain(result.Messages, message => message.Contains("Keine SD-Bestätigung vom RT-3100", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ProductiveDirectWriterFrame_ShouldUseSamePayloadAsDiagnosticDirectWriter()
+    {
+        var productiveFakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(
+                success: false,
+                receivedBytes: Array.Empty<byte>(),
+                errorMessage: "Noch keine Rückgabe vom Phoropter empfangen.",
+                bytesWritten: 4096)
+        };
+        var productiveService = new NidekRtSerialPhoropterCommunicationService(productiveFakeSerial);
+
+        await productiveService.SendSelectionAndReceiveAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialSendMode.DirectWriterFrame,
+            CancellationToken.None);
+
+        var diagnosticFakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: CreatePracticeReturnBytes())
+        };
+        var diagnosticService = new NidekRtSerialPhoropterCommunicationService(diagnosticFakeSerial);
+
+        await diagnosticService.SendSelectionDirectAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialPhoropterSendTestOptions.None,
+            CancellationToken.None);
+
+        Assert.NotNull(productiveFakeSerial.LastExchangeRequest);
+        Assert.NotNull(diagnosticFakeSerial.LastExchangeRequest);
+        Assert.Empty(productiveFakeSerial.LastExchangeRequest.RequestBytes);
+        Assert.Empty(diagnosticFakeSerial.LastExchangeRequest.RequestBytes);
+        Assert.Empty(productiveFakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
+        Assert.Empty(diagnosticFakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
+        Assert.Equal(diagnosticFakeSerial.LastExchangeRequest.PayloadBytes, productiveFakeSerial.LastExchangeRequest.PayloadBytes);
     }
 
     [Fact]

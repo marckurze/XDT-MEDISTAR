@@ -480,6 +480,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             yield return $"Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}.";
             if (sendMode == NidekRtSerialSendMode.DirectWriterFrame)
             {
+                yield return "Produktiver DirectWriterFrame verwendet denselben Writer-/Bytepfad wie der Diagnosemodus.";
                 yield return "Keine RS-Anforderung gesendet.";
                 yield return "Keine SD-Bestätigung erwartet.";
             }

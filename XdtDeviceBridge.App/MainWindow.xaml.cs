@@ -153,6 +153,7 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, bool> _monitoringDetailsExpandedByProfileId = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _nidekRtSerialListenOnlyProfiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _nidekRtSerialSendTestProfiles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _nidekRtSerialReturnProcessingProfiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, NidekRtSerialSendContext> _nidekRtSerialSendContexts = new(StringComparer.OrdinalIgnoreCase);
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
@@ -5072,13 +5073,15 @@ public partial class MainWindow : Window
             {
                 var runtimeState = GetMonitoringRuntimeState(row.MonitoringCard.InterfaceProfileId);
                 var runtimeCard = GetRuntimeMonitoringCard(row);
+                var hasPendingNidekRtSerialReturn = _nidekRtSerialSendContexts.ContainsKey(row.MonitoringCard.InterfaceProfileId);
                 var desiredCard = (runtimeCard with
                 {
                     CurrentStatus = runtimeState.CurrentStatus,
                     StatusClass = runtimeState.StatusClass,
                     LastScanText = runtimeState.LastScanText,
                     AutomaticProcessingText = IsAutomaticPairProcessingEnabled() ? "Ja" : "Nein",
-                    IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId)
+                    IsDetailsExpanded = GetMonitoringDetailsExpanded(row.MonitoringCard.InterfaceProfileId),
+                    HasNidekRtSerialPendingReturn = hasPendingNidekRtSerialReturn
                 }).WithPilotMonitoringActivity(isMonitoringActive);
                 var floatingState = _floatingWindowStateService.GetOrCreate(row.MonitoringCard.InterfaceProfileId);
                 if (floatingState.IsDetached && _floatingWindowRestoreGate.CanShowFloatingWindows)
@@ -5238,6 +5241,7 @@ public partial class MainWindow : Window
             window.ScanIntervalChangeRequested += FloatingMonitoringWindow_ScanIntervalChangeRequested;
             window.ResetRequested += FloatingMonitoringWindow_ResetRequested;
             window.SerialListenOnlyRequested += FloatingMonitoringWindow_SerialListenOnlyRequested;
+            window.SerialProcessReturnRequested += FloatingMonitoringWindow_SerialProcessReturnRequested;
             window.SerialRequestReadyRequested += FloatingMonitoringWindow_SerialRequestReadyRequested;
             window.SerialRequestReadyWithDtrToggleRequested += FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested;
             window.SerialDirectWriterRequested += FloatingMonitoringWindow_SerialDirectWriterRequested;
@@ -5654,6 +5658,16 @@ public partial class MainWindow : Window
         await RunNidekRtSerialListenOnlyAsync(window.InterfaceProfileId).ConfigureAwait(true);
     }
 
+    private async void FloatingMonitoringWindow_SerialProcessReturnRequested(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        await RunNidekRtSerialProcessReturnAsync(window.InterfaceProfileId).ConfigureAwait(true);
+    }
+
     private async void FloatingMonitoringWindow_SerialRequestReadyRequested(object? sender, EventArgs e)
     {
         if (sender is not FloatingInterfaceProfileWindow window)
@@ -5708,6 +5722,7 @@ public partial class MainWindow : Window
         window.ScanIntervalChangeRequested -= FloatingMonitoringWindow_ScanIntervalChangeRequested;
         window.ResetRequested -= FloatingMonitoringWindow_ResetRequested;
         window.SerialListenOnlyRequested -= FloatingMonitoringWindow_SerialListenOnlyRequested;
+        window.SerialProcessReturnRequested -= FloatingMonitoringWindow_SerialProcessReturnRequested;
         window.SerialRequestReadyRequested -= FloatingMonitoringWindow_SerialRequestReadyRequested;
         window.SerialRequestReadyWithDtrToggleRequested -= FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested;
         window.SerialDirectWriterRequested -= FloatingMonitoringWindow_SerialDirectWriterRequested;
@@ -5815,7 +5830,8 @@ public partial class MainWindow : Window
             LastSuccessfulExportText = runtimeCard.LastSuccessfulExportText,
             LastMessage = runtimeCard.LastMessage,
             ExpectedInputs = runtimeCard.ExpectedInputs,
-            SerialDiagnosticsText = runtimeCard.SerialDiagnosticsText
+            SerialDiagnosticsText = runtimeCard.SerialDiagnosticsText,
+            HasNidekRtSerialPendingReturn = runtimeCard.HasNidekRtSerialPendingReturn
         };
     }
 
@@ -7016,41 +7032,18 @@ public partial class MainWindow : Window
 
             if (result.Success)
             {
-                if (_nidekRtSerialSendContexts.TryGetValue(interfaceProfileId, out var context)
-                    && result.ReceivedBytes.Length > 0)
-                {
-                    string? temporaryReturnPath = null;
-                    try
-                    {
-                        SetMonitoringRuntimeState(interfaceProfileId, "Rückgabe vollständig, Verarbeitung startet", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-                        AppendNidekRtSerialDiagnostic(
-                            interfaceProfile,
-                            $"nidek-rt-serial-listen-only-return:{DateTime.UtcNow.Ticks}",
-                            $"Rückgabe über COM-Port empfangen: {result.ReceivedBytes.Length} Bytes. Die MEDISTAR-Ausgabe wird jetzt aus dem wartenden Patientenkontext erzeugt.");
-                        temporaryReturnPath = WriteNidekRtSerialReturnTempFile(interfaceProfileId, result.ReceivedBytes, DateTime.Now);
-                        ProcessNidekRtSerialReturn(
-                            interfaceProfile,
-                            context.AisFile,
-                            temporaryReturnPath,
-                            DateTime.Now,
-                            context.DeviceDisplayName,
-                            context.DeviceOutputKey,
-                            context.AisKey);
-                        _nidekRtSerialSendContexts.Remove(interfaceProfileId);
-                    }
-                    finally
-                    {
-                        TryDeleteTemporaryNidekRtSerialReturnFile(temporaryReturnPath);
-                    }
-                }
-                else
-                {
-                    SetMonitoringRuntimeState(interfaceProfileId, "COM-Mitschnitt empfangen", "Success", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-                    AppendNidekRtSerialDiagnostic(
-                        interfaceProfile,
-                        $"nidek-rt-serial-listen-only-success:{DateTime.UtcNow.Ticks}",
-                        $"Nur-Abhören abgeschlossen: {result.ReceivedBytes.Length} Bytes vom {deviceDisplayName} empfangen. Es wurde keine XDT-Ausgabe erzeugt.");
-                }
+                var hasPendingReturn = _nidekRtSerialSendContexts.TryGetValue(interfaceProfileId, out var context);
+                SetMonitoringRuntimeState(
+                    interfaceProfileId,
+                    hasPendingReturn ? $"Warte auf Rückgabe vom {context!.DeviceDisplayName}" : "COM-Mitschnitt empfangen",
+                    hasPendingReturn ? "Active" : "Success",
+                    DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-listen-only-success:{DateTime.UtcNow.Ticks}",
+                    hasPendingReturn
+                        ? $"Nur-Abhören abgeschlossen: {result.ReceivedBytes.Length} Bytes vom {deviceDisplayName} empfangen. Das ist Diagnose; der wartende Patientenkontext bleibt erhalten. Für produktive XDT-Erzeugung bitte `Rückgabe abhören und verarbeiten` verwenden."
+                        : $"Nur-Abhören abgeschlossen: {result.ReceivedBytes.Length} Bytes vom {deviceDisplayName} empfangen. Es wurde keine XDT-Ausgabe erzeugt.");
             }
             else
             {
@@ -7076,6 +7069,150 @@ public partial class MainWindow : Window
         finally
         {
             _nidekRtSerialListenOnlyProfiles.Remove(interfaceProfileId);
+        }
+    }
+
+    private async Task RunNidekRtSerialProcessReturnAsync(string interfaceProfileId)
+    {
+        if (_profileCatalog is null)
+        {
+            AppendMessage("Rückgabe abhören und verarbeiten nicht möglich: Profilkatalog ist nicht geladen.");
+            return;
+        }
+
+        var interfaceProfile = _profileCatalog.InterfaceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (interfaceProfile is null)
+        {
+            AppendMessage("Rückgabe abhören und verarbeiten nicht möglich: Schnittstellenprofil wurde nicht gefunden.");
+            return;
+        }
+
+        if (!_nidekRtSerialSendContexts.TryGetValue(interfaceProfileId, out var context))
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                "nidek-rt-serial-process-return-no-context",
+                "Keine wartende NIDEK-RT-Rückgabe mit Patientenkontext vorhanden. Bitte zuerst AIS-Datei empfangen und Werte an den Phoropter senden.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        var deviceProfile = _profileCatalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfile.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (!InterfaceProfileUiPolicy.ShouldTriggerNidekRtSerialPhoropterWorkflow(interfaceProfile, deviceProfile))
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                "nidek-rt-serial-process-return-not-supported",
+                "Rückgabe abhören und verarbeiten ist für den produktiven NIDEK-RT-Phoropterworkflow vorgesehen.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        if (!_nidekRtSerialReturnProcessingProfiles.Add(interfaceProfileId))
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                "nidek-rt-serial-process-return-already-running",
+                "Rückgabe abhören und verarbeiten läuft bereits für dieses Profil.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        string? temporaryReturnPath = null;
+        try
+        {
+            var settings = GetSerialSettingsForProfile(interfaceProfile);
+            var validationMessage = SerialDeviceCommunicationService.ValidateSettings(settings, requirePortName: true);
+            if (!string.IsNullOrWhiteSpace(validationMessage))
+            {
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    "nidek-rt-serial-process-return-validation",
+                    validationMessage,
+                    InterfaceMonitoringEventSeverity.Warning);
+                RefreshInterfaceMonitoringCards();
+                return;
+            }
+
+            SetMonitoringRuntimeState(interfaceProfileId, $"Rückgabe vom {context.DeviceDisplayName} abhören", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-process-return-start:{DateTime.UtcNow.Ticks}",
+                $"Produktives Rückgabe-Abhören für {context.DeviceDisplayName} startet. Es wird nichts gesendet; der wartende AIS-Patientenkontext bleibt aktiv. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
+            RefreshInterfaceMonitoringCards();
+
+            var result = await _nidekRtSerialCommunicationService
+                .ReceiveReturnAsync(settings, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                .ConfigureAwait(true);
+
+            var index = 0;
+            foreach (var message in result.Messages.Where(message => !string.IsNullOrWhiteSpace(message)))
+            {
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-process-return-message:{DateTime.UtcNow.Ticks}:{index++}",
+                    message,
+                    result.Success ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
+            }
+
+            if (!result.Success || result.ReceivedBytes.Length == 0)
+            {
+                SetMonitoringRuntimeState(interfaceProfileId, $"Warte auf Rückgabe vom {context.DeviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-process-return-timeout:{DateTime.UtcNow.Ticks}",
+                    "Keine Rückgabe innerhalb der Wartezeit empfangen. Der Patientenkontext bleibt erhalten; Sie können erneut `Rückgabe abhören und verarbeiten` starten oder den Vorgang abbrechen.",
+                    InterfaceMonitoringEventSeverity.Warning);
+                RefreshInterfaceMonitoringCards();
+                return;
+            }
+
+            SetMonitoringRuntimeState(interfaceProfileId, "Rückgabe vollständig, Verarbeitung startet", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-process-return-stable:{DateTime.UtcNow.Ticks}",
+                $"Rückgabe vom {context.DeviceDisplayName} vollständig empfangen. Produktive MEDISTAR-XDT-Verarbeitung mit wartendem Patientenkontext startet.");
+
+            temporaryReturnPath = WriteNidekRtSerialReturnTempFile(interfaceProfileId, result.ReceivedBytes, DateTime.Now);
+            if (ProcessNidekRtSerialReturn(
+                    interfaceProfile,
+                    context.AisFile,
+                    temporaryReturnPath,
+                    DateTime.Now,
+                    context.DeviceDisplayName,
+                    context.DeviceOutputKey,
+                    context.AisKey))
+            {
+                _nidekRtSerialSendContexts.Remove(interfaceProfileId);
+            }
+            else
+            {
+                SetMonitoringRuntimeState(interfaceProfileId, $"Warte auf Rückgabe vom {context.DeviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-process-return-processing-failed:{DateTime.UtcNow.Ticks}",
+                    "Die empfangene Rückgabe konnte nicht exportiert werden. Der Patientenkontext bleibt erhalten; bitte Diagnose prüfen.",
+                    InterfaceMonitoringEventSeverity.Error);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-process-return-canceled:{DateTime.UtcNow.Ticks}",
+                $"Produktives Rückgabe-Abhören für {context.DeviceDisplayName} wurde abgebrochen.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+        }
+        finally
+        {
+            TryDeleteTemporaryNidekRtSerialReturnFile(temporaryReturnPath);
+            _nidekRtSerialReturnProcessingProfiles.Remove(interfaceProfileId);
         }
     }
 
@@ -7273,10 +7410,13 @@ public partial class MainWindow : Window
             var messageIndex = 0;
             foreach (var message in communicationResult.Messages.Where(message => !string.IsNullOrWhiteSpace(message)))
             {
+                var diagnosticMessage = sendCompletedWithoutImmediateReturn && IsNidekRtSerialNoImmediateReturnMessage(message)
+                    ? "Noch keine Rückgabe empfangen. Der Sendeschritt war erfolgreich; XDTBox wartet auf die spätere Rückgabe."
+                    : message;
                 AppendNidekRtSerialDiagnostic(
                     interfaceProfile,
                     $"{deviceOutputKey}-serial-message:{aisKey}:{messageIndex++}",
-                    message,
+                    diagnosticMessage,
                     communicationResult.Success || sendCompletedWithoutImmediateReturn ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
             }
 
@@ -7287,12 +7427,16 @@ public partial class MainWindow : Window
                     SetMonitoringRuntimeState(profileId, $"Warte auf Rückgabe vom {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
                     AppendNidekRtSerialDiagnostic(
                         interfaceProfile,
+                        $"{deviceOutputKey}-send-write-confirmed:{aisKey}",
+                        $"Writer-Frame wurde technisch erfolgreich auf {communicationResult.PortName} geschrieben. Ob der Phoropter die Daten fachlich übernommen hat, muss am Gerät geprüft werden.");
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
                         $"{deviceOutputKey}-send-complete-waiting:{aisKey}",
                         $"Daten wurden an {deviceDisplayName} gesendet. XDTBox wartet auf die spätere Rückgabe vom Phoropter. Bitte Untersuchung durchführen und danach PRINT/SEND am Phoropter auslösen.");
                     AppendNidekRtSerialDiagnostic(
                         interfaceProfile,
                         $"{deviceOutputKey}-send-complete-waiting-action:{aisKey}",
-                        "Noch keine Rückgabe empfangen. Sie können weiter warten, COM-Port nur abhören/Rückgabe erneut abhören oder den Vorgang abbrechen. Es wurde kein leeres XDT erzeugt.");
+                        "Noch keine Rückgabe empfangen. Sie können `Rückgabe abhören und verarbeiten` starten, `COM-Port nur abhören` diagnostisch nutzen oder den Vorgang abbrechen. Es wurde kein leeres XDT erzeugt.");
                     RefreshInterfaceMonitoringCards();
                     return;
                 }
@@ -7317,15 +7461,17 @@ public partial class MainWindow : Window
                 $"Rückgabe vom {deviceDisplayName} vollständig empfangen, Verarbeitung startet.");
 
             temporaryReturnPath = WriteNidekRtSerialReturnTempFile(profileId, communicationResult.ReceivedBytes, DateTime.Now);
-            ProcessNidekRtSerialReturn(
+            if (ProcessNidekRtSerialReturn(
                 interfaceProfile,
                 aisFile,
                 temporaryReturnPath,
                 timestamp,
                 deviceDisplayName,
                 deviceOutputKey,
-                aisKey);
-            _nidekRtSerialSendContexts.Remove(profileId);
+                aisKey))
+            {
+                _nidekRtSerialSendContexts.Remove(profileId);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -7355,7 +7501,13 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ProcessNidekRtSerialReturn(
+    private static bool IsNidekRtSerialNoImmediateReturnMessage(string message)
+    {
+        return message.Contains("Keine Rückgabe vom Phoropter empfangen", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("Noch keine Rückgabe vom Phoropter empfangen", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool ProcessNidekRtSerialReturn(
         InterfaceProfileDefinition interfaceProfile,
         PendingImportFile aisFile,
         string temporaryReturnPath,
@@ -7371,7 +7523,7 @@ public partial class MainWindow : Window
                 $"{deviceOutputKey}-export-profile-missing:{aisKey}",
                 $"{interfaceProfile.Metadata.Name}: Verarbeitung nicht möglich, Profilkatalog ist nicht geladen.",
                 InterfaceMonitoringEventSeverity.Error);
-            return;
+            return false;
         }
 
         var exportProfile = _profileCatalog.ExportProfiles.FirstOrDefault(profile =>
@@ -7383,9 +7535,10 @@ public partial class MainWindow : Window
                 $"{deviceOutputKey}-export-profile-missing:{aisKey}",
                 $"{interfaceProfile.Metadata.Name}: Verarbeitung nicht möglich, Exportprofil fehlt.",
                 InterfaceMonitoringEventSeverity.Error);
-            return;
+            return false;
         }
 
+        var processedSuccessfully = false;
         var detectedAt = timestamp.ToUniversalTime();
         var deviceFile = new PendingImportFile(
             FilePath: temporaryReturnPath,
@@ -7421,6 +7574,7 @@ public partial class MainWindow : Window
 
             if (result.Success)
             {
+                processedSuccessfully = true;
                 _lastMonitoringScanQueuesByProfileId[interfaceProfile.Metadata.Id] = new PendingImportQueue();
                 _autoImportPackageStateService.ResetProfile(interfaceProfile.Metadata.Id);
                 _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfile.Metadata.Id);
@@ -7452,6 +7606,7 @@ public partial class MainWindow : Window
         }
 
         RefreshInterfaceMonitoringCards();
+        return processedSuccessfully;
     }
 
     private string? ValidateNidekRtSerialWorkflow(

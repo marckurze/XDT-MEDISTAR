@@ -236,13 +236,20 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("RS + Writer ohne SD-Warten", floatingXaml);
         Assert.Contains("Serielle Diagnose", floatingXaml);
         Assert.Contains("SerialDiagnosticsText", floatingXaml);
+        Assert.Contains("Rückgabe abhören und verarbeiten", floatingXaml);
+        Assert.Contains("HasNidekRtSerialPendingReturn", floatingXaml);
         Assert.Contains("SerialListenOnlyRequested", floatingCode);
+        Assert.Contains("SerialProcessReturnRequested", floatingCode);
         Assert.Contains("SerialDirectWriterRequested", floatingCode);
         Assert.Contains("RunNidekRtSerialListenOnlyAsync", mainCode);
+        Assert.Contains("RunNidekRtSerialProcessReturnAsync", mainCode);
         Assert.Contains("RunNidekRtSerialSendTestAsync", mainCode);
         Assert.Contains("AppendNidekRtSerialDiagnostic", mainCode);
         Assert.Contains("NidekRtSerialSendModeInfo.Resolve", mainCode);
         Assert.Contains("SendCompleted", mainCode);
+        Assert.Contains("Nur-Abhören abgeschlossen", mainCode);
+        Assert.Contains("Es wurde keine XDT-Ausgabe erzeugt", mainCode);
+        Assert.Contains("Produktives Rückgabe-Abhören", mainCode);
         Assert.Contains("RS/SD", mainCode);
     }
 
