@@ -41,6 +41,7 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.DoesNotContain(result.Messages, message => message.Contains("01 43 20 2A 2A 02 52 53 17 04", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("PC->RT-Writer Hexdump", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("PC->RT-Blöcke", StringComparison.Ordinal) && message.Contains("LM ADD", StringComparison.Ordinal));
+        Assert.DoesNotContain(fakeSerial.LastExchangeRequest.PayloadBytes, value => value == (byte)'*');
         Assert.DoesNotContain(result.Messages, message => message.Contains("R ADD/AR-Zeile", StringComparison.Ordinal));
     }
 
@@ -176,6 +177,104 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
 
         Assert.False(result.Success);
         Assert.Contains(result.Messages, message => message.Contains("letzten erfolgreichen RT-3100-Abhören war DTR aktiv", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task RequestReadyToSendAsync_ShouldSendOnlyRsAndWaitForSd()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: Array.Empty<byte>())
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.RequestReadyToSendAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialPhoropterSendTestOptions.None,
+            CancellationToken.None);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.Equal(NidekRtSerialPhoropterCommunicationService.CreateRsRequestBytes(), fakeSerial.LastExchangeRequest.RequestBytes);
+        Assert.Equal(NidekRtSerialPhoropterCommunicationService.CreateReadyToSendMarker(), fakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
+        Assert.Empty(fakeSerial.LastExchangeRequest.PayloadBytes);
+        Assert.False(fakeSerial.LastExchangeRequest.ReceiveResponse);
+        Assert.Contains(result.Messages, message => message.Contains("Nach diesem Test wird keine RT-Rückgabe abgewartet", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task RequestReadyToSendAsync_WithDtrToggle_ShouldRequestDtrToggle()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: Array.Empty<byte>())
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.RequestReadyToSendAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialPhoropterSendTestOptions.WithDtrToggle,
+            CancellationToken.None);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.True(fakeSerial.LastExchangeRequest.ToggleDtrBeforeRequest);
+        Assert.Equal(TimeSpan.FromSeconds(1), fakeSerial.LastExchangeRequest.DtrResetDuration);
+        Assert.Equal(TimeSpan.FromMilliseconds(200), fakeSerial.LastExchangeRequest.DelayAfterDtrEnable);
+        Assert.Contains(result.Messages, message => message.Contains("DTR-Testoption aktiv", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SendSelectionDirectAsync_ShouldSendPayloadWithoutRsHandshake()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: CreatePracticeReturnBytes())
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionDirectAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialPhoropterSendTestOptions.None,
+            CancellationToken.None);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.Empty(fakeSerial.LastExchangeRequest.RequestBytes);
+        Assert.Empty(fakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
+        Assert.NotEmpty(fakeSerial.LastExchangeRequest.PayloadBytes);
+        Assert.Contains(result.Messages, message => message.Contains("Direkt-Sendetest aktiv", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SendSelectionWithoutWaitingForSdAsync_ShouldContinueAfterShortSdWait()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: CreatePracticeReturnBytes())
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionWithoutWaitingForSdAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialPhoropterSendTestOptions.None,
+            CancellationToken.None);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.Equal(NidekRtSerialPhoropterCommunicationService.CreateRsRequestBytes(), fakeSerial.LastExchangeRequest.RequestBytes);
+        Assert.True(fakeSerial.LastExchangeRequest.ContinueWithoutHandshake);
+        Assert.Equal(TimeSpan.FromMilliseconds(300), fakeSerial.LastExchangeRequest.HandshakeTimeout);
+        Assert.Equal(TimeSpan.FromMilliseconds(300), fakeSerial.LastExchangeRequest.SendDelayAfterRequest);
+        Assert.Contains(result.Messages, message => message.Contains("Writer-Frame wird auch ohne SD-Bestätigung gesendet", StringComparison.Ordinal));
     }
 
     private static SerialCommunicationExchangeResult CreateExchangeResult(

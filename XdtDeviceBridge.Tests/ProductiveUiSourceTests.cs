@@ -227,10 +227,16 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("SerialTestDtrCheckBox", mainXaml);
         Assert.Contains("SerialTestRtsCheckBox", mainXaml);
         Assert.Contains("COM-Port nur abhören", floatingXaml);
+        Assert.Contains("Sendetest", floatingXaml);
+        Assert.Contains("RS anfordern", floatingXaml);
+        Assert.Contains("Direkt Writer-Frame senden", floatingXaml);
+        Assert.Contains("RS + Writer ohne SD-Warten", floatingXaml);
         Assert.Contains("Serielle Diagnose", floatingXaml);
         Assert.Contains("SerialDiagnosticsText", floatingXaml);
         Assert.Contains("SerialListenOnlyRequested", floatingCode);
+        Assert.Contains("SerialDirectWriterRequested", floatingCode);
         Assert.Contains("RunNidekRtSerialListenOnlyAsync", mainCode);
+        Assert.Contains("RunNidekRtSerialSendTestAsync", mainCode);
         Assert.Contains("AppendNidekRtSerialDiagnostic", mainCode);
         Assert.Contains("RS/SD", mainCode);
     }

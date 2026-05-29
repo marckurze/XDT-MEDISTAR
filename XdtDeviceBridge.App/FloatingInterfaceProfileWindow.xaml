@@ -583,6 +583,55 @@
                     </Button.Style>
                 </Button>
 
+                <Expander Header="Sendetest"
+                          IsExpanded="False"
+                          Margin="0,0,0,8"
+                          AutomationProperties.Name="Sendetest">
+                    <Expander.Style>
+                        <Style TargetType="Expander">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding UsesSerialDevice}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Expander.Style>
+                    <StackPanel Margin="0,6,0,0">
+                        <TextBlock Text="Diagnosemodus: sendet nur nach explizitem Klick. Keine produktive XDT-Ausgabe."
+                                   Foreground="#4B5563"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,6"/>
+                        <WrapPanel>
+                            <Button Content="RS anfordern"
+                                    Margin="0,0,6,6"
+                                    Padding="10,4"
+                                    Click="SerialRequestReadyButton_Click"
+                                    ToolTip="Sendet nur die RS-Anforderung und wartet auf SD. Kein Writer-Frame."
+                                    AutomationProperties.Name="RS anfordern"/>
+                            <Button Content="DTR-Toggle + RS"
+                                    Margin="0,0,6,6"
+                                    Padding="10,4"
+                                    Click="SerialRequestReadyWithDtrToggleButton_Click"
+                                    ToolTip="Setzt DTR kurz zurück, aktiviert DTR wieder, sendet RS und wartet auf SD."
+                                    AutomationProperties.Name="DTR-Toggle + RS"/>
+                            <Button Content="Direkt Writer-Frame senden"
+                                    Margin="0,0,6,6"
+                                    Padding="10,4"
+                                    Click="SerialDirectWriterButton_Click"
+                                    ToolTip="Testmodus: sendet den Writer-Frame ohne RS/SD. Nur für Praxisdiagnose."
+                                    AutomationProperties.Name="Direkt Writer-Frame senden"/>
+                            <Button Content="RS + Writer ohne SD-Warten"
+                                    Margin="0,0,6,6"
+                                    Padding="10,4"
+                                    Click="SerialRsWriterWithoutSdButton_Click"
+                                    ToolTip="Testmodus: sendet RS, wartet kurz und sendet den Writer-Frame auch ohne SD."
+                                    AutomationProperties.Name="RS + Writer ohne SD-Warten"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Expander>
+
                 <Expander Header="Details" IsExpanded="{Binding IsDetailsExpanded, Mode=OneWay}">
                     <StackPanel Margin="0,6,0,0">
                         <TextBlock Text="{Binding DeviceName, StringFormat=Gerät: {0}}" TextWrapping="Wrap"/>

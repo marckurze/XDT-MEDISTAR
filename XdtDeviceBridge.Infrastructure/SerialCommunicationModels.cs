@@ -50,7 +50,15 @@ public sealed record SerialCommunicationExchangeRequest(
     TimeSpan HandshakeTimeout,
     TimeSpan ReceiveTimeout,
     TimeSpan StableAfterEndOfTransmission,
-    int MaxReceiveBytes);
+    int MaxReceiveBytes,
+    bool ContinueWithoutHandshake = false,
+    bool ReceiveResponse = true,
+    TimeSpan SendDelayAfterRequest = default,
+    bool ToggleDtrBeforeRequest = false,
+    TimeSpan DtrResetDuration = default,
+    TimeSpan DelayAfterDtrEnable = default,
+    bool AppendCarriageReturnToRequest = false,
+    bool AppendCarriageReturnToPayload = false);
 
 public sealed record SerialCommunicationExchangeResult(
     bool Success,
@@ -61,7 +69,17 @@ public sealed record SerialCommunicationExchangeResult(
     byte[] ReceivedBytes,
     string RawText,
     string HexDump,
-    IReadOnlyList<string> Messages);
+    IReadOnlyList<string> Messages,
+    SerialModemStatus? LastModemStatus = null);
+
+public sealed record SerialModemStatus(
+    bool? Cts,
+    bool? Dsr,
+    bool? CarrierDetect,
+    bool? RingIndicator)
+{
+    public static SerialModemStatus Unavailable { get; } = new(null, null, null, null);
+}
 
 public sealed record SerialRawDeviceInput(
     string PortName,

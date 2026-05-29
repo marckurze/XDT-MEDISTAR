@@ -2,7 +2,7 @@
 
 Stand: 2026-05-29
 
-Status: echte RS232-Praxismitschnitte als Parser-/Baukasten-Fixtures validiert; patientengetriggerter Produktivablauf mit Auswahlfenster, COM-Senden und Empfang bis EOT ist technisch implementiert. Der Livebefund zeigt, dass RT-3100 Type1 im Praxisaufbau DTR aktiv benoetigt. Live-Senden mit korrigierter RS-Anforderung, Rueckgabe nach Sendung und MEDISTAR-Import am echten Arbeitsplatz sind noch offen.
+Status: echte RS232-Praxismitschnitte als Parser-/Baukasten-Fixtures validiert; patientengetriggerter Produktivablauf mit Auswahlfenster, COM-Senden und Empfang bis EOT ist technisch implementiert. Der Livebefund zeigt, dass RT-3100 Type1 im Praxisaufbau DTR aktiv benoetigt. Empfang RT->XDTBox ist damit belegt; PC->RT-Senden liefert im bisherigen Test noch keine SD-Bestaetigung. Fuer den naechsten Praxistest stehen RS-only, DTR-Toggle, direkter Writer-Frame und RS+Writer-ohne-SD als explizite Diagnosemodi bereit. Rueckgabe nach Sendung und MEDISTAR-Import am echten Arbeitsplatz sind noch offen.
 
 ## Ziel
 
@@ -25,6 +25,7 @@ Vorhanden:
 
 - echter RT-3100-RS232-Rohmitschnitt als Hex-Fixture `XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-practice-capture-202606xx.hex`
 - erfolgreicher RT-3100-`COM-Port nur abhoeren`-Mitschnitt mit DTR aktiv als Hex-Fixture `XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-dtr-listen-only-practice-capture-20260529.hex`
+- weiterer RT-3100-`COM-Port nur abhoeren`-Mitschnitt mit DTR aktiv, ADD und VA als Hex-Fixture `XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-add-va-practice-capture-20260529.hex`
 - bestaetigtes Format: `SH Header CR`, `STX @RT CR`, `STX Datenzeilen CR`, `EOT CR`
 
 Noch offen:
@@ -62,8 +63,9 @@ Noch offen:
 5. V0/Lensmeter und/oder V1/Autorefraktion auswaehlen.
 6. Optional im RT-Fenster `COM-Port nur abhoeren` testen: Profil-Port und Profil-Parameter werden verwendet, es wird nichts gesendet und kein Export erzeugt.
 7. `An RT-3100 senden` klicken.
-8. XDTBox sendet RS als `01 43 20 20 20 02 52 53 17 04` (`SH C   SX RS EB ET`), wartet auf SD, schreibt den PC->RT-Frame und wartet danach auf die RT-Rueckgabe bis EOT plus Stabilitaetswartezeit. Diagnosefenster pruefen: RS-Hexdump, SD-Antwort, Writer-Frame, Empfangs-Hexdump.
-9. Die Rueckgabe wird geparst und als MEDISTAR-XDT erzeugt.
+8. XDTBox sendet RS als `01 43 20 20 20 02 52 53 17 04` (`SH C   SX RS EB ET`), wartet auf SD, schreibt den PC->RT-Frame und wartet danach auf die RT-Rueckgabe bis EOT plus Stabilitaetswartezeit. Diagnosefenster pruefen: RS-Hexdump, SD-Antwort, Writer-Frame, Empfangs-Hexdump, CTS/DSR/DCD/RI.
+9. Wenn keine SD-Antwort kommt, im RT-Fenster nacheinander die Sendetestmodi nutzen: `RS anfordern`, `DTR-Toggle + RS`, `Direkt Writer-Frame senden`, `RS + Writer ohne SD-Warten`. Diese Modi senden nur nach explizitem Klick und erzeugen keinen XDT-Export.
+10. Die Rueckgabe wird geparst und als MEDISTAR-XDT erzeugt.
 
 ## Ergebnis
 
@@ -76,11 +78,14 @@ Noch offen:
 - Die Live-Diagnose macht sichtbar, ob der Profil-COM-Port geoeffnet wurde, welche DTR-/RTS-/Handshake-Werte gesetzt sind und ob Bytes vom RT eintreffen.
 - Der Nur-Abhoeren-Livebefund zeigt: DTR aus fuehrte zu keiner Rueckgabe, DTR aktiv/RTS aktiv lieferte einen vollstaendigen 110-Byte-Frame mit Final-R/L, PD und WD ohne ADD.
 - Die RS-Anforderung sendet Handbuch-`*` als Leerzeichen und enthaelt keine ASCII-Sternchen `2A 2A`.
+- Der Writer sendet LM-SCA-Augenpraefixe als Leerzeichen + `R`/`L` (`20 52`, `20 4C`) und nicht als ASCII-Sternchen.
+- Modemstatussignale CTS, DSR, DCD und RI werden in der seriellen Diagnose protokolliert, soweit der Adapter sie liefert.
 
 ## Offene Punkte
 
 - weitere echte Mitschnitte, insbesondere Type2 und andere RT-Varianten
 - DTR/DSR-/RTS-/Handshake-Verhalten vor Ort weiter pruefen; DTR aktiv ist fuer den getesteten RT-3100-Type1-Aufbau aktuell der bestaetigte Startpunkt
 - PC-port-Parameter am Geraet pruefen
-- Live-Senden an den Phoropter und die echte Rueckgabe nach Sendung separat freigeben
+- PC->RT-Live-Senden weiter diagnostizieren: Wenn RS/SD weiter ohne Antwort bleibt, TX-Leitung PC->RT, Kabel/Adapter und RT-Input-Mode pruefen; direkte Testsendung nur bewusst ueber Sendetestmodus
+- echte Rueckgabe nach Sendung separat freigeben
 - MEDISTAR-Import der erzeugten `6228`-Rueckgabe praktisch pruefen

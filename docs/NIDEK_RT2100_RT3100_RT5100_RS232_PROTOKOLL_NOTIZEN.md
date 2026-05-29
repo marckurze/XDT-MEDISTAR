@@ -56,6 +56,10 @@ Zusaetzliches Nur-Abhoeren-Fixture mit DTR aktiv:
 
 `XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-dtr-listen-only-practice-capture-20260529.hex`
 
+Zusaetzliches Nur-Abhoeren-Fixture mit DTR aktiv, ADD und VA:
+
+`XdtDeviceBridge.Tests/TestData/Devices/Nidek/RS232/rt3100-final-prescription-add-va-practice-capture-20260529.hex`
+
 Bestaetigtes Frameformat:
 
 - `SH` Header `CR`
@@ -82,6 +86,15 @@ Das DTR-Nur-Abhoeren-Fixture enthaelt dieselbe Struktur, aber ohne ADD/VA:
 
 - `FR- 1.25  0.00  0`: Final Right, S=-1.25, Z=0.00, Achse 0
 - `FL- 1.25  0.00  0`: Final Left, S=-1.25, Z=0.00, Achse 0
+- `PD64.0`: binokulare PD 64.0
+- `WD40`: WorkingDistance 40
+
+Das ADD-/VA-Nur-Abhoeren-Fixture enthaelt:
+
+- `FR- 2.25- 1.25180`: Final Right, S=-2.25, Z=-1.25, Achse 180
+- `FL- 2.25- 1.00180`: Final Left, S=-2.25, Z=-1.00, Achse 180
+- `AR+ 0.50`, `AL+ 0.75`: ADD rechts/links
+- `VR 0.05`, `VL 1.6`: VA rechts/links, diagnostisch
 - `PD64.0`: binokulare PD 64.0
 - `WD40`: WorkingDistance 40
 
@@ -121,6 +134,17 @@ RS-Anforderung:
 - XDTBox sendet fuer `RS` daher `SH C   SX RS EB ET`.
 - Hexdump: `01 43 20 20 20 02 52 53 17 04`.
 - Die alte Diagnose `<SOH>C **<STX>RS<ETB><EOT>` war irrefuehrend, weil sie echte `2A 2A`-Bytes beschrieb.
+- Auch in LM-SCA-Bloecken sind die gezeichneten Sternchen Platzhalter: XDTBox sendet `DLM SX  R... EB  L...` mit `20 52` und `20 4C`, nicht `2A 52`/`2A 4C`.
+- Die Diagnose nennt erkannte Writer-Bloecke wie ID, AR SCA, AR PD, LM SCA, LM ADD, LM PD und Prism anhand des erzeugten Frames.
+
+Live-Sendetestmodi im RT-Fenster:
+
+- `RS anfordern`: sendet nur `SH C   SX RS EB ET`, wartet auf `SD`, sendet keinen Writer-Frame.
+- `DTR-Toggle + RS`: setzt DTR kurz zurueck, aktiviert DTR wieder und sendet danach `RS`.
+- `Direkt Writer-Frame senden`: sendet den PC->RT-Frame ohne RS/SD, nur nach Warnbestaetigung.
+- `RS + Writer ohne SD-Warten`: sendet `RS`, wartet kurz und sendet den Writer-Frame auch ohne SD, nur nach Warnbestaetigung.
+
+Die serielle Diagnose protokolliert zusaetzlich CTS, DSR, DCD und RI, soweit die Windows-API sie fuer den Adapter liefert. Wenn keine SD-Antwort kommt, bleibt der normale Workflow defensiv: Er sendet keinen Writer-Frame automatisch nach; direkte Sendungen sind nur Testmodus.
 
 ## Produktiver Ablauf in XDTBox
 
@@ -132,6 +156,7 @@ RS-Anforderung:
 - Die Rueckgabe wird bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.
 - Serielle RT-Schnittstellenprofile brauchen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner.
 - Das RT-Floating-Fenster enthaelt fuer Live-Abnahmen eine serielle Diagnose: verwendete COM-Parameter, DTR/RTS/Handshake, Port-Status, RS-Anforderung, erwartete/empfangene SD-Bestaetigung, PC->RT-Writer-Frame, Hexdump und sichtbare Steuerzeichen werden angezeigt. `COM-Port nur abhoeren` oeffnet denselben Profil-Port, sendet nichts und zeigt empfangene Bytes ohne XDT-Export.
+- Der einklappbare Bereich `Sendetest` im RT-Fenster dient nur der Praxisdiagnose. Er kann RS-only, DTR-Toggle, direkten Writer-Frame und RS+Writer-ohne-SD ausloesen; dadurch wird kein produktiver XDT-Export erzeugt.
 - Wenn keine SD-Bestaetigung oder keine Rueckgabe eintrifft, zeigt XDTBox eine konkrete Pruefliste zu COM-Port, Type1/Type2, PC-Port-Parameter am RT, DTR/RTS/Handshake, Portbelegung und PRINT/SEND am Phoropter.
 
 ## XDT-Baukasten

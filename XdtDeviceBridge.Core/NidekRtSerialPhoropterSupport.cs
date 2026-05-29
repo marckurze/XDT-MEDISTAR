@@ -968,7 +968,7 @@ public sealed class NidekRtSerialPhoropterOutputWriter
         var lm = selectedMeasurements.FirstOrDefault(record => record.SourceKind == AisHistoricalMeasurementSourceKind.Lensmeter);
         if (lm is not null)
         {
-            blocks.Add(BuildSphericalCylinderAxisBlock("DLM", "*", lm));
+            blocks.Add(BuildSphericalCylinderAxisBlock("DLM", " ", lm));
             blocks.Add(BuildAddBlock(lm));
             blocks.Add(BuildPdBlock("DLM", lm));
         }

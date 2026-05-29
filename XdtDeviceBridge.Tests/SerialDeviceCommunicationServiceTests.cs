@@ -46,6 +46,21 @@ public sealed class SerialDeviceCommunicationServiceTests
     }
 
     [Fact]
+    public void SerialDiagnosticsFormatter_ShouldExposeModemStatusSignals()
+    {
+        var display = SerialDiagnosticsFormatter.FormatModemStatus(new SerialModemStatus(
+            Cts: true,
+            Dsr: false,
+            CarrierDetect: true,
+            RingIndicator: null));
+
+        Assert.Contains("CTS aktiv", display, StringComparison.Ordinal);
+        Assert.Contains("DSR aus", display, StringComparison.Ordinal);
+        Assert.Contains("DCD aktiv", display, StringComparison.Ordinal);
+        Assert.Contains("RI nicht verfügbar", display, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ValidateSettings_ShouldReportMissingPortWhenRequired()
     {
         var issue = SerialDeviceCommunicationService.ValidateSettings(

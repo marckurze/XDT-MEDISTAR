@@ -152,6 +152,8 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, PendingImportQueue> _lastMonitoringScanQueuesByProfileId = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, bool> _monitoringDetailsExpandedByProfileId = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _nidekRtSerialListenOnlyProfiles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _nidekRtSerialSendTestProfiles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, NidekRtSerialSendContext> _nidekRtSerialSendContexts = new(StringComparer.OrdinalIgnoreCase);
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
@@ -201,6 +203,18 @@ public partial class MainWindow : Window
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBackground;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalForeground;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBorderBrush;
+
+    private enum NidekRtSerialSendTestMode
+    {
+        RequestReady,
+        RequestReadyWithDtrToggle,
+        DirectWriter,
+        RsWriterWithoutSd
+    }
+
+    private sealed record NidekRtSerialSendContext(
+        PatientData Patient,
+        IReadOnlyList<AisHistoricalMeasurementRecord> SelectedMeasurements);
 
     public MainWindow()
     {
@@ -5188,6 +5202,10 @@ public partial class MainWindow : Window
             window.ScanIntervalChangeRequested += FloatingMonitoringWindow_ScanIntervalChangeRequested;
             window.ResetRequested += FloatingMonitoringWindow_ResetRequested;
             window.SerialListenOnlyRequested += FloatingMonitoringWindow_SerialListenOnlyRequested;
+            window.SerialRequestReadyRequested += FloatingMonitoringWindow_SerialRequestReadyRequested;
+            window.SerialRequestReadyWithDtrToggleRequested += FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested;
+            window.SerialDirectWriterRequested += FloatingMonitoringWindow_SerialDirectWriterRequested;
+            window.SerialRsWriterWithoutSdRequested += FloatingMonitoringWindow_SerialRsWriterWithoutSdRequested;
             _floatingMonitoringWindows[card.InterfaceProfileId] = window;
             ApplyFloatingWindowPlacement(window, state);
             window.Show();
@@ -5600,6 +5618,46 @@ public partial class MainWindow : Window
         await RunNidekRtSerialListenOnlyAsync(window.InterfaceProfileId).ConfigureAwait(true);
     }
 
+    private async void FloatingMonitoringWindow_SerialRequestReadyRequested(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.RequestReady).ConfigureAwait(true);
+    }
+
+    private async void FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.RequestReadyWithDtrToggle).ConfigureAwait(true);
+    }
+
+    private async void FloatingMonitoringWindow_SerialDirectWriterRequested(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.DirectWriter).ConfigureAwait(true);
+    }
+
+    private async void FloatingMonitoringWindow_SerialRsWriterWithoutSdRequested(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.RsWriterWithoutSd).ConfigureAwait(true);
+    }
+
     private void CloseFloatingMonitoringWindow(string interfaceProfileId)
     {
         if (!_floatingMonitoringWindows.Remove(interfaceProfileId, out var window))
@@ -5614,6 +5672,10 @@ public partial class MainWindow : Window
         window.ScanIntervalChangeRequested -= FloatingMonitoringWindow_ScanIntervalChangeRequested;
         window.ResetRequested -= FloatingMonitoringWindow_ResetRequested;
         window.SerialListenOnlyRequested -= FloatingMonitoringWindow_SerialListenOnlyRequested;
+        window.SerialRequestReadyRequested -= FloatingMonitoringWindow_SerialRequestReadyRequested;
+        window.SerialRequestReadyWithDtrToggleRequested -= FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested;
+        window.SerialDirectWriterRequested -= FloatingMonitoringWindow_SerialDirectWriterRequested;
+        window.SerialRsWriterWithoutSdRequested -= FloatingMonitoringWindow_SerialRsWriterWithoutSdRequested;
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
         EnsureAutoRedockTimerState();
         window.CloseWithoutDockRequest();
@@ -6801,6 +6863,9 @@ public partial class MainWindow : Window
 
         _cv5000DeviceOutputHandledAisKeys.Add(aisKey);
         var sendSelectedValues = dialogAction == Cv5000DeviceOutputDialogAction.WriteImportFile;
+        _nidekRtSerialSendContexts[interfaceProfile.Metadata.Id] = new NidekRtSerialSendContext(
+            parseResult.Patient,
+            selectedMeasurements.ToArray());
         var initialStatus = sendSelectedValues
             ? $"Sende Daten an {deviceDisplayName}"
             : $"Warte auf Rückgabe vom {deviceDisplayName}";
@@ -6940,6 +7005,149 @@ public partial class MainWindow : Window
         finally
         {
             _nidekRtSerialListenOnlyProfiles.Remove(interfaceProfileId);
+        }
+    }
+
+    private async Task RunNidekRtSerialSendTestAsync(string interfaceProfileId, NidekRtSerialSendTestMode mode)
+    {
+        if (_profileCatalog is null)
+        {
+            AppendMessage("NIDEK-RT-Sendetest nicht möglich: Profilkatalog ist nicht geladen.");
+            return;
+        }
+
+        var interfaceProfile = _profileCatalog.InterfaceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (interfaceProfile is null)
+        {
+            AppendMessage("NIDEK-RT-Sendetest nicht möglich: Schnittstellenprofil wurde nicht gefunden.");
+            return;
+        }
+
+        var deviceProfile = _profileCatalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfile.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (!InterfaceProfileUiPolicy.ShouldTriggerNidekRtSerialPhoropterWorkflow(interfaceProfile, deviceProfile))
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                "nidek-rt-serial-send-test-not-supported",
+                "Sendetest ist nur für den produktiven NIDEK-RT-Phoropterworkflow vorgesehen.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        if (!_nidekRtSerialSendTestProfiles.Add(interfaceProfileId))
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                "nidek-rt-serial-send-test-already-running",
+                "Ein NIDEK-RT-Sendetest läuft bereits für dieses Profil.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+            return;
+        }
+
+        var deviceDisplayName = CreateNidekRtSerialDisplayName(deviceProfile);
+        try
+        {
+            var settings = GetSerialSettingsForProfile(interfaceProfile);
+            var validationMessage = SerialDeviceCommunicationService.ValidateSettings(settings, requirePortName: true);
+            if (!string.IsNullOrWhiteSpace(validationMessage))
+            {
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    "nidek-rt-serial-send-test-validation",
+                    validationMessage,
+                    InterfaceMonitoringEventSeverity.Warning);
+                RefreshInterfaceMonitoringCards();
+                return;
+            }
+
+            var model = DetectNidekRtSerialModel(deviceProfile);
+            var options = mode == NidekRtSerialSendTestMode.RequestReadyWithDtrToggle
+                ? NidekRtSerialPhoropterSendTestOptions.WithDtrToggle
+                : NidekRtSerialPhoropterSendTestOptions.None;
+            if (mode is NidekRtSerialSendTestMode.DirectWriter or NidekRtSerialSendTestMode.RsWriterWithoutSd
+                && !ConfirmNidekRtSerialSendTest(mode, deviceDisplayName))
+            {
+                return;
+            }
+
+            var modeText = CreateNidekRtSerialSendTestModeText(mode);
+            SetMonitoringRuntimeState(interfaceProfileId, $"Sendetest: {modeText}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-send-test-start:{mode}:{DateTime.UtcNow.Ticks}",
+                $"{modeText} für {deviceDisplayName} startet. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
+            RefreshInterfaceMonitoringCards();
+
+            NidekRtSerialPhoropterCommunicationResult result;
+            if (mode is NidekRtSerialSendTestMode.RequestReady or NidekRtSerialSendTestMode.RequestReadyWithDtrToggle)
+            {
+                result = await _nidekRtSerialCommunicationService
+                    .RequestReadyToSendAsync(settings, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                    .ConfigureAwait(true);
+            }
+            else
+            {
+                if (!_nidekRtSerialSendContexts.TryGetValue(interfaceProfileId, out var context)
+                    || context.SelectedMeasurements.Count == 0)
+                {
+                    AppendNidekRtSerialDiagnostic(
+                        interfaceProfile,
+                        "nidek-rt-serial-send-test-no-context",
+                        "Für diesen Sendetest fehlen ausgewählte LM-/AR-Werte. Bitte zuerst eine AIS-Datei empfangen und im Auswahlfenster Werte auswählen.",
+                        InterfaceMonitoringEventSeverity.Warning);
+                    RefreshInterfaceMonitoringCards();
+                    return;
+                }
+
+                result = mode == NidekRtSerialSendTestMode.DirectWriter
+                    ? await _nidekRtSerialCommunicationService
+                        .SendSelectionDirectAsync(settings, context.Patient, context.SelectedMeasurements, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                        .ConfigureAwait(true)
+                    : await _nidekRtSerialCommunicationService
+                        .SendSelectionWithoutWaitingForSdAsync(settings, context.Patient, context.SelectedMeasurements, model, options, _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None)
+                        .ConfigureAwait(true);
+            }
+
+            var index = 0;
+            foreach (var message in result.Messages.Where(message => !string.IsNullOrWhiteSpace(message)))
+            {
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"nidek-rt-serial-send-test-message:{mode}:{DateTime.UtcNow.Ticks}:{index++}",
+                    message,
+                    result.Success ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
+            }
+
+            SetMonitoringRuntimeState(
+                interfaceProfileId,
+                result.Success ? $"Sendetest abgeschlossen: {modeText}" : $"Sendetest ohne Erfolg: {modeText}",
+                result.Success ? "Success" : "Error",
+                DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-send-test-complete:{mode}:{DateTime.UtcNow.Ticks}",
+                result.Success
+                    ? $"{modeText} abgeschlossen. Es wurde keine produktive XDT-Ausgabe erzeugt."
+                    : result.ErrorMessage ?? $"{modeText} ohne erfolgreiche Antwort abgeschlossen.",
+                result.Success ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Error);
+            RefreshInterfaceMonitoringCards();
+        }
+        catch (OperationCanceledException)
+        {
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"nidek-rt-serial-send-test-canceled:{mode}:{DateTime.UtcNow.Ticks}",
+                $"Sendetest für {deviceDisplayName} wurde abgebrochen.",
+                InterfaceMonitoringEventSeverity.Warning);
+            RefreshInterfaceMonitoringCards();
+        }
+        finally
+        {
+            _nidekRtSerialSendTestProfiles.Remove(interfaceProfileId);
         }
     }
 
@@ -7165,6 +7373,31 @@ public partial class MainWindow : Window
 
         var settings = GetSerialSettingsForProfile(interfaceProfile);
         return SerialDeviceCommunicationService.ValidateSettings(settings, requirePortName: true);
+    }
+
+    private static string CreateNidekRtSerialSendTestModeText(NidekRtSerialSendTestMode mode)
+    {
+        return mode switch
+        {
+            NidekRtSerialSendTestMode.RequestReady => "RS anfordern",
+            NidekRtSerialSendTestMode.RequestReadyWithDtrToggle => "DTR-Toggle + RS anfordern",
+            NidekRtSerialSendTestMode.DirectWriter => "Direkt Writer-Frame senden",
+            NidekRtSerialSendTestMode.RsWriterWithoutSd => "RS + Writer ohne SD-Warten",
+            _ => "Sendetest"
+        };
+    }
+
+    private static bool ConfirmNidekRtSerialSendTest(NidekRtSerialSendTestMode mode, string deviceDisplayName)
+    {
+        var modeText = CreateNidekRtSerialSendTestModeText(mode);
+        var message = mode == NidekRtSerialSendTestMode.DirectWriter
+            ? $"Testmodus: {modeText} sendet direkt an den {deviceDisplayName}, ohne vorher RS/SD abzuwarten. Nur verwenden, wenn RS/SD keine Antwort liefert. Fortfahren?"
+            : $"Testmodus: {modeText} sendet auch ohne SD-Bestätigung an den {deviceDisplayName}. Nur für die Praxisdiagnose verwenden. Fortfahren?";
+        return System.Windows.MessageBox.Show(
+            message,
+            "NIDEK-RT-Sendetest",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning) == MessageBoxResult.Yes;
     }
 
     private static string CreateNidekRtSerialDisplayName(DeviceProfileDefinition? deviceProfile)

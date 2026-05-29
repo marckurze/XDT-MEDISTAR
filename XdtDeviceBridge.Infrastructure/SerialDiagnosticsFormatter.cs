@@ -31,6 +31,21 @@ public static class SerialDiagnosticsFormatter
             : string.Join(" ", bytes.Select(value => value.ToString("X2")));
     }
 
+    public static string FormatModemStatus(SerialModemStatus? status)
+    {
+        if (status is null)
+        {
+            return "CTS nicht verfügbar, DSR nicht verfügbar, DCD nicht verfügbar, RI nicht verfügbar";
+        }
+
+        return string.Join(
+            ", ",
+            $"CTS {FormatSignal(status.Cts)}",
+            $"DSR {FormatSignal(status.Dsr)}",
+            $"DCD {FormatSignal(status.CarrierDetect)}",
+            $"RI {FormatSignal(status.RingIndicator)}");
+    }
+
     public static string ToVisibleControlText(IReadOnlyList<byte> bytes)
     {
         if (bytes.Count == 0)
@@ -71,5 +86,15 @@ public static class SerialDiagnosticsFormatter
             6. Ist der Port durch ein anderes Programm belegt?
             7. Wurde am Phoropter PRINT/SEND ausgelöst?
             """;
+    }
+
+    private static string FormatSignal(bool? value)
+    {
+        return value switch
+        {
+            true => "aktiv",
+            false => "aus",
+            _ => "nicht verfügbar"
+        };
     }
 }

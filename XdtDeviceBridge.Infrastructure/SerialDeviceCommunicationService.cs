@@ -12,6 +12,12 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
     private const uint GenericRead = 0x80000000;
     private const uint GenericWrite = 0x40000000;
     private const uint OpenExisting = 3;
+    private const uint ClearDtr = 6;
+    private const uint SetDtr = 5;
+    private const uint ModemStatusCts = 0x0010;
+    private const uint ModemStatusDsr = 0x0020;
+    private const uint ModemStatusRing = 0x0040;
+    private const uint ModemStatusCarrierDetect = 0x0080;
 
     public Task<SerialCommunicationSessionResult> ListenAsync(
         SerialCommunicationSettings settings,
@@ -260,21 +266,54 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             using var handle = OpenConfiguredPort(settings);
             using var stream = new FileStream(handle, FileAccess.ReadWrite, bufferSize: 4096, isAsync: false);
             messages.Add($"COM-Port geöffnet: {settings.PortName}.");
+            var lastModemStatus = AddModemStatusMessage(messages, handle, "nach Portöffnung");
 
             var bytesWritten = 0;
+            if (request.ToggleDtrBeforeRequest)
+            {
+                var resetDuration = request.DtrResetDuration > TimeSpan.Zero
+                    ? request.DtrResetDuration
+                    : TimeSpan.FromSeconds(1);
+                var enableDelay = request.DelayAfterDtrEnable > TimeSpan.Zero
+                    ? request.DelayAfterDtrEnable
+                    : TimeSpan.FromMilliseconds(200);
+                messages.Add($"DTR-Testsequenz: DTR aus für {resetDuration.TotalMilliseconds:0} ms, danach DTR aktiv und {enableDelay.TotalMilliseconds:0} ms Wartezeit.");
+                SetDtrState(messages, handle, enable: false);
+                Thread.Sleep(resetDuration);
+                lastModemStatus = AddModemStatusMessage(messages, handle, "nach DTR aus");
+                SetDtrState(messages, handle, enable: true);
+                Thread.Sleep(enableDelay);
+                lastModemStatus = AddModemStatusMessage(messages, handle, "nach DTR aktiv");
+            }
+
+            var requestBytes = WithOptionalCarriageReturn(request.RequestBytes, request.AppendCarriageReturnToRequest);
             if (request.RequestBytes.Length > 0)
             {
-                messages.Add($"RS-Anforderung gesendet: {SerialDiagnosticsFormatter.ToVisibleControlText(request.RequestBytes)}");
-                messages.Add($"RS-Hexdump: {SerialDiagnosticsFormatter.ToHexDump(request.RequestBytes)}");
-                stream.Write(request.RequestBytes, 0, request.RequestBytes.Length);
+                lastModemStatus = AddModemStatusMessage(messages, handle, "vor RS-Sendung");
+                if (request.AppendCarriageReturnToRequest)
+                {
+                    messages.Add("RS-Testoption: CR nach EOT wird angehängt.");
+                }
+
+                messages.Add($"RS-Anforderung gesendet: {SerialDiagnosticsFormatter.ToVisibleControlText(requestBytes)}");
+                messages.Add($"RS-Hexdump: {SerialDiagnosticsFormatter.ToHexDump(requestBytes)}");
+                stream.Write(requestBytes, 0, requestBytes.Length);
                 stream.Flush();
-                bytesWritten += request.RequestBytes.Length;
+                bytesWritten += requestBytes.Length;
+                lastModemStatus = AddModemStatusMessage(messages, handle, "nach RS-Sendung");
+                if (request.SendDelayAfterRequest > TimeSpan.Zero)
+                {
+                    messages.Add($"Warte {request.SendDelayAfterRequest.TotalMilliseconds:0} ms nach RS-Anforderung.");
+                    Thread.Sleep(request.SendDelayAfterRequest);
+                    lastModemStatus = AddModemStatusMessage(messages, handle, "nach RS-Wartezeit");
+                }
             }
 
             var handshakeBytes = Array.Empty<byte>();
             if (request.ExpectedHandshakeBytes.Length > 0)
             {
-                messages.Add($"Warte auf SD-Bestätigung, Marker: {SerialDiagnosticsFormatter.ToVisibleControlText(request.ExpectedHandshakeBytes)}.");
+                lastModemStatus = AddModemStatusMessage(messages, handle, "vor SD-Warten");
+                messages.Add($"Warte auf SD-Bestätigung, Marker: {SerialDiagnosticsFormatter.ToVisibleControlText(request.ExpectedHandshakeBytes)}, Timeout {request.HandshakeTimeout.TotalMilliseconds:0} ms.");
                 handshakeBytes = ReadUntil(
                     stream,
                     buffer => ContainsSequence(buffer, request.ExpectedHandshakeBytes),
@@ -287,6 +326,7 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                 {
                     var message = "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestätigung fehlt.";
                     messages.Add(message);
+                    lastModemStatus = AddModemStatusMessage(messages, handle, "nach SD-Warten ohne Bestätigung");
                     if (handshakeBytes.Length == 0)
                     {
                         messages.Add("Keine Bytes empfangen.");
@@ -299,32 +339,67 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                         messages.Add($"SD-Hexdump: {CreateHexDump(handshakeBytes)}");
                     }
 
-                    return new SerialCommunicationExchangeResult(
-                        Success: false,
-                        ErrorMessage: message,
-                        PortName: settings.PortName!,
-                        BytesWritten: bytesWritten,
-                        HandshakeBytes: handshakeBytes,
-                        ReceivedBytes: Array.Empty<byte>(),
-                        RawText: string.Empty,
-                        HexDump: CreateHexDump(handshakeBytes),
-                        Messages: messages);
-                }
+                    if (!request.ContinueWithoutHandshake)
+                    {
+                        return new SerialCommunicationExchangeResult(
+                            Success: false,
+                            ErrorMessage: message,
+                            PortName: settings.PortName!,
+                            BytesWritten: bytesWritten,
+                            HandshakeBytes: handshakeBytes,
+                            ReceivedBytes: Array.Empty<byte>(),
+                            RawText: string.Empty,
+                            HexDump: CreateHexDump(handshakeBytes),
+                            Messages: messages,
+                            LastModemStatus: lastModemStatus);
+                    }
 
-                messages.Add($"SD-Bestätigung empfangen: {SerialDiagnosticsFormatter.ToVisibleControlText(handshakeBytes)}");
-                messages.Add($"SD-Hexdump: {CreateHexDump(handshakeBytes)}");
+                    messages.Add("Testmodus: Senden wird trotz fehlender SD-Bestätigung fortgesetzt.");
+                }
+                else
+                {
+                    lastModemStatus = AddModemStatusMessage(messages, handle, "nach SD-Bestätigung");
+                    messages.Add($"SD-Bestätigung empfangen: {SerialDiagnosticsFormatter.ToVisibleControlText(handshakeBytes)}");
+                    messages.Add($"SD-Hexdump: {CreateHexDump(handshakeBytes)}");
+                }
             }
 
+            var payloadBytes = WithOptionalCarriageReturn(request.PayloadBytes, request.AppendCarriageReturnToPayload);
             if (request.PayloadBytes.Length > 0)
             {
-                messages.Add($"Sendeframe gesendet: {request.PayloadBytes.Length} Bytes.");
-                messages.Add($"Sendeframe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(request.PayloadBytes)}");
-                messages.Add($"Sendeframe-Hexdump: {CreateHexDump(request.PayloadBytes)}");
-                stream.Write(request.PayloadBytes, 0, request.PayloadBytes.Length);
+                lastModemStatus = AddModemStatusMessage(messages, handle, "vor Writer-Frame");
+                if (request.AppendCarriageReturnToPayload)
+                {
+                    messages.Add("Writer-Testoption: CR nach EOT wird angehängt.");
+                }
+
+                messages.Add($"Sendeframe gesendet: {payloadBytes.Length} Bytes.");
+                messages.Add($"Sendeframe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(payloadBytes)}");
+                messages.Add($"Sendeframe-Hexdump: {CreateHexDump(payloadBytes)}");
+                stream.Write(payloadBytes, 0, payloadBytes.Length);
                 stream.Flush();
-                bytesWritten += request.PayloadBytes.Length;
+                bytesWritten += payloadBytes.Length;
+                lastModemStatus = AddModemStatusMessage(messages, handle, "nach Writer-Frame");
             }
 
+            if (!request.ReceiveResponse)
+            {
+                messages.Add("Testmodus: Nach dem Senden wird keine Rückgabe abgewartet.");
+                lastModemStatus = AddModemStatusMessage(messages, handle, "vor Portschluss");
+                return new SerialCommunicationExchangeResult(
+                    Success: true,
+                    ErrorMessage: null,
+                    PortName: settings.PortName!,
+                    BytesWritten: bytesWritten,
+                    HandshakeBytes: handshakeBytes,
+                    ReceivedBytes: Array.Empty<byte>(),
+                    RawText: string.Empty,
+                    HexDump: string.Empty,
+                    Messages: messages,
+                    LastModemStatus: lastModemStatus);
+            }
+
+            lastModemStatus = AddModemStatusMessage(messages, handle, "vor Rückgabe-Empfang");
             messages.Add($"Warte auf Rückgabe bis EOT 0x{request.EndOfTransmissionByte:X2}, Timeout {request.ReceiveTimeout.TotalSeconds:0} s.");
             var receivedBytes = ReadUntil(
                 stream,
@@ -338,6 +413,7 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             {
                 var message = "Keine Rückgabe vom Phoropter empfangen.";
                 messages.Add(message);
+                lastModemStatus = AddModemStatusMessage(messages, handle, "nach Rückgabe-Timeout");
                 return new SerialCommunicationExchangeResult(
                     Success: false,
                     ErrorMessage: message,
@@ -347,7 +423,8 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                     ReceivedBytes: Array.Empty<byte>(),
                     RawText: string.Empty,
                     HexDump: string.Empty,
-                    Messages: messages);
+                    Messages: messages,
+                    LastModemStatus: lastModemStatus);
             }
 
             if (!receivedBytes.Contains(request.EndOfTransmissionByte))
@@ -356,6 +433,7 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                 messages.Add(message);
                 messages.Add($"Empfangene Rückgabe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(receivedBytes)}");
                 messages.Add($"Empfangene Rückgabe Hexdump: {CreateHexDump(receivedBytes)}");
+                lastModemStatus = AddModemStatusMessage(messages, handle, "nach unvollständiger Rückgabe");
                 return new SerialCommunicationExchangeResult(
                     Success: false,
                     ErrorMessage: message,
@@ -365,13 +443,15 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                     ReceivedBytes: receivedBytes,
                     RawText: DecodeText(receivedBytes),
                     HexDump: CreateHexDump(receivedBytes),
-                    Messages: messages);
+                    Messages: messages,
+                    LastModemStatus: lastModemStatus);
             }
 
             messages.Add("EOT empfangen; Stabilitätswartezeit abgeschlossen.");
             messages.Add($"Rückgabe vollständig: {receivedBytes.Length} Bytes.");
             messages.Add($"Empfangene Rückgabe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(receivedBytes)}");
             messages.Add($"Empfangene Rückgabe Hexdump: {CreateHexDump(receivedBytes)}");
+            lastModemStatus = AddModemStatusMessage(messages, handle, "nach vollständiger Rückgabe");
             return new SerialCommunicationExchangeResult(
                 Success: true,
                 ErrorMessage: null,
@@ -381,7 +461,8 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                 ReceivedBytes: receivedBytes,
                 RawText: DecodeText(receivedBytes),
                 HexDump: CreateHexDump(receivedBytes),
-                Messages: messages);
+                Messages: messages,
+                LastModemStatus: lastModemStatus);
         }
         catch (Exception ex) when (IsExpectedSerialException(ex))
         {
@@ -626,6 +707,49 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             : string.Join(" ", bytes.Select(value => value.ToString("X2")));
     }
 
+    private static byte[] WithOptionalCarriageReturn(byte[] bytes, bool appendCarriageReturn)
+    {
+        if (!appendCarriageReturn || bytes.Length == 0 || bytes[^1] == 0x0D)
+        {
+            return bytes;
+        }
+
+        var result = new byte[bytes.Length + 1];
+        Buffer.BlockCopy(bytes, 0, result, 0, bytes.Length);
+        result[^1] = 0x0D;
+        return result;
+    }
+
+    private static SerialModemStatus AddModemStatusMessage(List<string> messages, SafeFileHandle handle, string stage)
+    {
+        var status = ReadModemStatus(handle);
+        messages.Add($"Modemstatus {stage}: {SerialDiagnosticsFormatter.FormatModemStatus(status)}.");
+        return status;
+    }
+
+    private static SerialModemStatus ReadModemStatus(SafeFileHandle handle)
+    {
+        return GetCommModemStatus(handle, out var status)
+            ? new SerialModemStatus(
+                Cts: (status & ModemStatusCts) != 0,
+                Dsr: (status & ModemStatusDsr) != 0,
+                CarrierDetect: (status & ModemStatusCarrierDetect) != 0,
+                RingIndicator: (status & ModemStatusRing) != 0)
+            : SerialModemStatus.Unavailable;
+    }
+
+    private static void SetDtrState(List<string> messages, SafeFileHandle handle, bool enable)
+    {
+        if (EscapeCommFunction(handle, enable ? SetDtr : ClearDtr))
+        {
+            messages.Add(enable ? "DTR wurde aktiviert." : "DTR wurde zurückgesetzt.");
+            return;
+        }
+
+        var error = Marshal.GetLastWin32Error();
+        messages.Add($"DTR konnte nicht {(enable ? "aktiviert" : "zurückgesetzt")} werden: {new Win32Exception(error).Message}");
+    }
+
     private static IReadOnlyList<string> SplitLines(string rawText)
     {
         return rawText
@@ -706,6 +830,12 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool SetCommTimeouts(SafeFileHandle fileHandle, ref CommTimeouts timeouts);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetCommModemStatus(SafeFileHandle fileHandle, out uint modemStatus);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool EscapeCommFunction(SafeFileHandle fileHandle, uint function);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Dcb
