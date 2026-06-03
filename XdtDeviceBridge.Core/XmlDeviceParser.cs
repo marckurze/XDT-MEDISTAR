@@ -673,8 +673,7 @@ public sealed class XmlDeviceParser
     {
         var corrected = FindChildren(phoropter, "Corrected")
             .Where(element => string.Equals(GetAttributeValue(element, "CorrectionType")?.Trim(), correctionType, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(IsRt6100DistantStandard)
-            .FirstOrDefault();
+            .FirstOrDefault(IsRt6100DistantStandard);
         if (corrected is null)
         {
             return;

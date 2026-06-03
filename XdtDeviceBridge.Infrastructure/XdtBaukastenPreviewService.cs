@@ -10,6 +10,7 @@ public sealed class XdtBaukastenPreviewService
     private readonly MedistarHistoricalMeasurementParser _historyParser;
     private readonly TopconCv5000ImportXmlWriter _cv5000Writer;
     private readonly NidekRt6100InputXmlWriter _rt6100Writer;
+    private readonly NidekRt6100InputSourceXmlReader _rt6100InputReader;
     private readonly NidekRtSerialPhoropterOutputWriter _rtSerialWriter = new();
     private readonly XdtBaukastenDeviceCompatibilityService _compatibilityService;
 
@@ -19,6 +20,7 @@ public sealed class XdtBaukastenPreviewService
             new MedistarHistoricalMeasurementParser(),
             new TopconCv5000ImportXmlWriter(),
             new NidekRt6100InputXmlWriter(),
+            new NidekRt6100InputSourceXmlReader(),
             new XdtBaukastenDeviceCompatibilityService())
     {
     }
@@ -33,6 +35,7 @@ public sealed class XdtBaukastenPreviewService
             historyParser,
             cv5000Writer,
             rt6100Writer,
+            new NidekRt6100InputSourceXmlReader(),
             new XdtBaukastenDeviceCompatibilityService())
     {
     }
@@ -42,12 +45,14 @@ public sealed class XdtBaukastenPreviewService
         MedistarHistoricalMeasurementParser historyParser,
         TopconCv5000ImportXmlWriter cv5000Writer,
         NidekRt6100InputXmlWriter rt6100Writer,
+        NidekRt6100InputSourceXmlReader rt6100InputReader,
         XdtBaukastenDeviceCompatibilityService compatibilityService)
     {
         _manualPreviewService = manualPreviewService ?? throw new ArgumentNullException(nameof(manualPreviewService));
         _historyParser = historyParser ?? throw new ArgumentNullException(nameof(historyParser));
         _cv5000Writer = cv5000Writer ?? throw new ArgumentNullException(nameof(cv5000Writer));
         _rt6100Writer = rt6100Writer ?? throw new ArgumentNullException(nameof(rt6100Writer));
+        _rt6100InputReader = rt6100InputReader ?? throw new ArgumentNullException(nameof(rt6100InputReader));
         _compatibilityService = compatibilityService ?? throw new ArgumentNullException(nameof(compatibilityService));
     }
 
@@ -94,17 +99,29 @@ public sealed class XdtBaukastenPreviewService
                 messages.Add(compatibility.Message);
             }
 
-            pipelineResult = _manualPreviewService.BuildPreview(new BuilderManualProcessingPreviewRequest(
-                InterfaceProfile: interfaceProfile,
-                DeviceProfile: state.DeviceProfile,
-                ExportProfile: exportProfile,
-                AisFilePath: state.AisInput!.SourcePath,
-                DeviceFilePath: state.DeviceInput!.SourcePath));
+            var rt6100InputSource = TryReadRt6100InputSource(interfaceProfile, state);
+            if (rt6100InputSource is not null && rt6100InputSource.Records.Count > 0)
+            {
+                rawXdt = "Keine RT-6100-Rückgabe an das AIS geladen. Die geladene NIDEK-Datei wird als Quelle für die Geräteausgabe-Vorschau verwendet.";
+                aisView = "Noch keine RT-6100-Karteikartenansicht erzeugt. Bitte eine RT-6100-Rückgabedatei laden, um MEDISTAR-XDT zu prüfen.";
+                diagnostics = CreateRt6100InputSourceDiagnostics(state, exportProfile, rt6100InputSource);
+                messages.Add("RT-6100-Importquelle erkannt: Die Baukasten-Geräteausgabe wird aus der geladenen LM-/AR-Datei erzeugt.");
+                messages.AddRange(rt6100InputSource.Warnings.Select(warning => $"Geräteausgabe RT-6100 Quelle: {warning}"));
+            }
+            else
+            {
+                pipelineResult = _manualPreviewService.BuildPreview(new BuilderManualProcessingPreviewRequest(
+                    InterfaceProfile: interfaceProfile,
+                    DeviceProfile: state.DeviceProfile,
+                    ExportProfile: exportProfile,
+                    AisFilePath: state.AisInput!.SourcePath,
+                    DeviceFilePath: state.DeviceInput!.SourcePath));
 
-            rawXdt = pipelineResult.ExportContent;
-            aisView = CreateAisCardView(pipelineResult);
-            diagnostics = CreateDiagnosticsView(pipelineResult, state, exportProfile, compatibility);
-            messages.AddRange(pipelineResult.Issues.Select(issue => $"{issue.Severity}: {issue.Stage}: {issue.Message}"));
+                rawXdt = pipelineResult.ExportContent;
+                aisView = CreateAisCardView(pipelineResult);
+                diagnostics = CreateDiagnosticsView(pipelineResult, state, exportProfile, compatibility);
+                messages.AddRange(pipelineResult.Issues.Select(issue => $"{issue.Severity}: {issue.Stage}: {issue.Message}"));
+            }
         }
 
         var deviceOutput = BuildDeviceOutputPreview(state, interfaceProfile, timestamp, messages);
@@ -147,6 +164,61 @@ public sealed class XdtBaukastenPreviewService
         return null;
     }
 
+    private NidekRt6100InputSourceParseResult? TryReadRt6100InputSource(
+        InterfaceProfileDefinition? interfaceProfile,
+        XdtBaukastenState state)
+    {
+        if (!InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, state.DeviceProfile)
+            || state.DeviceInput is null
+            || string.IsNullOrWhiteSpace(state.DeviceInput.SourcePath)
+            || !File.Exists(state.DeviceInput.SourcePath))
+        {
+            return null;
+        }
+
+        var parsed = _rt6100InputReader.ParseFile(state.DeviceInput.SourcePath);
+        return parsed.Records.Count > 0 ? parsed : null;
+    }
+
+    private static string CreateRt6100InputSourceDiagnostics(
+        XdtBaukastenState state,
+        ExportProfileDefinition exportProfile,
+        NidekRt6100InputSourceParseResult source)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("RT-6100-Importquelle");
+        builder.AppendLine($"Geräteprofil: {state.DeviceProfile?.Metadata.Name ?? "-"}");
+        builder.AppendLine($"Exportprofil: {exportProfile.Metadata.Name}");
+        builder.AppendLine($"Gerätedatei: {state.DeviceInput?.SourcePath ?? "-"}");
+        builder.AppendLine("Richtung: Export an Gerät / RT-6100-Input-XML");
+        builder.AppendLine("Hinweis: Diese Datei ist keine RT-6100-Rückgabe an MEDISTAR, sondern Quelle für LM_Base/REF_Base.");
+        builder.AppendLine();
+        builder.AppendLine("Erkannte Quellen:");
+        foreach (var record in source.Records)
+        {
+            builder.AppendLine($"- {record.SourceKind} {record.Date:yyyy-MM-dd}: R={FormatEye(record.RightEye)}, L={FormatEye(record.LeftEye)}, PD={record.Pd ?? "-"}, VD={record.Vd ?? "-"}, WD={record.WorkingDistance ?? "-"}");
+        }
+
+        if (source.Warnings.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Warnungen:");
+            foreach (var warning in source.Warnings)
+            {
+                builder.AppendLine($"- {warning}");
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string FormatEye(AisHistoricalEyeRefraction? eye)
+    {
+        return eye is null
+            ? "-"
+            : $"S={eye.Sphere ?? "-"} Z={eye.Cylinder ?? "-"} A={eye.Axis ?? "-"} ADD={eye.Add ?? "-"}";
+    }
+
     private string BuildDeviceOutputPreview(
         XdtBaukastenState state,
         InterfaceProfileDefinition? interfaceProfile,
@@ -170,7 +242,7 @@ public sealed class XdtBaukastenPreviewService
             var isCv5000 = InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, state.DeviceProfile);
             if (isRt6100)
             {
-                var selected = _historyParser.CreateDefaultRt6100Selection(history.Records);
+                var selected = CreateRt6100DeviceOutputSelection(state, history, messages);
                 var result = _rt6100Writer.BuildXml(
                     new Cv5000ImportSelection(history.Patient, selected, null, NidekRt6100InputXmlWriter.DefaultFileNameTemplate),
                     timestamp);
@@ -256,6 +328,38 @@ public sealed class XdtBaukastenPreviewService
         {
             return $"Geräteausgabe-Vorschau konnte nicht erzeugt werden: {ex.Message}";
         }
+    }
+
+    private IReadOnlyList<AisHistoricalMeasurementRecord> CreateRt6100DeviceOutputSelection(
+        XdtBaukastenState state,
+        MedistarHistoricalMeasurementParseResult history,
+        List<string> messages)
+    {
+        var selectedFromHistory = _historyParser.CreateDefaultRt6100Selection(history.Records);
+        if (state.DeviceInput is null || string.IsNullOrWhiteSpace(state.DeviceInput.SourcePath) || !File.Exists(state.DeviceInput.SourcePath))
+        {
+            return selectedFromHistory;
+        }
+
+        var parsed = _rt6100InputReader.ParseFile(state.DeviceInput.SourcePath);
+        messages.AddRange(parsed.Warnings.Select(warning => $"Geräteausgabe RT-6100 Quelle: {warning}"));
+        if (parsed.Errors.Count > 0)
+        {
+            if (selectedFromHistory.Count == 0)
+            {
+                messages.AddRange(parsed.Errors.Select(error => $"Geräteausgabe RT-6100 Quelle: {error}"));
+            }
+
+            return selectedFromHistory;
+        }
+
+        if (parsed.Records.Count == 0)
+        {
+            return selectedFromHistory;
+        }
+
+        messages.Add("Geräteausgabe RT-6100: LM-/AR-Importwerte wurden aus der geladenen NIDEK-Gerätedatei gelesen.");
+        return parsed.Records;
     }
 
     private static XdtBaukastenPreviewResult CreateFailure(string message)

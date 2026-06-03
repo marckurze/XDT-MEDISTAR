@@ -487,7 +487,7 @@ public sealed class ProfileCatalogService
         }
 
         if (existingProfile.NidekRtSerialSendMode == NidekRtSerialSendMode.DirectWriterFrame
-            && existingProfile.NidekRtSerialOutputFrameVariant == NidekRtSerialOutputFrameVariant.FullSelectedData)
+            && existingProfile.NidekRtSerialOutputFrameVariant == defaultProfile.NidekRtSerialOutputFrameVariant)
         {
             return;
         }

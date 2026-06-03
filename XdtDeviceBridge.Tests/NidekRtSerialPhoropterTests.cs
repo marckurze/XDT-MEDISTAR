@@ -340,6 +340,34 @@ public sealed class NidekRtSerialPhoropterTests
         Assert.DoesNotContain("4C 41 2B", result.HexDump, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void OutputWriter_ShouldReproduceRt3100PracticeAcceptedLegacyFrameExactly()
+    {
+        var history = CreatePracticeAcceptedHistoricalRecords();
+
+        var result = _writer.BuildFrame(
+            CreatePatientData(),
+            history,
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame);
+
+        const string expectedHex =
+            "01 44 52 4C 02 20 20 20 20 20 20 20 34 37 30 31 31 17 " +
+            "44 52 4D 02 4F 52 2D 30 33 2E 32 35 2D 30 30 2E 32 35 30 32 30 17 " +
+            "4F 4C 2D 30 33 2E 32 35 2D 30 30 2E 32 35 31 36 34 17 " +
+            "44 4C 4D 02 20 52 2B 30 36 2E 32 35 2D 30 33 2E 32 35 30 30 33 17 " +
+            "20 4C 2B 30 36 2E 35 30 2D 30 32 2E 37 35 31 37 30 17 " +
+            "4C 41 2B 30 31 2E 35 30 04";
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(107, result.Bytes.Length);
+        Assert.Equal(expectedHex, result.HexDump);
+        Assert.Contains("LA+01.50<ET>", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("AL+01.50", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("<EB><ET>", result.VisibleContent, StringComparison.Ordinal);
+        Assert.Equal(NidekRtSerialControlChars.ET, result.Bytes.Last());
+    }
+
     [Theory]
     [InlineData(NidekRtSerialOutputFrameVariant.ArOnly, true, true, false, false)]
     [InlineData(NidekRtSerialOutputFrameVariant.LmOnly, true, false, true, true)]
@@ -419,7 +447,10 @@ public sealed class NidekRtSerialPhoropterTests
             Assert.Equal(2400, interfaceProfile.SerialSettings.BaudRate);
             Assert.Equal(7, interfaceProfile.SerialSettings.DataBits);
             Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, interfaceProfile.NidekRtSerialSendMode);
-            Assert.Equal(NidekRtSerialOutputFrameVariant.FullSelectedData, interfaceProfile.NidekRtSerialOutputFrameVariant);
+            var expectedFrameVariant = device.Metadata.Id == "device-nidek-rt3100-serial-default"
+                ? NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame
+                : NidekRtSerialOutputFrameVariant.FullSelectedData;
+            Assert.Equal(expectedFrameVariant, interfaceProfile.NidekRtSerialOutputFrameVariant);
             Assert.Empty(InterfaceProfileDefinitionValidator.Validate(interfaceProfile));
         }
     }
@@ -524,6 +555,37 @@ public sealed class NidekRtSerialPhoropterTests
                 new AisHistoricalEyeRefraction("+1.00", "-1.25", "7", null),
                 new AisHistoricalEyeRefraction("+1.50", "-0.75", "90", null),
                 "64",
+                null,
+                true,
+                Array.Empty<string>())
+        };
+    }
+
+    private static IReadOnlyList<AisHistoricalMeasurementRecord> CreatePracticeAcceptedHistoricalRecords()
+    {
+        return new[]
+        {
+            new AisHistoricalMeasurementRecord(
+                new DateOnly(2026, 5, 29),
+                "V0",
+                AisHistoricalMeasurementSourceKind.Lensmeter,
+                null,
+                Array.Empty<string>(),
+                new AisHistoricalEyeRefraction("+6.25", "-3.25", "3", null),
+                new AisHistoricalEyeRefraction("+6.50", "-2.75", "170", "+1.50"),
+                null,
+                null,
+                true,
+                Array.Empty<string>()),
+            new AisHistoricalMeasurementRecord(
+                new DateOnly(2026, 5, 29),
+                "V1",
+                AisHistoricalMeasurementSourceKind.Autorefraction,
+                null,
+                Array.Empty<string>(),
+                new AisHistoricalEyeRefraction("-3.25", "-0.25", "20", null),
+                new AisHistoricalEyeRefraction("-3.25", "-0.25", "164", null),
+                null,
                 null,
                 true,
                 Array.Empty<string>())

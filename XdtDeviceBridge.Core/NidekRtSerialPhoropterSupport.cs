@@ -983,7 +983,9 @@ public sealed class NidekRtSerialPhoropterOutputWriter
             blocks.Add(BuildSphericalCylinderAxisBlock("DLM", " ", record));
             if (variant != NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd)
             {
-                blocks.Add(BuildAddBlock(record));
+                blocks.Add(variant == NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame
+                    ? BuildLegacyPracticeAddBlock(record)
+                    : BuildAddBlock(record));
             }
 
             blocks.Add(BuildPdBlock("DLM", record));
@@ -1012,7 +1014,11 @@ public sealed class NidekRtSerialPhoropterOutputWriter
             bytes.AddRange(blocks[index]);
         }
 
-        bytes.Add(NidekRtSerialControlChars.EB);
+        if (ShouldAppendTerminatingEb(variant))
+        {
+            bytes.Add(NidekRtSerialControlChars.EB);
+        }
+
         bytes.Add(NidekRtSerialControlChars.ET);
         return new NidekRtSerialPhoropterOutputResult(
             true,
@@ -1056,7 +1062,8 @@ public sealed class NidekRtSerialPhoropterOutputWriter
         return variant is NidekRtSerialOutputFrameVariant.FullSelectedData
             or NidekRtSerialOutputFrameVariant.FullWithoutId
             or NidekRtSerialOutputFrameVariant.ArOnly
-            or NidekRtSerialOutputFrameVariant.ArOnlyWithoutId;
+            or NidekRtSerialOutputFrameVariant.ArOnlyWithoutId
+            or NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame;
     }
 
     private static bool ShouldIncludeLensmeter(NidekRtSerialOutputFrameVariant variant)
@@ -1066,7 +1073,13 @@ public sealed class NidekRtSerialPhoropterOutputWriter
             or NidekRtSerialOutputFrameVariant.LmOnly
             or NidekRtSerialOutputFrameVariant.LmOnlyWithoutId
             or NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd
-            or NidekRtSerialOutputFrameVariant.MinimalRightOnly;
+            or NidekRtSerialOutputFrameVariant.MinimalRightOnly
+            or NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame;
+    }
+
+    private static bool ShouldAppendTerminatingEb(NidekRtSerialOutputFrameVariant variant)
+    {
+        return variant != NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame;
     }
 
     private static AisHistoricalMeasurementRecord CreateRightOnlyRecord(AisHistoricalMeasurementRecord record)
@@ -1124,6 +1137,14 @@ public sealed class NidekRtSerialPhoropterOutputWriter
         return parts.ToArray();
     }
 
+    private static byte[] BuildLegacyPracticeAddBlock(AisHistoricalMeasurementRecord record)
+    {
+        var parts = new List<byte>();
+        AddLegacyPracticeEyeAdd(parts, "R", record.RightEye?.Add);
+        AddLegacyPracticeEyeAdd(parts, "L", record.LeftEye?.Add);
+        return parts.ToArray();
+    }
+
     private static void AddEyeAdd(List<byte> parts, string eye, string? add)
     {
         if (string.IsNullOrWhiteSpace(add))
@@ -1138,6 +1159,22 @@ public sealed class NidekRtSerialPhoropterOutputWriter
         }
 
         parts.AddRange(Encode($"A{eye}{FormatDiopterField(add)}"));
+    }
+
+    private static void AddLegacyPracticeEyeAdd(List<byte> parts, string eye, string? add)
+    {
+        if (string.IsNullOrWhiteSpace(add))
+        {
+            return;
+        }
+
+        var isFirstEyeInBlock = parts.Count == 0;
+        if (!isFirstEyeInBlock)
+        {
+            parts.Add(NidekRtSerialControlChars.EB);
+        }
+
+        parts.AddRange(Encode($"{eye}A{FormatDiopterField(add)}"));
     }
 
     private static byte[] BuildPdBlock(string blockCode, AisHistoricalMeasurementRecord record)

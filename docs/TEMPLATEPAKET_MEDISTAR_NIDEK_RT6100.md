@@ -1,6 +1,6 @@
 # Templatepaket MEDISTAR + NIDEK RT-6100
 
-Stand: 2026-05-28
+Stand: 2026-06-03
 
 Dieses Dokument beschreibt den vorbereiteten Templatepaket-Kandidaten fuer den bidirektionalen Phoropter NIDEK RT-6100.
 
@@ -51,8 +51,12 @@ Konservatives Mapping:
 
 - MEDISTAR `V0`/Lensmeter -> `LM_Base`
 - MEDISTAR `V1`/Autorefraktion -> `REF_Base`
+- echte NIDEK LM-7P-XML -> `LM_Base`
+- echte NIDEK ARK-1s-XML `ARMedian` -> `REF_Base`
 
 Andere historische Werte werden aktuell nicht an den RT-6100 geschrieben, solange keine praktische Freigabe vorliegt.
+
+Der XDT-Baukasten kann LM-/ARK-Dateien als Quellen fuer `Export an Geraet` verwenden. Solche Dateien sind keine RT-6100-Rueckgabe an MEDISTAR; sie erzeugen deshalb keine Roh-XDT-/AIS-Rueckgabe, sondern eine RT-6100-Input-XML-Vorschau. SR-, KM-, Bild- und andere Zusatzdaten werden nicht blind uebernommen.
 
 ## Rueckgabe an MEDISTAR
 
@@ -79,7 +83,10 @@ Automatisiert abgesichert sind:
 - RT-6100-BuiltIn-Profile
 - selektiver Templatepaket-Export/-Import
 - Inputwriter fuer `LM_Base`/`REF_Base`
+- echte LM-7P-/ARK-1s-Inputquellen
+- echte RT-6100-Rueckgabe-XML
 - Rueckgabeparser fuer `Best` und `Full`
+- Distant/Standard-Auswahl fuer die MEDISTAR-Hauptausgabe
 - keine `6330`
 - malformed OCR-XML erzeugt Diagnose statt falscher Messwerte
 

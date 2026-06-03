@@ -502,6 +502,7 @@ public static class DefaultInterfaceProfileDefinitions
             deviceProfileId: "device-nidek-rt2100-serial-default",
             exportProfileId: "export-medistar-nidek-rt2100-serial-default",
             description: "Built-in inactive candidate for NIDEK RT-2100 serial RS232 phoropter captures. PC-to-RT LM/AR output is prepared for Baukasten preview only until live validation.",
+            frameVariant: NidekRtSerialOutputFrameVariant.FullSelectedData,
             timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
     }
 
@@ -514,6 +515,7 @@ public static class DefaultInterfaceProfileDefinitions
             deviceProfileId: "device-nidek-rt3100-serial-default",
             exportProfileId: "export-medistar-nidek-rt3100-serial-default",
             description: "Built-in inactive candidate for NIDEK RT-3100 serial RS232 phoropter captures with Type1/Type2 communication presets prepared.",
+            frameVariant: NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame,
             timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
     }
 
@@ -526,6 +528,7 @@ public static class DefaultInterfaceProfileDefinitions
             deviceProfileId: "device-nidek-rt5100-serial-default",
             exportProfileId: "export-medistar-nidek-rt5100-serial-default",
             description: "Built-in inactive candidate for NIDEK RT-5100 serial RS232 phoropter captures with extended data sources kept diagnostic until practice captures are available.",
+            frameVariant: NidekRtSerialOutputFrameVariant.FullSelectedData,
             timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
     }
 
@@ -536,6 +539,7 @@ public static class DefaultInterfaceProfileDefinitions
         string deviceProfileId,
         string exportProfileId,
         string description,
+        NidekRtSerialOutputFrameVariant frameVariant,
         DateTimeOffset timestamp)
     {
         return new InterfaceProfileDefinition(
@@ -576,7 +580,7 @@ public static class DefaultInterfaceProfileDefinitions
                 Format: NidekRtSerialPhoropterOutputWriter.DeviceOutputFormat),
             SerialSettings: CreateNidekRtSerialDefaultSettings(),
             NidekRtSerialSendMode: NidekRtSerialSendMode.DirectWriterFrame,
-            NidekRtSerialOutputFrameVariant: NidekRtSerialOutputFrameVariant.FullSelectedData);
+            NidekRtSerialOutputFrameVariant: frameVariant);
     }
 
     private static SerialCommunicationSettings CreateNidekRtSerialDefaultSettings()

@@ -14,6 +14,10 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
     private const uint OpenExisting = 3;
     private const uint ClearDtr = 6;
     private const uint SetDtr = 5;
+    private const uint SetRts = 3;
+    private const uint ClearRts = 4;
+    private const uint PurgeTxClear = 0x0004;
+    private const uint PurgeRxClear = 0x0008;
     private const uint ModemStatusCts = 0x0010;
     private const uint ModemStatusDsr = 0x0020;
     private const uint ModemStatusRing = 0x0040;
@@ -266,7 +270,19 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             using var handle = OpenConfiguredPort(settings);
             using var stream = new FileStream(handle, FileAccess.ReadWrite, bufferSize: 4096, isAsync: false);
             messages.Add($"COM-Port geöffnet: {settings.PortName}.");
+            ApplyExplicitControlLines(messages, handle, settings);
             var lastModemStatus = AddModemStatusMessage(messages, handle, "nach Portöffnung");
+            if (request.PortSettleDelay > TimeSpan.Zero)
+            {
+                messages.Add($"Warte {request.PortSettleDelay.TotalMilliseconds:0} ms nach Portöffnung, damit DTR/RTS und RT-Eingang stabil sind.");
+                Thread.Sleep(request.PortSettleDelay);
+                lastModemStatus = AddModemStatusMessage(messages, handle, "nach Port-Bereitstellungswartezeit");
+            }
+
+            if (request.RequestBytes.Length > 0 || request.PayloadBytes.Length > 0)
+            {
+                ClearSerialBuffersAndErrors(messages, handle, "vor Sendung");
+            }
 
             var bytesWritten = 0;
             if (request.ToggleDtrBeforeRequest)
@@ -297,14 +313,18 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
 
                 messages.Add($"RS-Anforderung gesendet: {SerialDiagnosticsFormatter.ToVisibleControlText(requestBytes)}");
                 messages.Add($"RS-Hexdump: {SerialDiagnosticsFormatter.ToHexDump(requestBytes)}");
+                AddQueueStatusMessage(messages, handle, "vor RS-Write");
                 stream.Write(requestBytes, 0, requestBytes.Length);
                 stream.Flush();
+                FlushSerialOutput(messages, handle, "nach RS-Write");
                 bytesWritten += requestBytes.Length;
+                AddQueueStatusMessage(messages, handle, "nach RS-Write");
                 lastModemStatus = AddModemStatusMessage(messages, handle, "nach RS-Sendung");
                 if (request.SendDelayAfterRequest > TimeSpan.Zero)
                 {
                     messages.Add($"Warte {request.SendDelayAfterRequest.TotalMilliseconds:0} ms nach RS-Anforderung.");
                     Thread.Sleep(request.SendDelayAfterRequest);
+                    AddQueueStatusMessage(messages, handle, "nach RS-Wartezeit");
                     lastModemStatus = AddModemStatusMessage(messages, handle, "nach RS-Wartezeit");
                 }
             }
@@ -373,13 +393,24 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                     messages.Add("Writer-Testoption: CR nach EOT wird angehängt.");
                 }
 
-                messages.Add($"Sendeframe gesendet: {payloadBytes.Length} Bytes.");
+                messages.Add($"Sendeframe wird geschrieben: {payloadBytes.Length} Bytes.");
                 messages.Add($"Sendeframe sichtbar: {SerialDiagnosticsFormatter.ToVisibleControlText(payloadBytes)}");
                 messages.Add($"Sendeframe-Hexdump: {CreateHexDump(payloadBytes)}");
+                AddQueueStatusMessage(messages, handle, "vor Writer-Frame");
                 stream.Write(payloadBytes, 0, payloadBytes.Length);
                 stream.Flush();
+                FlushSerialOutput(messages, handle, "nach Writer-Frame");
                 bytesWritten += payloadBytes.Length;
+                AddQueueStatusMessage(messages, handle, "nach Writer-Frame");
+                messages.Add($"Sendeframe gesendet: {payloadBytes.Length} Bytes.");
                 lastModemStatus = AddModemStatusMessage(messages, handle, "nach Writer-Frame");
+                if (request.PostPayloadWriteDelay > TimeSpan.Zero)
+                {
+                    messages.Add($"Warte {request.PostPayloadWriteDelay.TotalMilliseconds:0} ms nach Writer-Frame, damit der serielle Sendepuffer vollständig ausgesendet werden kann.");
+                    Thread.Sleep(request.PostPayloadWriteDelay);
+                    AddQueueStatusMessage(messages, handle, "nach Writer-Sendenachlauf");
+                    lastModemStatus = AddModemStatusMessage(messages, handle, "nach Writer-Sendenachlauf");
+                }
             }
 
             if (!request.ReceiveResponse)
@@ -496,6 +527,16 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
         if (request.StableAfterEndOfTransmission < TimeSpan.Zero)
         {
             return "Stabilitätswartezeit darf nicht negativ sein.";
+        }
+
+        if (request.PortSettleDelay < TimeSpan.Zero)
+        {
+            return "Port-Bereitstellungswartezeit darf nicht negativ sein.";
+        }
+
+        if (request.PostPayloadWriteDelay < TimeSpan.Zero)
+        {
+            return "Sendenachlauf darf nicht negativ sein.";
         }
 
         if (request.MaxReceiveBytes <= 0)
@@ -617,20 +658,36 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
         const uint binary = 0x00000001;
         const uint parity = 0x00000002;
         const uint outxCtsFlow = 0x00000004;
+        const uint outxDsrFlow = 0x00000008;
+        const uint dsrSensitivity = 0x00000040;
+        const uint txContinueOnXoff = 0x00000080;
         const uint outX = 0x00000100;
         const uint inX = 0x00000200;
+        const uint errorChar = 0x00000400;
+        const uint nullChar = 0x00000800;
         const uint dtrControlMask = 0x00000030;
         const uint dtrControlEnable = 0x00000010;
         const uint rtsControlMask = 0x00003000;
         const uint rtsControlEnable = 0x00001000;
         const uint rtsControlHandshake = 0x00002000;
+        const uint abortOnError = 0x00004000;
 
         flags |= binary;
         flags = settings.Parity == SerialParitySetting.None
             ? flags & ~parity
             : flags | parity;
 
-        flags &= ~(outxCtsFlow | outX | inX | dtrControlMask | rtsControlMask);
+        flags &= ~(outxCtsFlow
+            | outxDsrFlow
+            | dsrSensitivity
+            | txContinueOnXoff
+            | outX
+            | inX
+            | errorChar
+            | nullChar
+            | dtrControlMask
+            | rtsControlMask
+            | abortOnError);
         if (settings.DtrEnable)
         {
             flags |= dtrControlEnable;
@@ -738,16 +795,106 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
             : SerialModemStatus.Unavailable;
     }
 
+    private static void ApplyExplicitControlLines(List<string> messages, SafeFileHandle handle, SerialCommunicationSettings settings)
+    {
+        SetDtrState(messages, handle, settings.DtrEnable, "gemäß Profil");
+        if (settings.Handshake is SerialHandshakeSetting.RequestToSend or SerialHandshakeSetting.RequestToSendXOnXOff)
+        {
+            messages.Add("RTS wird durch die aktivierte Hardware-Flusskontrolle gesteuert.");
+            return;
+        }
+
+        SetRtsState(messages, handle, settings.RtsEnable, "gemäß Profil");
+    }
+
     private static void SetDtrState(List<string> messages, SafeFileHandle handle, bool enable)
+    {
+        SetDtrState(messages, handle, enable, null);
+    }
+
+    private static void SetDtrState(List<string> messages, SafeFileHandle handle, bool enable, string? context)
     {
         if (EscapeCommFunction(handle, enable ? SetDtr : ClearDtr))
         {
-            messages.Add(enable ? "DTR wurde aktiviert." : "DTR wurde zurückgesetzt.");
+            messages.Add(enable
+                ? $"DTR wurde{FormatContext(context)} aktiviert."
+                : $"DTR wurde{FormatContext(context)} zurückgesetzt.");
             return;
         }
 
         var error = Marshal.GetLastWin32Error();
         messages.Add($"DTR konnte nicht {(enable ? "aktiviert" : "zurückgesetzt")} werden: {new Win32Exception(error).Message}");
+    }
+
+    private static void SetRtsState(List<string> messages, SafeFileHandle handle, bool enable, string? context)
+    {
+        if (EscapeCommFunction(handle, enable ? SetRts : ClearRts))
+        {
+            messages.Add(enable
+                ? $"RTS wurde{FormatContext(context)} aktiviert."
+                : $"RTS wurde{FormatContext(context)} zurückgesetzt.");
+            return;
+        }
+
+        var error = Marshal.GetLastWin32Error();
+        messages.Add($"RTS konnte nicht {(enable ? "aktiviert" : "zurückgesetzt")} werden: {new Win32Exception(error).Message}");
+    }
+
+    private static string FormatContext(string? context)
+    {
+        return string.IsNullOrWhiteSpace(context) ? string.Empty : $" {context}";
+    }
+
+    private static void ClearSerialBuffersAndErrors(List<string> messages, SafeFileHandle handle, string stage)
+    {
+        var status = new ComStat();
+        if (ClearCommError(handle, out var errors, ref status))
+        {
+            messages.Add(errors == 0
+                ? $"COM-Fehlerstatus {stage}: keine Fehler gemeldet."
+                : $"COM-Fehlerstatus {stage}: 0x{errors:X8} wurde gelesen.");
+        }
+        else
+        {
+            var error = Marshal.GetLastWin32Error();
+            messages.Add($"COM-Fehlerstatus {stage} konnte nicht gelesen werden: {new Win32Exception(error).Message}");
+        }
+
+        if (PurgeComm(handle, PurgeRxClear | PurgeTxClear))
+        {
+            messages.Add($"COM-Ein-/Ausgabepuffer {stage} geleert.");
+            AddQueueStatusMessage(messages, handle, $"{stage} nach Pufferleerung");
+            return;
+        }
+
+        var purgeError = Marshal.GetLastWin32Error();
+        messages.Add($"COM-Puffer {stage} konnten nicht geleert werden: {new Win32Exception(purgeError).Message}");
+    }
+
+    private static void AddQueueStatusMessage(List<string> messages, SafeFileHandle handle, string stage)
+    {
+        var queueStatus = ReadQueueStatus(handle);
+        messages.Add($"COM-Queue {stage}: {queueStatus}.");
+    }
+
+    private static string ReadQueueStatus(SafeFileHandle handle)
+    {
+        var status = new ComStat();
+        return ClearCommError(handle, out var errors, ref status)
+            ? $"Eingang {status.cbInQue} Bytes, Ausgang {status.cbOutQue} Bytes, Fehler 0x{errors:X8}"
+            : $"nicht verfügbar ({new Win32Exception(Marshal.GetLastWin32Error()).Message})";
+    }
+
+    private static void FlushSerialOutput(List<string> messages, SafeFileHandle handle, string stage)
+    {
+        if (FlushFileBuffers(handle))
+        {
+            messages.Add($"COM-Ausgabepuffer {stage} per FlushFileBuffers bestätigt.");
+            return;
+        }
+
+        var error = Marshal.GetLastWin32Error();
+        messages.Add($"COM-Ausgabepuffer {stage} konnte nicht per FlushFileBuffers bestätigt werden: {new Win32Exception(error).Message}");
     }
 
     private static IReadOnlyList<string> SplitLines(string rawText)
@@ -837,6 +984,15 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool EscapeCommFunction(SafeFileHandle fileHandle, uint function);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool PurgeComm(SafeFileHandle fileHandle, uint flags);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool ClearCommError(SafeFileHandle fileHandle, out uint errors, ref ComStat stat);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool FlushFileBuffers(SafeFileHandle fileHandle);
+
     [StructLayout(LayoutKind.Sequential)]
     private struct Dcb
     {
@@ -865,5 +1021,13 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
         public uint ReadTotalTimeoutConstant;
         public uint WriteTotalTimeoutMultiplier;
         public uint WriteTotalTimeoutConstant;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ComStat
+    {
+        public uint Flags;
+        public uint cbInQue;
+        public uint cbOutQue;
     }
 }

@@ -622,11 +622,12 @@ Umsetzung:
 - BuiltIn-Geraeteprofil `device-nidek-rt6100-default`
 - BuiltIn-Exportprofil `export-medistar-nidek-rt6100-default`
 - BuiltIn-Schnittstellenprofil `interface-medistar-nidek-rt6100-default`
-- Richtung Geraet: `NidekRt6100InputXmlWriter` erzeugt konservativ nur `LM_Base` aus MEDISTAR `V0` und `REF_Base` aus `V1`.
+- Richtung Geraet: `NidekRt6100InputXmlWriter` erzeugt konservativ `LM_Base` aus MEDISTAR `V0` beziehungsweise echter LM-7P-XML und `REF_Base` aus MEDISTAR `V1` beziehungsweise echter ARK-1s-XML (`ARMedian`). SR-, KM-, Bild-/Zusatzdaten und LM-Prismen werden nicht blind in den RT-6100-Input geschrieben.
 - Richtung MEDISTAR: `Best` wird ueber `6228` als finaler Verordnungswert ausgegeben, `Full` ueber `6227` als Maximalwert/Vollkorrektion.
+- Fuer die MEDISTAR-Hauptausgabe werden nur `Distant`/`Standard`-Bloecke aus `Best`/`Full` verwendet.
 - `6330` wird nicht erzeugt, und `8402` kommt weiterhin aus AIS.
 
-Hinweis zur bereitgestellten OCR-Datei `NIDEK  RT6100.XML`: Sie ist nicht als erfolgreiche Produktivfixture geeignet. Die Datei deklariert `UTF-16`, liegt aber ohne UTF-16-BOM vor und ist im XML-Aufbau abgeschnitten beziehungsweise nicht wohlgeformt. XDTBox behandelt solche Dateien als Fehlerdiagnose mit klarer XML-Parse-Meldung. Fuer die positiven Tests wurden PDF-nahe, wohlgeformte synthetische Fixtures verwendet.
+Hinweis zur bereitgestellten OCR-Datei `NIDEK  RT6100.XML`: Sie ist nicht als erfolgreiche Produktivfixture geeignet. Die Datei deklariert `UTF-16`, liegt aber ohne UTF-16-BOM vor und ist im XML-Aufbau abgeschnitten beziehungsweise nicht wohlgeformt. XDTBox behandelt solche Dateien als Fehlerdiagnose mit klarer XML-Parse-Meldung. Positive Tests nutzen jetzt echte wohlgeformte NIDEK-Fixtures fuer LM-7P, ARK-1s und RT-6100-Rueckgabe sowie synthetische Grenzfallfixtures.
 
 Status: testseitig vorbereiteter bidirektionaler Phoropter-Kandidat. Praktische Abnahme am RT-6100/MEM-200 und in MEDISTAR steht noch aus.
 

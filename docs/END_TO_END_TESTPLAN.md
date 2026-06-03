@@ -502,7 +502,8 @@ Voraussetzungen:
 - Schnittstellenprofil `MEDISTAR + NIDEK RT-6100` ist vorhanden und fuer Testordner konfiguriert.
 - Im Bereich `Ausgabe an Geraet` ist ein MEM-200-/Shared-Folder-Zielordner gesetzt, typischerweise einer der Unterordner `DIRECT_RT_0A\TXT`, `DIRECT_RT_1A\TXT`, `DIRECT_RT_1B\TXT`, `DIRECT_RT_2A\TXT`, `DIRECT_RT_2B\TXT`, `DIRECT_RT_3A\TXT` oder `DIRECT_RT_3B\TXT`.
 - Die AIS-Testdatei enthaelt synthetische Patientendaten und, falls die Geraeteuebergabe getestet wird, MEDISTAR-Historienzeilen `V0`/Lensmeter und/oder `V1`/Autorefraktion.
-- Fuer den Rueckweg wird eine echte wohlgeformte RT-6100-Ophthalmology-XML-Rueckgabedatei benoetigt. Die OCR-erzeugte Beispiel-XML aus der PDF ist malformed und nur als Diagnosefall geeignet.
+- Alternativ koennen im Baukasten echte NIDEK-LM-/ARK-XML-Dateien als Quellen fuer die RT-6100-Geraeteausgabe geladen werden; LM wird zu `LM_Base`, ARK-`ARMedian` zu `REF_Base`.
+- Fuer den Rueckweg wird eine echte wohlgeformte RT-6100-Ophthalmology-XML-Rueckgabedatei benoetigt. Die OCR-erzeugte Beispiel-XML aus der PDF ist malformed und nur als Diagnosefall geeignet; die Repository-Tests verwenden echte NIDEK-RT-6100-Rueckgabe-XML.
 
 Ablauf:
 
@@ -522,10 +523,12 @@ Erwartung:
 - Die RT-6100-Inputdatei ist wohlgeformtes Ophthalmology-XML mit `Company=NIDEK`, `ModelName=RT-6100`, `Version=NIDEK_RT_V1.00` und `Measure Type="RT"`.
 - `V0`/Lensmeter wird als `CorrectionType="LM_Base"` geschrieben.
 - `V1`/Autorefraktion wird als `CorrectionType="REF_Base"` geschrieben.
+- Reale LM-/ARK-Quellen werden konservativ ausgewertet: LM `Sphare`/`Sphere` wird toleriert, ARK nutzt `ARMedian`, Zusatzdaten wie SR/KM/CS/PS/AC/RI/Bilddaten werden nicht in die RT-6100-Ausgabe geraten.
 - Es werden keine nicht vorhandenen Messwerte erfunden.
 - Die Rueckgabe wird nur als RT-6100 erkannt, wenn NIDEK, RT-6100, `NIDEK_RT...` und `Measure Type="RT"` zusammen passen.
 - `Best` wird als finaler Verordnungswert ueber `6228` exportiert.
 - `Full` wird als Maximalwert/Vollkorrektion ueber `6227` exportiert.
+- Nur `Vision="Distant"` und `Situation="Standard"` werden als Haupt-MEDISTAR-Zeilen exportiert; Near-/Night-Werte bleiben Diagnose-/Rohdatenkontext.
 - Es werden keine `6330`-Zeilen und keine kuenstliche Trennzeile erzeugt.
 - `8402` kommt weiterhin aus AIS/MEDISTAR.
 

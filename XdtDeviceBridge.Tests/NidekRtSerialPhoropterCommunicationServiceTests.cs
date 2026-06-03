@@ -212,6 +212,8 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.Empty(fakeSerial.LastExchangeRequest.ExpectedHandshakeBytes);
         Assert.NotEmpty(fakeSerial.LastExchangeRequest.PayloadBytes);
         Assert.False(fakeSerial.LastExchangeRequest.ContinueWithoutHandshake);
+        Assert.Equal(TimeSpan.FromMilliseconds(800), fakeSerial.LastExchangeRequest.PortSettleDelay);
+        Assert.True(fakeSerial.LastExchangeRequest.PostPayloadWriteDelay >= TimeSpan.FromMilliseconds(250));
         Assert.Contains(result.Messages, message => message.Contains("Sendemodus: Direkt Writer-Frame senden", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("denselben Writer-/Bytepfad wie der Diagnosemodus", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("Keine RS-Anforderung gesendet", StringComparison.Ordinal));
@@ -263,6 +265,10 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.False(productiveFakeSerial.LastExchangeRequest.ReceiveResponse);
         Assert.True(diagnosticFakeSerial.LastExchangeRequest.ReceiveResponse);
         Assert.Equal(diagnosticFakeSerial.LastExchangeRequest.PayloadBytes, productiveFakeSerial.LastExchangeRequest.PayloadBytes);
+        Assert.Equal(diagnosticFakeSerial.LastExchangeRequest.PortSettleDelay, productiveFakeSerial.LastExchangeRequest.PortSettleDelay);
+        Assert.Equal(TimeSpan.FromMilliseconds(800), productiveFakeSerial.LastExchangeRequest.PortSettleDelay);
+        Assert.Equal(diagnosticFakeSerial.LastExchangeRequest.PostPayloadWriteDelay, productiveFakeSerial.LastExchangeRequest.PostPayloadWriteDelay);
+        Assert.True(productiveFakeSerial.LastExchangeRequest.PostPayloadWriteDelay >= TimeSpan.FromMilliseconds(250));
         Assert.Contains(productiveResult.Messages, message => message.Contains("Produktiver Sendeschritt aktiv", StringComparison.Ordinal));
     }
 
@@ -420,6 +426,33 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.Contains("DRM<STX>", visiblePayload, StringComparison.Ordinal);
         Assert.Contains("DLM<STX>", visiblePayload, StringComparison.Ordinal);
         Assert.Contains(result.Messages, message => message.Contains("Frame-Variante: Alle ausgewählten Werte ohne ID", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SendSelectionDirectAsync_ShouldDiagnosePracticeAcceptedLegacyFrameVariant()
+    {
+        var fakeSerial = new FakeSerialDeviceCommunicationService
+        {
+            ExchangeResult = CreateExchangeResult(success: true, receivedBytes: CreatePracticeReturnBytes())
+        };
+        var service = new NidekRtSerialPhoropterCommunicationService(fakeSerial);
+
+        var result = await service.SendSelectionDirectAsync(
+            NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM7"),
+            CreatePatient(),
+            CreateHistoricalRecords(),
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialPhoropterSendTestOptions.None,
+            CancellationToken.None,
+            NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame);
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.NotNull(fakeSerial.LastExchangeRequest);
+        Assert.Equal(NidekRtSerialControlChars.ET, fakeSerial.LastExchangeRequest.PayloadBytes.Last());
+        Assert.NotEqual(NidekRtSerialControlChars.EB, fakeSerial.LastExchangeRequest.PayloadBytes[^2]);
+        Assert.Contains(result.Messages, message => message.Contains("Frame-Variante: RT-3100 Praxisvariante (getestet)", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("Praxis angenommenen RT-3100-Direct-Writer-Frame", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("PC->RT-Blöcke", StringComparison.Ordinal) && message.Contains("LM ADD", StringComparison.Ordinal));
     }
 
     [Fact]

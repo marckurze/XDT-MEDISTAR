@@ -541,6 +541,7 @@ public static class XdtBaukastenDeviceOutputRuleService
         AddValue(values, $"{prefix}.Both.PD", record.Pd);
         AddValue(values, $"{prefix}.PD", record.Pd);
         AddValue(values, $"{prefix}.VD", record.Vd);
+        AddValue(values, $"{prefix}.WorkingDistance", record.WorkingDistance);
     }
 
     private static void AddEyeValues(

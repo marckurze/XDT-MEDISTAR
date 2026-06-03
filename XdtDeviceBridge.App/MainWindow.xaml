@@ -2637,12 +2637,13 @@
                                             <ComboBoxItem Content="Nur Autoref ohne ID" Tag="ArOnlyWithoutId"/>
                                             <ComboBoxItem Content="Nur Lensmeter ohne ID" Tag="LmOnlyWithoutId"/>
                                             <ComboBoxItem Content="Minimal rechts" Tag="MinimalRightOnly"/>
+                                            <ComboBoxItem Content="RT-3100 Praxisvariante (getestet)" Tag="LegacyRt3100DirectFrame"/>
                                         </ComboBox>
                                         <TextBlock Grid.Row="5"
                                                    Grid.Column="3"
                                                    Grid.ColumnSpan="2"
                                                    x:Name="InterfaceNidekRtSerialFrameVariantHintTextBlock"
-                                                   Text="Default: alle ausgewählten Werte. Für Praxisdiagnose bei Annahmeproblemen zuerst Nur Lensmeter ohne ADD, dann Nur Lensmeter, Nur Autoref und Varianten ohne ID testen."
+                                                  Text="RT-3100 Praxisempfehlung: RT-3100 Praxisvariante (getestet). Für weitere Praxisdiagnose zuerst Nur Lensmeter ohne ADD, dann Nur Lensmeter, Nur Autoref und Varianten ohne ID testen."
                                                    Foreground="DimGray"
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,8,8"/>

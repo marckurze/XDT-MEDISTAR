@@ -256,6 +256,33 @@ public sealed class XdtBaukastenPreviewServiceTests
     }
 
     [Fact]
+    public void BuildPreview_ShouldUseRealNidekLmXmlAsRt6100DeviceOutputSource()
+    {
+        using var temp = new TempFolder();
+        var aisPath = CopyFixture(temp.Path, "Devices", "Topcon", "CV5000", "Patient_mit_Phoropter_Daten.XDT");
+        var devicePath = CopyFixture(temp.Path, "Devices", "Nidek", "RT6100", "LM__20251128120038_05D67D.xml");
+        var state = CreateState(
+            aisPath,
+            devicePath,
+            DefaultDeviceProfileDefinitions.CreateNidekRt6100Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt6100Default());
+        state.SetRuleDirection(XdtBaukastenRuleDirection.DeviceOutput);
+        var service = new XdtBaukastenPreviewService();
+
+        var result = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt6100Default());
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
+        Assert.Contains(result.Messages, message => message.Contains("RT-6100-Importquelle erkannt", StringComparison.Ordinal));
+        Assert.Contains("Keine RT-6100-Rückgabe", result.Output.RawXdt);
+        Assert.Contains("CorrectionType=\"LM_Base\"", result.Output.DeviceOutput);
+        Assert.Contains("<Sphere unit=\"D\">3.99</Sphere>", result.Output.DeviceOutput);
+        Assert.Contains("<Cylinder unit=\"D\">-1.76</Cylinder>", result.Output.DeviceOutput);
+        Assert.Contains("<Axis unit=\"deg\">70</Axis>", result.Output.DeviceOutput);
+        Assert.DoesNotContain("CorrectionType=\"REF_Base\"", result.Output.DeviceOutput);
+        Assert.Contains("Prismenwerte", result.Output.Diagnostics, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void BuildPreview_ShouldCreateNidekRtSerialDeviceOutputPreviewWithoutWritingProductiveFile()
     {
         using var temp = new TempFolder();

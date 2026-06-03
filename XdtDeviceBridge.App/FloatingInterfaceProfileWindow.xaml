@@ -651,6 +651,7 @@
                                 <ComboBoxItem Content="Nur Autoref ohne ID" Tag="ArOnlyWithoutId"/>
                                 <ComboBoxItem Content="Nur Lensmeter ohne ID" Tag="LmOnlyWithoutId"/>
                                 <ComboBoxItem Content="Minimal rechts" Tag="MinimalRightOnly"/>
+                                <ComboBoxItem Content="RT-3100 Praxisvariante (getestet)" Tag="LegacyRt3100DirectFrame"/>
                             </ComboBox>
                             <CheckBox Grid.Column="2"
                                       x:Name="NidekRtAppendCrAfterEotCheckBox"
@@ -659,7 +660,7 @@
                                       VerticalAlignment="Center"
                                       ToolTip="Testoption: hängt nach EOT zusätzlich CR an den Writer-Frame an."/>
                         </Grid>
-                        <TextBlock Text="Live-Testplan: Wenn alle ausgewählten Werte nicht übernommen werden, zuerst Nur Lensmeter ohne ADD testen, dann Nur Lensmeter, Nur Autoref, danach Varianten ohne ID und optional CR nach EOT."
+                        <TextBlock Text="Live-Testplan: Für den getesteten RT-3100 zuerst RT-3100 Praxisvariante (getestet) verwenden. Wenn diese nicht übernommen wird, Nur Lensmeter ohne ADD testen, dann Nur Lensmeter, Nur Autoref, danach Varianten ohne ID und optional CR nach EOT."
                                    Foreground="#4B5563"
                                    FontSize="11"
                                    TextWrapping="Wrap"

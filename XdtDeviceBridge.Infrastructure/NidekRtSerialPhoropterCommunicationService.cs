@@ -538,6 +538,17 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialSendMode? productiveSendMode,
         CancellationToken cancellationToken)
     {
+        var effectivePayloadLength = payloadBytes.Length;
+        if (options.AppendCarriageReturnToPayload && payloadBytes.Length > 0 && payloadBytes[^1] != NidekRtSerialControlChars.CR)
+        {
+            effectivePayloadLength++;
+        }
+
+        var postPayloadWriteDelay = CalculatePostPayloadWriteDelay(settings, effectivePayloadLength);
+        var portSettleDelay = payloadBytes.Length > 0 || requestBytes.Length > 0
+            ? TimeSpan.FromMilliseconds(800)
+            : TimeSpan.Zero;
+
         var exchangeRequest = new SerialCommunicationExchangeRequest(
             RequestBytes: requestBytes,
             ExpectedHandshakeBytes: expectedHandshakeBytes,
@@ -553,8 +564,10 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             ToggleDtrBeforeRequest: options.ToggleDtrBeforeRequest,
             DtrResetDuration: options.DtrResetDuration,
             DelayAfterDtrEnable: options.DelayAfterDtrEnable,
+            PortSettleDelay: portSettleDelay,
             AppendCarriageReturnToRequest: options.AppendCarriageReturnToRequest,
-            AppendCarriageReturnToPayload: options.AppendCarriageReturnToPayload);
+            AppendCarriageReturnToPayload: options.AppendCarriageReturnToPayload,
+            PostPayloadWriteDelay: postPayloadWriteDelay);
 
         var exchangeResult = await _serialCommunicationService
             .ExchangeAsync(settings, exchangeRequest, cancellationToken)
@@ -590,6 +603,26 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             SendCompleted: sendCompleted);
     }
 
+    private static TimeSpan CalculatePostPayloadWriteDelay(SerialCommunicationSettings settings, int payloadLength)
+    {
+        if (payloadLength <= 0 || settings.BaudRate <= 0)
+        {
+            return TimeSpan.Zero;
+        }
+
+        var parityBits = settings.Parity == SerialParitySetting.None ? 0d : 1d;
+        var stopBits = settings.StopBits switch
+        {
+            SerialStopBitsSetting.Two => 2d,
+            SerialStopBitsSetting.OnePointFive => 1.5d,
+            _ => 1d
+        };
+        var bitsPerByte = 1d + settings.DataBits + parityBits + stopBits;
+        var estimatedMilliseconds = Math.Ceiling(payloadLength * bitsPerByte * 1000d / settings.BaudRate);
+        var delayMilliseconds = Math.Clamp(estimatedMilliseconds + 300d, 250d, 5000d);
+        return TimeSpan.FromMilliseconds(delayMilliseconds);
+    }
+
     private static IEnumerable<string> CreateDiagnosticMessages(
         SerialCommunicationSettings settings,
         byte[] requestBytes,
@@ -606,6 +639,11 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
     {
         yield return $"COM-Einstellungen: {SerialDiagnosticsFormatter.FormatSettings(settings)}";
         yield return $"Frame-Variante: {NidekRtSerialOutputFrameVariantInfo.ToDisplayName(frameVariant)}.";
+        if (frameVariant == NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame)
+        {
+            yield return "Diese Bytefolge entspricht dem in der Praxis angenommenen RT-3100-Direct-Writer-Frame: Legacy-ADD-Schreibweise und kein zusätzliches ETB direkt vor EOT.";
+        }
+
         if (productiveSendMode is { } sendMode)
         {
             yield return $"Sendemodus: {NidekRtSerialSendModeInfo.ToDisplayName(sendMode)}.";
@@ -755,7 +793,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             {
                 blocks.Add("AR PD");
             }
-            else if (StartsWithAscii(segment, "AR") || StartsWithAscii(segment, "AL"))
+            else if (StartsWithAscii(segment, "AR") || StartsWithAscii(segment, "AL") || StartsWithAscii(segment, "RA") || StartsWithAscii(segment, "LA"))
             {
                 blocks.Add("LM ADD");
             }

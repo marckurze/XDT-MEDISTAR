@@ -163,6 +163,54 @@ public sealed class SerialDeviceCommunicationServiceTests
     }
 
     [Fact]
+    public async Task ExchangeAsync_ShouldRejectNegativePostPayloadWriteDelay()
+    {
+        var service = new SerialDeviceCommunicationService();
+        var request = new SerialCommunicationExchangeRequest(
+            RequestBytes: Array.Empty<byte>(),
+            ExpectedHandshakeBytes: Array.Empty<byte>(),
+            PayloadBytes: new byte[] { 0x01, 0x04 },
+            EndOfTransmissionByte: 0x04,
+            HandshakeTimeout: TimeSpan.FromMilliseconds(50),
+            ReceiveTimeout: TimeSpan.FromMilliseconds(50),
+            StableAfterEndOfTransmission: TimeSpan.FromMilliseconds(10),
+            MaxReceiveBytes: 1024,
+            PostPayloadWriteDelay: TimeSpan.FromMilliseconds(-1));
+
+        var result = await service.ExchangeAsync(
+            SerialCommunicationSettings.Default with { PortName = "COM1" },
+            request,
+            CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Sendenachlauf darf nicht negativ sein.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task ExchangeAsync_ShouldRejectNegativePortSettleDelay()
+    {
+        var service = new SerialDeviceCommunicationService();
+        var request = new SerialCommunicationExchangeRequest(
+            RequestBytes: Array.Empty<byte>(),
+            ExpectedHandshakeBytes: Array.Empty<byte>(),
+            PayloadBytes: new byte[] { 0x01, 0x04 },
+            EndOfTransmissionByte: 0x04,
+            HandshakeTimeout: TimeSpan.FromMilliseconds(50),
+            ReceiveTimeout: TimeSpan.FromMilliseconds(50),
+            StableAfterEndOfTransmission: TimeSpan.FromMilliseconds(10),
+            MaxReceiveBytes: 1024,
+            PortSettleDelay: TimeSpan.FromMilliseconds(-1));
+
+        var result = await service.ExchangeAsync(
+            SerialCommunicationSettings.Default with { PortName = "COM1" },
+            request,
+            CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Equal("Port-Bereitstellungswartezeit darf nicht negativ sein.", result.ErrorMessage);
+    }
+
+    [Fact]
     public void SerialPortDiscoveryService_ShouldReturnListWithoutThrowing()
     {
         var service = new SerialPortDiscoveryService();

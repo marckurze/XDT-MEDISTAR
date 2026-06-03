@@ -57,8 +57,10 @@ public sealed record SerialCommunicationExchangeRequest(
     bool ToggleDtrBeforeRequest = false,
     TimeSpan DtrResetDuration = default,
     TimeSpan DelayAfterDtrEnable = default,
+    TimeSpan PortSettleDelay = default,
     bool AppendCarriageReturnToRequest = false,
-    bool AppendCarriageReturnToPayload = false);
+    bool AppendCarriageReturnToPayload = false,
+    TimeSpan PostPayloadWriteDelay = default);
 
 public sealed record SerialCommunicationExchangeResult(
     bool Success,

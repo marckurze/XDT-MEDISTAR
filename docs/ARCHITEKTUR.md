@@ -106,15 +106,15 @@ Die serielle NIDEK-RT-Phoropterfamilie RT-2100 / RT-3100 / RT-5100 ist darauf au
 NIDEK RT-6100 ist als bidirektionaler LAN-/MEM-200-Phoropter-Kandidat vorbereitet. Die Architektur folgt dem CV-5000-Zweiphasenmodell, bleibt aber geraetespezifisch:
 
 - `NetworkLan` bleibt der Dateifreigabe-/UNC-Workflow.
-- Phase 1 nutzt AIS-/MEDISTAR-Historienwerte und erzeugt eine RT-6100-Ophthalmology-XML-Datei.
+- Phase 1 nutzt AIS-/MEDISTAR-Historienwerte oder im Baukasten echte NIDEK-LM-/ARK-XML-Quellen und erzeugt eine RT-6100-Ophthalmology-XML-Datei.
 - Der Zielordner ist die im Schnittstellenprofil konfigurierte Ausgabe an Geraet, in der Praxis ein MEM-200-Unterordner wie `DIRECT_RT_0A\TXT`, `DIRECT_RT_1A\TXT` bis `DIRECT_RT_3B\TXT`.
-- Der RT-6100-Writer gibt konservativ nur `LM_Base` aus MEDISTAR `V0` und `REF_Base` aus `V1` aus; weitere Historienwerte werden nicht geraten.
+- Der RT-6100-Writer gibt konservativ nur `LM_Base` aus MEDISTAR `V0` beziehungsweise realer LM-XML und `REF_Base` aus `V1` beziehungsweise realer ARK-XML aus; weitere Historienwerte und Zusatzdaten werden nicht geraten.
 - Phase 2 liest RT-6100-Rueckgabe-XML `NIDEK_RT`.
 - `Corrected CorrectionType="Best"` wird als finaler Verordnungswert ueber `6228` exportiert.
 - `Corrected CorrectionType="Full"` wird als Maximalwert/Vollkorrektion ueber `6227` exportiert.
 - `6330`, kuenstliche Trennzeilen und neu erfundene Werte werden nicht erzeugt; `8402` kommt weiterhin aus AIS.
 
-Die bereitgestellte OCR-XML ist als malformed diagnostiziert und wird nicht als positive Produktivfixture verwendet. Positive Tests nutzen PDF-nahe wohlgeformte Fixtures. Praktische Abnahme am RT-6100/MEM-200 und in MEDISTAR ist offen.
+Die bereitgestellte OCR-XML ist als malformed diagnostiziert und wird nicht als positive Produktivfixture verwendet. Positive Tests nutzen inzwischen echte NIDEK-LM-/ARK-/RT-6100-XML-Fixtures; die ARK-Quelle verwendet `ARMedian`, LM nutzt das historische `Sphare`-Element und RT-Rueckgaben werden nur fuer `Distant`/`Standard` als Hauptausgabe gewertet. Praktische Abnahme am RT-6100/MEM-200 und in MEDISTAR ist offen.
 
 ### 1.7 Lizenzanzeige
 

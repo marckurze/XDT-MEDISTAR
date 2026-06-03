@@ -8,6 +8,7 @@ public sealed class NidekRt6100ProfileTests
 {
     private readonly XmlDeviceParser _xmlParser = new();
     private readonly MedistarHistoricalMeasurementParser _historyParser = new();
+    private readonly NidekRt6100InputSourceXmlReader _rt6100InputReader = new();
     private readonly NidekRt6100InputXmlWriter _writer = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
@@ -65,19 +66,30 @@ public sealed class NidekRt6100ProfileTests
         Assert.Equal("NIDEK", ChildValue(common, "Company"));
         Assert.Equal("RT-6100", ChildValue(common, "ModelName"));
         Assert.Equal("NIDEK_RT_V1.00", ChildValue(common, "Version"));
-        Assert.Equal("2026.05.28", ChildValue(common, "Date"));
+        Assert.Equal("2026-05-28", ChildValue(common, "Date"));
         Assert.Equal("10:31:35", ChildValue(common, "Time"));
+        Assert.NotNull(Child(common, "MachineNo"));
+        Assert.NotNull(Child(common, "ROMVersion"));
 
         var patient = Child(common, "Patient")!;
         Assert.Equal("4701-1", ChildValue(patient, "No"));
         Assert.Equal("4701-1", ChildValue(patient, "ID"));
         Assert.Equal("Anna", ChildValue(patient, "FirstName"));
+        Assert.Equal(string.Empty, ChildValue(patient, "MiddleName"));
         Assert.Equal("Testfrau", ChildValue(patient, "LastName"));
-        Assert.Equal("1955.06.12", ChildValue(patient, "DOB"));
+        Assert.Equal("1955-06-12", ChildValue(patient, "DOB"));
+        Assert.Equal(string.Empty, ChildValue(patient, "Sex"));
+        Assert.Equal(string.Empty, ChildValue(patient, "Age"));
+        Assert.Equal(string.Empty, ChildValue(patient, "NameJ1"));
+        Assert.Equal(string.Empty, ChildValue(patient, "NameJ2"));
 
         var measure = Assert.Single(root.Elements(), element => element.Name.LocalName == "Measure");
         Assert.Equal("RT", measure.Attributes().Single(attribute => attribute.Name.LocalName == "Type").Value);
-        var corrected = Child(measure, "Phoropter")!
+        var phoropter = Child(measure, "Phoropter")!;
+        Assert.Equal("D", Child(phoropter, "DiopterStep")!.Attributes().Single(attribute => attribute.Name.LocalName == "unit").Value);
+        Assert.Equal("deg", Child(phoropter, "AxisStep")!.Attributes().Single(attribute => attribute.Name.LocalName == "unit").Value);
+        Assert.Equal("-", ChildValue(phoropter, "CylinderMode"));
+        var corrected = phoropter
             .Elements()
             .Where(element => element.Name.LocalName == "Corrected")
             .ToArray();
@@ -89,8 +101,102 @@ public sealed class NidekRt6100ProfileTests
 
         var lensmeterRight = Child(corrected[0], "R")!;
         Assert.Equal("6.25", ChildValue(lensmeterRight, "Sphere"));
+        Assert.Equal("D", Child(lensmeterRight, "Sphere")!.Attributes().Single(attribute => attribute.Name.LocalName == "unit").Value);
         Assert.Equal("-3.25", ChildValue(lensmeterRight, "Cylinder"));
+        Assert.Equal("D", Child(lensmeterRight, "Cylinder")!.Attributes().Single(attribute => attribute.Name.LocalName == "unit").Value);
         Assert.Equal("3", ChildValue(lensmeterRight, "Axis"));
+        Assert.Equal("deg", Child(lensmeterRight, "Axis")!.Attributes().Single(attribute => attribute.Name.LocalName == "unit").Value);
+    }
+
+    [Fact]
+    public void InputSourceReader_ShouldParseRealLm7PXmlForRt6100LmBase()
+    {
+        var result = _rt6100InputReader.ParseFile(GetRt6100FixturePath("LM__20251128120038_05D67D.xml"));
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Errors));
+        var record = Assert.Single(result.Records);
+        Assert.Equal(AisHistoricalMeasurementSourceKind.Lensmeter, record.SourceKind);
+        Assert.Equal(new DateOnly(2025, 11, 28), record.Date);
+        Assert.Equal("3.99", record.RightEye?.Sphere);
+        Assert.Equal("-1.76", record.RightEye?.Cylinder);
+        Assert.Equal("70", record.RightEye?.Axis);
+        Assert.Null(record.RightEye?.Add);
+        Assert.Equal("4.60", record.LeftEye?.Sphere);
+        Assert.Equal("-0.36", record.LeftEye?.Cylinder);
+        Assert.Equal("105", record.LeftEye?.Axis);
+        Assert.Null(record.LeftEye?.Add);
+        Assert.Contains(result.Warnings, warning => warning.Contains("Prismenwerte", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void InputSourceReader_ShouldParseRealArkXmlForRt6100RefBase()
+    {
+        var result = _rt6100InputReader.ParseFile(GetRt6100FixturePath("ARK_              _20150528151629.xml"));
+
+        Assert.True(result.Success, string.Join(Environment.NewLine, result.Errors));
+        var record = Assert.Single(result.Records);
+        Assert.Equal(AisHistoricalMeasurementSourceKind.Autorefraction, record.SourceKind);
+        Assert.Equal(new DateOnly(2015, 5, 28), record.Date);
+        Assert.Equal("-0.82", record.RightEye?.Sphere);
+        Assert.Equal("-0.33", record.RightEye?.Cylinder);
+        Assert.Equal("179", record.RightEye?.Axis);
+        Assert.Null(record.RightEye?.Add);
+        Assert.Equal("-4.32", record.LeftEye?.Sphere);
+        Assert.Equal("-0.04", record.LeftEye?.Cylinder);
+        Assert.Equal("104", record.LeftEye?.Axis);
+        Assert.Null(record.LeftEye?.Add);
+        Assert.Equal("12.00", record.Vd);
+        Assert.Equal("40", record.WorkingDistance);
+        Assert.Contains(result.Warnings, warning => warning.Contains("Zusatzdaten", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void InputWriter_ShouldCreateRt6100XmlFromRealNidekLmAndArkXml()
+    {
+        var lm = _rt6100InputReader.ParseFile(GetRt6100FixturePath("LM__20251128120038_05D67D.xml"));
+        var ark = _rt6100InputReader.ParseFile(GetRt6100FixturePath("ARK_              _20150528151629.xml"));
+        var selected = lm.Records.Concat(ark.Records).ToArray();
+
+        var result = _writer.BuildXml(
+            new Cv5000ImportSelection(
+                CreatePatientData(),
+                selected,
+                null,
+                NidekRt6100InputXmlWriter.DefaultFileNameTemplate),
+            new DateTimeOffset(2026, 6, 2, 9, 51, 32, TimeSpan.Zero));
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Contains(result.Warnings, warning => warning.Contains("Prismenwerte", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Warnings, warning => warning.Contains("Zusatzdaten", StringComparison.OrdinalIgnoreCase));
+        var document = XDocument.Parse(result.XmlContent!);
+        var corrected = Child(Child(document.Root!, "Measure")!, "Phoropter")!
+            .Elements()
+            .Where(element => element.Name.LocalName == "Corrected")
+            .ToArray();
+        Assert.Equal(2, corrected.Length);
+
+        var lmBase = corrected.Single(element => element.Attribute("CorrectionType")?.Value == "LM_Base");
+        Assert.Equal("3.99", ChildValue(Child(lmBase, "R")!, "Sphere"));
+        Assert.Equal("-1.76", ChildValue(Child(lmBase, "R")!, "Cylinder"));
+        Assert.Equal("70", ChildValue(Child(lmBase, "R")!, "Axis"));
+        Assert.Null(Child(Child(lmBase, "R")!, "ADD"));
+        Assert.Equal("4.60", ChildValue(Child(lmBase, "L")!, "Sphere"));
+        Assert.Equal("105", ChildValue(Child(lmBase, "L")!, "Axis"));
+
+        var refBase = corrected.Single(element => element.Attribute("CorrectionType")?.Value == "REF_Base");
+        Assert.Equal("12.00", ChildValue(refBase, "VD"));
+        Assert.Equal("40.00", ChildValue(refBase, "WorkingDistance"));
+        Assert.Equal("-0.82", ChildValue(Child(refBase, "R")!, "Sphere"));
+        Assert.Equal("-0.33", ChildValue(Child(refBase, "R")!, "Cylinder"));
+        Assert.Equal("179", ChildValue(Child(refBase, "R")!, "Axis"));
+        Assert.Null(Child(Child(refBase, "R")!, "ADD"));
+        Assert.Equal("-4.32", ChildValue(Child(refBase, "L")!, "Sphere"));
+        Assert.Equal("-0.04", ChildValue(Child(refBase, "L")!, "Cylinder"));
+        Assert.Equal("104", ChildValue(Child(refBase, "L")!, "Axis"));
+
+        Assert.DoesNotContain("<SR>", result.XmlContent, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("<KM>", result.XmlContent, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("RingImage", result.XmlContent, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -162,6 +268,37 @@ public sealed class NidekRt6100ProfileTests
         AssertMeasurement(result, "Measure[@Type='RT']/Full/R/MedistarLine", "R.:S=- 8.25 Z=- 1.50*170 A=+ 1.50 PD= 65.5 VD= 13.75");
         AssertMeasurement(result, "Measure[@Type='RT']/Full/L/MedistarLine", "L.:S=- 7.75 Z=- 0.75* 30 A=+ 1.50 PD= 33");
         Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath.Contains("6330", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ParseRealRt6100ReturnXml_ShouldCreateBestAndFullMedistarLines()
+    {
+        var result = _xmlParser.ParseFile(GetRt6100FixturePath("RT__20260602_095132__.xml"));
+
+        Assert.Empty(result.Issues);
+        AssertMeasurement(result, "Common/Company", "NIDEK");
+        AssertMeasurement(result, "Common/ModelName", "RT-6100");
+        AssertMeasurement(result, "Measure[@Type='RT']/Best/HeaderLine", "Phoropter finaler Verordnungswert");
+        AssertMeasurement(result, "Measure[@Type='RT']/Best/R/MedistarLine", "R.:S=- 1.25 Z=- 1.00*179 PD= 64");
+        AssertMeasurement(result, "Measure[@Type='RT']/Best/L/MedistarLine", "L.:S=- 4.75 Z=- 0.75*180");
+        AssertMeasurement(result, "Measure[@Type='RT']/Full/HeaderLine", "Phoropter Maximalwert (Vollkorrektion)");
+        AssertMeasurement(result, "Measure[@Type='RT']/Full/R/MedistarLine", "R.:S=- 1.25 Z=- 1.00*179 PD= 64");
+        AssertMeasurement(result, "Measure[@Type='RT']/Full/L/MedistarLine", "L.:S=- 4.75 Z=- 0.75*180");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath.Contains("6330", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ParseRt6100ReturnXml_ShouldNotExportNearOrNightAsMainMedistarLines()
+    {
+        var xml = CreateRt6100ReturnXml(includeFull: false)
+            .Replace("Vision=\"Distant\" Situation=\"Standard\"", "Vision=\"Near\" Situation=\"Night\"", StringComparison.Ordinal);
+
+        var result = _xmlParser.ParseFile(WriteTempXml(xml));
+
+        Assert.Empty(result.Issues);
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='RT']/Best/HeaderLine");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='RT']/Best/R/MedistarLine");
+        Assert.DoesNotContain(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='RT']/Best/L/MedistarLine");
     }
 
     [Fact]
@@ -445,6 +582,11 @@ public sealed class NidekRt6100ProfileTests
     private static string GetCv5000FixturePath(string fileName)
     {
         return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Topcon", "CV5000", fileName);
+    }
+
+    private static string GetRt6100FixturePath(string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Nidek", "RT6100", fileName);
     }
 
     private static string WriteTempXml(string content, Encoding? encoding = null)

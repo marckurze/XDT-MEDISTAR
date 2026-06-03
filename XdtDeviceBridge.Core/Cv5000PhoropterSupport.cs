@@ -41,7 +41,8 @@ public sealed record AisHistoricalMeasurementRecord(
     string? Pd,
     string? Vd,
     bool IsExportableToCv5000,
-    IReadOnlyList<string> ParseWarnings);
+    IReadOnlyList<string> ParseWarnings,
+    string? WorkingDistance = null);
 
 public sealed record MedistarHistoricalMeasurementParseResult(
     PatientData Patient,
@@ -60,6 +61,14 @@ public sealed record Cv5000ImportWriteResult(
     string? XmlContent,
     IReadOnlyList<string> Warnings,
     string? ErrorMessage);
+
+public sealed record NidekRt6100InputSourceParseResult(
+    IReadOnlyList<AisHistoricalMeasurementRecord> Records,
+    IReadOnlyList<string> Warnings,
+    IReadOnlyList<string> Errors)
+{
+    public bool Success => Errors.Count == 0;
+}
 
 public sealed class MedistarHistoricalMeasurementParser
 {
@@ -648,6 +657,319 @@ public sealed class TopconCv5000ImportXmlWriter
     }
 }
 
+public sealed class NidekRt6100InputSourceXmlReader
+{
+    public NidekRt6100InputSourceParseResult ParseFile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new ArgumentException("Path must not be empty.", nameof(path));
+        }
+
+        try
+        {
+            var document = XDocument.Load(path, LoadOptions.PreserveWhitespace);
+            return Parse(document);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Xml.XmlException)
+        {
+            return new NidekRt6100InputSourceParseResult(
+                Array.Empty<AisHistoricalMeasurementRecord>(),
+                Array.Empty<string>(),
+                new[] { $"NIDEK RT-6100 Eingangsquelle konnte nicht gelesen werden: {ex.Message}" });
+        }
+    }
+
+    public NidekRt6100InputSourceParseResult Parse(XDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+
+        var root = document.Root;
+        if (root is null)
+        {
+            return CreateUnsupported("XML-Dokument hat kein Wurzelelement.");
+        }
+
+        var common = Child(root, "Common") ?? root;
+        var company = Value(common, "Company");
+        var modelName = Value(common, "ModelName");
+        if (!string.Equals(company?.Trim(), "NIDEK", StringComparison.OrdinalIgnoreCase))
+        {
+            return CreateUnsupported("Keine NIDEK-XML-Eingangsquelle.");
+        }
+
+        if (ContainsModel(modelName, "LM-7") || FindMeasure(root, "LM") is not null)
+        {
+            return ParseLensmeter(root, common, modelName);
+        }
+
+        if (ContainsModel(modelName, "ARK") || Child(Child(root, "R"), "AR") is not null || Child(Child(root, "L"), "AR") is not null)
+        {
+            return ParseAutorefraction(root, common, modelName);
+        }
+
+        return CreateUnsupported($"NIDEK-XML-Modell '{modelName ?? "-"}' ist keine RT-6100 LM-/AR-Eingangsquelle.");
+    }
+
+    private static NidekRt6100InputSourceParseResult ParseLensmeter(XElement root, XElement common, string? modelName)
+    {
+        var warnings = new List<string>();
+        var measure = FindMeasure(root, "LM");
+        var lm = Child(measure, "LM") ?? Child(root, "LM");
+        if (lm is null)
+        {
+            return new NidekRt6100InputSourceParseResult(
+                Array.Empty<AisHistoricalMeasurementRecord>(),
+                Array.Empty<string>(),
+                new[] { "NIDEK LM-XML enthaelt keinen LM-Messblock." });
+        }
+
+        var right = ParseEye(Child(lm, "R"));
+        var left = ParseEye(Child(lm, "L"));
+        AddIgnoredPrismWarnings(warnings, lm, modelName ?? "NIDEK LM");
+        var record = CreateRecord(
+            common,
+            sourcePrefix: "LM",
+            sourceKind: AisHistoricalMeasurementSourceKind.Lensmeter,
+            originalLine: $"{modelName ?? "NIDEK LM"} {Value(common, "Date")} {Value(common, "Time")}".Trim(),
+            right,
+            left,
+            pd: Value(Child(lm, "B"), "PD") ?? Value(lm, "PD"),
+            vd: null,
+            workingDistance: null,
+            warnings);
+
+        return record.IsExportableToCv5000
+            ? new NidekRt6100InputSourceParseResult(new[] { record }, warnings, Array.Empty<string>())
+            : new NidekRt6100InputSourceParseResult(
+                Array.Empty<AisHistoricalMeasurementRecord>(),
+                warnings,
+                new[] { "NIDEK LM-XML enthaelt keine vollstaendig exportierbaren R-/L-Refraktionswerte." });
+    }
+
+    private static NidekRt6100InputSourceParseResult ParseAutorefraction(XElement root, XElement common, string? modelName)
+    {
+        var warnings = new List<string>();
+        var right = ParseArkEye(Child(root, "R"), warnings);
+        var left = ParseArkEye(Child(root, "L"), warnings);
+        AddArkIgnoredDataWarnings(root, warnings);
+        var record = CreateRecord(
+            common,
+            sourcePrefix: "AR",
+            sourceKind: AisHistoricalMeasurementSourceKind.Autorefraction,
+            originalLine: $"{modelName ?? "NIDEK ARK"} {Value(common, "Date")} {Value(common, "Time")}".Trim(),
+            right,
+            left,
+            pd: Value(Child(root, "B"), "PD") ?? Value(root, "PD"),
+            vd: ReadUnitNumber(Value(root, "VD")),
+            workingDistance: ReadUnitNumber(Value(root, "WorkingDistance")),
+            warnings);
+
+        return record.IsExportableToCv5000
+            ? new NidekRt6100InputSourceParseResult(new[] { record }, warnings, Array.Empty<string>())
+            : new NidekRt6100InputSourceParseResult(
+                Array.Empty<AisHistoricalMeasurementRecord>(),
+                warnings,
+                new[] { "NIDEK ARK-XML enthaelt keine vollstaendig exportierbaren ARMedian-R-/L-Refraktionswerte." });
+    }
+
+    private static AisHistoricalMeasurementRecord CreateRecord(
+        XElement common,
+        string sourcePrefix,
+        AisHistoricalMeasurementSourceKind sourceKind,
+        string originalLine,
+        AisHistoricalEyeRefraction? right,
+        AisHistoricalEyeRefraction? left,
+        string? pd,
+        string? vd,
+        string? workingDistance,
+        IReadOnlyList<string> warnings)
+    {
+        var date = ParseDate(Value(common, "Date")) ?? DateOnly.FromDateTime(DateTime.Today);
+        var isExportable = right?.HasExportableRefraction == true || left?.HasExportableRefraction == true;
+        return new AisHistoricalMeasurementRecord(
+            date,
+            sourcePrefix,
+            sourceKind,
+            Variant: null,
+            OriginalLines: new[] { originalLine },
+            RightEye: right,
+            LeftEye: left,
+            Pd: NormalizeNumber(pd),
+            Vd: NormalizeNumber(vd),
+            IsExportableToCv5000: isExportable,
+            ParseWarnings: warnings,
+            WorkingDistance: NormalizeNumber(workingDistance));
+    }
+
+    private static AisHistoricalEyeRefraction? ParseArkEye(XElement? eye, List<string> warnings)
+    {
+        var ar = Child(eye, "AR");
+        var median = Child(ar, "ARMedian");
+        if (median is null)
+        {
+            var trialLens = Child(ar, "TrialLens");
+            if (trialLens is not null)
+            {
+                warnings.Add("NIDEK ARK-XML: ARMedian fehlt; TrialLens wurde als Fallback gelesen.");
+                median = trialLens;
+            }
+        }
+
+        return ParseEye(median, includeAdd: false);
+    }
+
+    private static AisHistoricalEyeRefraction? ParseEye(XElement? eye, bool includeAdd = true)
+    {
+        if (eye is null)
+        {
+            return null;
+        }
+
+        var sphere = Value(eye, "Sphere") ?? Value(eye, "Sphare");
+        var cylinder = Value(eye, "Cylinder");
+        var axis = Value(eye, "Axis");
+        if (string.IsNullOrWhiteSpace(sphere)
+            || string.IsNullOrWhiteSpace(cylinder)
+            || string.IsNullOrWhiteSpace(axis))
+        {
+            return null;
+        }
+
+        return new AisHistoricalEyeRefraction(
+            NormalizeNumber(sphere),
+            NormalizeNumber(cylinder),
+            NormalizeAxis(axis),
+            includeAdd ? NormalizeNumber(Value(eye, "ADD") ?? Value(eye, "Add1")) : null);
+    }
+
+    private static void AddIgnoredPrismWarnings(List<string> warnings, XElement lm, string modelName)
+    {
+        var hasPrism = new[] { "Prism", "PrismBase", "PrismX", "PrismY" }
+            .Any(name => Descendants(lm, name).Any(element => !string.IsNullOrWhiteSpace(element.Value)));
+        if (hasPrism)
+        {
+            warnings.Add($"{modelName}: Prismenwerte wurden erkannt, aber fuer die RT-6100-Importvorschau nicht exportiert.");
+        }
+    }
+
+    private static void AddArkIgnoredDataWarnings(XElement root, List<string> warnings)
+    {
+        var ignored = new[] { "SR", "KM", "CS", "PS", "AC", "RI", "Image", "RingImage", "AccImage", "RetroImage" }
+            .Where(name => Descendants(root, name).Any())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (ignored.Length > 0)
+        {
+            warnings.Add("NIDEK ARK-XML: Zusatzdaten wurden fuer RT-6100 REF_Base ignoriert: " + string.Join(", ", ignored) + ".");
+        }
+    }
+
+    private static NidekRt6100InputSourceParseResult CreateUnsupported(string message)
+    {
+        return new NidekRt6100InputSourceParseResult(
+            Array.Empty<AisHistoricalMeasurementRecord>(),
+            Array.Empty<string>(),
+            new[] { message });
+    }
+
+    private static XElement? FindMeasure(XElement root, string type)
+    {
+        return DescendantsAndSelf(root, "Measure")
+            .FirstOrDefault(element => string.Equals(AttributeValue(element, "Type") ?? AttributeValue(element, "type"), type, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static XElement? Child(XContainer? parent, string localName)
+    {
+        return parent?.Elements().FirstOrDefault(element => string.Equals(element.Name.LocalName, localName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<XElement> Descendants(XContainer parent, string localName)
+    {
+        return parent.Descendants().Where(element => string.Equals(element.Name.LocalName, localName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<XElement> DescendantsAndSelf(XElement element, string localName)
+    {
+        return element.DescendantsAndSelf().Where(candidate => string.Equals(candidate.Name.LocalName, localName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string? Value(XContainer? parent, string localName)
+    {
+        var value = Child(parent, localName)?.Value;
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string? AttributeValue(XElement element, string localName)
+    {
+        return element.Attributes().FirstOrDefault(attribute => string.Equals(attribute.Name.LocalName, localName, StringComparison.OrdinalIgnoreCase))?.Value;
+    }
+
+    private static bool ContainsModel(string? modelName, string expected)
+    {
+        return NormalizeModel(modelName).Contains(NormalizeModel(expected), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeModel(string? value)
+    {
+        return string.Concat((value ?? string.Empty).Where(char.IsLetterOrDigit)).ToUpperInvariant();
+    }
+
+    private static DateOnly? ParseDate(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        foreach (var format in new[] { "yyyy-MM-dd", "yyyy/MM/dd", "yyyy.MM.dd", "yyyyMMdd" })
+        {
+            if (DateOnly.TryParseExact(trimmed, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ReadUnitNumber(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(value, @"[+-]?\d+(?:[.,]\d+)?", RegexOptions.CultureInvariant);
+        return match.Success ? NormalizeNumber(match.Value) : null;
+    }
+
+    private static string? NormalizeNumber(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Replace(" ", string.Empty, StringComparison.Ordinal).Replace(',', '.').Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
+
+    private static string? NormalizeAxis(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = NormalizeNumber(value);
+        return decimal.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out var axis)
+            ? axis.ToString("0", CultureInfo.InvariantCulture)
+            : normalized;
+    }
+}
+
 public sealed class NidekRt6100InputXmlWriter
 {
     public const string DefaultFileNameTemplate = "RTImport_{PatientNumber}_{yyyyMMdd}_{HHmmss}.xml";
@@ -682,13 +1004,19 @@ public sealed class NidekRt6100InputXmlWriter
                     new XAttribute("Type", "RT"),
                     new XElement(
                         "Phoropter",
+                        new XElement("DiopterStep", new XAttribute("unit", "D"), "0.01"),
+                        new XElement("AxisStep", new XAttribute("unit", "deg"), "1"),
+                        new XElement("CylinderMode", "-"),
                         exportableRecords.Select(CreateCorrectedElement)))));
 
         return new Cv5000ImportWriteResult(
             Success: true,
             TargetPath: CreateTargetPath(selection.TargetFolder, selection.TargetFileName, selection.Patient, now),
             XmlContent: document.ToString(SaveOptions.None),
-            Warnings: Array.Empty<string>(),
+            Warnings: exportableRecords
+                .SelectMany(record => record.ParseWarnings)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray(),
             ErrorMessage: null);
     }
 
@@ -789,16 +1117,23 @@ public sealed class NidekRt6100InputXmlWriter
             "Common",
             new XElement("Company", "NIDEK"),
             new XElement("ModelName", "RT-6100"),
+            new XElement("MachineNo", string.Empty),
+            new XElement("ROMVersion", string.Empty),
             new XElement("Version", "NIDEK_RT_V1.00"),
-            new XElement("Date", now.ToString("yyyy.MM.dd", CultureInfo.InvariantCulture)),
+            new XElement("Date", now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
             new XElement("Time", now.ToString("HH:mm:ss", CultureInfo.InvariantCulture)),
             new XElement(
                 "Patient",
                 new XElement("No", patientNumber),
                 new XElement("ID", patientNumber),
                 new XElement("FirstName", patient.FirstName ?? string.Empty),
+                new XElement("MiddleName", string.Empty),
                 new XElement("LastName", patient.LastName ?? string.Empty),
-                new XElement("DOB", FormatDateOfBirth(patient.BirthDate))));
+                new XElement("Sex", string.Empty),
+                new XElement("Age", string.Empty),
+                new XElement("DOB", FormatDateOfBirth(patient.BirthDate)),
+                new XElement("NameJ1", string.Empty),
+                new XElement("NameJ2", string.Empty)));
     }
 
     private static XElement CreateCorrectedElement(AisHistoricalMeasurementRecord record)
@@ -810,23 +1145,22 @@ public sealed class NidekRt6100InputXmlWriter
             new XAttribute("Situation", "Standard"),
             new XElement("DisplayName", record.SourceKind == AisHistoricalMeasurementSourceKind.Lensmeter ? "Lensmeter" : "Autorefraction"));
 
-        if (!string.IsNullOrWhiteSpace(record.Vd))
-        {
-            corrected.Add(new XElement("VD", FormatXmlDecimal(record.Vd)));
-        }
+        corrected.Add(new XElement("VD", new XAttribute("unit", "mm"), FormatXmlDecimal(record.Vd)));
+        corrected.Add(new XElement("WorkingDistance", new XAttribute("unit", "cm"), FormatXmlDecimal(record.WorkingDistance)));
 
-        AddEyeElement(corrected, "R", record.RightEye, record.Pd);
-        AddEyeElement(corrected, "L", record.LeftEye, null);
+        var allowAdd = record.SourceKind == AisHistoricalMeasurementSourceKind.Lensmeter;
+        AddEyeElement(corrected, "R", record.RightEye, allowAdd, record.Pd);
+        AddEyeElement(corrected, "L", record.LeftEye, allowAdd, null);
 
         if (!string.IsNullOrWhiteSpace(record.Pd))
         {
-            corrected.Add(new XElement("B", new XElement("PD", FormatXmlDecimal(record.Pd))));
+            corrected.Add(new XElement("B", new XElement("PD", new XAttribute("unit", "mm"), FormatXmlDecimal(record.Pd))));
         }
 
         return corrected;
     }
 
-    private static void AddEyeElement(XElement corrected, string eye, AisHistoricalEyeRefraction? values, string? pd)
+    private static void AddEyeElement(XElement corrected, string eye, AisHistoricalEyeRefraction? values, bool allowAdd, string? pd)
     {
         if (values?.HasExportableRefraction != true)
         {
@@ -835,18 +1169,18 @@ public sealed class NidekRt6100InputXmlWriter
 
         var eyeElement = new XElement(
             eye,
-            new XElement("Sphere", FormatXmlDecimal(values.Sphere)),
-            new XElement("Cylinder", FormatXmlDecimal(values.Cylinder)),
-            new XElement("Axis", NormalizeAxis(values.Axis)));
+            new XElement("Sphere", new XAttribute("unit", "D"), FormatXmlDecimal(values.Sphere)),
+            new XElement("Cylinder", new XAttribute("unit", "D"), FormatXmlDecimal(values.Cylinder)),
+            new XElement("Axis", new XAttribute("unit", "deg"), NormalizeAxis(values.Axis)));
 
-        if (!string.IsNullOrWhiteSpace(values.Add))
+        if (allowAdd && !string.IsNullOrWhiteSpace(values.Add))
         {
-            eyeElement.Add(new XElement("ADD", FormatXmlDecimal(values.Add)));
+            eyeElement.Add(new XElement("ADD", new XAttribute("unit", "D"), FormatXmlDecimal(values.Add)));
         }
 
         if (!string.IsNullOrWhiteSpace(pd))
         {
-            eyeElement.Add(new XElement("PD", FormatXmlDecimal(pd)));
+            eyeElement.Add(new XElement("PD", new XAttribute("unit", "mm"), FormatXmlDecimal(pd)));
         }
 
         corrected.Add(eyeElement);
@@ -860,7 +1194,7 @@ public sealed class NidekRt6100InputXmlWriter
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out var parsed)
-            ? parsed.ToString("yyyy.MM.dd", CultureInfo.InvariantCulture)
+            ? parsed.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             : birthDate?.Trim() ?? string.Empty;
     }
 
