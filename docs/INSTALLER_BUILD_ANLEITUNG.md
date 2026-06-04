@@ -22,9 +22,10 @@ Der Kundeninstaller wird self-contained fuer `win-x64` gebaut. Kunden muessen da
 Das Skript fuehrt aus:
 
 1. Bereinigung von `artifacts\publish\XDTBox` und `artifacts\installer`
-2. `dotnet publish` fuer `XdtDeviceBridge.App`
-3. harte Sicherheitspruefung der Publish-Ausgabe
-4. Inno-Setup-Build von `installer\XDTBox.iss`
+2. Pruefung, dass die offiziellen BuiltIn-Geraetebilder als App-Assets unter `XdtDeviceBridge.App\Assets\Devices` vorhanden sind
+3. `dotnet publish` fuer `XdtDeviceBridge.App`
+4. harte Sicherheitspruefung der Publish-Ausgabe
+5. Inno-Setup-Build von `installer\XDTBox.iss`
 
 Ergebnis:
 
@@ -58,6 +59,7 @@ Enthalten sind nur die veroeffentlichten Dateien der Kunden-App:
 - benoetigte DLLs und Runtime-Dateien
 - Hilfe, Themes, Icons und App-Assets
 - BuiltIn-Definitionen als App-Bestandteil
+- offizielle BuiltIn-Geraetebilder als WPF-Ressourcen aus `XdtDeviceBridge.App\Assets\Devices`, darunter NIDEK ARK1S, AR360, LM7/LM7P, NT530P, RT-2100/RT-3100/RT-5100 RS232, RT-6100, TOPCON CV-5000/CV-5000S, CL-300, Solos, KR-800S, KR-1, TRK2P, CT-1P, CT-800A sowie der Dokumentgeraete-Platzhalter
 
 Nicht enthalten:
 
@@ -66,6 +68,7 @@ Nicht enthalten:
 - konkrete Ordnerpfade oder COM-Port-Einstellungen aus Entwicklung/Praxis
 - lokale Baukasten-Templates und Templatepakete
 - `device-image-overrides.json`
+- lokale `DeviceImages` aus `%LocalAppData%\XdtDeviceBridge`
 - `app-settings.json`
 - `license.xdtboxlic`, `license.json`, `device-grace-periods.json`
 - Backups und Diagnose-Logs
@@ -81,6 +84,8 @@ Die Publish-Validierung bricht den Build ab, wenn solche Dateien, Ordner oder be
 ```text
 Kundenpublish enthaelt lokale Kundendaten/Entwicklungsdaten:
 ```
+
+Die offiziellen BuiltIn-Geraetebilder sind ausdruecklich keine lokalen Overrides. Sie werden als App-Ressourcen eingebettet und ueber `pack://application:,,,/Assets/Devices/...` referenziert. Bei einem nackten First-Run ohne `%LocalAppData%\XdtDeviceBridge` muss daher kein lokaler Bild-Override vorhanden sein, damit BuiltIn-Geraete Bilder anzeigen.
 
 Wichtig fuer Tests auf dem Entwicklungsrechner: Wenn XDTBox nach einer Testinstallation lokale Marc-/Entwicklungsprofile zeigt, bedeutet das nicht automatisch, dass der Installer diese Daten eingepackt hat. Die App liest beim Start weiterhin den bestehenden lokalen Datenstamm des Windows-Benutzers unter `%LocalAppData%\XdtDeviceBridge`. Fuer einen echten "nackten" First-Run-Test muss dieser lokale Datenstamm vorher gesichert und fuer den Test umbenannt werden oder der Test unter einem frischen Windows-Benutzer beziehungsweise auf einer sauberen VM laufen.
 
@@ -137,8 +142,10 @@ Externe Praxisordner werden niemals geloescht.
 2. `artifacts\installer\XDTBox_Setup_1.0.exe` starten.
 3. Neuinstallation in einem Testordner durchfuehren.
 4. App starten und im Info-Dialog Version `1.0` pruefen.
-5. Update erneut ueber denselben Ordner ausfuehren.
-6. Pruefen, dass Kundendaten unter `%LocalAppData%\XdtDeviceBridge` erhalten bleiben.
-7. Deinstallation aus Windows "Programme & Features" ausfuehren.
-8. Standardfall pruefen: Kundendaten bleiben erhalten.
-9. Optionalen Komplettentfernungsdialog separat in einer Testumgebung pruefen.
+5. Fuer einen nackten First-Run `%LocalAppData%\XdtDeviceBridge` vorher sichern/umbenennen oder einen frischen Windows-Benutzer verwenden.
+6. App starten und in `Profilverwaltung` beziehungsweise `XDT-Baukasten` pruefen, dass BuiltIn-Geraete ihre offiziellen Bilder aus App-Assets zeigen und keine lokalen UserDefined-/Override-Daten geladen werden.
+7. Update erneut ueber denselben Ordner ausfuehren.
+8. Pruefen, dass Kundendaten unter `%LocalAppData%\XdtDeviceBridge` erhalten bleiben.
+9. Deinstallation aus Windows "Programme & Features" ausfuehren.
+10. Standardfall pruefen: Kundendaten bleiben erhalten.
+11. Optionalen Komplettentfernungsdialog separat in einer Testumgebung pruefen.

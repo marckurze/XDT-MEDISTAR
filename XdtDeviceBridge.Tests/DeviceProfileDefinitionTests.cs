@@ -22,6 +22,30 @@ public sealed class DeviceProfileDefinitionTests
     }
 
     [Fact]
+    public void BuiltInDeviceProfiles_ShouldUseOfficialPackAssetImages()
+    {
+        var profiles = CreateAllBuiltInDeviceProfiles();
+
+        foreach (var profile in profiles)
+        {
+            Assert.True(profile.Metadata.IsBuiltIn, profile.Metadata.Id);
+            Assert.False(string.IsNullOrWhiteSpace(profile.DeviceImagePath), profile.Metadata.Id);
+            Assert.StartsWith(InterfaceProfileUiPolicy.BuiltInDeviceImageRoot, profile.DeviceImagePath, StringComparison.Ordinal);
+            Assert.DoesNotContain("C:\\", profile.DeviceImagePath, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("%LocalAppData%", profile.DeviceImagePath, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("AppData", profile.DeviceImagePath, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(
+                InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(profile.Metadata.Id),
+                profile.DeviceImagePath);
+
+            var assetFileName = profile.DeviceImagePath[InterfaceProfileUiPolicy.BuiltInDeviceImageRoot.Length..];
+            Assert.True(
+                File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", "Assets", "Devices", assetFileName)),
+                $"BuiltIn device image asset missing for {profile.Metadata.Id}: {assetFileName}");
+        }
+    }
+
+    [Fact]
     public void Validate_ShouldAcceptNidekArk1sProfile()
     {
         var issues = DeviceProfileDefinitionValidator.Validate(DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault());
@@ -720,6 +744,48 @@ public sealed class DeviceProfileDefinitionTests
             && m.SourcePath == sourcePath
             && !m.IsRequired
             && (m.Description ?? string.Empty).Contains("noch zu validieren", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IReadOnlyList<DeviceProfileDefinition> CreateAllBuiltInDeviceProfiles()
+    {
+        return new[]
+        {
+            DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekAr360Default(),
+            DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
+            DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekRt6100Default(),
+            DefaultDeviceProfileDefinitions.CreateTopconCl300Default(),
+            DefaultDeviceProfileDefinitions.CreateTopconSolosDefault(),
+            DefaultDeviceProfileDefinitions.CreateTopconKr800Default(),
+            DefaultDeviceProfileDefinitions.CreateTopconKr1Default(),
+            DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault(),
+            DefaultDeviceProfileDefinitions.CreateTopconCt1PDefault(),
+            DefaultDeviceProfileDefinitions.CreateTopconCt800ADefault(),
+            DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
+            DefaultDeviceProfileDefinitions.CreateNidekRt2100SerialDefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekRt5100SerialDefault(),
+            DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(),
+            DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault()
+        };
+    }
+
+    private static string FindWorkspaceFile(params string[] relativeSegments)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var candidate = Path.Combine(new[] { directory.FullName }.Concat(relativeSegments).ToArray());
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new FileNotFoundException($"Workspace file not found: {Path.Combine(relativeSegments)}");
     }
 
     private static ProfileMetadata CreateMetadata(ProfileKind profileKind)

@@ -22,6 +22,8 @@ Der Build erfolgt reproduzierbar ueber `scripts/build-xdtbox-installer.ps1`; die
 
 Vor jedem Neubau bereinigt das Buildskript ausschliesslich die Build-Artefakte `artifacts\publish\XDTBox` und `artifacts\installer`. Es loescht keine Kundendatenordner, kein `%LocalAppData%\XdtDeviceBridge`, kein `C:\XDTBox` und keine externen Praxisordner.
 
+Vor dem Publish prueft das Buildskript ausserdem die offiziellen BuiltIn-Geraetebilder unter `XdtDeviceBridge.App\Assets\Devices`. Fehlt eines der kuratierten App-Assets, bricht der Installerbuild vor dem Publish ab. Dadurch bleibt der Kundeninstaller weiterhin frei von lokalen Overrides, enthaelt aber die offiziellen BuiltIn-Bilder fuer einen nackten First-Run.
+
 Nach dem Publish prueft das Buildskript hart, ob lokale Kundendaten oder Entwicklungsdaten in die Kunden-App-Ausgabe geraten sind. Verboten sind unter anderem UserDefined-/persistierte Profilordner, lokale Schnittstellenprofile, `app-settings.json`, Lizenzdateien, Geraetebild-Overrides, Baukasten-Templates, lokale Templatepakete, Backups, Diagnose-Logs, Testfixtures, Hersteller-Lizenztools, private Schluessel und konkrete Entwicklungsdatenmuster wie Marc-Pfade oder RT3100-Testordner. Bei einem Treffer bricht der Build mit einer klaren Meldung ab.
 
 ## Aktueller Datenstamm
@@ -49,10 +51,12 @@ Diese Bestandteile sind Teil der installierten Anwendung und duerfen bei Updates
 - WPF-Themes und Styles
 - lokale Hilfe unter `Assets/Help`
 - Branding, Icons und Standard-Assets
-- Standard-Geraetebilder als App-Assets
+- Standard-Geraetebilder als App-Assets unter `XdtDeviceBridge.App\Assets\Devices`, referenziert ueber `pack://application:,,,/Assets/Devices/...`
 - BuiltIn-Definitionen im Code
 
 BuiltIn-Definitionen sind keine Kundendaten. Sie duerfen durch eine neue App-Version bereitgestellt und ueber BuiltIn-Repair aktualisiert werden. Dabei gilt: Nur BuiltIns werden repariert, UserDefined-Profile und konkrete Praxisparameter nicht.
+
+Die Geraetebild-Aufloesung bleibt bewusst kundenfreundlich: ein lokaler Override wird zuerst verwendet, danach das BuiltIn-App-Asset und erst danach der stabile Platzhalter. Dadurch behalten Praxen eigene Bilder nach Updates, waehrend eine Neuinstallation ohne lokale Overrides trotzdem offizielle BuiltIn-Bilder zeigt.
 
 ## Kundendaten
 
@@ -145,6 +149,7 @@ Bei einem Update gilt:
 
 - App-Dateien ersetzen: erlaubt.
 - Hilfe, Themes und Standard-Assets ersetzen: erlaubt.
+- offizielle BuiltIn-Geraetebilder als App-Assets ersetzen oder ergaenzen: erlaubt.
 - BuiltIns ergaenzen oder BuiltIn-Repair ausfuehren: erlaubt.
 - UserDefined-Profile ueberschreiben: nicht erlaubt.
 - Schnittstellenprofile mit Praxisordnern oder COM-Port-Parametern ueberschreiben: nicht erlaubt.

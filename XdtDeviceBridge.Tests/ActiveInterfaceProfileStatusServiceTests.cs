@@ -214,8 +214,8 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Equal("-", row.MonitoringCard.LastScanText);
         Assert.Equal("Ja", row.MonitoringCard.AutomaticProcessingText);
         Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
-        Assert.Equal(string.Empty, row.MonitoringCard.DeviceImagePath);
-        Assert.False(row.MonitoringCard.HasDeviceImage);
+        Assert.Equal(InterfaceProfileUiPolicy.NidekArk1sDeviceImagePath, row.MonitoringCard.DeviceImagePath);
+        Assert.True(row.MonitoringCard.HasDeviceImage);
     }
 
     [Fact]
@@ -352,6 +352,8 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.True(row.MonitoringCard.UsesPilotDeviceVisual);
         Assert.Equal(deviceProfile.DeviceType, row.MonitoringCard.DeviceType);
         Assert.Equal(expectedDeviceTypeDisplay, row.MonitoringCard.EffectiveDeviceTypeDisplay);
+        Assert.Equal(deviceProfile.DeviceImagePath, row.MonitoringCard.DeviceImagePath);
+        Assert.True(row.MonitoringCard.HasDeviceImage);
         Assert.False(row.MonitoringCard.UsesTextAboveImageLayout);
         Assert.False(row.MonitoringCard.ShouldPulseStatusOrb);
         Assert.All(row.MonitoringCard.ExpectedInputs, input => Assert.Equal("gestoppt", input.Status));

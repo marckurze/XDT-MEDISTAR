@@ -27,6 +27,44 @@ public static class InterfaceProfileUiPolicy
     public const double FloatingInputBadgeMaxWidth = 188;
     public const string BuiltInDeviceImageRoot = "pack://application:,,,/Assets/Devices/";
     public const string TopconCv5000DeviceImagePath = BuiltInDeviceImageRoot + "Topcon_CV5000_freigestellt.png";
+    public const string NidekArk1sDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-ark1s-default.png";
+    public const string NidekAr360DeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-ar360-default.png";
+    public const string NidekLm7DeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-lm7-default.png";
+    public const string NidekNt530PDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-nt530p-default.png";
+    public const string NidekRt6100DeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-rt6100-default.png";
+    public const string NidekRt2100SerialDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-rt2100-serial-default.png";
+    public const string NidekRt3100SerialDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-rt3100-serial-default.png";
+    public const string NidekRt5100SerialDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-rt5100-serial-default.png";
+    public const string TopconCl300DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-cl300-default.png";
+    public const string TopconSolosDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-solos-default.png";
+    public const string TopconKr800DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-kr800-default.png";
+    public const string TopconKr1DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-kr1-default.png";
+    public const string TopconTrk2PDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-trk2p-default.png";
+    public const string TopconCt1PDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-ct1p-default.png";
+    public const string TopconCt800ADeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-ct800a-default.png";
+    public const string DocumentDeviceImagePath = BuiltInDeviceImageRoot + "device-manual-document-selection-default.png";
+    private static readonly IReadOnlyDictionary<string, string> BuiltInDeviceImagePathsByDeviceProfileId =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["device-nidek-ark1s-default"] = NidekArk1sDeviceImagePath,
+            ["device-nidek-ar360-default"] = NidekAr360DeviceImagePath,
+            ["device-nidek-lm7-default"] = NidekLm7DeviceImagePath,
+            ["device-nidek-nt530p-default"] = NidekNt530PDeviceImagePath,
+            ["device-nidek-rt6100-default"] = NidekRt6100DeviceImagePath,
+            ["device-nidek-rt2100-serial-default"] = NidekRt2100SerialDeviceImagePath,
+            ["device-nidek-rt3100-serial-default"] = NidekRt3100SerialDeviceImagePath,
+            ["device-nidek-rt5100-serial-default"] = NidekRt5100SerialDeviceImagePath,
+            ["device-topcon-cl300-default"] = TopconCl300DeviceImagePath,
+            ["device-topcon-solos-default"] = TopconSolosDeviceImagePath,
+            ["device-topcon-kr800-default"] = TopconKr800DeviceImagePath,
+            ["device-topcon-kr1-default"] = TopconKr1DeviceImagePath,
+            ["device-topcon-trk2p-default"] = TopconTrk2PDeviceImagePath,
+            ["device-topcon-ct1p-default"] = TopconCt1PDeviceImagePath,
+            ["device-topcon-ct800a-default"] = TopconCt800ADeviceImagePath,
+            ["device-topcon-cv5000-default"] = TopconCv5000DeviceImagePath,
+            ["device-document-attachment-default"] = DocumentDeviceImagePath,
+            ["device-manual-document-selection-default"] = DocumentDeviceImagePath
+        };
 
     public static bool ShouldShowDeviceOutput(
         InterfaceProfileDefinition? interfaceProfile,
@@ -97,6 +135,18 @@ public static class InterfaceProfileUiPolicy
         }
 
         return GetBuiltInDeviceImagePath(interfaceProfile, deviceProfile);
+    }
+
+    public static string GetBuiltInDeviceImagePathForDeviceProfileId(string? deviceProfileId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceProfileId))
+        {
+            return string.Empty;
+        }
+
+        return BuiltInDeviceImagePathsByDeviceProfileId.TryGetValue(deviceProfileId.Trim(), out var imagePath)
+            ? imagePath
+            : string.Empty;
     }
 
     public static string GetMonitoringDeviceImagePath(
@@ -173,6 +223,18 @@ public static class InterfaceProfileUiPolicy
         InterfaceProfileDefinition? interfaceProfile,
         DeviceProfileDefinition? deviceProfile)
     {
+        var deviceProfilePath = GetBuiltInDeviceImagePathForDeviceProfileId(deviceProfile?.Metadata.Id);
+        if (!string.IsNullOrWhiteSpace(deviceProfilePath))
+        {
+            return deviceProfilePath;
+        }
+
+        var interfaceDeviceProfilePath = GetBuiltInDeviceImagePathForDeviceProfileId(interfaceProfile?.DeviceProfileId);
+        if (!string.IsNullOrWhiteSpace(interfaceDeviceProfilePath))
+        {
+            return interfaceDeviceProfilePath;
+        }
+
         return IsCv5000(interfaceProfile, deviceProfile)
             ? TopconCv5000DeviceImagePath
             : string.Empty;

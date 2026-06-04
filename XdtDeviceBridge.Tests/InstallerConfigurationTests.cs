@@ -86,6 +86,7 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("Remove-Item -LiteralPath $Path -Recurse -Force", script);
         Assert.Contains("Assert-PathInsideRepository", script);
         Assert.Contains("Assert-CustomerPublishIsClean -Path $publishDir", script);
+        Assert.Contains("Assert-BuiltInDeviceAssetsExist", script);
         Assert.Contains("XdtDeviceBridge.App\\XdtDeviceBridge.App.csproj", script);
         Assert.Contains("dotnet publish", script);
         Assert.Contains("--self-contained true", script);
@@ -100,6 +101,9 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("UserDefined", script);
         Assert.Contains("template-packages", script);
         Assert.Contains("device-image-overrides.json", script);
+        Assert.Contains("device-nidek-rt3100-serial-default.png", script);
+        Assert.Contains("Topcon_CV5000_freigestellt.png", script);
+        Assert.Contains("Offizielle BuiltIn-Geraetebilder fehlen im App-Asset-Ordner", script);
         Assert.Contains("license.xdtboxlic", script);
         Assert.Contains("C:\\Users\\MarcK", script);
         Assert.Contains("Kundenpublish enthaelt lokale Kundendaten/Entwicklungsdaten", script);

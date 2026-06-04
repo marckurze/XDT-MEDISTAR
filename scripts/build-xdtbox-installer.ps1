@@ -73,6 +73,41 @@ function Test-IsTextFileForPublishValidation {
     return $false
 }
 
+function Assert-BuiltInDeviceAssetsExist {
+    $deviceAssetsDir = Join-Path $repoRoot "XdtDeviceBridge.App\Assets\Devices"
+    $requiredBuiltInDeviceAssets = @(
+        "Topcon_CV5000_freigestellt.png",
+        "device-manual-document-selection-default.png",
+        "device-nidek-ar360-default.png",
+        "device-nidek-ark1s-default.png",
+        "device-nidek-lm7-default.png",
+        "device-nidek-nt530p-default.png",
+        "device-nidek-rt2100-serial-default.png",
+        "device-nidek-rt3100-serial-default.png",
+        "device-nidek-rt5100-serial-default.png",
+        "device-nidek-rt6100-default.png",
+        "device-topcon-cl300-default.png",
+        "device-topcon-ct1p-default.png",
+        "device-topcon-ct800a-default.png",
+        "device-topcon-kr1-default.png",
+        "device-topcon-kr800-default.png",
+        "device-topcon-solos-default.png",
+        "device-topcon-trk2p-default.png"
+    )
+
+    $missingAssets = foreach ($asset in $requiredBuiltInDeviceAssets) {
+        $assetPath = Join-Path $deviceAssetsDir $asset
+        if (-not (Test-Path -LiteralPath $assetPath)) {
+            $assetPath
+        }
+    }
+
+    if ($missingAssets) {
+        $list = $missingAssets -join [Environment]::NewLine
+        throw "Offizielle BuiltIn-Geraetebilder fehlen im App-Asset-Ordner:$([Environment]::NewLine)$list"
+    }
+}
+
 function Assert-CustomerPublishIsClean {
     param(
         [Parameter(Mandatory = $true)]
@@ -179,6 +214,7 @@ function Assert-CustomerPublishIsClean {
 
 Reset-BuildArtifactDirectory -Path $publishDir
 Reset-BuildArtifactDirectory -Path $installerDir
+Assert-BuiltInDeviceAssetsExist
 
 New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null

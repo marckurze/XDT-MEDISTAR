@@ -38,7 +38,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("near-pd", "NearPD", "PD/PDList[@No='1']/NearPD", "PDList", string.Empty, "mm", false, "Near pupillary distance.")
             },
             SupportedExaminationTypes: new[] { "Refraktion", "PD" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.NidekArk1sDeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateNidekAr360Default()
@@ -80,7 +81,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("ar360-far-pd", "FarPD", "PD/PDList[@No='1']/FarPD", "PDList", string.Empty, "mm", false, "Far pupillary distance from NIDEK AR360 LAN XML.")
             },
             SupportedExaminationTypes: new[] { "Refraktion", "AR", "PD" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.NidekAr360DeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateNidekLm7Default()
@@ -201,7 +203,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("lm7-medistar-l-line", "L MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/L/MedistarLine", "LM", "L", string.Empty, false, "Computed MEDISTAR lensmeter line for left lens; optional values are omitted when absent.")
             },
             SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.NidekLm7DeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateNidekNt530PDefault()
@@ -274,7 +277,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("nt530p-tono-medistar-line", "MEDISTAR Tonometrie-Zeile", "Measure[@Type='NT530P']/Tono/MedistarLine", "NT", string.Empty, string.Empty, false, "Computed compact MEDISTAR tonometry line; default export uses the split 6205 lines.")
             },
             SupportedExaminationTypes: new[] { "Tonometrie", "Pachymetrie", "CorrectedIOP", "Attachment" },
-            CanContainMultipleExaminationTypes: true);
+            CanContainMultipleExaminationTypes: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.NidekNt530PDeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateNidekRt6100Default()
@@ -319,6 +323,7 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "RT", "Phoropter", "Refraktion", "Best", "Full", "LM_Base", "REF_Base" },
             CanContainMultipleExaminationTypes: true,
             IsBidirectional: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.NidekRt6100DeviceImagePath,
             ConnectionKind: DeviceConnectionKind.NetworkLan);
     }
 
@@ -383,7 +388,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("cl300-medistar-l-line", "L MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/L/MedistarLine", "LM", "L", string.Empty, false, "Computed MEDISTAR lensmeter line for TOPCON CL-300 left lens; optional values are omitted when absent.")
             },
             SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconCl300DeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateTopconSolosDefault()
@@ -475,7 +481,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("solos-medistar-l-line", "L MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/L/MedistarLine", "LM", "L", string.Empty, false, "Computed MEDISTAR lensmeter line for TOPCON SOLOS left lens; optional values are omitted when absent.")
             },
             SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism", "Transmission" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconSolosDeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateTopconKr800Default()
@@ -537,7 +544,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("kr800-sbj-line4", "SBJ MEDISTAR-Zeile 4", "Measure[@Type='SBJ']/MedistarLine4", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR subjective refraction line 4, if present.")
             },
             SupportedExaminationTypes: new[] { "REF", "KM", "SBJ", "Refraktion", "Keratometer", "Subjektiv" },
-            CanContainMultipleExaminationTypes: true);
+            CanContainMultipleExaminationTypes: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconKr800DeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateTopconKr1Default()
@@ -591,7 +599,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("kr1-ref-l-medistar-line", "REF L MEDISTAR-Zeile", "Measure[@Type='REF']/REF/L/MedistarLine", "REF", "L", string.Empty, false, "Computed MEDISTAR REF line for TOPCON KR-1 left eye.")
             },
             SupportedExaminationTypes: new[] { "REF", "Refraktion", "Autorefraktion", "Keratometer-Kandidat" },
-            CanContainMultipleExaminationTypes: true);
+            CanContainMultipleExaminationTypes: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconKr1DeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateTopconTrk2PDefault()
@@ -658,7 +667,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("trk2p-sbj-line4", "SBJ MEDISTAR-Zeile 4", "Measure[@Type='SBJ']/MedistarLine4", "SBJ", string.Empty, string.Empty, false, "Computed MEDISTAR subjective refraction line 4 when SBJ values are present.")
             },
             SupportedExaminationTypes: new[] { "REF", "KM", "TM", "CCT", "SBJ", "Autorefraktion", "Keratometer", "Tonometrie", "Pachymetrie", "Subjektiv" },
-            CanContainMultipleExaminationTypes: true);
+            CanContainMultipleExaminationTypes: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconTrk2PDeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateTopconCt1PDefault()
@@ -725,7 +735,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("ct1p-tono-list-line", "TM MEDISTAR IOP-Listen-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Computed MEDISTAR tonometry list line.")
             },
             SupportedExaminationTypes: new[] { "TM", "CCT", "Tonometrie", "Pachymetrie", "CorrectedIOP" },
-            CanContainMultipleExaminationTypes: true);
+            CanContainMultipleExaminationTypes: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconCt1PDeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateTopconCt800ADefault()
@@ -789,7 +800,8 @@ public static class DefaultDeviceProfileDefinitions
                 new DeviceMeasurementDefinition("ct800a-tono-list-line", "TM MEDISTAR IOP-Listen-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Computed MEDISTAR tonometry list line.")
             },
             SupportedExaminationTypes: new[] { "TM", "Tonometrie", "CorrectedIOP" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.TopconCt800ADeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateTopconCv5000Default()
@@ -910,7 +922,7 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "RT", "Phoropter", "Refraktion", "Final", "Subjective", "LM", "RM", "AR" },
             CanContainMultipleExaminationTypes: true,
             IsBidirectional: true,
-            DeviceImagePath: string.Empty,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
             ConnectionKind: DeviceConnectionKind.SerialRs232,
             SerialSettings: new SerialCommunicationSettings(
                 BaudRate: 2400,
@@ -994,7 +1006,8 @@ public static class DefaultDeviceProfileDefinitions
             ParserMode: "AttachmentOnly",
             Measurements: Array.Empty<DeviceMeasurementDefinition>(),
             SupportedExaminationTypes: new[] { "Dokument", "Anhang" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.DocumentDeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateManualDocumentSelectionDefault()
@@ -1021,6 +1034,7 @@ public static class DefaultDeviceProfileDefinitions
             ParserMode: "AttachmentOnlyManual",
             Measurements: Array.Empty<DeviceMeasurementDefinition>(),
             SupportedExaminationTypes: new[] { "Dokument", "Anhang", "Manuell" },
-            CanContainMultipleExaminationTypes: false);
+            CanContainMultipleExaminationTypes: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.DocumentDeviceImagePath);
     }
 }

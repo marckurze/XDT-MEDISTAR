@@ -470,12 +470,16 @@ public sealed class ProductiveUiSourceTests
         var mainWindow = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
         var floatingWindow = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "FloatingInterfaceProfileWindow.xaml"));
         var converter = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "DeviceImageSourceConverter.cs"));
+        var appProject = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "XdtDeviceBridge.App.csproj"));
 
         Assert.Contains("Converter={StaticResource DeviceImageSourceConverter}", mainWindow);
         Assert.Contains("Converter={StaticResource DeviceImageSourceConverter}", floatingWindow);
         Assert.Contains("BitmapCacheOption.OnLoad", converter);
         Assert.Contains("FileShare.ReadWrite | FileShare.Delete", converter);
         Assert.Contains("bitmap.Freeze()", converter);
+        Assert.Contains(@"<Resource Include=""Assets\Devices\*.png"" />", appProject);
+        Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "device-nidek-rt3100-serial-default.png"))));
+        Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "Topcon_CV5000_freigestellt.png"))));
     }
 
     [Fact]

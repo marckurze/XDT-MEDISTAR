@@ -210,7 +210,9 @@ public sealed class InterfaceProfileUiPolicyTests
         var (interfaceProfile, deviceProfile) = CreateNonCv5000Profile(profileKind);
 
         Assert.True(InterfaceProfileUiPolicy.ShouldUsePilotMonitoringVisual(interfaceProfile, deviceProfile));
-        Assert.Equal(string.Empty, InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile));
+        var imagePath = InterfaceProfileUiPolicy.GetMonitoringDeviceImagePath(interfaceProfile, deviceProfile);
+        Assert.Equal(deviceProfile.DeviceImagePath, imagePath);
+        Assert.StartsWith(InterfaceProfileUiPolicy.BuiltInDeviceImageRoot, imagePath, StringComparison.Ordinal);
     }
 
     [Fact]
