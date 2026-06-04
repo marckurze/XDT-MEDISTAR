@@ -49,7 +49,7 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
-    public void TabUtilityButtons_ShouldExposeHelpInfoAndSettings()
+    public void TabUtilityButtons_ShouldExposeHelpInfoSettingsAndExit()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
@@ -57,6 +57,9 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("x:Name=\"TabUtilityButtonsPanel\"", xaml);
         Assert.Contains("x:Name=\"TabHelpButton\"", xaml);
         Assert.Contains("x:Name=\"AppSettingsButton\"", xaml);
+        Assert.Contains("x:Name=\"AppExitButton\"", xaml);
+        Assert.Contains("Content=\"Beenden\"", xaml);
+        Assert.Contains("ToolTip=\"XDTBox vollständig beenden\"", xaml);
         Assert.Contains("Header=\"Hilfe\"", xaml);
         Assert.Contains("Header=\"Info\"", xaml);
         Assert.Contains("Style=\"{StaticResource XdtBoxTabUtilityButtonStyle}\"", xaml);
@@ -65,6 +68,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("OpenAboutDialog_Click", code);
         Assert.Contains("OpenAppSettings_Click", code);
         Assert.Contains("TabHelpButton_Click", code);
+        Assert.Contains("AppExitButton_Click", code);
+        Assert.Contains("RequestApplicationExit();", ExtractMethodBody(code, "private void AppExitButton_Click", "private void InitializeProfileOverview"));
     }
 
     [Fact]
@@ -125,12 +130,18 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("x:Name=\"XdtBaukastenRoot\"", xaml);
         Assert.Contains("Baukasten-Template laden", xaml);
         Assert.Contains("Template Paket importieren", xaml);
-        Assert.Contains("Neues AIS anlegen", xaml);
         Assert.Contains("Gerät laden", xaml);
         Assert.Contains("Konfiguration als Template speichern", xaml);
         Assert.Contains("Template Paket exportieren", xaml);
-        Assert.Contains("AIS wählen", xaml);
-        Assert.Contains("Neues Gerät anlegen", xaml);
+        var workbenchSection = ExtractSection(
+            xaml,
+            "<TabItem Header=\"XDT-Baukasten\">",
+            "<TabItem Header=\"Profilverwaltung\">");
+        Assert.DoesNotContain("Neues AIS anlegen", workbenchSection);
+        Assert.DoesNotContain("AIS wählen", workbenchSection);
+        Assert.Contains("Neues Gerät anlegen", workbenchSection);
+        Assert.Contains("XdtBaukastenAisProfileComboBox", workbenchSection);
+        Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", "NewDeviceProfileDialog.xaml")));
         Assert.Contains("XdtBaukastenState", code);
         Assert.Contains("XdtBaukastenPreviewService", code);
         Assert.Contains("XdtBaukastenUndoBuffer", code);
@@ -261,7 +272,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Im XDT-Baukasten öffnen", section);
         Assert.Contains("Im Schnittstellenprofil öffnen", section);
         Assert.Contains("Neues AIS anlegen", section);
-        Assert.Contains("Neues Gerät anlegen", section);
+        Assert.DoesNotContain("Neues Gerät anlegen", section);
         Assert.Contains("Gerät laden / Bild pflegen", section);
         Assert.Contains("Neues Exportprofil aus Vorlage", section);
         Assert.Contains("Neues Schnittstellenprofil", section);
@@ -274,6 +285,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("_profileManagementRows", code);
         Assert.Contains("IsProfileManagementUiReady", code);
         Assert.Contains("if (!IsProfileManagementUiReady)", code);
+        Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", "NewAisProfileDialog.xaml")));
+        Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", "NewDeviceProfileDialog.xaml")));
     }
 
     [Fact]
@@ -544,12 +557,20 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("# Sicherung wiederherstellen", help);
         Assert.Contains("# Hardwaretausch und 7 Tage Karenzzeit", help);
         Assert.Contains("# Lizenzstatus verstehen", help);
+        Assert.Contains("# Bereiche der XDTBox", help);
+        Assert.Contains("Verarbeitung: Produktiver Betrieb.", help);
+        Assert.Contains("XDT-Baukasten: Arbeits- und Testbereich", help);
+        Assert.Contains("Profilverwaltung: Zentrale Verwaltung", help);
+        Assert.Contains("Schnittstellenprofile: Konkrete Praxisanbindung.", help);
+        Assert.Contains("Sicherung/Umzug: Sichern und Wiederherstellen", help);
+        Assert.Contains("Lizenz: Lizenzstatus", help);
         Assert.Contains("# RS232 NIDEK allgemein", help);
         Assert.Contains("# TOPCON CV-5000/CV-5000S", help);
         Assert.Contains("# Fehlerbehebung", help);
         Assert.Contains("Die Untersuchungsart 8402 kommt aus AIS", help);
         Assert.Contains("Es werden keine Patientendaten oder Messdateien gesichert", help);
         Assert.Contains("Die endgültige produktive Lizenzblockade ist in dieser Version nicht hart aktiviert", help);
+        Assert.DoesNotContain("Profile & Templates", help);
     }
 
     private static string FindWorkspaceFile(string projectFolder, string fileName)

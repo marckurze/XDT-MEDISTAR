@@ -838,17 +838,15 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
 
-                                <UniformGrid Grid.Column="0" Columns="1" Rows="4">
+                                <UniformGrid Grid.Column="0" Columns="1" Rows="3">
                                     <Button x:Name="XdtBaukastenLoadTemplatePackageButton" Content="Baukasten-Template laden" Margin="0,0,0,8" Click="XdtBaukastenLoadTemplatePackage_Click" />
                                     <Button x:Name="XdtBaukastenImportTemplatePackageButton" Content="Template Paket importieren" Margin="0,0,0,8" Click="XdtBaukastenImportTemplatePackage_Click" />
-                                    <Button x:Name="XdtBaukastenNewAisButton" Content="Neues AIS anlegen" Margin="0,0,0,8" Click="XdtBaukastenNewAis_Click" />
                                     <Button x:Name="XdtBaukastenLoadDeviceButton" Content="Gerät laden" Click="XdtBaukastenLoadDevice_Click" />
                                 </UniformGrid>
 
-                                <UniformGrid Grid.Column="2" Columns="1" Rows="4">
+                                <UniformGrid Grid.Column="2" Columns="1" Rows="3">
                                     <Button x:Name="XdtBaukastenSaveTemplateButton" Content="Konfiguration als Template speichern" Margin="0,0,0,8" Click="XdtBaukastenSaveTemplate_Click" />
                                     <Button x:Name="XdtBaukastenExportTemplatePackageButton" Content="Template Paket exportieren" Margin="0,0,0,8" Click="XdtBaukastenExportTemplatePackage_Click" />
-                                    <Button x:Name="XdtBaukastenChooseAisButton" Content="AIS wählen" Margin="0,0,0,8" Click="XdtBaukastenChooseAis_Click" />
                                     <Button x:Name="XdtBaukastenNewDeviceButton" Content="Neues Gerät anlegen" Click="XdtBaukastenNewDevice_Click" />
                                 </UniformGrid>
                                 <Border Grid.Row="1"
@@ -1421,11 +1419,6 @@
                                             Margin="0,0,0,6"
                                             Click="ProfileManagementNewAis_Click"
                                             ToolTip="Legt ein neues UserDefined-AIS-Profil an. BuiltIns bleiben unverändert." />
-                                    <Button x:Name="ProfileManagementNewDeviceButton"
-                                            Content="Neues Gerät anlegen"
-                                            Margin="0,0,0,6"
-                                            Click="ProfileManagementNewDevice_Click"
-                                            ToolTip="Legt ein neues UserDefined-Geräteprofil an." />
                                     <Button x:Name="ProfileManagementLoadDeviceButton"
                                             Content="Gerät laden / Bild pflegen"
                                             Margin="0,0,0,6"
@@ -2639,6 +2632,13 @@
                         Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
                         ToolTip="App-Einstellungen"
                         Click="OpenAppSettings_Click"/>
+                <Button x:Name="AppExitButton"
+                        Content="Beenden"
+                        Width="86"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        FontSize="13"
+                        ToolTip="XDTBox vollständig beenden"
+                        Click="AppExitButton_Click"/>
             </StackPanel>
         </Grid>
     </Grid>

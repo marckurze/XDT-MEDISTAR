@@ -540,6 +540,11 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke((Action)RequestApplicationExit);
     }
 
+    private void AppExitButton_Click(object sender, RoutedEventArgs e)
+    {
+        RequestApplicationExit();
+    }
+
     private void InitializeProfileOverview()
     {
         try
@@ -624,7 +629,6 @@ public partial class MainWindow : Window
         && ProfileManagementDetailsTextBox is not null
         && ProfileManagementStatusText is not null
         && ProfileManagementNewAisButton is not null
-        && ProfileManagementNewDeviceButton is not null
         && ProfileManagementLoadDeviceButton is not null
         && ProfileManagementNewExportButton is not null
         && ProfileManagementNewInterfaceButton is not null

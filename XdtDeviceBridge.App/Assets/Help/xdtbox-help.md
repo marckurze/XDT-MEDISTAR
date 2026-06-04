@@ -4,6 +4,20 @@ XDTBox verbindet medizinische Untersuchungsgeräte lokal mit dem Arztinformation
 
 Die Verarbeitung findet nur auf dem lokalen System und in den konfigurierten Ordnern statt. XDTBox startet keine Verarbeitung, wenn die App geschlossen ist.
 
+# Bereiche der XDTBox
+
+Verarbeitung: Produktiver Betrieb. Hier sehen Sie aktive Schnittstellenprofile, Monitoringstatus, eingehende AIS-/Gerätedaten und den Verarbeitungszustand.
+
+XDT-Baukasten: Arbeits- und Testbereich für neue oder bestehende Geräteanbindungen. Hier werden AIS-, Geräte- und Exportprofile kombiniert, Testdaten geladen, Mappingregeln geprüft und Vorschauen für AIS- und Geräteausgabe erstellt.
+
+Profilverwaltung: Zentrale Verwaltung von AIS-, Geräte-, Export- und Schnittstellenprofilen sowie Templates. Hier können Profile gesucht, angezeigt, dupliziert, umbenannt, geschützt gelöscht und gewartet werden.
+
+Schnittstellenprofile: Konkrete Praxisanbindung. Hier werden Ordner, COM-Port, DTR/RTS, RS232-Diagnose, Ausgabeordner, Aktivierungsprüfung und profilbezogene Betriebsparameter eingestellt.
+
+Sicherung/Umzug: Sichern und Wiederherstellen der XDTBox-Konfiguration. Wichtig vor Updates, Hardwarewechsel oder Neuinstallation.
+
+Lizenz: Lizenzstatus, Lizenzanforderung, Lizenzimport, lizenzierte Geräteanzahl und Hinweise zum Hardwaretausch.
+
 # Grundprinzip AIS -> XDTBox -> Gerät/AIS
 
 Das AIS legt eine Patientendatei im Ordner "AIS-Patienten Datei an XDTBox" ab. XDTBox überwacht diesen Ordner und kombiniert die Patientendaten mit Messdaten des gewählten Geräteprofils.
@@ -60,7 +74,7 @@ Die Rollen sind getrennt: Der XDT-Baukasten ist Entwurf, Test und Vorschau. Die 
 
 # XDT-Baukasten
 
-Der Tab "XDT-Baukasten" ist eine eigenständige Entwurfs- und Testoberfläche. Der frühere Tab "Profile & Templates" ist entfernt; der Baukasten arbeitet mit eigenen Auswahl-, Import-, Template- und RS232-Diagnosewegen.
+Der Tab "XDT-Baukasten" ist eine eigenständige Entwurfs- und Testoberfläche. Er arbeitet mit eigenen Auswahl-, Import-, Template- und RS232-Diagnosewegen.
 
 Im Baukasten wählen Sie AIS-Profil, Geräteprofil und Mapping-/Exportprofil, laden Testdaten und starten eine Vorschau. Diese Vorschau arbeitet nur mit Entwurfsdaten: Es wird keine produktive Datei in den AIS-Exportordner geschrieben, nichts verschoben, nichts archiviert und keine Ordnerüberwachung gestartet.
 
@@ -90,7 +104,7 @@ Im Baukasten kann ein COM-Port zeitlich begrenzt abgehört werden; DTR/RTS, Pari
 
 Im Tab "Schnittstellenprofile" öffnet "RS232-Diagnose öffnen" dieselbe allgemeine Diagnose mit den aktuell sichtbaren COM-Parametern des gewählten seriellen Schnittstellenprofils. Diese Diagnose startet keine produktive Verarbeitung und übernimmt keine Daten in den Baukasten.
 
-Der frühere RS232-Testbereich aus "Profile & Templates" ist entfernt. Serielle Diagnose läuft über den Baukasten-Mitschnitt oder über die RS232-Diagnose im Tab "Schnittstellenprofile".
+Serielle Diagnose läuft über den Baukasten-Mitschnitt oder über die RS232-Diagnose im Tab "Schnittstellenprofile".
 
 Die NIDEK-RS232-Auswertung erkennt SOH/STX/ETB/EOT-Frames, optionale Checksummen, Header und erste LM-/NT-/PM-Kandidaten. Unbekannte Segmente bleiben roh erhalten und werden nicht als Messwerte exportiert.
 
