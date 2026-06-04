@@ -34,6 +34,19 @@ artifacts\installer\XDTBox_Setup_1.0.exe
 
 Wenn Inno Setup auf dem Build-PC fehlt, bleibt die Publish-Ausgabe bestehen und das Skript meldet klar, dass `ISCC.exe` installiert oder per `ISCC_EXE` angegeben werden muss.
 
+## Aktueller Buildstatus 2026-06-04
+
+Der Installer wurde mit Inno Setup 6.7.3 erzeugt:
+
+```text
+C:\Program Files (x86)\Inno Setup 6\ISCC.exe
+artifacts\installer\XDTBox_Setup_1.0.exe
+```
+
+Die erzeugte Setup-Datei ist noch nicht digital codesigniert. Das ist fuer die erste technische Pruefung dokumentiert; vor Kundenverteilung ist eine Codesignatur beziehungsweise ein definierter Verteilprozess noch offen.
+
+Eine stille Testinstallation aus der Codex-Sitzung konnte nicht vollautomatisch ausgefuehrt werden, weil der aktuelle Prozess nicht mit Administratorrechten lief. Das ist erwartbar, da das Setup fuer `C:\XDTBox` und HKLM/Windows "Programme & Features" bewusst `PrivilegesRequired=admin` nutzt. Die praktische Installation, Update-Erkennung und Deinstallation sollen daher mit Admin-Rechten auf einem Windows-Testsystem ausgefuehrt werden.
+
 ## Kundeninstaller-Inhalt
 
 Enthalten sind nur die veroeffentlichten Dateien der Kunden-App:

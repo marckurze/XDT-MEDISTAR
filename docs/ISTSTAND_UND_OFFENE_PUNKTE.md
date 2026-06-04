@@ -98,7 +98,7 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
 - `VERSION`: `1.0`
 - `Directory.Build.props`: `Version` und `InformationalVersion` ebenfalls `1.0`
 - `AssemblyVersion` und `FileVersion`: `1.0.0.0`
-- XDTBox 1.0 ist die erste offizielle Installer-Version mit vorbereitetem Inno-Setup, self-contained Publish und Deinstallation Variante B.
+- XDTBox 1.0 ist die erste offizielle Installer-Version mit Inno-Setup, self-contained Publish und Deinstallation Variante B. `artifacts\installer\XDTBox_Setup_1.0.exe` wurde mit Inno Setup 6.7.3 erzeugt; Codesignatur und praktische Admin-Testinstallation bleiben als manuelle Abnahmepunkte offen.
 
 ### Validierter Kernworkflow
 

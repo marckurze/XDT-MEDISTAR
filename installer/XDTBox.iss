@@ -5,11 +5,10 @@
 #define MyAppVersion "1.0"
 #define MyAppPublisher "Technik-Apparat M.Kurze"
 #define MyAppExeName "XdtDeviceBridge.App.exe"
-#define MyAppGuid "7E45D05D-7E53-4B47-961D-9113C3D42623"
 #define MyPublishDir "..\artifacts\publish\XDTBox"
 
 [Setup]
-AppId={{#MyAppGuid}}
+AppId={{7E45D05D-7E53-4B47-961D-9113C3D42623}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -99,7 +98,7 @@ begin
     end;
   end;
 
-  if RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{' + '{#MyAppGuid}' + '}_is1', 'InstallLocation', RegDir) then
+  if RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{7E45D05D-7E53-4B47-961D-9113C3D42623}_is1', 'InstallLocation', RegDir) then
   begin
     if IsXdtBoxInstallDir(RegDir) then
     begin

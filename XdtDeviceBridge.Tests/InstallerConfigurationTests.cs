@@ -25,6 +25,7 @@ public sealed class InstallerConfigurationTests
     {
         var installer = File.ReadAllText(FindWorkspaceFile("installer", "XDTBox.iss"));
 
+        Assert.Contains("AppId={{7E45D05D-7E53-4B47-961D-9113C3D42623}", installer);
         Assert.Contains("AppName={#MyAppName}", installer);
         Assert.Contains("#define MyAppVersion \"1.0\"", installer);
         Assert.Contains("AppVersion={#MyAppVersion}", installer);
@@ -48,6 +49,7 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("TryDetectInstallDir", installer);
         Assert.Contains("Software\\XDTBox", installer);
         Assert.Contains("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", installer);
+        Assert.Contains(@"{7E45D05D-7E53-4B47-961D-9113C3D42623}_is1", installer);
         Assert.Contains("XdtDeviceBridge.App.exe", installer);
         Assert.Contains("XDTBox.installation.json", installer);
         Assert.Contains("InstallLocation", installer);
