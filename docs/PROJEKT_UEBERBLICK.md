@@ -1,6 +1,6 @@
 ﻿# Projektueberblick XdtDeviceBridge / XDT Verwaltung
 
-Stand: 2026-05-24
+Stand: 2026-06-04
 
 Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Sessions und Projektplanung. Sie trennt aktuellen Iststand, validierten Kernworkflow, vorbereitete Bausteine und Zielbild.
 
@@ -32,17 +32,17 @@ Aktuelle Entwicklungsleitlinie: Fertige Geraeteprofile und Templatepakete haben 
 Aktuelle Version laut `VERSION` und `Directory.Build.props`:
 
 ```text
-0.1.0-prototype
+1.0
 ```
 
 Assembly-/Dateiversionen:
 
-- `Version`: `0.1.0-prototype`
-- `AssemblyVersion`: `0.1.0.0`
-- `FileVersion`: `0.1.0.0`
-- `InformationalVersion`: `0.1.0-prototype`
+- `Version`: `1.0`
+- `AssemblyVersion`: `1.0.0.0`
+- `FileVersion`: `1.0.0.0`
+- `InformationalVersion`: `1.0`
 
-Keine neue Version wurde fuer diesen Dokumentationsstand erfunden.
+Version 1.0 ist die erste offizielle Installer-Version. Das Kunden-Setup wird ueber Inno Setup 6 vorbereitet und schuetzt Kundendaten nach Deinstallationsvariante B.
 
 ## 3. Praktisch validierter Kernworkflow
 
@@ -558,7 +558,7 @@ An `docs/ROADMAP.md` orientierte naechste Schritte:
 Der folgende Block kann in einen neuen Chat kopiert werden:
 
 ```text
-Wir arbeiten an XdtDeviceBridge / XDT Verwaltung, Version 0.1.0-prototype.
+Wir arbeiten an XdtDeviceBridge / XDT Verwaltung, Version 1.0.
 
 XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer eine dateibasierte AIS-/Geraete-Bridge im augenaerztlichen Umfeld. Fokus ist MEDISTAR mit XDT/GDT und NIDEK ARK1S XML. Es gibt keine Cloud, keinen Windows-Dienst, keinen Windows-Autostart, keinen FileSystemWatcher und keine Verarbeitung, wenn die App geschlossen ist. Die App-Start-Ueberwachung ist lokal konfigurierbar und standardmaessig aktiv.
 

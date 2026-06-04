@@ -42,6 +42,16 @@ XDTBox baut keine Cloudverbindung auf, startet keinen Windows-Dienst, verwendet 
 
 Backups sind Konfigurationssicherungen. Patientendaten, Messdateien, Archivordner-Inhalte, Fehlerordner-Inhalte und erzeugte Ergebnisdateien werden nicht gesichert.
 
+# Installation, Update und Deinstallation
+
+XDTBox 1.0 wird als klassisches Windows-Setup installiert. Der vorgeschlagene Installationsordner ist C:\XDTBox und kann bei Neuinstallation geändert werden.
+
+Das Setup unterscheidet Neuinstallation und Update. Bei Updates werden App-Dateien ersetzt, Kundendaten bleiben erhalten. Dazu gehören Profile, Schnittstellenprofile, COM-Port-Parameter, Lizenzen, Baukasten-Templates, Gerätebild-Overrides und lokale UI-Einstellungen.
+
+Der Deinstaller entfernt standardmäßig nur die App. Lokale XDTBox-Kundendaten werden nur nach separater ausdrücklicher Bestätigung gelöscht. Externe Praxisordner wie AIS-, Geräte-, Archiv-, Export- oder Fehlerordner werden nicht durch den Installer oder Deinstaller bereinigt.
+
+Vor Updates empfiehlt sich eine Sicherung im Tab "Sicherung/Umzug".
+
 # Automatische Überwachung
 
 Beim Start der geöffneten XDTBox-App startet die Überwachung automatisch für aktive Schnittstellenprofile. Gefundene passende Dateipaare werden automatisch verarbeitet, sobald die Überwachung läuft.

@@ -2,7 +2,7 @@
 
 Stand: 2026-06-04
 
-Dieses Dokument beschreibt die Datenabgrenzung fuer einen spaeteren XDTBox-Installer. Es ist bewusst noch kein Installer-Konzept und baut keinen Installer. Ziel ist, vorab festzulegen, welche Dateien bei Installation, Update und Deinstallation ersetzt werden duerfen und welche Kundendaten geschuetzt bleiben muessen.
+Dieses Dokument beschreibt die Datenabgrenzung fuer den XDTBox-Installer ab Version 1.0. Ziel ist, verbindlich festzulegen, welche Dateien bei Installation, Update und Deinstallation ersetzt werden duerfen und welche Kundendaten geschuetzt bleiben muessen.
 
 ## Grundsatz
 
@@ -13,6 +13,12 @@ XDTBox trennt drei Bereiche:
 3. Externe Praxisordner duerfen vom Installer und Deinstaller niemals blind geloescht werden.
 
 Die produktive Verarbeitung, Parser, MEDISTAR-Mapping, CV-5000-/RT-6100-Logik und RS232-Kommunikation werden durch diese Datenpolitik nicht fachlich veraendert.
+
+## Installer 1.0
+
+XDTBox 1.0 nutzt ein Inno-Setup-Skript unter `installer/XDTBox.iss`. Der Installer installiert die Kunden-App standardmaessig nach `C:\XDTBox`, erlaubt einen anderen Installationsordner, erzeugt Startmenue- und optionale Desktop-Verknuepfungen, schreibt Registry-/Uninstall-Informationen und legt im Installationsordner `XDTBox.installation.json` als Installationsmarker ab.
+
+Der Build erfolgt reproduzierbar ueber `scripts/build-xdtbox-installer.ps1`; die Buildanleitung steht in `docs/INSTALLER_BUILD_ANLEITUNG.md`. Der Kundeninstaller enthaelt nur die Publish-Ausgabe von `XdtDeviceBridge.App`. `XdtBox.LicenseManager`, `XdtBox.LicenseIssuer`, private Hersteller-Schluessel, Lizenzhistorien und Hersteller-Einstellungen werden nicht aufgenommen.
 
 ## Aktueller Datenstamm
 
@@ -167,13 +173,10 @@ XdtDeviceBridge.Infrastructure/XdtBoxInstallationDataPolicy.cs
 
 Sie unterscheidet App-Komponenten, BuiltIn-Templates, Kundendaten, temporaere Diagnosedaten, externe Praxisdaten, Herstellerdaten und Hersteller-Private-Keys. Tests sichern ab, dass Kundendaten als zu schuetzende Daten klassifiziert werden und externe Praxisordner beim Deinstallationsentscheid niemals automatisch geloescht werden.
 
-## Offene Punkte vor einem echten Installer
+## Offene Punkte nach Installer 1.0
 
-- Installationsziel final festlegen, z. B. `%ProgramFiles%\XDTBox`.
 - ProgramData-Migration nur mit eigenem Migrationskonzept umsetzen.
-- Installer-Technologie auswaehlen.
 - Signatur und Updatekanal klaeren.
 - Vor Update eine Backup-Empfehlung oder Backup-Aktion anbieten.
-- Deinstaller-Dialog fuer Variante B textlich und technisch finalisieren.
 - Rechtekonzept fuer Terminalserver/Praxisarbeitsplaetze pruefen.
-- Hersteller-Lizenztools strikt vom Kundeninstaller trennen.
+- Installierte Setup-Datei auf einem separaten Windows-Testsystem praktisch gegen Neuinstallation, Update, Deinstallation und Programme-&-Features-Eintrag abnehmen.

@@ -6972,7 +6972,7 @@ public partial class MainWindow : Window
                 _profileCatalog.DeviceProfiles,
                 customer,
                 XdtBoxLicenseConstants.ProductCode,
-                "0.1.0",
+                GetApplicationVersionText(),
                 DateTime.UtcNow);
 
             var paths = _appDataPathProvider.GetDefaultUserPaths();

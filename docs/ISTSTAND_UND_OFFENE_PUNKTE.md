@@ -95,9 +95,10 @@ Vorbereitet, aber noch nicht als produktiv abgenommen:
 
 ### Version
 
-- `VERSION`: `0.1.0-prototype`
-- `Directory.Build.props`: `Version` und `InformationalVersion` ebenfalls `0.1.0-prototype`
-- `AssemblyVersion` und `FileVersion`: `0.1.0.0`
+- `VERSION`: `1.0`
+- `Directory.Build.props`: `Version` und `InformationalVersion` ebenfalls `1.0`
+- `AssemblyVersion` und `FileVersion`: `1.0.0.0`
+- XDTBox 1.0 ist die erste offizielle Installer-Version mit vorbereitetem Inno-Setup, self-contained Publish und Deinstallation Variante B.
 
 ### Validierter Kernworkflow
 
@@ -392,7 +393,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 
 | Bereich | Aussage in Dokumentation | Tatsaechlicher Code-/Projektstand | Bewertung | Empfehlung |
 | --- | --- | --- | --- | --- |
-| Version | `0.1.0-prototype` in README, VERSION und Buildprops. | Versionen stimmen ueberein. | passt | Keine Aenderung noetig. |
+| Version | `1.0` in README, VERSION und Buildprops. | Versionen stimmen ueberein; Info-Dialog liest `AssemblyInformationalVersion`. | passt | Keine Aenderung noetig. |
 | Automatikmodell | App-Start-Ueberwachung ist lokal konfigurierbar, standardmaessig aktiv, periodischer Scan. | Code nutzt `PeriodicAutoImportScanService` und App-Einstellungen; kein Dienst, kein Windows-Autostart. | passt | Keine Aenderung noetig. |
 | FileSystemWatcher / Dienst / Autostart | Dokumentation sagt: nicht enthalten. | Keine entsprechende Implementierung erkennbar. | passt | Als Sicherheitsentscheidung beibehalten. |
 | Paket-Wartelogik | Roadmap, Projektueberblick und E2E-Testplan beschreiben zweistufige Logik. | `AutoImportPackageStateService` und Coordinator bilden die Logik ab. | passt | Praktischen E2E-Testplan ausfuehren. |
@@ -402,7 +403,7 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | MEDISTAR/NIDEK ARK1S | Als validierter Kernworkflow beschrieben. | BuiltIn-Profile, Parser, Mapping und Tests vorhanden. | passt | Als stabilen Kern beibehalten. |
 | V2-Geraeteprofile | Als vorbereitet, nicht produktiv validiert beschrieben. | BuiltIn-Profile und Beispiel-Doku vorhanden; keine Praxisvalidierung behauptet. | passt | Pro Geraet Validierungsplan abarbeiten. |
 | Lizenzsystem | Anzeige, `.xdtboxlic`-Import, RSA-PSS/SHA-256-Signaturpruefung, Karenzzeitmodell; keine harte Sperre. | Code enthaelt Lizenzmodelle, Anzeige, Import-/Signaturservices und Karenzzeitservices; keine harte Durchsetzung. | passt | Issuer-Tool, produktiven Public Key und Sperrregeln separat umsetzen. |
-| Installer/Deployment | In Roadmap als offen. | Kein Installer-Projekt erkennbar; Installations-/Update-Datenpolitik ist dokumentiert. | passt | Installer spaeter auf Basis von `docs/INSTALLATION_UPDATE_DATENPOLITIK.md` erstellen. |
+| Installer/Deployment | Installer 1.0 mit Neuinstallation, Update und Deinstallation Variante B ist vorbereitet. | `installer/XDTBox.iss`, `scripts/build-xdtbox-installer.ps1` und `docs/INSTALLER_BUILD_ANLEITUNG.md` sind vorhanden; Inno Setup 6 wird auf dem Build-PC benoetigt. | passt | Praktische Installation/Update/Deinstallation auf Windows-Testsystem abnehmen. |
 | SQLite/JSON-Speicherung | Pflichtenheft nennt SQLite als Ziel, Projektueberblick beschreibt JSON/AppData. | Code nutzt JSON-Dateien unter LocalAppData. | unklar | Architekturentscheidung treffen: JSON bewusst beibehalten oder SQLite neu planen. |
 | Profil-Assistent | Roadmap fuehrt Assistent als offen. | Schlanke V1-Anlage fuer AIS-, Geraete- und Exportprofile als UserDefined ist vorhanden; kein vollstaendiger Assistent und keine Aktivierung. | passt | Geraete-Datei-Explorer als naechsten vorbereitenden Schritt planen. |
 | PDF-/EV-Dokumentenerzeugung | Als Zukunft/offen beschrieben. | Keine PDF-Erzeugung und keine MEDISTAR-interne EV-Zeile. 6302-6305-Link ist der aktuelle Weg. | passt | EV vs. strukturierter Link fachlich entscheiden. |

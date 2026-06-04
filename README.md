@@ -4,13 +4,13 @@ XdtDeviceBridge ist ein lokaler Windows-Prototyp fuer die dateibasierte Anbindun
 
 In der Kunden-App startet die periodische Überwachung beim Öffnen der App standardmaessig automatisch fuer aktive Schnittstellenprofile; dieses Verhalten ist ueber das Zahnrad in der Tab-Zeile konfigurierbar. Es gibt weiterhin keinen Windows-Dienst, keinen Windows-Autostart und keinen FileSystemWatcher. XDTBox bringt ausserdem einen Tab `Sicherung/Umzug` fuer lokale Konfigurationssicherungen im Format `.xdtboxbackup` sowie ein lokales Hilfe-/Info-Menue direkt neben den Tabs mit.
 
-Der aktuelle Fokus liegt auf dem Workflow MEDISTAR mit einem NIDEK ARK1S / AR-1s Autorefraktometer.
+Der aktuelle Fokus liegt auf stabilen XDTBox-Praxisanbindungen, dem XDT-Baukasten und der ersten offiziellen Windows-Installer-Version.
 
 Aktuelle Version:
 
-`0.1.0-prototype`
+`1.0`
 
-Dies ist der erste stabile Prototyp. Er wurde mit MEDISTAR und NIDEK ARK1S erfolgreich validiert. Der Workflow MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link wurde am 2026-05-11 praktisch geprüft; externe Anhänge können über `6302`, `6303`, optional `6304` und `6305` in MEDISTAR übernommen und aus der Karteikarte geöffnet werden. Die automatische Verarbeitung ist manuell startbar und bewusst nicht als Windows-Dienst oder Autostart umgesetzt.
+Dies ist die erste offizielle Installer-Version. XDTBox bleibt eine lokale Windows-Desktop-App ohne Cloudpflicht, ohne Windows-Dienst, ohne Windows-Autostart und ohne FileSystemWatcher. Der validierte Kernworkflow MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link wurde am 2026-05-11 praktisch geprüft; externe Anhänge können über `6302`, `6303`, optional `6304` und `6305` in das AIS übernommen und aus der Karteikarte geöffnet werden.
 
 Praktisch validiert ist aktuell nur der Workflow MEDISTAR + NIDEK ARK1S, einschließlich XDT-Anhang-Link für den geprüften Pflicht-Anhang-Praxislauf. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt bzw. konfiguriert werden, gelten aber noch nicht als produktiv validiert.
 
@@ -36,7 +36,9 @@ Der Tab `Profilverwaltung` bündelt die reine Profilpflege: Suche, BuiltIn/UserD
 
 ## Installation, Update und Kundendaten
 
-Vor einem spaeteren Installer ist die Datenpolitik in [`docs/INSTALLATION_UPDATE_DATENPOLITIK.md`](docs/INSTALLATION_UPDATE_DATENPOLITIK.md) festgelegt. App-Dateien, Hilfe, Themes, Standard-Assets und BuiltIn-Definitionen duerfen durch Updates ersetzt beziehungsweise repariert werden. Kundendaten unter `%LocalAppData%\XdtDeviceBridge` bleiben erhalten: Profile, UserDefined-Schnittstellenprofile, COM-Port-/Ordnerparameter, Baukasten-Templates, lokale Geraetebilder, `device-image-overrides.json`, Lizenzdaten inklusive `license.xdtboxlic`, UI-Einstellungen und Backups.
+XDTBox 1.0 besitzt ein reproduzierbares Inno-Setup-Skript und eine Buildanleitung in [`docs/INSTALLER_BUILD_ANLEITUNG.md`](docs/INSTALLER_BUILD_ANLEITUNG.md). Der Default-Installationspfad ist `C:\XDTBox`, der Benutzer kann ihn bei Neuinstallation aendern. Das Setup unterscheidet Neuinstallation und Update, erzeugt `XDTBox_Setup_1.0.exe`, nutzt das offizielle `XDTBox.ico`, legt Startmenue- und optional Desktop-Verknuepfungen an und traegt XDTBox in Windows "Programme & Features" ein.
+
+Die Datenpolitik ist in [`docs/INSTALLATION_UPDATE_DATENPOLITIK.md`](docs/INSTALLATION_UPDATE_DATENPOLITIK.md) festgelegt. App-Dateien, Hilfe, Themes, Standard-Assets und BuiltIn-Definitionen duerfen durch Updates ersetzt beziehungsweise repariert werden. Kundendaten unter `%LocalAppData%\XdtDeviceBridge` bleiben erhalten: Profile, UserDefined-Schnittstellenprofile, COM-Port-/Ordnerparameter, Baukasten-Templates, lokale Geraetebilder, `device-image-overrides.json`, Lizenzdaten inklusive `license.xdtboxlic`, UI-Einstellungen und Backups.
 
 Fuer die Deinstallation gilt Variante B: Die Anwendung wird entfernt, Kundendaten bleiben standardmaessig erhalten und duerfen nur nach ausdruecklicher separater Bestaetigung geloescht werden. Externe Praxisordner wie AIS-Import, Geraete-Import, Export, Archiv oder Fehlerordner werden vom Installer/Deinstaller niemals blind geloescht. Interne Herstellerwerkzeuge und private Lizenzschluessel gehoeren nicht in den Kundeninstaller.
 

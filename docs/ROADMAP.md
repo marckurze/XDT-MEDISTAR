@@ -1,6 +1,6 @@
 ﻿# Roadmap XdtDeviceBridge
 
-Stand: 2026-05-12
+Stand: 2026-06-04
 
 Projekt: XdtDeviceBridge / XDT Verwaltung
 
@@ -8,12 +8,13 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 ### Version
 
-- Aktuelle Version: `0.1.0-prototype`
+- Aktuelle Version: `1.0`
 - `VERSION` und `Directory.Build.props` sind konsistent:
-  - `Version`: `0.1.0-prototype`
-  - `AssemblyVersion`: `0.1.0.0`
-  - `FileVersion`: `0.1.0.0`
-  - `InformationalVersion`: `0.1.0-prototype`
+  - `Version`: `1.0`
+  - `AssemblyVersion`: `1.0.0.0`
+  - `FileVersion`: `1.0.0.0`
+  - `InformationalVersion`: `1.0`
+- XDTBox 1.0 ist die erste offizielle Installer-Version. Der Inno-Setup-Weg ist vorbereitet; Kundeninstaller schuetzen Kundendaten nach Variante B.
 
 ### Projektleitlinie ab 2026-05-12
 
@@ -309,7 +310,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 ### Phase 1: Dokumentation und Version konsolidieren
 
 - Roadmap, Projektüberblick, Changelog und End-to-End-Testplan aufeinander abstimmen.
-- Aktuellen Stand `0.1.0-prototype` sauber vom nächsten Meilenstein trennen.
+- Aktuellen Stand `1.0` sauber vom naechsten Meilenstein trennen.
 - Praxisvalidierung MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link als bestanden führen.
 - Restliche E2E-Fälle klar als offen markieren.
 
