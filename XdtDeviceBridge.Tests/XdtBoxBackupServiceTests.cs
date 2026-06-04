@@ -31,10 +31,12 @@ public sealed class XdtBoxBackupServiceTests
         using var archive = ZipFile.OpenRead(backupPath);
         Assert.NotNull(archive.GetEntry("manifest.json"));
         Assert.NotNull(archive.GetEntry("profiles/interfaces/interface-user.json"));
+        Assert.NotNull(archive.GetEntry("template-packages/workbench-template.xdtbaukasten.json"));
         Assert.NotNull(archive.GetEntry("device-images/device-user.png"));
         Assert.NotNull(archive.GetEntry("settings/device-image-overrides.json"));
         Assert.NotNull(archive.GetEntry("settings/ui/app-settings.json"));
         Assert.NotNull(archive.GetEntry("license-customer/license-customer-data.json"));
+        Assert.NotNull(archive.GetEntry("license/device-grace-periods.json"));
         Assert.NotNull(archive.GetEntry("license/license.xdtboxlic"));
         Assert.Null(archive.GetEntry("patient-import/patient.gdt"));
     }
@@ -54,10 +56,12 @@ public sealed class XdtBoxBackupServiceTests
 
         Assert.True(restore.Success);
         Assert.True(File.Exists(Path.Combine(targetPaths.ProfilesFolder, "interfaces", "interface-user.json")));
+        Assert.True(File.Exists(Path.Combine(targetPaths.TemplatePackagesFolder, "workbench-template.xdtbaukasten.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "DeviceImages", "device-user.png")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "device-image-overrides.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "ui", "app-settings.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license-customer-data.json")));
+        Assert.True(File.Exists(targetPaths.DeviceGracePeriodsFile));
         Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license.xdtboxlic")));
     }
 
@@ -159,6 +163,9 @@ public sealed class XdtBoxBackupServiceTests
             Path.Combine(paths.ProfilesFolder, "interfaces", "interface-user.json"),
             """{"id":"interface-user","ConnectionKind":"SerialRs232","AisImportFolder":"C:\\XDTBox\\CV5000\\Patient2Box"}""");
 
+        Directory.CreateDirectory(paths.TemplatePackagesFolder);
+        File.WriteAllText(Path.Combine(paths.TemplatePackagesFolder, "workbench-template.xdtbaukasten.json"), """{"Name":"Baukasten Template"}""");
+
         Directory.CreateDirectory(Path.Combine(paths.BaseFolder, "DeviceImages"));
         File.WriteAllText(Path.Combine(paths.BaseFolder, "DeviceImages", "device-user.png"), "image");
         File.WriteAllText(Path.Combine(paths.BaseFolder, "device-image-overrides.json"), """{"device-user":"DeviceImages/device-user.png"}""");
@@ -167,6 +174,7 @@ public sealed class XdtBoxBackupServiceTests
 
         Directory.CreateDirectory(paths.LicensesFolder);
         File.WriteAllText(Path.Combine(paths.LicensesFolder, "license-customer-data.json"), """{"CustomerName":"Praxis"}""");
+        File.WriteAllText(paths.DeviceGracePeriodsFile, """{"GracePeriods":[]}""");
         File.WriteAllText(Path.Combine(paths.LicensesFolder, "license.xdtboxlic"), "signed-license");
     }
 

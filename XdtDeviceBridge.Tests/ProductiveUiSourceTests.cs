@@ -277,6 +277,31 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void ProfileManagementActions_ShouldSitAboveCompactDetailsArea()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var section = ExtractSection(
+            xaml,
+            "<TabItem Header=\"Profilverwaltung\">",
+            "<TabItem Header=\"Schnittstellenprofile\">");
+
+        var actionsIndex = section.IndexOf("Header=\"Aktionen\"", StringComparison.Ordinal);
+        var detailsIndex = section.IndexOf("Header=\"Details und Aktionen\"", StringComparison.Ordinal);
+        var detailsSection = ExtractSection(
+            section,
+            "Header=\"Details und Aktionen\"",
+            "</GroupBox>");
+
+        Assert.True(actionsIndex >= 0, "Profilverwaltung soll einen eigenen Aktionsbereich haben.");
+        Assert.True(detailsIndex >= 0, "Profilverwaltung soll weiterhin den Details-Bereich anzeigen.");
+        Assert.True(actionsIndex < detailsIndex, "Der Aktionsbereich soll rechts oberhalb der Details stehen.");
+        Assert.Contains("Height=\"160\"", detailsSection);
+        Assert.Contains("ProfileManagementDetailsTextBox", detailsSection);
+        Assert.DoesNotContain("ProfileManagementNewAisButton", detailsSection);
+        Assert.DoesNotContain("ProfileManagementDeleteButton", detailsSection);
+    }
+
+    [Fact]
     public void ProfileManagementTab_ShouldNotDependOnOldProfileTemplatesControls()
     {
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
@@ -438,6 +463,33 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("BitmapCacheOption.OnLoad", converter);
         Assert.Contains("FileShare.ReadWrite | FileShare.Delete", converter);
         Assert.Contains("bitmap.Freeze()", converter);
+    }
+
+    [Fact]
+    public void XdtBaukastenDeviceImagePlaceholder_ShouldOpenImageManagementFromWholeContainer()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var imageContainer = ExtractSection(
+            xaml,
+            "x:Name=\"XdtBaukastenDeviceImageContainer\"",
+            "<Grid Grid.Column=\"2\">");
+        var imageElement = ExtractSection(
+            imageContainer,
+            "<Image x:Name=\"XdtBaukastenDeviceImage\"",
+            "<TextBlock x:Name=\"XdtBaukastenDeviceImagePlaceholder\"");
+        var clickHandler = ExtractMethodBody(
+            code,
+            "private void XdtBaukastenDeviceImage_MouseLeftButtonUp",
+            "private void XdtBaukastenLoadAisOrSerial_Click");
+
+        Assert.Contains("MouseLeftButtonUp=\"XdtBaukastenDeviceImage_MouseLeftButtonUp\"", imageContainer);
+        Assert.Contains("Cursor=\"Hand\"", imageContainer);
+        Assert.Contains("Gerätebild auswählen oder austauschen", imageContainer);
+        Assert.Contains("Kein Gerätebild hinterlegt. Klicken, um ein Bild auszuwählen.", imageContainer);
+        Assert.DoesNotContain("MouseLeftButtonUp=", imageElement);
+        Assert.Contains("LoadDeviceProfileDialog(catalog.DeviceProfiles, paths, _deviceProfileImageOverrideService)", clickHandler);
+        Assert.Contains("BuiltIn-Fachprofile wurden nicht überschrieben", clickHandler);
     }
 
     [Fact]

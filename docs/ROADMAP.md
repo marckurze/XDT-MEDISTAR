@@ -371,9 +371,10 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 
 ### Phase 8: Installer / Deployment
 
-- Installationsziel, Datenordner und Rechtekonzept definieren.
+- Installationsziel, Datenordner und Rechtekonzept auf Basis von `docs/INSTALLATION_UPDATE_DATENPOLITIK.md` finalisieren.
 - Desktop-Shortcut und Startmenüeintrag prüfen.
-- Update-/Backup-Konzept für lokale Profile und Lizenzen festlegen.
+- Update-/Backup-Konzept fuer lokale Profile, Lizenzen, Baukasten-Templates und Geraetebilder anhand der geschuetzten Kundendatenklassifikation pruefen.
+- Deinstallation Variante B umsetzen: App entfernen, Kundendaten standardmaessig behalten, Loeschen nur nach ausdruecklicher separater Bestaetigung; externe Praxisordner niemals blind loeschen.
 
 ## 6. Empfohlene nächste kleine Codex-Schritte
 
@@ -388,7 +389,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 9. MEDISTAR + Dokumentanhang und MEDISTAR + Manuelle Dokumentuebergabe im Live-Test mit mehreren Anhangdateien, TopMost-Dialog, Zwischenablage/Dateiauswahl/Drag-&-Drop und pro-Datei-`6304`-Text pruefen.
 10. Restliche E2E-Testfälle mit realen Testordnern ausführen und mit `docs/E2E_TESTPROTOKOLL_TEMPLATE.md` protokollieren.
 11. Read-only Aktivierungsassistent nur als geparkten Regressionsstand weiterfuehren.
-12. Lizenzsignatur- und Installer-Themen erst nach weiterem Profil-/Template-Nutzen priorisieren.
+12. Installer-Themen erst nach weiterem Profil-/Template-Nutzen priorisieren; die Datenpolitik fuer Updates/Deinstallation ist als Sicherheitsbasis dokumentiert.
 
 ## 7. Risiken / offene Entscheidungen
 

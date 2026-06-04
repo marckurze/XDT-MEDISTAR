@@ -142,6 +142,12 @@ Eine Wiederherstellung ersetzt lokale XDTBox-Konfigurationen. Stoppen Sie vorher
 
 Nach der Wiederherstellung werden Profile und Lizenzstatus neu geladen. Auf neuer Hardware kann eine neue Lizenzanforderung nötig sein.
 
+# Installation und Updates
+
+Updates duerfen App-Dateien, Hilfe, Themes und BuiltIn-Definitionen ersetzen. Ihre lokalen Kundendaten bleiben erhalten: Profile, Schnittstellenprofile, Baukasten-Templates, lokale Gerätebilder, Bild-Overrides, Lizenzdateien, UI-Einstellungen und Backups.
+
+Bei einer spaeteren Deinstallation bleiben Kundendaten standardmaessig erhalten. Loeschen Sie Kundendaten nur nach bewusster Bestaetigung und vorheriger Sicherung. Externe Praxisordner wie AIS-Import, Geraete-Import, Export, Archiv und Fehlerordner werden von XDTBox nicht blind geloescht.
+
 # NIDEK ARK1S
 
 NIDEK ARK1S ist ein validierter Autorefraktor-Workflow für MEDISTAR. XDTBox nutzt die AIS-Patientendatei und die passende Geräte-XML-Datei und erzeugt MEDISTAR-kompatible Ergebniszeilen.

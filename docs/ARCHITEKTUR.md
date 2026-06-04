@@ -857,6 +857,12 @@ Für benutzerbezogene lokale App-Daten ist `AppDataPathProvider` vorbereitet. De
 
 Darunter sind Pfade für Profile, Templates, Lizenzen, Logs, Lizenzanfragen, Templatepakete und Installationsinformationen vorgesehen. Die Struktur ist für Workstations und Terminalserver-Benutzerprofile geeignet.
 
+### 8.4a Installation, Update und Deinstallation
+
+Die Installer-/Update-Datenpolitik ist in `docs/INSTALLATION_UPDATE_DATENPOLITIK.md` festgelegt und durch `XdtBoxInstallationDataPolicy` testseitig abgesichert. App-Bestandteile wie EXE/DLLs, Themes, Hilfe, Standard-Assets und BuiltIn-Definitionen duerfen bei Updates ersetzt beziehungsweise fuer BuiltIns repariert werden. Kundendaten unter `%LocalAppData%\XdtDeviceBridge` bleiben erhalten: Profile, UserDefined-Schnittstellenprofile, lokale Baukasten-Templates, Templatepakete, lokale Geraetebilder, `device-image-overrides.json`, Lizenzdaten inklusive `license.xdtboxlic`, Karenzzeitdaten, UI-Komfortdaten und Backups.
+
+Fuer die Deinstallation gilt Variante B: Standard-Deinstallation entfernt nur die Anwendung. Kundendaten duerfen nur nach ausdruecklicher separater Bestaetigung geloescht werden. Externe Praxisordner aus Schnittstellenprofilen, etwa AIS-/Geraete-Import, Export, Archiv oder Fehlerordner, werden nie automatisch geloescht. Das interne Hersteller-Lizenztool und private Hersteller-Schluessel sind vom Kundeninstaller ausgeschlossen.
+
 ### 8.5 Sicherheit
 
 Mit `FolderSafetyValidator` ist eine Sicherheitsprüfung für spätere bzw. explizite Ordnerbereinigungen vorhanden. Der Validator erkennt gefährliche Cleanup-Pfade wie leere oder relative Pfade, Laufwerks- oder Share-Wurzeln, Windows-Systemordner, Program-Files-Ordner und Benutzerprofil-Wurzeln. Nicht vorhandene, aber ansonsten plausible Unterordner werden als Warnung gemeldet.

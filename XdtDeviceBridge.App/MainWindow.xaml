@@ -881,7 +881,24 @@
                                     <ColumnDefinition Width="24" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Border BorderBrush="{StaticResource XdtBoxBorderBrush}" BorderThickness="1" CornerRadius="8" Background="White" Padding="10">
+                                <Border x:Name="XdtBaukastenDeviceImageContainer"
+                                        BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Background="White"
+                                        Padding="10"
+                                        Cursor="Hand"
+                                        MouseLeftButtonUp="XdtBaukastenDeviceImage_MouseLeftButtonUp">
+                                    <Border.Style>
+                                        <Style TargetType="{x:Type Border}">
+                                            <Setter Property="ToolTip" Value="Gerätebild auswählen oder austauschen" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=XdtBaukastenDeviceImagePathTextBox}" Value="">
+                                                    <Setter Property="ToolTip" Value="Kein Gerätebild hinterlegt. Klicken, um ein Bild auszuwählen." />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="150" />
@@ -889,8 +906,7 @@
                                         </Grid.RowDefinitions>
                                         <Image x:Name="XdtBaukastenDeviceImage"
                                                Source="{Binding Text, ElementName=XdtBaukastenDeviceImagePathTextBox, Converter={StaticResource DeviceImageSourceConverter}}"
-                                               Stretch="Uniform"
-                                               MouseLeftButtonUp="XdtBaukastenDeviceImage_MouseLeftButtonUp" />
+                                               Stretch="Uniform" />
                                         <TextBlock x:Name="XdtBaukastenDeviceImagePlaceholder"
                                                    Text="Geräte Bild&#x0a;&#x0a;Mit Klick austauschbar"
                                                    TextAlignment="Center"
@@ -1388,21 +1404,15 @@
                             </DataGrid>
                         </GroupBox>
 
-                        <GroupBox Grid.Row="1" Grid.Column="4" Header="Details und Aktionen">
-                            <Grid Margin="8">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <TextBox x:Name="ProfileManagementDetailsTextBox"
-                                         IsReadOnly="True"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         VerticalScrollBarVisibility="Auto"
-                                         MinHeight="320"
-                                         Text="Bitte einen Eintrag auswählen." />
+                        <Grid Grid.Row="1" Grid.Column="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                                <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                            <GroupBox Grid.Row="0" Header="Aktionen">
+                                <StackPanel Margin="8">
                                     <TextBlock Text="Neu anlegen / laden"
                                                FontWeight="SemiBold"
                                                Margin="0,0,0,6" />
@@ -1483,8 +1493,19 @@
                                             Click="ProfileManagementRepairBuiltIns_Click"
                                             ToolTip="Lädt den Katalog neu und repariert BuiltIn-Profile über den bestehenden Katalogservice. UserDefined bleibt unverändert." />
                                 </StackPanel>
-                            </Grid>
-                        </GroupBox>
+                            </GroupBox>
+
+                            <GroupBox Grid.Row="2" Header="Details und Aktionen">
+                                <TextBox x:Name="ProfileManagementDetailsTextBox"
+                                         Margin="8"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Height="160"
+                                         Text="Bitte einen Eintrag auswählen." />
+                            </GroupBox>
+                        </Grid>
 
                         <Border Grid.Row="2"
                                 Grid.Column="0"

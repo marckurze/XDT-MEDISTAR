@@ -34,6 +34,12 @@ Der Tab `XDT-Baukasten` ist die eigenständige Arbeitsoberfläche für Entwürfe
 
 Der Tab `Profilverwaltung` bündelt die reine Profilpflege: Suche, BuiltIn/UserDefined-Filter, Profiltypfilter, Details, Nutzungshinweise, Umbenennen, Duplizieren, geschütztes Löschen, lokales Template-Aufräumen, BuiltIn-Reparatur sowie Aktionen zum Anlegen/Laden von AIS-, Geräte-, Export- und Schnittstellenprofilen. Lokale Baukasten-Templates und Templatepakete können dort umbenannt beziehungsweise exportiert werden; der sichere Templatepaket-Import und das Speichern von Baukasten-Templates laufen über den XDT-Baukasten. BuiltIn-Profile werden nicht überschrieben oder gelöscht; verwendete Profile und aktive Schnittstellenprofile blockieren blindes Löschen.
 
+## Installation, Update und Kundendaten
+
+Vor einem spaeteren Installer ist die Datenpolitik in [`docs/INSTALLATION_UPDATE_DATENPOLITIK.md`](docs/INSTALLATION_UPDATE_DATENPOLITIK.md) festgelegt. App-Dateien, Hilfe, Themes, Standard-Assets und BuiltIn-Definitionen duerfen durch Updates ersetzt beziehungsweise repariert werden. Kundendaten unter `%LocalAppData%\XdtDeviceBridge` bleiben erhalten: Profile, UserDefined-Schnittstellenprofile, COM-Port-/Ordnerparameter, Baukasten-Templates, lokale Geraetebilder, `device-image-overrides.json`, Lizenzdaten inklusive `license.xdtboxlic`, UI-Einstellungen und Backups.
+
+Fuer die Deinstallation gilt Variante B: Die Anwendung wird entfernt, Kundendaten bleiben standardmaessig erhalten und duerfen nur nach ausdruecklicher separater Bestaetigung geloescht werden. Externe Praxisordner wie AIS-Import, Geraete-Import, Export, Archiv oder Fehlerordner werden vom Installer/Deinstaller niemals blind geloescht. Interne Herstellerwerkzeuge und private Lizenzschluessel gehoeren nicht in den Kundeninstaller.
+
 ## Aktueller Funktionsumfang
 
 - Einlesen einer AIS-GDT-Datei mit Patientendaten.
