@@ -103,6 +103,7 @@ public partial class MainWindow : Window
     private readonly ExportProfileDraftService _exportProfileDraftService = new();
     private readonly UserDefinedProfileCreationService _userDefinedProfileCreationService = new();
     private readonly UserDefinedProfileRenameService _userDefinedProfileRenameService = new();
+    private readonly ProfileManagementService _profileManagementService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
     private readonly SaveFeedbackDisplayService _saveFeedbackDisplayService = new();
     private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
@@ -136,6 +137,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<InterfaceProfileActivationAttachmentDisplay> _interfaceProfileActivationAttachmentRows = new();
     private readonly ObservableCollection<InterfaceProfileActivationPreviewRow> _interfaceProfileActivationPreviewRows = new();
     private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
+    private readonly ObservableCollection<ProfileManagementRow> _profileManagementRows = new();
     private readonly XdtBaukastenState _xdtBaukastenState = new();
     private readonly ObservableCollection<XdtBaukastenRuleGridRow> _xdtBaukastenExportRules = new();
     private readonly ObservableCollection<XdtBaukastenPreviewLine> _xdtBaukastenResultLines = new();
@@ -189,6 +191,7 @@ public partial class MainWindow : Window
     private TemplatePackageImportPlan? _lastTemplatePackageImportBasePlan;
     private TemplatePackageImportPlan? _lastTemplatePackageImportPlan;
     private TemplatePackageImportDryRunResult? _lastTemplatePackageImportDryRunResult;
+    private IReadOnlyList<ProfileManagementRow> _profileManagementAllRows = Array.Empty<ProfileManagementRow>();
     private bool _updatingTemplatePackageImportPreview;
     private bool _isTemplatePackageImportPreviewBusy;
     private bool _notificationSoundFailureReported;
@@ -239,6 +242,7 @@ public partial class MainWindow : Window
         InterfaceActivationPreviewAttachmentChecksGrid.ItemsSource = _interfaceProfileActivationAttachmentRows;
         InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
         BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
+        ProfileManagementGrid.ItemsSource = _profileManagementRows;
         XdtBaukastenExportRulesGrid.ItemsSource = _xdtBaukastenExportRules;
         XdtBaukastenResultLinesGrid.ItemsSource = _xdtBaukastenResultLines;
         XdtBaukastenAisPlaceholderItems.ItemsSource = _xdtBaukastenAisPlaceholders;
@@ -655,6 +659,7 @@ public partial class MainWindow : Window
         string? selectedDeviceProfileId = null,
         string? selectedExportProfileId = null)
     {
+        InitializeProfileManagementTab(catalog);
         InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
         InitializeXdtBaukasten(catalog, selectedAisProfileId, selectedDeviceProfileId, selectedExportProfileId);
     }
@@ -685,6 +690,7 @@ public partial class MainWindow : Window
 
     private void ClearProfileDependentTabsOnProfileLoadFailure()
     {
+        ClearProfileManagementTabOnProfileLoadFailure();
         InterfaceProfileComboBox.ItemsSource = null;
         ClearInterfaceProfileEditor();
         ClearActiveInterfaceProfilesOverview("Aktive Schnittstellenprofile konnten nicht geladen werden.");
@@ -695,6 +701,372 @@ public partial class MainWindow : Window
         ClearXdtBaukastenDeviceIdentity();
         XdtBaukastenStatusText.Text = "Keine Profile geladen.";
         XdtBaukastenTopStatusText.Text = "Keine Profile geladen.";
+    }
+
+    private void InitializeProfileManagementTab(ProfileCatalog catalog)
+    {
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        _profileManagementAllRows = _profileManagementService.BuildRows(
+            catalog,
+            paths,
+            _xdtBaukastenTemplateLibraryService);
+        RefreshProfileManagementRows();
+        ProfileManagementStatusText.Text =
+            $"Profilverwaltung geladen: {_profileManagementAllRows.Count} Einträge. BuiltIn-Profile bleiben geschützt.";
+    }
+
+    private void ClearProfileManagementTabOnProfileLoadFailure()
+    {
+        _profileManagementAllRows = Array.Empty<ProfileManagementRow>();
+        _profileManagementRows.Clear();
+        ProfileManagementDetailsTextBox.Text = "Keine Profile geladen.";
+        ProfileManagementStatusText.Text = "Keine Profile geladen.";
+        UpdateProfileManagementActionButtons();
+    }
+
+    private ProfileManagementRow? SelectedProfileManagementRow =>
+        ProfileManagementGrid.SelectedItem as ProfileManagementRow;
+
+    private void ProfileManagementFilter_Changed(object sender, EventArgs e)
+    {
+        RefreshProfileManagementRows();
+    }
+
+    private void ProfileManagementGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateProfileManagementActionButtons();
+    }
+
+    private void RefreshProfileManagementRows()
+    {
+        var selected = SelectedProfileManagementRow;
+        var search = ProfileManagementSearchTextBox.Text.Trim();
+        var scope = GetSelectedComboBoxTag(ProfileManagementScopeFilterComboBox);
+        var kind = GetSelectedComboBoxTag(ProfileManagementKindFilterComboBox);
+
+        var rows = _profileManagementAllRows.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            rows = rows.Where(row =>
+                row.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)
+                || row.Id.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || row.Type.Contains(search, StringComparison.CurrentCultureIgnoreCase)
+                || row.Owner.Contains(search, StringComparison.CurrentCultureIgnoreCase)
+                || row.UsedBy.Contains(search, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        if (!scope.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            rows = rows.Where(row => row.Scope.Equals(scope, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!kind.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            rows = rows.Where(row => row.Kind.ToString().Equals(kind, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var filteredRows = rows.ToList();
+        _profileManagementRows.Clear();
+        foreach (var row in filteredRows)
+        {
+            _profileManagementRows.Add(row);
+        }
+
+        if (selected is not null)
+        {
+            ProfileManagementGrid.SelectedItem = _profileManagementRows.FirstOrDefault(row =>
+                row.Kind == selected.Kind && row.Id.Equals(selected.Id, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (ProfileManagementGrid.SelectedItem is null && _profileManagementRows.Count > 0)
+        {
+            ProfileManagementGrid.SelectedItem = _profileManagementRows[0];
+        }
+
+        ProfileManagementStatusText.Text = $"{_profileManagementRows.Count} von {_profileManagementAllRows.Count} Einträgen sichtbar.";
+        UpdateProfileManagementActionButtons();
+    }
+
+    private void UpdateProfileManagementActionButtons()
+    {
+        var row = SelectedProfileManagementRow;
+        if (row is null)
+        {
+            ProfileManagementDetailsTextBox.Text = "Kein Eintrag ausgewählt.";
+            ProfileManagementOpenWorkbenchButton.IsEnabled = false;
+            ProfileManagementOpenInterfaceButton.IsEnabled = false;
+            ProfileManagementRenameButton.IsEnabled = false;
+            ProfileManagementDuplicateButton.IsEnabled = false;
+            ProfileManagementDeleteButton.IsEnabled = false;
+            return;
+        }
+
+        var details = new StringBuilder(row.Details);
+        if (_profileCatalog is not null)
+        {
+            var deleteEvaluation = _profileManagementService.EvaluateDelete(_profileCatalog, row);
+            details.AppendLine();
+            details.AppendLine();
+            details.AppendLine($"Löschen: {deleteEvaluation.Message}");
+        }
+
+        ProfileManagementDetailsTextBox.Text = details.ToString();
+        ProfileManagementOpenWorkbenchButton.IsEnabled = row.CanOpenInWorkbench;
+        ProfileManagementOpenInterfaceButton.IsEnabled = row.CanOpenInInterfaceProfiles;
+        ProfileManagementRenameButton.IsEnabled = row.CanRename;
+        ProfileManagementDuplicateButton.IsEnabled = row.CanDuplicate;
+        ProfileManagementDeleteButton.IsEnabled = row.CanDelete;
+    }
+
+    private void RefreshProfileManagement_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.EnsureDefaultProfiles(paths);
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(catalog);
+            ProfileManagementStatusText.Text = "Profile wurden neu geladen. BuiltIn-Reparatur hat UserDefined-Profile unverändert gelassen.";
+            AppendProfileMessage("Profilverwaltung neu geladen. BuiltIn-Reparatur hat UserDefined-Profile nicht überschrieben.");
+        }
+        catch (Exception ex)
+        {
+            ProfileManagementStatusText.Text = $"Profile konnten nicht neu geladen werden: {ex.Message}";
+            AppendProfileMessage($"Profile konnten nicht neu geladen werden: {ex.Message}");
+        }
+    }
+
+    private void ProfileManagementRepairBuiltIns_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshProfileManagement_Click(sender, e);
+    }
+
+    private void ProfileManagementOpenWorkbench_Click(object sender, RoutedEventArgs e)
+    {
+        var row = SelectedProfileManagementRow;
+        if (row is null)
+        {
+            ProfileManagementStatusText.Text = "Bitte zuerst einen Eintrag auswählen.";
+            return;
+        }
+
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        if (row.Kind == ProfileManagementRowKind.XdtBaukastenTemplate && !string.IsNullOrWhiteSpace(row.FilePath))
+        {
+            try
+            {
+                var template = _xdtBaukastenTemplateLibraryService.Load(row.FilePath);
+                LoadXdtBaukastenTemplate(template);
+                SelectMainTabByHeader("XDT-Baukasten");
+                ProfileManagementStatusText.Text = $"Baukasten-Template geladen: {template.Name}.";
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+            {
+                ProfileManagementStatusText.Text = $"Baukasten-Template konnte nicht geladen werden: {ex.Message}";
+            }
+
+            return;
+        }
+
+        if (row.Kind == ProfileManagementRowKind.TemplatePackage)
+        {
+            SelectMainTabByHeader("XDT-Baukasten");
+            SetXdtBaukastenStatus("Templatepakete werden im Baukasten über 'Template Paket importieren' geprüft und importiert.");
+            ProfileManagementStatusText.Text = "Templatepaket-Import im Baukasten geöffnet. Import prüft Konflikte vor dem Speichern.";
+            return;
+        }
+
+        RefreshProfileOverview(
+            catalog,
+            selectedExportProfileId: row.Kind == ProfileManagementRowKind.ExportProfile ? row.Id : null,
+            selectedAisProfileId: row.Kind == ProfileManagementRowKind.AisProfile ? row.Id : null,
+            selectedDeviceProfileId: row.Kind == ProfileManagementRowKind.DeviceProfile ? row.Id : null);
+        SelectMainTabByHeader("XDT-Baukasten");
+        ProfileManagementStatusText.Text = $"Eintrag im XDT-Baukasten ausgewählt: {row.Name}.";
+    }
+
+    private void ProfileManagementOpenInterface_Click(object sender, RoutedEventArgs e)
+    {
+        var row = SelectedProfileManagementRow;
+        if (row is null)
+        {
+            ProfileManagementStatusText.Text = "Bitte zuerst einen Eintrag auswählen.";
+            return;
+        }
+
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        RefreshProfileOverview(catalog, selectedInterfaceProfileId: row.Id);
+        SelectMainTabByHeader("Schnittstellenprofile");
+        ProfileManagementStatusText.Text = $"Schnittstellenprofil geöffnet: {row.Name}.";
+    }
+
+    private void ProfileManagementRename_Click(object sender, RoutedEventArgs e)
+    {
+        var row = SelectedProfileManagementRow;
+        if (row is null)
+        {
+            ProfileManagementStatusText.Text = "Bitte zuerst einen Eintrag auswählen.";
+            return;
+        }
+
+        var renameKind = ToUserDefinedProfileRenameKind(row.Kind);
+        if (renameKind is null)
+        {
+            ProfileManagementStatusText.Text = "Dieser Eintrag kann nicht umbenannt werden.";
+            return;
+        }
+
+        RenameProfile(
+            renameKind.Value,
+            row.Id,
+            row.Name,
+            selectedAisProfileId: row.Kind == ProfileManagementRowKind.AisProfile ? row.Id : null,
+            selectedDeviceProfileId: row.Kind == ProfileManagementRowKind.DeviceProfile ? row.Id : null,
+            selectedExportProfileId: row.Kind == ProfileManagementRowKind.ExportProfile ? row.Id : null,
+            selectedInterfaceProfileId: row.Kind == ProfileManagementRowKind.InterfaceProfile ? row.Id : null);
+    }
+
+    private void ProfileManagementDuplicate_Click(object sender, RoutedEventArgs e)
+    {
+        var row = SelectedProfileManagementRow;
+        if (row is null)
+        {
+            ProfileManagementStatusText.Text = "Bitte zuerst einen Eintrag auswählen.";
+            return;
+        }
+
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var result = _profileManagementService.Duplicate(catalog, paths, row, DateTimeOffset.UtcNow, Environment.UserName);
+            if (!result.Success)
+            {
+                ProfileManagementStatusText.Text = result.Message;
+                return;
+            }
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(
+                updatedCatalog,
+                selectedExportProfileId: result.ExportProfileId,
+                selectedInterfaceProfileId: result.InterfaceProfileId,
+                selectedAisProfileId: result.AisProfileId,
+                selectedDeviceProfileId: result.DeviceProfileId);
+            ProfileManagementStatusText.Text = result.Message;
+            AppendProfileMessage(result.Message);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        {
+            ProfileManagementStatusText.Text = $"Profil konnte nicht dupliziert werden: {ex.Message}";
+            AppendProfileMessage($"Profil konnte nicht dupliziert werden: {ex.Message}");
+        }
+    }
+
+    private void ProfileManagementDelete_Click(object sender, RoutedEventArgs e)
+    {
+        var row = SelectedProfileManagementRow;
+        if (row is null)
+        {
+            ProfileManagementStatusText.Text = "Bitte zuerst einen Eintrag auswählen.";
+            return;
+        }
+
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var evaluation = _profileManagementService.EvaluateDelete(catalog, row);
+        if (!evaluation.Success)
+        {
+            ProfileManagementStatusText.Text = evaluation.Message;
+            System.Windows.MessageBox.Show(
+                this,
+                evaluation.Message,
+                "Profilverwaltung",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var confirmation = System.Windows.MessageBox.Show(
+            this,
+            $"{row.Type} wirklich löschen?{Environment.NewLine}{row.Name}{Environment.NewLine}{Environment.NewLine}BuiltIn-Profile und verwendete Profile bleiben geschützt.",
+            "Profilverwaltung",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var result = _profileManagementService.Delete(catalog, paths, row);
+            if (!result.Success)
+            {
+                ProfileManagementStatusText.Text = result.Message;
+                return;
+            }
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(updatedCatalog);
+            ProfileManagementStatusText.Text = result.Message;
+            AppendProfileMessage(result.Message);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        {
+            ProfileManagementStatusText.Text = $"Eintrag konnte nicht gelöscht werden: {ex.Message}";
+            AppendProfileMessage($"Eintrag konnte nicht gelöscht werden: {ex.Message}");
+        }
+    }
+
+    private static string GetSelectedComboBoxTag(System.Windows.Controls.ComboBox comboBox)
+    {
+        return comboBox.SelectedItem is ComboBoxItem item && item.Tag is not null
+            ? item.Tag.ToString() ?? "All"
+            : "All";
+    }
+
+    private static UserDefinedProfileRenameKind? ToUserDefinedProfileRenameKind(ProfileManagementRowKind kind)
+    {
+        return kind switch
+        {
+            ProfileManagementRowKind.AisProfile => UserDefinedProfileRenameKind.AisProfile,
+            ProfileManagementRowKind.DeviceProfile => UserDefinedProfileRenameKind.DeviceProfile,
+            ProfileManagementRowKind.ExportProfile => UserDefinedProfileRenameKind.ExportProfile,
+            ProfileManagementRowKind.InterfaceProfile => UserDefinedProfileRenameKind.InterfaceProfile,
+            _ => null
+        };
+    }
+
+    private void SelectMainTabByHeader(string header)
+    {
+        foreach (var tabItem in MainTabControl.Items.OfType<TabItem>())
+        {
+            if (string.Equals(tabItem.Header?.ToString(), header, StringComparison.OrdinalIgnoreCase))
+            {
+                MainTabControl.SelectedItem = tabItem;
+                return;
+            }
+        }
     }
 
     private void InitializeExportRulesView(ProfileCatalog catalog, string? selectedExportProfileId = null)
@@ -1280,7 +1652,6 @@ public partial class MainWindow : Window
         {
             InterfaceProfileComboBox.SelectedIndex = -1;
             ClearInterfaceProfileEditor();
-            UpdateProfileRenameActionButtons();
             return;
         }
 

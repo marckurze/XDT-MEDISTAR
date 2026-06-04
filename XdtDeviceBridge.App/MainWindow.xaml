@@ -2349,6 +2349,178 @@
                 </ScrollViewer>
             </TabItem>
 
+            <TabItem Header="Profilverwaltung">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="260" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="360" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="5"
+                                Padding="10"
+                                Margin="0,0,0,10"
+                                BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Background="{StaticResource XdtBoxPanelBackgroundBrush}">
+                            <StackPanel>
+                                <TextBlock Text="Profilverwaltung"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource XdtBoxPrimaryTextBrush}" />
+                                <TextBlock Text="Zentrale Übersicht für AIS-, Geräte-, Export-, Schnittstellen- und Templateprofile. Der XDT-Baukasten bleibt Entwurf, Test und Vorschau."
+                                           TextWrapping="Wrap"
+                                           Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                                           Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <GroupBox Grid.Row="1" Grid.Column="0" Header="Übersicht / Filter">
+                            <StackPanel Margin="8">
+                                <TextBlock Text="Suche" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <TextBox x:Name="ProfileManagementSearchTextBox"
+                                         Margin="0,0,0,10"
+                                         TextChanged="ProfileManagementFilter_Changed"
+                                         ToolTip="Durchsucht Name, Typ, Hersteller/AIS und Verwendungen." />
+
+                                <TextBlock Text="Quelle" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <ComboBox x:Name="ProfileManagementScopeFilterComboBox"
+                                          SelectedValuePath="Tag"
+                                          SelectedValue="All"
+                                          Margin="0,0,0,10"
+                                          SelectionChanged="ProfileManagementFilter_Changed">
+                                    <ComboBoxItem Content="Alle" Tag="All" />
+                                    <ComboBoxItem Content="BuiltIn" Tag="BuiltIn" />
+                                    <ComboBoxItem Content="UserDefined" Tag="UserDefined" />
+                                    <ComboBoxItem Content="Lokal" Tag="Lokal" />
+                                </ComboBox>
+
+                                <TextBlock Text="Profiltyp" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                <ComboBox x:Name="ProfileManagementKindFilterComboBox"
+                                          SelectedValuePath="Tag"
+                                          SelectedValue="All"
+                                          Margin="0,0,0,12"
+                                          SelectionChanged="ProfileManagementFilter_Changed">
+                                    <ComboBoxItem Content="Alle" Tag="All" />
+                                    <ComboBoxItem Content="AIS-Profile" Tag="AisProfile" />
+                                    <ComboBoxItem Content="Geräteprofile" Tag="DeviceProfile" />
+                                    <ComboBoxItem Content="Exportprofile" Tag="ExportProfile" />
+                                    <ComboBoxItem Content="Schnittstellenprofile" Tag="InterfaceProfile" />
+                                    <ComboBoxItem Content="Templatepakete" Tag="TemplatePackage" />
+                                    <ComboBoxItem Content="Baukasten-Templates" Tag="XdtBaukastenTemplate" />
+                                    <ComboBoxItem Content="Wartung" Tag="Maintenance" />
+                                </ComboBox>
+
+                                <Button Content="Profile neu laden / BuiltIns reparieren"
+                                        Margin="0,0,0,8"
+                                        Click="RefreshProfileManagement_Click"
+                                        ToolTip="Lädt den Profilkatalog neu. BuiltIn-Reparaturen laufen über den Katalogservice; UserDefined-Profile bleiben unverändert." />
+                                <TextBlock x:Name="ProfileManagementStatusText"
+                                           Text="Keine Profile geladen."
+                                           TextWrapping="Wrap"
+                                           Foreground="{StaticResource XdtBoxMutedTextBrush}" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="1" Grid.Column="2" Header="Profile und lokale Templates">
+                            <DataGrid x:Name="ProfileManagementGrid"
+                                      Margin="8"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      IsReadOnly="True"
+                                      SelectionChanged="ProfileManagementGrid_SelectionChanged"
+                                      MinHeight="420"
+                                      GridLinesVisibility="Horizontal"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" MinWidth="220" Width="*" />
+                                    <DataGridTextColumn Header="Typ" Binding="{Binding Type}" MinWidth="120" Width="130" />
+                                    <DataGridTextColumn Header="Hersteller / AIS / Gerät" Binding="{Binding Owner}" MinWidth="180" Width="200" />
+                                    <DataGridTextColumn Header="BuiltIn/UserDefined" Binding="{Binding Scope}" MinWidth="130" Width="150" />
+                                    <DataGridTextColumn Header="Aktiv genutzt" Binding="{Binding ActiveUsage}" MinWidth="120" Width="130" />
+                                    <DataGridTextColumn Header="Verwendet von" Binding="{Binding UsedBy}" MinWidth="240" Width="260" />
+                                    <DataGridTextColumn Header="Zuletzt geändert" Binding="{Binding UpdatedAt}" MinWidth="130" Width="150" />
+                                    <DataGridTextColumn Header="Aktionen" Binding="{Binding Actions}" MinWidth="280" Width="320" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="1" Grid.Column="4" Header="Details und Aktionen">
+                            <Grid Margin="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBox x:Name="ProfileManagementDetailsTextBox"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         MinHeight="320"
+                                         Text="Bitte einen Eintrag auswählen." />
+
+                                <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                                    <Button x:Name="ProfileManagementOpenWorkbenchButton"
+                                            Content="Im XDT-Baukasten öffnen"
+                                            Margin="0,0,0,6"
+                                            Click="ProfileManagementOpenWorkbench_Click"
+                                            ToolTip="Lädt AIS-, Geräte-, Export- oder Baukasten-Template-Auswahl in den XDT-Baukasten." />
+                                    <Button x:Name="ProfileManagementOpenInterfaceButton"
+                                            Content="Im Schnittstellenprofil öffnen"
+                                            Margin="0,0,0,6"
+                                            Click="ProfileManagementOpenInterface_Click"
+                                            ToolTip="Springt zum Tab Schnittstellenprofile und wählt dieses Schnittstellenprofil aus." />
+                                    <Button x:Name="ProfileManagementRenameButton"
+                                            Content="Umbenennen"
+                                            Margin="0,0,0,6"
+                                            Click="ProfileManagementRename_Click"
+                                            ToolTip="Nur UserDefined-Profile können umbenannt werden." />
+                                    <Button x:Name="ProfileManagementDuplicateButton"
+                                            Content="Als UserDefined-Kopie duplizieren"
+                                            Margin="0,0,0,6"
+                                            Click="ProfileManagementDuplicate_Click"
+                                            ToolTip="BuiltIn- und UserDefined-Profile können als neue UserDefined-Kopie gespeichert werden." />
+                                    <Button x:Name="ProfileManagementDeleteButton"
+                                            Content="Löschen"
+                                            Margin="0,0,0,6"
+                                            Click="ProfileManagementDelete_Click"
+                                            ToolTip="Löscht nur erlaubte UserDefined-Profile oder lokale Template-Dateien nach Bestätigung." />
+                                    <Button Content="Wartung ausführen"
+                                            Click="ProfileManagementRepairBuiltIns_Click"
+                                            ToolTip="Lädt den Katalog neu und repariert BuiltIn-Profile über den bestehenden Katalogservice. UserDefined bleibt unverändert." />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                        <Border Grid.Row="2"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="5"
+                                Margin="0,10,0,0"
+                                Padding="10,8"
+                                BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                                BorderThickness="1"
+                                Background="{StaticResource XdtBoxPanelBackgroundBrush}">
+                            <TextBlock Text="Abgrenzung: XDT-Baukasten = Entwurf/Test/Vorschau. Profilverwaltung = Übersicht, Umbenennen, Löschen, Duplizieren und Wartung. Schnittstellenprofile = konkrete Praxisanbindung."
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource XdtBoxMutedTextBrush}" />
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
             <TabItem Header="Schnittstellenprofile">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="8">

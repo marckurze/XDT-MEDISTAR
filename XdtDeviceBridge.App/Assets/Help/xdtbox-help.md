@@ -50,6 +50,14 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
+# Profilverwaltung
+
+Der Tab "Profilverwaltung" bündelt die reine Profilpflege. Dort finden Sie AIS-, Geräte-, Export- und Schnittstellenprofile sowie lokale Templatepakete und Baukasten-Templates in einer gemeinsamen Übersicht mit Suche, BuiltIn/UserDefined-Filter und Profiltypfilter.
+
+BuiltIn-Profile sind geschützt. Sie können nicht direkt umbenannt oder gelöscht werden, lassen sich aber als UserDefined-Kopie duplizieren. UserDefined-Profile können umbenannt, dupliziert und gelöscht werden, solange sie nicht noch von Export- oder Schnittstellenprofilen verwendet werden. Aktive Schnittstellenprofile schützen zusätzlich vor blindem Löschen.
+
+Die Rollen sind getrennt: Der XDT-Baukasten ist Entwurf, Test und Vorschau. Die Profilverwaltung ist Übersicht, Umbenennen, Duplizieren, Löschen, Template-Aufräumen und BuiltIn-Reparatur. Der Tab "Schnittstellenprofile" bleibt für Ordner, COM-Port, DTR/RTS, NIDEK-RT-Sendemodus und konkrete Praxisparameter zuständig.
+
 # XDT-Baukasten
 
 Der Tab "XDT-Baukasten" ist eine eigenständige Entwurfs- und Testoberfläche. Er ersetzt noch nicht den alten Tab "Profile & Templates", bereitet aber dessen spätere Ablösung vor.
@@ -68,7 +76,7 @@ Regeln können über das Plus ergänzt und über die Mülltonne aus der Arbeitsk
 
 "Baukasten-Template laden" lädt lokal gespeicherte Baukasten-Arbeitskopien aus der Templatebibliothek. "Konfiguration als Template speichern" speichert die aktuelle Baukasten-Arbeitskopie als UserDefined-Exportprofil und zusätzlich als lokale Baukasten-Template-Datei. "Template Paket importieren" öffnet im Baukasten eine eigene Importvorschau; der Import wird dort als UserDefined-Kopie übernommen und nicht mehr in den alten Tab "Profile & Templates" umgeleitet.
 
-Der alte Tab "Profile & Templates" bleibt vorerst parallel sichtbar. Reine Profilverwaltungsfunktionen wie Übersicht, Umbenennen und Löschen liegen dort noch, bis sie später in eine eigene Profilverwaltung überführt werden. Der Baukasten selbst nutzt eigene Auswahl-, Import-, Template- und RS232-Testwege und ist nicht als Bedienoberfläche vom alten Tab abhängig.
+Der alte Tab "Profile & Templates" bleibt vorerst parallel sichtbar. Die zentrale Profilpflege liegt jetzt im Tab "Profilverwaltung"; der alte Tab dient noch als Übergangs-/Legacy-Bereich. Der Baukasten selbst nutzt eigene Auswahl-, Import-, Template- und RS232-Testwege und ist nicht als Bedienoberfläche vom alten Tab abhängig.
 
 # Neues Gerät anlegen und Gerät laden
 

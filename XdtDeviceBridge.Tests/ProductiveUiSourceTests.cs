@@ -131,7 +131,7 @@ public sealed class ProductiveUiSourceTests
         var section = ExtractSection(
             xaml,
             "<TabItem Header=\"XDT-Baukasten\">",
-            "<TabItem Header=\"Schnittstellenprofile\">");
+            "<TabItem Header=\"Profilverwaltung\">");
 
         Assert.Contains("Geräteidentität", section);
         Assert.Contains("Testdaten und Rohdaten", section);
@@ -193,7 +193,7 @@ public sealed class ProductiveUiSourceTests
         var section = ExtractSection(
             xaml,
             "<TabItem Header=\"XDT-Baukasten\">",
-            "<TabItem Header=\"Schnittstellenprofile\">");
+            "<TabItem Header=\"Profilverwaltung\">");
 
         Assert.DoesNotContain("BuilderAisFilePathTextBox", section);
         Assert.DoesNotContain("BuilderDeviceFilePathTextBox", section);
@@ -215,12 +215,76 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("InitializeLegacyProfileTemplatesTab", code);
         Assert.Contains("InitializeProfileDependentTabs", code);
         Assert.Contains("InitializeXdtBaukasten", dependentBody);
+        Assert.Contains("InitializeProfileManagementTab", dependentBody);
         Assert.Contains("InitializeInterfaceProfileConfiguration", dependentBody);
         Assert.DoesNotContain("AisProfileCountText", dependentBody);
         Assert.DoesNotContain("ExportProfileComboBox", dependentBody);
         Assert.DoesNotContain("TemplatePackageExportInterfaceProfileComboBox", dependentBody);
         Assert.DoesNotContain("BuilderAttachmentDiagnosticInterfaceProfileComboBox", dependentBody);
         Assert.DoesNotContain("ProfileMessagesTextBox", dependentBody);
+    }
+
+    [Fact]
+    public void ProfileManagementTab_ShouldExposeCentralProfileMaintenanceSurface()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var section = ExtractSection(
+            xaml,
+            "<TabItem Header=\"Profilverwaltung\">",
+            "<TabItem Header=\"Schnittstellenprofile\">");
+
+        Assert.Contains("ProfileManagementGrid", section);
+        Assert.Contains("Profilverwaltung", section);
+        Assert.Contains("Übersicht / Filter", section);
+        Assert.Contains("Profile und lokale Templates", section);
+        Assert.Contains("Details und Aktionen", section);
+        Assert.Contains("Profile neu laden / BuiltIns reparieren", section);
+        Assert.Contains("Umbenennen", section);
+        Assert.Contains("Duplizieren", section);
+        Assert.Contains("Löschen", section);
+        Assert.Contains("Im XDT-Baukasten öffnen", section);
+        Assert.Contains("Im Schnittstellenprofil öffnen", section);
+        Assert.Contains("XDT-Baukasten = Entwurf/Test/Vorschau", section);
+        Assert.Contains("ProfileManagementService", code);
+        Assert.Contains("InitializeProfileManagementTab", code);
+        Assert.Contains("_profileManagementRows", code);
+    }
+
+    [Fact]
+    public void ProfileManagementTab_ShouldNotDependOnOldProfileTemplatesControls()
+    {
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var body = ExtractMethodBody(
+            code,
+            "private void InitializeProfileManagementTab",
+            "private void ClearProfileManagementTabOnProfileLoadFailure");
+
+        Assert.Contains("_profileManagementService", body);
+        Assert.Contains("ProfileManagementGrid", code);
+        Assert.DoesNotContain("AisProfileCountText", body);
+        Assert.DoesNotContain("ExportProfileComboBox", body);
+        Assert.DoesNotContain("TemplatePackageExportInterfaceProfileComboBox", body);
+        Assert.DoesNotContain("BuilderAttachmentDiagnosticInterfaceProfileComboBox", body);
+        Assert.DoesNotContain("ProfileMessagesTextBox", body);
+    }
+
+    [Fact]
+    public void InterfaceProfilesInitialization_ShouldNotDependOnOldProfileTemplatesControls()
+    {
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var body = ExtractMethodBody(
+            code,
+            "private void InitializeInterfaceProfileConfiguration",
+            "private void InitializeAttachmentDiagnosticProfiles");
+
+        Assert.Contains("InterfaceProfileComboBox", body);
+        Assert.DoesNotContain("AisProfileCountText", body);
+        Assert.DoesNotContain("ExportProfileComboBox", body);
+        Assert.DoesNotContain("TemplatePackageExportInterfaceProfileComboBox", body);
+        Assert.DoesNotContain("BuilderAttachmentDiagnosticInterfaceProfileComboBox", body);
+        Assert.DoesNotContain("ProfileMessagesTextBox", body);
+        Assert.DoesNotContain("UpdateProfileRenameActionButtons", body);
     }
 
     [Fact]

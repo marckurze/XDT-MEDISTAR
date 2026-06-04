@@ -222,6 +222,64 @@ public sealed class ProfileCatalogService
         return true;
     }
 
+    public bool DeleteAisProfile(AppDataPaths paths, string aisProfileId)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        EnsureProfileId(aisProfileId);
+
+        var aisFolder = GetAisFolder(paths);
+        var filePath = CreateProfilePath(aisFolder, aisProfileId);
+        EnsurePathStaysInFolder(aisFolder, filePath);
+
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+
+        var profile = _repository.LoadAisProfile(filePath);
+        if (profile.Metadata.IsBuiltIn)
+        {
+            throw new InvalidOperationException("Built-in AIS profiles cannot be deleted.");
+        }
+
+        if (!profile.Metadata.IsUserDefined)
+        {
+            throw new InvalidOperationException("Only user-defined AIS profiles can be deleted.");
+        }
+
+        File.Delete(filePath);
+        return true;
+    }
+
+    public bool DeleteDeviceProfileDefinition(AppDataPaths paths, string deviceProfileId)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        EnsureProfileId(deviceProfileId);
+
+        var devicesFolder = GetDevicesFolder(paths);
+        var filePath = CreateProfilePath(devicesFolder, deviceProfileId);
+        EnsurePathStaysInFolder(devicesFolder, filePath);
+
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+
+        var profile = _repository.LoadDeviceProfileDefinition(filePath);
+        if (profile.Metadata.IsBuiltIn)
+        {
+            throw new InvalidOperationException("Built-in device profiles cannot be deleted.");
+        }
+
+        if (!profile.Metadata.IsUserDefined)
+        {
+            throw new InvalidOperationException("Only user-defined device profiles can be deleted.");
+        }
+
+        File.Delete(filePath);
+        return true;
+    }
+
     public bool DeleteExportProfile(AppDataPaths paths, string exportProfileId)
     {
         ArgumentNullException.ThrowIfNull(paths);

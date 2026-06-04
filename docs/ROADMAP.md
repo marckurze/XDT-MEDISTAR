@@ -22,7 +22,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Der Baukasten bleibt Werkzeug fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen.
 - Der Aktivierungsassistent ist fuer den Moment ausreichend vorbereitet und wird nicht weiter ausgebaut.
 - Naechste Entwicklungsarbeit soll konkrete Geraete-/Template-Luecken schliessen.
-- Der neue `XDT-Baukasten` wird schrittweise vom alten Tab `Profile & Templates` entkoppelt: Import, lokale Baukasten-Templates, Vorschau, Arbeitskopien und RS232-Testdaten sollen im Baukasten selbst funktionieren. Der alte Tab bleibt als Profilverwaltungs- und Uebergangsbereich erhalten, bis Umbenennen/Loeschen/Uebersicht in eine eigene Profilverwaltung wandern.
+- Der neue `XDT-Baukasten` wird schrittweise vom alten Tab `Profile & Templates` entkoppelt: Import, lokale Baukasten-Templates, Vorschau, Arbeitskopien und RS232-Testdaten funktionieren im Baukasten selbst. Die reine Profilpflege wandert in den neuen Tab `Profilverwaltung`; `Profile & Templates` bleibt nur noch als Uebergangs-/Legacy-Tab erhalten, bis verbleibende Altbereiche abgenommen und entfernt werden koennen.
 
 ### Validierter Kernworkflow MEDISTAR + NIDEK ARK1S
 
@@ -116,6 +116,14 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - XDT-Anhänge können für den Baukasten-Test aus einem beliebigen Speicherort ausgewählt werden.
 - Die Vorschau simuliert den produktiven Zielpfad aus dem Schnittstellenprofil: `6305` zeigt auf `XDT-Anhang Exportordner` plus erzeugten Dateinamen, nicht auf den Quellpfad.
 - Exportprofile und BuiltIn-Profile werden durch den Baukasten-Test nicht verändert.
+
+### Neuer Tab `Profilverwaltung`
+
+- Der Tab `Profilverwaltung` buendelt reine Profilpflege: Suche, Filter nach BuiltIn/UserDefined und Profiltyp, Details, Nutzungshinweise, Umbenennen, Duplizieren, geschuetztes Loeschen, lokale Template-/Baukasten-Template-Uebersicht und BuiltIn-Reparatur.
+- BuiltIn-Profile bleiben gegen direktes Umbenennen oder Loeschen geschuetzt; sie koennen als UserDefined-Kopie dupliziert werden.
+- UserDefined-Profile duerfen geloescht werden, wenn keine Schnittstellen-/Exportprofile sie verwenden und aktive Schnittstellenprofile nicht betroffen sind.
+- Abgrenzung: `XDT-Baukasten` ist Entwurf/Test/Vorschau, `Profilverwaltung` ist Uebersicht/Pflege/Wartung, `Schnittstellenprofile` ist konkrete Praxisanbindung mit Ordnern, COM-Port, Aktivierungspruefung und Laufzeitparametern.
+- Der alte Tab `Profile & Templates` bleibt vorerst vorhanden. Offene Restthemen vor Entfernung sind vor allem vollstaendige Verlagerung einzelner Legacy-Diagnose-/Bildpflegepfade und praktische UI-Abnahme der neuen Verwaltung.
 
 ### Testexport
 
