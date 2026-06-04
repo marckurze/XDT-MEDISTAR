@@ -1,4 +1,4 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
@@ -25,18 +25,6 @@ public partial class MainWindow : Window
     private const string AppIconResourcePath = "Assets/App/XDTBox.ico";
     private const bool MonitoringNotificationSoundEnabled = true;
 
-    private static readonly HashSet<string> SupportedBuilderAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".pdf",
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".tif",
-        ".tiff",
-        ".dcm",
-        ".txt"
-    };
-
     private static readonly DependencyProperty RadarAnimationKeyProperty = DependencyProperty.RegisterAttached(
         "RadarAnimationKey",
         typeof(string),
@@ -55,16 +43,13 @@ public partial class MainWindow : Window
         typeof(MainWindow),
         new PropertyMetadata(""));
 
-    private readonly BuilderManualProcessingPreviewService _builderManualProcessingPreviewService = new();
     private readonly XdtBaukastenPreviewService _xdtBaukastenPreviewService = new();
-    private readonly ExportFileNameBuilder _fileNameBuilder = new();
     private readonly FileExportService _fileExportService = new();
     private readonly AppDataPathProvider _appDataPathProvider = new();
     private readonly ProfileCatalogService _profileCatalogService = new();
     private readonly TemplatePackageExporter _templatePackageExporter = new();
     private readonly TemplatePackageExportSelectionService _templatePackageExportSelectionService = new();
     private readonly TemplatePackageImportDryRunService _templatePackageImportDryRunService = new();
-    private readonly TemplatePackageImportPreviewDisplayService _templatePackageImportPreviewDisplayService = new();
     private readonly TemplatePackageImportPreviewService _templatePackageImportPreviewService = new();
     private readonly TemplatePackageImportExecutor _templatePackageImportExecutor = new();
     private readonly TemplatePackageImportSelectionService _templatePackageImportSelectionService = new();
@@ -91,23 +76,17 @@ public partial class MainWindow : Window
     private readonly MedistarHistoricalMeasurementParser _cv5000HistoryParser = new();
     private readonly TopconCv5000ImportXmlWriter _cv5000ImportWriter = new();
     private readonly NidekRt6100InputXmlWriter _nidekRt6100ImportWriter = new();
-    private readonly BuilderTestExportService _builderTestExportService = new();
-    private readonly AttachmentFileNameBuilder _attachmentFileNameBuilder = new();
-    private readonly ExternalAisLinkFieldBuilder _externalAisLinkFieldBuilder = new();
-    private readonly ExternalAisLinkXdtFieldAdapter _externalAisLinkXdtFieldAdapter = new();
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly LicenseCustomerDataRepository _licenseCustomerDataRepository = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
-    private readonly ExportProfileDraftService _exportProfileDraftService = new();
     private readonly UserDefinedProfileCreationService _userDefinedProfileCreationService = new();
     private readonly UserDefinedProfileRenameService _userDefinedProfileRenameService = new();
     private readonly ProfileManagementService _profileManagementService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
     private readonly SaveFeedbackDisplayService _saveFeedbackDisplayService = new();
     private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
-    private readonly ExportRuleRemovalService _exportRuleRemovalService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
     private readonly InterfaceProfileAutoDetachService _interfaceProfileAutoDetachService = new();
     private readonly InterfaceProfileAutoRedockService _interfaceProfileAutoRedockService = new();
@@ -127,16 +106,12 @@ public partial class MainWindow : Window
     private readonly ISerialDeviceCommunicationService _serialDeviceCommunicationService = new SerialDeviceCommunicationService();
     private readonly INidekRtSerialPhoropterCommunicationService _nidekRtSerialCommunicationService;
     private readonly InterfaceProfileFloatingWindowStateRepository _floatingWindowStateRepository = new();
-    private readonly ObservableCollection<PlaceholderRow> _aisPlaceholderRows = new();
-    private readonly ObservableCollection<PlaceholderRow> _devicePlaceholderRows = new();
-    private readonly ObservableCollection<ExportRuleDefinition> _visibleExportRules = new();
     private readonly ObservableCollection<LicenseDeviceStateRow> _licensedDeviceStateRows = new();
     private readonly ObservableCollection<ActiveInterfaceProfileStatusRow> _activeInterfaceProfileStatusRows = new();
     private readonly ObservableCollection<InterfaceMonitoringCardDisplay> _interfaceMonitoringCards = new();
     private readonly ObservableCollection<InterfaceProfileActivationFolderDisplay> _interfaceProfileActivationFolderRows = new();
     private readonly ObservableCollection<InterfaceProfileActivationAttachmentDisplay> _interfaceProfileActivationAttachmentRows = new();
     private readonly ObservableCollection<InterfaceProfileActivationPreviewRow> _interfaceProfileActivationPreviewRows = new();
-    private readonly ObservableCollection<AttachmentImportCandidateDisplayRow> _attachmentImportCandidateRows = new();
     private readonly ObservableCollection<ProfileManagementRow> _profileManagementRows = new();
     private readonly XdtBaukastenState _xdtBaukastenState = new();
     private readonly ObservableCollection<XdtBaukastenRuleGridRow> _xdtBaukastenExportRules = new();
@@ -149,7 +124,6 @@ public partial class MainWindow : Window
     private readonly XdtBaukastenPlaceholderValueService _xdtBaukastenPlaceholderValueService = new();
     private readonly XmlDeviceParser _xdtBaukastenDeviceParser = new();
     private readonly XdtBaukastenDeviceCompatibilityService _xdtBaukastenDeviceCompatibilityService = new();
-    private readonly List<ExportRuleDefinition> _temporaryExportRules = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, PendingImportQueue> _lastMonitoringScanQueuesByProfileId = new(StringComparer.OrdinalIgnoreCase);
@@ -167,38 +141,18 @@ public partial class MainWindow : Window
     private WinForms.NotifyIcon? _trayIcon;
     private WinForms.ContextMenuStrip? _trayContextMenu;
 
-    private ProcessingPipelineResult? _lastPipelineResult;
     private DeviceProfile _currentProfile = DefaultDeviceProfiles.CreateNidekArk1sDefault();
     private ProfileCatalog? _profileCatalog;
     private InstallationInfo? _installationInfo;
-    private string? _plannedFileName;
-    private bool _updatingPlaceholderRows;
     private bool _updatingXdtBaukastenSelection;
     private bool _restoringXdtBaukastenUndo;
     private string? _xdtBaukastenSelectedRuleId;
-    private bool _updatingAttachmentDiagnosticProfileSelection;
-    private int _draftRuleSequence;
     private CancellationTokenSource? _periodicScanCancellationTokenSource;
     private Task? _periodicScanTask;
     private bool _refreshingInterfaceMonitoringCards;
-    private IReadOnlyList<ExportFieldRecord> _builderTransientAttachmentFields = Array.Empty<ExportFieldRecord>();
-    private AttachmentImportCandidateDisplayRow? _builderSelectedAttachmentCandidate;
-    private string? _builderPreviewAttachmentTargetPath;
-    private string? _builderPreviewAttachmentTargetFileName;
-    private TemplatePackageImportResult? _lastTemplatePackageImportResult;
-    private TemplatePackageImportValidationResult? _lastTemplatePackageImportValidationResult;
-    private TemplatePackageImportAnalysisResult? _lastTemplatePackageImportAnalysisResult;
-    private TemplatePackageImportPlan? _lastTemplatePackageImportBasePlan;
-    private TemplatePackageImportPlan? _lastTemplatePackageImportPlan;
-    private TemplatePackageImportDryRunResult? _lastTemplatePackageImportDryRunResult;
     private IReadOnlyList<ProfileManagementRow> _profileManagementAllRows = Array.Empty<ProfileManagementRow>();
-    private bool _updatingTemplatePackageImportPreview;
-    private bool _isTemplatePackageImportPreviewBusy;
     private bool _notificationSoundFailureReported;
-    private bool _isNewExportProfileDraftActive;
-    private string _lastTemplatePackageImportSelectionSignature = string.Empty;
     private DispatcherTimer? _interfaceProfileSaveFeedbackTimer;
-    private CancellationTokenSource? _serialTestCancellationTokenSource;
     private bool _hasInterfaceProfileSaveButtonOriginalState;
     private bool _hasAutoStartedPeriodicScan;
     private bool _hasAppliedStartupTrayPreference;
@@ -232,16 +186,11 @@ public partial class MainWindow : Window
         InitializeComponent();
         LoadAppSettings();
         LoadFloatingWindowStates();
-        DraftRuleTypeComboBox.ItemsSource = Enum.GetValues<ExportRuleType>();
-        AisPlaceholdersGrid.ItemsSource = _aisPlaceholderRows;
-        DevicePlaceholdersGrid.ItemsSource = _devicePlaceholderRows;
-        ExportRulesGrid.ItemsSource = _visibleExportRules;
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         InterfaceMonitoringCardsItemsControl.ItemsSource = _interfaceMonitoringCards;
         InterfaceActivationPreviewFolderChecksGrid.ItemsSource = _interfaceProfileActivationFolderRows;
         InterfaceActivationPreviewAttachmentChecksGrid.ItemsSource = _interfaceProfileActivationAttachmentRows;
         InterfaceActivationPreviewChecksGrid.ItemsSource = _interfaceProfileActivationPreviewRows;
-        BuilderAttachmentDiagnosticCandidatesGrid.ItemsSource = _attachmentImportCandidateRows;
         ProfileManagementGrid.ItemsSource = _profileManagementRows;
         XdtBaukastenExportRulesGrid.ItemsSource = _xdtBaukastenExportRules;
         XdtBaukastenResultLinesGrid.ItemsSource = _xdtBaukastenResultLines;
@@ -251,8 +200,8 @@ public partial class MainWindow : Window
         _autoRedockTimer.Tick += AutoRedockTimer_Tick;
         AttachInterfaceActivationPreviewDraftChangeHandlers();
         InitializeTrayIcon();
-        SyncBuilderTestPreviewArea();
-        InitializeSerialCommunicationUi();
+        RefreshSerialPortComboBox(InterfaceSerialPortComboBox);
+        InterfaceSerialStatusTextBlock.Text = "RS232 ersetzt nur den Geräte-Eingangsordner. AIS-Patientendatei, Ergebnisordner, Archiv und Fehlerordner bleiben wie gewohnt konfigurierbar.";
         InitializeProfileOverview();
         InitializeLicenseOverview();
         InitializeBackupOverview();
@@ -277,9 +226,6 @@ public partial class MainWindow : Window
         }
 
         StopPeriodicScan(updateUi: false);
-        _serialTestCancellationTokenSource?.Cancel();
-        _serialTestCancellationTokenSource?.Dispose();
-        _serialTestCancellationTokenSource = null;
         _autoRedockTimer.Stop();
         SaveFloatingWindowStates();
         CloseAllFloatingMonitoringWindows();
@@ -353,15 +299,6 @@ public partial class MainWindow : Window
         {
             MinimizeMainWindowToTray();
         }
-    }
-
-    private void InitializeSerialCommunicationUi()
-    {
-        RefreshSerialPortComboBox(SerialTestPortComboBox);
-        RefreshSerialPortComboBox(InterfaceSerialPortComboBox);
-        SerialTestStatusTextBlock.Text = "Kein Mitschnitt gestartet.";
-        SerialTestBytesTextBlock.Text = "0 Bytes";
-        InterfaceSerialStatusTextBlock.Text = "RS232 ersetzt nur den Geräte-Eingangsordner. AIS-Patientendatei, Ergebnisordner, Archiv und Fehlerordner bleiben wie gewohnt konfigurierbar.";
     }
 
     private void RefreshSerialPortComboBox(System.Windows.Controls.ComboBox comboBox)
@@ -608,19 +545,13 @@ public partial class MainWindow : Window
         try
         {
             var (paths, catalog) = LoadProfileCatalogForUi();
-            ProfileBaseFolderText.Text = paths.BaseFolder;
-            InitializeLegacyProfileTemplatesTab(catalog);
             InitializeProfileDependentTabs(catalog);
-            UpdatePlaceholderTables();
-            ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
+            AppendProfileMessage($"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}. Profilordner: {paths.BaseFolder}");
         }
         catch (Exception ex)
         {
             _profileCatalog = null;
-            ProfileBaseFolderText.Text = string.Empty;
-            ClearLegacyProfileTemplatesTabOnProfileLoadFailure();
             ClearProfileDependentTabsOnProfileLoadFailure();
-            ClearPlaceholderTables();
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
     }
@@ -634,24 +565,6 @@ public partial class MainWindow : Window
         return (paths, catalog);
     }
 
-    private void InitializeLegacyProfileTemplatesTab(
-        ProfileCatalog catalog,
-        string? selectedExportProfileId = null,
-        string? selectedInterfaceProfileId = null,
-        string? selectedAisProfileId = null,
-        string? selectedDeviceProfileId = null)
-    {
-        AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
-        DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
-        ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
-        InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
-        ShowProfileNameColumns(catalog);
-        InitializeProfileRenameSelectors(catalog, selectedAisProfileId, selectedDeviceProfileId);
-        InitializeTemplatePackageExportSelection(catalog, selectedInterfaceProfileId);
-        InitializeExportRulesView(catalog, selectedExportProfileId);
-        InitializeAttachmentDiagnosticProfiles(catalog, selectedInterfaceProfileId);
-    }
-
     private void InitializeProfileDependentTabs(
         ProfileCatalog catalog,
         string? selectedInterfaceProfileId = null,
@@ -662,30 +575,6 @@ public partial class MainWindow : Window
         InitializeProfileManagementTab(catalog);
         InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
         InitializeXdtBaukasten(catalog, selectedAisProfileId, selectedDeviceProfileId, selectedExportProfileId);
-    }
-
-    private void ClearLegacyProfileTemplatesTabOnProfileLoadFailure()
-    {
-        AisProfileCountText.Text = "-";
-        DeviceProfileCountText.Text = "-";
-        ExportProfileCountText.Text = "-";
-        InterfaceProfileCountText.Text = "-";
-        ClearProfileNameColumns();
-        AisProfileRenameComboBox.ItemsSource = null;
-        DeviceProfileRenameComboBox.ItemsSource = null;
-        UpdateProfileRenameActionButtons();
-        TemplatePackageExportInterfaceProfileComboBox.ItemsSource = null;
-        TemplatePackageExportSelectionHintText.Text = "Keine Profile geladen.";
-        ExportProfileComboBox.ItemsSource = null;
-        BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
-        SetAttachmentDiagnosticResultText("Keine Profile geladen.");
-        _visibleExportRules.Clear();
-        _temporaryExportRules.Clear();
-        ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
-        ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
-        FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
-        ClearDraftRuleEditor();
-        UpdateExportProfileActionButtons();
     }
 
     private void ClearProfileDependentTabsOnProfileLoadFailure()
@@ -734,6 +623,14 @@ public partial class MainWindow : Window
         && ProfileManagementGrid is not null
         && ProfileManagementDetailsTextBox is not null
         && ProfileManagementStatusText is not null
+        && ProfileManagementNewAisButton is not null
+        && ProfileManagementNewDeviceButton is not null
+        && ProfileManagementLoadDeviceButton is not null
+        && ProfileManagementNewExportButton is not null
+        && ProfileManagementNewInterfaceButton is not null
+        && ProfileManagementNewTemplateButton is not null
+        && ProfileManagementImportTemplatePackageButton is not null
+        && ProfileManagementExportTemplateButton is not null
         && ProfileManagementOpenWorkbenchButton is not null
         && ProfileManagementOpenInterfaceButton is not null
         && ProfileManagementRenameButton is not null
@@ -831,6 +728,7 @@ public partial class MainWindow : Window
             ProfileManagementRenameButton.IsEnabled = false;
             ProfileManagementDuplicateButton.IsEnabled = false;
             ProfileManagementDeleteButton.IsEnabled = false;
+            ProfileManagementExportTemplateButton.IsEnabled = false;
             return;
         }
 
@@ -849,6 +747,8 @@ public partial class MainWindow : Window
         ProfileManagementRenameButton.IsEnabled = row.CanRename;
         ProfileManagementDuplicateButton.IsEnabled = row.CanDuplicate;
         ProfileManagementDeleteButton.IsEnabled = row.CanDelete;
+        ProfileManagementExportTemplateButton.IsEnabled =
+            row.Kind is ProfileManagementRowKind.TemplatePackage or ProfileManagementRowKind.XdtBaukastenTemplate or ProfileManagementRowKind.InterfaceProfile;
     }
 
     private void RefreshProfileManagement_Click(object sender, RoutedEventArgs e)
@@ -873,6 +773,184 @@ public partial class MainWindow : Window
     private void ProfileManagementRepairBuiltIns_Click(object sender, RoutedEventArgs e)
     {
         RefreshProfileManagement_Click(sender, e);
+    }
+
+    private void ProfileManagementNewAis_Click(object sender, RoutedEventArgs e)
+    {
+        CreateNewAisProfile_Click(sender, e);
+        ProfileManagementStatusText.Text = "AIS-Neuanlage wurde über die Profilverwaltung gestartet.";
+    }
+
+    private void ProfileManagementNewDevice_Click(object sender, RoutedEventArgs e)
+    {
+        CreateNewDeviceProfile_Click(sender, e);
+        ProfileManagementStatusText.Text = "Geräte-Neuanlage wurde über die Profilverwaltung gestartet.";
+    }
+
+    private void ProfileManagementLoadDevice_Click(object sender, RoutedEventArgs e)
+    {
+        LoadDeviceProfile_Click(sender, e);
+        ProfileManagementStatusText.Text = "Gerätedialog geöffnet. Gerätebilder werden als lokale Overrides gepflegt.";
+    }
+
+    private void ProfileManagementNewExport_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var sourceRow = SelectedProfileManagementRow?.Kind == ProfileManagementRowKind.ExportProfile
+            ? SelectedProfileManagementRow
+            : _profileManagementAllRows.FirstOrDefault(row => row.Kind == ProfileManagementRowKind.ExportProfile);
+        if (sourceRow is null)
+        {
+            ProfileManagementStatusText.Text = "Es ist kein Exportprofil als Vorlage vorhanden.";
+            AppendProfileMessage("Neues Exportprofil konnte nicht angelegt werden: keine Vorlage vorhanden.");
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var result = _profileManagementService.Duplicate(catalog, paths, sourceRow, DateTimeOffset.UtcNow, Environment.UserName);
+            if (!result.Success)
+            {
+                ProfileManagementStatusText.Text = result.Message;
+                return;
+            }
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(updatedCatalog, selectedExportProfileId: result.ExportProfileId);
+            SelectMainTabByHeader("XDT-Baukasten");
+            ProfileManagementStatusText.Text = $"{result.Message} Die neue Arbeitskopie kann im XDT-Baukasten bearbeitet werden.";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        {
+            ProfileManagementStatusText.Text = $"Exportprofil konnte nicht angelegt werden: {ex.Message}";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
+    }
+
+    private void ProfileManagementNewInterface_Click(object sender, RoutedEventArgs e)
+    {
+        CreateNewInterfaceProfile_Click(sender, e);
+        ProfileManagementStatusText.Text = "Schnittstellenprofil-Neuanlage wurde über die Profilverwaltung gestartet.";
+    }
+
+    private void ProfileManagementNewTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        SelectMainTabByHeader("XDT-Baukasten");
+        XdtBaukastenSaveTemplate_Click(sender, e);
+        ProfileManagementStatusText.Text = "Baukasten-Template-Erstellung wurde in den XDT-Baukasten übergeben.";
+    }
+
+    private void ProfileManagementImportTemplatePackage_Click(object sender, RoutedEventArgs e)
+    {
+        SelectMainTabByHeader("XDT-Baukasten");
+        XdtBaukastenImportTemplatePackage_Click(sender, e);
+        ProfileManagementStatusText.Text = "Templatepaket-Import wird im Baukasten geprüft. BuiltIns werden nicht überschrieben.";
+    }
+
+    private void ProfileManagementExportTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        var row = SelectedProfileManagementRow;
+        if (row is null)
+        {
+            ProfileManagementStatusText.Text = "Bitte zuerst ein Template, Paket oder Schnittstellenprofil auswählen.";
+            return;
+        }
+
+        if (row.Kind is ProfileManagementRowKind.TemplatePackage or ProfileManagementRowKind.XdtBaukastenTemplate)
+        {
+            ExportLocalProfileManagementFile(row);
+            return;
+        }
+
+        if (row.Kind == ProfileManagementRowKind.InterfaceProfile)
+        {
+            ExportTemplatePackageForInterfaceProfile(row.Id);
+            return;
+        }
+
+        ProfileManagementStatusText.Text = "Dieser Eintrag kann nicht als Template/Paket exportiert werden.";
+    }
+
+    private void ExportLocalProfileManagementFile(ProfileManagementRow row)
+    {
+        if (string.IsNullOrWhiteSpace(row.FilePath) || !File.Exists(row.FilePath))
+        {
+            ProfileManagementStatusText.Text = "Die lokale Template-Datei wurde nicht gefunden.";
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Template/Paket exportieren",
+            Filter = row.Kind == ProfileManagementRowKind.XdtBaukastenTemplate
+                ? "Baukasten-Template (*.json)|*.json|Alle Dateien (*.*)|*.*"
+                : "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
+            FileName = Path.GetFileName(row.FilePath)
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            File.Copy(row.FilePath, dialog.FileName, overwrite: true);
+            ProfileManagementStatusText.Text = $"Template/Paket exportiert: {dialog.FileName}";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            ProfileManagementStatusText.Text = $"Template/Paket konnte nicht exportiert werden: {ex.Message}";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
+    }
+
+    private void ExportTemplatePackageForInterfaceProfile(string interfaceProfileId)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var selection = _templatePackageExportSelectionService.CreateForInterfaceProfile(catalog, interfaceProfileId, DateTimeOffset.UtcNow);
+        if (!selection.Success || selection.Request is null)
+        {
+            ProfileManagementStatusText.Text = selection.ErrorMessage ?? "Templatepaket konnte für dieses Schnittstellenprofil nicht vorbereitet werden.";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Templatepaket exportieren",
+            Filter = "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
+            FileName = selection.SuggestedFileName
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _templatePackageExporter.Export(dialog.FileName, selection.Request);
+            ProfileManagementStatusText.Text = $"Templatepaket exportiert: {dialog.FileName}";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        {
+            ProfileManagementStatusText.Text = $"Templatepaket konnte nicht exportiert werden: {ex.Message}";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
     }
 
     private void ProfileManagementOpenWorkbench_Click(object sender, RoutedEventArgs e)
@@ -951,6 +1029,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (row.Kind is ProfileManagementRowKind.TemplatePackage or ProfileManagementRowKind.XdtBaukastenTemplate)
+        {
+            RenameLocalTemplateEntry(row);
+            return;
+        }
+
         var renameKind = ToUserDefinedProfileRenameKind(row.Kind);
         if (renameKind is null)
         {
@@ -966,6 +1050,86 @@ public partial class MainWindow : Window
             selectedDeviceProfileId: row.Kind == ProfileManagementRowKind.DeviceProfile ? row.Id : null,
             selectedExportProfileId: row.Kind == ProfileManagementRowKind.ExportProfile ? row.Id : null,
             selectedInterfaceProfileId: row.Kind == ProfileManagementRowKind.InterfaceProfile ? row.Id : null);
+    }
+
+    private void RenameLocalTemplateEntry(ProfileManagementRow row)
+    {
+        if (string.IsNullOrWhiteSpace(row.FilePath) || !File.Exists(row.FilePath))
+        {
+            ProfileManagementStatusText.Text = "Die lokale Template-Datei wurde nicht gefunden.";
+            return;
+        }
+
+        var dialog = new RenameProfileDialog(row.Name)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            if (row.Kind == ProfileManagementRowKind.XdtBaukastenTemplate)
+            {
+                RenameXdtBaukastenTemplate(row.FilePath, dialog.NewName);
+            }
+            else
+            {
+                RenameTemplatePackageFile(row.FilePath, dialog.NewName);
+            }
+
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var catalog = _profileCatalogService.Load(paths);
+            _profileCatalog = catalog;
+            RefreshProfileOverview(catalog);
+            ProfileManagementStatusText.Text = $"Lokaler Template-Eintrag umbenannt: {dialog.NewName}.";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        {
+            ProfileManagementStatusText.Text = $"Lokaler Template-Eintrag konnte nicht umbenannt werden: {ex.Message}";
+            AppendProfileMessage(ProfileManagementStatusText.Text);
+        }
+    }
+
+    private void RenameXdtBaukastenTemplate(string filePath, string newName)
+    {
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        var template = _xdtBaukastenTemplateLibraryService.Load(filePath);
+        var updatedTemplate = template with
+        {
+            Name = newName,
+            SavedAt = DateTimeOffset.UtcNow,
+            SavedBy = Environment.UserName
+        };
+        var targetPath = _xdtBaukastenTemplateLibraryService.CreateDefaultFilePath(paths, newName);
+        if (!string.Equals(Path.GetFullPath(filePath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase)
+            && File.Exists(targetPath))
+        {
+            throw new InvalidOperationException("Es existiert bereits ein Baukasten-Template mit diesem Dateinamen.");
+        }
+
+        _xdtBaukastenTemplateLibraryService.Save(targetPath, updatedTemplate, overwriteExisting: true);
+        if (!string.Equals(Path.GetFullPath(filePath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase))
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    private static void RenameTemplatePackageFile(string filePath, string newName)
+    {
+        var folder = Path.GetDirectoryName(Path.GetFullPath(filePath))
+            ?? throw new InvalidOperationException("Templatepaket-Ordner konnte nicht ermittelt werden.");
+        var targetPath = Path.Combine(folder, TemplatePackageExportSelectionService.CreateSafeTemplatePackageFileName(newName));
+        if (!string.Equals(Path.GetFullPath(filePath), Path.GetFullPath(targetPath), StringComparison.OrdinalIgnoreCase)
+            && File.Exists(targetPath))
+        {
+            throw new InvalidOperationException("Es existiert bereits ein Templatepaket mit diesem Dateinamen.");
+        }
+
+        File.Move(filePath, targetPath, overwrite: true);
     }
 
     private void ProfileManagementDuplicate_Click(object sender, RoutedEventArgs e)
@@ -1102,578 +1266,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void InitializeExportRulesView(ProfileCatalog catalog, string? selectedExportProfileId = null)
-    {
-        if (catalog.ExportProfiles.Count == 0)
-        {
-            ExportProfileComboBox.ItemsSource = null;
-            _visibleExportRules.Clear();
-            _temporaryExportRules.Clear();
-            ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
-            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
-            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
-            ClearDraftRuleEditor();
-            UpdateExportProfileActionButtons();
-            AppendProfileMessage("Keine Exportprofile geladen. Exportregeln können nicht angezeigt werden.");
-            return;
-        }
-
-        var exportProfiles = catalog.ExportProfiles
-            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-
-        ExportProfileComboBox.ItemsSource = exportProfiles;
-        var selectedProfile = string.IsNullOrWhiteSpace(selectedExportProfileId)
-            ? null
-            : exportProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedExportProfileId, StringComparison.Ordinal));
-        ExportProfileComboBox.SelectedItem = selectedProfile ?? exportProfiles[0];
-        ShowExportRulesForSelectedProfile();
-    }
-
-    private void ExportProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        ShowExportRulesForSelectedProfile();
-    }
-
-    private void ShowExportRulesForSelectedProfile()
-    {
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            _visibleExportRules.Clear();
-            _temporaryExportRules.Clear();
-            ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
-            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
-            NewExportProfileNameTextBox.Text = string.Empty;
-            ClearDraftRuleEditor();
-            UpdateExportProfileActionButtons();
-            return;
-        }
-
-        NewExportProfileNameTextBox.Text = $"{exportProfile.Metadata.Name} - Kopie";
-        _temporaryExportRules.Clear();
-        _isNewExportProfileDraftActive = false;
-        RebuildExportRulesGrid(exportProfile);
-        ExportRulesStatusText.Text = $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
-        ExportRulesGrid.SelectedIndex = _visibleExportRules.Count > 0 ? 0 : -1;
-        ShowExportRulePreviewForSelectedRule();
-        ShowFullExportPreviewForSelectedProfile();
-        UpdateExportProfileActionButtons();
-    }
-
-    private void RebuildExportRulesGrid(ExportProfileDefinition exportProfile, string? selectedRuleId = null)
-    {
-        _visibleExportRules.Clear();
-        var baseRules = _isNewExportProfileDraftActive
-            ? Array.Empty<ExportRuleDefinition>()
-            : exportProfile.Rules;
-        foreach (var rule in baseRules.Concat(_temporaryExportRules).OrderBy(rule => rule.SortOrder))
-        {
-            _visibleExportRules.Add(rule);
-        }
-
-        ExportRulesStatusText.Text = _isNewExportProfileDraftActive
-            ? $"Neuer Exportprofil-Entwurf: {_visibleExportRules.Count} Entwurfsregel(n)"
-            : $"{exportProfile.Metadata.Name}: {_visibleExportRules.Count} Exportregeln";
-        if (!string.IsNullOrWhiteSpace(selectedRuleId))
-        {
-            var selectedRule = _visibleExportRules.FirstOrDefault(rule => rule.Id == selectedRuleId);
-            if (selectedRule is not null)
-            {
-                ExportRulesGrid.SelectedItem = selectedRule;
-                return;
-            }
-        }
-
-        ExportRulesGrid.SelectedIndex = _visibleExportRules.Count > 0 ? 0 : -1;
-    }
-
-    private void ExportRulesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        LoadDraftFromSelectedRule();
-        ShowExportRulePreviewForSelectedRule();
-        ShowFullExportPreviewForSelectedProfile();
-        UpdateExportProfileActionButtons();
-    }
-
-    private void UpdateExportProfileActionButtons()
-    {
-        if (_profileCatalog is null || ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            RenameExportProfileButton.IsEnabled = false;
-            RenameExportProfileButton.ToolTip = "Bitte zuerst ein Exportprofil auswählen.";
-            DeleteExportProfileButton.IsEnabled = false;
-            DeleteExportProfileButton.ToolTip = "Bitte zuerst ein Exportprofil auswählen.";
-            RemoveExportRuleButton.IsEnabled = false;
-            RemoveExportRuleButton.ToolTip = "Bitte zuerst ein Exportprofil und eine Exportregel auswählen.";
-            return;
-        }
-
-        var renameEvaluation = _userDefinedProfileRenameService.Evaluate(
-            _profileCatalog,
-            UserDefinedProfileRenameKind.ExportProfile,
-            exportProfile.Metadata.Id,
-            exportProfile.Metadata.Name);
-        RenameExportProfileButton.IsEnabled = exportProfile.Metadata.IsUserDefined && !exportProfile.Metadata.IsBuiltIn;
-        RenameExportProfileButton.ToolTip = RenameExportProfileButton.IsEnabled
-            ? "Ändert nur den sichtbaren Namen dieses UserDefined-Exportprofils."
-            : renameEvaluation.Message;
-
-        var deletionEvaluation = _exportProfileDeletionService.Evaluate(_profileCatalog, exportProfile.Metadata.Id);
-        DeleteExportProfileButton.IsEnabled = deletionEvaluation.Success;
-        DeleteExportProfileButton.ToolTip = deletionEvaluation.Success
-            ? "Löscht dieses UserDefined-Exportprofil. Es werden keine Exportdateien oder Ordner gelöscht."
-            : deletionEvaluation.Message;
-
-        if (exportProfile.Metadata.IsBuiltIn)
-        {
-            RemoveExportRuleButton.IsEnabled = false;
-            RemoveExportRuleButton.ToolTip = "Exportregeln in BuiltIn-Exportprofilen können nicht entfernt werden.";
-            return;
-        }
-
-        if (!exportProfile.Metadata.IsUserDefined)
-        {
-            RemoveExportRuleButton.IsEnabled = false;
-            RemoveExportRuleButton.ToolTip = "Exportregeln können nur aus UserDefined-Exportprofilen entfernt werden.";
-            return;
-        }
-
-        var hasSelectedRule = ExportRulesGrid.SelectedItem is ExportRuleDefinition;
-        RemoveExportRuleButton.IsEnabled = hasSelectedRule;
-        RemoveExportRuleButton.ToolTip = hasSelectedRule
-            ? "Entfernt die ausgewählte Exportregel aus diesem UserDefined-Exportprofil."
-            : "Bitte zuerst eine Exportregel auswählen.";
-    }
-
-    private void DeleteSelectedExportProfile_Click(object sender, RoutedEventArgs e)
-    {
-        if (_profileCatalog is null)
-        {
-            AppendProfileMessage("Exportprofil kann nicht gelöscht werden, weil keine Profile geladen sind.");
-            return;
-        }
-
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            AppendProfileMessage("Exportprofil kann nicht gelöscht werden, weil kein Exportprofil ausgewählt ist.");
-            return;
-        }
-
-        var evaluation = _exportProfileDeletionService.Evaluate(_profileCatalog, exportProfile.Metadata.Id);
-        if (!evaluation.Success)
-        {
-            AppendProfileMessage(evaluation.Message);
-            return;
-        }
-
-        var confirmation = System.Windows.MessageBox.Show(
-            this,
-            $"Exportprofil '{exportProfile.Metadata.Name}' wirklich löschen?\n\nDiese Aktion entfernt nur das UserDefined-Profil. Es werden keine Exportdateien gelöscht, keine Ordner bereinigt und keine Verarbeitung gestartet.",
-            "Exportprofil löschen",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-        if (confirmation != MessageBoxResult.Yes)
-        {
-            AppendProfileMessage("Exportprofil wurde nicht gelöscht.");
-            return;
-        }
-
-        try
-        {
-            var paths = _appDataPathProvider.GetDefaultUserPaths();
-            var result = _exportProfileDeletionService.Delete(_profileCatalog, paths, exportProfile.Metadata.Id);
-            if (!result.Success)
-            {
-                AppendProfileMessage(result.Message);
-                return;
-            }
-
-            var catalog = _profileCatalogService.Load(paths);
-            _profileCatalog = catalog;
-            RefreshProfileOverview(catalog);
-            AppendProfileMessage(result.Message);
-            AppendProfileMessage("Es wurden keine Schnittstellenprofile verändert und keine Exportdateien gelöscht.");
-        }
-        catch (Exception ex)
-        {
-            AppendProfileMessage($"Exportprofil konnte nicht gelöscht werden: {ex.Message}");
-        }
-    }
-
-    private void RemoveSelectedExportRule_Click(object sender, RoutedEventArgs e)
-    {
-        if (_profileCatalog is null)
-        {
-            AppendProfileMessage("Exportregel kann nicht entfernt werden, weil keine Profile geladen sind.");
-            return;
-        }
-
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            AppendProfileMessage("Exportregel kann nicht entfernt werden, weil kein Exportprofil ausgewählt ist.");
-            return;
-        }
-
-        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition selectedRule)
-        {
-            AppendProfileMessage("Exportregel kann nicht entfernt werden, weil keine Exportregel ausgewählt ist.");
-            return;
-        }
-
-        var draftRule = _temporaryExportRules.FirstOrDefault(rule =>
-            string.Equals(rule.Id, selectedRule.Id, StringComparison.OrdinalIgnoreCase));
-        if (draftRule is not null)
-        {
-            _temporaryExportRules.Remove(draftRule);
-            RebuildExportRulesGrid(exportProfile);
-            AppendProfileMessage("Entwurfsregel entfernt. Es wurde kein Exportprofil gespeichert.");
-            return;
-        }
-
-        var evaluation = _exportRuleRemovalService.Evaluate(
-            _profileCatalog,
-            exportProfile.Metadata.Id,
-            selectedRule.Id,
-            DateTimeOffset.UtcNow);
-        if (!evaluation.Success)
-        {
-            AppendProfileMessage(evaluation.Message);
-            foreach (var issue in evaluation.Issues)
-            {
-                AppendProfileMessage($"[Exportregel entfernen] {issue}");
-            }
-
-            return;
-        }
-
-        var confirmation = System.Windows.MessageBox.Show(
-            this,
-            $"Exportregel '{selectedRule.TargetName}' wirklich entfernen?\n\nDie Änderung betrifft nur dieses UserDefined-Exportprofil. Es werden keine Exportdateien gelöscht, keine Ordner bereinigt und keine Verarbeitung gestartet.",
-            "Exportregel entfernen",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-        if (confirmation != MessageBoxResult.Yes)
-        {
-            AppendProfileMessage("Exportregel wurde nicht entfernt.");
-            return;
-        }
-
-        try
-        {
-            var paths = _appDataPathProvider.GetDefaultUserPaths();
-            var result = _exportRuleRemovalService.Remove(
-                _profileCatalog,
-                paths,
-                exportProfile.Metadata.Id,
-                selectedRule.Id,
-                DateTimeOffset.UtcNow);
-            if (!result.Success || result.UpdatedProfile is null)
-            {
-                AppendProfileMessage(result.Message);
-                return;
-            }
-
-            var catalog = _profileCatalogService.Load(paths);
-            _profileCatalog = catalog;
-            RefreshProfileOverview(catalog, selectedExportProfileId: result.UpdatedProfile.Metadata.Id);
-            AppendProfileMessage(result.Message);
-            AppendProfileMessage("Es wurden keine anderen Profile verändert und keine Verarbeitung gestartet.");
-        }
-        catch (Exception ex)
-        {
-            AppendProfileMessage($"Exportregel konnte nicht entfernt werden: {ex.Message}");
-        }
-    }
-
-    private void AddDraftExportRule_Click(object sender, RoutedEventArgs e)
-    {
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            AppendProfileMessage("Neue Exportregel kann nicht angelegt werden, weil kein Exportprofil ausgewählt ist.");
-            return;
-        }
-
-        var nextSortOrder = _visibleExportRules.Count == 0
-            ? 1
-            : _visibleExportRules.Max(rule => rule.SortOrder) + 1;
-        var draftRule = new ExportRuleDefinition(
-            Id: $"draft-rule-{++_draftRuleSequence}",
-            TargetFieldCode: "6228",
-            TargetName: "Neue Regel (Entwurf)",
-            RuleType: ExportRuleType.Template,
-            SourcePath: null,
-            OutputTemplate: string.Empty,
-            SortOrder: nextSortOrder,
-            IsEnabled: true,
-            Description: "Neue Entwurfsregel");
-
-        _temporaryExportRules.Add(draftRule);
-        RebuildExportRulesGrid(exportProfile, draftRule.Id);
-        LoadDraftFromSelectedRule();
-        UpdateDraftPreviewFromCurrentDraft();
-        AppendProfileMessage("Neue Entwurfsregel aktiv. Sie erscheint nur in der Vorschau.");
-    }
-
-    private void ShowExportRulePreviewForSelectedRule()
-    {
-        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition rule)
-        {
-            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
-            return;
-        }
-
-        ExportRulePreviewTextBox.Text = FormatExportRulePreview(rule);
-    }
-
-    private string FormatExportRulePreview(ExportRuleDefinition rule)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine($"TargetFieldCode: {rule.TargetFieldCode}");
-        builder.AppendLine($"TargetName: {rule.TargetName}");
-        builder.AppendLine("OutputTemplate:");
-        builder.AppendLine(rule.OutputTemplate);
-        builder.AppendLine();
-
-        var roundBracketPlaceholders = GetRoundBracketPlaceholderCandidates(rule.OutputTemplate);
-        AppendRoundBracketPlaceholderHint(builder, roundBracketPlaceholders);
-
-        if (_lastPipelineResult is null)
-        {
-            builder.AppendLine("Vorschau:");
-            builder.AppendLine("Noch keine Beispielwerte geladen.");
-            return builder.ToString().TrimEnd();
-        }
-
-        var result = _lastPipelineResult;
-        var patient = result.Patient ?? CreateEmptyPatientData();
-        var previewRule = CreatePreviewMappingRule(rule, result);
-
-        var mappingResult = _mappingEngine.Map(
-            patient,
-            result.Measurements,
-            new[] { previewRule });
-
-        builder.AppendLine("Gerenderte Vorschau:");
-        var renderedValue = mappingResult.Records.FirstOrDefault()?.Value;
-        builder.AppendLine(renderedValue ?? string.Empty);
-
-        var unresolvedPlaceholders = GetUnresolvedPlaceholders(rule.OutputTemplate, previewRule.SourcePath, patient, result.Measurements);
-        if (mappingResult.Issues.Count > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Mapping-Hinweise:");
-            foreach (var issue in mappingResult.Issues)
-            {
-                builder.AppendLine($"- {issue.Severity}: {issue.Message} SourcePath={issue.SourcePath}, TargetFieldCode={issue.TargetFieldCode}");
-            }
-        }
-
-        if (mappingResult.HasErrors || unresolvedPlaceholders.Count > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Ein oder mehrere Platzhalter konnten nicht aufgelöst werden.");
-            foreach (var placeholder in unresolvedPlaceholders)
-            {
-                builder.AppendLine($"- Platzhalter konnte nicht aufgelöst werden: {{{placeholder}}}");
-            }
-        }
-
-        return builder.ToString().TrimEnd();
-    }
-
-    private void ShowFullExportPreviewForSelectedProfile()
-    {
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
-            return;
-        }
-
-        FullExportPreviewTextBox.Text = FormatFullExportPreview(exportProfile);
-    }
-
-    private string FormatFullExportPreview(
-        ExportProfileDefinition exportProfile,
-        ExportRuleDefinition? draftRule = null,
-        string? replaceRuleId = null)
-    {
-        if (_lastPipelineResult is null)
-        {
-            return "Noch keine Beispielwerte geladen. Bitte zuerst AIS-Datei und Gerätedatei laden.";
-        }
-
-        var result = _lastPipelineResult;
-        var patient = result.Patient ?? CreateEmptyPatientData();
-        var effectiveRules = GetEffectiveExportRules(exportProfile, draftRule, replaceRuleId);
-        var mappingRules = effectiveRules
-            .Select(rule => CreatePreviewMappingRule(rule, result))
-            .ToList();
-        var mappingResult = _mappingEngine.Map(patient, result.Measurements, mappingRules);
-        var exportRecords = BuilderTestExportService.AppendTransientAttachmentFields(
-            mappingResult.Records,
-            _builderTransientAttachmentFields);
-        var exportResult = _xdtExportBuilder.Build(exportRecords);
-        var unresolvedPlaceholders = effectiveRules
-            .SelectMany(rule =>
-            {
-                var mappingRule = CreatePreviewMappingRule(rule, result);
-                return GetUnresolvedPlaceholders(rule.OutputTemplate, mappingRule.SourcePath, patient, result.Measurements)
-                    .Select(placeholder => $"Platzhalter konnte nicht aufgelöst werden: {{{placeholder}}} ({rule.TargetFieldCode} {rule.TargetName})");
-            })
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var builder = new StringBuilder();
-        builder.AppendLine($"Exportprofil: {exportProfile.Metadata.Name}");
-        builder.AppendLine(_builderTransientAttachmentFields.Count > 0
-            ? "XDT-Anhang-Linkfelder: 6302-6305 werden nur transient für diese Baukasten-Vorschau ergänzt."
-            : "XDT-Anhang-Linkfelder: Kein XDT-Anhang eingelesen. Vorschau enthält keine 6302-6305.");
-        if (draftRule is not null)
-        {
-            builder.AppendLine("Entwurfsregel aktiv: Diese Vorschau ist temporär und wurde nicht gespeichert.");
-        }
-
-        if (mappingResult.Issues.Count > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Mapping-Fehler:");
-            foreach (var issue in mappingResult.Issues)
-            {
-                builder.AppendLine($"- {issue.Severity}: {issue.Message} SourcePath={issue.SourcePath}, TargetFieldCode={issue.TargetFieldCode}");
-            }
-        }
-
-        if (unresolvedPlaceholders.Count > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Ein oder mehrere Platzhalter konnten nicht aufgelöst werden:");
-            foreach (var placeholder in unresolvedPlaceholders)
-            {
-                builder.AppendLine($"- {placeholder}");
-            }
-        }
-
-        if (exportResult.Issues.Count > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("ExportBuilder-Fehler:");
-            foreach (var issue in exportResult.Issues)
-            {
-                builder.AppendLine($"- {issue.Severity}: {issue.Message} FieldCode={issue.FieldCode}, Value={issue.Value}");
-            }
-        }
-
-        builder.AppendLine();
-        builder.AppendLine("ExportContent:");
-        builder.Append(exportResult.Content.Length == 0 ? "(leer)" : exportResult.Content);
-
-        return builder.ToString().TrimEnd();
-    }
-
-    private IReadOnlyList<ExportRuleDefinition> GetEffectiveExportRules(
-        ExportProfileDefinition exportProfile,
-        ExportRuleDefinition? draftRule,
-        string? replaceRuleId)
-    {
-        var baseRules = _isNewExportProfileDraftActive
-            ? Array.Empty<ExportRuleDefinition>()
-            : exportProfile.Rules;
-        var rules = baseRules.Concat(_temporaryExportRules).ToList();
-        if (draftRule is null || string.IsNullOrWhiteSpace(replaceRuleId))
-        {
-            return rules;
-        }
-
-        return rules
-            .Select(rule => rule.Id == replaceRuleId ? draftRule : rule)
-            .ToList();
-    }
-
-    private bool IsTemporaryRule(ExportRuleDefinition? rule)
-    {
-        return rule is not null && _temporaryExportRules.Any(temporaryRule => temporaryRule.Id == rule.Id);
-    }
-
-    private void UpdateDraftModeStatus(ExportRuleDefinition? rule)
-    {
-        DraftModeStatusText.Text = IsTemporaryRule(rule)
-            ? "Entwurfsmodus: Änderungen und neue Regeln werden noch nicht gespeichert.\nNeue Entwurfsregel aktiv. Sie erscheint nur in der Vorschau."
-            : "Entwurfsmodus: Änderungen und neue Regeln werden noch nicht gespeichert.";
-    }
-
-    private void LoadDraftFromSelectedRule()
-    {
-        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition rule)
-        {
-            ClearDraftRuleEditor();
-            return;
-        }
-
-        DraftTargetFieldCodeTextBox.Text = rule.TargetFieldCode;
-        DraftTargetNameTextBox.Text = rule.TargetName;
-        DraftRuleTypeComboBox.SelectedItem = rule.RuleType;
-        DraftSourcePathTextBox.Text = rule.SourcePath ?? string.Empty;
-        DraftOutputTemplateTextBox.Text = rule.OutputTemplate;
-        DraftSortOrderTextBox.Text = rule.SortOrder.ToString();
-        DraftIsEnabledCheckBox.IsChecked = rule.IsEnabled;
-        DraftDescriptionTextBox.Text = rule.Description ?? string.Empty;
-        UpdateDraftModeStatus(rule);
-        RefreshPlaceholderUsageFromDraft();
-    }
-
-    private void ClearDraftRuleEditor()
-    {
-        DraftTargetFieldCodeTextBox.Text = string.Empty;
-        DraftTargetNameTextBox.Text = string.Empty;
-        DraftRuleTypeComboBox.SelectedItem = ExportRuleType.Template;
-        DraftSourcePathTextBox.Text = string.Empty;
-        DraftOutputTemplateTextBox.Text = string.Empty;
-        DraftSortOrderTextBox.Text = string.Empty;
-        DraftIsEnabledCheckBox.IsChecked = false;
-        DraftDescriptionTextBox.Text = string.Empty;
-        UpdateDraftModeStatus(null);
-        RefreshPlaceholderUsageFromDraft();
-    }
-
-    private void UpdateDraftPreview_Click(object sender, RoutedEventArgs e)
-    {
-        UpdateDraftPreviewFromCurrentDraft();
-    }
-
-    private void UpdateDraftPreviewFromCurrentDraft()
-    {
-        if (ExportRulesGrid.SelectedItem is not ExportRuleDefinition selectedRule)
-        {
-            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
-            FullExportPreviewTextBox.Text = "Keine Exportregel ausgewählt.";
-            return;
-        }
-
-        if (!TryCreateDraftRule(selectedRule, out var draftRule, out var message))
-        {
-            ExportRulePreviewTextBox.Text = message;
-            FullExportPreviewTextBox.Text = message;
-            return;
-        }
-
-        ExportRulePreviewTextBox.Text = FormatExportRulePreview(draftRule);
-
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
-            return;
-        }
-
-        FullExportPreviewTextBox.Text = FormatFullExportPreview(exportProfile, draftRule, selectedRule.Id);
-    }
-
-    private void ResetDraft_Click(object sender, RoutedEventArgs e)
-    {
-        LoadDraftFromSelectedRule();
-        ShowExportRulePreviewForSelectedRule();
-        ShowFullExportPreviewForSelectedProfile();
-    }
-
     private void InitializeInterfaceProfileConfiguration(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
     {
         var interfaceProfiles = catalog.InterfaceProfiles
@@ -1696,176 +1288,18 @@ public partial class MainWindow : Window
         ShowInterfaceProfileForSelectedProfile();
     }
 
-    private void InitializeAttachmentDiagnosticProfiles(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
-    {
-        var activeProfiles = catalog.InterfaceProfiles
-            .Where(profile => profile.IsActive)
-            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-
-        BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = activeProfiles;
-        if (activeProfiles.Count == 0)
-        {
-            BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedIndex = -1;
-            _attachmentImportCandidateRows.Clear();
-            UpdateAttachmentDiagnosticProfileDisplay();
-            SetAttachmentDiagnosticResultText("Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.");
-            return;
-        }
-
-        var selectedProfile = string.IsNullOrWhiteSpace(selectedInterfaceProfileId)
-            ? null
-            : activeProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedInterfaceProfileId, StringComparison.Ordinal));
-
-        SetAttachmentDiagnosticSelectedProfile(selectedProfile ?? activeProfiles[0]);
-        UpdateAttachmentDiagnosticProfileDisplay();
-        if (BuilderAttachmentDiagnosticResultTextBox.Text == "Keine aktiven Schnittstellenprofile für den XDT-Anhang-Test geladen.")
-        {
-            SetAttachmentDiagnosticResultText("Noch kein XDT-Anhang vorbereitet.");
-        }
-    }
-
-    private void AttachmentDiagnosticInterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        if (_updatingAttachmentDiagnosticProfileSelection)
-        {
-            return;
-        }
-
-        SyncAttachmentDiagnosticProfileSelection(sender as System.Windows.Controls.ComboBox);
-        _attachmentImportCandidateRows.Clear();
-        ClearBuilderAttachmentPreviewState(updatePreview: true);
-        UpdateAttachmentDiagnosticProfileDisplay();
-    }
-
-    private void UpdateAttachmentDiagnosticProfileDisplay()
-    {
-        if (GetSelectedAttachmentDiagnosticProfile() is not InterfaceProfileDefinition profile)
-        {
-            UpdateBuilderAttachmentProfileDetails(null);
-            return;
-        }
-
-        UpdateBuilderAttachmentProfileDetails(profile);
-        SelectExportProfileForInterfaceProfile(profile);
-    }
-
-    private InterfaceProfileDefinition? GetSelectedAttachmentDiagnosticProfile()
-    {
-        return BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedItem as InterfaceProfileDefinition;
-    }
-
-    private void SetAttachmentDiagnosticSelectedProfile(InterfaceProfileDefinition profile)
-    {
-        _updatingAttachmentDiagnosticProfileSelection = true;
-        try
-        {
-            BuilderAttachmentDiagnosticInterfaceProfileComboBox.SelectedItem = profile;
-        }
-        finally
-        {
-            _updatingAttachmentDiagnosticProfileSelection = false;
-        }
-    }
-
-    private void SyncAttachmentDiagnosticProfileSelection(System.Windows.Controls.ComboBox? source)
-    {
-        if (source?.SelectedItem is not InterfaceProfileDefinition profile)
-        {
-            return;
-        }
-
-        SetAttachmentDiagnosticSelectedProfile(profile);
-    }
-
-    private void UpdateBuilderAttachmentProfileDetails(InterfaceProfileDefinition? profile)
-    {
-        if (profile is null)
-        {
-            BuilderAttachmentProfileDetailsTextBox.Text = "Bitte erst Schnittstellenprofil anlegen.";
-            BuilderReadXdtAttachmentButton.IsEnabled = false;
-            return;
-        }
-
-        var options = profile.FolderOptions;
-        var aisProfileName = _profileCatalog?.AisProfiles
-            .FirstOrDefault(aisProfile => string.Equals(aisProfile.Metadata.Id, profile.AisProfileId, StringComparison.Ordinal))?
-            .Metadata.Name ?? profile.AisProfileId;
-        var deviceProfileName = _profileCatalog?.DeviceProfiles
-            .FirstOrDefault(deviceProfile => string.Equals(deviceProfile.Metadata.Id, profile.DeviceProfileId, StringComparison.Ordinal))?
-            .Metadata.Name ?? profile.DeviceProfileId;
-        var exportProfileName = _profileCatalog?.ExportProfiles
-            .FirstOrDefault(exportProfile => string.Equals(exportProfile.Metadata.Id, profile.ExportProfileId, StringComparison.Ordinal))?
-            .Metadata.Name ?? profile.ExportProfileId;
-
-        var builder = new StringBuilder();
-        AppendSummaryLine(builder, "gewähltes Schnittstellenprofil", profile.Metadata.Name);
-        AppendSummaryLine(builder, "AIS-Profil", aisProfileName);
-        AppendSummaryLine(builder, "Geräteprofil", deviceProfileName);
-        AppendSummaryLine(builder, "Exportprofil", exportProfileName);
-        AppendSummaryLine(builder, "XDT-Anhänge für AIS aktiv", options.IsAttachmentProcessingEnabled ? "Ja" : "Nein");
-        AppendSummaryLine(builder, "XDT-Anhang ist", options.AttachmentRequirementMode == AttachmentRequirementMode.Required ? "Pflicht" : "optional");
-        AppendSummaryLine(builder, "XDT-Anhang Importordner", options.AttachmentImportFolder);
-        AppendSummaryLine(builder, "XDT-Anhang Exportordner", options.AttachmentExportFolder);
-        AppendSummaryLine(builder, "XDT-Anhang Dateiname", options.AttachmentFileNameTemplate);
-        AppendSummaryLine(builder, "6302 Dokumentenname", options.AttachmentExternalLinkDocumentName);
-        AppendSummaryLine(builder, "6303 Dateiformat", options.AttachmentExternalLinkFileFormat);
-        AppendSummaryLine(builder, "6304 Beschreibung", options.AttachmentExternalLinkDescription);
-        AppendSummaryLine(builder, "6305 vollständiger Dateipfad", options.AttachmentExternalLinkPathTemplate);
-
-        BuilderAttachmentProfileDetailsTextBox.Text = builder.ToString().TrimEnd();
-        BuilderReadXdtAttachmentButton.IsEnabled = true;
-    }
-
-    private void SelectExportProfileForInterfaceProfile(InterfaceProfileDefinition profile)
-    {
-        if (_profileCatalog is null || ExportProfileComboBox.ItemsSource is null)
-        {
-            return;
-        }
-
-        var exportProfile = _profileCatalog.ExportProfiles.FirstOrDefault(candidate =>
-            string.Equals(candidate.Metadata.Id, profile.ExportProfileId, StringComparison.Ordinal));
-        if (exportProfile is not null && !ReferenceEquals(ExportProfileComboBox.SelectedItem, exportProfile))
-        {
-            ExportProfileComboBox.SelectedItem = exportProfile;
-        }
-    }
-
-    private static void SetAttachmentDiagnosticProfileDisplayValue(
-        System.Windows.Controls.TextBlock primary,
-        string value)
-    {
-        primary.Text = value;
-        primary.ToolTip = value == "-" ? null : value;
-    }
-
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         ShowInterfaceProfileForSelectedProfile();
         UpdateProfileRenameActionButtons();
     }
 
-    private void InitializeTemplatePackageExportSelection(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
+    private void UpdateProfileRenameActionButtons()
     {
-        var interfaceProfiles = catalog.InterfaceProfiles
-            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-
-        TemplatePackageExportInterfaceProfileComboBox.ItemsSource = interfaceProfiles;
-        if (interfaceProfiles.Count == 0)
-        {
-            TemplatePackageExportInterfaceProfileComboBox.SelectedIndex = -1;
-            TemplatePackageExportSelectionHintText.Text = "Keine Schnittstellenprofile für den Templatepaket-Export geladen.";
-            return;
-        }
-
-        var selectedProfile = string.IsNullOrWhiteSpace(selectedInterfaceProfileId)
-            ? null
-            : interfaceProfiles.FirstOrDefault(profile => string.Equals(profile.Metadata.Id, selectedInterfaceProfileId, StringComparison.Ordinal));
-
-        TemplatePackageExportInterfaceProfileComboBox.SelectedItem = selectedProfile ?? interfaceProfiles[0];
-        UpdateTemplatePackageExportSelectionHint();
+        UpdateProfileRenameButton(
+            RenameInterfaceProfileButton,
+            InterfaceProfileComboBox.SelectedItem is InterfaceProfileDefinition interfaceProfile ? interfaceProfile.Metadata : null,
+            "Schnittstellenprofil");
     }
 
     private void RefreshInterfaceActivationPreview_Click(object sender, RoutedEventArgs e)
@@ -2292,37 +1726,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CreateInterfaceProfileForSelectedExport_Click(object sender, RoutedEventArgs e)
-    {
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            AppendProfileMessage("Schnittstellenprofil kann nicht erstellt werden, weil kein Exportprofil ausgewählt ist.");
-            return;
-        }
-
-        try
-        {
-            var profile = _interfaceProfileConfigurationService.CreateForExportProfile(
-                exportProfile,
-                DateTimeOffset.UtcNow,
-                Environment.UserName);
-            var paths = _appDataPathProvider.GetDefaultUserPaths();
-            _profileCatalogService.SaveInterfaceProfileDefinition(paths, profile, overwriteExisting: false);
-
-            var catalog = _profileCatalogService.Load(paths);
-            _profileCatalog = catalog;
-            RefreshProfileOverview(
-                catalog,
-                selectedExportProfileId: exportProfile.Metadata.Id,
-                selectedInterfaceProfileId: profile.Metadata.Id);
-            AppendProfileMessage($"Schnittstellenprofil erstellt: {profile.Metadata.Name}");
-        }
-        catch (Exception ex)
-        {
-            AppendProfileMessage($"Schnittstellenprofil konnte nicht erstellt werden: {ex.Message}");
-        }
-    }
-
     private void CreateNewInterfaceProfile_Click(object sender, RoutedEventArgs e)
     {
         if (!TryGetProfileCatalogForProfileAction(out var catalog))
@@ -2392,7 +1795,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var selectedExportProfileId = (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id;
+        var selectedExportProfileId = selectedProfile.ExportProfileId;
         InterfaceFolderOptions folderOptions;
         SerialCommunicationSettings? serialSettings;
         NidekRtSerialSendMode? nidekRtSerialSendMode;
@@ -2541,7 +1944,6 @@ public partial class MainWindow : Window
 
         try
         {
-            var selectedExportProfileId = (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id;
             var paths = _appDataPathProvider.GetDefaultUserPaths();
             var deleted = _profileCatalogService.DeleteInterfaceProfile(paths, selectedProfile.Metadata.Id);
             if (!deleted)
@@ -2552,7 +1954,7 @@ public partial class MainWindow : Window
 
             var catalog = _profileCatalogService.Load(paths);
             _profileCatalog = catalog;
-            RefreshProfileOverview(catalog, selectedExportProfileId: selectedExportProfileId);
+            RefreshProfileOverview(catalog, selectedExportProfileId: selectedProfile.ExportProfileId);
             AppendProfileMessage($"Schnittstellenprofil entfernt: {selectedProfile.Metadata.Name}");
         }
         catch (FileNotFoundException ex)
@@ -3023,303 +2425,6 @@ public partial class MainWindow : Window
         InterfaceSerialStatusTextBlock.Text = "RS232-Diagnose geschlossen. Es wurde keine produktive Verarbeitung gestartet.";
     }
 
-    private void RefreshSerialTestPorts_Click(object sender, RoutedEventArgs e)
-    {
-        RefreshSerialPortComboBox(SerialTestPortComboBox);
-        SerialTestStatusTextBlock.Text = SerialTestPortComboBox.Items.Count == 0
-            ? "Keine COM-Ports gefunden. Port kann bei Bedarf manuell eingetragen werden."
-            : "COM-Ports aktualisiert.";
-    }
-
-    private async void StartSerialTestListen_Click(object sender, RoutedEventArgs e)
-    {
-        if (_serialTestCancellationTokenSource is not null)
-        {
-            SerialTestStatusTextBlock.Text = "Ein RS232-Mitschnitt läuft bereits.";
-            return;
-        }
-
-        SerialCommunicationSettings settings;
-        TimeSpan duration;
-        try
-        {
-            settings = CreateSerialTestSettingsFromEditor();
-            duration = ReadSerialTestDuration();
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
-        {
-            SerialTestStatusTextBlock.Text = ex.Message;
-            SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DarkRed;
-            return;
-        }
-
-        _serialTestCancellationTokenSource = new CancellationTokenSource();
-        SetSerialTestRunningState(isRunning: true);
-        SerialTestRawTextBox.Text = string.Empty;
-        SerialTestHexTextBox.Text = string.Empty;
-        SerialTestNidekAnalysisTextBox.Text = string.Empty;
-        SerialTestBytesTextBlock.Text = "0 Bytes";
-        SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DimGray;
-        SerialTestStatusTextBlock.Text = $"Mitschnitt auf {settings.PortName} läuft...";
-
-        try
-        {
-            var result = await _serialDeviceCommunicationService.ListenAsync(
-                settings,
-                duration,
-                _serialTestCancellationTokenSource.Token);
-            SerialTestRawTextBox.Text = result.RawText;
-            SerialTestHexTextBox.Text = result.HexDump;
-            SerialTestBytesTextBlock.Text = $"{result.BytesReceived} Bytes";
-            SerialTestStatusTextBlock.Foreground = result.Success
-                ? System.Windows.Media.Brushes.SeaGreen
-                : System.Windows.Media.Brushes.DarkRed;
-            SerialTestStatusTextBlock.Text = result.Success
-                ? $"Daten empfangen auf {result.PortName}."
-                : result.ErrorMessage ?? "Keine Daten empfangen.";
-            UpdateSerialTestNidekAnalysisIfSelected();
-        }
-        finally
-        {
-            _serialTestCancellationTokenSource?.Dispose();
-            _serialTestCancellationTokenSource = null;
-            SetSerialTestRunningState(isRunning: false);
-        }
-    }
-
-    private void StopSerialTestListen_Click(object sender, RoutedEventArgs e)
-    {
-        _serialTestCancellationTokenSource?.Cancel();
-    }
-
-    private async void SendSerialTestCommand_Click(object sender, RoutedEventArgs e)
-    {
-        SerialCommunicationSettings settings;
-        try
-        {
-            settings = CreateSerialTestSettingsFromEditor();
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
-        {
-            SerialTestStatusTextBlock.Text = ex.Message;
-            SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DarkRed;
-            return;
-        }
-
-        SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DimGray;
-        SerialTestStatusTextBlock.Text = $"Sende an {settings.PortName}...";
-        var result = await _serialDeviceCommunicationService.WriteAsync(
-            settings,
-            SerialTestCommandTextBox.Text,
-            CancellationToken.None);
-        SerialTestStatusTextBlock.Foreground = result.Success
-            ? System.Windows.Media.Brushes.SeaGreen
-            : System.Windows.Media.Brushes.DarkRed;
-        SerialTestStatusTextBlock.Text = result.Success
-            ? $"{result.BytesWritten} Bytes gesendet."
-            : result.ErrorMessage ?? "Senden fehlgeschlagen.";
-    }
-
-    private void ParseSerialTestRaw_Click(object sender, RoutedEventArgs e)
-    {
-        UpdateSerialTestNidekAnalysisIfSelected(forceStatus: true);
-    }
-
-    private void UpdateSerialTestNidekAnalysisIfSelected(bool forceStatus = false)
-    {
-        if (!string.Equals(SerialTestProtocolComboBox.SelectedValue as string, "NidekRs232", StringComparison.Ordinal))
-        {
-            SerialTestNidekAnalysisTextBox.Text = "Protokoll Raw: keine NIDEK-RS232-Auswertung aktiv.";
-            return;
-        }
-
-        try
-        {
-            var bytes = ReadSerialTestPayloadBytes();
-            if (bytes.Length == 0)
-            {
-                SerialTestNidekAnalysisTextBox.Text = "Keine Rohdaten für die NIDEK-RS232-Auswertung vorhanden.";
-                return;
-            }
-
-            var mode = ReadEnumOrDefault(
-                SerialTestNidekModeComboBox.SelectedValue as string,
-                NidekRs232CommunicationMode.Unknown);
-            var reader = new NidekRs232FrameReader();
-            var parser = new NidekRs232PayloadParser();
-            var result = reader.Read(bytes, mode);
-            SerialTestNidekAnalysisTextBox.Text = FormatNidekRs232Analysis(result, parser);
-            if (forceStatus)
-            {
-                SerialTestStatusTextBlock.Foreground = result.Frames.Count > 0
-                    ? System.Windows.Media.Brushes.SeaGreen
-                    : System.Windows.Media.Brushes.DarkOrange;
-                SerialTestStatusTextBlock.Text = result.Frames.Count > 0
-                    ? $"{result.Frames.Count} NIDEK-RS232-Frame(s) erkannt."
-                    : "Keine vollständigen NIDEK-RS232-Frames erkannt.";
-            }
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
-        {
-            SerialTestNidekAnalysisTextBox.Text = ex.Message;
-            if (forceStatus)
-            {
-                SerialTestStatusTextBlock.Foreground = System.Windows.Media.Brushes.DarkRed;
-                SerialTestStatusTextBlock.Text = ex.Message;
-            }
-        }
-    }
-
-    private byte[] ReadSerialTestPayloadBytes()
-    {
-        var hexText = SerialTestHexTextBox.Text;
-        if (!string.IsNullOrWhiteSpace(hexText))
-        {
-            return ParseHexBytes(hexText);
-        }
-
-        return Encoding.ASCII.GetBytes(SerialTestRawTextBox.Text ?? string.Empty);
-    }
-
-    private static byte[] ParseHexBytes(string text)
-    {
-        var compact = Regex.Replace(text, @"[^0-9A-Fa-f]", string.Empty);
-        if (compact.Length == 0)
-        {
-            return Array.Empty<byte>();
-        }
-
-        if (compact.Length % 2 != 0)
-        {
-            throw new FormatException("Hexdump enthält eine ungerade Anzahl Hex-Zeichen.");
-        }
-
-        var bytes = new byte[compact.Length / 2];
-        for (var i = 0; i < bytes.Length; i++)
-        {
-            bytes[i] = byte.Parse(compact.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-        }
-
-        return bytes;
-    }
-
-    private static string FormatNidekRs232Analysis(
-        NidekRs232FrameReadResult result,
-        NidekRs232PayloadParser parser)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine($"Frames: {result.Frames.Count}");
-        if (result.NoiseBytes.Length > 0)
-        {
-            builder.AppendLine($"Noise ignoriert: {result.NoiseBytes.Length} Byte");
-        }
-
-        if (result.HasPartialFrame)
-        {
-            builder.AppendLine($"Unvollständiger Frame: {result.PartialBytes.Length} Byte");
-        }
-
-        foreach (var warning in result.Warnings)
-        {
-            builder.AppendLine($"Warnung: {warning}");
-        }
-
-        for (var index = 0; index < result.Frames.Count; index++)
-        {
-            var frame = result.Frames[index];
-            builder.AppendLine();
-            builder.AppendLine($"Frame {index + 1}: Header={frame.Header}, Kind={frame.Kind}, DeviceCode={frame.DeviceCode}");
-            builder.AppendLine(frame.HasChecksum
-                ? $"Checksum: {frame.ChecksumText} ({(frame.ChecksumValid == true ? "gültig" : "ungültig")})"
-                : "Checksum: keine");
-            builder.AppendLine($"Trailing CR: {(frame.HasTrailingCr ? "ja" : "nein")}");
-            foreach (var segment in frame.Segments)
-            {
-                builder.AppendLine($"  Segment: {EscapeControlText(segment)}");
-            }
-
-            foreach (var warning in frame.Warnings)
-            {
-                builder.AppendLine($"  Frame-Warnung: {warning}");
-            }
-
-            if (frame.Kind != NidekRs232FrameKind.Data)
-            {
-                continue;
-            }
-
-            var payload = parser.Parse(frame);
-            builder.AppendLine($"  Payload: Familie={payload.DeviceFamily}, Hersteller={payload.Manufacturer ?? "-"}, Modell={payload.Model ?? "-"}");
-            if (payload.MeasurementDateTime.HasValue)
-            {
-                builder.AppendLine($"  Messzeit: {payload.MeasurementDateTime.Value:yyyy-MM-dd HH:mm}");
-            }
-
-            foreach (var candidate in payload.MedistarCandidates)
-            {
-                builder.AppendLine($"  Kandidat {candidate.FieldCode}: {candidate.PreviewText}");
-            }
-
-            foreach (var error in payload.Errors)
-            {
-                builder.AppendLine($"  Fehlersegment {error.Code}: {error.RawText}");
-            }
-
-            foreach (var warning in payload.Warnings)
-            {
-                builder.AppendLine($"  Payload-Warnung: {warning}");
-            }
-        }
-
-        return builder.ToString().TrimEnd();
-    }
-
-    private static string EscapeControlText(string value)
-    {
-        return value
-            .Replace("\r", "\\r", StringComparison.Ordinal)
-            .Replace("\n", "\\n", StringComparison.Ordinal)
-            .Replace("\u0001", "<SOH>", StringComparison.Ordinal)
-            .Replace("\u0002", "<STX>", StringComparison.Ordinal)
-            .Replace("\u0004", "<EOT>", StringComparison.Ordinal)
-            .Replace("\u0017", "<ETB>", StringComparison.Ordinal);
-    }
-
-    private SerialCommunicationSettings CreateSerialTestSettingsFromEditor()
-    {
-        return CreateSerialSettingsFromValues(
-            SerialTestPortComboBox.Text,
-            SerialTestBaudRateTextBox.Text,
-            SerialTestDataBitsTextBox.Text,
-            SerialTestStopBitsComboBox.SelectedValue as string,
-            SerialTestParityComboBox.SelectedValue as string,
-            SerialTestHandshakeComboBox.SelectedValue as string,
-            SerialTestDtrCheckBox.IsChecked == true,
-            SerialTestRtsCheckBox.IsChecked == true,
-            isBidirectional: true,
-            readTimeout: "1000",
-            writeTimeout: "1000");
-    }
-
-    private TimeSpan ReadSerialTestDuration()
-    {
-        var seconds = ReadPositiveIntOrDefault(SerialTestDurationSecondsTextBox.Text, 10, "Mitschnittdauer");
-        if (seconds > 300)
-        {
-            throw new ArgumentException("Mitschnittdauer darf höchstens 300 Sekunden betragen.");
-        }
-
-        return TimeSpan.FromSeconds(seconds);
-    }
-
-    private void SetSerialTestRunningState(bool isRunning)
-    {
-        SerialTestStartButton.IsEnabled = !isRunning;
-        SerialTestStopButton.IsEnabled = isRunning;
-        RefreshSerialTestPortsButton.IsEnabled = !isRunning;
-        ParseSerialTestRawButton.IsEnabled = !isRunning;
-    }
-
     private bool TryGetSelectedInterfaceDeviceProfile(
         out InterfaceProfileDefinition profile,
         out DeviceProfileDefinition deviceProfile)
@@ -3676,56 +2781,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ProfileRenameSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        UpdateProfileRenameActionButtons();
-    }
-
-    private void RenameAisProfile_Click(object sender, RoutedEventArgs e)
-    {
-        if (AisProfileRenameComboBox.SelectedItem is not AisProfile profile)
-        {
-            AppendProfileMessage("AIS-Profil kann nicht umbenannt werden, weil kein Profil ausgewählt ist.");
-            return;
-        }
-
-        RenameProfile(
-            UserDefinedProfileRenameKind.AisProfile,
-            profile.Metadata.Id,
-            profile.Name,
-            selectedAisProfileId: profile.Metadata.Id);
-    }
-
-    private void RenameDeviceProfile_Click(object sender, RoutedEventArgs e)
-    {
-        if (DeviceProfileRenameComboBox.SelectedItem is not DeviceProfileDefinition profile)
-        {
-            AppendProfileMessage("Geräteprofil kann nicht umbenannt werden, weil kein Profil ausgewählt ist.");
-            return;
-        }
-
-        RenameProfile(
-            UserDefinedProfileRenameKind.DeviceProfile,
-            profile.Metadata.Id,
-            profile.Metadata.Name,
-            selectedDeviceProfileId: profile.Metadata.Id);
-    }
-
-    private void RenameSelectedExportProfile_Click(object sender, RoutedEventArgs e)
-    {
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition profile)
-        {
-            AppendProfileMessage("Exportprofil kann nicht umbenannt werden, weil kein Profil ausgewählt ist.");
-            return;
-        }
-
-        RenameProfile(
-            UserDefinedProfileRenameKind.ExportProfile,
-            profile.Metadata.Id,
-            profile.Metadata.Name,
-            selectedExportProfileId: profile.Metadata.Id);
-    }
-
     private void RenameSelectedInterfaceProfile_Click(object sender, RoutedEventArgs e)
     {
         if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition profile)
@@ -3818,120 +2873,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CreateNewExportProfile_Click(object sender, RoutedEventArgs e)
-    {
-        if (!TryGetProfileCatalogForProfileAction(out var catalog))
-        {
-            return;
-        }
-
-        if (catalog.ExportProfiles.Count == 0)
-        {
-            AppendProfileMessage("Neues Exportprofil kann nicht vorbereitet werden, weil kein Exportprofil als Vorlage vorhanden ist.");
-            return;
-        }
-
-        var selectedProfile = ExportProfileComboBox.SelectedItem as ExportProfileDefinition
-            ?? catalog.ExportProfiles.OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase).First();
-
-        ExportProfileComboBox.SelectedItem = selectedProfile;
-        _temporaryExportRules.Clear();
-        _isNewExportProfileDraftActive = true;
-        RebuildExportRulesGrid(selectedProfile);
-
-        NewExportProfileNameTextBox.Text = UserDefinedProfileCreationService.CreateAvailableProfileName(
-            catalog.ExportProfiles.Select(profile => profile.Metadata.Name),
-            "Neues Exportprofil");
-        ExportRulesGrid.SelectedIndex = -1;
-        ClearDraftRuleEditor();
-        ExportRulesStatusText.Text = $"Neuer Exportprofil-Entwurf vorbereitet. Technischer Kontext: {selectedProfile.Metadata.Name}.";
-        ExportRulePreviewTextBox.Text = "Leerer Exportprofil-Entwurf. Bitte Exportregeln hinzufügen oder den leeren Entwurf bewusst als UserDefined speichern.";
-        FullExportPreviewTextBox.Text = "Neuer Exportprofil-Entwurf wurde vorbereitet. Es wurde noch nichts gespeichert.";
-        NewExportProfileNameTextBox.Focus();
-        NewExportProfileNameTextBox.SelectAll();
-        AppendProfileMessage("Neuer Exportprofil-Entwurf wurde vorbereitet. Fügen Sie Exportregeln hinzu und speichern Sie den Entwurf als UserDefined-Profil.");
-    }
-
-    private void SaveDraftAsNewExportProfile_Click(object sender, RoutedEventArgs e)
-    {
-        if (!TryGetProfileCatalogForProfileAction(out var catalog))
-        {
-            return;
-        }
-
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            AppendProfileMessage("Neues Exportprofil kann nicht gespeichert werden, weil kein Exportprofil ausgewählt ist.");
-            return;
-        }
-
-        var newProfileName = NewExportProfileNameTextBox.Text.Trim();
-        if (UserDefinedProfileCreationService.HasProfileNameOrIdConflict(
-            catalog.ExportProfiles.Select(profile => profile.Metadata),
-            newProfileName))
-        {
-            AppendProfileMessage("Es existiert bereits ein Exportprofil mit diesem Namen oder dieser ID.");
-            return;
-        }
-
-        ExportRuleDefinition? draftRule = null;
-        string? replaceRuleId = null;
-        if (ExportRulesGrid.SelectedItem is ExportRuleDefinition selectedRule)
-        {
-            if (!TryCreateDraftRule(selectedRule, out var createdDraftRule, out var draftMessage))
-            {
-                AppendProfileMessage(draftMessage);
-                return;
-            }
-
-            draftRule = createdDraftRule;
-            replaceRuleId = selectedRule.Id;
-        }
-
-        var existingExportProfileIds = catalog.ExportProfiles.Select(profile => profile.Metadata.Id).ToList();
-        var draftResult = _exportProfileDraftService.CreateUserDefinedCopy(
-            exportProfile,
-            newProfileName,
-            draftRule,
-            replaceRuleId,
-            _temporaryExportRules,
-            DateTimeOffset.UtcNow,
-            Environment.UserName,
-            idFactory: () => UserDefinedProfileCreationService.CreateUniqueProfileId(
-                "export",
-                newProfileName,
-                existingExportProfileIds),
-            includeOriginalRules: !_isNewExportProfileDraftActive);
-
-        if (!draftResult.Success || draftResult.Profile is null)
-        {
-            AppendProfileMessage("Neues Exportprofil wurde nicht gespeichert:");
-            foreach (var issue in draftResult.Issues)
-            {
-                AppendProfileMessage($"[Exportprofil-Entwurf] {issue}");
-            }
-
-            return;
-        }
-
-        try
-        {
-            var paths = _appDataPathProvider.GetDefaultUserPaths();
-            _profileCatalogService.SaveNewExportProfile(paths, draftResult.Profile);
-
-            var updatedCatalog = _profileCatalogService.Load(paths);
-            _profileCatalog = updatedCatalog;
-            RefreshProfileOverview(updatedCatalog, selectedExportProfileId: draftResult.Profile.Metadata.Id);
-
-            AppendProfileMessage($"Neues Exportprofil gespeichert: {draftResult.Profile.Metadata.Name}");
-            AppendProfileMessage("Profil wurde als neues Exportprofil gespeichert. Das Originalprofil wurde nicht verändert.");
-        }
-        catch (Exception ex)
-        {
-            AppendProfileMessage($"Neues Exportprofil konnte nicht gespeichert werden: {ex.Message}");
-        }
-    }
-
     private bool TryGetProfileCatalogForProfileAction(out ProfileCatalog catalog)
     {
         if (_profileCatalog is not null)
@@ -3982,12 +2923,6 @@ public partial class MainWindow : Window
         string? selectedAisProfileId = null,
         string? selectedDeviceProfileId = null)
     {
-        InitializeLegacyProfileTemplatesTab(
-            catalog,
-            selectedExportProfileId,
-            selectedInterfaceProfileId,
-            selectedAisProfileId,
-            selectedDeviceProfileId);
         InitializeProfileDependentTabs(
             catalog,
             selectedInterfaceProfileId,
@@ -3995,830 +2930,6 @@ public partial class MainWindow : Window
             selectedDeviceProfileId,
             selectedExportProfileId);
         RefreshLicensedDeviceStatesFromLocalLicense();
-    }
-
-    private bool TryCreateDraftRule(
-        ExportRuleDefinition selectedRule,
-        out ExportRuleDefinition draftRule,
-        out string message)
-    {
-        draftRule = selectedRule;
-        message = string.Empty;
-
-        var targetFieldCode = DraftTargetFieldCodeTextBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(targetFieldCode))
-        {
-            message = "TargetFieldCode darf nicht leer sein. Entwurfsvorschau wurde nicht aktualisiert.";
-            return false;
-        }
-
-        if (!int.TryParse(DraftSortOrderTextBox.Text.Trim(), out var sortOrder))
-        {
-            message = "SortOrder muss eine ganze Zahl sein. Entwurfsvorschau wurde nicht aktualisiert.";
-            return false;
-        }
-
-        var ruleType = DraftRuleTypeComboBox.SelectedItem is ExportRuleType selectedRuleType
-            ? selectedRuleType
-            : selectedRule.RuleType;
-
-        draftRule = new ExportRuleDefinition(
-            Id: selectedRule.Id,
-            TargetFieldCode: targetFieldCode,
-            TargetName: DraftTargetNameTextBox.Text.Trim(),
-            RuleType: ruleType,
-            SourcePath: string.IsNullOrWhiteSpace(DraftSourcePathTextBox.Text) ? null : DraftSourcePathTextBox.Text.Trim(),
-            OutputTemplate: DraftOutputTemplateTextBox.Text,
-            SortOrder: sortOrder,
-            IsEnabled: DraftIsEnabledCheckBox.IsChecked == true,
-            Description: string.IsNullOrWhiteSpace(DraftDescriptionTextBox.Text) ? null : DraftDescriptionTextBox.Text.Trim());
-
-        return true;
-    }
-
-    private static MappingRule CreatePreviewMappingRule(ExportRuleDefinition rule, ProcessingPipelineResult result)
-    {
-        return new MappingRule(
-            Id: $"preview-{rule.Id}",
-            TargetFieldCode: string.IsNullOrWhiteSpace(rule.TargetFieldCode) ? "PREVIEW" : rule.TargetFieldCode,
-            TargetName: rule.TargetName,
-            SourcePath: GetPreviewSourcePath(rule, result),
-            OutputTemplate: rule.OutputTemplate,
-            SortOrder: rule.SortOrder,
-            IsEnabled: rule.IsEnabled);
-    }
-
-    private static string GetPreviewSourcePath(ExportRuleDefinition rule, ProcessingPipelineResult result)
-    {
-        if (!string.IsNullOrWhiteSpace(rule.SourcePath))
-        {
-            return rule.SourcePath;
-        }
-
-        if (!string.IsNullOrWhiteSpace(result.Patient?.PatientNumber))
-        {
-            return "AIS.PatientNumber";
-        }
-
-        var firstMeasurementPath = result.Measurements.FirstOrDefault(measurement => !string.IsNullOrWhiteSpace(measurement.SourcePath))?.SourcePath;
-        return firstMeasurementPath is null ? "AIS.PatientNumber" : $"Device.{firstMeasurementPath}";
-    }
-
-    private static PatientData CreateEmptyPatientData()
-    {
-        return new PatientData(
-            PatientNumber: null,
-            LastName: null,
-            FirstName: null,
-            BirthDate: null,
-            PostalCodeCity: null,
-            Street: null,
-            GenderCode: null,
-            SourceSystem: null,
-            TargetSystem: null,
-            GdtVersion: null,
-            ExaminationType: null);
-    }
-
-    private static IReadOnlyList<string> GetUnresolvedPlaceholders(
-        string template,
-        string previewSourcePath,
-        PatientData patient,
-        IReadOnlyList<MeasurementValue> measurements)
-    {
-        var unresolved = new List<string>();
-        var measurementPaths = measurements
-            .Select(measurement => measurement.SourcePath)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var token in ExtractPlaceholderTokens(template))
-        {
-            var sourceToken = SplitPreviewFormatToken(token);
-            if (string.Equals(sourceToken, "value", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!CanResolvePreviewSource(previewSourcePath, patient, measurementPaths))
-                {
-                    unresolved.Add(token);
-                }
-
-                continue;
-            }
-
-            if (sourceToken.StartsWith("patient.", StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.IsNullOrWhiteSpace(GetPatientPreviewValue($"AIS.{sourceToken[8..]}", patient)))
-                {
-                    unresolved.Add(token);
-                }
-
-                continue;
-            }
-
-            if (sourceToken.StartsWith("AIS.", StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.IsNullOrWhiteSpace(GetPatientPreviewValue(sourceToken, patient)))
-                {
-                    unresolved.Add(token);
-                }
-
-                continue;
-            }
-
-            if (sourceToken.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!measurementPaths.Contains(sourceToken[7..]))
-                {
-                    unresolved.Add(token);
-                }
-
-                continue;
-            }
-
-            unresolved.Add(token);
-        }
-
-        return unresolved;
-    }
-
-    private static IReadOnlyList<string> GetRoundBracketPlaceholderCandidates(string template)
-    {
-        var candidates = new List<string>();
-        var index = 0;
-
-        while (index < template.Length)
-        {
-            var openIndex = template.IndexOf('(', index);
-            if (openIndex < 0)
-            {
-                break;
-            }
-
-            var closeIndex = template.IndexOf(')', openIndex + 1);
-            if (closeIndex < 0)
-            {
-                break;
-            }
-
-            var token = template[(openIndex + 1)..closeIndex].Trim();
-            if (LooksLikePlaceholderToken(token))
-            {
-                candidates.Add(token);
-            }
-
-            index = closeIndex + 1;
-        }
-
-        return candidates
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    private static bool LooksLikePlaceholderToken(string token)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            return false;
-        }
-
-        var sourceToken = SplitPreviewFormatToken(token);
-        return sourceToken.StartsWith("AIS.", StringComparison.OrdinalIgnoreCase)
-            || sourceToken.StartsWith("Device.", StringComparison.OrdinalIgnoreCase)
-            || sourceToken.StartsWith("Patient.", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(sourceToken, "value", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static void AppendRoundBracketPlaceholderHint(StringBuilder builder, IReadOnlyList<string> placeholders)
-    {
-        if (placeholders.Count == 0)
-        {
-            return;
-        }
-
-        builder.AppendLine("Runde Klammern werden nicht als Platzhalter erkannt. Verwenden Sie geschweifte Klammern, z. B. {Device.Date}.");
-        foreach (var placeholder in placeholders)
-        {
-            builder.AppendLine($"- ({placeholder})");
-        }
-
-        builder.AppendLine();
-    }
-
-    private void DraftOutputTemplateTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
-        if (_updatingPlaceholderRows)
-        {
-            return;
-        }
-
-        RefreshPlaceholderUsageFromDraft();
-    }
-
-    private void PlaceholderUseCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_updatingPlaceholderRows || sender is not System.Windows.Controls.CheckBox checkBox)
-        {
-            return;
-        }
-
-        if (checkBox.DataContext is not PlaceholderRow row)
-        {
-            return;
-        }
-
-        if (row.IsUsed)
-        {
-            InsertPlaceholderIntoDraft(row);
-        }
-        else
-        {
-            RemovePlaceholderFromDraft(row);
-        }
-
-        RefreshPlaceholderUsageFromDraft();
-        UpdateDraftPreviewFromCurrentDraft();
-    }
-
-    private void PlaceholderOutputModeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        if (_updatingPlaceholderRows || sender is not System.Windows.Controls.ComboBox comboBox)
-        {
-            return;
-        }
-
-        if (comboBox.DataContext is not PlaceholderRow row || !row.IsUsed)
-        {
-            return;
-        }
-
-        RemovePlaceholderFromDraft(row);
-        InsertPlaceholderIntoDraft(row);
-        RefreshPlaceholderUsageFromDraft();
-        UpdateDraftPreviewFromCurrentDraft();
-    }
-
-    private void UpdatePlaceholderTables()
-    {
-        _updatingPlaceholderRows = true;
-        try
-        {
-            _aisPlaceholderRows.Clear();
-            foreach (var row in CreateAisPlaceholderRows())
-            {
-                _aisPlaceholderRows.Add(row);
-            }
-
-            _devicePlaceholderRows.Clear();
-            foreach (var row in CreateDevicePlaceholderRows())
-            {
-                _devicePlaceholderRows.Add(row);
-            }
-
-            DevicePlaceholdersStatusText.Text = _lastPipelineResult is null
-                ? "Device-Platzhalter - noch keine Gerätedaten geladen"
-                : $"Device-Platzhalter - {_devicePlaceholderRows.Count} erkannt";
-        }
-        finally
-        {
-            _updatingPlaceholderRows = false;
-        }
-
-        RefreshPlaceholderUsageFromDraft();
-    }
-
-    private void ClearPlaceholderTables()
-    {
-        _updatingPlaceholderRows = true;
-        try
-        {
-            _aisPlaceholderRows.Clear();
-            _devicePlaceholderRows.Clear();
-            DevicePlaceholdersStatusText.Text = "Device-Platzhalter - noch keine Gerätedaten geladen";
-        }
-        finally
-        {
-            _updatingPlaceholderRows = false;
-        }
-    }
-
-    private IReadOnlyList<PlaceholderRow> CreateAisPlaceholderRows()
-    {
-        var patient = _lastPipelineResult?.Patient;
-        var rows = new[]
-        {
-            CreatePlaceholderRow("AIS.PatientNumber", GetPatientPreviewValueOrNull("AIS.PatientNumber", patient), 0),
-            CreatePlaceholderRow("AIS.LastName", GetPatientPreviewValueOrNull("AIS.LastName", patient), 1),
-            CreatePlaceholderRow("AIS.FirstName", GetPatientPreviewValueOrNull("AIS.FirstName", patient), 2),
-            CreatePlaceholderRow("AIS.BirthDate", GetPatientPreviewValueOrNull("AIS.BirthDate", patient), 3),
-            CreatePlaceholderRow("AIS.ExaminationType", GetPatientPreviewValueOrNull("AIS.ExaminationType", patient), 4),
-            CreatePlaceholderRow("AIS.Street", GetPatientPreviewValueOrNull("AIS.Street", patient), 5),
-            CreatePlaceholderRow("AIS.PostalCodeCity", GetPatientPreviewValueOrNull("AIS.PostalCodeCity", patient), 6)
-        };
-
-        return rows
-            .OrderBy(row => row.SortOrder)
-            .ToList();
-    }
-
-    private IReadOnlyList<PlaceholderRow> CreateDevicePlaceholderRows()
-    {
-        if (_lastPipelineResult is null)
-        {
-            return Array.Empty<PlaceholderRow>();
-        }
-
-        return _lastPipelineResult.Measurements
-            .Where(measurement => !string.IsNullOrWhiteSpace(measurement.SourcePath))
-            .GroupBy(measurement => measurement.SourcePath, StringComparer.OrdinalIgnoreCase)
-            .Select(group =>
-            {
-                var firstWithValue = group.FirstOrDefault(measurement => !string.IsNullOrWhiteSpace(measurement.Value));
-                var measurement = firstWithValue ?? group.First();
-                var placeholder = $"Device.{group.Key}";
-                return new PlaceholderRow(
-                    placeholder,
-                    GetFriendlyPlaceholderName(placeholder, measurement.DisplayName),
-                    measurement.Value ?? string.Empty,
-                    sortOrder: GetDevicePlaceholderSortOrder(group.Key));
-            })
-            .OrderByDescending(row => row.HasValue)
-            .ThenBy(row => row.SortOrder)
-            .ThenBy(row => row.DisplayName, StringComparer.CurrentCultureIgnoreCase)
-            .ThenBy(row => row.Placeholder, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    private static PlaceholderRow CreatePlaceholderRow(string placeholder, string? value, int sortOrder)
-    {
-        return new PlaceholderRow(
-            placeholder,
-            GetFriendlyPlaceholderName(placeholder, displayName: null),
-            value ?? string.Empty,
-            sortOrder);
-    }
-
-    private void RefreshPlaceholderUsageFromDraft()
-    {
-        var template = DraftOutputTemplateTextBox.Text ?? string.Empty;
-        _updatingPlaceholderRows = true;
-        try
-        {
-            foreach (var row in _aisPlaceholderRows.Concat(_devicePlaceholderRows))
-            {
-                var outputMode = DetectOutputMode(template, row);
-                row.OutputMode = outputMode ?? PlaceholderRow.OutputModeAis;
-                row.IsUsed = outputMode is not null;
-            }
-        }
-        finally
-        {
-            _updatingPlaceholderRows = false;
-        }
-    }
-
-    private void InsertPlaceholderIntoDraft(PlaceholderRow row)
-    {
-        var text = DraftOutputTemplateTextBox.Text ?? string.Empty;
-        if (TemplateContainsPlaceholder(text, row.Placeholder))
-        {
-            return;
-        }
-
-        var token = BuildPlaceholderToken(row.Placeholder);
-        var insertedText = string.Equals(row.OutputMode, PlaceholderRow.OutputModeHuman, StringComparison.OrdinalIgnoreCase)
-            ? $"{row.DisplayName}: {token}"
-            : token;
-        var insertionIndex = DraftOutputTemplateTextBox.IsKeyboardFocusWithin
-            ? Math.Clamp(DraftOutputTemplateTextBox.CaretIndex, 0, text.Length)
-            : text.Length;
-        var prefix = insertionIndex > 0 && !char.IsWhiteSpace(text[insertionIndex - 1]) ? " " : string.Empty;
-        var suffix = insertionIndex < text.Length && !char.IsWhiteSpace(text[insertionIndex]) ? " " : string.Empty;
-        var insertion = $"{prefix}{insertedText}{suffix}";
-
-        DraftOutputTemplateTextBox.Text = text.Insert(insertionIndex, insertion);
-        DraftOutputTemplateTextBox.CaretIndex = insertionIndex + prefix.Length + insertedText.Length;
-        DraftOutputTemplateTextBox.Focus();
-    }
-
-    private void RemovePlaceholderFromDraft(PlaceholderRow row)
-    {
-        var text = DraftOutputTemplateTextBox.Text ?? string.Empty;
-        var tokenPattern = CreatePlaceholderTokenPattern(row.Placeholder);
-        var humanPattern = Regex.Escape(row.DisplayName) + @"\s*:\s*" + tokenPattern;
-        var updatedText = Regex.Replace(text, humanPattern, string.Empty, RegexOptions.IgnoreCase);
-        updatedText = Regex.Replace(updatedText, tokenPattern, string.Empty, RegexOptions.IgnoreCase);
-        updatedText = CleanupRemovedPlaceholderWhitespace(updatedText);
-
-        DraftOutputTemplateTextBox.Text = updatedText;
-        DraftOutputTemplateTextBox.CaretIndex = Math.Min(DraftOutputTemplateTextBox.CaretIndex, updatedText.Length);
-        DraftOutputTemplateTextBox.Focus();
-    }
-
-    private static string CleanupRemovedPlaceholderWhitespace(string text)
-    {
-        var lines = text
-            .Replace("\r\n", "\n", StringComparison.Ordinal)
-            .Split('\n')
-            .Select(line => Regex.Replace(line, @" {2,}", " ").TrimEnd());
-
-        return string.Join(Environment.NewLine, lines);
-    }
-
-    private static bool TemplateContainsPlaceholder(string template, string placeholder)
-    {
-        return ExtractPlaceholderTokens(template)
-            .Select(SplitPreviewFormatToken)
-            .Any(token => string.Equals(token, placeholder, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string? DetectOutputMode(string template, PlaceholderRow row)
-    {
-        var tokenPattern = CreatePlaceholderTokenPattern(row.Placeholder);
-        var humanPattern = Regex.Escape(row.DisplayName) + @"\s*:\s*" + tokenPattern;
-        if (Regex.IsMatch(template, humanPattern, RegexOptions.IgnoreCase))
-        {
-            return PlaceholderRow.OutputModeHuman;
-        }
-
-        return Regex.IsMatch(template, tokenPattern, RegexOptions.IgnoreCase)
-            ? PlaceholderRow.OutputModeAis
-            : null;
-    }
-
-    private static string CreatePlaceholderTokenPattern(string placeholder)
-    {
-        return @"\{" + Regex.Escape(placeholder) + @"(?::[^{}]+)?\}";
-    }
-
-    private static string BuildPlaceholderToken(string placeholder)
-    {
-        var suggestedFormat = GetSuggestedFormat(placeholder);
-        return string.IsNullOrWhiteSpace(suggestedFormat)
-            ? $"{{{placeholder}}}"
-            : $"{{{placeholder}:{suggestedFormat}}}";
-    }
-
-    private static string? GetSuggestedFormat(string placeholder)
-    {
-        return PlaceholderDisplayHelper.GetSuggestedFormat(placeholder);
-    }
-
-    private static string GetFriendlyPlaceholderName(string placeholder, string? displayName)
-    {
-        return PlaceholderDisplayHelper.GetDisplayName(placeholder, displayName);
-    }
-
-    private static string GetFriendlyDevicePlaceholderName(string placeholder, string? displayName)
-    {
-        var sourcePath = placeholder.StartsWith("Device.", StringComparison.OrdinalIgnoreCase)
-            ? placeholder[7..]
-            : placeholder;
-        var eye = GetFriendlyEyeName(sourcePath);
-        var context = GetFriendlyMeasurementContext(sourcePath);
-
-        string name;
-        if (ContainsAny(sourcePath, "FarPD"))
-        {
-            name = "Pupillendistanz Ferne";
-        }
-        else if (ContainsAny(sourcePath, "NearPD"))
-        {
-            name = "Pupillendistanz Nähe";
-        }
-        else if (ContainsAny(sourcePath, "PD"))
-        {
-            name = "Pupillendistanz";
-        }
-        else if (ContainsAny(sourcePath, "Sphere", "Sphare"))
-        {
-            name = "Sphäre";
-        }
-        else if (ContainsAny(sourcePath, "Cylinder"))
-        {
-            name = "Zylinder";
-        }
-        else if (ContainsAny(sourcePath, "Axis"))
-        {
-            name = "Achse";
-        }
-        else if (ContainsAny(sourcePath, "SE"))
-        {
-            name = "Sphärisches Äquivalent";
-        }
-        else if (ContainsAny(sourcePath, "IOP", "CorrectedIOP", "/NT", "NT/"))
-        {
-            name = "Augeninnendruck";
-        }
-        else if (ContainsAny(sourcePath, "Pachy", "PACHY", "CCT"))
-        {
-            name = "Pachymetrie / Hornhautdicke";
-        }
-        else if (ContainsAny(sourcePath, "Prism"))
-        {
-            name = "Prisma";
-        }
-        else if (ContainsAny(sourcePath, "Keratometry", "K1", "K2", "Power", "Radius"))
-        {
-            name = "Keratometrie";
-        }
-        else
-        {
-            name = !string.IsNullOrWhiteSpace(displayName)
-                ? displayName.Trim()
-                : DeriveNameFromSourcePath(sourcePath);
-        }
-
-        var parts = new List<string> { name };
-        if (!string.IsNullOrWhiteSpace(eye) && !name.Contains("Pupillendistanz", StringComparison.OrdinalIgnoreCase))
-        {
-            parts.Add(eye);
-        }
-
-        if (!string.IsNullOrWhiteSpace(context))
-        {
-            parts.Add(context);
-        }
-
-        return string.Join(" ", parts);
-    }
-
-    private static string GetFriendlyMeasurementContext(string sourcePath)
-    {
-        var measurementNumber = ExtractMeasurementNumber(sourcePath);
-        if (ContainsAny(sourcePath, "ARMedian"))
-        {
-            return "Berechnung / Median";
-        }
-
-        if (ContainsAny(sourcePath, "ARList"))
-        {
-            return string.IsNullOrWhiteSpace(measurementNumber) ? "Messung" : $"Messung {measurementNumber}";
-        }
-
-        if (ContainsAny(sourcePath, "PDList"))
-        {
-            return string.IsNullOrWhiteSpace(measurementNumber) ? "Messung" : $"Messung {measurementNumber}";
-        }
-
-        if (ContainsAny(sourcePath, "/SR/", ".SR.", "SR/"))
-        {
-            return "SR";
-        }
-
-        if (ContainsAny(sourcePath, "TrialLens"))
-        {
-            return "TrialLens";
-        }
-
-        if (ContainsAny(sourcePath, "ContactLens"))
-        {
-            return "ContactLens";
-        }
-
-        return string.Empty;
-    }
-
-    private static string ExtractMeasurementNumber(string sourcePath)
-    {
-        const string marker = "[@No=";
-        var markerIndex = sourcePath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
-        if (markerIndex < 0)
-        {
-            return string.Empty;
-        }
-
-        var valueStart = markerIndex + marker.Length;
-        while (valueStart < sourcePath.Length && (sourcePath[valueStart] == '\'' || sourcePath[valueStart] == '"'))
-        {
-            valueStart++;
-        }
-
-        var valueEnd = valueStart;
-        while (valueEnd < sourcePath.Length && sourcePath[valueEnd] != '\'' && sourcePath[valueEnd] != '"' && sourcePath[valueEnd] != ']')
-        {
-            valueEnd++;
-        }
-
-        return valueEnd <= valueStart ? string.Empty : sourcePath[valueStart..valueEnd];
-    }
-
-    private static int GetDevicePlaceholderSortOrder(string sourcePath)
-    {
-        return PlaceholderDisplayHelper.GetDeviceSortOrder(sourcePath);
-    }
-
-    private static int GetEyeSortOrder(string sourcePath)
-    {
-        var eye = GetFriendlyEyeName(sourcePath);
-        return eye switch
-        {
-            "rechts" => 0,
-            "links" => 1,
-            _ => 2
-        };
-    }
-
-    private static int GetMeasurementGroupSortOrder(string sourcePath)
-    {
-        if (ContainsAny(sourcePath, "ARMedian"))
-        {
-            return 0;
-        }
-
-        if (ContainsAny(sourcePath, "ARList"))
-        {
-            return 1;
-        }
-
-        if (ContainsAny(sourcePath, "/SR/", ".SR.", "SR/"))
-        {
-            return 2;
-        }
-
-        if (ContainsAny(sourcePath, "TrialLens"))
-        {
-            return 3;
-        }
-
-        if (ContainsAny(sourcePath, "ContactLens"))
-        {
-            return 4;
-        }
-
-        if (ContainsAny(sourcePath, "PDList"))
-        {
-            return 5;
-        }
-
-        return 50;
-    }
-
-    private static int GetMeasurementTypeSortOrder(string sourcePath)
-    {
-        if (ContainsAny(sourcePath, "Sphere", "Sphare"))
-        {
-            return 0;
-        }
-
-        if (ContainsAny(sourcePath, "Cylinder"))
-        {
-            return 1;
-        }
-
-        if (ContainsAny(sourcePath, "Axis"))
-        {
-            return 2;
-        }
-
-        if (ContainsAny(sourcePath, "SE"))
-        {
-            return 3;
-        }
-
-        if (ContainsAny(sourcePath, "FarPD"))
-        {
-            return 4;
-        }
-
-        if (ContainsAny(sourcePath, "NearPD"))
-        {
-            return 5;
-        }
-
-        return 50;
-    }
-
-    private static string GetFriendlyEyeName(string sourcePath)
-    {
-        var segments = sourcePath.Split(new[] { '/', '.', '[', ']', '@', '=', '\'' }, StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Any(segment => string.Equals(segment, "R", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(segment, "Right", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "rechts";
-        }
-
-        if (segments.Any(segment => string.Equals(segment, "L", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(segment, "Left", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "links";
-        }
-
-        return string.Empty;
-    }
-
-    private static string DeriveNameFromSourcePath(string sourcePath)
-    {
-        var lastSegment = sourcePath
-            .Split(new[] { '/', '.', '[', ']', '@', '=', '\'' }, StringSplitOptions.RemoveEmptyEntries)
-            .LastOrDefault();
-
-        return string.IsNullOrWhiteSpace(lastSegment)
-            ? sourcePath
-            : lastSegment;
-    }
-
-    private static bool ContainsAny(string value, params string[] parts)
-    {
-        return parts.Any(part => value.Contains(part, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static IEnumerable<string> ExtractPlaceholderTokens(string template)
-    {
-        var index = 0;
-
-        while (index < template.Length)
-        {
-            var openIndex = template.IndexOf('{', index);
-            if (openIndex < 0)
-            {
-                break;
-            }
-
-            var closeIndex = template.IndexOf('}', openIndex + 1);
-            if (closeIndex < 0)
-            {
-                break;
-            }
-
-            yield return template[(openIndex + 1)..closeIndex];
-            index = closeIndex + 1;
-        }
-    }
-
-    private static string SplitPreviewFormatToken(string token)
-    {
-        var separatorIndex = token.LastIndexOf(':');
-        return separatorIndex < 0 ? token : token[..separatorIndex];
-    }
-
-    private static bool CanResolvePreviewSource(
-        string sourcePath,
-        PatientData patient,
-        HashSet<string> measurementPaths)
-    {
-        if (sourcePath.StartsWith("Device.", StringComparison.OrdinalIgnoreCase))
-        {
-            return measurementPaths.Contains(sourcePath[7..]);
-        }
-
-        return !string.IsNullOrWhiteSpace(GetPatientPreviewValue(sourcePath, patient));
-    }
-
-    private static string? GetPatientPreviewValue(string sourcePath, PatientData patient)
-    {
-        return sourcePath switch
-        {
-            "AIS.PatientNumber" => patient.PatientNumber,
-            "AIS.LastName" => patient.LastName,
-            "AIS.FirstName" => patient.FirstName,
-            "AIS.BirthDate" => patient.BirthDate,
-            "AIS.Street" => patient.Street,
-            "AIS.PostalCodeCity" => patient.PostalCodeCity,
-            "AIS.GenderCode" => patient.GenderCode,
-            "AIS.SourceSystem" => patient.SourceSystem,
-            "AIS.TargetSystem" => patient.TargetSystem,
-            "AIS.GdtVersion" => patient.GdtVersion,
-            "AIS.ExaminationType" => patient.ExaminationType,
-            _ => null
-        };
-    }
-
-    private static string? GetPatientPreviewValueOrNull(string sourcePath, PatientData? patient)
-    {
-        return patient is null ? null : GetPatientPreviewValue(sourcePath, patient);
-    }
-
-    private void ShowProfileNameColumns(ProfileCatalog catalog)
-    {
-        AisProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.AisProfiles.Select(profile => profile.Name));
-        DeviceProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.DeviceProfiles.Select(profile => profile.Metadata.Name));
-        ExportProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.ExportProfiles.Select(profile => profile.Metadata.Name));
-        InterfaceProfileNamesTextBox.Text = FormatProfileNameColumn(catalog.InterfaceProfiles.Select(profile => profile.Metadata.Name));
-    }
-
-    private void InitializeProfileRenameSelectors(
-        ProfileCatalog catalog,
-        string? selectedAisProfileId = null,
-        string? selectedDeviceProfileId = null)
-    {
-        var aisProfiles = catalog.AisProfiles
-            .OrderBy(profile => profile.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-        AisProfileRenameComboBox.ItemsSource = aisProfiles;
-        AisProfileRenameComboBox.SelectedItem = SelectProfileById(
-            aisProfiles,
-            selectedAisProfileId,
-            profile => profile.Metadata.Id);
-
-        var deviceProfiles = catalog.DeviceProfiles
-            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-        DeviceProfileRenameComboBox.ItemsSource = deviceProfiles;
-        DeviceProfileRenameComboBox.SelectedItem = SelectProfileById(
-            deviceProfiles,
-            selectedDeviceProfileId,
-            profile => profile.Metadata.Id);
-
-        UpdateProfileRenameActionButtons();
     }
 
     private static TProfile? SelectProfileById<TProfile>(
@@ -4842,22 +2953,6 @@ public partial class MainWindow : Window
         }
 
         return profiles[0];
-    }
-
-    private void UpdateProfileRenameActionButtons()
-    {
-        UpdateProfileRenameButton(
-            RenameAisProfileButton,
-            AisProfileRenameComboBox.SelectedItem is AisProfile aisProfile ? aisProfile.Metadata : null,
-            "AIS-Profil");
-        UpdateProfileRenameButton(
-            RenameDeviceProfileButton,
-            DeviceProfileRenameComboBox.SelectedItem is DeviceProfileDefinition deviceProfile ? deviceProfile.Metadata : null,
-            "Geräteprofil");
-        UpdateProfileRenameButton(
-            RenameInterfaceProfileButton,
-            InterfaceProfileComboBox.SelectedItem is InterfaceProfileDefinition interfaceProfile ? interfaceProfile.Metadata : null,
-            "Schnittstellenprofil");
     }
 
     private static void UpdateProfileRenameButton(
@@ -4888,29 +2983,6 @@ public partial class MainWindow : Window
 
         button.IsEnabled = true;
         button.ToolTip = $"Ändert nur den sichtbaren Namen dieses UserDefined-{profileKindLabel}s.";
-    }
-
-    private void ClearProfileNameColumns()
-    {
-        AisProfileNamesTextBox.Text = "Keine Profile geladen.";
-        DeviceProfileNamesTextBox.Text = string.Empty;
-        ExportProfileNamesTextBox.Text = string.Empty;
-        InterfaceProfileNamesTextBox.Text = string.Empty;
-    }
-
-    private static string FormatProfileNameColumn(IEnumerable<string> names)
-    {
-        var orderedNames = names
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
-
-        if (orderedNames.Count == 0)
-        {
-            return "Keine Profile geladen.";
-        }
-
-        return string.Join(Environment.NewLine, orderedNames);
     }
 
     private void InitializeLicenseOverview()
@@ -6699,7 +4771,7 @@ public partial class MainWindow : Window
             _profileCatalog = catalog;
             RefreshProfileOverview(
                 catalog,
-                selectedExportProfileId: (ExportProfileComboBox.SelectedItem as ExportProfileDefinition)?.Metadata.Id,
+                selectedExportProfileId: result.Profile.ExportProfileId,
                 selectedInterfaceProfileId: result.Profile.Metadata.Id);
 
             var activationText = _periodicScanCancellationTokenSource is null
@@ -9061,569 +7133,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ExportTemplatePackage_Click(object sender, RoutedEventArgs e)
-    {
-        if (_profileCatalog is null)
-        {
-            AppendProfileMessage("Templatepaket kann nicht exportiert werden, weil keine V2-Profile geladen sind.");
-            return;
-        }
-
-        if (TemplatePackageExportInterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedInterfaceProfile)
-        {
-            AppendProfileMessage("Templatepaket kann nicht exportiert werden, weil kein Schnittstellenprofil als Paketbasis ausgewählt ist.");
-            return;
-        }
-
-        var selection = _templatePackageExportSelectionService.CreateForInterfaceProfile(
-            _profileCatalog,
-            selectedInterfaceProfile.Metadata.Id,
-            DateTimeOffset.UtcNow);
-        if (!selection.Success || selection.Request is null)
-        {
-            AppendProfileMessage(selection.ErrorMessage ?? "Templatepaket kann nicht exportiert werden.");
-            foreach (var message in selection.Messages)
-            {
-                AppendProfileMessage($"[Templatepaket-Export] {message}");
-            }
-            return;
-        }
-
-        var dialog = new Microsoft.Win32.SaveFileDialog
-        {
-            Filter = "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
-            FileName = selection.SuggestedFileName,
-            DefaultExt = ".zip",
-            AddExtension = true,
-            OverwritePrompt = true
-        };
-
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
-
-        try
-        {
-            _templatePackageExporter.Export(dialog.FileName, selection.Request);
-            AppendProfileMessage($"Templatepaket erfolgreich exportiert: {dialog.FileName}");
-            AppendProfileMessage(FormatTemplatePackageExportSelection(selection.Request));
-        }
-        catch (Exception ex)
-        {
-            AppendProfileMessage($"Templatepaket konnte nicht exportiert werden: {ex.Message}");
-        }
-    }
-
-    private void TemplatePackageExportInterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        UpdateTemplatePackageExportSelectionHint();
-    }
-
-    private void UpdateTemplatePackageExportSelectionHint()
-    {
-        if (_profileCatalog is null)
-        {
-            TemplatePackageExportSelectionHintText.Text = "Keine Profile geladen.";
-            return;
-        }
-
-        if (TemplatePackageExportInterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedInterfaceProfile)
-        {
-            TemplatePackageExportSelectionHintText.Text = "Bitte ein Schnittstellenprofil als Paketbasis wählen.";
-            return;
-        }
-
-        var selection = _templatePackageExportSelectionService.CreateForInterfaceProfile(
-            _profileCatalog,
-            selectedInterfaceProfile.Metadata.Id,
-            DateTimeOffset.UtcNow);
-
-        TemplatePackageExportSelectionHintText.Text = selection.Success && selection.Request is not null
-            ? $"Enthält: AIS '{selection.Request.AisProfiles[0].Metadata.Name}', Gerät '{selection.Request.DeviceProfiles[0].Metadata.Name}', Exportprofil '{selection.Request.ExportProfiles[0].Metadata.Name}' und Schnittstellenprofil '{selection.Request.InterfaceProfiles[0].Metadata.Name}'."
-            : selection.ErrorMessage ?? "Templatepaket kann mit der aktuellen Auswahl nicht exportiert werden.";
-    }
-
-    private static string FormatTemplatePackageExportSelection(TemplatePackageExportRequest request)
-    {
-        return "Exportinhalt: "
-            + $"AIS '{request.AisProfiles[0].Metadata.Name}', "
-            + $"Gerät '{request.DeviceProfiles[0].Metadata.Name}', "
-            + $"Exportprofil '{request.ExportProfiles[0].Metadata.Name}', "
-            + $"Schnittstellenprofil '{request.InterfaceProfiles[0].Metadata.Name}'.";
-    }
-
-    private async void ImportTemplatePackage_Click(object sender, RoutedEventArgs e)
-    {
-        if (_isTemplatePackageImportPreviewBusy)
-        {
-            return;
-        }
-
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Filter = "Templatepaket (*.zip)|*.zip|Alle Dateien (*.*)|*.*",
-            CheckFileExists = true
-        };
-
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
-
-        try
-        {
-            SetTemplatePackageImportPreviewBusy(true);
-            ShowTemplatePackageImportPreviewLoading();
-
-            var existingCatalog = _profileCatalog ?? CreateEmptyProfileCatalog();
-            var previewResult = await Task.Run(() => _templatePackageImportPreviewService.Create(dialog.FileName, existingCatalog));
-
-            _lastTemplatePackageImportResult = previewResult.ImportResult;
-            _lastTemplatePackageImportValidationResult = previewResult.ValidationResult;
-            _lastTemplatePackageImportAnalysisResult = previewResult.AnalysisResult;
-            _lastTemplatePackageImportBasePlan = previewResult.BasePlan;
-            _lastTemplatePackageImportPlan = previewResult.Plan;
-            _lastTemplatePackageImportDryRunResult = previewResult.DryRunResult;
-            ShowTemplatePackageImportPreview(previewResult.Display);
-            UpdateTemplatePackageImportExecuteButton(previewResult.DryRunResult);
-            TemplatePackageImportExecutionResultTextBox.Text = "Noch keine Importübernahme ausgeführt.";
-            ShowTemplatePackageImportResult(previewResult.ImportResult, previewResult.ValidationResult);
-            AppendProfileMessage("Templatepaket-Importvorschau wurde aktualisiert. Es wurde nichts gespeichert.");
-        }
-        catch (Exception ex)
-        {
-            ClearTemplatePackageImportExecutionState();
-            ShowTemplatePackageImportPreviewFailure(
-                "Das Templatepaket konnte nicht für die Vorschau gelesen werden. Es wurden keine Änderungen vorgenommen.",
-                ex.Message);
-            AppendProfileMessage($"Templatepaket konnte nicht importiert oder geprüft werden: {ex.Message}");
-        }
-        finally
-        {
-            SetTemplatePackageImportPreviewBusy(false);
-        }
-    }
-
-    private void TemplatePackageImportActionComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        UpdateTemplatePackageImportPreviewFromUserInput(
-            "Importvorschau wurde anhand der Benutzerentscheidung aktualisiert. Noch keine Importübernahme ausgeführt.");
-    }
-
-    private void TemplatePackageImportTargetNameTextBox_LostFocus(object sender, RoutedEventArgs e)
-    {
-        UpdateTemplatePackageImportPreviewFromUserInput(
-            "Importvorschau wurde anhand des Zielnamens aktualisiert. Noch keine Importübernahme ausgeführt.");
-    }
-
-    private void UpdateTemplatePackageImportPreviewFromUserInput(string statusText)
-    {
-        if (_updatingTemplatePackageImportPreview
-            || _isTemplatePackageImportPreviewBusy
-            || _lastTemplatePackageImportResult is null
-            || _lastTemplatePackageImportValidationResult is null
-            || _lastTemplatePackageImportAnalysisResult is null
-            || _lastTemplatePackageImportBasePlan is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var selections = GetTemplatePackageImportUserSelections();
-            var selectionSignature = CreateTemplatePackageImportSelectionSignature(selections);
-            if (string.Equals(selectionSignature, _lastTemplatePackageImportSelectionSignature, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            var updatedPlan = _templatePackageImportSelectionService.Apply(_lastTemplatePackageImportBasePlan, selections);
-            var existingCatalog = _profileCatalog ?? CreateEmptyProfileCatalog();
-            var dryRunResult = _templatePackageImportDryRunService.Preview(_lastTemplatePackageImportResult, updatedPlan, existingCatalog);
-            _lastTemplatePackageImportPlan = updatedPlan;
-            _lastTemplatePackageImportDryRunResult = dryRunResult;
-            ShowTemplatePackageImportPreview(
-                _lastTemplatePackageImportValidationResult,
-                _lastTemplatePackageImportAnalysisResult,
-                updatedPlan,
-                dryRunResult);
-            UpdateTemplatePackageImportExecuteButton(dryRunResult);
-            TemplatePackageImportExecutionResultTextBox.Text = statusText;
-        }
-        catch (Exception ex)
-        {
-            TemplatePackageImportExecutionResultTextBox.Text = $"Importvorschau konnte nicht aktualisiert werden: {ex.Message}";
-            AppendProfileMessage($"Templatepaket-Importvorschau konnte nicht aktualisiert werden: {ex.Message}");
-        }
-    }
-
-    private void ExecuteTemplatePackageImport_Click(object sender, RoutedEventArgs e)
-    {
-        if (_isTemplatePackageImportPreviewBusy)
-        {
-            AppendProfileMessage("Templatepaket-Importvorschau läuft noch. Bitte kurz warten.");
-            return;
-        }
-
-        if (_lastTemplatePackageImportResult is null
-            || _lastTemplatePackageImportPlan is null
-            || _lastTemplatePackageImportDryRunResult is null)
-        {
-            AppendProfileMessage("Kein Templatepaket-Importplan vorhanden. Bitte zuerst ein Templatepaket importieren und prüfen.");
-            return;
-        }
-
-        try
-        {
-            var paths = _appDataPathProvider.GetDefaultUserPaths();
-            var result = _templatePackageImportExecutor.Execute(
-                _lastTemplatePackageImportResult,
-                _lastTemplatePackageImportPlan,
-                _lastTemplatePackageImportDryRunResult,
-                paths);
-
-            TemplatePackageImportExecutionResultTextBox.Text = FormatTemplatePackageImportExecutionResult(result);
-            AppendProfileMessage($"Templatepaket-Import abgeschlossen: {result.ImportedProfiles.Count} Profil(e) als UserDefined importiert, {result.Skipped} übersprungen, {result.Blocked} blockiert.");
-            AppendProfileMessage("BuiltIn-Profile wurden nicht überschrieben. Importierte Schnittstellenprofile wurden nicht automatisch aktiviert.");
-
-            _profileCatalogService.EnsureDefaultProfiles(paths);
-            var catalog = _profileCatalogService.Load(paths);
-            _profileCatalog = catalog;
-            RefreshProfileUiAfterCatalogChange(catalog);
-            ExecuteTemplatePackageImportButton.IsEnabled = false;
-        }
-        catch (Exception ex)
-        {
-            TemplatePackageImportExecutionResultTextBox.Text = $"Importübernahme konnte nicht ausgeführt werden: {ex.Message}";
-            AppendProfileMessage($"Templatepaket-Importübernahme fehlgeschlagen: {ex.Message}");
-        }
-    }
-
-    private void ShowTemplatePackageImportResult(
-        TemplatePackageImportResult importResult,
-        TemplatePackageImportValidationResult validationResult)
-    {
-        var warningIssues = validationResult.Issues
-            .Where(issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Warning)
-            .ToList();
-        var errorIssues = validationResult.Issues
-            .Where(issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Error)
-            .ToList();
-
-        AppendProfileMessage($"Templatepaket importiert: {importResult.Package.Metadata.Name}");
-        AppendProfileMessage($"AIS-Profile: {importResult.AisProfiles.Count}");
-        AppendProfileMessage($"Geräteprofile: {importResult.DeviceProfiles.Count}");
-        AppendProfileMessage($"Exportprofile: {importResult.ExportProfiles.Count}");
-        AppendProfileMessage($"Schnittstellenprofile: {importResult.InterfaceProfiles.Count}");
-        AppendProfileMessage($"Warnings: {warningIssues.Count}");
-        AppendProfileMessage($"Errors: {errorIssues.Count}");
-
-        if (errorIssues.Count > 0)
-        {
-            AppendProfileMessage("Templatepaket enthält Fehler und wurde nicht übernommen.");
-            foreach (var issue in errorIssues)
-            {
-                AppendProfileMessage($"[Templatepaket] Error: {FormatTemplatePackageImportIssue(issue)}");
-            }
-
-            return;
-        }
-
-        if (warningIssues.Count > 0)
-        {
-            AppendProfileMessage("Templatepaket ist grundsätzlich gültig, enthält aber Hinweise.");
-            foreach (var issue in warningIssues)
-            {
-                AppendProfileMessage($"[Templatepaket] Warning: {FormatTemplatePackageImportIssue(issue)}");
-            }
-        }
-
-        AppendProfileMessage("Templatepaket wurde geprüft. Es wurde noch nicht produktiv übernommen.");
-    }
-
-    private void ShowTemplatePackageImportPreview(
-        TemplatePackageImportValidationResult validationResult,
-        TemplatePackageImportAnalysisResult analysisResult,
-        TemplatePackageImportPlan importPlan,
-        TemplatePackageImportDryRunResult dryRunResult)
-    {
-        var display = _templatePackageImportPreviewDisplayService.Create(
-            validationResult,
-            analysisResult,
-            importPlan,
-            dryRunResult);
-
-        ShowTemplatePackageImportPreview(display);
-    }
-
-    private void ShowTemplatePackageImportPreview(TemplatePackageImportPreviewDisplay display)
-    {
-        _updatingTemplatePackageImportPreview = true;
-        try
-        {
-            TemplatePackageImportPreviewSummaryText.Text = display.Summary.SummaryText;
-            TemplatePackageImportPreviewMessagesTextBox.Text = FormatTemplatePackageImportPreviewMessages(display);
-            TemplatePackageImportPreviewGrid.ItemsSource = null;
-            TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
-            TemplatePackageImportPreviewGrid.ItemsSource = display.Rows;
-            TemplatePackageImportDependencyPreviewGrid.ItemsSource = display.DependencyRows;
-            TemplatePackageImportDependencyPreviewGrid.Visibility = display.DependencyRows.Count > 0
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            TemplatePackageImportDependencyEmptyText.Text = display.DependencyEmptyStateMessage;
-            TemplatePackageImportDependencyEmptyText.Visibility = display.DependencyRows.Count == 0
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            _lastTemplatePackageImportSelectionSignature = CreateTemplatePackageImportSelectionSignature(display.Rows);
-        }
-        finally
-        {
-            _updatingTemplatePackageImportPreview = false;
-        }
-    }
-
-    private void UpdateTemplatePackageImportExecuteButton(TemplatePackageImportDryRunResult dryRunResult)
-    {
-        ExecuteTemplatePackageImportButton.IsEnabled = !_isTemplatePackageImportPreviewBusy && CanExecuteTemplatePackageImport(dryRunResult);
-    }
-
-    private static bool CanExecuteTemplatePackageImport(TemplatePackageImportDryRunResult dryRunResult)
-    {
-        return dryRunResult.Items.Any(item =>
-            item.WouldWrite
-            && !item.IsBlocking
-            && item.PlannedAction is TemplatePackageImportAction.ImportAsNew or TemplatePackageImportAction.ImportAsCopy);
-    }
-
-    private void ClearTemplatePackageImportExecutionState()
-    {
-        _lastTemplatePackageImportResult = null;
-        _lastTemplatePackageImportValidationResult = null;
-        _lastTemplatePackageImportAnalysisResult = null;
-        _lastTemplatePackageImportBasePlan = null;
-        _lastTemplatePackageImportPlan = null;
-        _lastTemplatePackageImportDryRunResult = null;
-        _lastTemplatePackageImportSelectionSignature = string.Empty;
-        ExecuteTemplatePackageImportButton.IsEnabled = false;
-    }
-
-    private void SetTemplatePackageImportPreviewBusy(bool isBusy)
-    {
-        _isTemplatePackageImportPreviewBusy = isBusy;
-        ImportTemplatePackageButton.IsEnabled = !isBusy;
-        ExecuteTemplatePackageImportButton.IsEnabled = !isBusy
-            && _lastTemplatePackageImportDryRunResult is not null
-            && CanExecuteTemplatePackageImport(_lastTemplatePackageImportDryRunResult);
-    }
-
-    private void ShowTemplatePackageImportPreviewLoading()
-    {
-        _updatingTemplatePackageImportPreview = true;
-        try
-        {
-            TemplatePackageImportPreviewSummaryText.Text = "Templatepaket wird für die Vorschau gelesen...";
-            TemplatePackageImportPreviewMessagesTextBox.Text = "Bitte warten. Es wurde noch nichts gespeichert.";
-            TemplatePackageImportPreviewGrid.ItemsSource = null;
-            TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
-            TemplatePackageImportDependencyPreviewGrid.Visibility = Visibility.Visible;
-            TemplatePackageImportDependencyEmptyText.Text = "";
-            TemplatePackageImportDependencyEmptyText.Visibility = Visibility.Collapsed;
-            TemplatePackageImportExecutionResultTextBox.Text = "Importvorschau wird erstellt. Noch keine Importübernahme ausgeführt.";
-            _lastTemplatePackageImportSelectionSignature = string.Empty;
-        }
-        finally
-        {
-            _updatingTemplatePackageImportPreview = false;
-        }
-    }
-
-    private void ShowTemplatePackageImportPreviewFailure(string summary, string detail)
-    {
-        _updatingTemplatePackageImportPreview = true;
-        try
-        {
-            TemplatePackageImportPreviewSummaryText.Text = summary;
-            TemplatePackageImportPreviewMessagesTextBox.Text = string.IsNullOrWhiteSpace(detail)
-                ? "Es wurden keine Änderungen vorgenommen."
-                : $"{detail}{Environment.NewLine}{Environment.NewLine}Es wurden keine Änderungen vorgenommen.";
-            TemplatePackageImportPreviewGrid.ItemsSource = null;
-            TemplatePackageImportDependencyPreviewGrid.ItemsSource = null;
-            TemplatePackageImportDependencyPreviewGrid.Visibility = Visibility.Collapsed;
-            TemplatePackageImportDependencyEmptyText.Text = "Für die aktuelle Auswahl sind keine Abhängigkeiten anzuzeigen.";
-            TemplatePackageImportDependencyEmptyText.Visibility = Visibility.Visible;
-            TemplatePackageImportExecutionResultTextBox.Text = summary;
-            _lastTemplatePackageImportSelectionSignature = string.Empty;
-        }
-        finally
-        {
-            _updatingTemplatePackageImportPreview = false;
-        }
-    }
-
-    private IReadOnlyList<TemplatePackageImportUserSelection> GetTemplatePackageImportUserSelections()
-    {
-        return (TemplatePackageImportPreviewGrid.ItemsSource as IEnumerable<TemplatePackageImportPreviewRow>
-                ?? Array.Empty<TemplatePackageImportPreviewRow>())
-            .Where(row => row.IsActionSelectionEnabled)
-            .Select(row => new TemplatePackageImportUserSelection(
-                ProfileKind: row.ProfileKindValue,
-                ImportedProfileId: row.ImportedProfileId,
-                SelectedAction: row.SelectedAction,
-                TargetProfileId: null,
-                TargetProfileName: row.SelectedAction == TemplatePackageImportAction.ImportAsCopy && row.IsTargetNameEditable
-                    ? row.TargetProfileName
-                    : null,
-                IsValid: row.SelectedAction != TemplatePackageImportAction.ImportAsCopy
-                    || !row.IsTargetNameEditable
-                    || !string.IsNullOrWhiteSpace(row.TargetProfileName),
-                ValidationMessage: row.SelectedAction == TemplatePackageImportAction.ImportAsCopy
-                    && row.IsTargetNameEditable
-                    && string.IsNullOrWhiteSpace(row.TargetProfileName)
-                        ? "Zielname darf nicht leer sein."
-                        : null))
-            .ToList();
-    }
-
-    private static string CreateTemplatePackageImportSelectionSignature(IEnumerable<TemplatePackageImportPreviewRow> rows)
-    {
-        return string.Join(
-            "|",
-            rows
-                .Where(row => row.IsActionSelectionEnabled)
-                .OrderBy(row => row.ProfileKindValue)
-                .ThenBy(row => row.ImportedProfileId, StringComparer.OrdinalIgnoreCase)
-                .Select(row => $"{row.ProfileKindValue}:{row.ImportedProfileId}:{row.SelectedAction}:{(row.IsTargetNameEditable ? row.TargetProfileName : "")}"));
-    }
-
-    private static string CreateTemplatePackageImportSelectionSignature(IEnumerable<TemplatePackageImportUserSelection> selections)
-    {
-        return string.Join(
-            "|",
-            selections
-                .OrderBy(selection => selection.ProfileKind)
-                .ThenBy(selection => selection.ImportedProfileId, StringComparer.OrdinalIgnoreCase)
-                .Select(selection => $"{selection.ProfileKind}:{selection.ImportedProfileId}:{selection.SelectedAction}:{selection.TargetProfileName ?? ""}"));
-    }
-
     private void RefreshProfileUiAfterCatalogChange(ProfileCatalog catalog)
     {
-        InitializeLegacyProfileTemplatesTab(catalog);
         InitializeProfileDependentTabs(catalog);
-        UpdatePlaceholderTables();
         RefreshLicensedDeviceStatesFromLocalLicense();
-    }
-
-    private static string FormatTemplatePackageImportExecutionResult(TemplatePackageImportExecutionResult result)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine($"Import abgeschlossen: {result.ImportedProfiles.Count} Profil(e) als UserDefined importiert.");
-        builder.AppendLine($"ImportAsNew: {result.ImportedAsNew}");
-        builder.AppendLine($"ImportAsCopy: {result.ImportedAsCopy}");
-        builder.AppendLine($"Übersprungen: {result.Skipped}");
-        builder.AppendLine($"Blockiert: {result.Blocked}");
-        builder.AppendLine($"Fehler: {result.Failed}");
-        builder.AppendLine();
-
-        if (result.ImportedProfiles.Count > 0)
-        {
-            builder.AppendLine("Importierte Profile:");
-            foreach (var item in result.ImportedProfiles)
-            {
-                builder.AppendLine($"- {FormatProfileKindForUser(item.ProfileKind)}: {item.TargetProfileName} ({item.TargetProfileId}) - {GetProfileLocationHint(item.ProfileKind)}");
-            }
-            builder.AppendLine();
-        }
-
-        if (result.SkippedProfiles.Count > 0)
-        {
-            builder.AppendLine("Übersprungen:");
-            foreach (var item in result.SkippedProfiles)
-            {
-                builder.AppendLine($"- {item.ProfileKind}: {item.SourceProfileName} - {item.Message}");
-            }
-            builder.AppendLine();
-        }
-
-        if (result.BlockedProfiles.Count > 0)
-        {
-            builder.AppendLine("Blockiert:");
-            foreach (var item in result.BlockedProfiles)
-            {
-                builder.AppendLine($"- {item.ProfileKind}: {item.SourceProfileName} - {item.Message}");
-            }
-            builder.AppendLine();
-        }
-
-        if (result.Warnings.Count > 0)
-        {
-            builder.AppendLine("Warnungen:");
-            foreach (var warning in result.Warnings)
-            {
-                builder.AppendLine($"- {warning}");
-            }
-            builder.AppendLine();
-        }
-
-        builder.AppendLine("Importierte AIS-, Geräte- und Exportprofile finden Sie im Tab Profile & Templates.");
-        builder.AppendLine("Importierte Schnittstellenprofile finden Sie im Tab Schnittstellenprofile.");
-        builder.AppendLine("Importierte Schnittstellenprofile wurden nicht automatisch aktiviert.");
-        builder.AppendLine("XDT-Anhang-Ordner und Felder 6302/6303/6304/6305 vor späterer Nutzung prüfen.");
-        builder.AppendLine("BuiltIn-Profile wurden nicht überschrieben.");
-        builder.Append("ReplaceExisting wird in diesem Schritt noch nicht unterstützt.");
-
-        return builder.ToString();
-    }
-
-    private static string FormatProfileKindForUser(ProfileKind profileKind)
-    {
-        return profileKind switch
-        {
-            ProfileKind.AisProfile => "AIS-Profil",
-            ProfileKind.DeviceProfile => "Geräteprofil",
-            ProfileKind.ExportProfile => "Exportprofil",
-            ProfileKind.InterfaceProfile => "Schnittstellenprofil",
-            _ => profileKind.ToString()
-        };
-    }
-
-    private static string GetProfileLocationHint(ProfileKind profileKind)
-    {
-        return profileKind switch
-        {
-            ProfileKind.InterfaceProfile => "sichtbar im Tab Schnittstellenprofile",
-            ProfileKind.AisProfile or ProfileKind.DeviceProfile or ProfileKind.ExportProfile => "sichtbar im XDT-Baukasten und in der Profilverwaltung",
-            _ => "sichtbar in der Profilverwaltung"
-        };
-    }
-
-    private static string FormatTemplatePackageImportPreviewMessages(TemplatePackageImportPreviewDisplay display)
-    {
-        var builder = new StringBuilder();
-        foreach (var message in display.Messages)
-        {
-            builder.AppendLine(message);
-        }
-
-        if (display.Warnings.Count > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Hinweise/Warnungen:");
-            foreach (var warning in display.Warnings.Distinct(StringComparer.OrdinalIgnoreCase))
-            {
-                builder.AppendLine($"- {warning}");
-            }
-        }
-
-        return builder.ToString().TrimEnd();
-    }
-
-    private static string FormatTemplatePackageImportIssue(TemplatePackageImportValidationIssue issue)
-    {
-        var profileKind = issue.ProfileKind?.ToString() ?? "Unbekannt";
-        var profileId = string.IsNullOrWhiteSpace(issue.ProfileId) ? "ohne Profil-ID" : issue.ProfileId;
-
-        return $"{issue.Message} ({profileKind}, {profileId})";
     }
 
     private static ProfileCatalog CreateEmptyProfileCatalog()
@@ -9635,431 +7148,9 @@ public partial class MainWindow : Window
             InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>());
     }
 
-    private void SelectAisFile_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Filter = "GDT/XDT (*.gdt;*.xdt)|*.gdt;*.xdt|Alle Dateien (*.*)|*.*"
-        };
-
-        if (dialog.ShowDialog() == true)
-        {
-            BuilderAisFilePathTextBox.Text = dialog.FileName;
-            ClearBuilderAttachmentPreviewState(updatePreview: false);
-            SyncBuilderTestPreviewArea();
-            SetBuilderTestStatus("AIS-Datei geladen. Bitte als Nächstes die Gerätedatei laden.");
-            AppendMessage($"AIS-Datei ausgewählt: {dialog.FileName}");
-        }
-    }
-
-    private void SelectDeviceFile_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Filter = "XML (*.xml)|*.xml|Alle Dateien (*.*)|*.*"
-        };
-
-        if (dialog.ShowDialog() == true)
-        {
-            BuilderDeviceFilePathTextBox.Text = dialog.FileName;
-            ClearBuilderAttachmentPreviewState(updatePreview: false);
-            SyncBuilderTestPreviewArea();
-            SetBuilderTestStatus("Gerätedatei geladen. Die Exportvorschau kann jetzt aktualisiert werden.");
-            AppendMessage($"Geräte-Datei ausgewählt: {dialog.FileName}");
-        }
-    }
-
-    private void SelectXdtAttachmentFile_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Filter = "XDT-Anhänge (*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt)|*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt|Alle Dateien (*.*)|*.*"
-        };
-
-        if (dialog.ShowDialog() == true)
-        {
-            SetAttachmentDiagnosticFilePath(dialog.FileName);
-            SetBuilderTestStatus("XDT-Anhang ausgewählt. Der Anhang kann jetzt vorbereitet werden.");
-            AppendMessage($"XDT-Anhang ausgewählt: {dialog.FileName}");
-        }
-    }
-
-    private void ScanXdtAttachmentImportFolder_Click(object sender, RoutedEventArgs e)
-    {
-        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
-        var result = _attachmentImportFolderDiagnosticService.Scan(selectedProfile);
-
-        ShowAttachmentImportFolderDiagnosticResult(result);
-        SetBuilderTestStatus(result.Success
-            ? "XDT-Anhang Importordner eingelesen."
-            : "XDT-Anhang Importordner konnte nicht eingelesen werden.");
-        AppendMessage(result.Message);
-    }
-
-    private void ReadBuilderXdtAttachment_Click(object sender, RoutedEventArgs e)
-    {
-        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
-        if (selectedProfile is null)
-        {
-            _attachmentImportCandidateRows.Clear();
-            ClearBuilderAttachmentPreviewState(updatePreview: true);
-            const string message = "Bitte erst Schnittstellenprofil anlegen.";
-            SetAttachmentDiagnosticResultText(message);
-            SetBuilderTestStatus(message);
-            AppendMessage(message);
-            return;
-        }
-
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Filter = "XDT-Anhänge (*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt)|*.pdf;*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.dcm;*.txt|Alle Dateien (*.*)|*.*",
-            Multiselect = false
-        };
-
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
-
-        var selectedFile = dialog.FileName;
-        var extension = Path.GetExtension(selectedFile);
-        var fileInfo = new FileInfo(selectedFile);
-        if (!fileInfo.Exists)
-        {
-            _attachmentImportCandidateRows.Clear();
-            ClearBuilderAttachmentPreviewState(updatePreview: true);
-            var message = $"XDT-Anhangdatei wurde nicht gefunden: {selectedFile}";
-            SetBuilderTestStatus(message);
-            SetAttachmentDiagnosticResultText(message);
-            AppendMessage(message);
-            return;
-        }
-
-        var isSupported = SupportedBuilderAttachmentExtensions.Contains(extension);
-        var selectedCandidate = new AttachmentImportCandidateDisplayRow(
-            FileName: fileInfo.Name,
-            Extension: extension,
-            FullPath: fileInfo.FullName,
-            SizeBytes: fileInfo.Length,
-            LastWriteTimeUtc: fileInfo.LastWriteTimeUtc,
-            IsSupported: isSupported,
-            IsStable: true,
-            Status: isSupported
-                ? "Unterstützt, Baukasten-Dateiauswahl"
-                : "Nicht unterstützt: Dateityp nicht unterstützt.");
-
-        _attachmentImportCandidateRows.Clear();
-        _attachmentImportCandidateRows.Add(selectedCandidate);
-        BuilderAttachmentDiagnosticCandidatesGrid.SelectedItem = selectedCandidate;
-
-        if (!isSupported)
-        {
-            ClearBuilderAttachmentPreviewState(updatePreview: true);
-            var message = $"Nicht unterstützter XDT-Anhang-Dateityp: {extension}. Unterstützt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT.";
-            SetBuilderTestStatus(message);
-            SetAttachmentDiagnosticResultText(message);
-            AppendMessage(message);
-            return;
-        }
-
-        if (!TryPrepareBuilderAttachmentPreview(selectedProfile, selectedCandidate, DateTime.Now, out var messageText))
-        {
-            ClearBuilderAttachmentPreviewState(updatePreview: true);
-            SetBuilderTestStatus(messageText);
-            AppendMessage(messageText);
-            return;
-        }
-
-        if (HasManualTestInputFiles())
-        {
-            try
-            {
-                RefreshManualProcessingPreview();
-                SetBuilderTestStatus("Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert.");
-                AppendMessage("Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert.");
-            }
-            catch (Exception ex) when (ex is IOException
-                or UnauthorizedAccessException
-                or ArgumentException
-                or NotSupportedException
-                or PathTooLongException
-                or InvalidOperationException)
-            {
-                SetBuilderTestStatus($"XDT-Anhang eingelesen. Exportvorschau konnte noch nicht aktualisiert werden: {ex.Message}");
-                AppendMessage($"XDT-Anhang eingelesen, Exportvorschau konnte noch nicht aktualisiert werden: {ex.Message}");
-            }
-        }
-        else
-        {
-            ShowFullExportPreviewForSelectedProfile();
-            SetBuilderTestStatus("XDT-Anhang eingelesen. Exportvorschau wird aktualisiert, sobald AIS- und Gerätedatei geladen sind.");
-        }
-
-        AppendMessage(messageText);
-    }
-
-    private void AttachmentDiagnosticCandidatesGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        if ((sender as System.Windows.Controls.DataGrid)?.SelectedItem is not AttachmentImportCandidateDisplayRow row)
-        {
-            return;
-        }
-
-        if (!row.IsSupported)
-        {
-            SetAttachmentDiagnosticFilePath(string.Empty);
-            AppendMessage($"XDT-Anhang-Kandidat ist nicht unterstützt und wurde nicht ausgewählt: {row.FileName}");
-            return;
-        }
-
-        if (!row.IsStable)
-        {
-            SetAttachmentDiagnosticFilePath(string.Empty);
-            AppendMessage($"XDT-Anhang-Kandidat ist noch nicht stabil und wurde nicht ausgewählt: {row.FileName}");
-            return;
-        }
-
-        SetAttachmentDiagnosticFilePath(row.FullPath);
-        AppendMessage($"XDT-Anhang-Kandidat ausgewählt: {row.FullPath}");
-    }
-
-    private void PrepareXdtAttachment_Click(object sender, RoutedEventArgs e)
-    {
-        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
-        var patient = GetPatientForAttachmentDiagnostic();
-        var result = _attachmentExternalLinkDiagnosticService.Prepare(
-            selectedProfile,
-            patient,
-            GetAttachmentDiagnosticFilePath(),
-            DateTime.Now);
-
-        ShowAttachmentDiagnosticResult(result);
-        SetBuilderTestStatus(result.Success
-            ? "XDT-Anhang vorbereitet."
-            : "XDT-Anhang konnte nicht vorbereitet werden.");
-        AppendMessage(result.Message);
-    }
-
-    private bool TryPrepareBuilderAttachmentPreview(
-        InterfaceProfileDefinition interfaceProfile,
-        AttachmentImportCandidateDisplayRow candidate,
-        DateTime processingTimestamp,
-        out string message)
-    {
-        ClearBuilderAttachmentPreviewState(updatePreview: false);
-
-        var patient = GetPatientForAttachmentDiagnostic();
-        if (patient is null || string.IsNullOrWhiteSpace(patient.PatientNumber))
-        {
-            message = "Für den XDT-Anhang-Test muss zuerst eine AIS-GDT/XDT-Datei mit Patientennummer geladen werden.";
-            return false;
-        }
-
-        var options = interfaceProfile.FolderOptions;
-        if (string.IsNullOrWhiteSpace(options.AttachmentExportFolder))
-        {
-            message = "XDT-Anhang Exportordner ist nicht gesetzt.";
-            return false;
-        }
-
-        string desiredFileName;
-        string targetFileName;
-        string targetPath;
-        try
-        {
-            desiredFileName = _attachmentFileNameBuilder.Build(
-                options.AttachmentFileNameTemplate,
-                patient,
-                processingTimestamp,
-                candidate.Extension);
-            targetFileName = Directory.Exists(options.AttachmentExportFolder)
-                ? _attachmentFileNameBuilder.BuildUniqueFileName(options.AttachmentExportFolder, desiredFileName)
-                : desiredFileName;
-            targetPath = Path.Combine(options.AttachmentExportFolder, targetFileName);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or IOException or UnauthorizedAccessException or NotSupportedException)
-        {
-            message = $"XDT-Anhang-Zieldateiname konnte nicht vorbereitet werden: {ex.Message}";
-            return false;
-        }
-
-        var fieldBuildResult = _externalAisLinkFieldBuilder.Build(options, targetPath, candidate.Extension);
-        if (!fieldBuildResult.Success || fieldBuildResult.FieldSet is null)
-        {
-            message = fieldBuildResult.ErrorMessage ?? "XDT-Anhang-Linkfelder konnten nicht vorbereitet werden.";
-            return false;
-        }
-
-        var adapterResult = _externalAisLinkXdtFieldAdapter.Adapt(fieldBuildResult.FieldSet);
-        if (!adapterResult.Success)
-        {
-            message = adapterResult.ErrorMessage ?? "XDT-Anhang-Linkfelder konnten nicht in XDT-Felder umgesetzt werden.";
-            return false;
-        }
-
-        _builderSelectedAttachmentCandidate = candidate;
-        _builderPreviewAttachmentTargetFileName = targetFileName;
-        _builderPreviewAttachmentTargetPath = targetPath;
-        _builderTransientAttachmentFields = adapterResult.Fields;
-        SetAttachmentDiagnosticFilePath(candidate.FullPath);
-        SetAttachmentDiagnosticResultText(FormatBuilderAttachmentPreviewResult(
-            candidate,
-            targetFileName,
-            targetPath,
-            options.AttachmentTransferMode,
-            adapterResult.Fields));
-
-        message = "XDT-Anhang eingelesen. Linkfelder werden in der Vorschau berücksichtigt.";
-        return true;
-    }
-
-    private static string FormatBuilderAttachmentPreviewResult(
-        AttachmentImportCandidateDisplayRow candidate,
-        string targetFileName,
-        string targetPath,
-        AttachmentTransferMode transferMode,
-        IReadOnlyList<ExportFieldRecord> fields)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine("Status: XDT-Anhang eingelesen");
-        builder.AppendLine("Einlesen verändert keine Dateien. Die Quelle kann aus einem beliebigen Speicherort stammen; 6305 simuliert den Schnittstellenprofil-Zielpfad.");
-        builder.AppendLine();
-        builder.AppendLine($"Quelle: {candidate.FullPath}");
-        builder.AppendLine($"Ziel-Dateiname Vorschau: {targetFileName}");
-        builder.AppendLine($"Simulierter 6305-Zielpfad: {targetPath}");
-        builder.AppendLine($"Transfermodus: {transferMode}");
-        builder.AppendLine();
-        builder.AppendLine("Vorbereitete XDT-Felder:");
-        foreach (var field in fields.OrderBy(field => field.SortOrder))
-        {
-            builder.AppendLine($"{field.FieldCode} = {field.Value}");
-        }
-
-        return builder.ToString().TrimEnd();
-    }
-
-    private void ClearBuilderAttachmentPreviewState(bool updatePreview)
-    {
-        _builderSelectedAttachmentCandidate = null;
-        _builderPreviewAttachmentTargetPath = null;
-        _builderPreviewAttachmentTargetFileName = null;
-        _builderTransientAttachmentFields = Array.Empty<ExportFieldRecord>();
-        SetAttachmentDiagnosticFilePath(string.Empty);
-
-        if (updatePreview && _lastPipelineResult is not null)
-        {
-            ShowFullExportPreviewForSelectedProfile();
-        }
-    }
-
-    private PatientData? GetPatientForAttachmentDiagnostic()
-    {
-        if (!string.IsNullOrWhiteSpace(_lastPipelineResult?.Patient?.PatientNumber))
-        {
-            return _lastPipelineResult.Patient;
-        }
-
-        var aisFilePath = BuilderAisFilePathTextBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(aisFilePath))
-        {
-            return _lastPipelineResult?.Patient;
-        }
-
-        try
-        {
-            var gdtResult = new GdtParser().ParseFile(aisFilePath);
-            var patient = new PatientDataMapper().Map(gdtResult.Records);
-            if (!string.IsNullOrWhiteSpace(patient.PatientNumber))
-            {
-                ShowPatient(patient);
-            }
-            else
-            {
-                AppendMessage("AIS-Datei für XDT-Anhang-Test gelesen, aber keine Patientennummer gefunden.");
-            }
-
-            return patient;
-        }
-        catch (Exception ex) when (ex is IOException
-            or UnauthorizedAccessException
-            or ArgumentException
-            or NotSupportedException
-            or PathTooLongException)
-        {
-            AppendMessage($"AIS-Datei konnte für den XDT-Anhang-Test nicht gelesen werden: {ex.Message}");
-            return _lastPipelineResult?.Patient;
-        }
-    }
-
-    private void ShowAttachmentDiagnosticResult(AttachmentExternalLinkDiagnosticResult result)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine($"Status: {(result.Success ? "Erfolgreich vorbereitet" : "Fehler")}");
-        builder.AppendLine(result.Message);
-
-        if (result.PreparationResult is not null)
-        {
-            builder.AppendLine();
-            builder.AppendLine($"Ziel-Dateiname: {result.PreparationResult.TargetFileName ?? "-"}");
-            builder.AppendLine($"Zielpfad: {result.PreparationResult.TargetPath ?? "-"}");
-            builder.AppendLine($"Transfer: {result.PreparationResult.TransferMode}");
-
-            if (result.PreparationResult.ExportFields.Count > 0)
-            {
-                builder.AppendLine();
-                builder.AppendLine("Vorbereitete XDT-Felder:");
-                foreach (var field in result.PreparationResult.ExportFields.OrderBy(field => field.SortOrder))
-                {
-                    builder.AppendLine($"{field.FieldCode} = {field.Value}");
-                }
-            }
-        }
-
-        SetAttachmentDiagnosticResultText(builder.ToString().TrimEnd());
-    }
-
-    private void ShowAttachmentImportFolderDiagnosticResult(AttachmentImportFolderDiagnosticResult result)
-    {
-        _attachmentImportCandidateRows.Clear();
-        foreach (var row in result.Candidates)
-        {
-            _attachmentImportCandidateRows.Add(row);
-        }
-
-        var builder = new StringBuilder();
-        builder.AppendLine($"Status: {(result.Success ? "Importordner eingelesen" : "Fehler")}");
-        builder.AppendLine(result.Message);
-        builder.AppendLine();
-        builder.AppendLine($"Schnittstellenprofil: {DisplayOrDash(result.InterfaceProfileName)}");
-        builder.AppendLine($"XDT-Anhang Importordner: {DisplayOrDash(result.ImportFolder)}");
-        builder.AppendLine($"XDT-Anhang Exportordner: {DisplayOrDash(result.ExportFolder)}");
-        builder.AppendLine($"Gefundene Kandidaten: {result.Candidates.Count}");
-        builder.AppendLine($"Unterstützt: {result.Candidates.Count(row => row.IsSupported)}");
-        builder.AppendLine($"Stabil unterstützt: {result.Candidates.Count(row => row.IsSupported && row.IsStable)}");
-        builder.AppendLine($"Nicht unterstützt: {result.Candidates.Count(row => !row.IsSupported)}");
-
-        SetAttachmentDiagnosticResultText(builder.ToString().TrimEnd());
-    }
-
     private static string DisplayOrDash(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? "-" : value;
-    }
-
-    private void SetAttachmentDiagnosticFilePath(string value)
-    {
-        BuilderAttachmentDiagnosticFilePathTextBox.Text = value;
-    }
-
-    private string GetAttachmentDiagnosticFilePath()
-    {
-        return BuilderAttachmentDiagnosticFilePathTextBox.Text;
-    }
-
-    private void SetAttachmentDiagnosticResultText(string value)
-    {
-        BuilderAttachmentDiagnosticResultTextBox.Text = value;
-        BuilderAttachmentDiagnosticResultTextBox.ScrollToHome();
     }
 
     private void InitializeXdtBaukasten(
@@ -11616,362 +8707,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Process_Click(object sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(BuilderAisFilePathTextBox.Text) || string.IsNullOrWhiteSpace(BuilderDeviceFilePathTextBox.Text))
-        {
-            AppendMessage("Bitte zuerst AIS- und Geräte-Datei auswählen.");
-            SetBuilderTestStatus("Bitte zuerst AIS-Datei und Gerätedatei laden.");
-            return;
-        }
-
-        RefreshManualProcessingPreview();
-
-        if (_lastPipelineResult!.HasErrors)
-        {
-            SetBuilderTestStatus("Exportvorschau aktualisiert, Verarbeitung enthält Fehler.");
-            AppendMessage("Verarbeitung abgeschlossen mit Fehlern.");
-        }
-        else
-        {
-            SetBuilderTestStatus(_builderTransientAttachmentFields.Count > 0
-                ? $"Exportvorschau mit XDT-Anhang-Linkfeldern aktualisiert. {_lastPipelineResult.Measurements.Count} Messwerte erkannt. Exportprofil wurde nicht verändert."
-                : $"Kein XDT-Anhang eingelesen. Vorschau enthält keine 6302-6305. {_lastPipelineResult.Measurements.Count} Messwerte erkannt.");
-            AppendMessage("Verarbeitung erfolgreich abgeschlossen.");
-        }
-    }
-
-    private bool HasManualTestInputFiles()
-    {
-        return !string.IsNullOrWhiteSpace(BuilderAisFilePathTextBox.Text)
-            && !string.IsNullOrWhiteSpace(BuilderDeviceFilePathTextBox.Text);
-    }
-
-    private void RefreshManualProcessingPreview()
-    {
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            _lastPipelineResult = null;
-            BuilderMeasurementsGrid.ItemsSource = null;
-            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
-            SetBuilderTestStatus("Bitte zuerst ein Exportprofil auswählen.");
-            SyncBuilderTestPreviewArea();
-            return;
-        }
-
-        var deviceProfile = ResolveBuilderDeviceProfile(exportProfile);
-        var interfaceProfile = ResolveBuilderInterfaceProfile(exportProfile);
-        _currentProfile = CreateBuilderDeviceProfileSummary(exportProfile, deviceProfile);
-        _lastPipelineResult = _builderManualProcessingPreviewService.BuildPreview(new BuilderManualProcessingPreviewRequest(
-            InterfaceProfile: interfaceProfile,
-            DeviceProfile: deviceProfile,
-            ExportProfile: exportProfile,
-            AisFilePath: BuilderAisFilePathTextBox.Text,
-            DeviceFilePath: BuilderDeviceFilePathTextBox.Text));
-
-        ShowPatient(_lastPipelineResult.Patient);
-        BuilderMeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
-        UpdatePlaceholderTables();
-        ShowExportRulePreviewForSelectedRule();
-        ShowFullExportPreviewForSelectedProfile();
-
-        _plannedFileName = _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
-
-        ShowIssues(_lastPipelineResult.Issues);
-        SyncBuilderTestPreviewArea();
-    }
-
-    private DeviceProfileDefinition? ResolveBuilderDeviceProfile(ExportProfileDefinition exportProfile)
-    {
-        return _profileCatalog?.DeviceProfiles.FirstOrDefault(profile =>
-            string.Equals(profile.Metadata.Id, exportProfile.SourceDeviceProfileId, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private InterfaceProfileDefinition? ResolveBuilderInterfaceProfile(ExportProfileDefinition exportProfile)
-    {
-        return _profileCatalog?.InterfaceProfiles
-            .Where(profile =>
-                string.Equals(profile.ExportProfileId, exportProfile.Metadata.Id, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(profile.DeviceProfileId, exportProfile.SourceDeviceProfileId, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(profile => profile.IsActive)
-            .ThenBy(profile => profile.Metadata.IsBuiltIn ? 1 : 0)
-            .ThenBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
-            .FirstOrDefault();
-    }
-
-    private static DeviceProfile CreateBuilderDeviceProfileSummary(
-        ExportProfileDefinition exportProfile,
-        DeviceProfileDefinition? deviceProfile)
-    {
-        var profileName = deviceProfile?.Metadata.Name ?? exportProfile.Metadata.Name;
-        var parserMode = string.Equals(deviceProfile?.ParserMode, nameof(DeviceParserMode.Xml), StringComparison.OrdinalIgnoreCase)
-            ? DeviceParserMode.Xml
-            : DeviceParserMode.Unknown;
-        var safeProfileName = profileName
-            .Replace(" ", "_", StringComparison.Ordinal)
-            .Replace("/", "_", StringComparison.Ordinal)
-            .Replace("\\", "_", StringComparison.Ordinal);
-
-        return new DeviceProfile(
-            Id: deviceProfile?.Metadata.Id ?? exportProfile.SourceDeviceProfileId,
-            Name: profileName,
-            AisImportFolder: string.Empty,
-            DeviceImportFolder: string.Empty,
-            ExportFolder: string.Empty,
-            ArchiveFolder: string.Empty,
-            ErrorFolder: string.Empty,
-            ExportFileNamePattern: $"{safeProfileName}_{{PatientNumber}}_{{yyyyMMdd_HHmmss}}.XDT",
-            DeviceParserMode: parserMode,
-            OutputEncoding: exportProfile.OutputEncoding,
-            AutoExport: true,
-            AssignmentWindowMinutes: 10,
-            MappingRules: new ExportProfileMappingAdapter().Adapt(exportProfile).ToList());
-    }
-
-    private void RunBuilderTestExport_Click(object sender, RoutedEventArgs e)
-    {
-        if (_lastPipelineResult is null)
-        {
-            SetBuilderTestStatus("Bitte zuerst AIS-Datei und Gerätedatei laden.");
-            AppendMessage("Testexport nicht gestartet: keine Beispielwerte geladen.");
-            return;
-        }
-
-        if (ExportProfileComboBox.SelectedItem is not ExportProfileDefinition exportProfile)
-        {
-            SetBuilderTestStatus("Bitte zuerst ein Exportprofil auswählen.");
-            AppendMessage("Testexport nicht gestartet: kein Exportprofil ausgewählt.");
-            return;
-        }
-
-        using var dialog = new WinForms.FolderBrowserDialog
-        {
-            Description = "Temporären Zielordner für den Baukasten-Testexport auswählen"
-        };
-        if (dialog.ShowDialog() != WinForms.DialogResult.OK)
-        {
-            return;
-        }
-
-        var selectedProfile = GetSelectedAttachmentDiagnosticProfile();
-        var sourceAttachmentPath = _builderTransientAttachmentFields.Count > 0
-            ? _builderSelectedAttachmentCandidate?.FullPath ?? GetAttachmentDiagnosticFilePath()
-            : null;
-        var fileName = _plannedFileName ?? _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
-        var result = _builderTestExportService.Export(new BuilderTestExportRequest(
-            TargetFolder: dialog.SelectedPath,
-            ExportFileName: fileName,
-            OutputEncoding: exportProfile.OutputEncoding,
-            ExportProfileName: exportProfile.Metadata.Name,
-            ExportRules: GetEffectiveExportRules(exportProfile, null, null),
-            Patient: _lastPipelineResult.Patient,
-            Measurements: _lastPipelineResult.Measurements,
-            FolderOptions: sourceAttachmentPath is null ? null : selectedProfile?.FolderOptions,
-            SourceAttachmentPath: sourceAttachmentPath,
-            IsSourceAttachmentStable: _builderSelectedAttachmentCandidate?.IsStable,
-            ProcessingTimestamp: DateTime.Now));
-
-        FullExportPreviewTextBox.Text = FormatBuilderTestExportResultPreview(exportProfile, result);
-
-        if (!result.Success)
-        {
-            SetBuilderTestStatus("Testexport konnte nicht erstellt werden.");
-            foreach (var issue in result.Issues)
-            {
-                AppendMessage($"[Baukasten-Testexport] {issue}");
-            }
-
-            return;
-        }
-
-        var statusBuilder = new StringBuilder();
-        statusBuilder.AppendLine("Testexport erstellt.");
-        statusBuilder.AppendLine($"Test-XDT-Datei: {result.ExportFilePath}");
-        if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
-        {
-            statusBuilder.AppendLine($"Test-XDT-Anhang: {result.AttachmentTargetPath}");
-        }
-
-        if (!string.IsNullOrWhiteSpace(result.AttachmentSimulatedTargetPath))
-        {
-            statusBuilder.AppendLine($"Simulierter 6305-Zielpfad: {result.AttachmentSimulatedTargetPath}");
-        }
-
-        statusBuilder.Append("Exportprofil wurde nicht verändert.");
-        SetBuilderTestStatus(statusBuilder.ToString());
-        AppendMessage($"Testexport erstellt: {result.ExportFilePath}");
-        if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
-        {
-            AppendMessage($"XDT-Anhang wurde in den Testexport-Zielordner übernommen: {result.AttachmentTargetPath}");
-        }
-
-        if (!string.IsNullOrWhiteSpace(result.AttachmentSimulatedTargetPath))
-        {
-            AppendMessage($"6305 verweist auf den simulierten Schnittstellenprofil-Zielpfad: {result.AttachmentSimulatedTargetPath}");
-        }
-    }
-
-    private static string FormatBuilderTestExportResultPreview(
-        ExportProfileDefinition exportProfile,
-        BuilderTestExportResult result)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine($"Exportprofil: {exportProfile.Metadata.Name}");
-        builder.AppendLine("Baukasten-Testexport: Exportprofil wurde nicht verändert.");
-        if (!string.IsNullOrWhiteSpace(result.ExportFilePath))
-        {
-            builder.AppendLine($"Test-XDT-Datei: {result.ExportFilePath}");
-        }
-
-        if (!string.IsNullOrWhiteSpace(result.AttachmentTargetPath))
-        {
-            builder.AppendLine($"Test-XDT-Anhang: {result.AttachmentTargetPath}");
-        }
-
-        if (!string.IsNullOrWhiteSpace(result.AttachmentSimulatedTargetPath))
-        {
-            builder.AppendLine($"Simulierter 6305-Zielpfad: {result.AttachmentSimulatedTargetPath}");
-        }
-
-        if (result.Issues.Count > 0)
-        {
-            builder.AppendLine();
-            builder.AppendLine("Hinweise:");
-            foreach (var issue in result.Issues)
-            {
-                builder.AppendLine($"- {issue}");
-            }
-        }
-
-        builder.AppendLine();
-        builder.AppendLine("ExportContent:");
-        builder.Append(result.ExportContent.Length == 0 ? "(leer)" : result.ExportContent);
-        return builder.ToString().TrimEnd();
-    }
-
-    private void Export_Click(object sender, RoutedEventArgs e)
-    {
-        if (_lastPipelineResult is null || string.IsNullOrWhiteSpace(_lastPipelineResult.ExportContent))
-        {
-            AppendMessage("Keine Exportvorschau vorhanden. Bitte zuerst verarbeiten.");
-            SetBuilderTestStatus("Bitte zuerst die Exportvorschau aktualisieren.");
-            return;
-        }
-
-        using var dialog = new WinForms.FolderBrowserDialog();
-        if (dialog.ShowDialog() != WinForms.DialogResult.OK)
-        {
-            return;
-        }
-
-        var fileName = _plannedFileName ?? _fileNameBuilder.Build(_currentProfile, _lastPipelineResult.Patient, DateTime.Now);
-        var exportResult = _fileExportService.Export(dialog.SelectedPath, fileName, _lastPipelineResult.ExportContent, _currentProfile.OutputEncoding);
-
-        if (exportResult.HasErrors)
-        {
-            foreach (var issue in exportResult.Issues)
-            {
-                AppendMessage($"[Export] {issue.Severity}: {issue.Message}");
-            }
-
-            SetBuilderTestStatus("Testexportdatei konnte nicht geschrieben werden.");
-        }
-        else
-        {
-            SetBuilderTestStatus($"Testexportdatei geschrieben: {exportResult.FilePath}");
-            AppendMessage($"Export erfolgreich geschrieben: {exportResult.FilePath}");
-        }
-    }
-
-    private void ShowPatient(PatientData? patient)
-    {
-        UpdateBuilderPatientSummary(patient);
-    }
-
-    private void SyncBuilderTestPreviewArea()
-    {
-        if (_lastPipelineResult is not null)
-        {
-            BuilderMeasurementsGrid.ItemsSource = _lastPipelineResult.Measurements;
-            BuilderMeasurementsExpander.Header = $"Schritt 4 - Messwerte prüfen ({_lastPipelineResult.Measurements.Count} Messwerte erkannt)";
-        }
-        else
-        {
-            BuilderMeasurementsExpander.Header = "Schritt 4 - Messwerte prüfen";
-        }
-
-        UpdateBuilderPatientSummary(_lastPipelineResult?.Patient);
-        UpdateBuilderDeviceSummary();
-    }
-
-    private void SetBuilderTestStatus(string message)
-    {
-        BuilderTestStatusTextBox.Text = message;
-    }
-
-    private void UpdateBuilderPatientSummary(PatientData? patient)
-    {
-        if (patient is null && string.IsNullOrWhiteSpace(BuilderAisFilePathTextBox.Text))
-        {
-            BuilderPatientSummaryTextBox.Text = "Noch keine AIS-Testdaten geladen.";
-            return;
-        }
-
-        var builder = new StringBuilder();
-        AppendSummaryLine(builder, "PatientNumber", patient?.PatientNumber);
-        AppendSummaryLine(builder, "FirstName", patient?.FirstName);
-        AppendSummaryLine(builder, "LastName", patient?.LastName);
-        AppendSummaryLine(builder, "BirthDate", patient?.BirthDate);
-        AppendSummaryLine(builder, "Street", patient?.Street);
-        AppendSummaryLine(builder, "PostalCodeCity", patient?.PostalCodeCity);
-        AppendSummaryLine(builder, "ExaminationType", patient?.ExaminationType);
-
-        if (patient is null)
-        {
-            builder.AppendLine();
-            builder.Append("AIS-Datei ausgewählt, Patientendaten noch nicht eingelesen.");
-        }
-
-        BuilderPatientSummaryTextBox.Text = builder.ToString().TrimEnd();
-    }
-
-    private void UpdateBuilderDeviceSummary()
-    {
-        var deviceFilePath = BuilderDeviceFilePathTextBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(deviceFilePath) && _lastPipelineResult is null)
-        {
-            BuilderDeviceSummaryTextBox.Text = "Noch keine Gerätedatei geladen.";
-            return;
-        }
-
-        var builder = new StringBuilder();
-        AppendSummaryLine(builder, "verwendetes Geräteprofil", _currentProfile.Name);
-        AppendSummaryLine(builder, "Dateiname", string.IsNullOrWhiteSpace(deviceFilePath) ? null : Path.GetFileName(deviceFilePath));
-        AppendSummaryLine(builder, "erkannte Messwerte Anzahl", _lastPipelineResult?.Measurements.Count.ToString());
-        AppendSummaryLine(builder, "Status", CreateBuilderDeviceStatusText(deviceFilePath));
-        AppendSummaryLine(builder, "Dateiformat/Endung", string.IsNullOrWhiteSpace(deviceFilePath) ? null : Path.GetExtension(deviceFilePath));
-        BuilderDeviceSummaryTextBox.Text = builder.ToString().TrimEnd();
-    }
-
-    private string CreateBuilderDeviceStatusText(string deviceFilePath)
-    {
-        if (_lastPipelineResult is null)
-        {
-            return string.IsNullOrWhiteSpace(deviceFilePath)
-                ? "Noch nicht geladen"
-                : "Ausgewählt, noch nicht verarbeitet";
-        }
-
-        return _lastPipelineResult.HasErrors
-            ? "Verarbeitet mit Fehlern"
-            : "Verarbeitet";
-    }
-
-    private static void AppendSummaryLine(StringBuilder builder, string label, string? value)
-    {
-        builder.AppendLine($"{label}: {DisplayOrDash(value)}");
-    }
-
     private void ShowIssues(IEnumerable<ProcessingIssue> issues)
     {
         var visibleIssues = issues
@@ -12090,7 +8825,11 @@ public partial class MainWindow : Window
 
     private void AppendProfileMessage(string message)
     {
-        AppendText(ProfileMessagesTextBox, message);
+        if (ProfileManagementStatusText is not null)
+        {
+            ProfileManagementStatusText.Text = message;
+        }
+
         AppendMessage(message);
     }
 
@@ -12220,3 +8959,5 @@ public partial class MainWindow : Window
         }
     }
 }
+
+

@@ -32,6 +32,13 @@ public sealed class ProfileManagementServiceTests
         Assert.Contains(rows, row => row.Kind == ProfileManagementRowKind.Maintenance);
         Assert.Contains(rows, row => row.IsBuiltIn && row.CanDuplicate);
         Assert.Contains(rows, row => row.Kind == ProfileManagementRowKind.XdtBaukastenTemplate && row.CanOpenInWorkbench);
+
+        var packageRow = rows.First(row => row.Kind == ProfileManagementRowKind.TemplatePackage);
+        var baukastenTemplateRow = rows.First(row => row.Kind == ProfileManagementRowKind.XdtBaukastenTemplate);
+        Assert.True(packageRow.CanRename);
+        Assert.True(baukastenTemplateRow.CanRename);
+        Assert.Contains("exportieren", packageRow.Actions);
+        Assert.Contains("exportieren", baukastenTemplateRow.Actions);
     }
 
     [Fact]

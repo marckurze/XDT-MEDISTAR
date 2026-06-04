@@ -73,7 +73,6 @@ Dieser Kernworkflow ist der stabile Prototyp-Kern und muss bei allen naechsten S
 Die App besitzt aktuell diese Haupt-Tabs:
 
 - `Verarbeitung`
-- `Profile & Templates`
 - `XDT-Baukasten`
 - `Profilverwaltung`
 - `Schnittstellenprofile`
@@ -100,11 +99,9 @@ Die automatische Verarbeitung laeuft nur, wenn:
 - ein aktives Schnittstellenprofil vorhanden ist
 - die beteiligten Dateien stabil sind
 
-Der alte manuelle Testbereich ist nicht entfernt. Er bleibt als eingeklappter Bereich `Diagnose / manueller Alt-Test` erhalten und dient als Rueckfallfunktion.
+## 6. Tab Profilverwaltung
 
-## 6. Tab Profile & Templates
-
-Der Tab `Profile & Templates` ist der Profil- und Templatebereich. Der spaetere Standardweg soll ein fertiges Geraeteprofil plus fertiges Templatepaket sein; der Baukasten ist der Rueckfall- und Testbereich.
+Der fruehere Tab `Profile & Templates` ist entfernt. Die zentrale Profil- und Templatepflege liegt jetzt im Tab `Profilverwaltung`; der Baukasten bleibt der Rueckfall- und Testbereich fuer Entwurf/Vorschau.
 
 Er enthaelt:
 
@@ -112,18 +109,21 @@ Er enthaelt:
 - AIS-Profile
 - Geraeteprofile
 - Exportprofile
-- Exportregeln
+- Schnittstellenprofile
+- lokale Templatepakete
+- Baukasten-Templates
 - schlanke Anlage neuer AIS-, Geraete- und Exportprofile als UserDefined
 - sichere Anlage neuer Schnittstellenprofile als inaktive UserDefined-Kombination aus AIS-, Geraete- und Exportprofil
 - sichere UserDefined-Wartung fuer Exportprofile und Exportregeln
-- RS232-/COM-Port-Testfunktion fuer zeitlich begrenzte Rohdaten-Mitschnitte mit Text-/Hexanzeige und optionaler NIDEK-RS232-Auswertung
-- Platzhalter
-- Templatepaket-Export per ausgewaehltem Schnittstellenprofil
-- standardmaessig ausgeklappte, aber einklappbare Bereiche fuer bessere Uebersicht
+- Umbenennen, Duplizieren und geschuetztes Loeschen
+- BuiltIn-Reparatur
+- Geraet laden / Bildpflege mit lokalem Override statt BuiltIn-Ueberschreibung
+- Templatepaket-Import ueber den Baukasten-Importdialog
+- Export lokaler Baukasten-Templates, Templatepakete und schnittstellenprofilbasierter Templatepakete
 
 ## 6a. Tab XDT-Baukasten
 
-Der neue Tab `XDT-Baukasten` ist eine eigenstaendige Entwurfs- und Testoberflaeche, die den alten Sammelbereich `Profile & Templates` spaeter abloesen soll. Der alte Tab bleibt derzeit parallel bestehen. Die Initialisierung von Legacy-Profilverwaltung und Baukasten/Schnittstellenprofilen ist getrennt, damit der Baukasten ohne UI-Abhaengigkeit vom alten Tab weiterentwickelt werden kann.
+Der Tab `XDT-Baukasten` ist eine eigenstaendige Entwurfs- und Testoberflaeche. Er besitzt keine Abhaengigkeit vom entfernten Tab `Profile & Templates` und nutzt eigene Auswahl-, Import-, Template- und RS232-Diagnosewege.
 
 Der Baukasten haelt einen Arbeitszustand aus AIS-Profil, Geraeteprofil, Exportprofil-Arbeitskopie, Testdaten, optionalem Dateianhang, Rohdatenanzeigen, Ergebnisvorschau, Exportregel-Entwurf und Platzhaltern. Änderungen an Exportregeln betreffen zunaechst nur die Arbeitskopie und ueberschreiben keine BuiltIn-Profile.
 
@@ -133,58 +133,55 @@ Exportregeln im Baukasten sind nur Arbeitskopien. Plus/Muelltonne aendern nicht 
 - Templatepaket-Import mit Validierung, Importvorschau, Benutzerwahl und sicherer UserDefined-Uebernahme
 - Baukastenbereich `Test & Vorschau`
 
-## 6b. Tab Profilverwaltung
+## 6b. Abgrenzung der Profilbereiche
 
-Der neue Tab `Profilverwaltung` bereitet die spaetere Entfernung von `Profile & Templates` vor. Er ist nicht der Baukasten und nicht die Praxisanbindung, sondern die zentrale Pflegeoberflaeche fuer den Profilkatalog.
+`Profilverwaltung` ist nicht der Baukasten und nicht die Praxisanbindung, sondern die zentrale Pflegeoberflaeche fuer den Profilkatalog.
 
 Er zeigt AIS-, Geraete-, Export- und Schnittstellenprofile sowie lokale Templatepakete und `.xdtbaukasten.template.json`-Arbeitskopien in einer gemeinsamen Tabelle mit Suche, BuiltIn/UserDefined-Filter, Profiltypfilter, Details, Nutzungshinweisen und Wartung. UserDefined-Profile koennen umbenannt, dupliziert und geloescht werden, sofern sie nicht von Export- oder Schnittstellenprofilen verwendet werden. BuiltIn-Profile bleiben gegen Umbenennen und Loeschen geschuetzt und koennen als UserDefined-Kopie dupliziert werden. Aktive Schnittstellenprofile werden vor blindem Loeschen geschuetzt.
 
-Die Rollen sind bewusst getrennt: `XDT-Baukasten` bleibt Entwurf/Test/Vorschau und bearbeitet Arbeitskopien; `Profilverwaltung` ist Uebersicht, Umbenennen, Loeschen, Duplizieren, Template-Aufraeumen und BuiltIn-Reparatur; `Schnittstellenprofile` bleibt fuer Ordner, COM-Port, DTR/RTS, NIDEK-RT-Sendemodus, Aktivierungspruefung und konkrete Praxisparameter zustaendig. Der alte Tab `Profile & Templates` bleibt vorerst parallel bestehen, ist aber weiter isoliert.
+Die Rollen sind bewusst getrennt: `XDT-Baukasten` bleibt Entwurf/Test/Vorschau und bearbeitet Arbeitskopien; `Profilverwaltung` ist Uebersicht, Umbenennen, Loeschen, Duplizieren, Template-Aufraeumen, Template-Export/-Import-Einstieg und BuiltIn-Reparatur; `Schnittstellenprofile` bleibt fuer Ordner, COM-Port, DTR/RTS, NIDEK-RT-Sendemodus, Aktivierungspruefung und konkrete Praxisparameter zustaendig.
 
 Im Tab `Schnittstellenprofile` ist der Button `Neues Schnittstellenprofil anlegen` funktionsfaehig: Er oeffnet einen Dialog fuer Profilname, AIS-Profil, Geraeteprofil und Exportprofil. Das neue Profil wird als UserDefined gespeichert, bleibt initial inaktiv und enthaelt keine automatisch erfundenen Ordnerpfade. Ordner, Nachlauf, Phoropter-Ausgabe-an-Geraet fuer CV-5000/RT-6100 und Dokumentanhaenge werden danach im bestehenden Konfigurationsbereich gepflegt.
 
 Im selben Tab kann der Anwender Ordnerpfade vorbereiten, ohne Fachlogik zu aktivieren: `Ordner Default` fuellt Standardpfade unter `C:\XDTBox\<Geraetename>` in die aktuell sichtbaren Pfadfelder, `Ordner anlegen` erstellt die eingetragenen Ordner und meldet Erfolg oder konkrete Pfad-/Berechtigungsfehler. Es werden keine Dateien angelegt, geloescht oder verarbeitet.
 
-Der Bereich `Test & Vorschau` erlaubt:
+Der XDT-Baukasten erlaubt:
 
 - AIS-Datei laden
 - Geraetedatei laden
-- XDT-Anhang einlesen
-- Messwerte pruefen
-- Gesamtexport-Vorschau XDT pruefen
-- Testexport erstellen
+- RS232-Rohdaten zeitlich begrenzt abhoeren und uebernehmen
+- Messwerte und Platzhalter pruefen
+- Roh-XDT, AIS-Ansicht, Geraeteausgabe und Diagnose pruefen
+- Exportregeln als Arbeitskopie bearbeiten
+- Baukasten-Templates und Templatepakete im Entwurfskontext laden/importieren
 
-Die RS232-Testfunktion kann fuer NIDEK-RS232-Rohdaten Frames mit SOH/STX/ETB/EOT, optionale NCP10-Checksummen, Header, Segmente, Modellinformationen und erste Messwertkandidaten anzeigen. LM-Rohdaten werden nur als `6228`-Kandidaten, NT-Tonometrie nur als `6205`-Kandidaten und PM/Pachymetrie nur als `6220`-Kandidaten markiert. Daraus entsteht noch kein automatischer produktiver XDT-Export.
+Die RS232-Diagnose im Baukasten und im Tab `Schnittstellenprofile` kann fuer NIDEK-RS232-Rohdaten Frames mit SOH/STX/ETB/EOT, optionale NCP10-Checksummen, Header, Segmente, Modellinformationen und erste Messwertkandidaten anzeigen. LM-Rohdaten werden nur als `6228`-Kandidaten, NT-Tonometrie nur als `6205`-Kandidaten und PM/Pachymetrie nur als `6220`-Kandidaten markiert. Daraus entsteht noch kein automatischer produktiver XDT-Export.
 
 Fuer NIDEK RT-2100 / RT-3100 / RT-5100 ist zusaetzlich eine eigene serielle Phoropterfamilie vorbereitet und technisch in den produktiven Ablauf eingebunden. Sie nutzt die aus den Hersteller-PDFs abgeleiteten Presets 2400 7E2 beziehungsweise 9600 8O1, parst dokumentnahe und echte RT->PC-Frames mit Final-/Subjective-Werten und erzeugt PC->RT-Sendeframes fuer vorhandene LM-/AR-Historienwerte. Der Lauf startet nicht beim Ueberwachungsstart, sondern erst nach stabiler AIS-Patientendatei: Auswahlfenster oeffnen, Anwenderklick zum Senden ueber COM-Port, Warten auf Rueckgabe bis `EOT` plus Stabilitaetswartezeit, danach MEDISTAR-XDT. Echte Sendung/Rueckgabe am Geraet und MEDISTAR-Import bleiben praktische Abnahmepunkte.
 
-## 7. Baukasten `Test & Vorschau`
+## 7. XDT-Baukasten
 
-Der Baukasten dient dem manuellen Testen von Profilen, Exportregeln und XDT-Anhang-Konfigurationen. Er soll schlank bleiben und nicht zum normalen Bedienweg fuer Standardgeraete werden.
+Der Baukasten dient dem manuellen Testen von Profilen, Exportregeln, Rohdaten und Geräteausgabe-Vorschauen. Er soll schlank bleiben und nicht zum normalen Bedienweg fuer Standardgeraete werden.
 
 Wichtige Rollen:
 
-- Das Schnittstellenprofil dient als Testkontext.
 - Das Exportprofil steuert die normalen XDT-Ergebnisfelder.
-- Das Schnittstellenprofil verbindet AIS-Profil, Geraeteprofil, Exportprofil, Ordner und XDT-Anhang-Einstellungen.
-- XDT-Anhang-Linkfelder `6302` bis `6305` werden im Baukasten transient ergaenzt und veraendern kein Exportprofil.
+- Das Geraeteprofil liefert Identitaet, Parserbasis, Bild/Override und bidirektionale Faehigkeit.
+- DeviceOutput-Regeln bleiben im Baukasten Arbeitskopie und schreiben keine Geraetedatei.
+- Schnittstellenprofile bleiben fuer produktive Ordner, COM-Port und Praxisparameter zustaendig.
 
 Aktueller Stand:
 
-- Ein XDT-Anhang kann im Baukasten aus einem beliebigen Speicherort ausgewaehlt werden.
-- Die Vorschau simuliert trotzdem den Zielpfad aus dem Schnittstellenprofil.
-- `6305` zeigt in Vorschau und Test-XDT auf den simulierten Schnittstellenprofil-Zielpfad.
-- Der simulierte Zielpfad besteht aus `XDT-Anhang Exportordner` plus erzeugtem Dateinamen.
-- Der Quellpfad der ausgewaehlten Datei wird nicht als `6305` verwendet.
-- Der Testexport schreibt physisch eine Test-XDT-Datei und, falls vorhanden, den umbenannten Anhang in einen frei gewaehlten Testordner.
-- Der produktive XDT-Anhang Exportordner aus dem Schnittstellenprofil wird im Baukasten-Test nicht beschrieben.
+- Vorschauen entstehen im Speicher; es wird keine produktive AIS- oder Geraetedatei geschrieben.
+- `Roh-XDT`, `Ansicht im AIS`, `Geraeteausgabe` und `Diagnose` besitzen reine Baukasten-Zeilennummern.
+- Regel-Auswahl markiert die zugehoerige Ausgabezeile, wenn sie eindeutig erzeugt wird.
 - Exportprofil und BuiltIn-Profile werden nicht veraendert.
-- `Messwerte pruefen` ist standardmaessig eingeklappt.
-- `Verfuegbare Platzhalter` ist standardmaessig ausgeklappt.
+- Baukasten-Templates werden als lokale Arbeitskopien gespeichert und geladen.
+- Templatepakete werden im Baukasten ueber einen eigenen Importdialog sicher als UserDefined-Kopien uebernommen.
 
-Neue Profile koennen im Tab `Profile & Templates` als V1-Funktion angelegt werden: AIS-Profile ueber Name, System und Codierung, Geraeteprofile ueber Name, Hersteller, Modell, Geraetetyp und vorhandene Parserbasis. Die Dialoge enthalten kurze Hilfetexte, damit MEDISTAR/Generisch, Windows-1252, Geraetetyp und Parserbasis verstaendlich bleiben. Exportprofile werden sichtbar als leerer Entwurf mit eindeutigem Namen vorbereitet und erst nach bewusstem Speichern als UserDefined geschrieben. Name-/ID-Konflikte werden blockiert; BuiltIn-Profile, Schnittstellenprofile, Aktivierung und Verarbeitung bleiben unberuehrt.
+Neue Profile koennen ueber die `Profilverwaltung` als V1-Funktion angelegt werden: AIS-Profile ueber Name, System und Codierung, Geraeteprofile ueber Name, Hersteller, Modell, Geraetetyp und vorhandene Parserbasis. Exportprofile entstehen als UserDefined-Kopie aus einer Vorlage und koennen anschliessend im Baukasten bearbeitet werden. Name-/ID-Konflikte werden blockiert; BuiltIn-Profile, Schnittstellenprofile, Aktivierung und Verarbeitung bleiben unberuehrt.
 
-Vor einer spaeteren Entfernung des Tabs `Profile & Templates` sind die wichtigsten reinen Profilpflegefunktionen bereits in den neuen Tab `Profilverwaltung` ueberfuehrt: Profiluebersicht, Umbenennen, geschuetztes Loeschen, Duplizieren, Nutzungshinweise, lokale Templateuebersicht und BuiltIn-Reparatur. Offen bleiben praktische UI-Abnahme, moegliche Zentralisierung der Geraetebildpflege und einzelne Legacy-Diagnosepfade. Der `XDT-Baukasten` selbst benoetigt diese Legacy-UI nicht.
+Die reinen Profilpflegefunktionen sind im Tab `Profilverwaltung` gebuendelt: Profiluebersicht, Umbenennen, geschuetztes Loeschen, Duplizieren, Nutzungshinweise, lokale Templateuebersicht, Templateexport, Geraetebildpflege und BuiltIn-Reparatur. Der `XDT-Baukasten` benoetigt keine Legacy-UI.
 
 UserDefined-Profile koennen umbenannt werden, ohne ihre technische Funktion zu veraendern. Unterstuetzt sind AIS-, Geraete-, Export- und Schnittstellenprofile; geaendert wird nur der sichtbare Name. IDs, Referenzen, Ordnerpfade, Exportregeln, XDT-Anhang-Einstellungen, Aktivierungsstatus und Verarbeitung bleiben unveraendert. BuiltIn-Profile bleiben gegen Umbenennung geschuetzt. Templatepaket-ZIP-Dateien werden nicht als eigene App-Objekte verwaltet; Paketbenennung erfolgt weiterhin ueber Dateiname und Release-Regel.
 
@@ -567,13 +564,13 @@ XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer eine dateibasierte AIS-/Ger
 
 Praktisch validiert ist MEDISTAR + NIDEK ARK1S: AIS-GDT/XDT einlesen, NIDEK ARK1S XML einlesen, Patientendaten und Messwerte mappen und eine MEDISTAR-kompatible XDT-Datei erzeugen. Wichtige Felder sind 8000=6310, Patientendaten 3000/3101/3102/3103, 8402 Untersuchungsart und 6228 Ergebniszeilen rechts/links. Am 2026-05-11 wurde zusaetzlich der XDT-Anhang-Link ueber 6302/6303/optional 6304/6305 praktisch validiert; ein externer Anhang konnte aus einer MEDISTAR-Karteikarte geoeffnet werden.
 
-Die Haupt-Tabs sind Verarbeitung, Profile & Templates, XDT-Baukasten, Profilverwaltung, Schnittstellenprofile, Sicherung/Umzug und Lizenz. Verarbeitung ist der Betriebsbereich mit Schnittstellen-Monitor, aktiven Schnittstellenprofilen, manuell startbarer Ueberwachung, automatischer Verarbeitung per Haken, Paketstatus und Monitoring-Ereignissen.
+Die Haupt-Tabs sind Verarbeitung, XDT-Baukasten, Profilverwaltung, Schnittstellenprofile, Sicherung/Umzug und Lizenz. Verarbeitung ist der Betriebsbereich mit Schnittstellen-Monitor, aktiven Schnittstellenprofilen, manuell startbarer Ueberwachung, automatischer Verarbeitung per Haken, Paketstatus und Monitoring-Ereignissen.
 
 Im Tab Verarbeitung ist die V1 der abdockbaren Geraeteanbindungsfenster praxisabgenommen; das Protokoll liegt in `docs/PRAXISABNAHME_GERAETEFENSTER_V1.md`. Jede Monitoring-Karte kann manuell als eigenes Fenster geoeffnet und wieder angedockt werden. Relevante Monitoring-Aktivitaet oeffnet automatisch nur das betroffene Floating-Fenster und bringt es nach vorne; neue Dateiversionen mit gleichem Namen werden dabei erneut als Aktivitaet gewertet, waehrend identische Scan-Wiederholungen dedupliziert bleiben. Nach Vorgangsreset wird zusaetzlich der profilbezogene Monitoring-Dedupe-State freigegeben, damit eine neue AIS-Datei nach `↺` und X-Andocken wieder AutoDetach ausloest. Der App-Content-Signalton `04_praxis_terminal_signal.wav` wird nur bei stabil erkanntem Geraetedatei-Eingang mit kurzem Cooldown pro Schnittstellenprofil abgespielt. AIS-, Anhang-, Export- und Statusmeldungen bleiben stumm. Nach terminalem Abschluss dockt ein automatisch geoeffnetes, nicht gepinntes Fenster nach 5 Sekunden Restlaufzeit wieder an; neue Aktivitaet, Pin oder manuelles Andocken beendet den Countdown pro Profil. Schliessen per `X` dockt Floating-Fenster sicher zurueck. Der Reset `↺` verwirft nach Sicherheitsabfrage den aktuellen Vorgang genau eines Schnittstellenprofils, bricht interne Wartezustaende ab und leert nur die AIS-/Geraete-/optionalen XDT-Anhang-Eingangsordner dieses Profils top-level; Export-, Archiv- und Fehlerordner sowie Unterordner bleiben unangetastet. Pin, neues grafisches Standardlayout, `-`/`+`-Scanintervallsteuerung und Positionsmerken arbeiten pro Schnittstellenprofil; Position/Groesse und Abdockstatus werden als UI-State unter AppData gespeichert, wenn Positionsmerken aktiv ist. Beim App-Start werden gespeicherte Floating-Fenster erst nach der sicheren MainWindow-Anzeige wiederhergestellt; ein Restore-Fehler dockt die Karte sicher an. Die Systray-Grundfunktion ist vorhanden: Minimieren oder `X` am Hauptfenster blendet die App in den Infobereich aus, Doppelklick beziehungsweise `Oeffnen` stellt das Hauptfenster wieder her, `Beenden` schliesst bewusst. Die Floating-Fenster sind leicht verbreitert, damit die Symbolleiste `🗗 ↺ 📌 🔝` in einer Zeile bleibt. Autostart, Windows-Dienst, UI-Einstellung fuer Rueckdock-Zeit, sichtbarer Countdown-Hinweis, Ton-Schalter und eigenes Systray-Icon sind Komfortthemen fuer spaeteres Praxisfeedback.
 
-Die TOPCON-CV5000-/CV-5000S-Pilotdarstellung ist als Standardlayout fuer alle Monitoring-Karten und Floating-Geraetefenster uebernommen. Geraete zeigen einen linken Infoblock, ein Geraetebild ueber `DeviceImagePath` oder einen Platzhalter und eine Statuskugel. Die Kugel pulsiert anhand des Scanintervalls nur bei laufender Ueberwachung und kann bei Dateieingang kurz gruen blitzen. `Letzter Scan` und `Automatik` stehen im Detailbereich. BuiltIn-Geraetebilder liegen als App-Assets unter `XdtDeviceBridge.App/Assets/Devices/`; UserDefined-Geraete koennen optional eigene Bildpfade speichern. Bestehende Geraete werden im Tab `Profile & Templates` ueber `Geraet laden` angezeigt; neue Bilder werden in den lokalen AppData-Unterordner `DeviceImages` kopiert. BuiltIn-Geraete werden fachlich nicht ueberschrieben, sondern nutzen bei Bildwechsel einen lokalen Override in `device-image-overrides.json`.
+Die TOPCON-CV5000-/CV-5000S-Pilotdarstellung ist als Standardlayout fuer alle Monitoring-Karten und Floating-Geraetefenster uebernommen. Geraete zeigen einen linken Infoblock, ein Geraetebild ueber `DeviceImagePath` oder einen Platzhalter und eine Statuskugel. Die Kugel pulsiert anhand des Scanintervalls nur bei laufender Ueberwachung und kann bei Dateieingang kurz gruen blitzen. `Letzter Scan` und `Automatik` stehen im Detailbereich. BuiltIn-Geraetebilder liegen als App-Assets unter `XdtDeviceBridge.App/Assets/Devices/`; UserDefined-Geraete koennen optional eigene Bildpfade speichern. Bestehende Geraete werden in der `Profilverwaltung` ueber `Geraet laden / Bild pflegen` angezeigt; neue Bilder werden in den lokalen AppData-Unterordner `DeviceImages` kopiert. BuiltIn-Geraete werden fachlich nicht ueberschrieben, sondern nutzen bei Bildwechsel einen lokalen Override in `device-image-overrides.json`.
 
-Profile & Templates ist der Profil- und Templatebereich. Standardziel ist fertiges Geraeteprofil plus fertiges Templatepaket; der Baukasten Test & Vorschau bleibt fuer Sonderfaelle, Tests und kundenspezifische Anpassungen. AIS-, Geraete- und Exportprofile koennen jetzt schlank und mit Hilfetexten als UserDefined angelegt werden; bestehende Geraete koennen ueber `Geraet laden` gelesen und in V1 nur hinsichtlich ihres Geraetebildes gepflegt werden. Es gibt dabei keine automatische Aktivierung, keine Schnittstellenprofil-Aenderung und keine Verarbeitung.
+Die Profilverwaltung ist der zentrale Profil- und Templatebereich. Standardziel ist fertiges Geraeteprofil plus fertiges Templatepaket; der XDT-Baukasten bleibt fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen. AIS-, Geraete-, Export- und Schnittstellenprofile koennen schlank und mit Hilfetexten als UserDefined angelegt werden; bestehende Geraete koennen ueber `Geraet laden / Bild pflegen` gelesen und hinsichtlich ihres Geraetebildes gepflegt werden. Es gibt dabei keine automatische Aktivierung, keine Schnittstellenprofil-Aenderung und keine Verarbeitung.
 
 XDT-Anhaenge fuer AIS sind fuer den validierten MEDISTAR/ARK1S-Pflicht-Anhang-Praxislauf praktisch bestaetigt. Unterstuetzt sind PDF, JPG, JPEG, PNG, TIF, TIFF, DCM und TXT. Externe Linkfelder sind 6302 Dokumentenname, 6303 Dateiformat, 6304 Beschreibung optional und 6305 vollstaendiger Dateipfad. XDT-Längenpraefixe erzeugt der XdtExportBuilder zentral, nicht die UI.
 

@@ -13,7 +13,7 @@ Nicht separat lizenzpflichtig sind:
 - LAN/UNC-Dateiworkflow
 - SerialRs232
 - Dokumentanhang
-- Profile & Templates
+- XDT-Baukasten und Profilverwaltung
 - RS232-Testbereich
 - Parseranalyse
 - Lizenzanforderung

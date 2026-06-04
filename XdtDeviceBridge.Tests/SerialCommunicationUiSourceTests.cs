@@ -13,19 +13,22 @@ public sealed class SerialCommunicationUiSourceTests
     }
 
     [Fact]
-    public void MainWindow_ShouldExposeSerialCommunicationEditorAndTestArea()
+    public void MainWindow_ShouldExposeSerialCommunicationEditorAndSeparateDiagnosticsEntryPoint()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
 
-        Assert.Contains("RS232 / COM-Port testen", xaml);
-        Assert.Contains("x:Name=\"SerialTestPortComboBox\"", xaml);
-        Assert.Contains("x:Name=\"SerialTestProtocolComboBox\"", xaml);
-        Assert.Contains("NIDEK RS232", xaml);
-        Assert.Contains("x:Name=\"SerialTestNidekModeComboBox\"", xaml);
-        Assert.Contains("x:Name=\"SerialTestNidekAnalysisTextBox\"", xaml);
+        Assert.DoesNotContain("RS232 / COM-Port testen", xaml);
+        Assert.DoesNotContain("x:Name=\"SerialTestPortComboBox\"", xaml);
+        Assert.DoesNotContain("x:Name=\"SerialTestProtocolComboBox\"", xaml);
+        Assert.DoesNotContain("x:Name=\"SerialTestNidekModeComboBox\"", xaml);
+        Assert.DoesNotContain("x:Name=\"SerialTestNidekAnalysisTextBox\"", xaml);
         Assert.Contains("x:Name=\"InterfaceSerialCommunicationGroupBox\"", xaml);
         Assert.Contains("Serielle Gerätekommunikation / COM-Port", xaml);
         Assert.Contains("x:Name=\"InterfaceSerialPortComboBox\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceSerialDtrCheckBox\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceSerialRtsCheckBox\"", xaml);
+        Assert.Contains("x:Name=\"OpenInterfaceSerialDiagnosticsButton\"", xaml);
+        Assert.Contains("RS232-Diagnose öffnen", xaml);
         Assert.Contains("x:Name=\"InterfaceDeviceImportFolderTextBox\"", xaml);
     }
 

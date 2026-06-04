@@ -60,7 +60,7 @@ Die Rollen sind getrennt: Der XDT-Baukasten ist Entwurf, Test und Vorschau. Die 
 
 # XDT-Baukasten
 
-Der Tab "XDT-Baukasten" ist eine eigenständige Entwurfs- und Testoberfläche. Er ersetzt noch nicht den alten Tab "Profile & Templates", bereitet aber dessen spätere Ablösung vor.
+Der Tab "XDT-Baukasten" ist eine eigenständige Entwurfs- und Testoberfläche. Der frühere Tab "Profile & Templates" ist entfernt; der Baukasten arbeitet mit eigenen Auswahl-, Import-, Template- und RS232-Diagnosewegen.
 
 Im Baukasten wählen Sie AIS-Profil, Geräteprofil und Mapping-/Exportprofil, laden Testdaten und starten eine Vorschau. Diese Vorschau arbeitet nur mit Entwurfsdaten: Es wird keine produktive Datei in den AIS-Exportordner geschrieben, nichts verschoben, nichts archiviert und keine Ordnerüberwachung gestartet.
 
@@ -74,9 +74,9 @@ Bei NIDEK RT-6100 unterscheidet der Baukasten zwischen Eingabequellen für die G
 
 Regeln können über das Plus ergänzt und über die Mülltonne aus der Arbeitskopie entfernt werden. Ein leerer SourcePath ist für feste Überschriften oder Notizen erlaubt, wenn im Regeltext ein fester Text steht. Platzhalter zeigen rechts den aktuell eingelesenen Beispielwert; Geräteplatzhalter stammen aus der aktuell geladenen Testdatei. Bei bidirektionalen Geräten zeigen Ausgabe-an-Gerät-Platzhalter Patientendaten und verfügbare historische Werte für die Geräteausgabe. Änderungen an unterstützten Geräteausgabe-Regeln aktualisieren die Geräteausgabe-Vorschau sofort. Im Baukasten blockieren Modellabweichungen die Vorschau nicht, solange die Datei lesbar ist und Parser/Mapping verwertbare Daten liefern. XDTBox zeigt dann eine Warnung und schreibt die Abweichung in die Diagnose, damit neue Geräte, ähnliche Modelle und Exportprofile bewusst verglichen werden können. Die produktive Verarbeitung prüft strenger. Ein Klick fügt den Platzhalter in den Entwurf ein und aktualisiert die Vorschau. Der Zurück-Pfeil nimmt die letzten Baukasten-Änderungen schrittweise zurück. BuiltIn-Profile werden dadurch nicht direkt überschrieben.
 
-"Baukasten-Template laden" lädt lokal gespeicherte Baukasten-Arbeitskopien aus der Templatebibliothek. "Konfiguration als Template speichern" speichert die aktuelle Baukasten-Arbeitskopie als UserDefined-Exportprofil und zusätzlich als lokale Baukasten-Template-Datei. "Template Paket importieren" öffnet im Baukasten eine eigene Importvorschau; der Import wird dort als UserDefined-Kopie übernommen und nicht mehr in den alten Tab "Profile & Templates" umgeleitet.
+"Baukasten-Template laden" lädt lokal gespeicherte Baukasten-Arbeitskopien aus der Templatebibliothek. "Konfiguration als Template speichern" speichert die aktuelle Baukasten-Arbeitskopie als UserDefined-Exportprofil und zusätzlich als lokale Baukasten-Template-Datei. "Template Paket importieren" öffnet im Baukasten eine eigene Importvorschau; der Import wird dort als UserDefined-Kopie übernommen.
 
-Der alte Tab "Profile & Templates" bleibt vorerst parallel sichtbar. Die zentrale Profilpflege liegt jetzt im Tab "Profilverwaltung"; der alte Tab dient noch als Übergangs-/Legacy-Bereich. Der Baukasten selbst nutzt eigene Auswahl-, Import-, Template- und RS232-Testwege und ist nicht als Bedienoberfläche vom alten Tab abhängig.
+Die zentrale Profilpflege liegt im Tab "Profilverwaltung". Dort können Profile gesucht, dupliziert, umbenannt, gelöscht, BuiltIns repariert, Baukasten-Templates und Templatepakete verwaltet sowie neue AIS-, Geräte-, Export- und Schnittstellenprofile angelegt werden. Der Baukasten ist nicht von einer früheren Profil-/Template-Oberfläche abhängig.
 
 # Neues Gerät anlegen und Gerät laden
 
@@ -90,7 +90,7 @@ Im Baukasten kann ein COM-Port zeitlich begrenzt abgehört werden; DTR/RTS, Pari
 
 Im Tab "Schnittstellenprofile" öffnet "RS232-Diagnose öffnen" dieselbe allgemeine Diagnose mit den aktuell sichtbaren COM-Parametern des gewählten seriellen Schnittstellenprofils. Diese Diagnose startet keine produktive Verarbeitung und übernimmt keine Daten in den Baukasten.
 
-Der ältere RS232-Testbereich im Tab "Profile & Templates" bleibt für die Übergangszeit vorhanden, ist aber nicht mehr die einzige Möglichkeit, serielle Baukasten-Rohdaten zu erfassen.
+Der frühere RS232-Testbereich aus "Profile & Templates" ist entfernt. Serielle Diagnose läuft über den Baukasten-Mitschnitt oder über die RS232-Diagnose im Tab "Schnittstellenprofile".
 
 Die NIDEK-RS232-Auswertung erkennt SOH/STX/ETB/EOT-Frames, optionale Checksummen, Header und erste LM-/NT-/PM-Kandidaten. Unbekannte Segmente bleiben roh erhalten und werden nicht als Messwerte exportiert.
 

@@ -66,7 +66,7 @@ Unbekannte Segmente werden als Rohsegmente erhalten. UV/Transmission, Prisma-Det
 
 ## Testdialog
 
-Im Tab `Profile & Templates` kann die RS232-Testfunktion auf `NIDEK RS232` gestellt werden. Die Auswertung zeigt:
+Die RS232-Auswertung läuft über die Diagnose im Tab `Schnittstellenprofile` beziehungsweise über den Mitschnitt im `XDT-Baukasten`. Die Auswertung zeigt:
 
 - Frames
 - Header und DeviceCode

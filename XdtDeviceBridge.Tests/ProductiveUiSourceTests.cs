@@ -103,19 +103,15 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
-    public void BuilderManualPreview_ShouldResolveSelectedProfileInsteadOfHardcodedArk1S()
+    public void RemovedProfileTemplatesManualPreview_ShouldNotLeaveOldWorkbenchCodeBehind()
     {
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
-        var body = ExtractMethodBody(
-            code,
-            "private void RefreshManualProcessingPreview",
-            "private DeviceProfileDefinition? ResolveBuilderDeviceProfile");
 
-        Assert.Contains("BuilderManualProcessingPreviewRequest", body);
-        Assert.Contains("ResolveBuilderDeviceProfile(exportProfile)", body);
-        Assert.Contains("ResolveBuilderInterfaceProfile(exportProfile)", body);
-        Assert.DoesNotContain("DefaultDeviceProfiles.CreateNidekArk1sDefault", body);
-        Assert.DoesNotContain("_pipelineService.ProcessFiles", body);
+        Assert.DoesNotContain("RefreshManualProcessingPreview", code);
+        Assert.DoesNotContain("BuilderManualProcessingPreviewRequest", code);
+        Assert.DoesNotContain("ResolveBuilderDeviceProfile(exportProfile)", code);
+        Assert.DoesNotContain("ResolveBuilderInterfaceProfile(exportProfile)", code);
+        Assert.Contains("XdtBaukastenPreviewService", code);
     }
 
     [Fact]
@@ -125,7 +121,7 @@ public sealed class ProductiveUiSourceTests
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
         Assert.Contains("<TabItem Header=\"XDT-Baukasten\">", xaml);
-        Assert.Contains("<TabItem Header=\"Profile &amp; Templates\">", xaml);
+        Assert.DoesNotContain("<TabItem Header=\"Profile &amp; Templates\">", xaml);
         Assert.Contains("x:Name=\"XdtBaukastenRoot\"", xaml);
         Assert.Contains("Baukasten-Template laden", xaml);
         Assert.Contains("Template Paket importieren", xaml);
@@ -222,22 +218,22 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
-    public void XdtBaukastenInitialization_ShouldSeparateLegacyProfileTemplatesTabFromWorkbench()
+    public void XdtBaukastenInitialization_ShouldNotDependOnRemovedProfileTemplatesTab()
     {
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
         var dependentBody = ExtractMethodBody(
             code,
             "private void InitializeProfileDependentTabs",
-            "private void ClearLegacyProfileTemplatesTabOnProfileLoadFailure");
+            "private void ClearProfileManagementTabOnProfileLoadFailure");
 
         Assert.Contains("LoadProfileCatalogForUi", code);
-        Assert.Contains("InitializeLegacyProfileTemplatesTab", code);
+        Assert.DoesNotContain("InitializeLegacyProfileTemplatesTab", code);
+        Assert.DoesNotContain("ClearLegacyProfileTemplatesTabOnProfileLoadFailure", code);
         Assert.Contains("InitializeProfileDependentTabs", code);
         Assert.Contains("InitializeXdtBaukasten", dependentBody);
         Assert.Contains("InitializeProfileManagementTab", dependentBody);
         Assert.Contains("InitializeInterfaceProfileConfiguration", dependentBody);
         Assert.DoesNotContain("AisProfileCountText", dependentBody);
-        Assert.DoesNotContain("ExportProfileComboBox", dependentBody);
         Assert.DoesNotContain("TemplatePackageExportInterfaceProfileComboBox", dependentBody);
         Assert.DoesNotContain("BuilderAttachmentDiagnosticInterfaceProfileComboBox", dependentBody);
         Assert.DoesNotContain("ProfileMessagesTextBox", dependentBody);
@@ -264,6 +260,14 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Löschen", section);
         Assert.Contains("Im XDT-Baukasten öffnen", section);
         Assert.Contains("Im Schnittstellenprofil öffnen", section);
+        Assert.Contains("Neues AIS anlegen", section);
+        Assert.Contains("Neues Gerät anlegen", section);
+        Assert.Contains("Gerät laden / Bild pflegen", section);
+        Assert.Contains("Neues Exportprofil aus Vorlage", section);
+        Assert.Contains("Neues Schnittstellenprofil", section);
+        Assert.Contains("Baukasten-Template erstellen", section);
+        Assert.Contains("Templatepaket importieren", section);
+        Assert.Contains("Ausgewähltes Template/Paket exportieren", section);
         Assert.Contains("XDT-Baukasten = Entwurf/Test/Vorschau", section);
         Assert.Contains("ProfileManagementService", code);
         Assert.Contains("InitializeProfileManagementTab", code);
@@ -297,7 +301,7 @@ public sealed class ProductiveUiSourceTests
         var body = ExtractMethodBody(
             code,
             "private void InitializeInterfaceProfileConfiguration",
-            "private void InitializeAttachmentDiagnosticProfiles");
+            "private void InterfaceProfileComboBox_SelectionChanged");
 
         Assert.Contains("InterfaceProfileComboBox", body);
         Assert.DoesNotContain("AisProfileCountText", body);
@@ -354,8 +358,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("LegacyRt3100DirectFrame", mainXaml);
         Assert.Contains("RT-3100 Praxisvariante (getestet)", mainXaml);
         Assert.Contains("DirectWriterFrame", mainXaml);
-        Assert.Contains("SerialTestDtrCheckBox", mainXaml);
-        Assert.Contains("SerialTestRtsCheckBox", mainXaml);
+        Assert.DoesNotContain("SerialTestDtrCheckBox", mainXaml);
+        Assert.DoesNotContain("SerialTestRtsCheckBox", mainXaml);
         Assert.Contains("COM-Port nur abhören", floatingXaml);
         Assert.Contains("Sendetest", floatingXaml);
         Assert.Contains("RS anfordern", floatingXaml);
@@ -394,19 +398,17 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
-    public void ProfileTemplatesTab_ShouldUseExpandedSectionsByDefault()
+    public void OldProfileTemplatesTab_ShouldBeRemoved()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
-        Assert.Contains("Header=\"Profilübersicht\" IsExpanded=\"True\"", xaml);
-        Assert.Contains("Header=\"Templatepakete, neue Profile und RS232-Test\" IsExpanded=\"True\"", xaml);
-        Assert.Contains("Header=\"Profilnamen\" IsExpanded=\"True\"", xaml);
-        Assert.Contains("Header=\"Exportregeln\" IsExpanded=\"True\"", xaml);
-        Assert.Contains("Header=\"Exportregel-Entwurf\" IsExpanded=\"True\"", xaml);
-        Assert.Contains("Header=\"Regelvorschau\" IsExpanded=\"True\"", xaml);
-        Assert.Contains("Header=\"Test &amp; Vorschau\" IsExpanded=\"True\"", xaml);
-        Assert.Contains("Header=\"Verfügbare Platzhalter\"", xaml);
-        Assert.Contains("Header=\"Profil- und Template-Meldungen\" IsExpanded=\"True\"", xaml);
+        Assert.DoesNotContain("Header=\"Profile &amp; Templates\"", xaml);
+        Assert.DoesNotContain("Header=\"Templatepakete, neue Profile und RS232-Test\"", xaml);
+        Assert.DoesNotContain("Header=\"Profilnamen\"", xaml);
+        Assert.DoesNotContain("Header=\"Regelvorschau\"", xaml);
+        Assert.DoesNotContain("ProfileMessagesTextBox", xaml);
+        Assert.DoesNotContain("InitializeLegacyProfileTemplatesTab", code);
     }
 
     [Fact]
