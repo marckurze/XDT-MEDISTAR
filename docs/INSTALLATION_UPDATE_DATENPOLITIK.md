@@ -56,7 +56,7 @@ Diese Bestandteile sind Teil der installierten Anwendung und duerfen bei Updates
 
 BuiltIn-Definitionen sind keine Kundendaten. Sie duerfen durch eine neue App-Version bereitgestellt und ueber BuiltIn-Repair aktualisiert werden. Dabei gilt: Nur BuiltIns werden repariert, UserDefined-Profile und konkrete Praxisparameter nicht.
 
-Die Geraetebild-Aufloesung bleibt bewusst kundenfreundlich: ein lokaler Override wird zuerst verwendet, danach das BuiltIn-App-Asset und erst danach der stabile Platzhalter. Dadurch behalten Praxen eigene Bilder nach Updates, waehrend eine Neuinstallation ohne lokale Overrides trotzdem offizielle BuiltIn-Bilder zeigt.
+Die Geraetebild-Aufloesung bleibt bewusst kundenfreundlich: ein lokaler Override wird zuerst verwendet, danach das BuiltIn-App-Asset und erst danach der stabile Platzhalter. Dadurch behalten Praxen eigene Bilder nach Updates, waehrend eine Neuinstallation ohne lokale Overrides trotzdem offizielle BuiltIn-Bilder zeigt. Dokumentgeraete haben getrennte offizielle Assets fuer `Generisches Dokumentgeraet` und `Manuelle Dokumentauswahl`.
 
 ## Kundendaten
 

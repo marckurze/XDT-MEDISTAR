@@ -59,7 +59,7 @@ Enthalten sind nur die veroeffentlichten Dateien der Kunden-App:
 - benoetigte DLLs und Runtime-Dateien
 - Hilfe, Themes, Icons und App-Assets
 - BuiltIn-Definitionen als App-Bestandteil
-- offizielle BuiltIn-Geraetebilder als WPF-Ressourcen aus `XdtDeviceBridge.App\Assets\Devices`, darunter NIDEK ARK1S, AR360, LM7/LM7P, NT530P, RT-2100/RT-3100/RT-5100 RS232, RT-6100, TOPCON CV-5000/CV-5000S, CL-300, Solos, KR-800S, KR-1, TRK2P, CT-1P, CT-800A sowie der Dokumentgeraete-Platzhalter
+- offizielle BuiltIn-Geraetebilder als WPF-Ressourcen aus `XdtDeviceBridge.App\Assets\Devices`, darunter NIDEK ARK1S, AR360, LM7/LM7P, NT530P, RT-2100/RT-3100/RT-5100 RS232, RT-6100, TOPCON CV-5000/CV-5000S, CL-300, Solos, KR-800S, KR-1, TRK2P, CT-1P, CT-800A, das generische Dokumentgeraet und die manuelle Dokumentauswahl
 
 Nicht enthalten:
 

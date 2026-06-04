@@ -710,6 +710,7 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Equal("Generisches Dokumentgerät", profile.Metadata.Name);
         Assert.Equal("AttachmentOnly", profile.ParserMode);
         Assert.Equal("Dokument/Anhang", profile.DeviceType);
+        Assert.Equal(InterfaceProfileUiPolicy.DocumentAttachmentDeviceImagePath, profile.DeviceImagePath);
         Assert.Empty(profile.Measurements);
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile));
     }
@@ -723,6 +724,7 @@ public sealed class DeviceProfileDefinitionTests
         Assert.Equal("Manuelle Dokumentauswahl", profile.Metadata.Name);
         Assert.Equal("AttachmentOnlyManual", profile.ParserMode);
         Assert.Equal("Dokument/Manuell", profile.DeviceType);
+        Assert.Equal(InterfaceProfileUiPolicy.ManualDocumentSelectionDeviceImagePath, profile.DeviceImagePath);
         Assert.Empty(profile.Measurements);
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile));
     }

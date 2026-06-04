@@ -101,6 +101,7 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("UserDefined", script);
         Assert.Contains("template-packages", script);
         Assert.Contains("device-image-overrides.json", script);
+        Assert.Contains("device-document-attachment-default.png", script);
         Assert.Contains("device-nidek-rt3100-serial-default.png", script);
         Assert.Contains("Topcon_CV5000_freigestellt.png", script);
         Assert.Contains("Offizielle BuiltIn-Geraetebilder fehlen im App-Asset-Ordner", script);

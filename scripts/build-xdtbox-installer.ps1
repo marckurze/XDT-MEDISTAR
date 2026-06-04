@@ -77,6 +77,7 @@ function Assert-BuiltInDeviceAssetsExist {
     $deviceAssetsDir = Join-Path $repoRoot "XdtDeviceBridge.App\Assets\Devices"
     $requiredBuiltInDeviceAssets = @(
         "Topcon_CV5000_freigestellt.png",
+        "device-document-attachment-default.png",
         "device-manual-document-selection-default.png",
         "device-nidek-ar360-default.png",
         "device-nidek-ark1s-default.png",

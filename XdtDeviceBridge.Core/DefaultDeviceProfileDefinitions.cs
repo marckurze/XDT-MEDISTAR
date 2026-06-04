@@ -1007,7 +1007,7 @@ public static class DefaultDeviceProfileDefinitions
             Measurements: Array.Empty<DeviceMeasurementDefinition>(),
             SupportedExaminationTypes: new[] { "Dokument", "Anhang" },
             CanContainMultipleExaminationTypes: false,
-            DeviceImagePath: InterfaceProfileUiPolicy.DocumentDeviceImagePath);
+            DeviceImagePath: InterfaceProfileUiPolicy.DocumentAttachmentDeviceImagePath);
     }
 
     public static DeviceProfileDefinition CreateManualDocumentSelectionDefault()
@@ -1035,6 +1035,6 @@ public static class DefaultDeviceProfileDefinitions
             Measurements: Array.Empty<DeviceMeasurementDefinition>(),
             SupportedExaminationTypes: new[] { "Dokument", "Anhang", "Manuell" },
             CanContainMultipleExaminationTypes: false,
-            DeviceImagePath: InterfaceProfileUiPolicy.DocumentDeviceImagePath);
+            DeviceImagePath: InterfaceProfileUiPolicy.ManualDocumentSelectionDeviceImagePath);
     }
 }

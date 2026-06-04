@@ -42,7 +42,8 @@ public static class InterfaceProfileUiPolicy
     public const string TopconTrk2PDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-trk2p-default.png";
     public const string TopconCt1PDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-ct1p-default.png";
     public const string TopconCt800ADeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-ct800a-default.png";
-    public const string DocumentDeviceImagePath = BuiltInDeviceImageRoot + "device-manual-document-selection-default.png";
+    public const string DocumentAttachmentDeviceImagePath = BuiltInDeviceImageRoot + "device-document-attachment-default.png";
+    public const string ManualDocumentSelectionDeviceImagePath = BuiltInDeviceImageRoot + "device-manual-document-selection-default.png";
     private static readonly IReadOnlyDictionary<string, string> BuiltInDeviceImagePathsByDeviceProfileId =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -62,8 +63,8 @@ public static class InterfaceProfileUiPolicy
             ["device-topcon-ct1p-default"] = TopconCt1PDeviceImagePath,
             ["device-topcon-ct800a-default"] = TopconCt800ADeviceImagePath,
             ["device-topcon-cv5000-default"] = TopconCv5000DeviceImagePath,
-            ["device-document-attachment-default"] = DocumentDeviceImagePath,
-            ["device-manual-document-selection-default"] = DocumentDeviceImagePath
+            ["device-document-attachment-default"] = DocumentAttachmentDeviceImagePath,
+            ["device-manual-document-selection-default"] = ManualDocumentSelectionDeviceImagePath
         };
 
     public static bool ShouldShowDeviceOutput(

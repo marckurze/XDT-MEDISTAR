@@ -479,6 +479,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("bitmap.Freeze()", converter);
         Assert.Contains(@"<Resource Include=""Assets\Devices\*.png"" />", appProject);
         Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "device-nidek-rt3100-serial-default.png"))));
+        Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "device-document-attachment-default.png"))));
         Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "Topcon_CV5000_freigestellt.png"))));
     }
 
