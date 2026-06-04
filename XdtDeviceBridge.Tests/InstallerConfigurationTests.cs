@@ -81,6 +81,11 @@ public sealed class InstallerConfigurationTests
     {
         var script = File.ReadAllText(FindWorkspaceFile("scripts", "build-xdtbox-installer.ps1"));
 
+        Assert.Contains("Reset-BuildArtifactDirectory -Path $publishDir", script);
+        Assert.Contains("Reset-BuildArtifactDirectory -Path $installerDir", script);
+        Assert.Contains("Remove-Item -LiteralPath $Path -Recurse -Force", script);
+        Assert.Contains("Assert-PathInsideRepository", script);
+        Assert.Contains("Assert-CustomerPublishIsClean -Path $publishDir", script);
         Assert.Contains("XdtDeviceBridge.App\\XdtDeviceBridge.App.csproj", script);
         Assert.Contains("dotnet publish", script);
         Assert.Contains("--self-contained true", script);
@@ -91,8 +96,34 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("XdtBox.LicenseIssuer*", script);
         Assert.Contains("*.pem", script);
         Assert.Contains("*.key", script);
+        Assert.Contains("profiles", script);
+        Assert.Contains("UserDefined", script);
+        Assert.Contains("template-packages", script);
+        Assert.Contains("device-image-overrides.json", script);
+        Assert.Contains("license.xdtboxlic", script);
+        Assert.Contains("C:\\Users\\MarcK", script);
+        Assert.Contains("Kundenpublish enthaelt lokale Kundendaten/Entwicklungsdaten", script);
         Assert.Contains("ISCC_EXE", script);
         Assert.Contains("Inno Setup 6 Compiler wurde nicht gefunden", script);
+    }
+
+    [Fact]
+    public void InstallerScript_ShouldOnlyPackageCleanPublishDirectory()
+    {
+        var installer = File.ReadAllText(FindWorkspaceFile("installer", "XDTBox.iss"));
+        var filesSectionStart = installer.IndexOf("[Files]", StringComparison.Ordinal);
+        var iconsSectionStart = installer.IndexOf("[Icons]", StringComparison.Ordinal);
+        Assert.True(filesSectionStart >= 0);
+        Assert.True(iconsSectionStart > filesSectionStart);
+        var filesSection = installer[filesSectionStart..iconsSectionStart];
+
+        Assert.Contains("#define MyPublishDir \"..\\artifacts\\publish\\XDTBox\"", installer);
+        Assert.Contains("Source: \"{#MyPublishDir}\\*\"", installer);
+        Assert.DoesNotContain("%LocalAppData%", filesSection);
+        Assert.DoesNotContain("C:\\Users\\MarcK", filesSection);
+        Assert.DoesNotContain("C:\\XDTBox\\RT3100RS232", filesSection);
+        Assert.DoesNotContain("template-packages\\", filesSection);
+        Assert.DoesNotContain("profiles\\", filesSection);
     }
 
     [Fact]
@@ -114,6 +145,8 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("Deinstallation Variante B", buildGuide);
         Assert.Contains("XdtBox.LicenseManager", buildGuide);
         Assert.Contains("private Hersteller-Schluessel", buildGuide);
+        Assert.Contains("Kundeninstaller enthaelt ausschliesslich App-Dateien und BuiltIn-Werksvorlagen", buildGuide);
+        Assert.Contains("Bereinigung von `artifacts\\publish\\XDTBox` und `artifacts\\installer`", buildGuide);
         Assert.Contains("# Installation, Update und Deinstallation", help);
         Assert.Contains("Der Deinstaller entfernt standardmäßig nur die App", help);
     }

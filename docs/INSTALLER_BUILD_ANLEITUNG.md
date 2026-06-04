@@ -21,9 +21,10 @@ Der Kundeninstaller wird self-contained fuer `win-x64` gebaut. Kunden muessen da
 
 Das Skript fuehrt aus:
 
-1. `dotnet publish` fuer `XdtDeviceBridge.App`
-2. Sicherheitspruefung der Publish-Ausgabe
-3. Inno-Setup-Build von `installer\XDTBox.iss`
+1. Bereinigung von `artifacts\publish\XDTBox` und `artifacts\installer`
+2. `dotnet publish` fuer `XdtDeviceBridge.App`
+3. harte Sicherheitspruefung der Publish-Ausgabe
+4. Inno-Setup-Build von `installer\XDTBox.iss`
 
 Ergebnis:
 
@@ -49,6 +50,8 @@ Eine stille Testinstallation aus der Codex-Sitzung konnte nicht vollautomatisch 
 
 ## Kundeninstaller-Inhalt
 
+Der Kundeninstaller enthaelt ausschliesslich App-Dateien und BuiltIn-Werksvorlagen. BuiltIns liegen im App-Code beziehungsweise in App-Assets und sind erlaubt. Persistierte Profile, UserDefined-Profile und konkrete Schnittstellenprofile sind Kundendaten und duerfen nicht in den Installer.
+
 Enthalten sind nur die veroeffentlichten Dateien der Kunden-App:
 
 - `XdtDeviceBridge.App.exe`
@@ -58,11 +61,28 @@ Enthalten sind nur die veroeffentlichten Dateien der Kunden-App:
 
 Nicht enthalten:
 
+- UserDefined-Profile
+- lokale Schnittstellenprofile
+- konkrete Ordnerpfade oder COM-Port-Einstellungen aus Entwicklung/Praxis
+- lokale Baukasten-Templates und Templatepakete
+- `device-image-overrides.json`
+- `app-settings.json`
+- `license.xdtboxlic`, `license.json`, `device-grace-periods.json`
+- Backups und Diagnose-Logs
+- Testfixtures oder Entwicklungsdaten
 - `XdtBox.LicenseManager`
 - `XdtBox.LicenseIssuer`
 - private Hersteller-Schluessel
 - Hersteller-Lizenzhistorie
 - Entwicklungs-, Test-, Codex- oder Repository-Artefakte
+
+Die Publish-Validierung bricht den Build ab, wenn solche Dateien, Ordner oder bekannte Entwicklungsdatenmuster im Kundenpublish auftauchen. Die Fehlermeldung beginnt mit:
+
+```text
+Kundenpublish enthaelt lokale Kundendaten/Entwicklungsdaten:
+```
+
+Wichtig fuer Tests auf dem Entwicklungsrechner: Wenn XDTBox nach einer Testinstallation lokale Marc-/Entwicklungsprofile zeigt, bedeutet das nicht automatisch, dass der Installer diese Daten eingepackt hat. Die App liest beim Start weiterhin den bestehenden lokalen Datenstamm des Windows-Benutzers unter `%LocalAppData%\XdtDeviceBridge`. Fuer einen echten "nackten" First-Run-Test muss dieser lokale Datenstamm vorher gesichert und fuer den Test umbenannt werden oder der Test unter einem frischen Windows-Benutzer beziehungsweise auf einer sauberen VM laufen.
 
 ## Installation
 

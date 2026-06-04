@@ -20,6 +20,10 @@ XDTBox 1.0 nutzt ein Inno-Setup-Skript unter `installer/XDTBox.iss`. Der Install
 
 Der Build erfolgt reproduzierbar ueber `scripts/build-xdtbox-installer.ps1`; die Buildanleitung steht in `docs/INSTALLER_BUILD_ANLEITUNG.md`. Der Kundeninstaller enthaelt nur die Publish-Ausgabe von `XdtDeviceBridge.App`. `XdtBox.LicenseManager`, `XdtBox.LicenseIssuer`, private Hersteller-Schluessel, Lizenzhistorien und Hersteller-Einstellungen werden nicht aufgenommen.
 
+Vor jedem Neubau bereinigt das Buildskript ausschliesslich die Build-Artefakte `artifacts\publish\XDTBox` und `artifacts\installer`. Es loescht keine Kundendatenordner, kein `%LocalAppData%\XdtDeviceBridge`, kein `C:\XDTBox` und keine externen Praxisordner.
+
+Nach dem Publish prueft das Buildskript hart, ob lokale Kundendaten oder Entwicklungsdaten in die Kunden-App-Ausgabe geraten sind. Verboten sind unter anderem UserDefined-/persistierte Profilordner, lokale Schnittstellenprofile, `app-settings.json`, Lizenzdateien, Geraetebild-Overrides, Baukasten-Templates, lokale Templatepakete, Backups, Diagnose-Logs, Testfixtures, Hersteller-Lizenztools, private Schluessel und konkrete Entwicklungsdatenmuster wie Marc-Pfade oder RT3100-Testordner. Bei einem Treffer bricht der Build mit einer klaren Meldung ab.
+
 ## Aktueller Datenstamm
 
 Der aktuelle lokale Kundendatenstamm liegt noch unter:
