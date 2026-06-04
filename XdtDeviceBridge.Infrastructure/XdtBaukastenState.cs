@@ -257,6 +257,26 @@ public sealed class XdtBaukastenState
             : SourceExportProfile with { Rules = _workingExportRules.ToList() };
     }
 
+    public void ReplaceWorkingExportRules(IEnumerable<ExportRuleDefinition> rules)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+
+        _workingExportRules.Clear();
+        _workingExportRules.AddRange(rules
+            .OrderBy(rule => rule.SortOrder)
+            .ThenBy(rule => rule.Id, StringComparer.OrdinalIgnoreCase));
+    }
+
+    public void ReplaceWorkingDeviceOutputRules(IEnumerable<ExportRuleDefinition> rules)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+
+        _workingDeviceOutputRules.Clear();
+        _workingDeviceOutputRules.AddRange(rules
+            .OrderBy(rule => rule.SortOrder)
+            .ThenBy(rule => rule.Id, StringComparer.OrdinalIgnoreCase));
+    }
+
     public bool UpdateWorkingRule(ExportRuleDefinition rule)
     {
         ArgumentNullException.ThrowIfNull(rule);

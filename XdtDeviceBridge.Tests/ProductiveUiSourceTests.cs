@@ -108,7 +108,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("<TabItem Header=\"XDT-Baukasten\">", xaml);
         Assert.Contains("<TabItem Header=\"Profile &amp; Templates\">", xaml);
         Assert.Contains("x:Name=\"XdtBaukastenRoot\"", xaml);
-        Assert.Contains("Templatepaket laden", xaml);
+        Assert.Contains("Baukasten-Template laden", xaml);
         Assert.Contains("Template Paket importieren", xaml);
         Assert.Contains("Neues AIS anlegen", xaml);
         Assert.Contains("Gerät laden", xaml);
@@ -170,9 +170,15 @@ public sealed class ProductiveUiSourceTests
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
-        Assert.Contains("Das Laden lokal gespeicherter Templatepakete ist vorbereitet", code);
+        Assert.Contains("Baukasten-Template laden", xaml);
+        Assert.Contains("XdtBaukastenTemplateLibraryService", code);
+        Assert.Contains(".xdtbaukasten.template.json", code);
+        Assert.Contains("LoadXdtBaukastenTemplate", code);
+        Assert.Contains("XdtBaukastenTemplatePackageImportDialog", code);
+        Assert.Contains("Template Paket wurde im Baukasten importiert", code);
+        Assert.Contains("Baukasten-Konfiguration gespeichert", code);
+        Assert.DoesNotContain("bisherigen Importbereich", code);
         Assert.Contains("XdtBaukastenTopStatusText", xaml);
-        Assert.Contains("SetXdtBaukastenStatus(message, showDialog: true)", code);
         Assert.Contains("XdtBaukastenTextEncodingReader", code);
         Assert.Contains("XdtBaukastenPlaceholderValueService", code);
         Assert.Contains("RefreshXdtBaukastenPreviewIfPossible", code);
@@ -197,6 +203,27 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void XdtBaukastenInitialization_ShouldSeparateLegacyProfileTemplatesTabFromWorkbench()
+    {
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var dependentBody = ExtractMethodBody(
+            code,
+            "private void InitializeProfileDependentTabs",
+            "private void ClearLegacyProfileTemplatesTabOnProfileLoadFailure");
+
+        Assert.Contains("LoadProfileCatalogForUi", code);
+        Assert.Contains("InitializeLegacyProfileTemplatesTab", code);
+        Assert.Contains("InitializeProfileDependentTabs", code);
+        Assert.Contains("InitializeXdtBaukasten", dependentBody);
+        Assert.Contains("InitializeInterfaceProfileConfiguration", dependentBody);
+        Assert.DoesNotContain("AisProfileCountText", dependentBody);
+        Assert.DoesNotContain("ExportProfileComboBox", dependentBody);
+        Assert.DoesNotContain("TemplatePackageExportInterfaceProfileComboBox", dependentBody);
+        Assert.DoesNotContain("BuilderAttachmentDiagnosticInterfaceProfileComboBox", dependentBody);
+        Assert.DoesNotContain("ProfileMessagesTextBox", dependentBody);
+    }
+
+    [Fact]
     public void XdtBaukastenSerialCaptureWindow_ShouldReturnRawDataToBaukasten()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "XdtBaukastenSerialCaptureWindow.xaml"));
@@ -208,6 +235,13 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("ParityComboBox", xaml);
         Assert.Contains("StopBitsComboBox", xaml);
         Assert.Contains("HandshakeComboBox", xaml);
+        Assert.Contains("DtrCheckBox", xaml);
+        Assert.Contains("RtsCheckBox", xaml);
+        Assert.Contains("Testkommando senden", xaml);
+        Assert.Contains("allowWorkbenchAccept", code);
+        Assert.Contains("Send_Click", code);
+        Assert.Contains("_communicationService.WriteAsync", code);
+        Assert.Contains("SerialDiagnosticsFormatter.ToHexDump", code);
         Assert.Contains("CapturedInput", code);
         Assert.Contains("SerialDeviceCommunicationService.ValidateSettings", code);
         Assert.Contains("_xdtBaukastenState.SetSerialInput(dialog.CapturedInput)", mainCode);
@@ -224,6 +258,9 @@ public sealed class ProductiveUiSourceTests
 
         Assert.Contains("InterfaceSerialDtrCheckBox", mainXaml);
         Assert.Contains("InterfaceSerialRtsCheckBox", mainXaml);
+        Assert.Contains("RS232-Diagnose öffnen", mainXaml);
+        Assert.Contains("OpenInterfaceSerialDiagnostics_Click", mainCode);
+        Assert.Contains("allowWorkbenchAccept: false", mainCode);
         Assert.Contains("NIDEK-RT Sendemodus", mainXaml);
         Assert.Contains("InterfaceNidekRtSerialSendModeComboBox", mainXaml);
         Assert.Contains("NIDEK-RT Sendeinhalt", mainXaml);

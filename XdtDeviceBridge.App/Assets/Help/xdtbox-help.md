@@ -66,7 +66,9 @@ Bei NIDEK RT-6100 unterscheidet der Baukasten zwischen Eingabequellen für die G
 
 Regeln können über das Plus ergänzt und über die Mülltonne aus der Arbeitskopie entfernt werden. Ein leerer SourcePath ist für feste Überschriften oder Notizen erlaubt, wenn im Regeltext ein fester Text steht. Platzhalter zeigen rechts den aktuell eingelesenen Beispielwert; Geräteplatzhalter stammen aus der aktuell geladenen Testdatei. Bei bidirektionalen Geräten zeigen Ausgabe-an-Gerät-Platzhalter Patientendaten und verfügbare historische Werte für die Geräteausgabe. Änderungen an unterstützten Geräteausgabe-Regeln aktualisieren die Geräteausgabe-Vorschau sofort. Im Baukasten blockieren Modellabweichungen die Vorschau nicht, solange die Datei lesbar ist und Parser/Mapping verwertbare Daten liefern. XDTBox zeigt dann eine Warnung und schreibt die Abweichung in die Diagnose, damit neue Geräte, ähnliche Modelle und Exportprofile bewusst verglichen werden können. Die produktive Verarbeitung prüft strenger. Ein Klick fügt den Platzhalter in den Entwurf ein und aktualisiert die Vorschau. Der Zurück-Pfeil nimmt die letzten Baukasten-Änderungen schrittweise zurück. BuiltIn-Profile werden dadurch nicht direkt überschrieben.
 
-"Templatepaket laden" ist als lokale Paketbibliothek vorbereitet und zeigt in V1 eine sichtbare Hinweismeldung. Bis diese Bibliothek vollständig geführt wird, verwenden Sie "Template Paket importieren" oder wählen AIS, Gerät und Exportprofil manuell.
+"Baukasten-Template laden" lädt lokal gespeicherte Baukasten-Arbeitskopien aus der Templatebibliothek. "Konfiguration als Template speichern" speichert die aktuelle Baukasten-Arbeitskopie als UserDefined-Exportprofil und zusätzlich als lokale Baukasten-Template-Datei. "Template Paket importieren" öffnet im Baukasten eine eigene Importvorschau; der Import wird dort als UserDefined-Kopie übernommen und nicht mehr in den alten Tab "Profile & Templates" umgeleitet.
+
+Der alte Tab "Profile & Templates" bleibt vorerst parallel sichtbar. Reine Profilverwaltungsfunktionen wie Übersicht, Umbenennen und Löschen liegen dort noch, bis sie später in eine eigene Profilverwaltung überführt werden. Der Baukasten selbst nutzt eigene Auswahl-, Import-, Template- und RS232-Testwege und ist nicht als Bedienoberfläche vom alten Tab abhängig.
 
 # Neues Gerät anlegen und Gerät laden
 
@@ -76,7 +78,11 @@ BuiltIn-Geräte werden fachlich nicht überschrieben. Bildänderungen für Built
 
 # RS232-Testfunktion und NIDEK-Auswertung
 
-Im Tab "Profile & Templates" kann ein COM-Port zeitlich begrenzt abgehört werden. Ohne Gerät oder bei falschen Parametern zeigt XDTBox verständliche Statusmeldungen.
+Im Baukasten kann ein COM-Port zeitlich begrenzt abgehört werden; DTR/RTS, Parität, Stopbits, Flusskontrolle und Zeilenende werden direkt im Baukasten-Fenster gesetzt. Zusätzlich kann ein kleines ASCII-Testkommando gesendet werden. Ohne Gerät oder bei falschen Parametern zeigt XDTBox verständliche Statusmeldungen.
+
+Im Tab "Schnittstellenprofile" öffnet "RS232-Diagnose öffnen" dieselbe allgemeine Diagnose mit den aktuell sichtbaren COM-Parametern des gewählten seriellen Schnittstellenprofils. Diese Diagnose startet keine produktive Verarbeitung und übernimmt keine Daten in den Baukasten.
+
+Der ältere RS232-Testbereich im Tab "Profile & Templates" bleibt für die Übergangszeit vorhanden, ist aber nicht mehr die einzige Möglichkeit, serielle Baukasten-Rohdaten zu erfassen.
 
 Die NIDEK-RS232-Auswertung erkennt SOH/STX/ETB/EOT-Frames, optionale Checksummen, Header und erste LM-/NT-/PM-Kandidaten. Unbekannte Segmente bleiben roh erhalten und werden nicht als Messwerte exportiert.
 

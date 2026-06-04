@@ -68,6 +68,7 @@ public partial class MainWindow : Window
     private readonly TemplatePackageImportPreviewService _templatePackageImportPreviewService = new();
     private readonly TemplatePackageImportExecutor _templatePackageImportExecutor = new();
     private readonly TemplatePackageImportSelectionService _templatePackageImportSelectionService = new();
+    private readonly XdtBaukastenTemplateLibraryService _xdtBaukastenTemplateLibraryService = new();
     private readonly InstallationInfoProvider _installationInfoProvider = new();
     private readonly LicenseFileRepository _licenseFileRepository = new();
     private readonly LicensedDeviceGracePeriodRepository _licensedDeviceGracePeriodRepository = new();
@@ -602,62 +603,98 @@ public partial class MainWindow : Window
     {
         try
         {
-            var paths = _appDataPathProvider.GetDefaultUserPaths();
-            _profileCatalogService.EnsureDefaultProfiles(paths);
-            var catalog = _profileCatalogService.Load(paths);
-            _profileCatalog = catalog;
-
-            AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
-            DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
-            ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
-            InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
+            var (paths, catalog) = LoadProfileCatalogForUi();
             ProfileBaseFolderText.Text = paths.BaseFolder;
-            ShowProfileNameColumns(catalog);
-            InitializeProfileRenameSelectors(catalog);
-            InitializeTemplatePackageExportSelection(catalog);
-            InitializeExportRulesView(catalog);
-            InitializeInterfaceProfileConfiguration(catalog);
-            InitializeAttachmentDiagnosticProfiles(catalog);
-            InitializeXdtBaukasten(catalog);
+            InitializeLegacyProfileTemplatesTab(catalog);
+            InitializeProfileDependentTabs(catalog);
             UpdatePlaceholderTables();
             ProfileMessagesTextBox.Text = $"Profile geladen. AIS: {catalog.AisProfiles.Count}, Geräte: {catalog.DeviceProfiles.Count}, Export: {catalog.ExportProfiles.Count}, Schnittstellen: {catalog.InterfaceProfiles.Count}.";
         }
         catch (Exception ex)
         {
-            AisProfileCountText.Text = "-";
-            DeviceProfileCountText.Text = "-";
-            ExportProfileCountText.Text = "-";
-            InterfaceProfileCountText.Text = "-";
             _profileCatalog = null;
             ProfileBaseFolderText.Text = string.Empty;
-            ClearProfileNameColumns();
-            AisProfileRenameComboBox.ItemsSource = null;
-            DeviceProfileRenameComboBox.ItemsSource = null;
-            UpdateProfileRenameActionButtons();
-            TemplatePackageExportInterfaceProfileComboBox.ItemsSource = null;
-            TemplatePackageExportSelectionHintText.Text = "Keine Profile geladen.";
-            ExportProfileComboBox.ItemsSource = null;
-            InterfaceProfileComboBox.ItemsSource = null;
-            BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
-            XdtBaukastenAisProfileComboBox.ItemsSource = null;
-            XdtBaukastenDeviceProfileComboBox.ItemsSource = null;
-            XdtBaukastenExportProfileComboBox.ItemsSource = null;
-            _xdtBaukastenExportRules.Clear();
-            ClearXdtBaukastenDeviceIdentity();
-            XdtBaukastenStatusText.Text = "Keine Profile geladen.";
-            SetAttachmentDiagnosticResultText("Keine Profile geladen.");
-            _visibleExportRules.Clear();
-            _temporaryExportRules.Clear();
-            ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
-            ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
-            FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
-            ClearDraftRuleEditor();
-            UpdateExportProfileActionButtons();
+            ClearLegacyProfileTemplatesTabOnProfileLoadFailure();
+            ClearProfileDependentTabsOnProfileLoadFailure();
             ClearPlaceholderTables();
-            ClearInterfaceProfileEditor();
-            ClearActiveInterfaceProfilesOverview("Aktive Schnittstellenprofile konnten nicht geladen werden.");
             AppendProfileMessage($"V2-Profile konnten nicht geladen werden: {ex.Message}");
         }
+    }
+
+    private (AppDataPaths Paths, ProfileCatalog Catalog) LoadProfileCatalogForUi()
+    {
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        _profileCatalogService.EnsureDefaultProfiles(paths);
+        var catalog = _profileCatalogService.Load(paths);
+        _profileCatalog = catalog;
+        return (paths, catalog);
+    }
+
+    private void InitializeLegacyProfileTemplatesTab(
+        ProfileCatalog catalog,
+        string? selectedExportProfileId = null,
+        string? selectedInterfaceProfileId = null,
+        string? selectedAisProfileId = null,
+        string? selectedDeviceProfileId = null)
+    {
+        AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
+        DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
+        ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
+        InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
+        ShowProfileNameColumns(catalog);
+        InitializeProfileRenameSelectors(catalog, selectedAisProfileId, selectedDeviceProfileId);
+        InitializeTemplatePackageExportSelection(catalog, selectedInterfaceProfileId);
+        InitializeExportRulesView(catalog, selectedExportProfileId);
+        InitializeAttachmentDiagnosticProfiles(catalog, selectedInterfaceProfileId);
+    }
+
+    private void InitializeProfileDependentTabs(
+        ProfileCatalog catalog,
+        string? selectedInterfaceProfileId = null,
+        string? selectedAisProfileId = null,
+        string? selectedDeviceProfileId = null,
+        string? selectedExportProfileId = null)
+    {
+        InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
+        InitializeXdtBaukasten(catalog, selectedAisProfileId, selectedDeviceProfileId, selectedExportProfileId);
+    }
+
+    private void ClearLegacyProfileTemplatesTabOnProfileLoadFailure()
+    {
+        AisProfileCountText.Text = "-";
+        DeviceProfileCountText.Text = "-";
+        ExportProfileCountText.Text = "-";
+        InterfaceProfileCountText.Text = "-";
+        ClearProfileNameColumns();
+        AisProfileRenameComboBox.ItemsSource = null;
+        DeviceProfileRenameComboBox.ItemsSource = null;
+        UpdateProfileRenameActionButtons();
+        TemplatePackageExportInterfaceProfileComboBox.ItemsSource = null;
+        TemplatePackageExportSelectionHintText.Text = "Keine Profile geladen.";
+        ExportProfileComboBox.ItemsSource = null;
+        BuilderAttachmentDiagnosticInterfaceProfileComboBox.ItemsSource = null;
+        SetAttachmentDiagnosticResultText("Keine Profile geladen.");
+        _visibleExportRules.Clear();
+        _temporaryExportRules.Clear();
+        ExportRulesStatusText.Text = "Keine Exportprofile geladen.";
+        ExportRulePreviewTextBox.Text = "Keine Exportregel ausgewählt.";
+        FullExportPreviewTextBox.Text = "Kein Exportprofil ausgewählt.";
+        ClearDraftRuleEditor();
+        UpdateExportProfileActionButtons();
+    }
+
+    private void ClearProfileDependentTabsOnProfileLoadFailure()
+    {
+        InterfaceProfileComboBox.ItemsSource = null;
+        ClearInterfaceProfileEditor();
+        ClearActiveInterfaceProfilesOverview("Aktive Schnittstellenprofile konnten nicht geladen werden.");
+        XdtBaukastenAisProfileComboBox.ItemsSource = null;
+        XdtBaukastenDeviceProfileComboBox.ItemsSource = null;
+        XdtBaukastenExportProfileComboBox.ItemsSource = null;
+        _xdtBaukastenExportRules.Clear();
+        ClearXdtBaukastenDeviceIdentity();
+        XdtBaukastenStatusText.Text = "Keine Profile geladen.";
+        XdtBaukastenTopStatusText.Text = "Keine Profile geladen.";
     }
 
     private void InitializeExportRulesView(ProfileCatalog catalog, string? selectedExportProfileId = null)
@@ -2550,6 +2587,38 @@ public partial class MainWindow : Window
             : "COM-Ports aktualisiert.";
     }
 
+    private void OpenInterfaceSerialDiagnostics_Click(object sender, RoutedEventArgs e)
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition selectedProfile
+            || !IsSerialInterfaceProfile(selectedProfile))
+        {
+            InterfaceSerialStatusTextBlock.Text = "Bitte zuerst ein serielles Schnittstellenprofil auswählen.";
+            return;
+        }
+
+        SerialCommunicationSettings settings;
+        try
+        {
+            settings = CreateInterfaceSerialSettingsFromEditor(selectedProfile) ?? SerialCommunicationSettings.Default;
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            InterfaceSerialStatusTextBlock.Text = ex.Message;
+            return;
+        }
+
+        var dialog = new XdtBaukastenSerialCaptureWindow(
+            _serialPortDiscoveryService,
+            _serialDeviceCommunicationService,
+            settings,
+            allowWorkbenchAccept: false)
+        {
+            Owner = this
+        };
+        _ = dialog.ShowDialog();
+        InterfaceSerialStatusTextBlock.Text = "RS232-Diagnose geschlossen. Es wurde keine produktive Verarbeitung gestartet.";
+    }
+
     private void RefreshSerialTestPorts_Click(object sender, RoutedEventArgs e)
     {
         RefreshSerialPortComboBox(SerialTestPortComboBox);
@@ -3509,17 +3578,18 @@ public partial class MainWindow : Window
         string? selectedAisProfileId = null,
         string? selectedDeviceProfileId = null)
     {
-        AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
-        DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
-        ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
-        InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
-        ShowProfileNameColumns(catalog);
-        InitializeProfileRenameSelectors(catalog, selectedAisProfileId, selectedDeviceProfileId);
-        InitializeTemplatePackageExportSelection(catalog, selectedInterfaceProfileId);
-        InitializeExportRulesView(catalog, selectedExportProfileId);
-        InitializeInterfaceProfileConfiguration(catalog, selectedInterfaceProfileId);
-        InitializeAttachmentDiagnosticProfiles(catalog, selectedInterfaceProfileId);
-        InitializeXdtBaukasten(catalog, selectedAisProfileId, selectedDeviceProfileId, selectedExportProfileId);
+        InitializeLegacyProfileTemplatesTab(
+            catalog,
+            selectedExportProfileId,
+            selectedInterfaceProfileId,
+            selectedAisProfileId,
+            selectedDeviceProfileId);
+        InitializeProfileDependentTabs(
+            catalog,
+            selectedInterfaceProfileId,
+            selectedAisProfileId,
+            selectedDeviceProfileId,
+            selectedExportProfileId);
         RefreshLicensedDeviceStatesFromLocalLicense();
     }
 
@@ -9034,16 +9104,8 @@ public partial class MainWindow : Window
 
     private void RefreshProfileUiAfterCatalogChange(ProfileCatalog catalog)
     {
-        AisProfileCountText.Text = catalog.AisProfiles.Count.ToString();
-        DeviceProfileCountText.Text = catalog.DeviceProfiles.Count.ToString();
-        ExportProfileCountText.Text = catalog.ExportProfiles.Count.ToString();
-        InterfaceProfileCountText.Text = catalog.InterfaceProfiles.Count.ToString();
-        ShowProfileNameColumns(catalog);
-        InitializeTemplatePackageExportSelection(catalog);
-        InitializeExportRulesView(catalog);
-        InitializeInterfaceProfileConfiguration(catalog);
-        InitializeAttachmentDiagnosticProfiles(catalog);
-        InitializeXdtBaukasten(catalog);
+        InitializeLegacyProfileTemplatesTab(catalog);
+        InitializeProfileDependentTabs(catalog);
         UpdatePlaceholderTables();
         RefreshLicensedDeviceStatesFromLocalLicense();
     }
@@ -9126,7 +9188,7 @@ public partial class MainWindow : Window
         return profileKind switch
         {
             ProfileKind.InterfaceProfile => "sichtbar im Tab Schnittstellenprofile",
-            ProfileKind.AisProfile or ProfileKind.DeviceProfile or ProfileKind.ExportProfile => "sichtbar im Tab Profile & Templates",
+            ProfileKind.AisProfile or ProfileKind.DeviceProfile or ProfileKind.ExportProfile => "sichtbar im XDT-Baukasten und in der Profilverwaltung",
             _ => "sichtbar in der Profilverwaltung"
         };
     }
@@ -9901,8 +9963,40 @@ public partial class MainWindow : Window
 
     private void XdtBaukastenLoadTemplatePackage_Click(object sender, RoutedEventArgs e)
     {
-        const string message = "Das Laden lokal gespeicherter Templatepakete ist vorbereitet. Bitte verwenden Sie vorerst „Template Paket importieren“ oder wählen Sie AIS, Gerät und Exportprofil manuell.";
-        SetXdtBaukastenStatus(message, showDialog: true);
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        var templateFolder = _xdtBaukastenTemplateLibraryService.GetTemplateFolder(paths);
+        var hasLocalTemplates = _xdtBaukastenTemplateLibraryService.ListTemplateFiles(paths).Count > 0;
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Baukasten-Template laden",
+            Filter = "Baukasten-Templates (*.xdtbaukasten.template.json)|*.xdtbaukasten.template.json|Alle Dateien (*.*)|*.*",
+            CheckFileExists = true
+        };
+        if (Directory.Exists(templateFolder))
+        {
+            dialog.InitialDirectory = templateFolder;
+        }
+
+        if (!hasLocalTemplates)
+        {
+            SetXdtBaukastenStatus("Noch kein lokales Baukasten-Template gefunden. Speichern Sie zuerst eine Konfiguration oder wählen Sie eine Template-Datei manuell.", showDialog: true);
+        }
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var template = _xdtBaukastenTemplateLibraryService.Load(dialog.FileName);
+            LoadXdtBaukastenTemplate(template);
+            SetXdtBaukastenStatus($"Baukasten-Template geladen: {template.Name}.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        {
+            SetXdtBaukastenStatus($"Baukasten-Template konnte nicht geladen werden: {ex.Message}", showDialog: true);
+        }
     }
 
     private async void XdtBaukastenImportTemplatePackage_Click(object sender, RoutedEventArgs e)
@@ -9921,20 +10015,45 @@ public partial class MainWindow : Window
 
         try
         {
+            XdtBaukastenImportTemplatePackageButton.IsEnabled = false;
+            SetXdtBaukastenStatus("Template Paket wird geprüft. Es wird noch nichts gespeichert.");
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
             var existingCatalog = _profileCatalog ?? CreateEmptyProfileCatalog();
             var preview = await Task.Run(() => _templatePackageImportPreviewService.Create(dialog.FileName, existingCatalog));
             if (preview.ValidationResult.HasErrors)
             {
-                XdtBaukastenStatusText.Text = "Templatepaket konnte nicht validiert werden: "
-                    + string.Join("; ", preview.ValidationResult.Issues.Where(issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Error).Select(issue => issue.Message));
+                SetXdtBaukastenStatus("Templatepaket konnte nicht validiert werden: "
+                    + string.Join("; ", preview.ValidationResult.Issues.Where(issue => issue.Severity == TemplatePackageImportValidationIssueSeverity.Error).Select(issue => issue.Message)));
                 return;
             }
 
-            XdtBaukastenStatusText.Text = "Templatepaket ist lesbar. Bitte Konflikte und Importauswahl im bisherigen Importbereich prüfen, bevor es übernommen wird.";
+            var importDialog = new XdtBaukastenTemplatePackageImportDialog(preview, existingCatalog, paths)
+            {
+                Owner = this
+            };
+            if (importDialog.ShowDialog() == true && importDialog.ImportSucceeded)
+            {
+                var updatedCatalog = _profileCatalogService.Load(paths);
+                _profileCatalog = updatedCatalog;
+                RefreshProfileOverview(
+                    updatedCatalog,
+                    selectedExportProfileId: importDialog.ImportedExportProfileId,
+                    selectedAisProfileId: importDialog.ImportedAisProfileId,
+                    selectedDeviceProfileId: importDialog.ImportedDeviceProfileId);
+                SetXdtBaukastenStatus("Template Paket wurde im Baukasten importiert und geladen. BuiltIn-Profile wurden nicht überschrieben.");
+            }
+            else
+            {
+                SetXdtBaukastenStatus("Template Paket wurde geprüft. Es wurde nichts übernommen.");
+            }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
-            XdtBaukastenStatusText.Text = $"Templatepaket konnte nicht gelesen werden: {ex.Message}";
+            SetXdtBaukastenStatus($"Templatepaket konnte nicht gelesen werden: {ex.Message}");
+        }
+        finally
+        {
+            XdtBaukastenImportTemplatePackageButton.IsEnabled = true;
         }
     }
 
@@ -9989,7 +10108,100 @@ public partial class MainWindow : Window
 
     private void XdtBaukastenSaveTemplate_Click(object sender, RoutedEventArgs e)
     {
-        XdtBaukastenStatusText.Text = "Konfiguration als Template speichern ist vorbereitet. In V1 bleibt die Arbeitskopie im Baukasten, bis ein UserDefined-Exportprofil oder Templatepaket bewusst exportiert wird.";
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        if (_xdtBaukastenState.AisProfile is null
+            || _xdtBaukastenState.DeviceProfile is null
+            || _xdtBaukastenState.SourceExportProfile is null)
+        {
+            SetXdtBaukastenStatus("Bitte zuerst AIS-Profil, Geräteprofil und Exportprofil im Baukasten auswählen.", showDialog: true);
+            return;
+        }
+
+        var suggestedName = UserDefinedProfileCreationService.CreateAvailableProfileName(
+            catalog.ExportProfiles.Select(profile => profile.Metadata.Name),
+            $"{_xdtBaukastenState.AisProfile.Metadata.Name} + {_xdtBaukastenState.DeviceProfile.Metadata.Name} Baukasten");
+        var suggestedDescription = $"Baukasten-Template aus {_xdtBaukastenState.SourceExportProfile.Metadata.Name}.";
+        var dialog = new XdtBaukastenSaveTemplateDialog(
+            suggestedName,
+            suggestedDescription,
+            catalog.ExportProfiles.Select(profile => profile.Metadata.Name))
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var workingExportProfile = _xdtBaukastenState.CreateWorkingExportProfile();
+        if (workingExportProfile is null)
+        {
+            SetXdtBaukastenStatus("Baukasten-Konfiguration konnte nicht gespeichert werden, weil keine Exportprofil-Arbeitskopie vorhanden ist.", showDialog: true);
+            return;
+        }
+
+        var createResult = _userDefinedProfileCreationService.CreateExportProfile(
+            catalog,
+            new UserDefinedExportProfileCreationRequest(
+                dialog.TemplateName,
+                _xdtBaukastenState.AisProfile.Metadata.Id,
+                _xdtBaukastenState.DeviceProfile.Metadata.Id,
+                workingExportProfile.OutputEncoding,
+                workingExportProfile.Rules.ToList()),
+            DateTimeOffset.UtcNow,
+            Environment.UserName,
+            idFactory: () => UserDefinedProfileCreationService.CreateUniqueProfileId(
+                "export",
+                dialog.TemplateName,
+                catalog.ExportProfiles.Select(profile => profile.Metadata.Id)));
+
+        if (!createResult.Success || createResult.Profile is null)
+        {
+            SetXdtBaukastenStatus("Baukasten-Konfiguration wurde nicht gespeichert: " + string.Join("; ", createResult.Issues), showDialog: true);
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _profileCatalogService.SaveNewExportProfile(paths, createResult.Profile);
+
+            var template = new XdtBaukastenTemplate(
+                Id: CreateXdtBaukastenTemplateId(dialog.TemplateName),
+                Name: dialog.TemplateName,
+                Description: dialog.Description,
+                SavedAt: DateTimeOffset.UtcNow,
+                SavedBy: Environment.UserName,
+                AisProfileId: _xdtBaukastenState.AisProfile.Metadata.Id,
+                DeviceProfileId: _xdtBaukastenState.DeviceProfile.Metadata.Id,
+                ExportProfileId: createResult.Profile.Metadata.Id,
+                AisExportRules: createResult.Profile.Rules.ToList(),
+                DeviceOutputRules: _xdtBaukastenState.WorkingDeviceOutputRules.ToList());
+            var templateFilePath = CreateAvailableXdtBaukastenTemplatePath(paths, dialog.TemplateName);
+            _xdtBaukastenTemplateLibraryService.Save(templateFilePath, template, overwriteExisting: false);
+
+            var updatedCatalog = _profileCatalogService.Load(paths);
+            _profileCatalog = updatedCatalog;
+            RefreshProfileOverview(
+                updatedCatalog,
+                selectedExportProfileId: createResult.Profile.Metadata.Id,
+                selectedAisProfileId: _xdtBaukastenState.AisProfile.Metadata.Id,
+                selectedDeviceProfileId: _xdtBaukastenState.DeviceProfile.Metadata.Id);
+            _xdtBaukastenState.ReplaceWorkingDeviceOutputRules(template.DeviceOutputRules);
+            RefreshXdtBaukastenRuleDirectionUi();
+            RefreshXdtBaukastenRuleGrid();
+            RefreshXdtBaukastenPreviewIfPossible();
+            SetXdtBaukastenStatus($"Baukasten-Konfiguration gespeichert: UserDefined-Exportprofil '{createResult.Profile.Metadata.Name}' und lokales Template '{templateFilePath}'.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or NotSupportedException)
+        {
+            SetXdtBaukastenStatus($"Baukasten-Konfiguration konnte nicht gespeichert werden: {ex.Message}", showDialog: true);
+        }
     }
 
     private void XdtBaukastenExportTemplatePackage_Click(object sender, RoutedEventArgs e)
@@ -10034,6 +10246,84 @@ public partial class MainWindow : Window
         {
             XdtBaukastenStatusText.Text = $"Template Paket konnte nicht exportiert werden: {ex.Message}";
         }
+    }
+
+    private void LoadXdtBaukastenTemplate(XdtBaukastenTemplate template)
+    {
+        if (!TryGetProfileCatalogForProfileAction(out var catalog))
+        {
+            return;
+        }
+
+        var aisProfile = catalog.AisProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, template.AisProfileId, StringComparison.OrdinalIgnoreCase));
+        var deviceProfile = catalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, template.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
+        var exportProfile = catalog.ExportProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, template.ExportProfileId, StringComparison.OrdinalIgnoreCase));
+
+        var missing = new List<string>();
+        if (aisProfile is null)
+        {
+            missing.Add($"AIS-Profil {template.AisProfileId}");
+        }
+
+        if (deviceProfile is null)
+        {
+            missing.Add($"Geräteprofil {template.DeviceProfileId}");
+        }
+
+        if (exportProfile is null)
+        {
+            missing.Add($"Exportprofil {template.ExportProfileId}");
+        }
+
+        if (missing.Count > 0)
+        {
+            throw new InvalidOperationException("Template kann nicht geladen werden, weil Profile fehlen: " + string.Join(", ", missing));
+        }
+
+        PushXdtBaukastenUndoState();
+        InitializeXdtBaukasten(
+            catalog,
+            selectedAisProfileId: aisProfile!.Metadata.Id,
+            selectedDeviceProfileId: deviceProfile!.Metadata.Id,
+            selectedExportProfileId: exportProfile!.Metadata.Id);
+        _xdtBaukastenState.ReplaceWorkingExportRules(template.AisExportRules);
+        _xdtBaukastenState.ReplaceWorkingDeviceOutputRules(template.DeviceOutputRules);
+        RefreshXdtBaukastenRuleDirectionUi();
+        RefreshXdtBaukastenRuleGrid();
+        UpdateXdtBaukastenPlaceholders();
+        RefreshXdtBaukastenPreviewIfPossible();
+    }
+
+    private string CreateAvailableXdtBaukastenTemplatePath(AppDataPaths paths, string templateName)
+    {
+        var candidate = _xdtBaukastenTemplateLibraryService.CreateDefaultFilePath(paths, templateName);
+        if (!File.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        var folder = Path.GetDirectoryName(candidate) ?? _xdtBaukastenTemplateLibraryService.GetTemplateFolder(paths);
+        var nameWithoutExtension = Path.GetFileName(candidate).Replace(".xdtbaukasten.template.json", "", StringComparison.OrdinalIgnoreCase);
+        for (var index = 2; index < 10_000; index++)
+        {
+            var indexedCandidate = Path.Combine(folder, $"{nameWithoutExtension}-{index}.xdtbaukasten.template.json");
+            if (!File.Exists(indexedCandidate))
+            {
+                return indexedCandidate;
+            }
+        }
+
+        return Path.Combine(folder, $"{nameWithoutExtension}-{Guid.NewGuid():N}.xdtbaukasten.template.json");
+    }
+
+    private static string CreateXdtBaukastenTemplateId(string templateName)
+    {
+        var safeName = TemplatePackageExportSelectionService.CreateSafeTemplatePackageFileName(templateName)
+            .Replace(".templatepackage.zip", "", StringComparison.OrdinalIgnoreCase);
+        return $"baukasten-template-{safeName}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
     }
 
     private void XdtBaukastenChooseAis_Click(object sender, RoutedEventArgs e)

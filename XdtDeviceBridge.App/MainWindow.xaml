@@ -1909,7 +1909,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <UniformGrid Grid.Column="0" Columns="1" Rows="4">
-                                    <Button x:Name="XdtBaukastenLoadTemplatePackageButton" Content="Templatepaket laden" Margin="0,0,0,8" Click="XdtBaukastenLoadTemplatePackage_Click" />
+                                    <Button x:Name="XdtBaukastenLoadTemplatePackageButton" Content="Baukasten-Template laden" Margin="0,0,0,8" Click="XdtBaukastenLoadTemplatePackage_Click" />
                                     <Button x:Name="XdtBaukastenImportTemplatePackageButton" Content="Template Paket importieren" Margin="0,0,0,8" Click="XdtBaukastenImportTemplatePackage_Click" />
                                     <Button x:Name="XdtBaukastenNewAisButton" Content="Neues AIS anlegen" Margin="0,0,0,8" Click="XdtBaukastenNewAis_Click" />
                                     <Button x:Name="XdtBaukastenLoadDeviceButton" Content="Gerät laden" Click="XdtBaukastenLoadDevice_Click" />
@@ -2648,15 +2648,33 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,8,8"/>
 
-                                        <TextBlock Grid.Row="6"
-                                                   Grid.Column="0"
-                                                   Grid.ColumnSpan="5"
-                                                   x:Name="InterfaceSerialStatusTextBlock"
-                                                   Text="RS232 ersetzt nur den Geräte-Eingangsordner. AIS-Patientendatei, Ergebnisordner, Archiv und Fehlerordner bleiben wie gewohnt konfigurierbar."
+                                         <TextBlock Grid.Row="6"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="5"
+                                                    x:Name="InterfaceSerialStatusTextBlock"
+                                                    Text="RS232 ersetzt nur den Geräte-Eingangsordner. AIS-Patientendatei, Ergebnisordner, Archiv und Fehlerordner bleiben wie gewohnt konfigurierbar."
+                                                    Foreground="DimGray"
+                                                    TextWrapping="Wrap"/>
+                                        <Button Grid.Row="7"
+                                                Grid.Column="0"
+                                                Grid.ColumnSpan="2"
+                                                x:Name="OpenInterfaceSerialDiagnosticsButton"
+                                                Content="RS232-Diagnose öffnen"
+                                                Width="180"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,8,8,0"
+                                                Click="OpenInterfaceSerialDiagnostics_Click"
+                                                ToolTip="Öffnet eine allgemeine RS232-Diagnose mit den aktuell sichtbaren Schnittstellenprofil-Parametern. Es wird keine produktive Verarbeitung gestartet."/>
+                                        <TextBlock Grid.Row="7"
+                                                   Grid.Column="2"
+                                                   Grid.ColumnSpan="3"
+                                                   Text="Diagnose: COM-Port abhören, Rohtext/Hexdump anzeigen und optional ein ASCII-Testkommando senden."
                                                    Foreground="DimGray"
-                                                   TextWrapping="Wrap"/>
-                                    </Grid>
-                                </Expander>
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,8,0,0"/>
+                                     </Grid>
+                                 </Expander>
 
                                 <Expander x:Name="InterfaceDeviceOutputGroupBox" Header="Ausgabe an Gerät" IsExpanded="True" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">

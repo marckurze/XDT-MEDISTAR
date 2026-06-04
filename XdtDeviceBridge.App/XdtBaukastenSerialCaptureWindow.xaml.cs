@@ -16,12 +16,19 @@ public partial class XdtBaukastenSerialCaptureWindow : Window
     public XdtBaukastenSerialCaptureWindow(
         ISerialPortDiscoveryService portDiscoveryService,
         ISerialDeviceCommunicationService communicationService,
-        SerialCommunicationSettings? defaultSettings = null)
+        SerialCommunicationSettings? defaultSettings = null,
+        bool allowWorkbenchAccept = true)
     {
         _portDiscoveryService = portDiscoveryService ?? throw new ArgumentNullException(nameof(portDiscoveryService));
         _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
 
         InitializeComponent();
+        if (!allowWorkbenchAccept)
+        {
+            Title = "RS232-Diagnose";
+            AcceptButton.Visibility = Visibility.Collapsed;
+        }
+
         ParityComboBox.ItemsSource = Enum.GetValues<SerialParitySetting>();
         StopBitsComboBox.ItemsSource = Enum.GetValues<SerialStopBitsSetting>();
         HandshakeComboBox.ItemsSource = Enum.GetValues<SerialHandshakeSetting>();
@@ -40,6 +47,8 @@ public partial class XdtBaukastenSerialCaptureWindow : Window
         StopBitsComboBox.SelectedItem = settings.StopBits;
         HandshakeComboBox.SelectedItem = settings.Handshake;
         LineTerminatorComboBox.SelectedItem = settings.LineTerminator;
+        DtrCheckBox.IsChecked = settings.DtrEnable;
+        RtsCheckBox.IsChecked = settings.RtsEnable;
         if (!string.IsNullOrWhiteSpace(settings.PortName))
         {
             PortComboBox.Text = settings.PortName;
@@ -101,6 +110,43 @@ public partial class XdtBaukastenSerialCaptureWindow : Window
         finally
         {
             ListenButton.IsEnabled = true;
+        }
+    }
+
+    private async void Send_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryReadSettings(out var settings, out _, out var message))
+        {
+            StatusText.Text = message;
+            return;
+        }
+
+        var command = CommandTextBox.Text;
+        if (string.IsNullOrWhiteSpace(command))
+        {
+            StatusText.Text = "Bitte ein ASCII-Testkommando eintragen.";
+            return;
+        }
+
+        SendButton.IsEnabled = false;
+        StatusText.Text = $"Sende Testkommando an {settings.PortName} ...";
+        try
+        {
+            var result = await _communicationService.WriteAsync(settings, command, CancellationToken.None);
+            var bytes = Encoding.ASCII.GetBytes(command + CreateTerminator(settings.LineTerminator));
+            HexDumpTextBox.Text = SerialDiagnosticsFormatter.ToHexDump(bytes);
+            RawTextBox.Text = SerialDiagnosticsFormatter.ToVisibleControlText(bytes);
+            StatusText.Text = result.Success
+                ? $"{result.BytesWritten} Byte gesendet. Es wurde keine produktive Verarbeitung gestartet."
+                : result.ErrorMessage ?? "Testkommando konnte nicht gesendet werden.";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            StatusText.Text = $"COM-Port konnte nicht beschrieben werden: {ex.Message}";
+        }
+        finally
+        {
+            SendButton.IsEnabled = true;
         }
     }
 
@@ -168,6 +214,8 @@ public partial class XdtBaukastenSerialCaptureWindow : Window
             StopBits: StopBitsComboBox.SelectedItem is SerialStopBitsSetting stopBits ? stopBits : SerialStopBitsSetting.One,
             Parity: ParityComboBox.SelectedItem is SerialParitySetting parity ? parity : SerialParitySetting.None,
             Handshake: HandshakeComboBox.SelectedItem is SerialHandshakeSetting handshake ? handshake : SerialHandshakeSetting.None,
+            DtrEnable: DtrCheckBox.IsChecked == true,
+            RtsEnable: RtsCheckBox.IsChecked == true,
             LineTerminator: LineTerminatorComboBox.SelectedItem is SerialLineTerminatorSetting terminator ? terminator : SerialLineTerminatorSetting.CRLF);
         duration = TimeSpan.FromSeconds(seconds);
         message = string.Empty;
@@ -186,5 +234,17 @@ public partial class XdtBaukastenSerialCaptureWindow : Window
         }
 
         return true;
+    }
+
+    private static string CreateTerminator(SerialLineTerminatorSetting terminator)
+    {
+        return terminator switch
+        {
+            SerialLineTerminatorSetting.None => string.Empty,
+            SerialLineTerminatorSetting.CR => "\r",
+            SerialLineTerminatorSetting.LF => "\n",
+            SerialLineTerminatorSetting.CRLF => "\r\n",
+            _ => "\r\n"
+        };
     }
 }
