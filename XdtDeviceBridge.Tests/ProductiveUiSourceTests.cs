@@ -68,6 +68,25 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void MainWindowXaml_ShouldOnlyReferenceKnownStaticResources()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var theme = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Styles", "XdtBoxTheme.xaml")));
+        var definedKeys = ExtractResourceKeys(xaml).Concat(ExtractResourceKeys(theme)).ToHashSet(StringComparer.Ordinal);
+        var referencedKeys = ExtractReferencedResourceKeys(xaml).ToArray();
+
+        var missingKeys = referencedKeys
+            .Where(key => !definedKeys.Contains(key))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(
+            missingKeys.Length == 0,
+            $"MainWindow.xaml references unknown WPF resources: {string.Join(", ", missingKeys)}");
+    }
+
+    [Fact]
     public void AppSettingsDialog_ShouldExposeStartupAndTrayOptions()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AppSettingsDialog.xaml"));
@@ -249,6 +268,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("ProfileManagementService", code);
         Assert.Contains("InitializeProfileManagementTab", code);
         Assert.Contains("_profileManagementRows", code);
+        Assert.Contains("IsProfileManagementUiReady", code);
+        Assert.Contains("if (!IsProfileManagementUiReady)", code);
     }
 
     [Fact]
@@ -512,5 +533,19 @@ public sealed class ProductiveUiSourceTests
         var end = text.IndexOf(endMarker, start + startMarker.Length, StringComparison.Ordinal);
         Assert.True(end > start, $"End marker {endMarker} not found.");
         return text[start..end];
+    }
+
+    private static IEnumerable<string> ExtractResourceKeys(string xaml)
+    {
+        return System.Text.RegularExpressions.Regex
+            .Matches(xaml, @"x:Key=""([^""]+)""")
+            .Select(match => match.Groups[1].Value);
+    }
+
+    private static IEnumerable<string> ExtractReferencedResourceKeys(string xaml)
+    {
+        return System.Text.RegularExpressions.Regex
+            .Matches(xaml, @"\{(?:StaticResource|DynamicResource)\s+([^},]+)")
+            .Select(match => match.Groups[1].Value.Trim());
     }
 }

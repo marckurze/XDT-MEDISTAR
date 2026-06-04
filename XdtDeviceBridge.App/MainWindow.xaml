@@ -2378,7 +2378,7 @@
                                 <TextBlock Text="Profilverwaltung"
                                            FontSize="18"
                                            FontWeight="SemiBold"
-                                           Foreground="{StaticResource XdtBoxPrimaryTextBrush}" />
+                                           Foreground="{StaticResource XdtBoxDarkTextBrush}" />
                                 <TextBlock Text="Zentrale Übersicht für AIS-, Geräte-, Export-, Schnittstellen- und Templateprofile. Der XDT-Baukasten bleibt Entwurf, Test und Vorschau."
                                            TextWrapping="Wrap"
                                            Foreground="{StaticResource XdtBoxMutedTextBrush}"

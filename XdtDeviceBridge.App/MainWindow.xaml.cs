@@ -725,20 +725,48 @@ public partial class MainWindow : Window
     }
 
     private ProfileManagementRow? SelectedProfileManagementRow =>
-        ProfileManagementGrid.SelectedItem as ProfileManagementRow;
+        ProfileManagementGrid?.SelectedItem as ProfileManagementRow;
+
+    private bool IsProfileManagementUiReady =>
+        ProfileManagementSearchTextBox is not null
+        && ProfileManagementScopeFilterComboBox is not null
+        && ProfileManagementKindFilterComboBox is not null
+        && ProfileManagementGrid is not null
+        && ProfileManagementDetailsTextBox is not null
+        && ProfileManagementStatusText is not null
+        && ProfileManagementOpenWorkbenchButton is not null
+        && ProfileManagementOpenInterfaceButton is not null
+        && ProfileManagementRenameButton is not null
+        && ProfileManagementDuplicateButton is not null
+        && ProfileManagementDeleteButton is not null;
 
     private void ProfileManagementFilter_Changed(object sender, EventArgs e)
     {
+        if (!IsProfileManagementUiReady)
+        {
+            return;
+        }
+
         RefreshProfileManagementRows();
     }
 
     private void ProfileManagementGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (!IsProfileManagementUiReady)
+        {
+            return;
+        }
+
         UpdateProfileManagementActionButtons();
     }
 
     private void RefreshProfileManagementRows()
     {
+        if (!IsProfileManagementUiReady)
+        {
+            return;
+        }
+
         var selected = SelectedProfileManagementRow;
         var search = ProfileManagementSearchTextBox.Text.Trim();
         var scope = GetSelectedComboBoxTag(ProfileManagementScopeFilterComboBox);
@@ -789,6 +817,11 @@ public partial class MainWindow : Window
 
     private void UpdateProfileManagementActionButtons()
     {
+        if (!IsProfileManagementUiReady)
+        {
+            return;
+        }
+
         var row = SelectedProfileManagementRow;
         if (row is null)
         {
