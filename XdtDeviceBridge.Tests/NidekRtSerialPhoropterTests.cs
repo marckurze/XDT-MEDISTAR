@@ -304,7 +304,11 @@ public sealed class NidekRtSerialPhoropterTests
     {
         var history = CreateHistoricalRecords();
 
-        var result = _writer.BuildFrame(CreatePatientData(), history, NidekRtSerialPhoropterModel.Rt3100);
+        var result = _writer.BuildFrame(
+            CreatePatientData(),
+            history,
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialOutputFrameVariant.FullSelectedData);
 
         Assert.True(result.Success, result.ErrorMessage);
         Assert.Contains("<SH>DRL<SX>", result.VisibleContent, StringComparison.Ordinal);
@@ -368,6 +372,32 @@ public sealed class NidekRtSerialPhoropterTests
         Assert.Equal(NidekRtSerialControlChars.ET, result.Bytes.Last());
     }
 
+    [Fact]
+    public void OutputWriter_ShouldBuildReferenceFrameWithoutIdBlock()
+    {
+        var history = CreatePracticeAcceptedHistoricalRecords();
+
+        var result = _writer.BuildFrame(
+            CreatePatientData(),
+            history,
+            NidekRtSerialPhoropterModel.Rt3100,
+            NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl);
+
+        const string expectedHex =
+            "01 44 52 4D 02 4F 52 2D 30 33 2E 32 35 2D 30 30 2E 32 35 30 32 30 17 " +
+            "4F 4C 2D 30 33 2E 32 35 2D 30 30 2E 32 35 31 36 34 17 " +
+            "44 4C 4D 02 20 52 2B 30 36 2E 32 35 2D 30 33 2E 32 35 30 30 33 17 " +
+            "20 4C 2B 30 36 2E 35 30 2D 30 32 2E 37 35 31 37 30 17 " +
+            "41 4C 2B 30 31 2E 35 30 17 04";
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(91, result.Bytes.Length);
+        Assert.Equal(expectedHex, result.HexDump);
+        Assert.DoesNotContain("DRL<SX>", result.VisibleContent, StringComparison.Ordinal);
+        Assert.Contains("AL+01.50<EB><ET>", result.VisibleContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("LA+01.50", result.VisibleContent, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData(NidekRtSerialOutputFrameVariant.ArOnly, true, true, false, false)]
     [InlineData(NidekRtSerialOutputFrameVariant.LmOnly, true, false, true, true)]
@@ -375,6 +405,7 @@ public sealed class NidekRtSerialPhoropterTests
     [InlineData(NidekRtSerialOutputFrameVariant.ArOnlyWithoutId, false, true, false, false)]
     [InlineData(NidekRtSerialOutputFrameVariant.LmOnlyWithoutId, false, false, true, true)]
     [InlineData(NidekRtSerialOutputFrameVariant.FullWithoutId, false, true, true, true)]
+    [InlineData(NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl, false, true, true, true)]
     [InlineData(NidekRtSerialOutputFrameVariant.MinimalRightOnly, false, false, true, true)]
     public void OutputWriter_ShouldBuildConfiguredFrameVariants(
         NidekRtSerialOutputFrameVariant variant,
@@ -447,10 +478,7 @@ public sealed class NidekRtSerialPhoropterTests
             Assert.Equal(2400, interfaceProfile.SerialSettings.BaudRate);
             Assert.Equal(7, interfaceProfile.SerialSettings.DataBits);
             Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, interfaceProfile.NidekRtSerialSendMode);
-            var expectedFrameVariant = device.Metadata.Id == "device-nidek-rt3100-serial-default"
-                ? NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame
-                : NidekRtSerialOutputFrameVariant.FullSelectedData;
-            Assert.Equal(expectedFrameVariant, interfaceProfile.NidekRtSerialOutputFrameVariant);
+            Assert.Equal(NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl, interfaceProfile.NidekRtSerialOutputFrameVariant);
             Assert.Empty(InterfaceProfileDefinitionValidator.Validate(interfaceProfile));
         }
     }

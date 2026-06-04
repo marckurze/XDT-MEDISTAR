@@ -165,7 +165,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.True(profile.Metadata.IsBuiltIn);
         Assert.False(profile.Metadata.IsUserDefined);
         Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, profile.NidekRtSerialSendMode);
-        Assert.Equal(NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame, profile.NidekRtSerialOutputFrameVariant);
+        Assert.Equal(NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl, profile.NidekRtSerialOutputFrameVariant);
     }
 
     [Fact]

@@ -501,8 +501,8 @@ public static class DefaultInterfaceProfileDefinitions
             product: "MEDISTAR/NIDEK RT-2100 RS232",
             deviceProfileId: "device-nidek-rt2100-serial-default",
             exportProfileId: "export-medistar-nidek-rt2100-serial-default",
-            description: "Built-in inactive candidate for NIDEK RT-2100 serial RS232 phoropter captures. PC-to-RT LM/AR output is prepared for Baukasten preview only until live validation.",
-            frameVariant: NidekRtSerialOutputFrameVariant.FullSelectedData,
+            description: "Built-in inactive candidate for NIDEK RT-2100 serial RS232 phoropter captures. PC-to-RT LM/AR output uses the RT reference frame shape without ID block by default.",
+            frameVariant: NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl,
             timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
     }
 
@@ -514,8 +514,8 @@ public static class DefaultInterfaceProfileDefinitions
             product: "MEDISTAR/NIDEK RT-3100 RS232",
             deviceProfileId: "device-nidek-rt3100-serial-default",
             exportProfileId: "export-medistar-nidek-rt3100-serial-default",
-            description: "Built-in inactive candidate for NIDEK RT-3100 serial RS232 phoropter captures with Type1/Type2 communication presets prepared.",
-            frameVariant: NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame,
+            description: "Built-in inactive candidate for NIDEK RT-3100 serial RS232 phoropter captures with Type1/Type2 communication presets prepared and RT reference frame shape as default.",
+            frameVariant: NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl,
             timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
     }
 
@@ -527,8 +527,8 @@ public static class DefaultInterfaceProfileDefinitions
             product: "MEDISTAR/NIDEK RT-5100 RS232",
             deviceProfileId: "device-nidek-rt5100-serial-default",
             exportProfileId: "export-medistar-nidek-rt5100-serial-default",
-            description: "Built-in inactive candidate for NIDEK RT-5100 serial RS232 phoropter captures with extended data sources kept diagnostic until practice captures are available.",
-            frameVariant: NidekRtSerialOutputFrameVariant.FullSelectedData,
+            description: "Built-in inactive candidate for NIDEK RT-5100 serial RS232 phoropter captures with extended data sources kept diagnostic and RT reference frame shape as default.",
+            frameVariant: NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl,
             timestamp: new DateTimeOffset(2026, 5, 29, 12, 0, 0, TimeSpan.Zero));
     }
 

@@ -640,7 +640,7 @@
                             <ComboBox Grid.Column="1"
                                       x:Name="NidekRtFrameVariantComboBox"
                                       SelectedValuePath="Tag"
-                                      SelectedValue="FullSelectedData"
+                                      SelectedValue="ReferenceWithoutIdArAl"
                                       Margin="0,0,10,6"
                                       ToolTip="Sendeinhalt für den Diagnose-Writer-Frame. Ändert nicht das gespeicherte Schnittstellenprofil.">
                                 <ComboBoxItem Content="Alle ausgewählten Werte" Tag="FullSelectedData"/>
@@ -648,6 +648,7 @@
                                 <ComboBoxItem Content="Nur Lensmeter" Tag="LmOnly"/>
                                 <ComboBoxItem Content="Nur Lensmeter ohne ADD" Tag="LmOnlyWithoutAdd"/>
                                 <ComboBoxItem Content="Alle ausgewählten Werte ohne ID" Tag="FullWithoutId"/>
+                                <ComboBoxItem Content="RT-Referenz ohne ID (AR/AL)" Tag="ReferenceWithoutIdArAl"/>
                                 <ComboBoxItem Content="Nur Autoref ohne ID" Tag="ArOnlyWithoutId"/>
                                 <ComboBoxItem Content="Nur Lensmeter ohne ID" Tag="LmOnlyWithoutId"/>
                                 <ComboBoxItem Content="Minimal rechts" Tag="MinimalRightOnly"/>
@@ -660,7 +661,7 @@
                                       VerticalAlignment="Center"
                                       ToolTip="Testoption: hängt nach EOT zusätzlich CR an den Writer-Frame an."/>
                         </Grid>
-                        <TextBlock Text="Live-Testplan: Für den getesteten RT-3100 zuerst RT-3100 Praxisvariante (getestet) verwenden. Wenn diese nicht übernommen wird, Nur Lensmeter ohne ADD testen, dann Nur Lensmeter, Nur Autoref, danach Varianten ohne ID und optional CR nach EOT."
+                        <TextBlock Text="Live-Testplan: Zuerst RT-Referenz ohne ID (AR/AL) testen, weil diese Form aus ausgewerteten produktiven RT-Anbindungen abgeleitet ist. Danach RT-3100 Praxisvariante (getestet), Nur Lensmeter ohne ADD, Nur Lensmeter, Nur Autoref und optional CR nach EOT testen."
                                    Foreground="#4B5563"
                                    FontSize="11"
                                    TextWrapping="Wrap"

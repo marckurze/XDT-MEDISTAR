@@ -9,13 +9,14 @@ public enum NidekRtSerialOutputFrameVariant
     ArOnlyWithoutId,
     LmOnlyWithoutId,
     FullWithoutId,
+    ReferenceWithoutIdArAl,
     MinimalRightOnly,
     LegacyRt3100DirectFrame
 }
 
 public static class NidekRtSerialOutputFrameVariantInfo
 {
-    public const NidekRtSerialOutputFrameVariant Default = NidekRtSerialOutputFrameVariant.FullSelectedData;
+    public const NidekRtSerialOutputFrameVariant Default = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl;
 
     public static NidekRtSerialOutputFrameVariant Resolve(NidekRtSerialOutputFrameVariant? variant)
     {
@@ -34,6 +35,7 @@ public static class NidekRtSerialOutputFrameVariantInfo
             NidekRtSerialOutputFrameVariant.ArOnlyWithoutId => "Nur Autoref ohne ID",
             NidekRtSerialOutputFrameVariant.LmOnlyWithoutId => "Nur Lensmeter ohne ID",
             NidekRtSerialOutputFrameVariant.FullWithoutId => "Alle ausgewählten Werte ohne ID",
+            NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl => "RT-Referenz ohne ID (AR/AL)",
             NidekRtSerialOutputFrameVariant.MinimalRightOnly => "Minimal rechts",
             NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame => "RT-3100 Praxisvariante (getestet)",
             _ => "Alle ausgewählten Werte"

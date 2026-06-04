@@ -68,7 +68,7 @@ Noch offen:
 8. Im Schnittstellenprofil den `NIDEK-RT Sendeinhalt` pruefen. RT-3100-Praxisdefault: `RT-3100 Praxisvariante (getestet)`; bei Annahmeproblemen danach `Nur Lensmeter ohne ADD`, `Nur Lensmeter`, `Nur Autoref` und Varianten ohne ID testen.
 9. `An RT-3100 senden` klicken.
 10. Bei `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame ohne RS und ohne SD-Erwartung. Diagnosefenster pruefen: gespeicherter Sendemodus, gespeicherter Sendeinhalt, Writer-Frame, Hexdump, CTS/DSR/DCD/RI und Status `Warte auf Rueckgabe vom RT-3100`.
-11. Bei `RS/SD-Handshake` sendet XDTBox RS als `01 43 20 20 20 02 52 53 17 04` (`SH C   SX RS EB ET`), wartet auf SD und schreibt den Writer-Frame nur bei SD. Dieser Modus bleibt fuer andere Installationen verfuegbar.
+11. Bei `RS/SD-Handshake` sendet XDTBox RS als `01 43 2A 2A 02 52 53 17 04` (`SH C** SX RS EB ET`), wartet auf SD und schreibt den Writer-Frame nur bei SD. Dieser Modus bleibt fuer andere Installationen verfuegbar.
 12. Wenn keine sofortige Rueckgabe kommt, bleibt der Vorgang wartend: Untersuchung am RT durchfuehren und danach PRINT/SEND ausloesen. XDTBox erzeugt ohne Rueckgabe kein leeres XDT.
 13. `COM-Port nur abhoeren` bleibt Diagnose und erzeugt keinen Export. Fuer den produktiven Rueckweg im Wartestatus `Rueckgabe abhoeren und verarbeiten` starten; die empfangene Rueckgabe wird mit dem gespeicherten AIS-Kontext geparst und als MEDISTAR-XDT erzeugt.
 14. Die Sendetestmodi `RS anfordern`, `DTR-Toggle + RS`, `Direkt Writer-Frame senden`, `RS + Writer ohne SD-Warten` bleiben reine Diagnosemodi. Sie senden nur nach explizitem Klick, erzeugen keinen XDT-Export und aendern den gespeicherten Sendemodus nicht.
@@ -85,7 +85,7 @@ Noch offen:
 - Der Nur-Abhoeren-Livebefund zeigt: DTR aus fuehrte zu keiner Rueckgabe, DTR aktiv/RTS aktiv lieferte einen vollstaendigen 110-Byte-Frame mit Final-R/L, PD und WD ohne ADD.
 - Der PC->RT-Livebefund zeigt: Der direkte Writer-Frame wurde vom RT-3100 empfangen; RS/SD lieferte keine SD-Bestaetigung.
 - Der Sendemodus wird im Schnittstellenprofil gespeichert. `DirectWriterFrame` ist fuer RT-3100 der BuiltIn-Default; Testmodi im RT-Fenster aendern diesen Wert nicht automatisch.
-- Die RS-Anforderung sendet Handbuch-`*` als Leerzeichen und enthaelt keine ASCII-Sternchen `2A 2A`.
+- Die RS-Anforderung sendet echte ASCII-Sternchen `2A 2A`, passend zu den ausgewerteten produktiven RT-Anbindungen.
 - Der Writer sendet LM-SCA-Augenpraefixe als Leerzeichen + `R`/`L` (`20 52`, `20 4C`) und nicht als ASCII-Sternchen.
 - Die dokumentnahe PC->RT-Variante sendet LM ADD laut Herstellerformat als `AR`/`AL` und beendet den Nutzdatenrahmen mit `EB ET`.
 - Die RT-3100-Praxisvariante reproduziert den live angenommenen Direct-Writer-Frame exakt: 107 Bytes, Legacy-ADD `RA`/`LA` im bekannten Fall `LA+01.50`, kein zusaetzliches `EB` direkt vor `ET`.

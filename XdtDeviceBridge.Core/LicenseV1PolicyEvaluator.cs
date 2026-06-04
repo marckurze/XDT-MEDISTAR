@@ -14,7 +14,7 @@ public sealed class LicenseV1PolicyEvaluator
 
         if (activeDeviceConnectionCount < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(activeDeviceConnectionCount), "Active device connection count must not be negative.");
+            throw new ArgumentOutOfRangeException(nameof(activeDeviceConnectionCount), "Active connection count must not be negative.");
         }
 
         if (nowUtc == default)

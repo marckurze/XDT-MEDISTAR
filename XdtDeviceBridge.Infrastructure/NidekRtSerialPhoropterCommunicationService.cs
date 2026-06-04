@@ -11,7 +11,7 @@ public interface INidekRtSerialPhoropterCommunicationService
         NidekRtSerialPhoropterModel model,
         NidekRtSerialSendMode sendMode,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl);
 
     Task<NidekRtSerialPhoropterCommunicationResult> ReceiveReturnAsync(
         SerialCommunicationSettings settings,
@@ -22,7 +22,7 @@ public interface INidekRtSerialPhoropterCommunicationService
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl);
 
     Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionDirectAsync(
         SerialCommunicationSettings settings,
@@ -31,7 +31,7 @@ public interface INidekRtSerialPhoropterCommunicationService
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl);
 
     Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionDirectWithoutReturnAsync(
         SerialCommunicationSettings settings,
@@ -39,7 +39,7 @@ public interface INidekRtSerialPhoropterCommunicationService
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl);
 
     Task<NidekRtSerialPhoropterCommunicationResult> SendSelectionWithoutWaitingForSdAsync(
         SerialCommunicationSettings settings,
@@ -48,13 +48,13 @@ public interface INidekRtSerialPhoropterCommunicationService
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl);
 
     NidekRtSerialPhoropterOutputResult BuildSelectionFrame(
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData);
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl);
 }
 
 public sealed record NidekRtSerialPhoropterCommunicationOptions(
@@ -105,9 +105,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
     {
         NidekRtSerialControlChars.SH,
         (byte)'C',
-        (byte)' ',
-        (byte)' ',
-        (byte)' ',
+        (byte)'*',
+        (byte)'*',
         NidekRtSerialControlChars.SX,
         (byte)'R',
         (byte)'S',
@@ -148,7 +147,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialPhoropterModel model,
         NidekRtSerialSendMode sendMode,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(patient);
@@ -212,7 +211,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             Array.Empty<string>(),
             NidekRtSerialPhoropterModel.Rt3100,
             NidekRtSerialPhoropterSendTestOptions.None,
-            NidekRtSerialOutputFrameVariant.FullSelectedData,
+            NidekRtSerialOutputFrameVariantInfo.Default,
             continueWithoutHandshake: false,
             receiveResponse: true,
             handshakeTimeoutOverride: null,
@@ -225,7 +224,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl)
     {
         ArgumentNullException.ThrowIfNull(settings);
         return ExchangeAsync(
@@ -251,7 +250,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl)
     {
         return SendSelectionDirectCoreAsync(
             settings,
@@ -271,7 +270,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl)
     {
         return SendSelectionDirectCoreAsync(
             settings,
@@ -292,7 +291,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         NidekRtSerialPhoropterModel model,
         NidekRtSerialPhoropterSendTestOptions options,
         CancellationToken cancellationToken,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl)
     {
         var adjustedOptions = options with
         {
@@ -319,7 +318,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData)
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl)
     {
         ArgumentNullException.ThrowIfNull(patient);
         ArgumentNullException.ThrowIfNull(selectedMeasurements);
@@ -643,6 +642,10 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         {
             yield return "Diese Bytefolge entspricht dem in der Praxis angenommenen RT-3100-Direct-Writer-Frame: Legacy-ADD-Schreibweise und kein zusätzliches ETB direkt vor EOT.";
         }
+        else if (frameVariant == NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl)
+        {
+            yield return "Diese Bytefolge entspricht den ausgewerteten produktiven RT-Anbindungen fuer RT-2100/3100/5100: ohne ID-Block, LM ADD als AR/AL und Abschluss EB/ET.";
+        }
 
         if (productiveSendMode is { } sendMode)
         {
@@ -688,7 +691,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         {
             yield return $"RS-Anforderung erwartet: {SerialDiagnosticsFormatter.ToVisibleControlText(requestBytes)}";
             yield return $"RS-Anforderung Hexdump: {SerialDiagnosticsFormatter.ToHexDump(requestBytes)}";
-            yield return "RS-Anforderung Hinweis: Die im Handbuch dargestellten * werden als Leerzeichen-Platzhalter gesendet.";
+            yield return "RS-Anforderung Hinweis: Die ausgewerteten produktiven RT-Anbindungen senden die RT-RS-Anforderung mit echten ASCII-Sternchen.";
             if (options.AppendCarriageReturnToRequest)
             {
                 yield return "RS-Testoption aktiv: CR wird nach EOT angehängt.";

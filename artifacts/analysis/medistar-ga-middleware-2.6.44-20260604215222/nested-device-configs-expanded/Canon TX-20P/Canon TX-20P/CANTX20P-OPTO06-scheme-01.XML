@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="TX_Stylesheet.xsl" ?>
+
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common"
+xmlns:nsTM="http://www.joia.or.jp/standardized/namespaces/TM">
+
+  <nsCommon:Common>
+
+      <nsCommon:Company>CANON INC.</nsCommon:Company>
+      <nsCommon:ModelName>TX-20P</nsCommon:ModelName>
+      <nsCommon:MachineNo></nsCommon:MachineNo>
+      <nsCommon:ROMVersion></nsCommon:ROMVersion>
+      <nsCommon:Version></nsCommon:Version>
+      <nsCommon:Date></nsCommon:Date>
+      <nsCommon:Time></nsCommon:Time>
+
+      <nsCommon:Patient>
+          <nsCommon:No.></nsCommon:No.>
+          <nsCommon:ID GDTFID="3000" GDTDisplayName=""></nsCommon:ID>
+          <nsCommon:FirstName></nsCommon:FirstName>
+          <nsCommon:MiddleName></nsCommon:MiddleName>
+          <nsCommon:LastName></nsCommon:LastName>
+          <nsCommon:Sex></nsCommon:Sex>
+          <nsCommon:Age></nsCommon:Age>
+          <nsCommon:DOB></nsCommon:DOB>
+          <nsCommon:NameJ1></nsCommon:NameJ1>
+          <nsCommon:NameJ2></nsCommon:NameJ2>
+      </nsCommon:Patient>
+
+  </nsCommon:Common>
+
+  <nsTM:Measure type="TM">
+
+      <nsTM:TM>
+      	<GDTOneLiner>
+      	
+          <nsTM:R GDTList="1" GDTFID="6228" GDTDisplayName="R =">
+              <nsTM:List GDTAttributeNo="">
+                  <nsTM:IOP_mmHg unit="" GDTFID="6228" GDTDisplayName="" GDTAttributeUnit=""></nsTM:IOP_mmHg>
+                  <nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+                  <nsTM:ConfidenceIndex GDTFID="0"></nsTM:ConfidenceIndex>
+              </nsTM:List>
+
+              <nsTM:Average>
+                  <nsTM:IOP_mmHg unit="" GDTFID="6228" GDTDisplayName="" GDTAttributeUnit="" GDTValuePrefix="[" GDTValueSuffix="]"></nsTM:IOP_mmHg>
+                  <nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+	          </nsTM:Average>
+          </nsTM:R>
+
+          <nsTM:L GDTList="1" GDTFID="6228" GDTDisplayName="// L =">
+              <nsTM:List GDTAttributeNo="">
+                  <nsTM:IOP_mmHg unit="" GDTFID="6228" GDTDisplayName="" GDTAttributeUnit=""></nsTM:IOP_mmHg>
+                  <nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+                  <nsTM:ConfidenceIndex GDTFID="0"></nsTM:ConfidenceIndex>
+              </nsTM:List>
+
+	            <nsTM:Average>
+                  <nsTM:IOP_mmHg unit="" GDTFID="6228" GDTDisplayName="" GDTAttributeUnit="" GDTValuePrefix="[" GDTValueSuffix="]"></nsTM:IOP_mmHg>
+                  <nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+	            </nsTM:Average>
+          </nsTM:L>
+		  
+      	</GDTOneLiner>
+		  
+      	<GDTAppendCustomDataToOneLiner>
+      	  <unit GDTFID="6228" GDTDisplayName="">mmHg</unit>
+			    <datetime GDTFID="6228" GDTDisplayName="">hh:nn</datetime>
+      	</GDTAppendCustomDataToOneLiner>
+          
+      </nsTM:TM>
+      
+      <!-- -->
+      
+			<nsTM:CorrectedIOP>
+				
+				<nsTM:Formula1>
+					
+					<nsTM:R>
+					
+						<GDTOneLiner foo="bar1" GDTMoveNodeToDestination="//Ophthalmology/*[local-name()='Measure']/*[local-name()='CorrectedIOP']/*[local-name()='Formula1']/*[local-name()='R']/GDTOneLiner[@foo='bar2']" GDTMoveNodeToDestinationAction="InsertAfter" GDTMoveNodeToDestinationWrapperNodeName="GDTMovedNodes" GDTMoveNodeToDestinationWrapperNodeAttributes="(GDTList=1|GDTFID=6227|GDTDisplayName=)">
+							<nsTM:Param1 unit="" GDTFID="6227" GDTDisplayName="PR: Param1" GDTAttributeUnit="mm" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:Param1>
+							<nsTM:Param2 GDTFID="6227" GDTDisplayName="; Param2" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:Param2>
+							<nsTM:CCT unit="" GDTFID="6227" GDTDisplayName="; CCT" GDTAttributeUnit="mm" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:CCT>
+						</GDTOneLiner>
+						
+						<GDTOneLiner foo="bar2">
+							<nsTM:Measured GDTList="1" GDTFID="6227" GDTDisplayName="">
+								<nsTM:IOP_mmHg unit="" GDTFID="6227" GDTDisplayName="PR: Gemessen" GDTAttributeUnit=" mmHg;" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:IOP_mmHg>
+								<nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+							</nsTM:Measured>
+							
+							<nsTM:Corrected GDTList="1" GDTFID="6227" GDTDisplayName="">
+								<nsTM:IOP_mmHg unit="" GDTFID="6227" GDTDisplayName="Korrigiert" GDTAttributeUnit=" mmHg;" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:IOP_mmHg>
+								<nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+							</nsTM:Corrected>
+						</GDTOneLiner>
+					</nsTM:R>
+					
+					<nsTM:L>
+					
+						<GDTOneLiner foo="bar1" GDTMoveNodeToDestination="//Ophthalmology/*[local-name()='Measure']/*[local-name()='CorrectedIOP']/*[local-name()='Formula1']/*[local-name()='L']/GDTOneLiner[@foo='bar2']" GDTMoveNodeToDestinationAction="InsertAfter" GDTMoveNodeToDestinationWrapperNodeName="GDTMovedNodes" GDTMoveNodeToDestinationWrapperNodeAttributes="(GDTList=1|GDTFID=6227|GDTDisplayName=)">
+							<nsTM:Param1 unit="" GDTFID="6227" GDTDisplayName="PL: Param1" GDTAttributeUnit="mm" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:Param1>
+							<nsTM:Param2 GDTFID="6227" GDTDisplayName="; Param2" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:Param2>
+							<nsTM:CCT unit="" GDTFID="6227" GDTDisplayName="; CCT" GDTAttributeUnit="mm" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:CCT>
+						</GDTOneLiner>
+						
+						<GDTOneLiner foo="bar2">
+							<nsTM:Measured GDTList="1" GDTFID="6227" GDTDisplayName="">
+								<nsTM:IOP_mmHg unit="" GDTFID="6227" GDTDisplayName="PL: Gemessen" GDTAttributeUnit=" mmHg;" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:IOP_mmHg>
+								<nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+							</nsTM:Measured>
+							
+							<nsTM:Corrected GDTList="1" GDTFID="6227" GDTDisplayName="">
+								<nsTM:IOP_mmHg unit="" GDTFID="6227" GDTDisplayName="Korrigiert" GDTAttributeUnit=" mmHg;" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator=""></nsTM:IOP_mmHg>
+								<nsTM:IOP_Pa unit="" GDTFID="0"></nsTM:IOP_Pa>
+							</nsTM:Corrected>
+						</GDTOneLiner>
+					</nsTM:L>
+					
+				</nsTM:Formula1>
+				
+			</nsTM:CorrectedIOP>	    
+      
+      <!-- -->
+
+      <nsTM:PM>
+      	  <GDTOneLiner>
+      	  
+          <nsTM:R GDTList="1" GDTFID="6227" GDTDisplayName="PR:">       	
+              <nsTM:List GDTAttributeNo="">
+                  <nsTM:CCT unit="" GDTFID="6227" GDTDisplayName="" GDTAttributeUnit=""></nsTM:CCT>
+                  <nsTM:ConfidenceIndex GDTFID="0"></nsTM:ConfidenceIndex>
+              </nsTM:List>
+ 
+              <nsTM:Average>
+                  <nsTM:CCT unit="" GDTFID="6227" GDTDisplayName="" GDTAttributeUnit="" GDTValuePrefix="[" GDTValueSuffix="]"></nsTM:CCT>
+              </nsTM:Average>
+              
+              <GDTExternalFile GDTFID="0" GDTDisplayName="">
+	                <nsTM:Image GDTExternalFileType="BMP" GDTExternalFileDescription=""></nsTM:Image>
+              </GDTExternalFile>
+          </nsTM:R>
+          
+          </GDTOneLiner>
+          
+      	  <GDTAppendCustomDataToOneLiner>
+      	    <unit GDTFID="6227" GDTDisplayName="">mm</unit>
+      	  </GDTAppendCustomDataToOneLiner>          
+          
+          <GDTOneLiner>
+          
+          <nsTM:L GDTList="1" GDTFID="6227" GDTDisplayName="LR:">         	
+              <nsTM:List GDTAttributeNo="">
+                  <nsTM:CCT unit="" GDTFID="6227" GDTDisplayName="" GDTAttributeUnit=""></nsTM:CCT>
+                  <nsTM:ConfidenceIndex GDTFID="0"></nsTM:ConfidenceIndex>
+              </nsTM:List>
+              
+              <nsTM:Average>
+                  <nsTM:CCT unit="" GDTFID="6227" GDTDisplayName="" GDTAttributeUnit="" GDTValuePrefix="[" GDTValueSuffix="]"></nsTM:CCT>
+              </nsTM:Average>
+              
+              <GDTExternalFile GDTFID="0" GDTDisplayName="">
+	                <nsTM:Image GDTExternalFileType="BMP" GDTExternalFileDescription=""></nsTM:Image>
+              </GDTExternalFile>              
+          </nsTM:L>
+          
+          </GDTOneLiner>
+          
+      	  <GDTAppendCustomDataToOneLiner>
+      	    <unit GDTFID="6227" GDTDisplayName="">mm</unit>
+      	  </GDTAppendCustomDataToOneLiner>                  
+          
+      </nsTM:PM>     
+
+  </nsTM:Measure>
+
+</Ophthalmology>

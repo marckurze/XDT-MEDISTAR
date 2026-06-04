@@ -138,17 +138,17 @@ Herstellerabgleich PC->RT, insbesondere RT-3100-PDF Abschnitt 6:
 
 RS-Anforderung:
 
-- Die in den NIDEK-Formatdiagrammen dargestellten `*` sind Leerzeichen-Platzhalter und werden nicht als ASCII-Sternchen gesendet.
-- XDTBox sendet fuer `RS` daher `SH C   SX RS EB ET`.
-- Hexdump: `01 43 20 20 20 02 52 53 17 04`.
-- Die alte Diagnose `<SOH>C **<STX>RS<ETB><EOT>` war irrefuehrend, weil sie echte `2A 2A`-Bytes beschrieb.
+- Die ausgewerteten produktiven RT-Anbindungen senden fuer `RS` echte ASCII-Sternchen.
+- XDTBox sendet fuer `RS` daher `SH C** SX RS EB ET`.
+- Hexdump: `01 43 2A 2A 02 52 53 17 04`.
+- Die aeltere Diagnose mit Leerzeichen (`01 43 20 20 20 02 52 53 17 04`) bleibt als historischer Irrtum dokumentiert, wird aber nicht mehr als Default gesendet.
 - Auch in LM-SCA-Bloecken sind die gezeichneten Sternchen Platzhalter: XDTBox sendet `DLM SX  R... EB  L...` mit `20 52` und `20 4C`, nicht `2A 52`/`2A 4C`.
 - Dokumentnahe LM-ADD-Bloecke werden als `AR`/`AL` erzeugt. Zusaetzlich gibt es die Praxisvariante `RT-3100 Praxisvariante (getestet)`, die den zuvor live angenommenen Frame exakt reproduziert: Legacy-ADD `RA`/`LA`, im bekannten Testfall `LA+01.50`, Laenge 107 Bytes, kein `EB` direkt vor `ET`.
 - Die Diagnose nennt erkannte Writer-Bloecke wie ID, AR SCA, AR PD, LM SCA, LM ADD, LM PD und Prism anhand des erzeugten Frames.
 
 Live-Sendetestmodi im RT-Fenster:
 
-- `RS anfordern`: sendet nur `SH C   SX RS EB ET`, wartet auf `SD`, sendet keinen Writer-Frame.
+- `RS anfordern`: sendet nur `SH C** SX RS EB ET`, wartet auf `SD`, sendet keinen Writer-Frame.
 - `DTR-Toggle + RS`: setzt DTR kurz zurueck, aktiviert DTR wieder und sendet danach `RS`.
 - `Direkt Writer-Frame senden`: sendet den PC->RT-Frame ohne RS/SD, nur nach Warnbestaetigung.
 - `RS + Writer ohne SD-Warten`: sendet `RS`, wartet kurz und sendet den Writer-Frame auch ohne SD, nur nach Warnbestaetigung.
@@ -164,6 +164,7 @@ Die BuiltIn-Schnittstellenprofile fuer RT-2100/RT-3100/RT-5100 verwenden `Direkt
 Der zusaetzliche Schnittstellenprofilwert `NIDEK-RT Sendeinhalt` steuert, welche PC->RT-Bloecke beziehungsweise welche Frameform produktiv in den Writer-Frame kommen:
 
 - `Alle ausgewaehlten Werte`: ID, AR, LM, ADD/PD soweit vorhanden.
+- `RT-Referenz ohne ID (AR/AL)`: AR und LM ohne `DRL`-ID-Block, LM ADD als `AR`/`AL`, Abschluss `EB ET`; aktueller BuiltIn-Default fuer RT-2100/3100/5100.
 - `RT-3100 Praxisvariante (getestet)`: reproduziert den in der Praxis angenommenen Direct-Writer-Frame mit Legacy-ADD `RA`/`LA` und ohne zusaetzliches `EB` direkt vor `ET`.
 - `Nur Autoref`: AR SCA und ggf. AR PD.
 - `Nur Lensmeter`: LM SCA, LM ADD und ggf. LM PD.
@@ -179,8 +180,8 @@ Im Diagnosebereich koennen diese Varianten unabhaengig vom gespeicherten Profilw
 - Erst eine stabile AIS-Patientendatei startet den Auswahl-/Sendedialog.
 - Der Dialog bietet LM-/AR-Historienwerte an; produktiv gesendet werden zunaechst V0/Lensmeter und V1/Autorefraktion.
 - Senden erfolgt nur nach ausdruecklichem Anwenderklick ueber den im Schnittstellenprofil konfigurierten COM-Port.
-- Der Schnittstellenprofilwert `NIDEK-RT Sendemodus` steuert den produktiven Ablauf. Im Praxisdefault `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame direkt, sendet keinen `RS` und erwartet keine `SD`-Bestaetigung. In `RS/SD-Handshake` sendet XDTBox `SH C   SX RS EB ET` (`01 43 20 20 20 02 52 53 17 04`), erwartet `SX SD` und schreibt erst danach den PC->RT-Frame. In `RS senden, dann Writer ohne SD` wird `RS` gesendet, kurz gewartet und der Writer-Frame auch ohne `SD` geschrieben.
-- Der Schnittstellenprofilwert `NIDEK-RT Sendeinhalt` bestimmt den produktiven Writer-Inhalt. Fuer RT-3100-BuiltIns ist `RT-3100 Praxisvariante (getestet)` der Default; RT-2100 und RT-5100 bleiben standardmaessig dokumentnah bei `Alle ausgewaehlten Werte`.
+- Der Schnittstellenprofilwert `NIDEK-RT Sendemodus` steuert den produktiven Ablauf. Im Praxisdefault `Direkt Writer-Frame senden` schreibt XDTBox den PC->RT-Frame direkt, sendet keinen `RS` und erwartet keine `SD`-Bestaetigung. In `RS/SD-Handshake` sendet XDTBox `SH C** SX RS EB ET` (`01 43 2A 2A 02 52 53 17 04`), erwartet `SX SD` und schreibt erst danach den PC->RT-Frame. In `RS senden, dann Writer ohne SD` wird `RS` gesendet, kurz gewartet und der Writer-Frame auch ohne `SD` geschrieben.
+- Der Schnittstellenprofilwert `NIDEK-RT Sendeinhalt` bestimmt den produktiven Writer-Inhalt. Fuer RT-2100/RT-3100/RT-5100-BuiltIns ist `RT-Referenz ohne ID (AR/AL)` der Default; die RT-3100 Praxisvariante bleibt als separate Legacy-Testform verfuegbar.
 - Nach dem Oeffnen des COM-Ports wartet XDTBox kurz, damit DTR/RTS und der RT-Eingang stabil sind. Nach dem Schreiben des Writer-Frames bleibt der COM-Port noch fuer einen baudratenabhaengigen Sendenachlauf offen. Bei 107 Bytes und RT-3100 Type1 `2400/7E2` sind das rund 0,8 Sekunden, damit der Frame nicht nur in den Windows-Treiber geschrieben, sondern auch auf der seriellen Leitung ausgesendet werden kann.
 - Nach erfolgreichem Senden wechselt XDTBox in `Warte auf Rueckgabe vom Phoropter`. Eine ausbleibende sofortige Rueckgabe ist kein Sendefehler: Der Anwender fuehrt die Untersuchung am RT durch und loest danach PRINT/SEND aus. Ohne Rueckgabe wird kein leeres XDT erzeugt.
 - Sobald eine Rueckgabe empfangen wird, wird sie bis `ET`/EOT gesammelt; danach wartet XDTBox eine kurze Stabilitaetszeit, bevor geparst und exportiert wird.

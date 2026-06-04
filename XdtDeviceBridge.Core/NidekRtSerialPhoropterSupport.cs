@@ -948,7 +948,7 @@ public sealed class NidekRtSerialPhoropterOutputWriter
         IReadOnlyList<AisHistoricalMeasurementRecord> selectedMeasurements,
         NidekRtSerialPhoropterModel model)
     {
-        return BuildFrame(patient, selectedMeasurements, model, NidekRtSerialOutputFrameVariant.FullSelectedData);
+        return BuildFrame(patient, selectedMeasurements, model, NidekRtSerialOutputFrameVariantInfo.Default);
     }
 
     public NidekRtSerialPhoropterOutputResult BuildFrame(
@@ -1054,6 +1054,7 @@ public sealed class NidekRtSerialPhoropterOutputWriter
         return variant is not NidekRtSerialOutputFrameVariant.ArOnlyWithoutId
             and not NidekRtSerialOutputFrameVariant.LmOnlyWithoutId
             and not NidekRtSerialOutputFrameVariant.FullWithoutId
+            and not NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl
             and not NidekRtSerialOutputFrameVariant.MinimalRightOnly;
     }
 
@@ -1061,6 +1062,7 @@ public sealed class NidekRtSerialPhoropterOutputWriter
     {
         return variant is NidekRtSerialOutputFrameVariant.FullSelectedData
             or NidekRtSerialOutputFrameVariant.FullWithoutId
+            or NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl
             or NidekRtSerialOutputFrameVariant.ArOnly
             or NidekRtSerialOutputFrameVariant.ArOnlyWithoutId
             or NidekRtSerialOutputFrameVariant.LegacyRt3100DirectFrame;
@@ -1070,6 +1072,7 @@ public sealed class NidekRtSerialPhoropterOutputWriter
     {
         return variant is NidekRtSerialOutputFrameVariant.FullSelectedData
             or NidekRtSerialOutputFrameVariant.FullWithoutId
+            or NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl
             or NidekRtSerialOutputFrameVariant.LmOnly
             or NidekRtSerialOutputFrameVariant.LmOnlyWithoutId
             or NidekRtSerialOutputFrameVariant.LmOnlyWithoutAdd

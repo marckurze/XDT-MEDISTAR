@@ -5807,7 +5807,7 @@ public partial class MainWindow : Window
     private async Task RunNidekRtSerialSendTestAsync(
         string interfaceProfileId,
         NidekRtSerialSendTestMode mode,
-        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.FullSelectedData,
+        NidekRtSerialOutputFrameVariant frameVariant = NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl,
         bool appendCarriageReturnAfterEot = false)
     {
         if (_profileCatalog is null)

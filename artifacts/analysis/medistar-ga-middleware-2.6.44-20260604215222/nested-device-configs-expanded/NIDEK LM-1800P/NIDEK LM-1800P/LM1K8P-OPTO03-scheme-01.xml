@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="NIDEK_LM_Stylesheet.xsl" ?>
+
+<Ophthalmology>
+  
+  <Common>
+  
+      <Company>NIDEK</Company>
+      <ModelName>LM-1800P</ModelName>
+      <MachineNo></MachineNo>
+      <ROMVersion></ROMVersion>
+      <Version></Version>
+      <Date></Date>
+      <Time></Time>
+      
+      <Patient>
+           <No.></No.>
+           <ID GDTFID="3000" GDTDisplayName=""></ID>
+           <FirstName></FirstName>
+           <MiddleName></MiddleName>
+           <LastName></LastName>
+           <Sex></Sex>
+           <Age></Age>
+           <DOB></DOB>
+           <NameJ1></NameJ1>
+           <NameJ2></NameJ2>
+      </Patient>
+      
+  </Common>
+  
+  <Measure type="LM">
+  
+      <MeasureMode></MeasureMode>
+      <DiopterStep unit=""></DiopterStep>
+      <AxisStep unit=""></AxisStep>
+      <CylinderMode></CylinderMode>
+      <PrismDiopterStep unit=""></PrismDiopterStep>
+      <PrismBaseStep unit="deg"></PrismBaseStep>
+      <PrismMode></PrismMode>
+      <AddMode></AddMode>
+      
+      <LM>
+      	
+        <GDTOneLiner>
+         
+        <R GDTList="1" GDTFID="6228" GDTDisplayName="R.:">
+               <Sphare unit="" GDTDisplayName="S" GDTAttributeUnit="" GDTNameValueAppendSeparator="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Sphare>
+               <Cylinder unit="" GDTDisplayName="Z" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Cylinder>
+               <Axis unit="" GDTDisplayName="*" GDTAttributeUnit="" GDTNameValueSeparator="" GDTNameValueAppendSeparator=""></Axis>
+               <SE unit="" GDTFID="0"></SE>
+               <ADD unit="" GDTDisplayName="A" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/R/PrismY" GDTMoveNodeToDestinationAction="InsertAfter"></ADD>
+               <ADD2 unit="" GDTDisplayName="A2" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/R/ADD" GDTMoveNodeToDestinationAction="InsertAfter"></ADD2>
+               <NearSphare unit="" GDTFID="0"></NearSphare>
+               <NearSphare2 unit="" GDTFID="0"></NearSphare2>
+               <Prism unit="" GDTFID="0" GDTDisplayName="P" GDTAttributeUnit="" GDTNameValueSeparator="= "></Prism>
+               <PrismBase unit="" GDTFID="0" GDTDisplayName="B" GDTAttributeUnit="" GDTNameValueSeparator="= "></PrismBase>
+               <PrismX unit="" base="out" GDTDisplayName="P" GDTNameValueSeparator="= " GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(in=I|out=O)"></PrismX>
+               <PrismY unit="" base="down" GDTDisplayName="" GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(up=U|down=D)"></PrismY>
+               
+               <UVTransmittance unit="" GDTDisplayName="R: UV" GDTNameValueSeparator=" = " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM" GDTMoveNodeToDestinationAction="AppendChild" GDTMoveNodeToDestinationWrapperNodeName="GDTMovedNodes" GDTMoveNodeToDestinationWrapperNodeAttributes="(GDTList=1|GDTFID=6227|GDTDisplayName=)"></UVTransmittance>
+        </R>
+		
+        <I GDTList="1" GDTFID="6228" GDTDisplayName="R.:">
+               <Sphare unit="" GDTDisplayName="S" GDTAttributeUnit="" GDTNameValueAppendSeparator="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Sphare>
+               <Cylinder unit="" GDTDisplayName="Z" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Cylinder>
+               <Axis unit="" GDTDisplayName="*" GDTAttributeUnit="" GDTNameValueSeparator="" GDTNameValueAppendSeparator=""></Axis>
+               <SE unit="" GDTFID="0"></SE>
+               <ADD unit="" GDTDisplayName="A" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/I/PrismY" GDTMoveNodeToDestinationAction="InsertAfter"></ADD>
+               <ADD2 unit="" GDTDisplayName="A2" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/I/ADD" GDTMoveNodeToDestinationAction="InsertAfter"></ADD2>
+               <NearSphare unit="" GDTFID="0"></NearSphare>
+               <NearSphare2 unit="" GDTFID="0"></NearSphare2>
+               <Prism unit="" GDTFID="0" GDTDisplayName="P" GDTAttributeUnit="" GDTNameValueSeparator="= "></Prism>
+               <PrismBase unit="" GDTFID="0" GDTDisplayName="B" GDTAttributeUnit="" GDTNameValueSeparator="= "></PrismBase>
+               <PrismX unit="" base="out" GDTDisplayName="P" GDTNameValueSeparator="= " GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(in=I|out=O)"></PrismX>
+               <PrismY unit="" base="down" GDTDisplayName="" GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(up=U|down=D)"></PrismY>
+               
+               <UVTransmittance unit="" GDTDisplayName="R: UV" GDTNameValueSeparator=" = " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM" GDTMoveNodeToDestinationAction="AppendChild" GDTMoveNodeToDestinationWrapperNodeName="GDTMovedNodes" GDTMoveNodeToDestinationWrapperNodeAttributes="(GDTList=1|GDTFID=6227|GDTDisplayName=)"></UVTransmittance>
+        </I>		
+        
+        </GDTOneLiner>
+        
+        <GDTOneLiner>
+        
+        <L GDTList="1" GDTFID="6228" GDTDisplayName="L.:">
+               <Sphare unit="" GDTDisplayName="S" GDTAttributeUnit="" GDTNameValueAppendSeparator="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Sphare>
+               <Cylinder unit="" GDTDisplayName="Z" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Cylinder>
+               <Axis unit="" GDTDisplayName="*" GDTAttributeUnit="" GDTNameValueSeparator="" GDTNameValueAppendSeparator=""></Axis>
+               <SE unit="" GDTFID="0"></SE>
+               <ADD unit="" GDTDisplayName="A" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/L/PrismY" GDTMoveNodeToDestinationAction="InsertAfter"></ADD>
+               <ADD2 unit="" GDTDisplayName="A2" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/L/ADD" GDTMoveNodeToDestinationAction="InsertAfter"></ADD2>
+               <NearSphare unit="" GDTFID="0"></NearSphare>
+               <NearSphare2 unit="" GDTFID="0"></NearSphare2>
+               <Prism unit="" GDTFID="0" GDTDisplayName="P" GDTAttributeUnit="" GDTNameValueSeparator="= "></Prism>
+               <PrismBase unit="" GDTFID="0" GDTDisplayName="B" GDTAttributeUnit="" GDTNameValueSeparator="= "></PrismBase>
+               <PrismX unit="" base="in" GDTDisplayName="P" GDTNameValueSeparator="= " GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(in=I|out=O)"></PrismX>
+               <PrismY unit="" base="down" GDTDisplayName="" GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(up=U|down=D)"></PrismY>
+               
+               <UVTransmittance unit="" GDTDisplayName="; L: UV" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator="" GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTMovedNodes/UVTransmittance" GDTMoveNodeToDestinationAction="InsertAfter"></UVTransmittance>
+        </L>
+
+        <S GDTList="1" GDTFID="6228" GDTDisplayName="L.:">
+               <Sphare unit="" GDTDisplayName="S" GDTAttributeUnit="" GDTNameValueAppendSeparator="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Sphare>
+               <Cylinder unit="" GDTDisplayName="Z" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" "></Cylinder>
+               <Axis unit="" GDTDisplayName="*" GDTAttributeUnit="" GDTNameValueSeparator="" GDTNameValueAppendSeparator=""></Axis>
+               <SE unit="" GDTFID="0"></SE>
+               <ADD unit="" GDTDisplayName="A" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/S/PrismY" GDTMoveNodeToDestinationAction="InsertAfter"></ADD>
+               <ADD2 unit="" GDTDisplayName="A2" GDTAttributeUnit="" GDTAddSignToNumberValue="1" GDTAddSignToNumberValueSuffix=" " GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTOneLiner/S/ADD" GDTMoveNodeToDestinationAction="InsertAfter"></ADD2>
+               <NearSphare unit="" GDTFID="0"></NearSphare>
+               <NearSphare2 unit="" GDTFID="0"></NearSphare2>
+               <Prism unit="" GDTFID="0" GDTDisplayName="P" GDTAttributeUnit="" GDTNameValueSeparator="= "></Prism>
+               <PrismBase unit="" GDTFID="0" GDTDisplayName="B" GDTAttributeUnit="" GDTNameValueSeparator="= "></PrismBase>
+               <PrismX unit="" base="in" GDTDisplayName="P" GDTNameValueSeparator="= " GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(in=I|out=O)"></PrismX>
+               <PrismY unit="" base="down" GDTDisplayName="" GDTAttributeUnit="" GDTAttributeBase="" GDTReplaceAndAddAttributeValueBase="(up=U|down=D)"></PrismY>
+               
+               <UVTransmittance unit="" GDTDisplayName="; L: UV" GDTNameValueSeparator=" = " GDTNameValueAppendSeparator="" GDTMoveNodeToDestination="//Ophthalmology/Measure/LM/GDTMovedNodes/UVTransmittance" GDTMoveNodeToDestinationAction="InsertAfter"></UVTransmittance>
+        </S>		
+		       
+        </GDTOneLiner>
+        
+      </LM>
+      
+  </Measure>
+  
+</Ophthalmology>

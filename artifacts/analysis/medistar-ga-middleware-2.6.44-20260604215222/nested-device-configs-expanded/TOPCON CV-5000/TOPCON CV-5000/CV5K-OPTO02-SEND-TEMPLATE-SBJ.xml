@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Ophthalmology xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsSBJ="http://www.joia.or.jp/standardized/namespaces/SBJ" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.joia.or.jp/standardized/namespaces/Common Common_schema.xsd http://www.joia.or.jp/standardized/namespaces/SBJ SBJ_schema.xsd">
+
+  <nsCommon:Common>
+    <nsCommon:Company>Topcon Europe Medical B.V.</nsCommon:Company>
+    <nsCommon:ModelName>IMAGEnet i-base</nsCommon:ModelName>
+    <nsCommon:MachineNo></nsCommon:MachineNo>
+    <nsCommon:ROMVersion></nsCommon:ROMVersion>
+    <nsCommon:Version>3.24.0</nsCommon:Version>
+    <nsCommon:Date><T2W_REPLACE/></nsCommon:Date>
+    <nsCommon:Time><T2W_REPLACE/></nsCommon:Time>
+    <nsCommon:Patient>
+      <nsCommon:No.><T2W_REPLACE/></nsCommon:No.>
+      <nsCommon:ID><T2W_REPLACE/></nsCommon:ID>
+      <nsCommon:FirstName></nsCommon:FirstName>
+      <nsCommon:MiddleName></nsCommon:MiddleName>
+      <nsCommon:LastName></nsCommon:LastName>
+      <nsCommon:Sex></nsCommon:Sex>
+      <nsCommon:Age></nsCommon:Age>
+      <nsCommon:DOB></nsCommon:DOB>
+      <nsCommon:NameJ1></nsCommon:NameJ1>
+      <nsCommon:NameJ2></nsCommon:NameJ2>
+    </nsCommon:Patient>
+  </nsCommon:Common>
+  
+  <nsSBJ:Measure type="SBJ">
+    <nsSBJ:RefractionTest>
+    	
+      <nsSBJ:Type No="1">
+        <nsSBJ:TypeName>Last Prescription</nsSBJ:TypeName>
+        <nsSBJ:ExamDistance No="1">
+          <nsSBJ:Distance unit="cm">500.000</nsSBJ:Distance>
+          <nsSBJ:RefractionData>
+            <nsSBJ:R>
+              <nsSBJ:Sph unit="D"><T2W_REPLACE/></nsSBJ:Sph>
+              <nsSBJ:Cyl unit="D"><T2W_REPLACE/></nsSBJ:Cyl>
+              <nsSBJ:Axis unit="deg"><T2W_REPLACE/></nsSBJ:Axis>
+              <nsSBJ:HPri unit="prism"></nsSBJ:HPri>
+              <nsSBJ:HBase></nsSBJ:HBase>
+              <nsSBJ:VPri unit="prism"></nsSBJ:VPri>
+              <nsSBJ:VBase></nsSBJ:VBase>
+            </nsSBJ:R>
+            <nsSBJ:L>
+              <nsSBJ:Sph unit="D"><T2W_REPLACE/></nsSBJ:Sph>
+              <nsSBJ:Cyl unit="D"><T2W_REPLACE/></nsSBJ:Cyl>
+              <nsSBJ:Axis unit="deg"><T2W_REPLACE/></nsSBJ:Axis>
+              <nsSBJ:HPri unit="prism"></nsSBJ:HPri>
+              <nsSBJ:HBase></nsSBJ:HBase>
+              <nsSBJ:VPri unit="prism"></nsSBJ:VPri>
+              <nsSBJ:VBase></nsSBJ:VBase>
+            </nsSBJ:L>
+            <nsSBJ:VD unit="mm"><T2W_REPLACE/></nsSBJ:VD>
+          </nsSBJ:RefractionData>
+          <nsSBJ:VA>
+            <nsSBJ:R unit="Decimal"></nsSBJ:R>
+            <nsSBJ:L unit="Decimal"></nsSBJ:L>
+            <nsSBJ:B unit="Decimal"/>
+          </nsSBJ:VA>
+          <nsSBJ:PD>
+            <nsSBJ:B unit="mm"><T2W_REPLACE/></nsSBJ:B>
+          </nsSBJ:PD>
+        </nsSBJ:ExamDistance>        
+      </nsSBJ:Type>
+      
+	  <nsSBJ:Type No="2">
+		<nsSBJ:TypeName>Objective Data</nsSBJ:TypeName>
+		<nsSBJ:ExamDistance No="1">
+			<nsSBJ:Distance unit="cm">500.000</nsSBJ:Distance>
+			<nsSBJ:RefractionData>
+				<nsSBJ:R>
+					<nsSBJ:Sph unit="D"><T2W_REPLACE/></nsSBJ:Sph>
+					<nsSBJ:Cyl unit="D"><T2W_REPLACE/></nsSBJ:Cyl>
+					<nsSBJ:Axis unit="deg"><T2W_REPLACE/></nsSBJ:Axis>
+					<nsSBJ:HPri unit="prism"/>
+					<nsSBJ:HBase/>
+					<nsSBJ:VPri unit="prism"/>
+					<nsSBJ:VBase/>
+					<nsSBJ:Prism unit="prism"/>
+					<nsSBJ:Angle unit="deg"/>
+				</nsSBJ:R>
+				<nsSBJ:L>
+					<nsSBJ:Sph unit="D"><T2W_REPLACE/></nsSBJ:Sph>
+					<nsSBJ:Cyl unit="D"><T2W_REPLACE/></nsSBJ:Cyl>
+					<nsSBJ:Axis unit="deg"><T2W_REPLACE/></nsSBJ:Axis>
+					<nsSBJ:HPri unit="prism"/>
+					<nsSBJ:HBase/>
+					<nsSBJ:VPri unit="prism"/>
+					<nsSBJ:VBase/>
+					<nsSBJ:Prism unit="prism"/>
+					<nsSBJ:Angle unit="deg"/>
+				</nsSBJ:L>
+				<nsSBJ:VD unit="mm"><T2W_REPLACE/></nsSBJ:VD>
+			</nsSBJ:RefractionData>
+			<nsSBJ:PD>
+				<nsSBJ:R unit="mm"><T2W_REPLACE/></nsSBJ:R>
+				<nsSBJ:L unit="mm"></nsSBJ:L>
+				<nsSBJ:B unit="mm"></nsSBJ:B>
+			</nsSBJ:PD>
+		</nsSBJ:ExamDistance>
+	  </nsSBJ:Type>
+			
+	  <nsSBJ:Type No="3">
+		<nsSBJ:TypeName>Current Spectacles</nsSBJ:TypeName>
+		<nsSBJ:ExamDistance No="1">
+			<nsSBJ:Distance unit="cm">500.000</nsSBJ:Distance>
+			<nsSBJ:RefractionData>
+				<nsSBJ:R>
+					<nsSBJ:Sph unit="D"><T2W_REPLACE/></nsSBJ:Sph>
+					<nsSBJ:Cyl unit="D"><T2W_REPLACE/></nsSBJ:Cyl>
+					<nsSBJ:Axis unit="deg"><T2W_REPLACE/></nsSBJ:Axis>
+					<nsSBJ:HPri unit="prism"></nsSBJ:HPri>
+					<nsSBJ:HBase></nsSBJ:HBase>
+					<nsSBJ:VPri unit="prism"></nsSBJ:VPri>
+					<nsSBJ:VBase></nsSBJ:VBase>
+					<nsSBJ:Prism unit="prism"></nsSBJ:Prism>
+					<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+				</nsSBJ:R>
+				<nsSBJ:L>
+					<nsSBJ:Sph unit="D"><T2W_REPLACE/></nsSBJ:Sph>
+					<nsSBJ:Cyl unit="D"><T2W_REPLACE/></nsSBJ:Cyl>
+					<nsSBJ:Axis unit="deg"><T2W_REPLACE/></nsSBJ:Axis>
+					<nsSBJ:HPri unit="prism"></nsSBJ:HPri>
+					<nsSBJ:HBase></nsSBJ:HBase>
+					<nsSBJ:VPri unit="prism"></nsSBJ:VPri>
+					<nsSBJ:VBase></nsSBJ:VBase>
+					<nsSBJ:Prism unit="prism"></nsSBJ:Prism>
+					<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+				</nsSBJ:L>
+				<nsSBJ:VD unit="mm"></nsSBJ:VD>
+			</nsSBJ:RefractionData>
+			<nsSBJ:PD>
+				<nsSBJ:R unit="mm"></nsSBJ:R>
+				<nsSBJ:L unit="mm"></nsSBJ:L>
+				<nsSBJ:B unit="mm"></nsSBJ:B>
+			</nsSBJ:PD>
+		</nsSBJ:ExamDistance>
+      </nsSBJ:Type>      
+
+    </nsSBJ:RefractionTest>
+  </nsSBJ:Measure>
+
+</Ophthalmology>

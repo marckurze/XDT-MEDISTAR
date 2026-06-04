@@ -305,9 +305,10 @@ public sealed class XdtBaukastenPreviewServiceTests
 
         Assert.True(result.Success, string.Join(Environment.NewLine, result.Messages));
         Assert.Contains("<SH>", result.Output.DeviceOutput);
-        Assert.Contains("DRL<SX>", result.Output.DeviceOutput);
+        Assert.DoesNotContain("DRL<SX>", result.Output.DeviceOutput);
+        Assert.Contains("DRM<SX>", result.Output.DeviceOutput);
+        Assert.Contains("DLM<SX>", result.Output.DeviceOutput);
         Assert.Contains("Hexdump:", result.Output.DeviceOutput);
-        Assert.Contains("RTSERIAL-TEST-ID", result.Output.DeviceOutput);
         Assert.Contains("NIDEK RT-2100/3100/5100 RS232 ist vorbereitet", result.Output.DeviceOutput);
         Assert.False(File.Exists(Path.Combine(temp.Path, NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate)));
     }

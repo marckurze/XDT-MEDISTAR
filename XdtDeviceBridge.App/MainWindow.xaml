@@ -1787,7 +1787,7 @@
                                                   Grid.ColumnSpan="2"
                                                   x:Name="InterfaceNidekRtSerialFrameVariantComboBox"
                                                   SelectedValuePath="Tag"
-                                                  SelectedValue="FullSelectedData"
+                                                  SelectedValue="ReferenceWithoutIdArAl"
                                                   Width="260"
                                                   HorizontalAlignment="Left"
                                                   Margin="0,0,8,8"
@@ -1797,6 +1797,7 @@
                                             <ComboBoxItem Content="Nur Lensmeter" Tag="LmOnly"/>
                                             <ComboBoxItem Content="Nur Lensmeter ohne ADD" Tag="LmOnlyWithoutAdd"/>
                                             <ComboBoxItem Content="Alle ausgewählten Werte ohne ID" Tag="FullWithoutId"/>
+                                            <ComboBoxItem Content="RT-Referenz ohne ID (AR/AL)" Tag="ReferenceWithoutIdArAl"/>
                                             <ComboBoxItem Content="Nur Autoref ohne ID" Tag="ArOnlyWithoutId"/>
                                             <ComboBoxItem Content="Nur Lensmeter ohne ID" Tag="LmOnlyWithoutId"/>
                                             <ComboBoxItem Content="Minimal rechts" Tag="MinimalRightOnly"/>
@@ -1806,7 +1807,7 @@
                                                    Grid.Column="3"
                                                    Grid.ColumnSpan="2"
                                                    x:Name="InterfaceNidekRtSerialFrameVariantHintTextBlock"
-                                                  Text="RT-3100 Praxisempfehlung: RT-3100 Praxisvariante (getestet). Für weitere Praxisdiagnose zuerst Nur Lensmeter ohne ADD, dann Nur Lensmeter, Nur Autoref und Varianten ohne ID testen."
+                                                  Text="Praxisreferenz: RT-Referenz ohne ID (AR/AL) entspricht ausgewerteten produktiven RT-Anbindungen. Die RT-3100 Praxisvariante (getestet) bleibt als Legacy-Testform verfügbar."
                                                    Foreground="DimGray"
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,8,8"/>

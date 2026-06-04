@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Ophthalmology>
+  <Common>
+      <Company></Company>
+      <ModelName></ModelName>
+      <MachineNo></MachineNo>
+      <ROMVersion></ROMVersion>
+      <Version></Version>
+      <Date><T2W_REPLACE/></Date>
+      <Time><T2W_REPLACE/></Time>
+      <Patient>
+           <No.></No.>
+           <ID><T2W_REPLACE/></ID>
+           <FirstName></FirstName>
+           <MiddleName></MiddleName>
+           <LastName></LastName>
+           <Sex></Sex>
+           <Age></Age>
+           <DOB></DOB>
+           <NameJ1></NameJ1>
+           <NameJ2></NameJ2>
+      </Patient>
+  </Common>
+  <Measure type="LM">
+      <MeasureMode></MeasureMode>
+      <DiopterStep unit="D"></DiopterStep>
+      <AxisStep unit="deg"></AxisStep>
+      <CylinderMode></CylinderMode>
+      <PrismDiopterStep unit="pri"></PrismDiopterStep>
+      <PrismBaseStep unit="deg"></PrismBaseStep>
+      <PrismMode></PrismMode>
+      <AddMode></AddMode>
+      <LM>
+        <R>
+               <Sphare unit="D"><T2W_REPLACE/></Sphare>
+               <Sphere unit="D"><T2W_REPLACE/></Sphere>
+               <Cylinder unit="D"><T2W_REPLACE/></Cylinder>
+               <Axis unit="deg"><T2W_REPLACE/></Axis>
+               <SE unit="D"></SE>
+               <ADD unit="D"><T2W_REPLACE/></ADD>
+               <ADD2 unit="D"><T2W_REPLACE/></ADD2>
+               <NearSphare unit="D"></NearSphare>
+               <NearSphare2 unit="D"></NearSphare2>
+               <NearSphere unit="D"></NearSphere>
+               <NearSphere2 unit="D"></NearSphere2>
+               <Prism unit="pri"><T2W_REPLACE/></Prism>
+               <PrismBase unit="deg"><T2W_REPLACE/></PrismBase>
+               <PrismX unit="pri" base="<T2W_REPLACE/>"><T2W_REPLACE/></PrismX>
+               <PrismY unit="pri" base="<T2W_REPLACE/>"><T2W_REPLACE/></PrismY>
+               <UVTransmittance unit=""></UVTransmittance>
+               <ConfidenceIndex></ConfidenceIndex>
+        </R>
+        <L>
+               <Sphare unit="D"><T2W_REPLACE/></Sphare>
+               <Sphere unit="D"><T2W_REPLACE/></Sphere>
+               <Cylinder unit="D"><T2W_REPLACE/></Cylinder>
+               <Axis unit="deg"><T2W_REPLACE/></Axis>
+               <SE unit="D"></SE>
+               <ADD unit="D"><T2W_REPLACE/></ADD>
+               <ADD2 unit="D"><T2W_REPLACE/></ADD2>
+               <NearSphare unit="D"></NearSphare>
+               <NearSphare2 unit="D"></NearSphare2>
+               <NearSphere unit="D"></NearSphere>
+               <NearSphere2 unit="D"></NearSphere2>            
+               <Prism unit="pri"><T2W_REPLACE/></Prism>
+               <PrismBase unit="deg"><T2W_REPLACE/></PrismBase>
+               <PrismX unit="pri" base="<T2W_REPLACE/>"><T2W_REPLACE/></PrismX>
+               <PrismY unit="pri" base="<T2W_REPLACE/>"><T2W_REPLACE/></PrismY>
+               <UVTransmittance unit=""></UVTransmittance>
+               <ConfidenceIndex></ConfidenceIndex>
+        </L>
+      </LM>
+  </Measure>
+</Ophthalmology>

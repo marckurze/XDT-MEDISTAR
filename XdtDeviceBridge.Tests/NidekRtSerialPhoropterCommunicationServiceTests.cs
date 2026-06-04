@@ -32,14 +32,14 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.Equal(NidekRtSerialControlChars.ET, fakeSerial.LastExchangeRequest.PayloadBytes.Last());
         Assert.Equal(NidekRtSerialControlChars.ET, fakeSerial.LastExchangeRequest.EndOfTransmissionByte);
         Assert.Equal(TimeSpan.FromMilliseconds(800), fakeSerial.LastExchangeRequest.StableAfterEndOfTransmission);
-        Assert.Contains("DRL", Encoding.ASCII.GetString(fakeSerial.LastExchangeRequest.PayloadBytes), StringComparison.Ordinal);
+        Assert.DoesNotContain("DRL", Encoding.ASCII.GetString(fakeSerial.LastExchangeRequest.PayloadBytes), StringComparison.Ordinal);
         Assert.Equal(CreatePracticeReturnBytes(), result.ReceivedBytes);
         Assert.NotNull(fakeSerial.LastSettings);
         Assert.True(fakeSerial.LastSettings!.DtrEnable);
         Assert.True(fakeSerial.LastSettings.RtsEnable);
         Assert.Contains(result.Messages, message => message.Contains("RS-Anforderung Hexdump", StringComparison.Ordinal));
-        Assert.Contains(result.Messages, message => message.Contains("01 43 20 20 20 02 52 53 17 04", StringComparison.Ordinal));
-        Assert.DoesNotContain(result.Messages, message => message.Contains("01 43 20 2A 2A 02 52 53 17 04", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("01 43 2A 2A 02 52 53 17 04", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Messages, message => message.Contains("01 43 20 20 20 02 52 53 17 04", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("PC->RT-Writer Hexdump", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("PC->RT-Blöcke", StringComparison.Ordinal) && message.Contains("LM ADD", StringComparison.Ordinal));
         Assert.DoesNotContain(fakeSerial.LastExchangeRequest.PayloadBytes, value => value == (byte)'*');
@@ -47,19 +47,19 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
     }
 
     [Fact]
-    public void CreateRsRequestBytes_ShouldUseSpacePlaceholdersInsteadOfAsterisks()
+    public void CreateRsRequestBytes_ShouldUseReferenceLiteralAsterisks()
     {
         var request = NidekRtSerialPhoropterCommunicationService.CreateRsRequestBytes();
 
         Assert.Equal(
             new byte[]
             {
-                0x01, 0x43, 0x20, 0x20, 0x20, 0x02, 0x52, 0x53, 0x17, 0x04
+                0x01, 0x43, 0x2A, 0x2A, 0x02, 0x52, 0x53, 0x17, 0x04
             },
             request);
-        Assert.DoesNotContain((byte)'*', request);
-        Assert.Equal("<SOH>C   <STX>RS<ETB><EOT>", SerialDiagnosticsFormatter.ToVisibleControlText(request));
-        Assert.Equal("01 43 20 20 20 02 52 53 17 04", SerialDiagnosticsFormatter.ToHexDump(request));
+        Assert.Contains((byte)'*', request);
+        Assert.Equal("<SOH>C**<STX>RS<ETB><EOT>", SerialDiagnosticsFormatter.ToVisibleControlText(request));
+        Assert.Equal("01 43 2A 2A 02 52 53 17 04", SerialDiagnosticsFormatter.ToHexDump(request));
     }
 
     [Fact]

@@ -1,0 +1,60 @@
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsLM="http://www.joia.or.jp/standardized/namespaces/LM" xmlns:nsREF="http://www.joia.or.jp/standardized/namespaces/REF" xmlns:nsKM="http://www.joia.or.jp/standardized/namespaces/KM" xmlns:nsTM="http://www.joia.or.jp/standardized/namespaces/TM" xmlns:nsSBJ="http://www.joia.or.jp/standardized/namespaces/SBJ" xsi:schemaLocation="http://www.joia.or.jp/standardized/namespaces/Common Common_schema.xsdhttp://www.joia.or.jp/standardized/namespaces/LM LM_schema.xsdhttp://www.joia.or.jp/standardized/namespaces/REF REF_schema.xsdhttp://www.joia.or.jp/standardized/namespaces/KM KM_schema.xsd http://www.joia.or.jp/standardized/namespaces/TM TM_schema.xsd http://www.joia.or.jp/standardized/namespaces/SBJ SBJ_schema.xsd">
+	<nsCommon:Common>
+		<nsCommon:Company></nsCommon:Company>
+		<nsCommon:ModelName></nsCommon:ModelName>
+		<nsCommon:MachineNo></nsCommon:MachineNo>
+		<nsCommon:ROMVersion/>
+		<nsCommon:Version></nsCommon:Version>
+		<nsCommon:Date><T2W_REPLACE/></nsCommon:Date>
+		<nsCommon:Time><T2W_REPLACE/></nsCommon:Time>
+		<nsCommon:Patient>
+			<nsCommon:No./>
+			<nsCommon:ID><T2W_REPLACE/></nsCommon:ID>
+			<nsCommon:FirstName><T2W_REPLACE/></nsCommon:FirstName>
+			<nsCommon:MiddleName></nsCommon:MiddleName>
+			<nsCommon:LastName><T2W_REPLACE/></nsCommon:LastName>
+			<nsCommon:Sex></nsCommon:Sex>
+			<nsCommon:Age></nsCommon:Age>
+			<nsCommon:DOB><T2W_REPLACE/></nsCommon:DOB>
+			<nsCommon:NameJ1/>
+		<nsCommon:NameJ2/>
+		</nsCommon:Patient>
+	</nsCommon:Common>
+	<nsREF:Measure type="REF">
+		<nsREF:VD unit="mm"><T2W_REPLACE/></nsREF:VD>
+		<nsREF:DiopterStep unit="D"></nsREF:DiopterStep>
+		<nsREF:AxisStep unit="deg"></nsREF:AxisStep>
+		<nsREF:CylinderMode></nsREF:CylinderMode>
+		<nsREF:REF>
+			<nsREF:R>
+				<nsREF:List No="1">
+					<nsREF:Sphere unit="D"><T2W_REPLACE/></nsREF:Sphere>
+					<nsREF:Cylinder unit="D"><T2W_REPLACE/></nsREF:Cylinder>
+					<nsREF:Axis unit="deg"><T2W_REPLACE/></nsREF:Axis>
+				</nsREF:List>
+				<nsREF:Median>
+					<nsREF:Sphere unit="D"></nsREF:Sphere>
+					<nsREF:Cylinder unit="D"></nsREF:Cylinder>
+					<nsREF:Axis unit="deg"></nsREF:Axis>
+				</nsREF:Median>
+			</nsREF:R>
+			<nsREF:L>
+				<nsREF:List No="1">
+					<nsREF:Sphere unit="D"><T2W_REPLACE/></nsREF:Sphere>
+					<nsREF:Cylinder unit="D"><T2W_REPLACE/></nsREF:Cylinder>
+					<nsREF:Axis unit="deg"><T2W_REPLACE/></nsREF:Axis>
+				</nsREF:List>
+				<nsREF:Median>
+					<nsREF:Sphere unit="D"></nsREF:Sphere>
+					<nsREF:Cylinder unit="D"></nsREF:Cylinder>
+					<nsREF:Axis unit="deg"></nsREF:Axis>
+				</nsREF:Median>
+			</nsREF:L>
+		</nsREF:REF>
+		<nsREF:PD>
+			<nsREF:WorkingDistance unit="cm"/>
+			<nsREF:Distance unit="mm"><T2W_REPLACE/></nsREF:Distance>
+			<nsREF:Near unit="mm"></nsREF:Near>
+		</nsREF:PD>
+	</nsREF:Measure>
+</Ophthalmology>

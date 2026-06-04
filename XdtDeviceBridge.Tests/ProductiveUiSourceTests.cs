@@ -393,6 +393,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("NIDEK-RT Sendeinhalt", mainXaml);
         Assert.Contains("InterfaceNidekRtSerialFrameVariantComboBox", mainXaml);
         Assert.Contains("LmOnlyWithoutAdd", mainXaml);
+        Assert.Contains("ReferenceWithoutIdArAl", mainXaml);
+        Assert.Contains("RT-Referenz ohne ID (AR/AL)", mainXaml);
         Assert.Contains("LegacyRt3100DirectFrame", mainXaml);
         Assert.Contains("RT-3100 Praxisvariante (getestet)", mainXaml);
         Assert.Contains("DirectWriterFrame", mainXaml);
@@ -405,6 +407,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("RS + Writer ohne SD-Warten", floatingXaml);
         Assert.Contains("Frame-Variante", floatingXaml);
         Assert.Contains("NidekRtFrameVariantComboBox", floatingXaml);
+        Assert.Contains("ReferenceWithoutIdArAl", floatingXaml);
         Assert.Contains("LegacyRt3100DirectFrame", floatingXaml);
         Assert.Contains("CR nach EOT", floatingXaml);
         Assert.Contains("Serielle Diagnose", floatingXaml);
