@@ -224,8 +224,12 @@ public sealed class ProductiveUiSourceTests
 
         Assert.Contains("InterfaceManufacturerFilterComboBox", section);
         Assert.Contains("InterfaceAisFilterComboBox", section);
+        Assert.Contains("InterfaceProfileSelectionGrid", section);
         Assert.Contains("Gerätehersteller:", section);
         Assert.Contains("AIS-System:", section);
+        Assert.Contains("Schnittstellenprofil:", section);
+        Assert.Contains("x:Name=\"InterfaceProfileComboBox\"", section);
+        Assert.Contains("MaxWidth=\"560\"", section);
         Assert.Contains("AIS Ausgabe Info", section);
         Assert.Contains("Aktive Schnittstellenprofile zählen immer als Geräteanbindung.", section);
         Assert.DoesNotContain("InterfaceIsLicenseRequiredCheckBox", section);
@@ -242,15 +246,35 @@ public sealed class ProductiveUiSourceTests
         var section = ExtractSection(
             xaml,
             "x:Name=\"InterfaceAttachmentLinkPathTemplateLabel\"",
+            "Header=\"Ordnerbereinigung\"");
+        var pathTextBoxSection = ExtractSection(
+            section,
+            "<TextBox Grid.Row=\"0\"",
+            "x:Name=\"InterfaceAttachmentFolderDefaultButton\"");
+        var folderDefaultButtonSection = ExtractSection(
+            section,
+            "x:Name=\"InterfaceAttachmentFolderDefaultButton\"",
+            "x:Name=\"InterfaceCreateAttachmentFoldersButton\"");
+        var createFolderButtonSection = ExtractSection(
+            section,
+            "x:Name=\"InterfaceCreateAttachmentFoldersButton\"",
             "x:Name=\"InterfaceAttachmentFolderSetupStatusTextBlock\"");
 
+        Assert.Contains("<Grid x:Name=\"InterfaceAttachmentFolderSetupPanel\"", section);
+        Assert.Contains("<ColumnDefinition Width=\"*\"/>", section);
+        Assert.Contains("<ColumnDefinition Width=\"Auto\"/>", section);
         Assert.Contains("Grid.Row=\"14\"", section);
         Assert.Contains("Grid.Column=\"1\"", section);
         Assert.Contains("Grid.ColumnSpan=\"2\"", section);
-        Assert.Contains("x:Name=\"InterfaceAttachmentFolderSetupPanel\"", section);
-        Assert.Contains("Grid.Row=\"15\"", section);
-        Assert.Contains("Grid.Column=\"1\"", section);
-        Assert.Contains("MinWidth=\"130\"", section);
+        Assert.Contains("Grid.Column=\"0\"", pathTextBoxSection);
+        Assert.DoesNotContain("Grid.ColumnSpan", pathTextBoxSection);
+        Assert.Contains("Grid.Column=\"1\"", folderDefaultButtonSection);
+        Assert.Contains("MinWidth=\"150\"", folderDefaultButtonSection);
+        Assert.Contains("Grid.Column=\"2\"", createFolderButtonSection);
+        Assert.Contains("MinWidth=\"150\"", createFolderButtonSection);
+        Assert.DoesNotContain("<WrapPanel x:Name=\"InterfaceAttachmentFolderSetupPanel\"", section);
+        Assert.DoesNotContain("Grid.Row=\"15\"", section);
+        Assert.DoesNotContain("Margin=\"-", section);
     }
 
     [Fact]

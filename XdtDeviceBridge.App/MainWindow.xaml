@@ -1549,30 +1549,59 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Schnittstellenprofil:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,8">
-                                    <WrapPanel Margin="0,0,0,6">
-                                        <TextBlock Text="Gerätehersteller:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,4"/>
-                                        <ComboBox x:Name="InterfaceManufacturerFilterComboBox"
-                                                  Width="190"
-                                                  Margin="0,0,18,4"
-                                                  SelectionChanged="InterfaceProfileFilter_SelectionChanged"
-                                                  ToolTip="Filtert die Schnittstellenprofile nach Gerätehersteller."/>
-                                        <TextBlock Text="AIS-System:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,4"/>
-                                        <ComboBox x:Name="InterfaceAisFilterComboBox"
-                                                  Width="190"
-                                                  Margin="0,0,0,4"
-                                                  SelectionChanged="InterfaceProfileFilter_SelectionChanged"
-                                                  ToolTip="Filtert die Schnittstellenprofile nach AIS-System."/>
-                                    </WrapPanel>
+                                <Grid x:Name="InterfaceProfileSelectionGrid"
+                                      Grid.Row="0"
+                                      Grid.Column="0"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="240"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="560"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0"
+                                               Text="Gerätehersteller:"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"/>
+                                    <ComboBox x:Name="InterfaceManufacturerFilterComboBox"
+                                              Grid.Column="1"
+                                              MaxWidth="240"
+                                              HorizontalAlignment="Stretch"
+                                              Margin="0,0,18,0"
+                                              SelectionChanged="InterfaceProfileFilter_SelectionChanged"
+                                              ToolTip="Filtert die Schnittstellenprofile nach Gerätehersteller."/>
+                                    <TextBlock Grid.Column="2"
+                                               Text="AIS-System:"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"/>
+                                    <ComboBox x:Name="InterfaceAisFilterComboBox"
+                                              Grid.Column="3"
+                                              MaxWidth="220"
+                                              HorizontalAlignment="Stretch"
+                                              Margin="0,0,18,0"
+                                              SelectionChanged="InterfaceProfileFilter_SelectionChanged"
+                                              ToolTip="Filtert die Schnittstellenprofile nach AIS-System."/>
+                                    <TextBlock Grid.Column="4"
+                                               Text="Schnittstellenprofil:"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"/>
                                     <ComboBox x:Name="InterfaceProfileComboBox"
+                                              Grid.Column="5"
                                               DisplayMemberPath="Metadata.Name"
-                                              MinWidth="260"
+                                              MinWidth="320"
                                               MaxWidth="560"
                                               HorizontalAlignment="Stretch"
                                               ToolTip="{Binding SelectedItem.Metadata.Name, RelativeSource={RelativeSource Self}}"
                                               SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
-                                </StackPanel>
+                                </Grid>
                                 <WrapPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="0,0,0,8">
                                     <Button Content="Neues Schnittstellenprofil anlegen"
                                             Width="260"
@@ -2110,36 +2139,50 @@
                                         <TextBox Grid.Row="13" Grid.Column="1" Grid.ColumnSpan="2" x:Name="InterfaceAttachmentLinkDescriptionTextBox" Margin="0,0,0,8" ToolTip="Optionale Beschreibung für Feld 6304, z. B. Messprotokoll Autorefraktor."/>
 
                                          <TextBlock Grid.Row="14" Grid.Column="0" x:Name="InterfaceAttachmentLinkPathTemplateLabel" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,8"/>
-                                         <TextBox Grid.Row="14"
-                                                  Grid.Column="1"
-                                                  Grid.ColumnSpan="2"
-                                                  x:Name="InterfaceAttachmentLinkPathTemplateTextBox"
-                                                  Margin="0,0,0,8"
-                                                  ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
+                                         <Grid x:Name="InterfaceAttachmentFolderSetupPanel"
+                                               Grid.Row="14"
+                                               Grid.Column="1"
+                                               Grid.ColumnSpan="2"
+                                               Margin="0,0,0,8">
+                                             <Grid.RowDefinitions>
+                                                 <RowDefinition Height="Auto"/>
+                                                 <RowDefinition Height="Auto"/>
+                                             </Grid.RowDefinitions>
+                                             <Grid.ColumnDefinitions>
+                                                 <ColumnDefinition Width="*"/>
+                                                 <ColumnDefinition Width="Auto"/>
+                                                 <ColumnDefinition Width="Auto"/>
+                                             </Grid.ColumnDefinitions>
 
-                                         <WrapPanel x:Name="InterfaceAttachmentFolderSetupPanel"
-                                                    Grid.Row="15"
-                                                    Grid.Column="1"
-                                                    Grid.ColumnSpan="2"
-                                                    Margin="0,0,0,8"
-                                                    VerticalAlignment="Center">
+                                             <TextBox Grid.Row="0"
+                                                      Grid.Column="0"
+                                                      x:Name="InterfaceAttachmentLinkPathTemplateTextBox"
+                                                      Margin="0,0,8,8"
+                                                      ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
                                              <Button x:Name="InterfaceAttachmentFolderDefaultButton"
+                                                     Grid.Row="0"
+                                                     Grid.Column="1"
                                                      Content="Ordner Default"
-                                                     MinWidth="130"
-                                                     Margin="0,0,8,6"
+                                                     MinWidth="150"
+                                                     Margin="0,0,8,8"
                                                      Click="ApplyInterfaceAttachmentFolderDefaults_Click"
                                                      ToolTip="Trägt Standardpfade für XDT-Anhänge unter C:\XDTBox für das aktuelle Geräteprofil ein. Es werden noch keine Ordner erstellt."/>
                                              <Button x:Name="InterfaceCreateAttachmentFoldersButton"
+                                                     Grid.Row="0"
+                                                     Grid.Column="2"
                                                      Content="Ordner anlegen"
-                                                     MinWidth="130"
-                                                     Margin="0,0,12,6"
+                                                     MinWidth="150"
+                                                     Margin="0,0,0,8"
                                                      Click="CreateInterfaceAttachmentFolders_Click"
                                                      ToolTip="Legt die aktuell eingetragenen XDT-Anhang-Ordner an. Vorhandene Ordner gelten als OK."/>
                                              <TextBlock x:Name="InterfaceAttachmentFolderSetupStatusTextBlock"
+                                                        Grid.Row="1"
+                                                        Grid.Column="0"
+                                                        Grid.ColumnSpan="3"
                                                         VerticalAlignment="Center"
                                                         Foreground="DimGray"
                                                         TextWrapping="Wrap"/>
-                                         </WrapPanel>
+                                         </Grid>
                                      </Grid>
                                  </Expander>
 

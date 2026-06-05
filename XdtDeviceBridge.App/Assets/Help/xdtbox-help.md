@@ -128,9 +128,9 @@ Ein neues Schnittstellenprofil wird als UserDefined und inaktiv angelegt. Konfig
 
 Aktive Schnittstellenprofile zaehlen immer als Geraeteanbindung. Der fruehere Lizenzpflicht-Haken wird in der App nicht mehr angezeigt; alte Profildaten koennen dadurch keine aktive Anbindung lizenzfrei schalten.
 
-Die Auswahl im Tab "Schnittstellenprofile" kann nach Geraetehersteller und AIS-System gefiltert werden. Der Button "AIS Ausgabe Info" zeigt ausschliesslich AIS-Ausgabefelder mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Geraeteausgabe, echte Messwerte, Rohdaten und Platzhalter werden dort bewusst nicht angezeigt.
+Die Auswahl im Tab "Schnittstellenprofile" kann nach Geraetehersteller und AIS-System gefiltert werden. Filter und Schnittstellenprofil-Dropdown stehen in einer kompakten Kopfzeile; das Profil-Dropdown ist begrenzt, damit es breite Fenster nicht dominiert. Der Button "AIS Ausgabe Info" zeigt ausschliesslich AIS-Ausgabefelder mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Geraeteausgabe, echte Messwerte, Rohdaten und Platzhalter werden dort bewusst nicht angezeigt.
 
-Die Untersuchungsart `8402` wird aus der AIS-Datei uebernommen und unveraendert wieder ausgegeben. Empfohlene Defaultwerte fuer neue Profile sind zum Beispiel `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS`; eine eingehende Untersuchungsart wird dadurch nicht blockiert.
+Die Untersuchungsart `8402` wird aus der AIS-Datei uebernommen und unveraendert wieder ausgegeben. Fuer empfohlene Defaultwerte priorisiert XDTBox die Geraeteidentitaet vor optionalen Anhangsfaehigkeiten: Tonometer/Pachymeter bleiben `TONO`, reine Dokument-/AttachmentOnly-Profile bleiben `DOKU`. Empfohlene Defaultwerte fuer neue Profile sind zum Beispiel `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS`; eine eingehende Untersuchungsart wird dadurch nicht blockiert.
 
 # Ordner Default und Ordner anlegen
 
@@ -142,7 +142,7 @@ Die Untersuchungsart `8402` wird aus der AIS-Datei uebernommen und unveraendert 
 
 XDT-Anhang Import und XDT-Anhang Export steuern die Übergabe externer Dokumentdateien an das AIS. Je Datei können Linkfelder 6302 bis 6305 erzeugt werden, wenn das jeweilige Profil diese Funktion nutzt.
 
-In `AIS Ausgabe Info` zeigen reine Dokumentgeräte die Felder `6302`, `6303` und `6305` als Karteikarten-relevant. Messgeräte mit optionalem XDT-Anhang behalten diese Linkfelder als optionale Zusatzfelder.
+In `AIS Ausgabe Info` zeigen reine Dokumentgeräte die Felder `6302`, `6303` und `6305` als Karteikarten-relevant. Messgeräte mit optionalem XDT-Anhang behalten diese Linkfelder als optionale Zusatzfelder. Das `6305`-Pfadtemplate und die Ordnerbuttons werden im Schnittstellenprofil in getrennten Grid-Spalten angezeigt, damit keine Ueberlagerung entsteht.
 
 Dokumentanhang-Workflows verändern keine Messwertparser und erzeugen keine künstlichen Messwerte.
 

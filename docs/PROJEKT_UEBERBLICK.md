@@ -145,9 +145,9 @@ Die Rollen sind bewusst getrennt: `XDT-Baukasten` bleibt Entwurf/Test/Vorschau u
 
 Im Tab `Schnittstellenprofile` ist der Button `Neues Schnittstellenprofil anlegen` funktionsfaehig: Er oeffnet einen Dialog fuer Profilname, AIS-Profil, Geraeteprofil und Exportprofil. Das neue Profil wird als UserDefined gespeichert, bleibt initial inaktiv und enthaelt keine automatisch erfundenen Ordnerpfade. Ordner, Nachlauf, Phoropter-Ausgabe-an-Geraet fuer CV-5000/RT-6100 und Dokumentanhaenge werden danach im bestehenden Konfigurationsbereich gepflegt.
 
-Die Schnittstellenprofil-Auswahl kann nach `Geraetehersteller` und `AIS-System` gefiltert werden. Aktive Schnittstellenprofile gelten immer als Geraeteanbindung; ein separater Lizenzpflicht-Haken wird nicht mehr angeboten und alte Profilwerte mit deaktivierter Lizenzpflicht zaehlen fuer aktive Anbindungen nicht mehr als Ausnahme. Fuer neue BuiltIn-, Template- und Repair-Profile gelten sichere Defaults: AIS-Importordnerbereinigung aktiv, Archivierung aus, Fehlerablage aktiv. UserDefined-Entscheidungen bleiben erhalten.
+Die Schnittstellenprofil-Auswahl kann nach `Geraetehersteller` und `AIS-System` gefiltert werden. Filter und begrenzte Schnittstellenprofil-Auswahl stehen in einer kompakten Kopfzeile. Aktive Schnittstellenprofile gelten immer als Geraeteanbindung; ein separater Lizenzpflicht-Haken wird nicht mehr angeboten und alte Profilwerte mit deaktivierter Lizenzpflicht zaehlen fuer aktive Anbindungen nicht mehr als Ausnahme. Fuer neue BuiltIn-, Template- und Repair-Profile gelten sichere Defaults: AIS-Importordnerbereinigung aktiv, Archivierung aus, Fehlerablage aktiv. UserDefined-Entscheidungen bleiben erhalten.
 
-Der Button `AIS Ausgabe Info` zeigt fuer das aktuelle Schnittstellenprofil nur die AIS-Ausgabesicht: Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Reine Dokumentgeraete zeigen `6302`, `6303` und `6305` als Karteikarten-relevant; Messgeraete mit optionalem Anhang behalten diese Felder optional. `8402` bleibt eine aus AIS uebernommene und unveraendert zurueckgegebene Untersuchungsart; Defaultvorschlaege wie `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS` sind nur Empfehlungen fuer neue Profile.
+Der Button `AIS Ausgabe Info` zeigt fuer das aktuelle Schnittstellenprofil nur die AIS-Ausgabesicht: Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Reine Dokumentgeraete zeigen `6302`, `6303` und `6305` als Karteikarten-relevant; Messgeraete mit optionalem Anhang behalten diese Felder optional. Die Defaultlogik priorisiert die Geraeteidentitaet vor optionalen Anhangsfaehigkeiten, damit Tonometer/Pachymeter `TONO` bleiben und nur reine Dokument-/AttachmentOnly-Profile `DOKU` erhalten. `8402` bleibt eine aus AIS uebernommene und unveraendert zurueckgegebene Untersuchungsart; Defaultvorschlaege wie `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS` sind nur Empfehlungen fuer neue Profile.
 
 Im selben Tab kann der Anwender Ordnerpfade vorbereiten, ohne Fachlogik zu aktivieren: `Ordner Default` fuellt Standardpfade unter `C:\XDTBox\<Geraetename>` in die aktuell sichtbaren Pfadfelder, `Ordner anlegen` erstellt die eingetragenen Ordner und meldet Erfolg oder konkrete Pfad-/Berechtigungsfehler. Es werden keine Dateien angelegt, geloescht oder verarbeitet.
 
@@ -227,7 +227,7 @@ Aktuell dokumentierte Felder:
 
 BuiltIn-Schnittstellenprofile werden nicht ueberschrieben. Beim Speichern auf Basis eines BuiltIn-Profils wird eine UserDefined-Kopie erzeugt.
 
-Das Feld `6305` ist im Konfigurationsbereich so angeordnet, dass das lange Pfadtemplate die Buttons `Ordner Default` und `Ordner anlegen` nicht verdeckt.
+Das Feld `6305` ist im Konfigurationsbereich mit einem inneren Grid angeordnet: Pfadtemplate, `Ordner Default` und `Ordner anlegen` belegen getrennte Spalten, sodass das lange Pfadtemplate die Buttons nicht verdeckt.
 
 Aktivierungsassistent aktueller Stand:
 

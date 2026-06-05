@@ -229,6 +229,20 @@ public sealed class AisOutputInfoService
 
     private static string CreateDeviceClassifier(DeviceProfileDefinition? deviceProfile)
     {
+        var identity = CreateDeviceIdentityClassifier(deviceProfile);
+        if (deviceProfile is null)
+        {
+            return identity;
+        }
+
+        return string.Join(
+            ' ',
+            identity,
+            string.Join(' ', deviceProfile.SupportedExaminationTypes ?? Array.Empty<string>()));
+    }
+
+    private static string CreateDeviceIdentityClassifier(DeviceProfileDefinition? deviceProfile)
+    {
         if (deviceProfile is null)
         {
             return string.Empty;
@@ -241,8 +255,7 @@ public sealed class AisOutputInfoService
             deviceProfile.Manufacturer,
             deviceProfile.DeviceType,
             deviceProfile.Model,
-            deviceProfile.ParserMode,
-            string.Join(' ', deviceProfile.SupportedExaminationTypes ?? Array.Empty<string>()));
+            deviceProfile.ParserMode);
     }
 
     private static bool IsRequiredAttachmentOnlyProfile(
@@ -254,8 +267,23 @@ public sealed class AisOutputInfoService
             return true;
         }
 
-        var text = CreateDeviceClassifier(deviceProfile);
-        return ContainsAny(text, "document", "dokument", "attachmentonly", "attachment only", "anhang", "manual");
+        var text = CreateDeviceIdentityClassifier(deviceProfile);
+        return IsDocumentOnlyDeviceText(text);
+    }
+
+    private static bool IsDocumentOnlyDeviceText(string text)
+    {
+        return ContainsAny(
+            text,
+            "document",
+            "dokument",
+            "attachmentonly",
+            "attachment only",
+            "anhang",
+            "manual document",
+            "manualdocument",
+            "dokumentauswahl",
+            "dokumentübergabe");
     }
 
     private static bool ContainsAny(string text, params string[] needles)
@@ -337,7 +365,7 @@ public static class AisExaminationTypeDefaults
             return Fallback;
         }
 
-        var profileText = string.Join(
+        var identityText = string.Join(
             ' ',
             deviceProfile.Metadata.Name,
             deviceProfile.Metadata.Product ?? string.Empty,
@@ -348,10 +376,10 @@ public static class AisExaminationTypeDefaults
         var supportedText = string.Join(' ', deviceProfile.SupportedExaminationTypes ?? Array.Empty<string>());
         var text = string.Join(
             ' ',
-            profileText,
+            identityText,
             supportedText);
 
-        if (ContainsAny(text, "document", "dokument", "attachment", "anhang", "manual"))
+        if (IsDocumentOnlyDeviceText(identityText))
         {
             return "DOKU";
         }
@@ -371,14 +399,14 @@ public static class AisExaminationTypeDefaults
             return "KOMB";
         }
 
-        if (ContainsAny(text, "pachy", "cct"))
-        {
-            return "PACHY";
-        }
-
         if (ContainsAny(text, "tonometer", "nct", "nt-", "tm", "ct-"))
         {
             return "TONO";
+        }
+
+        if (ContainsAny(text, "pachy", "cct"))
+        {
+            return "PACHY";
         }
 
         if (ContainsAny(text, "kerato", "keratometer", "km"))
@@ -409,6 +437,21 @@ public static class AisExaminationTypeDefaults
         return Fallback;
     }
 
+    private static bool IsDocumentOnlyDeviceText(string text)
+    {
+        return ContainsAny(
+            text,
+            "document",
+            "dokument",
+            "attachmentonly",
+            "attachment only",
+            "anhang",
+            "manual document",
+            "manualdocument",
+            "dokumentauswahl",
+            "dokumentübergabe");
+    }
+
     private static bool IsCombinationDevice(string text)
     {
         if (ContainsAny(text, "combo", "kombi", "komb", "trk-", "tonoref", "ref/km", "ref-km"))
@@ -425,7 +468,7 @@ public static class AisExaminationTypeDefaults
             || (hasRef && hasTono)
             || (hasRef && hasPachy)
             || (hasKerato && hasTono)
-            || (hasTono && hasPachy);
+            || (hasKerato && hasPachy);
     }
 
     private static bool ContainsAny(string text, params string[] needles)
