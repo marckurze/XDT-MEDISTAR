@@ -1,0 +1,24 @@
+<Ophthalmology xmlns:nsCommon="urn:common" xmlns:nsLM="urn:lm">
+  <nsCommon:Common>
+    <nsCommon:Company>ZEISS</nsCommon:Company>
+    <nsCommon:ModelName>VISULENS 550</nsCommon:ModelName>
+  </nsCommon:Common>
+  <nsLM:Measure Type="LM">
+    <nsLM:LM>
+      <nsLM:R>
+        <nsLM:Sphere>6.25</nsLM:Sphere>
+        <nsLM:Cylinder>-3.25</nsLM:Cylinder>
+        <nsLM:Axis>3</nsLM:Axis>
+        <nsLM:ADD>1.25</nsLM:ADD>
+        <nsLM:ADD2>2.00</nsLM:ADD2>
+        <nsLM:PD>59</nsLM:PD>
+      </nsLM:R>
+      <nsLM:L>
+        <nsLM:Sphere>6.50</nsLM:Sphere>
+        <nsLM:Cylinder>-2.75</nsLM:Cylinder>
+        <nsLM:Axis>170</nsLM:Axis>
+        <nsLM:ADD>1.50</nsLM:ADD>
+      </nsLM:L>
+    </nsLM:LM>
+  </nsLM:Measure>
+</Ophthalmology>

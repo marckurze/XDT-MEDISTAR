@@ -78,7 +78,9 @@ public partial class NewDeviceProfileDialog : Window
                         ? "TOMEY EM"
                         : parserMode.Equals(ShinNipponDeviceParser.ParserMode, StringComparison.OrdinalIgnoreCase)
                             ? "Shin-Nippon"
-                            : parserMode;
+                            : parserMode.Equals(CanonZeissVisionixDeviceParser.ParserMode, StringComparison.OrdinalIgnoreCase)
+                                ? "Canon / ZEISS / Visionix"
+                                : parserMode;
     }
 
     private DeviceConnectionKind ReadConnectionKind()

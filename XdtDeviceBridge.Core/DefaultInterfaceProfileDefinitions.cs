@@ -1127,6 +1127,145 @@ public static class DefaultInterfaceProfileDefinitions
             SerialSettings: serialSettings);
     }
 
+    public static InterfaceProfileDefinition CreateMedistarCanonRkF2Default()
+    {
+        return CreateMedistarCanonZeissVisionixFileDefault("interface-medistar-canon-rkf2-default", "MEDISTAR + Canon RK-F2", "MEDISTAR/Canon RK-F2", "device-canon-rkf2-default", "export-medistar-canon-rkf2-default", "Built-in inactive file profile for Canon RK-F2 XML REF imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarCanonTx20PDefault()
+    {
+        return CreateMedistarCanonZeissVisionixFileDefault("interface-medistar-canon-tx20p-default", "MEDISTAR + Canon TX-20P", "MEDISTAR/Canon TX-20P", "device-canon-tx20p-default", "export-medistar-canon-tx20p-default", "Built-in inactive file profile for Canon TX-20P XML IOP/CCT imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarZeissVisulens550Default()
+    {
+        return CreateMedistarCanonZeissVisionixFileDefault("interface-medistar-zeiss-visulens550-default", "MEDISTAR + ZEISS VISULENS 550", "MEDISTAR/ZEISS VISULENS 550", "device-zeiss-visulens550-default", "export-medistar-zeiss-visulens550-default", "Built-in inactive file profile for ZEISS VISULENS 550 XML lensmeter imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarZeissVisuplan500Default()
+    {
+        return CreateMedistarReferenceTextSerialDefault(
+            id: "interface-medistar-zeiss-visuplan500-default",
+            name: "MEDISTAR + ZEISS VISUPLAN 500",
+            product: "MEDISTAR/ZEISS VISUPLAN 500",
+            deviceProfileId: "device-zeiss-visuplan500-default",
+            exportProfileId: "export-medistar-zeiss-visuplan500-default",
+            description: "Built-in inactive serial profile for ZEISS VISUPLAN 500 tonometry text imports. COM defaults use 19200 8N1 without DTR/RTS according to the reference settings; practical raw-data validation remains open.",
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 19200,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            timestamp: new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarZeissVisuref100Default()
+    {
+        return CreateMedistarReferenceTextSerialDefault(
+            id: "interface-medistar-zeiss-visuref100-default",
+            name: "MEDISTAR + ZEISS VISUREF 100",
+            product: "MEDISTAR/ZEISS VISUREF 100",
+            deviceProfileId: "device-zeiss-visuref100-default",
+            exportProfileId: "export-medistar-zeiss-visuref100-default",
+            description: "Built-in inactive serial profile for ZEISS VISUREF 100 REF/KM text imports. COM defaults use 9600 8N1 without DTR/RTS according to the reference settings; practical raw-data validation remains open.",
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 9600,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CR,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            timestamp: new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarVisionixRetinomax5Default()
+    {
+        return CreateMedistarReferenceTextSerialDefault(
+            id: "interface-medistar-visionix-retinomax5-default",
+            name: "MEDISTAR + Visionix Retinomax 5",
+            product: "MEDISTAR/Visionix Retinomax 5",
+            deviceProfileId: "device-visionix-retinomax5-default",
+            exportProfileId: "export-medistar-visionix-retinomax5-default",
+            description: "Built-in inactive serial profile for Visionix Retinomax 5 REF/KM text imports. COM defaults use 115200 8N1 without DTR/RTS according to the reference settings; practical raw-data validation remains open.",
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 115200,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            timestamp: new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarVisionixVx120Default()
+    {
+        return CreateMedistarCanonZeissVisionixFileDefault("interface-medistar-visionix-vx120-default", "MEDISTAR + Visionix VX 120", "MEDISTAR/Visionix VX 120", "device-visionix-vx120-default", "export-medistar-visionix-vx120-default", "Built-in inactive file profile for Visionix VX 120 XML REF imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarVisionixVx650Default()
+    {
+        return CreateMedistarCanonZeissVisionixFileDefault("interface-medistar-visionix-vx650-default", "MEDISTAR + Visionix VX 650", "MEDISTAR/Visionix VX 650", "device-visionix-vx650-default", "export-medistar-visionix-vx650-default", "Built-in inactive file profile for Visionix VX 650 XML REF/TM imports.");
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarCanonZeissVisionixFileDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: true,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description);
+    }
+
     public static InterfaceProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
     {
         return CreateMedistarHuvitzTextSerialDefault(

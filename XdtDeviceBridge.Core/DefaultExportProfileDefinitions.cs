@@ -1997,6 +1997,199 @@ public static class DefaultExportProfileDefinitions
         };
     }
 
+    public static ExportProfileDefinition CreateMedistarCanonRkF2Default()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-canon-rkf2-default",
+            name: "MEDISTAR + Canon RK-F2 Export",
+            product: "MEDISTAR/Canon RK-F2",
+            deviceProfileId: "device-canon-rkf2-default",
+            description: "Built-in MEDISTAR export profile for Canon RK-F2 REF XML data. REF maps to 6228. No 6330 or artificial separators are emitted.",
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarCanonTx20PDefault()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-canon-tx20p-default",
+            name: "MEDISTAR + Canon TX-20P Export",
+            product: "MEDISTAR/Canon TX-20P",
+            deviceProfileId: "device-canon-tx20p-default",
+            description: "Built-in MEDISTAR export profile for Canon TX-20P XML data. IOP maps to 6205 and CCT/Pachy maps to 6220.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            includePachy: true);
+    }
+
+    public static ExportProfileDefinition CreateMedistarZeissVisulens550Default()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-zeiss-visulens550-default",
+            name: "MEDISTAR + ZEISS VISULENS 550 Export",
+            product: "MEDISTAR/ZEISS VISULENS 550",
+            deviceProfileId: "device-zeiss-visulens550-default",
+            description: "Built-in MEDISTAR export profile for ZEISS VISULENS 550 LM XML data. Lensmeter lines map to 6228.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarZeissVisuplan500Default()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-zeiss-visuplan500-default",
+            name: "MEDISTAR + ZEISS VISUPLAN 500 Export",
+            product: "MEDISTAR/ZEISS VISUPLAN 500",
+            deviceProfileId: "device-zeiss-visuplan500-default",
+            description: "Built-in MEDISTAR export profile for ZEISS VISUPLAN 500 tonometry text data. IOP maps to 6205.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            includePachy: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarZeissVisuref100Default()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-zeiss-visuref100-default",
+            name: "MEDISTAR + ZEISS VISUREF 100 Export",
+            product: "MEDISTAR/ZEISS VISUREF 100",
+            deviceProfileId: "device-zeiss-visuref100-default",
+            description: "Built-in MEDISTAR export profile for ZEISS VISUREF 100 REF/KM text data. REF maps to 6228 and KM maps to 6221.",
+            includeRef: true,
+            includeKm: true,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarVisionixRetinomax5Default()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-visionix-retinomax5-default",
+            name: "MEDISTAR + Visionix Retinomax 5 Export",
+            product: "MEDISTAR/Visionix Retinomax 5",
+            deviceProfileId: "device-visionix-retinomax5-default",
+            description: "Built-in MEDISTAR export profile for Visionix Retinomax 5 REF/KM text data. REF maps to 6228 and KM maps to 6221.",
+            includeRef: true,
+            includeKm: true,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarVisionixVx120Default()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-visionix-vx120-default",
+            name: "MEDISTAR + Visionix VX 120 Export",
+            product: "MEDISTAR/Visionix VX 120",
+            deviceProfileId: "device-visionix-vx120-default",
+            description: "Built-in MEDISTAR export profile for Visionix VX 120 REF XML data. REF maps to 6228.",
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarVisionixVx650Default()
+    {
+        return CreateMedistarCanonZeissVisionixDefault(
+            id: "export-medistar-visionix-vx650-default",
+            name: "MEDISTAR + Visionix VX 650 Export",
+            product: "MEDISTAR/Visionix VX 650",
+            deviceProfileId: "device-visionix-vx650-default",
+            description: "Built-in MEDISTAR export profile for Visionix VX 650 REF/TM XML data. REF maps to 6228 and tonometry maps to 6205.",
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            includePachy: false);
+    }
+
+    private static ExportProfileDefinition CreateMedistarCanonZeissVisionixDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono,
+        bool includePachy)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarCanonZeissVisionixRules(includeRef, includeKm, includeLens, includeTono, includePachy));
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarCanonZeissVisionixRules(
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono,
+        bool includePachy)
+    {
+        var rules = CreateMedistarBaseRules();
+        var sortOrder = rules.Count + 1;
+        if (includeRef)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultRight", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye REF line."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultLeft", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye REF line."));
+        }
+
+        if (includeLens)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultRight", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye lensmeter line."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultLeft", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye lensmeter line."));
+        }
+
+        if (includeKm)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryRadii", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine1", "{value}", sortOrder++, true, "MEDISTAR 6221 KM R1/R2 line."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryAverage", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine2", "{value}", sortOrder++, true, "MEDISTAR 6221 KM AV/CYL line."));
+        }
+
+        if (includeTono)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "Tonometry", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/TonoListLine", "{value}", sortOrder++, true, "MEDISTAR 6205 tonometry line."));
+        }
+
+        if (includePachy)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6220", "Pachymetry", ExportRuleType.Template, "Device.Measure[@Type='CCT']/Pachy/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6220 pachymetry/CCT line."));
+        }
+
+        return rules;
+    }
+
     public static ExportProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
     {
         return CreateMedistarHuvitzTextDefault(

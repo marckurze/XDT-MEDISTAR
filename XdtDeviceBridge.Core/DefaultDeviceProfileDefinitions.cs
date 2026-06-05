@@ -2374,6 +2374,336 @@ public static class DefaultDeviceProfileDefinitions
         return measurements;
     }
 
+    public static DeviceProfileDefinition CreateCanonRkF2Default()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-canon-rkf2-default",
+            name: "Canon RK-F2",
+            manufacturer: "Canon",
+            product: "RK-F2",
+            model: "RK-F2",
+            deviceType: "Autorefraktor",
+            description: "Built-in Canon RK-F2 XML REF profile derived from reference XPath rules. REF maps to 6228; KM is not enabled without a confirmed target rule.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static DeviceProfileDefinition CreateCanonTx20PDefault()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-canon-tx20p-default",
+            name: "Canon TX-20P",
+            manufacturer: "Canon",
+            product: "TX-20P",
+            model: "TX-20P",
+            deviceType: "Tonometer/Pachymeter",
+            description: "Built-in Canon TX-20P XML profile derived from reference XML scheme rules. IOP maps to 6205 and CCT/Pachy maps to 6220.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeRef: false,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            includePachy: true);
+    }
+
+    public static DeviceProfileDefinition CreateZeissVisulens550Default()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-zeiss-visulens550-default",
+            name: "ZEISS VISULENS 550",
+            manufacturer: "ZEISS",
+            product: "VISULENS 550",
+            model: "VISULENS 550",
+            deviceType: "Lensmeter",
+            description: "Built-in ZEISS VISULENS 550 XML lensmeter profile derived from reference XPath rules. LM maps to 6228.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static DeviceProfileDefinition CreateZeissVisuplan500Default()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-zeiss-visuplan500-default",
+            name: "ZEISS VISUPLAN 500",
+            manufacturer: "ZEISS",
+            product: "VISUPLAN 500",
+            model: "VISUPLAN 500",
+            deviceType: "Tonometer",
+            description: "Built-in ZEISS VISUPLAN 500 serial text tonometry profile derived from reference parser rules. IOP maps to 6205; practical raw-data validation remains open.",
+            connectionKind: DeviceConnectionKind.SerialRs232,
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 19200,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            includeRef: false,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            includePachy: false);
+    }
+
+    public static DeviceProfileDefinition CreateZeissVisuref100Default()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-zeiss-visuref100-default",
+            name: "ZEISS VISUREF 100",
+            manufacturer: "ZEISS",
+            product: "VISUREF 100",
+            model: "VISUREF 100",
+            deviceType: "Autorefraktor/Keratometer",
+            description: "Built-in ZEISS VISUREF 100 serial text REF/KM profile derived from reference parser rules. REF maps to 6228 and KM maps to 6221; practical raw-data validation remains open.",
+            connectionKind: DeviceConnectionKind.SerialRs232,
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 9600,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CR,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            includeRef: true,
+            includeKm: true,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static DeviceProfileDefinition CreateVisionixRetinomax5Default()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-visionix-retinomax5-default",
+            name: "Visionix Retinomax 5",
+            manufacturer: "Visionix",
+            product: "Retinomax 5",
+            model: "Retinomax 5",
+            deviceType: "Autorefraktor/Keratometer",
+            description: "Built-in Visionix Retinomax 5 serial text REF/KM profile derived from reference parser rules. REF maps to 6228 and KM maps to 6221; practical raw-data validation remains open.",
+            connectionKind: DeviceConnectionKind.SerialRs232,
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 115200,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            includeRef: true,
+            includeKm: true,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static DeviceProfileDefinition CreateVisionixVx120Default()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-visionix-vx120-default",
+            name: "Visionix VX 120",
+            manufacturer: "Visionix",
+            product: "VX 120",
+            model: "VX 120",
+            deviceType: "Autorefraktor",
+            description: "Built-in Visionix VX 120 XML REF profile derived from reference XPath rules. Only clearly mapped REF values are exported with 6228.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: false,
+            includePachy: false);
+    }
+
+    public static DeviceProfileDefinition CreateVisionixVx650Default()
+    {
+        return CreateCanonZeissVisionixDefault(
+            id: "device-visionix-vx650-default",
+            name: "Visionix VX 650",
+            manufacturer: "Visionix",
+            product: "VX 650",
+            model: "VX 650",
+            deviceType: "Autorefraktor/Tonometer",
+            description: "Built-in Visionix VX 650 XML REF/TM profile derived from reference XPath rules. REF maps to 6228 and tonometry maps to 6205.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            includePachy: false);
+    }
+
+    private static DeviceProfileDefinition CreateCanonZeissVisionixDefault(
+        string id,
+        string name,
+        string manufacturer,
+        string product,
+        string model,
+        string deviceType,
+        string description,
+        DeviceConnectionKind connectionKind,
+        SerialCommunicationSettings? serialSettings,
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono,
+        bool includePachy)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: manufacturer,
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: manufacturer,
+            Model: model,
+            DeviceType: deviceType,
+            ParserMode: CanonZeissVisionixDeviceParser.ParserMode,
+            Measurements: CreateCanonZeissVisionixMeasurements(id, manufacturer, includeRef, includeKm, includeLens, includeTono, includePachy),
+            SupportedExaminationTypes: CreateCanonZeissVisionixSupportedExaminationTypes(includeRef, includeKm, includeLens, includeTono, includePachy),
+            CanContainMultipleExaminationTypes: new[] { includeRef, includeKm, includeLens, includeTono, includePachy }.Count(value => value) > 1,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: connectionKind,
+            SerialSettings: serialSettings);
+    }
+
+    private static IReadOnlyList<string> CreateCanonZeissVisionixSupportedExaminationTypes(
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono,
+        bool includePachy)
+    {
+        var values = new List<string>();
+        if (includeRef)
+        {
+            values.AddRange(new[] { "REF", "AUTO", "Refraktion" });
+        }
+
+        if (includeKm)
+        {
+            values.AddRange(new[] { "KM", "Keratometer" });
+        }
+
+        if (includeLens)
+        {
+            values.AddRange(new[] { "LM", "Lensmeter" });
+        }
+
+        if (includeTono)
+        {
+            values.AddRange(new[] { "TM", "Tonometrie" });
+        }
+
+        if (includePachy)
+        {
+            values.AddRange(new[] { "CCT", "Pachymetrie" });
+        }
+
+        return values;
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateCanonZeissVisionixMeasurements(
+        string id,
+        string manufacturer,
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono,
+        bool includePachy)
+    {
+        var prefix = id.Replace("device-", string.Empty, StringComparison.OrdinalIgnoreCase).Replace("-default", string.Empty, StringComparison.OrdinalIgnoreCase);
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, $"{manufacturer} common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, $"{manufacturer} model name.")
+        };
+
+        if (includeRef)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-ref-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"REF {eye} Sphere", $"Measure[@Type='REF']/REF/{eye}/Sphere", "REF", eye, "dpt", false, "REF sphere."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"REF {eye} Cylinder", $"Measure[@Type='REF']/REF/{eye}/Cylinder", "REF", eye, "dpt", false, "REF cylinder."));
+                measurements.Add(new($"{eyePrefix}-axis", $"REF {eye} Axis", $"Measure[@Type='REF']/REF/{eye}/Axis", "REF", eye, "deg", false, "REF axis."));
+                measurements.Add(new($"{eyePrefix}-add", $"REF {eye} ADD", $"Measure[@Type='REF']/REF/{eye}/ADD", "REF", eye, "dpt", false, "REF addition, when present."));
+                measurements.Add(new($"{eyePrefix}-line", $"REF {eye} MEDISTAR-Zeile", $"Measure[@Type='REF']/REF/{eye}/MedistarLine", "REF", eye, string.Empty, false, "Prepared MEDISTAR 6228 REF line."));
+            }
+
+            measurements.Add(new($"{prefix}-ref-pd", "REF PD", "Measure[@Type='REF']/REF/PD", "REF", string.Empty, "mm", false, "REF PD."));
+            measurements.Add(new($"{prefix}-ref-vd", "REF VD", "Measure[@Type='REF']/REF/VD", "REF", string.Empty, "mm", false, "REF VD."));
+        }
+
+        if (includeLens)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-lm-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"LM {eye} Sphere", $"Measure[@Type='LM']/LM/{eye}/Sphere", "LM", eye, "dpt", false, "LM sphere."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"LM {eye} Cylinder", $"Measure[@Type='LM']/LM/{eye}/Cylinder", "LM", eye, "dpt", false, "LM cylinder."));
+                measurements.Add(new($"{eyePrefix}-axis", $"LM {eye} Axis", $"Measure[@Type='LM']/LM/{eye}/Axis", "LM", eye, "deg", false, "LM axis."));
+                measurements.Add(new($"{eyePrefix}-add", $"LM {eye} ADD", $"Measure[@Type='LM']/LM/{eye}/ADD", "LM", eye, "dpt", false, "LM addition."));
+                measurements.Add(new($"{eyePrefix}-add2", $"LM {eye} ADD2", $"Measure[@Type='LM']/LM/{eye}/ADD2", "LM", eye, "dpt", false, "LM second addition."));
+                measurements.Add(new($"{eyePrefix}-line", $"LM {eye} MEDISTAR-Zeile", $"Measure[@Type='LM']/LM/{eye}/MedistarLine", "LM", eye, string.Empty, false, "Prepared MEDISTAR 6228 LM line."));
+            }
+        }
+
+        if (includeKm)
+        {
+            measurements.Add(new($"{prefix}-km-line1", "KM MEDISTAR R1/R2-Zeile", "Measure[@Type='KM']/KM/MedistarLine1", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 R1/R2 line."));
+            measurements.Add(new($"{prefix}-km-line2", "KM MEDISTAR AV/CYL-Zeile", "Measure[@Type='KM']/KM/MedistarLine2", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 AV/CYL line."));
+        }
+
+        if (includeTono)
+        {
+            measurements.Add(new($"{prefix}-tm-line", "Tonometrie MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 tonometry line."));
+        }
+
+        if (includePachy)
+        {
+            measurements.Add(new($"{prefix}-cct-line", "Pachymetrie MEDISTAR-Zeile", "Measure[@Type='CCT']/Pachy/MedistarLine", "CCT", string.Empty, string.Empty, false, "Prepared MEDISTAR 6220 pachymetry line."));
+        }
+
+        return measurements;
+    }
+
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

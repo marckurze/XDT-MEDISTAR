@@ -14,6 +14,7 @@ public sealed class BuilderManualProcessingPreviewService
     private readonly RodenstockDeviceParser _rodenstockDeviceParser = new();
     private readonly TomeyDeviceParser _tomeyDeviceParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmDeviceParser = new();
+    private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixDeviceParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -201,6 +202,23 @@ public sealed class BuilderManualProcessingPreviewService
             try
             {
                 return _tomeyEmDeviceParser.ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                });
+            }
+        }
+
+        if (CanonZeissVisionixDeviceParser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return _canonZeissVisionixDeviceParser.ParseFile(deviceFilePath);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {

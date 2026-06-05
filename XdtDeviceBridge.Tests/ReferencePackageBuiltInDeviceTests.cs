@@ -12,6 +12,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
     private readonly RodenstockDeviceParser _rodenstockParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
+    private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixParser = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
 
@@ -509,6 +510,193 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void CanonRkF2Profile_ShouldParseAndExportRefLinesOnly()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetCanonFixturePath("RKF2", "RKF2_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarCanonRkF2Default();
+        var xdt = BuildXdt(CreatePatientData("AUTO"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "RK-F2");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine" && measurement.Value == "R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 0.00 Z=+ 0.00*  0", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CanonTx20PProfile_ShouldParseAndExportTonometryAndPachymetryLines()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetCanonFixturePath("TX20P", "TX20P_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarCanonTx20PDefault();
+        var xdt = BuildXdt(CreatePatientData("TONO"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "TX-20P");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine" && measurement.Value == "R = 12 11 15 [12.7] // L = 14 13 15 [14] mmHg");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='CCT']/Pachy/MedistarLine" && measurement.Value == "RA: 0.559 // LA: 0.560");
+        Assert.Contains("6205R = 12 11 15 [12.7] // L = 14 13 15 [14] mmHg", xdt, StringComparison.Ordinal);
+        Assert.Contains("6220RA: 0.559 // LA: 0.560", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ZeissVisulens550Profile_ShouldParseAndExportLensmeterLines()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetZeissFixturePath("VISULENS550", "VISULENS550_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarZeissVisulens550Default();
+        var xdt = BuildXdt(CreatePatientData("LENS"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "VISULENS 550");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/MedistarLine");
+        Assert.Contains("6228R.:S=+ 6.25 Z=- 3.25*  3 PD= 59                     A=+ 1.25 A2=+ 2.00", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 6.50 Z=- 2.75*170                     A=+ 1.50", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ZeissVisuplan500Profile_ShouldParseAndExportTonometryLine()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetZeissFixturePath("VISUPLAN500", "VISUPLAN500_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarZeissVisuplan500Default();
+        var xdt = BuildXdt(CreatePatientData("TONO"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "VISUPLAN 500");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine" && measurement.Value == "R = 12 11 15 [12.7] // L = 14 13 15 [14] mmHg");
+        Assert.Contains("6205R = 12 11 15 [12.7] // L = 14 13 15 [14] mmHg", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ZeissVisuref100Profile_ShouldParseAndExportRefAndKeratometryLines()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetZeissFixturePath("VISUREF100", "VISUREF100_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarZeissVisuref100Default();
+        var xdt = BuildXdt(CreatePatientData("KOMB"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "VISUREF 100");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.67 44 *173 R2=7.57 44.5 * 83 // L: R1=7.68 44 *175 R2=7.52 45 * 85", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: AV=7.62 44.25 CYL=-0.50 173 // L: AV=7.6 44.5 CYL=-1.00 175", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VisionixRetinomax5Profile_ShouldParseAndExportRefAndKeratometryLines()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetVisionixFixturePath("Retinomax5", "Retinomax5_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarVisionixRetinomax5Default();
+        var xdt = BuildXdt(CreatePatientData("KOMB"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "Retinomax 5");
+        Assert.Contains("6228R.:S=- 3.75 Z=- 1.25* 98 PD= 66 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 4.25 Z=- 2.00*105", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.67 44 *173 R2=7.57 44.5 * 83 // L: R1=7.68 44 *175 R2=7.52 45 * 85", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VisionixVx120Profile_ShouldParseAndExportRefLinesOnly()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetVisionixFixturePath("VX120", "VX120_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarVisionixVx120Default();
+        var xdt = BuildXdt(CreatePatientData("AUTO"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "VX 120");
+        Assert.Contains("6228R.:S=- 3.75 Z=- 1.25* 98", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 4.25 Z=- 2.00*105", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6205", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VisionixVx650Profile_ShouldParseAndExportRefAndTonometryLines()
+    {
+        var parseResult = _canonZeissVisionixParser.ParseFile(GetVisionixFixturePath("VX650", "VX650_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarVisionixVx650Default();
+        var xdt = BuildXdt(CreatePatientData("KOMB"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "VX 650");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 0.00 Z=+ 0.00*  0", xdt, StringComparison.Ordinal);
+        Assert.Contains("6205R = 12.7 [12.7] // L = 14 [14] mmHg", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CanonZeissVisionixPreview_ShouldAcceptNonXmlDeviceFileInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = GetZeissFixturePath("VISUREF100", "VISUREF100_reference_text.txt");
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateZeissVisuref100Default(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12", result.ExportContent, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AisOutputInfo_ShouldShowCanonTx20PMeasurementFields()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateCanonTx20PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarCanonTx20PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarCanonTx20PDefault());
+        var service = new AisOutputInfoService();
+
+        var info = service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        Assert.Equal("TONO", info.DefaultExaminationType);
+        Assert.Contains(info.Fields, field => field.FieldCode == "6205" && field.IsCardField);
+        Assert.Contains(info.Fields, field => field.FieldCode == "6220" && field.IsCardField);
+        Assert.DoesNotContain(info.Fields, field => field.FieldCode == "6228");
+    }
+
+    [Theory]
+    [InlineData("interface-medistar-canon-rkf2-default", "package-medistar-canon-rk-f2-v1")]
+    [InlineData("interface-medistar-canon-tx20p-default", "package-medistar-canon-tx-20p-v1")]
+    [InlineData("interface-medistar-zeiss-visulens550-default", "package-medistar-zeiss-visulens-550-v1")]
+    [InlineData("interface-medistar-zeiss-visuplan500-default", "package-medistar-zeiss-visuplan-500-v1")]
+    [InlineData("interface-medistar-zeiss-visuref100-default", "package-medistar-zeiss-visuref-100-v1")]
+    [InlineData("interface-medistar-visionix-retinomax5-default", "package-medistar-visionix-retinomax-5-v1")]
+    [InlineData("interface-medistar-visionix-vx120-default", "package-medistar-visionix-vx-120-v1")]
+    [InlineData("interface-medistar-visionix-vx650-default", "package-medistar-visionix-vx-650-v1")]
+    public void TemplateSelection_ShouldCreateCanonZeissVisionixBatch8Packages(string interfaceProfileId, string expectedPackageId)
+    {
+        var catalog = CreateCanonZeissVisionixCatalog();
+        var service = new TemplatePackageExportSelectionService();
+
+        var result = service.CreateForInterfaceProfile(catalog, interfaceProfileId, new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero));
+
+        Assert.True(result.Success, result.ErrorMessage);
+        Assert.Equal(expectedPackageId, result.Request!.Package.Metadata.Id);
+        Assert.Contains(result.Request.Package.IncludedProfiles, profile => profile.Id == interfaceProfileId);
+        Assert.Contains(result.Request.Package.IncludedProfiles, profile => profile.Id == "ais-medistar-default");
+    }
+
+    [Fact]
     public void NewReferenceBackedBuiltIns_ShouldBeValid()
     {
         var deviceProfiles = new[]
@@ -526,6 +714,14 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultDeviceProfileDefinitions.CreateReichert7CrNctDefault(),
             DefaultDeviceProfileDefinitions.CreateReichertLensChekPlusDefault(),
             DefaultDeviceProfileDefinitions.CreateRodenstockCx800Default(),
+            DefaultDeviceProfileDefinitions.CreateCanonRkF2Default(),
+            DefaultDeviceProfileDefinitions.CreateCanonTx20PDefault(),
+            DefaultDeviceProfileDefinitions.CreateZeissVisulens550Default(),
+            DefaultDeviceProfileDefinitions.CreateZeissVisuplan500Default(),
+            DefaultDeviceProfileDefinitions.CreateZeissVisuref100Default(),
+            DefaultDeviceProfileDefinitions.CreateVisionixRetinomax5Default(),
+            DefaultDeviceProfileDefinitions.CreateVisionixVx120Default(),
+            DefaultDeviceProfileDefinitions.CreateVisionixVx650Default(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk9000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(),
@@ -554,6 +750,14 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultExportProfileDefinitions.CreateMedistarReichert7CrNctDefault(),
             DefaultExportProfileDefinitions.CreateMedistarReichertLensChekPlusDefault(),
             DefaultExportProfileDefinitions.CreateMedistarRodenstockCx800Default(),
+            DefaultExportProfileDefinitions.CreateMedistarCanonRkF2Default(),
+            DefaultExportProfileDefinitions.CreateMedistarCanonTx20PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarZeissVisulens550Default(),
+            DefaultExportProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
+            DefaultExportProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+            DefaultExportProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
+            DefaultExportProfileDefinitions.CreateMedistarVisionixVx120Default(),
+            DefaultExportProfileDefinitions.CreateMedistarVisionixVx650Default(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
@@ -582,6 +786,14 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultInterfaceProfileDefinitions.CreateMedistarReichert7CrNctDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarReichertLensChekPlusDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarRodenstockCx800Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarCanonRkF2Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarCanonTx20PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisulens550Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx120Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx650Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
@@ -792,6 +1004,72 @@ public sealed class ReferencePackageBuiltInDeviceTests
     private static string GetTomeyFixturePath(string familyFolder, string fileName)
     {
         return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Tomey", familyFolder, fileName);
+    }
+
+    private static string GetCanonFixturePath(string familyFolder, string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Canon", familyFolder, fileName);
+    }
+
+    private static string GetZeissFixturePath(string familyFolder, string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "ZEISS", familyFolder, fileName);
+    }
+
+    private static string GetVisionixFixturePath(string familyFolder, string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Visionix", familyFolder, fileName);
+    }
+
+    private static ProfileCatalog CreateCatalog(
+        DeviceProfileDefinition deviceProfile,
+        ExportProfileDefinition exportProfile,
+        InterfaceProfileDefinition interfaceProfile)
+    {
+        return new ProfileCatalog(
+            AisProfiles: new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            DeviceProfiles: new[] { deviceProfile },
+            ExportProfiles: new[] { exportProfile },
+            InterfaceProfiles: new[] { interfaceProfile });
+    }
+
+    private static ProfileCatalog CreateCanonZeissVisionixCatalog()
+    {
+        return new ProfileCatalog(
+            AisProfiles: new[] { DefaultAisProfiles.CreateMedistarDefault() },
+            DeviceProfiles: new[]
+            {
+                DefaultDeviceProfileDefinitions.CreateCanonRkF2Default(),
+                DefaultDeviceProfileDefinitions.CreateCanonTx20PDefault(),
+                DefaultDeviceProfileDefinitions.CreateZeissVisulens550Default(),
+                DefaultDeviceProfileDefinitions.CreateZeissVisuplan500Default(),
+                DefaultDeviceProfileDefinitions.CreateZeissVisuref100Default(),
+                DefaultDeviceProfileDefinitions.CreateVisionixRetinomax5Default(),
+                DefaultDeviceProfileDefinitions.CreateVisionixVx120Default(),
+                DefaultDeviceProfileDefinitions.CreateVisionixVx650Default()
+            },
+            ExportProfiles: new[]
+            {
+                DefaultExportProfileDefinitions.CreateMedistarCanonRkF2Default(),
+                DefaultExportProfileDefinitions.CreateMedistarCanonTx20PDefault(),
+                DefaultExportProfileDefinitions.CreateMedistarZeissVisulens550Default(),
+                DefaultExportProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
+                DefaultExportProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+                DefaultExportProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
+                DefaultExportProfileDefinitions.CreateMedistarVisionixVx120Default(),
+                DefaultExportProfileDefinitions.CreateMedistarVisionixVx650Default()
+            },
+            InterfaceProfiles: new[]
+            {
+                DefaultInterfaceProfileDefinitions.CreateMedistarCanonRkF2Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarCanonTx20PDefault(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisulens550Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx120Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx650Default()
+            });
     }
 
     private static string WriteTempGdt()

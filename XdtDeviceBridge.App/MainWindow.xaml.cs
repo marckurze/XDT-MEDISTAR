@@ -130,6 +130,7 @@ public partial class MainWindow : Window
     private readonly ShinNipponDeviceParser _xdtBaukastenShinNipponParser = new();
     private readonly TomeyDeviceParser _xdtBaukastenTomeyParser = new();
     private readonly TomeyEmDeviceParser _xdtBaukastenTomeyEmParser = new();
+    private readonly CanonZeissVisionixDeviceParser _xdtBaukastenCanonZeissVisionixParser = new();
     private readonly XdtBaukastenDeviceCompatibilityService _xdtBaukastenDeviceCompatibilityService = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
@@ -8769,7 +8770,9 @@ public partial class MainWindow : Window
                         ? _xdtBaukastenTomeyParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
                         : TomeyEmDeviceParser.IsParserMode(parserMode)
                             ? _xdtBaukastenTomeyEmParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
-                            : _xdtBaukastenDeviceParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath);
+                            : CanonZeissVisionixDeviceParser.IsParserMode(parserMode)
+                                ? _xdtBaukastenCanonZeissVisionixParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
+                                : _xdtBaukastenDeviceParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath);
             if (result.HasErrors)
             {
                 return false;

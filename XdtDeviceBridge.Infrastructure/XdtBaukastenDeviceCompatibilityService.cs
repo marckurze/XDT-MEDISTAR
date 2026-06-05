@@ -16,6 +16,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
     private readonly RodenstockDeviceParser _rodenstockParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
+    private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixParser = new();
 
     public XdtBaukastenDeviceCompatibilityService()
         : this(new XmlDeviceParser())
@@ -156,6 +157,21 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 }
 
                 return EvaluateForWorkbench(deviceProfile, tomeyEmResult.Measurements);
+            }
+
+            if (CanonZeissVisionixDeviceParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var canonZeissVisionixResult = _canonZeissVisionixParser.ParseFile(deviceFilePath);
+                if (canonZeissVisionixResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        canonZeissVisionixResult.Measurements,
+                        FindCompany(canonZeissVisionixResult.Measurements),
+                        FindModelName(canonZeissVisionixResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, canonZeissVisionixResult.Measurements);
             }
 
             var parseResult = _parser.ParseFile(deviceFilePath);
