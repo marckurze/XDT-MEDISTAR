@@ -1386,6 +1386,186 @@ public static class DefaultExportProfileDefinitions
             });
     }
 
+    public static ExportProfileDefinition CreateMedistarShinNipponAccurefR800Default()
+    {
+        return CreateMedistarShinNipponTextDefault(
+            id: "export-medistar-shin-nippon-accuref-r800-default",
+            name: "MEDISTAR + Shin-Nippon Accuref R-800 Export",
+            product: "MEDISTAR/Shin-Nippon Accuref R-800",
+            deviceProfileId: "device-shin-nippon-accuref-r800-default",
+            description: "Built-in MEDISTAR export profile for Shin-Nippon Accuref R-800 text data. REF lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarShinNipponAccurefK900Default()
+    {
+        return CreateMedistarShinNipponTextDefault(
+            id: "export-medistar-shin-nippon-accuref-k900-default",
+            name: "MEDISTAR + Shin-Nippon Accuref K-900 Export",
+            product: "MEDISTAR/Shin-Nippon Accuref K-900",
+            deviceProfileId: "device-shin-nippon-accuref-k900-default",
+            description: "Built-in MEDISTAR export profile for Shin-Nippon Accuref K-900 text data. REF lines map to 6228 and KM lines map to 6221. No 6330 or artificial separators are emitted.",
+            includeRef: true,
+            includeKm: true,
+            includeLens: false,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarShinNipponDl1000Default()
+    {
+        return CreateMedistarShinNipponTextDefault(
+            id: "export-medistar-shin-nippon-dl1000-default",
+            name: "MEDISTAR + Shin-Nippon DL-1000 Export",
+            product: "MEDISTAR/Shin-Nippon DL-1000",
+            deviceProfileId: "device-shin-nippon-dl1000-default",
+            description: "Built-in MEDISTAR export profile for Shin-Nippon DL-1000 text data. Lensmeter lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarShinNipponDl800Default()
+    {
+        return CreateMedistarShinNipponTextDefault(
+            id: "export-medistar-shin-nippon-dl800-default",
+            name: "MEDISTAR + Shin-Nippon DL-800 Export",
+            product: "MEDISTAR/Shin-Nippon DL-800",
+            deviceProfileId: "device-shin-nippon-dl800-default",
+            description: "Built-in MEDISTAR export profile for Shin-Nippon DL-800 text data. Lensmeter lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarShinNipponDl900Default()
+    {
+        return CreateMedistarShinNipponTextDefault(
+            id: "export-medistar-shin-nippon-dl900-default",
+            name: "MEDISTAR + Shin-Nippon DL-900 Export",
+            product: "MEDISTAR/Shin-Nippon DL-900",
+            deviceProfileId: "device-shin-nippon-dl900-default",
+            description: "Built-in MEDISTAR export profile for Shin-Nippon DL-900 text data. Lensmeter lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarShinNipponNct200Default()
+    {
+        return CreateMedistarShinNipponTextDefault(
+            id: "export-medistar-shin-nippon-nct200-default",
+            name: "MEDISTAR + Shin-Nippon NCT-200 Export",
+            product: "MEDISTAR/Shin-Nippon NCT-200",
+            deviceProfileId: "device-shin-nippon-nct200-default",
+            description: "Built-in MEDISTAR export profile for Shin-Nippon NCT-200 text data. Tonometry maps to 6205. No 6330 or artificial separators are emitted.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarShinNipponSlm4000Default()
+    {
+        return CreateMedistarShinNipponTextDefault(
+            id: "export-medistar-shin-nippon-slm4000-default",
+            name: "MEDISTAR + Shin-Nippon SLM-4000 Export",
+            product: "MEDISTAR/Shin-Nippon SLM-4000",
+            deviceProfileId: "device-shin-nippon-slm4000-default",
+            description: "Built-in MEDISTAR export profile for Shin-Nippon SLM-4000 text data. Lensmeter lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static ExportProfileDefinition CreateMedistarShinNipponTextDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono,
+        DateTimeOffset timestamp)
+    {
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarShinNipponTextRules(includeRef, includeKm, includeLens, includeTono));
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarShinNipponTextRules(
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono)
+    {
+        var rules = new List<ExportRuleDefinition>
+        {
+            new("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+            new("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+            new("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+            new("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+            new("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+            new("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS.")
+        };
+
+        var sortOrder = 7;
+        if (includeLens)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultRight", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right lensmeter line from Shin-Nippon text data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultLeft", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left lensmeter line from Shin-Nippon text data."));
+        }
+
+        if (includeRef)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultRight", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye REF line from Shin-Nippon text data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultLeft", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye REF line from Shin-Nippon text data."));
+        }
+
+        if (includeKm)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryRadii", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine1", "{value}", sortOrder++, true, "MEDISTAR 6221 KM R1/R2 line from Shin-Nippon text data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryCylinder", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine2", "{value}", sortOrder++, true, "MEDISTAR 6221 KM cylinder line from Shin-Nippon text data."));
+        }
+
+        if (includeTono)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "Tonometry", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/TonoListLine", "{value}", sortOrder++, true, "MEDISTAR 6205 tonometry line from Shin-Nippon text data."));
+        }
+
+        return rules;
+    }
+
     public static ExportProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
     {
         return CreateMedistarHuvitzTextDefault(

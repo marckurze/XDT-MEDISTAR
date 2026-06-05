@@ -1259,10 +1259,15 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Contains("6303PDF", processed.ManualProcessingResult.ExportContent);
         Assert.Contains("6304bericht.pdf", processed.ManualProcessingResult.ExportContent);
         Assert.Contains("6305", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6227", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6228", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6205", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6220", processed.ManualProcessingResult.ExportContent);
+        var pipelineResult = processed.ManualProcessingResult.PipelineResult!;
+        Assert.NotNull(pipelineResult);
+        var fieldCodes = pipelineResult.ExportRecords
+            .Select(record => record.FieldCode)
+            .ToArray();
+        Assert.DoesNotContain("6227", fieldCodes);
+        Assert.DoesNotContain("6228", fieldCodes);
+        Assert.DoesNotContain("6205", fieldCodes);
+        Assert.DoesNotContain("6220", fieldCodes);
         Assert.Equal(files.Folder, scanner.LastOptions?.AttachmentImportFolder);
     }
 
@@ -1450,10 +1455,13 @@ public sealed class AutoImportPairProcessingCoordinatorTests
         Assert.Contains("6304bild.jpg", processed.ManualProcessingResult.ExportContent);
         Assert.Contains(processed.ManualProcessingResult.PipelineResult.ExportRecords, record =>
             record.FieldCode == "6305" && record.Value?.Contains(attachmentExportFolder, StringComparison.OrdinalIgnoreCase) == true);
-        Assert.DoesNotContain("6227", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6228", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6205", processed.ManualProcessingResult.ExportContent);
-        Assert.DoesNotContain("6220", processed.ManualProcessingResult.ExportContent);
+        var manualFieldCodes = processed.ManualProcessingResult.PipelineResult.ExportRecords
+            .Select(record => record.FieldCode)
+            .ToArray();
+        Assert.DoesNotContain("6227", manualFieldCodes);
+        Assert.DoesNotContain("6228", manualFieldCodes);
+        Assert.DoesNotContain("6205", manualFieldCodes);
+        Assert.DoesNotContain("6220", manualFieldCodes);
     }
 
     [Fact]

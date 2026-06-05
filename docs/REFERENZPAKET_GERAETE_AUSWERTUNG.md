@@ -47,6 +47,13 @@ Hinweis zur Namenskorrektur: Der Hersteller wird in XDTBox als `Möller-Wedel` g
 | TOMEY | TOP-1000 | Tonometer/Pachymeter | Datei/XML | TOP-XML-Strukturen fuer IOP/CorrectedIOP/CCT; synthetische Fixture | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
 | TOMEY | EM-3000 | Endothel-/Zellmessung | Datei/CSV | CSV-Token fuer `[RL]`, `[NUMBER]`, `[DENSITY]`, `[THK]`, `[FILES_N]`, `[FILE]`; synthetische Fixture | `6228` Messwerte, `6227` Kommentare, `6302` Bild-/Dateiverweise | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `TomeyEmDeviceParser`, Baukasten-Preview-Test und Templatepaket-Test ergaenzt |
 | TOMEY | EM-4000 | Endothel-/Zellmessung | Datei/CSV | CSV-Token fuer `[RL_1]`, `[DENSITY_1]`, `[THK_1]`, `[RL_2]`, `[DENSITY_2]`, `[THK_2]`, `[FILE]`; synthetische Fixture | `6228` CD/CCT-Messwerte, `6227` Kommentare, `6302` Bild-/Dateiverweise | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `TomeyEmDeviceParser`, BuiltIn- und Templatepaket-Tests ergaenzt |
+| Shin-Nippon | Accuref R-800 | Autorefraktor | RS232 Text | Referenzlogik fuer R/L-SCA, PD und VD; synthetische Fixture, keine echte Praxisrohdatei | `6228` REF-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `ShinNipponDeviceParser`, Baukasten-Preview-Test und Templatepaket-Test ergaenzt |
+| Shin-Nippon | Accuref K-900 | Autorefraktor/Keratometer | RS232 Text | gemeinsame Accuref-Textfamilie fuer REF und KM; synthetische Fixture | `6228` REF-Zeilen, `6221` KM-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `ShinNipponDeviceParser`, Baukasten-Preview-Test und Templatepaket-Test ergaenzt |
+| Shin-Nippon | DL-1000 | Lensmeter | RS232 Text | DL-/SLM-Lensmetertext mit R/L-SCA, ADD, PD und optionalem Prisma; synthetische Fixture | `6228` Lensmeter-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
+| Shin-Nippon | DL-800 | Lensmeter | RS232 Text | gleiche DL-/SLM-Lensmeterfamilie wie DL-1000; synthetische Fixture | `6228` Lensmeter-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
+| Shin-Nippon | DL-900 | Lensmeter | RS232 Text | gleiche DL-/SLM-Lensmeterfamilie wie DL-1000; synthetische Fixture | `6228` Lensmeter-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Baukasten-Kompatibilitaetstest und Templatepaket-Test ergaenzt |
+| Shin-Nippon | NCT-200 | Non-Contact-Tonometer | RS232 Text | IOP-Liste mit Durchschnittswerten; synthetische Fixture | `6205` Tonometrie | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Baukasten-Kompatibilitaetstest und Templatepaket-Test ergaenzt |
+| Shin-Nippon | SLM-4000 | Lensmeter | RS232 Text | gleiche DL-/SLM-Lensmeterfamilie wie DL-1000; synthetische Fixture | `6228` Lensmeter-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
 
 ## Bestehende Anbindungen mit sicherer Verbesserung
 
@@ -73,7 +80,6 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | Huvitz | HDR-7000, HDR-9000 | Phoropter-/Refraktor-Kandidaten mit bidirektionaler Relevanz | Rueckgabe und PC->Geraet getrennt analysieren, kein BuiltIn ohne Sendeframe-Test |
 | TOMEY | AP-2500 | Setup-/Konfigurationshinweise ohne ausreichend belegte Messwertrohstruktur | erst mit klarer Rohdaten- oder Parserstrecke als BuiltIn entscheiden |
 | TOMEY | TAP-2000 | bidirektionaler Phoropterkandidat mit serieller Relevanz; COM-Parameter und Framebausteine sind sichtbar, aber echte Rueckgabe-/Live-Sendeframes fehlen | Rueckgabe und PC->Geraet getrennt mit Live-/Framefixtures absichern |
-| Shin-Nippon | Accuref/DL/DR/NCT/SLM-Familien | teilweise Parserlogik, keine einheitliche Rohdatenbasis | pro Formatfamilie synthetische Fixtures ableiten |
 | Reichert | 7CR NCT, LensChek Plus | teilweise Setup-/Parserhinweise | getrennte Tonometer-/Lensmeter-Batches |
 | Rodenstock | CX 800, Phoromat 2000 | teilweise Refraktor-/Phoropterhinweise | erst nach klarer Frame-/Textstruktur als BuiltIn |
 | Möller-Wedel | Visutron-Familie | teilweise Hinweise, Herstellername korrigiert | Parserdetails und Anschlussart nachziehen |
@@ -96,6 +102,7 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | Huvitz | HLM-1 / HLM-7000P / HLM-9000 | Lensmeter-Familie mit erkennbarer COM-/Parserlogik, aber ohne ausreichend abgesicherte Rohdatenstruktur fuer ADD/PD/Prisma und MEDISTAR-`6228`. |
 | TOMEY | AP-2500 | Keine ausreichend belastbare Messwertrohstruktur fuer einen XDTBox-Parser. |
 | TOMEY | TAP-2000 | Phoropter-/Sendeframe-Workflow waere zu risikoreich ohne echte Rueckgabe- und PC->Geraet-Validierung. Die statisch sichtbaren COM-/Framefragmente werden dokumentiert, aber noch nicht produktiv freigegeben. |
+| Shin-Nippon | DR-900 | Refraktions-/Phoropterkandidat mit bidirektionaler Relevanz; Anschluss- und Sendeframe-Datenlage reicht nicht fuer ein sicheres BuiltIn. Kein halbfertiger produktiver Parser ohne getrennte Rueckgabe- und PC->Geraet-Validierung. |
 
 ## Uebernommene technische Regeln
 
@@ -104,13 +111,16 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 - TOPCON KR-800: Modellalias `KR-800` nutzt die vorhandene KR800S-Erkennung, ohne die bestehende KR800S-Fachlogik zu veraendern.
 - Huvitz-Textparser: nur eindeutig abgeleitete Tokens werden ausgewertet. `S-R-*` wird als REF nach `6228`, `S-K-*` als KM nach `6221`, `T-*` als Tonometrie nach `6205` und `P-*` als Pachymetrie/CCT nach `6220` vorbereitet. Die Fixtures sind synthetisch aus Referenzlogik abgeleitet und ersetzen keine Praxisrohdateien.
 - TOMEY-Parser: CF-2000 und TL-2000C/TL-6000/TL-7000 werden als Lensmeter nach `6228` vorbereitet. MR-6000 trennt REF nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`. TOP-1000 liefert Tonometrie nach `6205` und Pachymetrie nach `6220`. EM-3000/EM-4000 liefern Endothel-/Zellmesswerte nach `6228`, Kommentare nach `6227` und Bild-/Dateiverweise nach `6302`. Nur erkannte Werte werden exportiert; fehlende Teilmessungen erzeugen keine kuenstlichen Zeilen.
+- Shin-Nippon-Textparser: Accuref R-800/K-900 wird als REF beziehungsweise REF/KM ausgewertet, DL-1000/DL-800/DL-900/SLM-4000 als Lensmeter und NCT-200 als Tonometrie. COM-Defaults stammen aus neutraler Referenzlogik: Accuref 115200 8N1, DL-/SLM-Lensmeter 9600 8N1, NCT-200 19200 8N1. Die Fixtures sind synthetisch und ersetzen keine Praxisrohdateien.
 - Scriptbasierte Textparser: Feldkennungen wie `6228`, `6227`, `6221`, `6220` und `6205` werden als Hinweise dokumentiert, aber nicht blind als XDTBox-Code kopiert.
+- Externe Referenzartefakte wurden nicht in das Repository uebernommen. Ein Repo-Scan prueft die vier gesperrten externen Marker dynamisch und ohne Klartextspeicherung.
 
 ## Offene Folgeschritte
 
 1. Echte Huvitz-Praxisrohdateien fuer HRK-8000A/HRK-9000A/HNT-1P/HTR-1A sammeln und gegen die synthetischen Fixtures validieren.
 2. Echte TOMEY-Praxisrohdateien fuer CF-2000/TL-2000C/TL-6000/TL-7000/MR-6000/TOP-1000 sowie EM-3000/EM-4000 sammeln und gegen `TomeyDeviceParser` beziehungsweise `TomeyEmDeviceParser` validieren.
 3. Huvitz-HLM-Lensmeter, Huvitz-HDR-Phoropter und TOMEY-TAP-2000 erst nach klarer Rohdaten-/Frame-Struktur als BuiltIn entscheiden.
-4. Shin-Nippon danach nach Geraeteart trennen.
-5. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.
-6. Keine Referenzrohdateien, PDFs oder fremden Skripte in den Kundeninstaller aufnehmen.
+4. Echte Shin-Nippon-Praxisrohdateien fuer Accuref R-800/K-900, DL-1000/DL-800/DL-900, NCT-200 und SLM-4000 sammeln und gegen `ShinNipponDeviceParser` validieren.
+5. Shin-Nippon DR-900 erst nach klarer Rueckgabe- und PC->Geraet-Frame-Struktur entscheiden.
+6. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.
+7. Keine Referenzrohdateien, PDFs oder fremden Skripte in den Kundeninstaller aufnehmen.

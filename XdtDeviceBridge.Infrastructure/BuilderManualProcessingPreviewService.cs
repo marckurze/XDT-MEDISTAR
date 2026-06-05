@@ -9,6 +9,7 @@ public sealed class BuilderManualProcessingPreviewService
     private readonly MedistarHistoricalMeasurementParser _medistarHistoricalMeasurementParser = new();
     private readonly XmlDeviceParser _xmlDeviceParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextDeviceParser = new();
+    private readonly ShinNipponDeviceParser _shinNipponDeviceParser = new();
     private readonly TomeyDeviceParser _tomeyDeviceParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmDeviceParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
@@ -113,6 +114,23 @@ public sealed class BuilderManualProcessingPreviewService
             try
             {
                 return _huvitzTextDeviceParser.ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                });
+            }
+        }
+
+        if (ShinNipponDeviceParser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return _shinNipponDeviceParser.ParseFile(deviceFilePath);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {

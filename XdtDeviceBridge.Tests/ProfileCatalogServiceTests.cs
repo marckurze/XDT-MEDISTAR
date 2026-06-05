@@ -5,6 +5,8 @@ namespace XdtDeviceBridge.Tests;
 
 public sealed class ProfileCatalogServiceTests
 {
+    private const int ExpectedBuiltInProfileCount = 40;
+
     private readonly ProfileCatalogService _service = new();
 
     [Fact]
@@ -58,9 +60,9 @@ public sealed class ProfileCatalogServiceTests
         var catalog = _service.Load(paths);
 
         Assert.Single(catalog.AisProfiles);
-        Assert.Equal(33, catalog.DeviceProfiles.Count);
-        Assert.Equal(33, catalog.ExportProfiles.Count);
-        Assert.Equal(33, catalog.InterfaceProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.DeviceProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.ExportProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.InterfaceProfiles.Count);
         Assert.Equal("ais-medistar-default", catalog.AisProfiles[0].Metadata.Id);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
@@ -75,6 +77,13 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt2100-serial-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt3100-serial-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt5100-serial-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-shin-nippon-accuref-r800-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-shin-nippon-accuref-k900-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-shin-nippon-dl1000-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-shin-nippon-dl800-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-shin-nippon-dl900-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-shin-nippon-nct200-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-shin-nippon-slm4000-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-huvitz-hrk8000a-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-huvitz-hrk9000a-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-huvitz-hnt1p-default");
@@ -154,8 +163,8 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.AisProfiles, profile => profile.Metadata.Id == "ais-medistar-default" && profile.Name == "Custom MEDISTAR");
         Assert.Contains(catalog.DeviceProfiles, profile => profile.Metadata.Id == "device-topcon-trk2p-default" && profile.DeviceType == "Custom Tonometer/Pachymeter");
         Assert.Contains(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-trk2p-default" && profile.OutputEncoding == "Custom-Encoding");
-        Assert.Equal(33, catalog.DeviceProfiles.Count);
-        Assert.Equal(33, catalog.ExportProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.DeviceProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.ExportProfiles.Count);
     }
 
     [Fact]
@@ -535,9 +544,9 @@ public sealed class ProfileCatalogServiceTests
         var catalog = _service.Load(paths);
 
         Assert.Single(catalog.AisProfiles);
-        Assert.Equal(33, catalog.DeviceProfiles.Count);
-        Assert.Equal(33, catalog.ExportProfiles.Count);
-        Assert.Equal(33, catalog.InterfaceProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.DeviceProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.ExportProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.InterfaceProfiles.Count);
         AssertExpectedDeviceDefaults(catalog);
         AssertExpectedExportDefaults(catalog);
     }
@@ -785,6 +794,13 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("device-nidek-rt2100-serial-default", ids);
         Assert.Contains("device-nidek-rt3100-serial-default", ids);
         Assert.Contains("device-nidek-rt5100-serial-default", ids);
+        Assert.Contains("device-shin-nippon-accuref-r800-default", ids);
+        Assert.Contains("device-shin-nippon-accuref-k900-default", ids);
+        Assert.Contains("device-shin-nippon-dl1000-default", ids);
+        Assert.Contains("device-shin-nippon-dl800-default", ids);
+        Assert.Contains("device-shin-nippon-dl900-default", ids);
+        Assert.Contains("device-shin-nippon-nct200-default", ids);
+        Assert.Contains("device-shin-nippon-slm4000-default", ids);
         Assert.Contains("device-huvitz-hrk8000a-default", ids);
         Assert.Contains("device-huvitz-hrk9000a-default", ids);
         Assert.Contains("device-huvitz-hnt1p-default", ids);
@@ -824,6 +840,13 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("export-medistar-nidek-rt2100-serial-default", ids);
         Assert.Contains("export-medistar-nidek-rt3100-serial-default", ids);
         Assert.Contains("export-medistar-nidek-rt5100-serial-default", ids);
+        Assert.Contains("export-medistar-shin-nippon-accuref-r800-default", ids);
+        Assert.Contains("export-medistar-shin-nippon-accuref-k900-default", ids);
+        Assert.Contains("export-medistar-shin-nippon-dl1000-default", ids);
+        Assert.Contains("export-medistar-shin-nippon-dl800-default", ids);
+        Assert.Contains("export-medistar-shin-nippon-dl900-default", ids);
+        Assert.Contains("export-medistar-shin-nippon-nct200-default", ids);
+        Assert.Contains("export-medistar-shin-nippon-slm4000-default", ids);
         Assert.Contains("export-medistar-huvitz-hrk8000a-default", ids);
         Assert.Contains("export-medistar-huvitz-hrk9000a-default", ids);
         Assert.Contains("export-medistar-huvitz-hnt1p-default", ids);

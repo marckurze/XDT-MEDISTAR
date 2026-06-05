@@ -1097,6 +1097,283 @@ public static class DefaultDeviceProfileDefinitions
         };
     }
 
+    public static DeviceProfileDefinition CreateShinNipponAccurefR800Default()
+    {
+        return CreateShinNipponTextSerialDefault(
+            id: "device-shin-nippon-accuref-r800-default",
+            name: "Shin-Nippon Accuref R-800",
+            product: "Accuref R-800",
+            model: "Accuref R-800",
+            deviceType: "Autorefraktor",
+            description: "Built-in serial text profile for Shin-Nippon Accuref R-800 REF data derived from neutral reference parser rules. REF maps to 6228; practical raw-data validation remains open.",
+            baudRate: 115200,
+            includeRef: true,
+            includeKm: false,
+            includeLens: false,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateShinNipponAccurefK900Default()
+    {
+        return CreateShinNipponTextSerialDefault(
+            id: "device-shin-nippon-accuref-k900-default",
+            name: "Shin-Nippon Accuref K-900",
+            product: "Accuref K-900",
+            model: "Accuref K-900",
+            deviceType: "Autorefraktor/Keratometer",
+            description: "Built-in serial text profile for Shin-Nippon Accuref K-900 REF/KM data derived from neutral reference parser rules. REF maps to 6228 and KM maps to 6221; practical raw-data validation remains open.",
+            baudRate: 115200,
+            includeRef: true,
+            includeKm: true,
+            includeLens: false,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateShinNipponDl1000Default()
+    {
+        return CreateShinNipponTextSerialDefault(
+            id: "device-shin-nippon-dl1000-default",
+            name: "Shin-Nippon DL-1000",
+            product: "DL-1000",
+            model: "DL-1000",
+            deviceType: "Lensmeter",
+            description: "Built-in serial text profile for Shin-Nippon DL-1000 lensmeter data derived from neutral reference parser rules. Lensmeter lines map to 6228; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateShinNipponDl800Default()
+    {
+        return CreateShinNipponTextSerialDefault(
+            id: "device-shin-nippon-dl800-default",
+            name: "Shin-Nippon DL-800",
+            product: "DL-800",
+            model: "DL-800",
+            deviceType: "Lensmeter",
+            description: "Built-in serial text profile for Shin-Nippon DL-800 lensmeter data derived from neutral reference parser rules. Lensmeter lines map to 6228; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateShinNipponDl900Default()
+    {
+        return CreateShinNipponTextSerialDefault(
+            id: "device-shin-nippon-dl900-default",
+            name: "Shin-Nippon DL-900",
+            product: "DL-900",
+            model: "DL-900",
+            deviceType: "Lensmeter",
+            description: "Built-in serial text profile for Shin-Nippon DL-900 lensmeter data derived from neutral reference parser rules. Lensmeter lines map to 6228; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateShinNipponNct200Default()
+    {
+        return CreateShinNipponTextSerialDefault(
+            id: "device-shin-nippon-nct200-default",
+            name: "Shin-Nippon NCT-200",
+            product: "NCT-200",
+            model: "NCT-200",
+            deviceType: "Non-Contact-Tonometer",
+            description: "Built-in serial text profile for Shin-Nippon NCT-200 tonometry data derived from neutral reference parser rules. IOP maps to 6205; practical raw-data validation remains open.",
+            baudRate: 19200,
+            includeRef: false,
+            includeKm: false,
+            includeLens: false,
+            includeTono: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateShinNipponSlm4000Default()
+    {
+        return CreateShinNipponTextSerialDefault(
+            id: "device-shin-nippon-slm4000-default",
+            name: "Shin-Nippon SLM-4000",
+            product: "SLM-4000",
+            model: "SLM-4000",
+            deviceType: "Lensmeter",
+            description: "Built-in serial text profile for Shin-Nippon SLM-4000 lensmeter data derived from neutral reference parser rules. Lensmeter lines map to 6228; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeRef: false,
+            includeKm: false,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static DeviceProfileDefinition CreateShinNipponTextSerialDefault(
+        string id,
+        string name,
+        string product,
+        string model,
+        string deviceType,
+        string description,
+        int baudRate,
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono,
+        DateTimeOffset timestamp)
+    {
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "Shin-Nippon",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "Shin-Nippon",
+            Model: model,
+            DeviceType: deviceType,
+            ParserMode: ShinNipponDeviceParser.ParserMode,
+            Measurements: CreateShinNipponTextMeasurements(product, includeRef, includeKm, includeLens, includeTono),
+            SupportedExaminationTypes: CreateShinNipponSupportedExaminationTypes(includeRef, includeKm, includeLens, includeTono),
+            CanContainMultipleExaminationTypes: (includeRef && includeKm) || includeTono,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: DeviceConnectionKind.SerialRs232,
+            SerialSettings: new SerialCommunicationSettings(
+                BaudRate: baudRate,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: includeTono ? 30000 : 5000,
+                WriteTimeoutMilliseconds: 1000));
+    }
+
+    private static IReadOnlyList<string> CreateShinNipponSupportedExaminationTypes(
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono)
+    {
+        var values = new List<string>();
+        if (includeRef)
+        {
+            values.AddRange(new[] { "REF", "Autorefraktor" });
+        }
+
+        if (includeKm)
+        {
+            values.AddRange(new[] { "KM", "Keratometer" });
+        }
+
+        if (includeLens)
+        {
+            values.AddRange(new[] { "LM", "Lensmeter" });
+        }
+
+        if (includeTono)
+        {
+            values.AddRange(new[] { "TM", "Tonometrie" });
+        }
+
+        return values;
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateShinNipponTextMeasurements(
+        string product,
+        bool includeRef,
+        bool includeKm,
+        bool includeLens,
+        bool includeTono)
+    {
+        var prefix = $"shin-nippon-{product.Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase).ToLowerInvariant()}";
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "Shin-Nippon common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "Shin-Nippon model name.")
+        };
+
+        if (includeRef)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-ref-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"REF {eye} Sphere", $"Measure[@Type='REF']/REF/{eye}/Sphere", "REF", eye, "dpt", false, "REF sphere from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"REF {eye} Cylinder", $"Measure[@Type='REF']/REF/{eye}/Cylinder", "REF", eye, "dpt", false, "REF cylinder from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-axis", $"REF {eye} Axis", $"Measure[@Type='REF']/REF/{eye}/Axis", "REF", eye, "deg", false, "REF axis from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-pd", $"REF {eye} PD", $"Measure[@Type='REF']/REF/{eye}/PD", "REF", eye, "mm", false, "REF PD from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-vd", $"REF {eye} VD", $"Measure[@Type='REF']/REF/{eye}/VD", "REF", eye, "mm", false, "REF VD from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-medistar-line", $"REF {eye} MEDISTAR-Zeile", $"Measure[@Type='REF']/REF/{eye}/MedistarLine", "REF", eye, string.Empty, false, "Prepared MEDISTAR 6228 REF line."));
+            }
+        }
+
+        if (includeKm)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-km-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-r1-radius", $"KM {eye} R1 Radius", $"Measure[@Type='KM']/KM/{eye}/R1/Radius", "KM", eye, "mm", false, "KM R1 radius from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-r1-axis", $"KM {eye} R1 Axis", $"Measure[@Type='KM']/KM/{eye}/R1/Axis", "KM", eye, "deg", false, "KM R1 axis from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-r2-radius", $"KM {eye} R2 Radius", $"Measure[@Type='KM']/KM/{eye}/R2/Radius", "KM", eye, "mm", false, "KM R2 radius from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-r2-axis", $"KM {eye} R2 Axis", $"Measure[@Type='KM']/KM/{eye}/R2/Axis", "KM", eye, "deg", false, "KM R2 axis from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"KM {eye} Cylinder", $"Measure[@Type='KM']/KM/{eye}/Cylinder", "KM", eye, "dpt", false, "KM cylinder from Shin-Nippon text."));
+            }
+
+            measurements.Add(new($"{prefix}-km-radii-line", "KM MEDISTAR R1/R2-Zeile", "Measure[@Type='KM']/KM/MedistarLine1", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 KM R1/R2 line."));
+            measurements.Add(new($"{prefix}-km-cylinder-line", "KM MEDISTAR CYL-Zeile", "Measure[@Type='KM']/KM/MedistarLine2", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 KM cylinder line."));
+        }
+
+        if (includeLens)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-lm-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"LM {eye} Sphere", $"Measure[@Type='LM']/LM/{eye}/Sphere", "LM", eye, "dpt", false, "LM sphere from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"LM {eye} Cylinder", $"Measure[@Type='LM']/LM/{eye}/Cylinder", "LM", eye, "dpt", false, "LM cylinder from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-axis", $"LM {eye} Axis", $"Measure[@Type='LM']/LM/{eye}/Axis", "LM", eye, "deg", false, "LM axis from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-add", $"LM {eye} ADD", $"Measure[@Type='LM']/LM/{eye}/ADD", "LM", eye, "dpt", false, "LM ADD from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-prism", $"LM {eye} Prism", $"Measure[@Type='LM']/LM/{eye}/Prism", "LM", eye, "pdpt", false, "LM prism from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-pd", $"LM {eye} PD", $"Measure[@Type='LM']/LM/{eye}/PD", "LM", eye, "mm", false, "LM PD from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-medistar-line", $"LM {eye} MEDISTAR-Zeile", $"Measure[@Type='LM']/LM/{eye}/MedistarLine", "LM", eye, string.Empty, false, "Prepared MEDISTAR 6228 lensmeter line."));
+            }
+        }
+
+        if (includeTono)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-tono-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-value1", $"Tonometrie {eye} Wert 1", $"Measure[@Type='TM']/Tono/{eye}/Value1", "TM", eye, "mmHg", false, "First IOP value from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-value2", $"Tonometrie {eye} Wert 2", $"Measure[@Type='TM']/Tono/{eye}/Value2", "TM", eye, "mmHg", false, "Second IOP value from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-value3", $"Tonometrie {eye} Wert 3", $"Measure[@Type='TM']/Tono/{eye}/Value3", "TM", eye, "mmHg", false, "Third IOP value from Shin-Nippon text."));
+                measurements.Add(new($"{eyePrefix}-average", $"Tonometrie {eye} Mittelwert", $"Measure[@Type='TM']/Tono/{eye}/Average", "TM", eye, "mmHg", false, "Average IOP value from Shin-Nippon text."));
+            }
+
+            measurements.Add(new($"{prefix}-tono-medistar-line", "Tonometrie MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 tonometry line."));
+        }
+
+        return measurements;
+    }
+
     public static DeviceProfileDefinition CreateHuvitzHrk8000ADefault()
     {
         return CreateHuvitzTextSerialDefault(

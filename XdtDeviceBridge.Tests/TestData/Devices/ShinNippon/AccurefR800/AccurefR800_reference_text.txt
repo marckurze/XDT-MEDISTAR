@@ -1,0 +1,6 @@
+Accuref R-800
+M Accuref R-800
+T VD 12.00
+R S -3.75 C -1.25 A 98
+L S -4.25 C -2.00 A 105
+PD=66

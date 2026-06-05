@@ -7,6 +7,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
 {
     private readonly XmlDeviceParser _parser = new();
     private readonly HuvitzTextDeviceParser _huvitzParser = new();
+    private readonly ShinNipponDeviceParser _shinNipponParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -211,6 +212,91 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void ShinNipponAccurefR800Profile_ShouldParseAndExportAutorefractorLines()
+    {
+        var parseResult = _shinNipponParser.ParseFile(GetShinNipponFixturePath("AccurefR800", "AccurefR800_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarShinNipponAccurefR800Default();
+        var xdt = BuildXdt(CreatePatientData("AccurefR800"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "Accuref R-800");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/Sphere" && measurement.Value == "-3.75");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/L/MedistarLine");
+        Assert.Contains("6228R.:S=- 3.75 Z=- 1.25* 98 PD= 66 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 4.25 Z=- 2.00*105 PD= 66 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ShinNipponAccurefK900Profile_ShouldParseAndExportRefAndKeratometryLines()
+    {
+        var parseResult = _shinNipponParser.ParseFile(GetShinNipponFixturePath("AccurefK900", "AccurefK900_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarShinNipponAccurefK900Default();
+        var xdt = BuildXdt(CreatePatientData("AccurefK900"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "Accuref K-900");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 0.00 Z=+ 0.00*  0 PD= 59 VD= 12", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.67 *173 R2=7.57 * 83 // L: R1=7.68 *175 R2=7.52 * 85", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: CYL=-0.50 173 // L: CYL=-1.00 175", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("DL1000", "DL1000_reference_text.txt", "DL-1000", "6228R.:S=+ 6.25 Z=- 3.25*  3 P=0.75 OUT 1.00 UP PD= 59 A=+ 1.25", "6228L.:S=+ 6.50 Z=- 2.75*170 A=+ 0.25")]
+    [InlineData("DL800", "DL800_reference_text.txt", "DL-800", "6228R.:S=+ 1.00 Z=- 0.25*103", "6228L.:S=+ 0.25 Z=- 1.25* 62")]
+    [InlineData("DL900", "DL900_reference_text.txt", "DL-900", "6228R.:S=+ 6.50 Z=- 1.75*172 P=0.75 OUT 1.00 UP A=+ 0.25", "6228L.:S=+ 6.00 Z=- 2.25*  2 P=0.50 OUT 1.50 UP A=+ 0.25")]
+    [InlineData("SLM4000", "SLM4000_reference_text.txt", "SLM-4000", "6228R.:S=+ 0.75 Z=- 0.50* 25 PD= 63", "6228L.:S=+ 0.25 Z=- 0.75*111")]
+    public void ShinNipponLensmeterProfiles_ShouldParseAndExportLensmeterLines(
+        string familyFolder,
+        string fileName,
+        string model,
+        string expectedRight,
+        string expectedLeft)
+    {
+        var parseResult = _shinNipponParser.ParseFile(GetShinNipponFixturePath(familyFolder, fileName));
+        var exportProfile = model switch
+        {
+            "DL-1000" => DefaultExportProfileDefinitions.CreateMedistarShinNipponDl1000Default(),
+            "DL-800" => DefaultExportProfileDefinitions.CreateMedistarShinNipponDl800Default(),
+            "DL-900" => DefaultExportProfileDefinitions.CreateMedistarShinNipponDl900Default(),
+            _ => DefaultExportProfileDefinitions.CreateMedistarShinNipponSlm4000Default()
+        };
+        var xdt = BuildXdt(CreatePatientData(model), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == model);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/MedistarLine");
+        Assert.Contains(expectedRight, xdt, StringComparison.Ordinal);
+        Assert.Contains(expectedLeft, xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ShinNipponNct200Profile_ShouldParseAndExportTonometryLine()
+    {
+        var parseResult = _shinNipponParser.ParseFile(GetShinNipponFixturePath("NCT200", "NCT200_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarShinNipponNct200Default();
+        var xdt = BuildXdt(CreatePatientData("NCT200"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "NCT-200");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine" && measurement.Value == "R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg");
+        Assert.Contains("6205R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void TomeyCf2000Profile_ShouldParseAndExportLensmeterLines()
     {
         var parseResult = _tomeyParser.ParseFile(GetTomeyFixturePath("CF2000", "CF2000_reference_text.txt"));
@@ -348,6 +434,13 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultDeviceProfileDefinitions.CreateNidekArk510ADefault(),
             DefaultDeviceProfileDefinitions.CreateNidekArk560ADefault(),
             DefaultDeviceProfileDefinitions.CreateNidekLm1800PDefault(),
+            DefaultDeviceProfileDefinitions.CreateShinNipponAccurefR800Default(),
+            DefaultDeviceProfileDefinitions.CreateShinNipponAccurefK900Default(),
+            DefaultDeviceProfileDefinitions.CreateShinNipponDl1000Default(),
+            DefaultDeviceProfileDefinitions.CreateShinNipponDl800Default(),
+            DefaultDeviceProfileDefinitions.CreateShinNipponDl900Default(),
+            DefaultDeviceProfileDefinitions.CreateShinNipponNct200Default(),
+            DefaultDeviceProfileDefinitions.CreateShinNipponSlm4000Default(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk9000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(),
@@ -366,6 +459,13 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultExportProfileDefinitions.CreateMedistarNidekArk510ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarNidekArk560ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarNidekLm1800PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarShinNipponAccurefR800Default(),
+            DefaultExportProfileDefinitions.CreateMedistarShinNipponAccurefK900Default(),
+            DefaultExportProfileDefinitions.CreateMedistarShinNipponDl1000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarShinNipponDl800Default(),
+            DefaultExportProfileDefinitions.CreateMedistarShinNipponDl900Default(),
+            DefaultExportProfileDefinitions.CreateMedistarShinNipponNct200Default(),
+            DefaultExportProfileDefinitions.CreateMedistarShinNipponSlm4000Default(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
@@ -384,6 +484,13 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk510ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk560ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm1800PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponAccurefR800Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponAccurefK900Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponDl1000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponDl800Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponDl900Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponNct200Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponSlm4000Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
@@ -421,6 +528,27 @@ public sealed class ReferencePackageBuiltInDeviceTests
         Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
         Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
         Assert.Contains("6228R.:S=+ 0.75 Z=- 1.25*110 PD= 63", result.ExportContent, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ShinNipponTextPreview_ShouldAcceptNonXmlDeviceFileInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = GetShinNipponFixturePath("AccurefK900", "AccurefK900_reference_text.txt");
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponAccurefK900Default(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateShinNipponAccurefK900Default(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarShinNipponAccurefK900Default(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.67 *173 R2=7.57 * 83 // L: R1=7.68 *175 R2=7.52 * 85", result.ExportContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -500,6 +628,11 @@ public sealed class ReferencePackageBuiltInDeviceTests
     private static string GetHuvitzFixturePath(string familyFolder, string fileName)
     {
         return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Huvitz", familyFolder, fileName);
+    }
+
+    private static string GetShinNipponFixturePath(string familyFolder, string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "ShinNippon", familyFolder, fileName);
     }
 
     private static string GetTomeyFixturePath(string familyFolder, string fileName)

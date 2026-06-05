@@ -11,6 +11,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
     private readonly XmlDeviceParser _parser;
     private readonly NidekRtSerialPhoropterParser _rtSerialParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
+    private readonly ShinNipponDeviceParser _shinNipponParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
 
@@ -78,6 +79,21 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 }
 
                 return EvaluateForWorkbench(deviceProfile, huvitzResult.Measurements);
+            }
+
+            if (ShinNipponDeviceParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var shinNipponResult = _shinNipponParser.ParseFile(deviceFilePath);
+                if (shinNipponResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        shinNipponResult.Measurements,
+                        FindCompany(shinNipponResult.Measurements),
+                        FindModelName(shinNipponResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, shinNipponResult.Measurements);
             }
 
             if (TomeyDeviceParser.IsParserMode(deviceProfile.ParserMode))
@@ -292,6 +308,13 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         AddAliasIfContains(aliases, normalizedProfileText, "HRK9000A", "HRK9000A", "HRK-9000A");
         AddAliasIfContains(aliases, normalizedProfileText, "HNT1P", "HNT1P", "HNT-1P");
         AddAliasIfContains(aliases, normalizedProfileText, "HTR1A", "HTR1A", "HTR-1A");
+        AddAliasIfContains(aliases, normalizedProfileText, "ACCUREFR800", "ACCUREFR800", "ACCUREF R800", "ACCUREF R-800");
+        AddAliasIfContains(aliases, normalizedProfileText, "ACCUREFK900", "ACCUREFK900", "ACCUREF K900", "ACCUREF K-900");
+        AddAliasIfContains(aliases, normalizedProfileText, "DL1000", "DL1000", "DL-1000");
+        AddAliasIfContains(aliases, normalizedProfileText, "DL800", "DL800", "DL-800");
+        AddAliasIfContains(aliases, normalizedProfileText, "DL900", "DL900", "DL-900");
+        AddAliasIfContains(aliases, normalizedProfileText, "NCT200", "NCT200", "NCT-200");
+        AddAliasIfContains(aliases, normalizedProfileText, "SLM4000", "SLM4000", "SLM-4000");
     }
 
     private static void AddAliasIfContains(HashSet<string> aliases, string normalizedProfileText, string marker, params string[] values)

@@ -16,6 +16,10 @@ public sealed class XdtBaukastenDeviceCompatibilityServiceTests
         yield return new object[] { "NIDEK LM7", DefaultDeviceProfileDefinitions.CreateNidekLm7Default(), DeviceFixture("Nidek", "LM7", "NIDEK LM7.xml") };
         yield return new object[] { "NIDEK NT530P", DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(), DeviceFixture("Nidek", "NT530P", "NIDEK_NT530P.xml") };
         yield return new object[] { "NIDEK RT-6100", DefaultDeviceProfileDefinitions.CreateNidekRt6100Default(), WriteTempXml("nidek-rt6100.xml", CreateRt6100ReturnXml(), Encoding.Unicode) };
+        yield return new object[] { "Shin-Nippon Accuref R-800", DefaultDeviceProfileDefinitions.CreateShinNipponAccurefR800Default(), DeviceFixture("ShinNippon", "AccurefR800", "AccurefR800_reference_text.txt") };
+        yield return new object[] { "Shin-Nippon Accuref K-900", DefaultDeviceProfileDefinitions.CreateShinNipponAccurefK900Default(), DeviceFixture("ShinNippon", "AccurefK900", "AccurefK900_reference_text.txt") };
+        yield return new object[] { "Shin-Nippon DL-900", DefaultDeviceProfileDefinitions.CreateShinNipponDl900Default(), DeviceFixture("ShinNippon", "DL900", "DL900_reference_text.txt") };
+        yield return new object[] { "Shin-Nippon NCT-200", DefaultDeviceProfileDefinitions.CreateShinNipponNct200Default(), DeviceFixture("ShinNippon", "NCT200", "NCT200_reference_text.txt") };
         yield return new object[] { "Huvitz HRK-8000A", DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(), DeviceFixture("Huvitz", "HRK8000A", "HRK8000A_reference_text.txt") };
         yield return new object[] { "Huvitz HNT-1P", DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(), DeviceFixture("Huvitz", "HNT1P", "HNT1P_reference_text.txt") };
         yield return new object[] { "Huvitz HTR-1A", DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(), DeviceFixture("Huvitz", "HTR1A", "HTR1A_reference_text.txt") };

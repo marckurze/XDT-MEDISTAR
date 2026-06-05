@@ -124,6 +124,7 @@ public partial class MainWindow : Window
     private readonly XdtBaukastenPlaceholderValueService _xdtBaukastenPlaceholderValueService = new();
     private readonly XmlDeviceParser _xdtBaukastenDeviceParser = new();
     private readonly HuvitzTextDeviceParser _xdtBaukastenHuvitzTextParser = new();
+    private readonly ShinNipponDeviceParser _xdtBaukastenShinNipponParser = new();
     private readonly TomeyDeviceParser _xdtBaukastenTomeyParser = new();
     private readonly TomeyEmDeviceParser _xdtBaukastenTomeyEmParser = new();
     private readonly XdtBaukastenDeviceCompatibilityService _xdtBaukastenDeviceCompatibilityService = new();
@@ -8559,11 +8560,13 @@ public partial class MainWindow : Window
             var parserMode = _xdtBaukastenState.DeviceProfile?.ParserMode;
             var result = HuvitzTextDeviceParser.IsParserMode(parserMode)
                 ? _xdtBaukastenHuvitzTextParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
-                : TomeyDeviceParser.IsParserMode(parserMode)
-                    ? _xdtBaukastenTomeyParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
-                    : TomeyEmDeviceParser.IsParserMode(parserMode)
-                        ? _xdtBaukastenTomeyEmParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
-                        : _xdtBaukastenDeviceParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath);
+                : ShinNipponDeviceParser.IsParserMode(parserMode)
+                    ? _xdtBaukastenShinNipponParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
+                    : TomeyDeviceParser.IsParserMode(parserMode)
+                        ? _xdtBaukastenTomeyParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
+                        : TomeyEmDeviceParser.IsParserMode(parserMode)
+                            ? _xdtBaukastenTomeyEmParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
+                            : _xdtBaukastenDeviceParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath);
             if (result.HasErrors)
             {
                 return false;

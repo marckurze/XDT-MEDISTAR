@@ -39,6 +39,7 @@ public static class InterfaceProfileUiPolicy
     public const string HuvitzHrk9000ADeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-hrk9000a-default.png";
     public const string HuvitzHnt1PDeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-hnt1p-default.png";
     public const string HuvitzHtr1ADeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-htr1a-default.png";
+    public const string ShinNipponTextDeviceImagePath = BuiltInDeviceImageRoot + "device-document-attachment-default.png";
     public const string TomeyCf2000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-cf2000-default.png";
     public const string TomeyTl2000CDeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-tl2000c-default.png";
     public const string TomeyTl6000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-tl6000-default.png";
@@ -71,6 +72,13 @@ public static class InterfaceProfileUiPolicy
             ["device-huvitz-hrk9000a-default"] = HuvitzHrk9000ADeviceImagePath,
             ["device-huvitz-hnt1p-default"] = HuvitzHnt1PDeviceImagePath,
             ["device-huvitz-htr1a-default"] = HuvitzHtr1ADeviceImagePath,
+            ["device-shin-nippon-accuref-r800-default"] = ShinNipponTextDeviceImagePath,
+            ["device-shin-nippon-accuref-k900-default"] = ShinNipponTextDeviceImagePath,
+            ["device-shin-nippon-dl1000-default"] = ShinNipponTextDeviceImagePath,
+            ["device-shin-nippon-dl800-default"] = ShinNipponTextDeviceImagePath,
+            ["device-shin-nippon-dl900-default"] = ShinNipponTextDeviceImagePath,
+            ["device-shin-nippon-nct200-default"] = ShinNipponTextDeviceImagePath,
+            ["device-shin-nippon-slm4000-default"] = ShinNipponTextDeviceImagePath,
             ["device-tomey-cf2000-default"] = TomeyCf2000DeviceImagePath,
             ["device-tomey-tl2000c-default"] = TomeyTl2000CDeviceImagePath,
             ["device-tomey-tl6000-default"] = TomeyTl6000DeviceImagePath,

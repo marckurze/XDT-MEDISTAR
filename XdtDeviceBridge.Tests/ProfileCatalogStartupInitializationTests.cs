@@ -4,6 +4,8 @@ namespace XdtDeviceBridge.Tests;
 
 public sealed class ProfileCatalogStartupInitializationTests
 {
+    private const int ExpectedBuiltInProfileCount = 40;
+
     [Fact]
     public void StartupInitialization_ShouldEnsureDefaultsAndLoadCatalog()
     {
@@ -15,9 +17,9 @@ public sealed class ProfileCatalogStartupInitializationTests
         var catalog = catalogService.Load(paths);
 
         Assert.Single(catalog.AisProfiles);
-        Assert.Equal(33, catalog.DeviceProfiles.Count);
-        Assert.Equal(33, catalog.ExportProfiles.Count);
-        Assert.Equal(33, catalog.InterfaceProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.DeviceProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.ExportProfiles.Count);
+        Assert.Equal(ExpectedBuiltInProfileCount, catalog.InterfaceProfiles.Count);
         Assert.Contains("XdtDeviceBridgeTests", paths.BaseFolder);
     }
 }

@@ -74,7 +74,7 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
-Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A sowie TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000, TOP-1000, EM-3000 und EM-4000. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
+Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A, TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000, TOP-1000, EM-3000 und EM-4000 sowie Shin-Nippon Accuref R-800, Accuref K-900, DL-1000, DL-800, DL-900, NCT-200 und SLM-4000. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
 
 # Profilverwaltung
 

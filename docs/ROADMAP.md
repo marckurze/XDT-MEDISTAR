@@ -24,7 +24,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Der Aktivierungsassistent ist fuer den Moment ausreichend vorbereitet und wird nicht weiter ausgebaut.
 - Naechste Entwicklungsarbeit soll konkrete Geraete-/Template-Luecken schliessen.
 - Der alte Tab `Profile & Templates` ist entfernt. `XDT-Baukasten` funktioniert als eigenstaendige Entwurfs-/Vorschauflaeche, `Profilverwaltung` ist die zentrale Pflege- und Wartungsflaeche, und `Schnittstellenprofile` bleibt fuer konkrete Praxisparameter zustaendig.
-- Referenzdaten werden defensiv als Geraetequelle ausgewertet: XML-nahe, vollstaendig ableitbare Geraete duerfen direkt als BuiltIns mit Tests aufgenommen werden; scriptbasierte Geraete ohne echte Rohdaten werden nicht verworfen, sondern als Parser-Kandidaten fuer eigene Folge-Batches dokumentiert.
+- Referenzdaten werden defensiv als Geraetequelle ausgewertet: XML-nahe und scriptbasiert belastbar ableitbare Geraete duerfen als isolierte BuiltIns mit Tests aufgenommen werden; echte Rohdaten bleiben fuer die Praxisabnahme erforderlich. Huvitz, TOMEY und Shin-Nippon wurden inzwischen batchweise mit eigenen Parsern, synthetischen Fixtures und Templatepaket-Tests vorbereitet; unzureichend belegte Geraete bleiben Kandidaten.
 
 ### Validierter Kernworkflow MEDISTAR + NIDEK ARK1S
 
@@ -76,6 +76,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - RS232-Diagnose ist ueber den `XDT-Baukasten` und ueber `Schnittstellenprofile` erreichbar: zeitlich begrenzte Rohdaten-Mitschnitte mit Text-/Hexanzeige, DTR/RTS, Parameteruebernahme und kleinem ASCII-Sendetest funktionieren ohne alten Profil-/Template-Tab.
 - Fuer NIDEK-RS232 ist eine erste Protokollanalyse vorbereitet: FrameReader fuer SOH/STX/ETB/EOT, optionale NCP10-Checksumme, CommandBuilder fuer RS/SD/RD/RSD/CL und PayloadParser fuer LM-, NT- und PM-Kandidaten.
 - Fuer die NIDEK-RT-Phoropterfamilie RT-2100 / RT-3100 / RT-5100 ist ein eigener serieller Parser-/Writer-/Kommunikationszweig vorhanden: PDF-basierte Presets, SH/SX/EB/ET/CR-Frameauswertung, RT->PC-Parsing fuer Final/Subjective, PC->RT-Sendeframes fuer LM-/AR-Daten und patientengetriggerter Produktivablauf. Die Ueberwachung oeffnet kein RT-Fenster beim Start; erst eine stabile AIS-Datei oeffnet den Auswahl-/Sendedialog. Senden erfolgt nur nach Anwenderklick ueber den konfigurierten COM-Port, anschliessend wird bis `EOT` plus Stabilitaetswartezeit empfangen.
+- Fuer Shin-Nippon sind Accuref R-800/K-900, DL-1000/DL-800/DL-900, NCT-200 und SLM-4000 als serielle Text-BuiltIns vorbereitet. Der isolierte `ShinNipponDeviceParser` mappt REF/Lensmeter nach `6228`, KM nach `6221` und Tonometrie nach `6205`; echte Praxisrohdateien und MEDISTAR-Importtests fehlen noch. DR-900 bleibt wegen unzureichend belegter bidirektionaler Frames offen.
 - Produktive serielle Parser und ein dauerhafter RS232-Profilbetrieb muessen fuer weitere serielle Altgeraete anhand echter Rohdaten ergaenzt und praktisch validiert werden. Fuer NIDEK RT-3100 sind Parser-Fixture und Workflow technisch abgesichert; echtes Senden, Rueckgabe nach Sendung und MEDISTAR-Import bleiben Praxisabnahme.
 
 ### XDT-Anhänge für AIS

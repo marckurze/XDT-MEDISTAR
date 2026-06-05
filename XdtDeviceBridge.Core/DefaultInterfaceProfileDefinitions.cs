@@ -673,6 +673,167 @@ public static class DefaultInterfaceProfileDefinitions
             LineTerminator: SerialLineTerminatorSetting.CR);
     }
 
+    public static InterfaceProfileDefinition CreateMedistarShinNipponAccurefR800Default()
+    {
+        return CreateMedistarShinNipponTextSerialDefault(
+            id: "interface-medistar-shin-nippon-accuref-r800-default",
+            name: "MEDISTAR + Shin-Nippon Accuref R-800",
+            product: "MEDISTAR/Shin-Nippon Accuref R-800",
+            deviceProfileId: "device-shin-nippon-accuref-r800-default",
+            exportProfileId: "export-medistar-shin-nippon-accuref-r800-default",
+            description: "Built-in inactive serial profile for Shin-Nippon Accuref R-800 autorefractor text imports. COM defaults use 115200 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 115200,
+            readTimeoutMilliseconds: 5000,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarShinNipponAccurefK900Default()
+    {
+        return CreateMedistarShinNipponTextSerialDefault(
+            id: "interface-medistar-shin-nippon-accuref-k900-default",
+            name: "MEDISTAR + Shin-Nippon Accuref K-900",
+            product: "MEDISTAR/Shin-Nippon Accuref K-900",
+            deviceProfileId: "device-shin-nippon-accuref-k900-default",
+            exportProfileId: "export-medistar-shin-nippon-accuref-k900-default",
+            description: "Built-in inactive serial profile for Shin-Nippon Accuref K-900 REF/KM text imports. COM defaults use 115200 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 115200,
+            readTimeoutMilliseconds: 5000,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarShinNipponDl1000Default()
+    {
+        return CreateMedistarShinNipponTextSerialDefault(
+            id: "interface-medistar-shin-nippon-dl1000-default",
+            name: "MEDISTAR + Shin-Nippon DL-1000",
+            product: "MEDISTAR/Shin-Nippon DL-1000",
+            deviceProfileId: "device-shin-nippon-dl1000-default",
+            exportProfileId: "export-medistar-shin-nippon-dl1000-default",
+            description: "Built-in inactive serial profile for Shin-Nippon DL-1000 lensmeter text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 9600,
+            readTimeoutMilliseconds: 5000,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarShinNipponDl800Default()
+    {
+        return CreateMedistarShinNipponTextSerialDefault(
+            id: "interface-medistar-shin-nippon-dl800-default",
+            name: "MEDISTAR + Shin-Nippon DL-800",
+            product: "MEDISTAR/Shin-Nippon DL-800",
+            deviceProfileId: "device-shin-nippon-dl800-default",
+            exportProfileId: "export-medistar-shin-nippon-dl800-default",
+            description: "Built-in inactive serial profile for Shin-Nippon DL-800 lensmeter text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 9600,
+            readTimeoutMilliseconds: 5000,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarShinNipponDl900Default()
+    {
+        return CreateMedistarShinNipponTextSerialDefault(
+            id: "interface-medistar-shin-nippon-dl900-default",
+            name: "MEDISTAR + Shin-Nippon DL-900",
+            product: "MEDISTAR/Shin-Nippon DL-900",
+            deviceProfileId: "device-shin-nippon-dl900-default",
+            exportProfileId: "export-medistar-shin-nippon-dl900-default",
+            description: "Built-in inactive serial profile for Shin-Nippon DL-900 lensmeter text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 9600,
+            readTimeoutMilliseconds: 5000,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarShinNipponNct200Default()
+    {
+        return CreateMedistarShinNipponTextSerialDefault(
+            id: "interface-medistar-shin-nippon-nct200-default",
+            name: "MEDISTAR + Shin-Nippon NCT-200",
+            product: "MEDISTAR/Shin-Nippon NCT-200",
+            deviceProfileId: "device-shin-nippon-nct200-default",
+            exportProfileId: "export-medistar-shin-nippon-nct200-default",
+            description: "Built-in inactive serial profile for Shin-Nippon NCT-200 tonometry text imports. COM defaults use 19200 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 19200,
+            readTimeoutMilliseconds: 30000,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarShinNipponSlm4000Default()
+    {
+        return CreateMedistarShinNipponTextSerialDefault(
+            id: "interface-medistar-shin-nippon-slm4000-default",
+            name: "MEDISTAR + Shin-Nippon SLM-4000",
+            product: "MEDISTAR/Shin-Nippon SLM-4000",
+            deviceProfileId: "device-shin-nippon-slm4000-default",
+            exportProfileId: "export-medistar-shin-nippon-slm4000-default",
+            description: "Built-in inactive serial profile for Shin-Nippon SLM-4000 lensmeter text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 9600,
+            readTimeoutMilliseconds: 5000,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarShinNipponTextSerialDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description,
+        int baudRate,
+        int readTimeoutMilliseconds,
+        DateTimeOffset timestamp)
+    {
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description,
+            SerialSettings: CreateShinNipponTextSerialSettings(baudRate, readTimeoutMilliseconds));
+    }
+
+    private static SerialCommunicationSettings CreateShinNipponTextSerialSettings(
+        int baudRate,
+        int readTimeoutMilliseconds)
+    {
+        return new SerialCommunicationSettings(
+            BaudRate: baudRate,
+            DataBits: 8,
+            StopBits: SerialStopBitsSetting.One,
+            Parity: SerialParitySetting.None,
+            Handshake: SerialHandshakeSetting.None,
+            DtrEnable: false,
+            RtsEnable: false,
+            IsBidirectional: false,
+            LineTerminator: SerialLineTerminatorSetting.CRLF,
+            ReadTimeoutMilliseconds: readTimeoutMilliseconds,
+            WriteTimeoutMilliseconds: 1000);
+    }
+
     public static InterfaceProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
     {
         return CreateMedistarHuvitzTextSerialDefault(
