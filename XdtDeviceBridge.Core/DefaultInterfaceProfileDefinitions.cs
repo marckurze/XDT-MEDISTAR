@@ -263,6 +263,32 @@ public static class DefaultInterfaceProfileDefinitions
             Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON CL-300 lensmeter profile candidate.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarTopconCl300PdlDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateMedistarTopconCl300Default();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "interface-medistar-topcon-cl300pdl-default",
+                Name: "MEDISTAR + TOPCON CL-300PDL",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for MEDISTAR and TOPCON CL-300PDL.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON CL-300PDL",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            DeviceProfileId = "device-topcon-cl300pdl-default",
+            ExportProfileId = "export-medistar-topcon-cl300pdl-default",
+            Description = "Built-in inactive default interface definition for the MEDISTAR/TOPCON CL-300PDL lensmeter profile candidate."
+        };
+    }
+
     public static InterfaceProfileDefinition CreateMedistarTopconSolosDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero);
@@ -374,6 +400,32 @@ public static class DefaultInterfaceProfileDefinitions
             Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON KR-1 REF profile candidate. KM/KRT remains pending until a real fixture is available.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarTopconRm800Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateMedistarTopconKr1Default();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "interface-medistar-topcon-rm800-default",
+                Name: "MEDISTAR + TOPCON RM-800",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for MEDISTAR and TOPCON RM-800.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON RM-800",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            DeviceProfileId = "device-topcon-rm800-default",
+            ExportProfileId = "export-medistar-topcon-rm800-default",
+            Description = "Built-in inactive default interface definition for the MEDISTAR/TOPCON RM-800 REF-only profile candidate."
+        };
+    }
+
     public static InterfaceProfileDefinition CreateMedistarTopconTrk2PDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
@@ -409,6 +461,32 @@ public static class DefaultInterfaceProfileDefinitions
             IsActive: false,
             IsLicenseRequired: true,
             Description: "Built-in inactive default interface definition for the MEDISTAR/TOPCON TRK-2P REF, KM, TM, CCT and optional SBJ profile candidate.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarTopconTrk3OmniaDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateMedistarTopconTrk2PDefault();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "interface-medistar-topcon-trk3-omnia-default",
+                Name: "MEDISTAR + TOPCON TRK-3 Omnia",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: "Default interface profile definition for MEDISTAR and TOPCON TRK-3 Omnia.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON TRK-3 Omnia",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            DeviceProfileId = "device-topcon-trk3-omnia-default",
+            ExportProfileId = "export-medistar-topcon-trk3-omnia-default",
+            Description = "Built-in inactive default interface definition for the MEDISTAR/TOPCON TRK-3 Omnia REF, KM, TM, CCT and optional SBJ profile candidate."
+        };
     }
 
     public static InterfaceProfileDefinition CreateMedistarTopconCt1PDefault()

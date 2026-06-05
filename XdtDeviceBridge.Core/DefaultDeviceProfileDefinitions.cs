@@ -507,6 +507,32 @@ public static class DefaultDeviceProfileDefinitions
             DeviceImagePath: InterfaceProfileUiPolicy.TopconCl300DeviceImagePath);
     }
 
+    public static DeviceProfileDefinition CreateTopconCl300PdlDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateTopconCl300Default();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "device-topcon-cl300pdl-default",
+                Name: "TOPCON CL-300PDL",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON CL-300PDL Ophthalmology XML lensmeter files. The reference data confirms the same LM/PD XML structure as the CL-300 family.",
+                Vendor: "TOPCON",
+                Product: "CL-300PDL",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Model = "CL-300PDL",
+            DeviceType = "Lensmeter",
+            DeviceImagePath = InterfaceProfileUiPolicy.TopconCl300DeviceImagePath
+        };
+    }
+
     public static DeviceProfileDefinition CreateTopconSolosDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero);
@@ -718,6 +744,33 @@ public static class DefaultDeviceProfileDefinitions
             DeviceImagePath: InterfaceProfileUiPolicy.TopconKr1DeviceImagePath);
     }
 
+    public static DeviceProfileDefinition CreateTopconRm800Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateTopconKr1Default();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "device-topcon-rm800-default",
+                Name: "TOPCON RM-800",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON RM-800 REF-only Ophthalmology XML files. The reference data confirms REF median values on the TOPCON XML family; KM remains disabled until a real fixture is available.",
+                Vendor: "TOPCON",
+                Product: "RM-800",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Model = "RM-800",
+            DeviceType = "Autorefraktor",
+            SupportedExaminationTypes = new[] { "REF", "Refraktion", "Autorefraktion" },
+            DeviceImagePath = InterfaceProfileUiPolicy.TopconKr800DeviceImagePath
+        };
+    }
+
     public static DeviceProfileDefinition CreateTopconTrk2PDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
@@ -784,6 +837,32 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "REF", "KM", "TM", "CCT", "SBJ", "Autorefraktion", "Keratometer", "Tonometrie", "Pachymetrie", "Subjektiv" },
             CanContainMultipleExaminationTypes: true,
             DeviceImagePath: InterfaceProfileUiPolicy.TopconTrk2PDeviceImagePath);
+    }
+
+    public static DeviceProfileDefinition CreateTopconTrk3OmniaDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateTopconTrk2PDefault();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "device-topcon-trk3-omnia-default",
+                Name: "TOPCON TRK-3 Omnia",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for TOPCON TRK-3 Omnia JOIA/Ophthalmology XML files. Reference scripts confirm the same REF/KM/TM/CCT paths used by the TRK-2P XML family.",
+                Vendor: "TOPCON",
+                Product: "TRK-3 Omnia",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Model = "TRK-3 Omnia",
+            DeviceType = "Autorefraktometer/Keratometer/Tonometer/Pachymeter",
+            DeviceImagePath = InterfaceProfileUiPolicy.TopconTrk2PDeviceImagePath
+        };
     }
 
     public static DeviceProfileDefinition CreateTopconCt1PDefault()

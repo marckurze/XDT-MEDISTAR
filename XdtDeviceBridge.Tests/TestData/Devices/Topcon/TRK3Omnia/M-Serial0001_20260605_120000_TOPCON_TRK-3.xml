@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsREF="http://www.joia.or.jp/standardized/namespaces/REF" xmlns:nsKM="http://www.joia.or.jp/standardized/namespaces/KM" xmlns:nsTM="http://www.joia.or.jp/standardized/namespaces/TM">
+  <nsCommon:Common>
+    <nsCommon:Company>TOPCON</nsCommon:Company>
+    <nsCommon:ModelName>TRK-3</nsCommon:ModelName>
+    <nsCommon:MachineNo>TRK30001</nsCommon:MachineNo>
+    <nsCommon:ROMVersion>1.00.00</nsCommon:ROMVersion>
+    <nsCommon:Version>1.2</nsCommon:Version>
+    <nsCommon:Date>2026-06-05</nsCommon:Date>
+    <nsCommon:Time>12:00:00</nsCommon:Time>
+  </nsCommon:Common>
+  <nsREF:Measure type="REF">
+    <nsREF:VD unit="mm">13.75</nsREF:VD>
+    <nsREF:REF>
+      <nsREF:R>
+        <nsREF:Median>
+          <nsREF:Sphere unit="D">+0.25</nsREF:Sphere>
+          <nsREF:Cylinder unit="D">-0.25</nsREF:Cylinder>
+          <nsREF:Axis unit="deg">2</nsREF:Axis>
+        </nsREF:Median>
+      </nsREF:R>
+      <nsREF:L>
+        <nsREF:Median>
+          <nsREF:Sphere unit="D">+0.25</nsREF:Sphere>
+          <nsREF:Cylinder unit="D">+0.00</nsREF:Cylinder>
+          <nsREF:Axis unit="deg">0</nsREF:Axis>
+        </nsREF:Median>
+      </nsREF:L>
+    </nsREF:REF>
+    <nsREF:PD>
+      <nsREF:Distance unit="mm">68.0</nsREF:Distance>
+    </nsREF:PD>
+  </nsREF:Measure>
+  <nsKM:Measure type="KM">
+    <nsKM:KM>
+      <nsKM:R>
+        <nsKM:Median>
+          <nsKM:R1>
+            <nsKM:Radius unit="mm">7.74</nsKM:Radius>
+            <nsKM:Power unit="D">43.50</nsKM:Power>
+            <nsKM:Axis unit="deg">3</nsKM:Axis>
+          </nsKM:R1>
+          <nsKM:R2>
+            <nsKM:Radius unit="mm">7.67</nsKM:Radius>
+            <nsKM:Power unit="D">44.00</nsKM:Power>
+            <nsKM:Axis unit="deg">93</nsKM:Axis>
+          </nsKM:R2>
+          <nsKM:Average>
+            <nsKM:Radius unit="mm">7.71</nsKM:Radius>
+            <nsKM:Power unit="D">43.75</nsKM:Power>
+          </nsKM:Average>
+          <nsKM:Cylinder>
+            <nsKM:Power unit="D">-0.50</nsKM:Power>
+            <nsKM:Axis unit="deg">3</nsKM:Axis>
+          </nsKM:Cylinder>
+        </nsKM:Median>
+      </nsKM:R>
+      <nsKM:L>
+        <nsKM:Median>
+          <nsKM:R1>
+            <nsKM:Radius unit="mm">7.72</nsKM:Radius>
+            <nsKM:Power unit="D">43.75</nsKM:Power>
+            <nsKM:Axis unit="deg">175</nsKM:Axis>
+          </nsKM:R1>
+          <nsKM:R2>
+            <nsKM:Radius unit="mm">7.65</nsKM:Radius>
+            <nsKM:Power unit="D">44.25</nsKM:Power>
+            <nsKM:Axis unit="deg">85</nsKM:Axis>
+          </nsKM:R2>
+          <nsKM:Average>
+            <nsKM:Radius unit="mm">7.69</nsKM:Radius>
+            <nsKM:Power unit="D">44.00</nsKM:Power>
+          </nsKM:Average>
+          <nsKM:Cylinder>
+            <nsKM:Power unit="D">-0.50</nsKM:Power>
+            <nsKM:Axis unit="deg">175</nsKM:Axis>
+          </nsKM:Cylinder>
+        </nsKM:Median>
+      </nsKM:L>
+    </nsKM:KM>
+  </nsKM:Measure>
+  <nsTM:Measure type="TM">
+    <nsTM:TM>
+      <nsTM:R>
+        <nsTM:List No="1"><nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List No="2"><nsTM:IOP_mmHg unit="mmHg">18.0</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List No="3"><nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:Average><nsTM:IOP_mmHg unit="mmHg">17.5</nsTM:IOP_mmHg></nsTM:Average>
+      </nsTM:R>
+      <nsTM:L>
+        <nsTM:List No="1"><nsTM:IOP_mmHg unit="mmHg">17.0</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List No="2"><nsTM:IOP_mmHg unit="mmHg">16.0</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List No="3"><nsTM:IOP_mmHg unit="mmHg">16.0</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:Average><nsTM:IOP_mmHg unit="mmHg">16.3</nsTM:IOP_mmHg></nsTM:Average>
+      </nsTM:L>
+    </nsTM:TM>
+    <nsTM:CCT>
+      <nsTM:R>
+        <nsTM:List No="1"><nsTM:CCT_mm unit="mm">0.529</nsTM:CCT_mm></nsTM:List>
+        <nsTM:Average><nsTM:CCT_mm unit="mm">0.529</nsTM:CCT_mm></nsTM:Average>
+      </nsTM:R>
+      <nsTM:L>
+        <nsTM:List No="1"><nsTM:CCT_mm unit="mm">0.525</nsTM:CCT_mm></nsTM:List>
+        <nsTM:Average><nsTM:CCT_mm unit="mm">0.525</nsTM:CCT_mm></nsTM:Average>
+      </nsTM:L>
+    </nsTM:CCT>
+  </nsTM:Measure>
+</Ophthalmology>

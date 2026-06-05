@@ -296,11 +296,13 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         AddAliasIfContains(aliases, normalizedProfileText, "RT2100", "RT2100");
         AddAliasIfContains(aliases, normalizedProfileText, "RT3100", "RT3100");
         AddAliasIfContains(aliases, normalizedProfileText, "RT5100", "RT5100");
-        AddAliasIfContains(aliases, normalizedProfileText, "CL300", "CL300");
+        AddAliasIfContains(aliases, normalizedProfileText, "CL300", "CL300", "CL300PDL");
         AddAliasIfContains(aliases, normalizedProfileText, "SOLOS", "SOLOS");
         AddAliasIfContains(aliases, normalizedProfileText, "KR800", "KR800S", "KR800");
+        AddAliasIfContains(aliases, normalizedProfileText, "RM800", "RM800");
         AddAliasIfContains(aliases, normalizedProfileText, "KR1", "KR1");
         AddAliasIfContains(aliases, normalizedProfileText, "TRK2P", "TRK2P", "TRK2");
+        AddAliasIfContains(aliases, normalizedProfileText, "TRK3", "TRK3", "TRK3OMNIA");
         AddAliasIfContains(aliases, normalizedProfileText, "CT1P", "CT1P");
         AddAliasIfContains(aliases, normalizedProfileText, "CT800A", "CT800A", "CT800");
         AddAliasIfContains(aliases, normalizedProfileText, "CV5000", "CV5000", "CV5000S");

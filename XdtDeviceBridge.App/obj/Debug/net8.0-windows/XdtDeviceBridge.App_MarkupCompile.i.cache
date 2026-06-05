@@ -16,5 +16,5 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.App\App.xaml
 209483516507
 AboutXdtBoxWindow.xaml;AppSettingsDialog.xaml;Cv5000PhoropterSelectionDialog.xaml;DocumentAttachmentDocumentationWindow.xaml;FloatingInterfaceProfileWindow.xaml;HelpCenterWindow.xaml;InterfaceProfileActivationPreparationPreviewWindow.xaml;LoadDeviceProfileDialog.xaml;MainWindow.xaml;NewAisProfileDialog.xaml;NewDeviceProfileDialog.xaml;NewInterfaceProfileDialog.xaml;RenameProfileDialog.xaml;Styles\XdtBoxTheme.xaml;XdtBaukastenSaveTemplateDialog.xaml;XdtBaukastenSerialCaptureWindow.xaml;XdtBaukastenTemplatePackageImportDialog.xaml;
 
-False
+True
 

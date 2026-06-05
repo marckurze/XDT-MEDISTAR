@@ -54,12 +54,18 @@ Hinweis zur Namenskorrektur: Der Hersteller wird in XDTBox als `Möller-Wedel` g
 | Shin-Nippon | DL-900 | Lensmeter | RS232 Text | gleiche DL-/SLM-Lensmeterfamilie wie DL-1000; synthetische Fixture | `6228` Lensmeter-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Baukasten-Kompatibilitaetstest und Templatepaket-Test ergaenzt |
 | Shin-Nippon | NCT-200 | Non-Contact-Tonometer | RS232 Text | IOP-Liste mit Durchschnittswerten; synthetische Fixture | `6205` Tonometrie | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Baukasten-Kompatibilitaetstest und Templatepaket-Test ergaenzt |
 | Shin-Nippon | SLM-4000 | Lensmeter | RS232 Text | gleiche DL-/SLM-Lensmeterfamilie wie DL-1000; synthetische Fixture | `6228` Lensmeter-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
+| TOPCON | CL-300PDL | Lensmeter | Datei/LAN XML | `Ophthalmology`/JOIA-XML mit `Common.ModelName=CL-300PDL`, `Measure Type="LM"`; CL-300-Familie, synthetische neutrale Fixture | `6228` Lensmeter-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, ModelName-Alias, Baukasten-Kompatibilitaet und Templatepaket-Test ergaenzt |
+| TOPCON | RM-800 | Autorefraktor | Datei/LAN XML | `Ophthalmology`/JOIA-XML mit `Common.ModelName=RM-800`, `Measure Type="REF"`; REF-Familie, synthetische neutrale Fixture | `6228` REF-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, ModelName-Alias und Templatepaket-Test ergaenzt |
+| TOPCON | TRK-3 Omnia | Autorefraktor/Keratometer/Tonometer/Pachymeter | Datei/LAN XML | `Ophthalmology`/JOIA-XML mit `Common.ModelName=TRK-3`, REF/KM/TM/CCT wie TRK-2P-Familie; synthetische neutrale Fixture | `6228`, `6221`, `6220`, `6205` | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, ModelName-Alias, Baukasten-Kompatibilitaet und Templatepaket-Test ergaenzt |
 
 ## Bestehende Anbindungen mit sicherer Verbesserung
 
 | Hersteller | Modell / Familie | Verbesserung |
 | --- | --- | --- |
 | TOPCON | KR-800 / KR800S | `KR-800` wird als Alias der vorhandenen KR800S-XML-Familie erkannt. Die bestehende KR800S-Anbindung bleibt fachlich unveraendert. |
+| TOPCON | CL-300PDL / CL-300 | `CL-300PDL` wird als eigene BuiltIn-Variante der vorhandenen CL-300-Lensmeter-XML-Familie gefuehrt. |
+| TOPCON | RM-800 | `RM-800` nutzt eine eigene BuiltIn-Variante der vorhandenen REF-XML-Auswertung ohne KM-Erfindung. |
+| TOPCON | TRK-3 Omnia / TRK-2P | `TRK-3`/`TRK-3 Omnia` wird als eigene BuiltIn-Variante der TRK-2P-Mehruntersuchungsfamilie gefuehrt. |
 | NIDEK | LM7 / LM7P / LM-1800P | Die vorhandene NIDEK-Lensmeter-Fachlogik nutzt jetzt eine gemeinsame Modellpruefung und akzeptiert bei LM-1800P die alternativen Augenbloecke `I` und `S`. |
 
 ## Bereits vorhanden und nicht geaendert
@@ -67,7 +73,7 @@ Hinweis zur Namenskorrektur: Der Hersteller wird in XDTBox als `Möller-Wedel` g
 | Hersteller | Geraet / Familie | Grund |
 | --- | --- | --- |
 | NIDEK | ARK1S, AR360, LM7/LM7P, NT530P, RT-2100/3100/5100 RS232, RT-6100 | Bereits als BuiltIn vorhanden; keine sichere Verbesserung ausser den oben genannten Aliases/Fallbacks erforderlich. |
-| TOPCON | CL300, Solos, KR800S, KR-1, TRK2P, CT1P, CT800A, CV5000/CV5000S | Bereits als BuiltIn vorhanden; Referenzdaten lieferten in diesem Batch keine risikoarme fachliche Aenderung. |
+| TOPCON | CL300, CL-300PDL, Solos, KR800S, KR-1, RM-800, TRK2P, TRK-3 Omnia, CT1P, CT800A, CV5000/CV5000S | Bereits als BuiltIn vorhanden oder in diesem Batch als risikoarme Variante ergaenzt; CV-5000/CV-5000S wurde statisch bestaetigt, fachlich aber nicht veraendert. |
 | Dokumentgeraete | Generisches Dokumentgeraet, manuelle Dokumentauswahl | Bereits als BuiltIn vorhanden; keine Messwertparser betroffen. |
 
 ## Parser-Kandidaten aus Referenzlogik
@@ -80,6 +86,8 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | Huvitz | HDR-7000, HDR-9000 | Phoropter-/Refraktor-Kandidaten mit bidirektionaler Relevanz | Rueckgabe und PC->Geraet getrennt analysieren, kein BuiltIn ohne Sendeframe-Test |
 | TOMEY | AP-2500 | Setup-/Konfigurationshinweise ohne ausreichend belegte Messwertrohstruktur | erst mit klarer Rohdaten- oder Parserstrecke als BuiltIn entscheiden |
 | TOMEY | TAP-2000 | bidirektionaler Phoropterkandidat mit serieller Relevanz; COM-Parameter und Framebausteine sind sichtbar, aber echte Rueckgabe-/Live-Sendeframes fehlen | Rueckgabe und PC->Geraet getrennt mit Live-/Framefixtures absichern |
+| TOPCON | EZ-200 Advance | serielle/RDD-Logik mit `CLM`/`SD`-Handshake und Lensmeter-Ziel `6228`, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen Parser umsetzen |
+| TOPCON | RM-8000 | serielle/RDD-Logik mit `6228`/`6227`-Hinweisen, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen REF/SBJ-Parser entscheiden |
 | Reichert | 7CR NCT, LensChek Plus | teilweise Setup-/Parserhinweise | getrennte Tonometer-/Lensmeter-Batches |
 | Rodenstock | CX 800, Phoromat 2000 | teilweise Refraktor-/Phoropterhinweise | erst nach klarer Frame-/Textstruktur als BuiltIn |
 | Möller-Wedel | Visutron-Familie | teilweise Hinweise, Herstellername korrigiert | Parserdetails und Anschlussart nachziehen |
@@ -91,8 +99,6 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 
 | Hersteller | Geraet | Grund |
 | --- | --- | --- |
-| TOPCON | RM-800 | XML-Hinweise verweisen auf eine andere Modellfamilie; kein eigenes BuiltIn ohne belastbare Modellabgrenzung. |
-| TOPCON | TRK-3 Omnia | Referenzstruktur liegt nahe an bestehendem TRK2P; keine sichere eigenstaendige Modell-/Mappingentscheidung. |
 | NIDEK | NT-510 / NT-530 | Hinweise liegen nahe an vorhandener NT530P-Struktur; keine neue BuiltIn-ID ohne echte Modellfixture. |
 | NIDEK | LM-1800PD | LM-1800P-Fallback ist implementiert; PD-spezifische Variante braucht eigene Rohdaten oder eindeutige Regel. |
 | NIDEK | AR-1 / AR-1S / AR-310A / AR-600 / AR-660A / ARK-1 / ARK-1E / ARK-1F / ARK-500A | AR-/ARK-Familie ist technisch nah, aber je Modell fehlt in diesem Batch eine vollstaendige, eindeutig getestete Struktur. |
@@ -109,6 +115,7 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 - NIDEK ARK-5xx: einfache `Data`-XML-Struktur wird ueber die bestehende XML-Flattening-Logik verarbeitet; Exportprofile nutzen `ARMedian` fuer rechts/links, `PD/PDList[@No='1']/FarPD` und `VD`.
 - NIDEK LM-1800P: die Schreibvariante `Sphare` wird ueber vorhandene Aliaslogik als `Sphere` verfuegbar; alternative Augenbloecke `I` und `S` werden fuer die vorbereiteten MEDISTAR-Lines auf `R` und `L` abgebildet.
 - TOPCON KR-800: Modellalias `KR-800` nutzt die vorhandene KR800S-Erkennung, ohne die bestehende KR800S-Fachlogik zu veraendern.
+- TOPCON CL-300PDL/RM-800/TRK-3 Omnia: nur eindeutige XML-Familienaliasse wurden uebernommen. CL-300PDL bleibt Lensmeter `6228`, RM-800 bleibt REF `6228`, TRK-3 Omnia bleibt REF/KM/CCT/Tonometrie ueber `6228`/`6221`/`6220`/`6205`. Es wurden keine Cross-Device-Messarten geraten.
 - Huvitz-Textparser: nur eindeutig abgeleitete Tokens werden ausgewertet. `S-R-*` wird als REF nach `6228`, `S-K-*` als KM nach `6221`, `T-*` als Tonometrie nach `6205` und `P-*` als Pachymetrie/CCT nach `6220` vorbereitet. Die Fixtures sind synthetisch aus Referenzlogik abgeleitet und ersetzen keine Praxisrohdateien.
 - TOMEY-Parser: CF-2000 und TL-2000C/TL-6000/TL-7000 werden als Lensmeter nach `6228` vorbereitet. MR-6000 trennt REF nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`. TOP-1000 liefert Tonometrie nach `6205` und Pachymetrie nach `6220`. EM-3000/EM-4000 liefern Endothel-/Zellmesswerte nach `6228`, Kommentare nach `6227` und Bild-/Dateiverweise nach `6302`. Nur erkannte Werte werden exportiert; fehlende Teilmessungen erzeugen keine kuenstlichen Zeilen.
 - Shin-Nippon-Textparser: Accuref R-800/K-900 wird als REF beziehungsweise REF/KM ausgewertet, DL-1000/DL-800/DL-900/SLM-4000 als Lensmeter und NCT-200 als Tonometrie. COM-Defaults stammen aus neutraler Referenzlogik: Accuref 115200 8N1, DL-/SLM-Lensmeter 9600 8N1, NCT-200 19200 8N1. Die Fixtures sind synthetisch und ersetzen keine Praxisrohdateien.
@@ -122,5 +129,6 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 3. Huvitz-HLM-Lensmeter, Huvitz-HDR-Phoropter und TOMEY-TAP-2000 erst nach klarer Rohdaten-/Frame-Struktur als BuiltIn entscheiden.
 4. Echte Shin-Nippon-Praxisrohdateien fuer Accuref R-800/K-900, DL-1000/DL-800/DL-900, NCT-200 und SLM-4000 sammeln und gegen `ShinNipponDeviceParser` validieren.
 5. Shin-Nippon DR-900 erst nach klarer Rueckgabe- und PC->Geraet-Frame-Struktur entscheiden.
-6. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.
-7. Keine Referenzrohdateien, PDFs oder fremden Skripte in den Kundeninstaller aufnehmen.
+6. TOPCON EZ-200 Advance und RM-8000 erst mit echter serieller Rohdatenprobe oder eindeutigem Framefixture als Parser umsetzen.
+7. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.
+8. Keine Referenzrohdateien, PDFs oder fremden Skripte in den Kundeninstaller aufnehmen.

@@ -5,7 +5,7 @@ namespace XdtDeviceBridge.Tests;
 
 public sealed class ProfileCatalogServiceTests
 {
-    private const int ExpectedBuiltInProfileCount = 40;
+    private const int ExpectedBuiltInProfileCount = 43;
 
     private readonly ProfileCatalogService _service = new();
 
@@ -814,10 +814,13 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("device-tomey-em3000-default", ids);
         Assert.Contains("device-tomey-em4000-default", ids);
         Assert.Contains("device-topcon-cl300-default", ids);
+        Assert.Contains("device-topcon-cl300pdl-default", ids);
         Assert.Contains("device-topcon-solos-default", ids);
         Assert.Contains("device-topcon-kr800-default", ids);
         Assert.Contains("device-topcon-kr1-default", ids);
+        Assert.Contains("device-topcon-rm800-default", ids);
         Assert.Contains("device-topcon-trk2p-default", ids);
+        Assert.Contains("device-topcon-trk3-omnia-default", ids);
         Assert.Contains("device-topcon-ct1p-default", ids);
         Assert.Contains("device-topcon-ct800a-default", ids);
         Assert.Contains("device-topcon-cv5000-default", ids);
@@ -860,10 +863,13 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("export-medistar-tomey-em3000-default", ids);
         Assert.Contains("export-medistar-tomey-em4000-default", ids);
         Assert.Contains("export-medistar-topcon-cl300-default", ids);
+        Assert.Contains("export-medistar-topcon-cl300pdl-default", ids);
         Assert.Contains("export-medistar-topcon-solos-default", ids);
         Assert.Contains("export-medistar-topcon-kr800-default", ids);
         Assert.Contains("export-medistar-topcon-kr1-default", ids);
+        Assert.Contains("export-medistar-topcon-rm800-default", ids);
         Assert.Contains("export-medistar-topcon-trk2p-default", ids);
+        Assert.Contains("export-medistar-topcon-trk3-omnia-default", ids);
         Assert.Contains("export-medistar-topcon-ct1p-default", ids);
         Assert.Contains("export-medistar-topcon-ct800a-default", ids);
         Assert.Contains("export-medistar-topcon-cv5000-default", ids);

@@ -180,3 +180,6 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\S
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\ShinNippon\DL900\DL900_reference_text.txt
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\ShinNippon\NCT200\NCT200_reference_text.txt
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\ShinNippon\SLM4000\SLM4000_reference_text.txt
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\CL300PDL\M-Serial0001_20260605_120000_TOPCON_CL-300PDL.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\RM800\M-Serial0001_20260605_120000_TOPCON_RM-800.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Topcon\TRK3Omnia\M-Serial0001_20260605_120000_TOPCON_TRK-3.xml

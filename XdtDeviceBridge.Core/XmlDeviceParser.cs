@@ -2064,7 +2064,8 @@ public sealed class XmlDeviceParser
     private static bool IsTopconCl300Model(string? modelName)
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
-        return string.Equals(normalized, "CL300", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "CL300", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "CL300PDL", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconSolosModel(string? modelName)
@@ -2077,7 +2078,8 @@ public sealed class XmlDeviceParser
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "KR800S", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(normalized, "KR800", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(normalized, "KR800", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "RM800", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconKr1Model(string? modelName)
@@ -2089,7 +2091,9 @@ public sealed class XmlDeviceParser
     private static bool IsTopconTrk2PModel(string? modelName)
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
-        return string.Equals(normalized, "TRK2P", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "TRK2P", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "TRK3", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized?.Replace(" ", string.Empty, StringComparison.Ordinal), "TRK3OMNIA", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconCt1PModel(string? modelName)

@@ -527,6 +527,30 @@ public static class DefaultExportProfileDefinitions
             });
     }
 
+    public static ExportProfileDefinition CreateMedistarTopconCl300PdlDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateMedistarTopconCl300Default();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "export-medistar-topcon-cl300pdl-default",
+                Name: "MEDISTAR + TOPCON CL-300PDL Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON CL-300PDL lensmeter XML data. Lensmeter lines are emitted through 6228.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON CL-300PDL",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            SourceDeviceProfileId = "device-topcon-cl300pdl-default"
+        };
+    }
+
     public static ExportProfileDefinition CreateMedistarTopconSolosDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 24, 12, 0, 0, TimeSpan.Zero);
@@ -743,6 +767,30 @@ public static class DefaultExportProfileDefinitions
             });
     }
 
+    public static ExportProfileDefinition CreateMedistarTopconRm800Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateMedistarTopconKr1Default();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "export-medistar-topcon-rm800-default",
+                Name: "MEDISTAR + TOPCON RM-800 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON RM-800 REF XML data. REF values are emitted through 6228; KM remains disabled until real data is available.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON RM-800",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            SourceDeviceProfileId = "device-topcon-rm800-default"
+        };
+    }
+
     public static ExportProfileDefinition CreateMedistarTopconTrk2PDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 21, 12, 0, 0, TimeSpan.Zero);
@@ -953,6 +1001,30 @@ public static class DefaultExportProfileDefinitions
                     true,
                     "Conservative subjective refraction line 4 for TOPCON TRK-2P when SBJ values are present.")
             });
+    }
+
+    public static ExportProfileDefinition CreateMedistarTopconTrk3OmniaDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var profile = CreateMedistarTopconTrk2PDefault();
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "export-medistar-topcon-trk3-omnia-default",
+                Name: "MEDISTAR + TOPCON TRK-3 Omnia Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Default export profile definition for MEDISTAR and TOPCON TRK-3 Omnia REF, KM, TM, CCT and optional SBJ XML data.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/TOPCON TRK-3 Omnia",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            SourceDeviceProfileId = "device-topcon-trk3-omnia-default"
+        };
     }
 
     public static ExportProfileDefinition CreateMedistarTopconCt1PDefault()

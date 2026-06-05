@@ -24,7 +24,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Der Aktivierungsassistent ist fuer den Moment ausreichend vorbereitet und wird nicht weiter ausgebaut.
 - Naechste Entwicklungsarbeit soll konkrete Geraete-/Template-Luecken schliessen.
 - Der alte Tab `Profile & Templates` ist entfernt. `XDT-Baukasten` funktioniert als eigenstaendige Entwurfs-/Vorschauflaeche, `Profilverwaltung` ist die zentrale Pflege- und Wartungsflaeche, und `Schnittstellenprofile` bleibt fuer konkrete Praxisparameter zustaendig.
-- Referenzdaten werden defensiv als Geraetequelle ausgewertet: XML-nahe und scriptbasiert belastbar ableitbare Geraete duerfen als isolierte BuiltIns mit Tests aufgenommen werden; echte Rohdaten bleiben fuer die Praxisabnahme erforderlich. Huvitz, TOMEY und Shin-Nippon wurden inzwischen batchweise mit eigenen Parsern, synthetischen Fixtures und Templatepaket-Tests vorbereitet; unzureichend belegte Geraete bleiben Kandidaten.
+- Referenzdaten werden defensiv als Geraetequelle ausgewertet: XML-nahe und scriptbasiert belastbar ableitbare Geraete duerfen als isolierte BuiltIns mit Tests aufgenommen werden; echte Rohdaten bleiben fuer die Praxisabnahme erforderlich. Huvitz, TOMEY, Shin-Nippon und belastbare TOPCON-Varianten wurden inzwischen batchweise mit eigenen Profilketten beziehungsweise Parsern, synthetischen Fixtures und Templatepaket-Tests vorbereitet; unzureichend belegte Geraete bleiben Kandidaten.
 
 ### Validierter Kernworkflow MEDISTAR + NIDEK ARK1S
 
@@ -70,7 +70,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 ### Geraetequellen: LAN/Datei und RS232
 
 - XDTBox fuehrt den bisherigen Geraete-Dateiimport als `NetworkLan`: Geraete schreiben Messdateien ueber LAN/UNC/Shared Folder in den konfigurierten Geraete-Eingangsordner.
-- Aus dem ersten Referenzdaten-Batch sind NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P als neue BuiltIns vorbereitet; TOPCON KR-800 wird ueber die vorhandene KR800S-Familie erkannt. Die vollstaendige Entscheidungstabelle steht in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md`.
+- Aus den Referenzdaten-Batches sind NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P als neue BuiltIns vorbereitet; TOPCON KR-800 wird ueber die vorhandene KR800S-Familie erkannt. Zusaetzlich sind TOPCON CL-300PDL, RM-800 und TRK-3 Omnia als eigene, testseitig abgesicherte Varianten der vorhandenen TOPCON-XML-Familien vorhanden. Die vollstaendige Entscheidungstabelle steht in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md`.
 - `SerialRs232` ist als zweite Geraetequelle vorbereitet. RS232-Profile speichern COM-Port, Baudrate, Datenbits, Stoppbits, Paritaet, Flusskontrolle, Timeouts und bidirektionale Option.
 - Der AIS-Patientenordner bleibt fuer beide Quellen erhalten; ersetzt wird bei RS232 nur der Geraete-Eingangsordner.
 - RS232-Diagnose ist ueber den `XDT-Baukasten` und ueber `Schnittstellenprofile` erreichbar: zeitlich begrenzte Rohdaten-Mitschnitte mit Text-/Hexanzeige, DTR/RTS, Parameteruebernahme und kleinem ASCII-Sendetest funktionieren ohne alten Profil-/Template-Tab.

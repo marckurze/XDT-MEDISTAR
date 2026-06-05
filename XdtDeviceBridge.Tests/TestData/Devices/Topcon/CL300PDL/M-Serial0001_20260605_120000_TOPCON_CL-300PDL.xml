@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsLM="http://www.joia.or.jp/standardized/namespaces/LM">
+  <nsCommon:Common>
+    <nsCommon:Company>TOPCON</nsCommon:Company>
+    <nsCommon:ModelName>CL-300PDL</nsCommon:ModelName>
+    <nsCommon:MachineNo>CL300PDL01</nsCommon:MachineNo>
+    <nsCommon:ROMVersion>1.00.00</nsCommon:ROMVersion>
+    <nsCommon:Version>1.2</nsCommon:Version>
+    <nsCommon:Date>2026-06-05</nsCommon:Date>
+    <nsCommon:Time>12:00:00</nsCommon:Time>
+  </nsCommon:Common>
+  <nsLM:Measure type="LM">
+    <nsLM:DiopterStep unit="D">0.25</nsLM:DiopterStep>
+    <nsLM:AxisStep unit="deg">1</nsLM:AxisStep>
+    <nsLM:PrismStep unit="D">0.25</nsLM:PrismStep>
+    <nsLM:CylinderMode>-</nsLM:CylinderMode>
+    <nsLM:LensType>glass</nsLM:LensType>
+    <nsLM:LM>
+      <nsLM:R>
+        <nsLM:Sphere unit="D">+1.25</nsLM:Sphere>
+        <nsLM:Cylinder unit="D">-0.50</nsLM:Cylinder>
+        <nsLM:Axis unit="deg">32</nsLM:Axis>
+        <nsLM:Add1 unit="D">+0.75</nsLM:Add1>
+        <nsLM:Add2 unit="D">+1.25</nsLM:Add2>
+      </nsLM:R>
+      <nsLM:L>
+        <nsLM:Sphere unit="D">+0.75</nsLM:Sphere>
+        <nsLM:Cylinder unit="D">-0.25</nsLM:Cylinder>
+        <nsLM:Axis unit="deg">142</nsLM:Axis>
+        <nsLM:Add1 unit="D"></nsLM:Add1>
+        <nsLM:Add2 unit="D">+0.25</nsLM:Add2>
+      </nsLM:L>
+    </nsLM:LM>
+    <nsLM:PD>
+      <nsLM:B>
+        <nsLM:Distance unit="mm">59.0</nsLM:Distance>
+      </nsLM:B>
+    </nsLM:PD>
+  </nsLM:Measure>
+</Ophthalmology>
