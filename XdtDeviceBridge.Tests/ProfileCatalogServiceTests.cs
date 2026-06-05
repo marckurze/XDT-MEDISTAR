@@ -5,7 +5,7 @@ namespace XdtDeviceBridge.Tests;
 
 public sealed class ProfileCatalogServiceTests
 {
-    private const int ExpectedBuiltInProfileCount = 43;
+    private const int ExpectedBuiltInProfileCount = 52;
 
     private readonly ProfileCatalogService _service = new();
 
@@ -68,10 +68,19 @@ public sealed class ProfileCatalogServiceTests
         AssertExpectedExportDefaults(catalog);
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ark1s-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ar360-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ar1-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ar1s-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ar310a-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ark510a-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-ark560a-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-lm1800p-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-lm1800pd-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-lm7-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt1-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt1e-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt1p-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt510-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt530-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-nt530p-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt6100-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt2100-serial-default");
@@ -785,10 +794,19 @@ public sealed class ProfileCatalogServiceTests
 
         Assert.Contains("device-nidek-ark1s-default", ids);
         Assert.Contains("device-nidek-ar360-default", ids);
+        Assert.Contains("device-nidek-ar1-default", ids);
+        Assert.Contains("device-nidek-ar1s-default", ids);
+        Assert.Contains("device-nidek-ar310a-default", ids);
         Assert.Contains("device-nidek-ark510a-default", ids);
         Assert.Contains("device-nidek-ark560a-default", ids);
         Assert.Contains("device-nidek-lm1800p-default", ids);
+        Assert.Contains("device-nidek-lm1800pd-default", ids);
         Assert.Contains("device-nidek-lm7-default", ids);
+        Assert.Contains("device-nidek-nt1-default", ids);
+        Assert.Contains("device-nidek-nt1e-default", ids);
+        Assert.Contains("device-nidek-nt1p-default", ids);
+        Assert.Contains("device-nidek-nt510-default", ids);
+        Assert.Contains("device-nidek-nt530-default", ids);
         Assert.Contains("device-nidek-nt530p-default", ids);
         Assert.Contains("device-nidek-rt6100-default", ids);
         Assert.Contains("device-nidek-rt2100-serial-default", ids);
@@ -834,10 +852,19 @@ public sealed class ProfileCatalogServiceTests
 
         Assert.Contains("export-medistar-nidek-ark1s-default", ids);
         Assert.Contains("export-medistar-nidek-ar360-default", ids);
+        Assert.Contains("export-medistar-nidek-ar1-default", ids);
+        Assert.Contains("export-medistar-nidek-ar1s-default", ids);
+        Assert.Contains("export-medistar-nidek-ar310a-default", ids);
         Assert.Contains("export-medistar-nidek-ark510a-default", ids);
         Assert.Contains("export-medistar-nidek-ark560a-default", ids);
         Assert.Contains("export-medistar-nidek-lm1800p-default", ids);
+        Assert.Contains("export-medistar-nidek-lm1800pd-default", ids);
         Assert.Contains("export-medistar-nidek-lm7-default", ids);
+        Assert.Contains("export-medistar-nidek-nt1-default", ids);
+        Assert.Contains("export-medistar-nidek-nt1e-default", ids);
+        Assert.Contains("export-medistar-nidek-nt1p-default", ids);
+        Assert.Contains("export-medistar-nidek-nt510-default", ids);
+        Assert.Contains("export-medistar-nidek-nt530-default", ids);
         Assert.Contains("export-medistar-nidek-nt530p-default", ids);
         Assert.Contains("export-medistar-nidek-rt6100-default", ids);
         Assert.Contains("export-medistar-nidek-rt2100-serial-default", ids);

@@ -35,6 +35,15 @@ Hinweis zur Namenskorrektur: Der Hersteller wird in XDTBox als `Möller-Wedel` g
 | NIDEK | ARK-510A | Autorefraktor | Datei/LAN XML | `Data`-XML mit `Company`, `ModelName`, `VD`, `R/AR/ARMedian`, `L/AR/ARMedian`, `PD/PDList` | `6228` REF-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Tests ergaenzt |
 | NIDEK | ARK-560A | Autorefraktor | Datei/LAN XML | gleiche ARK-5xx-Struktur wie ARK-510A | `6228` REF-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Tests ergaenzt |
 | NIDEK | LM-1800P | Lensmeter | Datei/LAN XML | `Ophthalmology/Common`, `Measure Type="LM"`, LM-Augenbloecke `I`/`S`, Schreibweise `Sphare` | `6228` Lensmeter-Zeilen ueber vorhandene NIDEK-Lensmeter-Fachlogik | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Tests ergaenzt |
+| NIDEK | AR-1 | Autorefraktor | Datei/LAN XML | `Data`-XML mit `R/AR/ARMedian`, `L/AR/ARMedian`, `VD` und optionaler `PDList`-Logik wie AR360/ARK-5xx | `6228` REF-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Baukasten-Alias, synthetische XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | AR-1S | Autorefraktor mit subjektiver Refraktion | Datei/LAN XML | AR-Struktur plus `R/SR` und `L/SR` fuer subjektive Refraktionswerte | `6228` REF-Zeilen, `6227` subjektive Refraktion | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, synthetische XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | AR-310A | Autorefraktor | Datei/LAN XML | gleiche AR-XML-Familie wie AR-1/AR360 mit `ARMedian`, `VD` und optionaler `PDList` | `6228` REF-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Baukasten-Alias, synthetische XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | LM-1800PD | Lensmeter | Datei/LAN XML | gleiche NIDEK-Lensmeter-XML-Familie wie LM-1800P/LM7; `ModelName=LM-1800PD`, `Measure Type="LM"` | `6228` Lensmeter-Zeilen rechts/links | BuiltIn-Variante mit eigener Profilkombination, Parser-Alias, synthetischer XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | NT-1 | Tonometer/Pachymeter | Datei/LAN XML | NT530P-nahe `Data`-XML-Familie mit `NT`, `CorrectedIOP` und `PACHY` | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn-Variante mit eigener Profilkombination, Parser-Alias, synthetischer XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | NT-1E | Tonometer/Pachymeter | Datei/LAN XML | gleiche NT-XML-Familie wie NT-1/NT530P | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn-Variante mit eigener Profilkombination, Parser-Alias, synthetischer XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | NT-1P | Tonometer/Pachymeter | Datei/LAN XML | gleiche NT-XML-Familie wie NT-1/NT530P | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn-Variante mit eigener Profilkombination, Parser-Alias, synthetischer XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | NT-510 | Tonometer/Pachymeter | Datei/LAN XML | gleiche NT-XML-Familie wie NT530P mit `NT`/`PACHY`-Auswertung | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn-Variante mit eigener Profilkombination, Parser-Alias, synthetischer XML-Fixture und Templatepaket-Test ergaenzt |
+| NIDEK | NT-530 | Tonometer/Pachymeter | Datei/LAN XML | gleiche NT-XML-Familie wie NT530P ohne `P`-Suffix im Modellnamen | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn-Variante mit eigener Profilkombination, Parser-Alias, synthetischer XML-Fixture und Templatepaket-Test ergaenzt |
 | Huvitz | HRK-8000A | Autorefraktor/Keratometer | RS232 Text | Referenzlogik fuer `S-R-R`, `S-R-L`, `S-K-R`, `S-K-L`; synthetische Fixture, keine echte Praxisrohdatei | `6228` REF-Zeilen, `6221` KM-Zeile | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Huvitz-Textparser und Tests ergaenzt |
 | Huvitz | HRK-9000A | Autorefraktor/Keratometer | RS232 Text | gleiche Huvitz-REF/KM-Textfamilie wie HRK-8000A | `6228` REF-Zeilen, `6221` KM-Zeile | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
 | Huvitz | HNT-1P | Tonometer/Pachymeter | RS232 Text | Referenzlogik fuer `T-R01..03`, `T-R-A`, `T-L01..03`, `T-L-A`, `P-R01..03`, `P-R-A`, `P-L01..03`, `P-L-A`; synthetische Fixture | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Huvitz-Textparser und Tests ergaenzt |
@@ -66,13 +75,13 @@ Hinweis zur Namenskorrektur: Der Hersteller wird in XDTBox als `Möller-Wedel` g
 | TOPCON | CL-300PDL / CL-300 | `CL-300PDL` wird als eigene BuiltIn-Variante der vorhandenen CL-300-Lensmeter-XML-Familie gefuehrt. |
 | TOPCON | RM-800 | `RM-800` nutzt eine eigene BuiltIn-Variante der vorhandenen REF-XML-Auswertung ohne KM-Erfindung. |
 | TOPCON | TRK-3 Omnia / TRK-2P | `TRK-3`/`TRK-3 Omnia` wird als eigene BuiltIn-Variante der TRK-2P-Mehruntersuchungsfamilie gefuehrt. |
-| NIDEK | LM7 / LM7P / LM-1800P | Die vorhandene NIDEK-Lensmeter-Fachlogik nutzt jetzt eine gemeinsame Modellpruefung und akzeptiert bei LM-1800P die alternativen Augenbloecke `I` und `S`. |
+| NIDEK | AR-/LM-/NT-XML-Familien | Die vorhandenen NIDEK-XML-Familien wurden nur alias-tolerant erweitert: AR-1/AR-1S/AR-310A nutzen die bestehende ARMedian-Logik, LM-1800PD nutzt die vorhandene Lensmeter-Fachlogik, NT-1/NT-1E/NT-1P/NT-510/NT-530 nutzen die NT530P-nahe Tono/Pachy-Auswertung. Bestehende validierte NIDEK-Profile bleiben unveraendert. |
 
 ## Bereits vorhanden und nicht geaendert
 
 | Hersteller | Geraet / Familie | Grund |
 | --- | --- | --- |
-| NIDEK | ARK1S, AR360, LM7/LM7P, NT530P, RT-2100/3100/5100 RS232, RT-6100 | Bereits als BuiltIn vorhanden; keine sichere Verbesserung ausser den oben genannten Aliases/Fallbacks erforderlich. |
+| NIDEK | ARK1S, AR360, ARK-510A, ARK-560A, LM7/LM7P, LM-1800P, LM-1800PD, NT530P, NT-1/NT-1E/NT-1P/NT-510/NT-530, RT-2100/3100/5100 RS232, RT-6100 | Als BuiltIn vorhanden; die neu ergaenzten Restfamilienvarianten sind inaktiv, testseitig abgesichert und warten auf echte Praxisdateien. |
 | TOPCON | CL300, CL-300PDL, Solos, KR800S, KR-1, RM-800, TRK2P, TRK-3 Omnia, CT1P, CT800A, CV5000/CV5000S | Bereits als BuiltIn vorhanden oder in diesem Batch als risikoarme Variante ergaenzt; CV-5000/CV-5000S wurde statisch bestaetigt, fachlich aber nicht veraendert. |
 | Dokumentgeraete | Generisches Dokumentgeraet, manuelle Dokumentauswahl | Bereits als BuiltIn vorhanden; keine Messwertparser betroffen. |
 
@@ -88,6 +97,7 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | TOMEY | TAP-2000 | bidirektionaler Phoropterkandidat mit serieller Relevanz; COM-Parameter und Framebausteine sind sichtbar, aber echte Rueckgabe-/Live-Sendeframes fehlen | Rueckgabe und PC->Geraet getrennt mit Live-/Framefixtures absichern |
 | TOPCON | EZ-200 Advance | serielle/RDD-Logik mit `CLM`/`SD`-Handshake und Lensmeter-Ziel `6228`, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen Parser umsetzen |
 | TOPCON | RM-8000 | serielle/RDD-Logik mit `6228`/`6227`-Hinweisen, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen REF/SBJ-Parser entscheiden |
+| NIDEK | AR-600, AR-660A, ARK-500A, LM-970, LM-1000P, NT-2000 | vorwiegend RDD-/COM- beziehungsweise scriptnahe Logik ohne ausreichend belastbare neutrale Rohfixture | Folge-Batch mit eigener Parserklasse erst starten, wenn die Rohstruktur oder ein synthetisch eindeutig herleitbares Frame abgesichert werden kann |
 | Reichert | 7CR NCT, LensChek Plus | teilweise Setup-/Parserhinweise | getrennte Tonometer-/Lensmeter-Batches |
 | Rodenstock | CX 800, Phoromat 2000 | teilweise Refraktor-/Phoropterhinweise | erst nach klarer Frame-/Textstruktur als BuiltIn |
 | Möller-Wedel | Visutron-Familie | teilweise Hinweise, Herstellername korrigiert | Parserdetails und Anschlussart nachziehen |
@@ -99,10 +109,10 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 
 | Hersteller | Geraet | Grund |
 | --- | --- | --- |
-| NIDEK | NT-510 / NT-530 | Hinweise liegen nahe an vorhandener NT530P-Struktur; keine neue BuiltIn-ID ohne echte Modellfixture. |
-| NIDEK | LM-1800PD | LM-1800P-Fallback ist implementiert; PD-spezifische Variante braucht eigene Rohdaten oder eindeutige Regel. |
-| NIDEK | AR-1 / AR-1S / AR-310A / AR-600 / AR-660A / ARK-1 / ARK-1E / ARK-1F / ARK-500A | AR-/ARK-Familie ist technisch nah, aber je Modell fehlt in diesem Batch eine vollstaendige, eindeutig getestete Struktur. |
-| NIDEK | CEM-530 / TONOREF II / TONOREF III | Geraeteart und Ausgabe koennen gemischt sein; keine halbfertigen Kombi-BuiltIns. |
+| NIDEK | AR-600 / AR-660A / ARK-500A / LM-970 / LM-1000P / NT-2000 | RDD-/COM- beziehungsweise scriptnahe Logik ist sichtbar, aber ohne ausreichend sichere Rohdaten- oder Framefixture nicht als BuiltIn ausgeliefert. |
+| NIDEK | ARK-1 / ARK-1E / ARK-1F | ARK-Familie ist technisch nah, aber die vorliegenden Daten reichen fuer eine eigene BuiltIn-ID mit sauberer KM-/REF-Trennung noch nicht aus. |
+| NIDEK | CEM-530 | Endothel-/Zellmessgeraet-Kandidat; Messwerte, Kommentare und Bild-/Dateiverweise sind ohne echte Rohdaten und eindeutige Exportfelder noch nicht belastbar genug. |
+| NIDEK | TONOREF II / TONOREF III | Kombigeraete-Kandidaten fuer REF/KM/Tonometrie/Pachymetrie; die Teilmessarten werden erst mit echter Datei oder eindeutigem Parserfixture als BuiltIn getrennt. |
 | Haag-Streit | Refractor-900 | Phoropterkandidat ohne ausreichende PC->Geraet- und Rueckgabe-Absicherung. |
 | Huvitz | HDR-7000 / HDR-9000 | Bidirektionaler Phoropter-/Refraktorbereich; Rueckgabe- und PC->Geraet-Frames sind noch nicht sicher genug fuer ein BuiltIn. |
 | Huvitz | HLM-1 / HLM-7000P / HLM-9000 | Lensmeter-Familie mit erkennbarer COM-/Parserlogik, aber ohne ausreichend abgesicherte Rohdatenstruktur fuer ADD/PD/Prisma und MEDISTAR-`6228`. |
@@ -113,7 +123,9 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 ## Uebernommene technische Regeln
 
 - NIDEK ARK-5xx: einfache `Data`-XML-Struktur wird ueber die bestehende XML-Flattening-Logik verarbeitet; Exportprofile nutzen `ARMedian` fuer rechts/links, `PD/PDList[@No='1']/FarPD` und `VD`.
-- NIDEK LM-1800P: die Schreibvariante `Sphare` wird ueber vorhandene Aliaslogik als `Sphere` verfuegbar; alternative Augenbloecke `I` und `S` werden fuer die vorbereiteten MEDISTAR-Lines auf `R` und `L` abgebildet.
+- NIDEK AR-1/AR-1S/AR-310A: die AR-XML-Familie nutzt `ARMedian` fuer `6228`; AR-1S ergaenzt `SR` als subjektive Refraktion nach `6227`. Es wird kein `6330` und kein kuenstlicher Trenner erzeugt.
+- NIDEK LM-1800P/LM-1800PD: die Schreibvariante `Sphare` wird ueber vorhandene Aliaslogik als `Sphere` verfuegbar; alternative Augenbloecke `I` und `S` werden fuer die vorbereiteten MEDISTAR-Lines auf `R` und `L` abgebildet.
+- NIDEK NT-1/NT-1E/NT-1P/NT-510/NT-530: die NT530P-nahe XML-Familie erzeugt nur `6205` Tonometrie und `6220` Pachymetrie. Es wird keine Refraktionsausgabe geraten.
 - TOPCON KR-800: Modellalias `KR-800` nutzt die vorhandene KR800S-Erkennung, ohne die bestehende KR800S-Fachlogik zu veraendern.
 - TOPCON CL-300PDL/RM-800/TRK-3 Omnia: nur eindeutige XML-Familienaliasse wurden uebernommen. CL-300PDL bleibt Lensmeter `6228`, RM-800 bleibt REF `6228`, TRK-3 Omnia bleibt REF/KM/CCT/Tonometrie ueber `6228`/`6221`/`6220`/`6205`. Es wurden keine Cross-Device-Messarten geraten.
 - Huvitz-Textparser: nur eindeutig abgeleitete Tokens werden ausgewertet. `S-R-*` wird als REF nach `6228`, `S-K-*` als KM nach `6221`, `T-*` als Tonometrie nach `6205` und `P-*` als Pachymetrie/CCT nach `6220` vorbereitet. Die Fixtures sind synthetisch aus Referenzlogik abgeleitet und ersetzen keine Praxisrohdateien.

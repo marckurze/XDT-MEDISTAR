@@ -85,6 +85,97 @@ public static class DefaultDeviceProfileDefinitions
             DeviceImagePath: InterfaceProfileUiPolicy.NidekAr360DeviceImagePath);
     }
 
+    public static DeviceProfileDefinition CreateNidekAr1Default()
+    {
+        return CreateNidekArXmlDefault(
+            id: "device-nidek-ar1-default",
+            name: "NIDEK AR-1",
+            model: "AR-1",
+            description: "Built-in NIDEK AR-1 XML autorefractor profile derived from the reference package OPTO01 paths.",
+            includeSubjective: false);
+    }
+
+    public static DeviceProfileDefinition CreateNidekAr1SDefault()
+    {
+        return CreateNidekArXmlDefault(
+            id: "device-nidek-ar1s-default",
+            name: "NIDEK AR-1S",
+            model: "AR-1S",
+            description: "Built-in NIDEK AR-1S XML autorefractor profile derived from the reference package OPTO01 and SUBJ01 paths.",
+            includeSubjective: true);
+    }
+
+    public static DeviceProfileDefinition CreateNidekAr310ADefault()
+    {
+        return CreateNidekArXmlDefault(
+            id: "device-nidek-ar310a-default",
+            name: "NIDEK AR-310A",
+            model: "AR-310A",
+            description: "Built-in NIDEK AR-310A XML autorefractor profile derived from the reference package OPTO01 paths.",
+            includeSubjective: false);
+    }
+
+    private static DeviceProfileDefinition CreateNidekArXmlDefault(
+        string id,
+        string name,
+        string model,
+        string description,
+        bool includeSubjective)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{id}-company", "Company", "Company", "Common", string.Empty, string.Empty, true, "NIDEK XML company field."),
+            new($"{id}-model-name", "ModelName", "ModelName", "Common", string.Empty, string.Empty, true, $"NIDEK XML model name field; expected {model}."),
+            new($"{id}-date", "Date", "Date", "Common", string.Empty, string.Empty, false, "NIDEK XML measurement date."),
+            new($"{id}-time", "Time", "Time", "Common", string.Empty, string.Empty, false, "NIDEK XML measurement time."),
+            new($"{id}-vd", "VD", "VD", "ARMedian", string.Empty, "mm", false, "Vertex distance from NIDEK XML."),
+            new($"{id}-r-sphere", "R Sphere", "R/AR/ARMedian/Sphere", "ARMedian", "R", "dpt", true, "Right eye sphere from ARMedian."),
+            new($"{id}-r-cylinder", "R Cylinder", "R/AR/ARMedian/Cylinder", "ARMedian", "R", "dpt", true, "Right eye cylinder from ARMedian."),
+            new($"{id}-r-axis", "R Axis", "R/AR/ARMedian/Axis", "ARMedian", "R", "deg", true, "Right eye axis from ARMedian."),
+            new($"{id}-l-sphere", "L Sphere", "L/AR/ARMedian/Sphere", "ARMedian", "L", "dpt", true, "Left eye sphere from ARMedian."),
+            new($"{id}-l-cylinder", "L Cylinder", "L/AR/ARMedian/Cylinder", "ARMedian", "L", "dpt", true, "Left eye cylinder from ARMedian."),
+            new($"{id}-l-axis", "L Axis", "L/AR/ARMedian/Axis", "ARMedian", "L", "deg", true, "Left eye axis from ARMedian."),
+            new($"{id}-far-pd", "FarPD", "PD/PDList[@No='1']/FarPD", "PDList", string.Empty, "mm", false, "Far pupillary distance from NIDEK XML.")
+        };
+
+        if (includeSubjective)
+        {
+            measurements.AddRange(new[]
+            {
+                new DeviceMeasurementDefinition($"{id}-subj-r-sphere", "Subjective R Sphere", "R/SR/Sphere", "SR", "R", "dpt", false, "Right subjective sphere from SUBJ01."),
+                new DeviceMeasurementDefinition($"{id}-subj-r-cylinder", "Subjective R Cylinder", "R/SR/Cylinder", "SR", "R", "dpt", false, "Right subjective cylinder from SUBJ01."),
+                new DeviceMeasurementDefinition($"{id}-subj-r-axis", "Subjective R Axis", "R/SR/Axis", "SR", "R", "deg", false, "Right subjective axis from SUBJ01."),
+                new DeviceMeasurementDefinition($"{id}-subj-l-sphere", "Subjective L Sphere", "L/SR/Sphere", "SR", "L", "dpt", false, "Left subjective sphere from SUBJ01."),
+                new DeviceMeasurementDefinition($"{id}-subj-l-cylinder", "Subjective L Cylinder", "L/SR/Cylinder", "SR", "L", "dpt", false, "Left subjective cylinder from SUBJ01."),
+                new DeviceMeasurementDefinition($"{id}-subj-l-axis", "Subjective L Axis", "L/SR/Axis", "SR", "L", "deg", false, "Left subjective axis from SUBJ01.")
+            });
+        }
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "NIDEK",
+                Product: model,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: model,
+            DeviceType: includeSubjective ? "Autorefractor/Subjective" : "Autorefractor",
+            ParserMode: "Xml",
+            Measurements: measurements,
+            SupportedExaminationTypes: includeSubjective ? new[] { "Refraktion", "AR", "SR", "PD" } : new[] { "Refraktion", "AR", "PD" },
+            CanContainMultipleExaminationTypes: includeSubjective,
+            DeviceImagePath: InterfaceProfileUiPolicy.NidekAr360DeviceImagePath);
+    }
+
     public static DeviceProfileDefinition CreateNidekArk510ADefault()
     {
         return CreateNidekArk5xxDefault(
@@ -198,6 +289,30 @@ public static class DefaultDeviceProfileDefinitions
             },
             SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
             CanContainMultipleExaminationTypes: false);
+    }
+
+    public static DeviceProfileDefinition CreateNidekLm1800PdDefault()
+    {
+        var profile = CreateNidekLm1800PDefault();
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: "device-nidek-lm1800pd-default",
+                Name: "NIDEK LM-1800PD",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Built-in NIDEK LM-1800PD XML lensmeter profile derived from the reference package LM family paths.",
+                Vendor: "NIDEK",
+                Product: "LM-1800PD",
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Model = "LM-1800PD"
+        };
     }
 
     public static DeviceProfileDefinition CreateNidekLm7Default()
@@ -394,6 +509,80 @@ public static class DefaultDeviceProfileDefinitions
             SupportedExaminationTypes: new[] { "Tonometrie", "Pachymetrie", "CorrectedIOP", "Attachment" },
             CanContainMultipleExaminationTypes: true,
             DeviceImagePath: InterfaceProfileUiPolicy.NidekNt530PDeviceImagePath);
+    }
+
+    public static DeviceProfileDefinition CreateNidekNt1Default()
+    {
+        return CreateNidekNt530PVariantDefault(
+            id: "device-nidek-nt1-default",
+            name: "NIDEK NT-1",
+            model: "NT-1",
+            description: "Built-in NIDEK NT-1 XML tonometry profile derived from the reference package OPTO06 paths.");
+    }
+
+    public static DeviceProfileDefinition CreateNidekNt1EDefault()
+    {
+        return CreateNidekNt530PVariantDefault(
+            id: "device-nidek-nt1e-default",
+            name: "NIDEK NT-1E",
+            model: "NT-1E",
+            description: "Built-in NIDEK NT-1E XML tonometry profile derived from the reference package OPTO06 paths.");
+    }
+
+    public static DeviceProfileDefinition CreateNidekNt1PDefault()
+    {
+        return CreateNidekNt530PVariantDefault(
+            id: "device-nidek-nt1p-default",
+            name: "NIDEK NT-1P",
+            model: "NT-1P",
+            description: "Built-in NIDEK NT-1P XML tonometry and pachymetry profile derived from the reference package OPTO06 paths.");
+    }
+
+    public static DeviceProfileDefinition CreateNidekNt510Default()
+    {
+        return CreateNidekNt530PVariantDefault(
+            id: "device-nidek-nt510-default",
+            name: "NIDEK NT-510",
+            model: "NT-510",
+            description: "Built-in NIDEK NT-510 XML tonometry and pachymetry profile derived from the reference package OPTO06 paths.");
+    }
+
+    public static DeviceProfileDefinition CreateNidekNt530Default()
+    {
+        return CreateNidekNt530PVariantDefault(
+            id: "device-nidek-nt530-default",
+            name: "NIDEK NT-530",
+            model: "NT-530",
+            description: "Built-in NIDEK NT-530 XML tonometry and pachymetry profile derived from the reference package OPTO06 paths.");
+    }
+
+    private static DeviceProfileDefinition CreateNidekNt530PVariantDefault(
+        string id,
+        string name,
+        string model,
+        string description)
+    {
+        var profile = CreateNidekNt530PDefault();
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "NIDEK",
+                Product: model,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Model = model,
+            DeviceImagePath = InterfaceProfileUiPolicy.NidekNt530PDeviceImagePath
+        };
     }
 
     public static DeviceProfileDefinition CreateNidekRt6100Default()

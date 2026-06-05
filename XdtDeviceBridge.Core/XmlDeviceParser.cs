@@ -1421,7 +1421,12 @@ public sealed class XmlDeviceParser
     private static bool IsNidekNt530PModel(string? modelName)
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
-        return string.Equals(normalized, "NT530P", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "NT1", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "NT1E", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "NT1P", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "NT510", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "NT530", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "NT530P", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string? BuildNt530PPachyMedistarLine(XElement? right, XElement? left)
@@ -2058,7 +2063,8 @@ public sealed class XmlDeviceParser
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "LM7", StringComparison.OrdinalIgnoreCase)
             || string.Equals(normalized, "LM7P", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(normalized, "LM1800P", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(normalized, "LM1800P", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "LM1800PD", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconCl300Model(string? modelName)

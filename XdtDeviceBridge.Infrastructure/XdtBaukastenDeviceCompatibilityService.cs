@@ -289,9 +289,30 @@ public sealed class XdtBaukastenDeviceCompatibilityService
     private static void AddKnownAliases(HashSet<string> aliases, string normalizedProfileText)
     {
         AddAliasIfContains(aliases, normalizedProfileText, "ARK1S", "ARK1S");
+        if (normalizedProfileText.Contains("AR1S", StringComparison.OrdinalIgnoreCase))
+        {
+            AddAliases(aliases, "AR-1S");
+        }
+        else
+        {
+            AddAliasIfContains(aliases, normalizedProfileText, "AR1", "AR-1", "AR1");
+        }
+
+        AddAliasIfContains(aliases, normalizedProfileText, "AR310A", "AR-310A", "AR310A");
         AddAliasIfContains(aliases, normalizedProfileText, "AR360", "AR360", "AR360A");
+        AddAliasIfContains(aliases, normalizedProfileText, "LM1800PD", "LM-1800PD", "LM1800PD");
         AddAliasIfContains(aliases, normalizedProfileText, "LM7", "LM7", "LM7P");
-        AddAliasIfContains(aliases, normalizedProfileText, "NT530P", "NT530P", "NT530");
+        AddAliasIfContains(aliases, normalizedProfileText, "NT1P", "NT-1P", "NT1P");
+        AddAliasIfContains(aliases, normalizedProfileText, "NT1E", "NT-1E", "NT1E");
+        if (!normalizedProfileText.Contains("NT1P", StringComparison.OrdinalIgnoreCase)
+            && !normalizedProfileText.Contains("NT1E", StringComparison.OrdinalIgnoreCase))
+        {
+            AddAliasIfContains(aliases, normalizedProfileText, "NT1", "NT-1", "NT1");
+        }
+
+        AddAliasIfContains(aliases, normalizedProfileText, "NT510", "NT-510", "NT510");
+        AddAliasIfContains(aliases, normalizedProfileText, "NT530P", "NT530P", "NT-530P", "NT530", "NT-530");
+        AddAliasIfContains(aliases, normalizedProfileText, "NT530", "NT530", "NT-530");
         AddAliasIfContains(aliases, normalizedProfileText, "RT6100", "RT6100");
         AddAliasIfContains(aliases, normalizedProfileText, "RT2100", "RT2100");
         AddAliasIfContains(aliases, normalizedProfileText, "RT3100", "RT3100");

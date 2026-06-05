@@ -74,7 +74,7 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
-Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P, TOPCON CL-300PDL, TOPCON RM-800, TOPCON TRK-3 Omnia, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A, TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000, TOP-1000, EM-3000 und EM-4000 sowie Shin-Nippon Accuref R-800, Accuref K-900, DL-1000, DL-800, DL-900, NCT-200 und SLM-4000. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
+Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK AR-1, NIDEK AR-1S, NIDEK AR-310A, NIDEK LM-1800P, NIDEK LM-1800PD, NIDEK NT-1, NIDEK NT-1E, NIDEK NT-1P, NIDEK NT-510, NIDEK NT-530, TOPCON CL-300PDL, TOPCON RM-800, TOPCON TRK-3 Omnia, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A, TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000, TOP-1000, EM-3000 und EM-4000 sowie Shin-Nippon Accuref R-800, Accuref K-900, DL-1000, DL-800, DL-900, NCT-200 und SLM-4000. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
 
 # Profilverwaltung
 
@@ -182,13 +182,25 @@ NIDEK ARK1S ist ein validierter Autorefraktor-Workflow für MEDISTAR. XDTBox nut
 
 NIDEK AR360 / AR-360A ist als Autorefraktor-Kandidat mit eigenem Profil vorbereitet und testseitig abgesichert.
 
+# NIDEK AR-1 / AR-1S / AR-310A
+
+NIDEK AR-1, AR-1S und AR-310A nutzen die NIDEK-XML-Autorefraktor-Familie. AR-Medianwerte werden als `6228` ausgegeben; bei AR-1S kann eine dokumentierte subjektive SR-Quelle als `6227` vorbereitet werden. Es werden keine `6330`-Zeilen und keine kuenstlichen Trennzeilen erzeugt.
+
 # NIDEK LM7/LM7P
 
 NIDEK LM7 / LM-7P ist als Lensmeter-Workflow vorbereitet. Werte werden nur aus echten XML- oder validierten RS232-Rohdaten übernommen.
 
+# NIDEK LM-1800PD
+
+NIDEK LM-1800PD ist als Variante der bestehenden NIDEK-Lensmeter-XML-Familie vorbereitet. Die Ausgabe nutzt Lensmeter-Zeilen über `6228` und bleibt bei den aus der Datei ermittelten Werten.
+
 # NIDEK NT530P
 
 NIDEK NT530P / NT-530P ist als Tonometrie-/Pachymetrie-Kandidat vorbereitet. Fehlerhafte oder unvollständige Daten erzeugen keine künstlichen Messwerte.
+
+# NIDEK NT-1 / NT-1E / NT-1P / NT-510 / NT-530
+
+NIDEK NT-1, NT-1E, NT-1P, NT-510 und NT-530 nutzen die NT530P-XML-Familie. Tonometrie wird über `6205`, Pachymetrie über `6220` ausgegeben; Autorefraktor- oder Phoropter-Zeilen werden daraus nicht künstlich erzeugt.
 
 # TOPCON CL-300
 

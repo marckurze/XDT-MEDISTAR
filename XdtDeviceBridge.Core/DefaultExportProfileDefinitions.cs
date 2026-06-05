@@ -106,6 +106,125 @@ public static class DefaultExportProfileDefinitions
             });
     }
 
+    public static ExportProfileDefinition CreateMedistarNidekAr1Default()
+    {
+        return CreateMedistarNidekArXmlDefault(
+            id: "export-medistar-nidek-ar1-default",
+            name: "MEDISTAR + NIDEK AR-1 Export",
+            product: "MEDISTAR/NIDEK AR-1",
+            deviceProfileId: "device-nidek-ar1-default",
+            description: "Built-in MEDISTAR export profile for NIDEK AR-1 XML autorefractor data.",
+            includeSubjective: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekAr1SDefault()
+    {
+        return CreateMedistarNidekArXmlDefault(
+            id: "export-medistar-nidek-ar1s-default",
+            name: "MEDISTAR + NIDEK AR-1S Export",
+            product: "MEDISTAR/NIDEK AR-1S",
+            deviceProfileId: "device-nidek-ar1s-default",
+            description: "Built-in MEDISTAR export profile for NIDEK AR-1S XML autorefractor and subjective data.",
+            includeSubjective: true);
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekAr310ADefault()
+    {
+        return CreateMedistarNidekArXmlDefault(
+            id: "export-medistar-nidek-ar310a-default",
+            name: "MEDISTAR + NIDEK AR-310A Export",
+            product: "MEDISTAR/NIDEK AR-310A",
+            deviceProfileId: "device-nidek-ar310a-default",
+            description: "Built-in MEDISTAR export profile for NIDEK AR-310A XML autorefractor data.",
+            includeSubjective: false);
+    }
+
+    private static ExportProfileDefinition CreateMedistarNidekArXmlDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        bool includeSubjective)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        var rules = new List<ExportRuleDefinition>
+        {
+            new("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+            new("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+            new("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+            new("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+            new("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+            new("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS."),
+            new(
+                "7",
+                "6228",
+                "AutorefRight",
+                ExportRuleType.Template,
+                "Device.R/AR/ARMedian/Sphere",
+                "R.:S={Device.R/AR/ARMedian/Sphere:Diopter} Z={Device.R/AR/ARMedian/Cylinder:Diopter}*{Device.R/AR/ARMedian/Axis:Axis} PD= {Device.PD/PDList[@No='1']/FarPD:Pd} VD= {Device.VD:Raw} mm",
+                7,
+                true,
+                "MEDISTAR autorefractor card text for right eye."),
+            new(
+                "8",
+                "6228",
+                "AutorefLeft",
+                ExportRuleType.Template,
+                "Device.L/AR/ARMedian/Sphere",
+                "L.:S={Device.L/AR/ARMedian/Sphere:Diopter} Z={Device.L/AR/ARMedian/Cylinder:Diopter}*{Device.L/AR/ARMedian/Axis:Axis}",
+                8,
+                true,
+                "MEDISTAR autorefractor card text for left eye.")
+        };
+
+        if (includeSubjective)
+        {
+            rules.AddRange(new[]
+            {
+                new ExportRuleDefinition(
+                    "9",
+                    "6227",
+                    "SubjectiveRight",
+                    ExportRuleType.Template,
+                    "Device.R/SR/Sphere",
+                    "R.:S={Device.R/SR/Sphere:Diopter} Z={Device.R/SR/Cylinder:Diopter}*{Device.R/SR/Axis:Axis}",
+                    9,
+                    true,
+                    "MEDISTAR subjective refraction card text for right eye."),
+                new ExportRuleDefinition(
+                    "10",
+                    "6227",
+                    "SubjectiveLeft",
+                    ExportRuleType.Template,
+                    "Device.L/SR/Sphere",
+                    "L.:S={Device.L/SR/Sphere:Diopter} Z={Device.L/SR/Cylinder:Diopter}*{Device.L/SR/Axis:Axis}",
+                    10,
+                    true,
+                    "MEDISTAR subjective refraction card text for left eye.")
+            });
+        }
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: rules);
+    }
+
     public static ExportProfileDefinition CreateMedistarNidekArk510ADefault()
     {
         return CreateMedistarNidekArk5xxDefault(
@@ -215,6 +334,45 @@ public static class DefaultExportProfileDefinitions
                 new ExportRuleDefinition("7", "6228", "LensmeterResultRight", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/R/MedistarLine", "{value}", 7, true, "MEDISTAR lensmeter card text for right lens."),
                 new ExportRuleDefinition("8", "6228", "LensmeterResultLeft", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/L/MedistarLine", "{value}", 8, true, "MEDISTAR lensmeter card text for left lens.")
             });
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekLm1800PdDefault()
+    {
+        return CreateMedistarNidekLm1800PVariantDefault(
+            id: "export-medistar-nidek-lm1800pd-default",
+            name: "MEDISTAR + NIDEK LM-1800PD Export",
+            product: "MEDISTAR/NIDEK LM-1800PD",
+            deviceProfileId: "device-nidek-lm1800pd-default",
+            description: "Built-in MEDISTAR export profile for NIDEK LM-1800PD XML lensmeter data.");
+    }
+
+    private static ExportProfileDefinition CreateMedistarNidekLm1800PVariantDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description)
+    {
+        var profile = CreateMedistarNidekLm1800PDefault();
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            SourceDeviceProfileId = deviceProfileId
+        };
     }
 
     public static ExportProfileDefinition CreateMedistarNidekLm7Default()
@@ -399,6 +557,85 @@ public static class DefaultExportProfileDefinitions
                     true,
                     "MEDISTAR pachymetry line for NIDEK NT-530P; micrometers are converted to millimeters.")
             });
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekNt1Default()
+    {
+        return CreateMedistarNidekNt530PVariantDefault(
+            id: "export-medistar-nidek-nt1-default",
+            name: "MEDISTAR + NIDEK NT-1 Export",
+            product: "MEDISTAR/NIDEK NT-1",
+            deviceProfileId: "device-nidek-nt1-default",
+            description: "Built-in MEDISTAR export profile for NIDEK NT-1 XML tonometry data.");
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekNt1EDefault()
+    {
+        return CreateMedistarNidekNt530PVariantDefault(
+            id: "export-medistar-nidek-nt1e-default",
+            name: "MEDISTAR + NIDEK NT-1E Export",
+            product: "MEDISTAR/NIDEK NT-1E",
+            deviceProfileId: "device-nidek-nt1e-default",
+            description: "Built-in MEDISTAR export profile for NIDEK NT-1E XML tonometry data.");
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekNt1PDefault()
+    {
+        return CreateMedistarNidekNt530PVariantDefault(
+            id: "export-medistar-nidek-nt1p-default",
+            name: "MEDISTAR + NIDEK NT-1P Export",
+            product: "MEDISTAR/NIDEK NT-1P",
+            deviceProfileId: "device-nidek-nt1p-default",
+            description: "Built-in MEDISTAR export profile for NIDEK NT-1P XML tonometry and pachymetry data.");
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekNt510Default()
+    {
+        return CreateMedistarNidekNt530PVariantDefault(
+            id: "export-medistar-nidek-nt510-default",
+            name: "MEDISTAR + NIDEK NT-510 Export",
+            product: "MEDISTAR/NIDEK NT-510",
+            deviceProfileId: "device-nidek-nt510-default",
+            description: "Built-in MEDISTAR export profile for NIDEK NT-510 XML tonometry and pachymetry data.");
+    }
+
+    public static ExportProfileDefinition CreateMedistarNidekNt530Default()
+    {
+        return CreateMedistarNidekNt530PVariantDefault(
+            id: "export-medistar-nidek-nt530-default",
+            name: "MEDISTAR + NIDEK NT-530 Export",
+            product: "MEDISTAR/NIDEK NT-530",
+            deviceProfileId: "device-nidek-nt530-default",
+            description: "Built-in MEDISTAR export profile for NIDEK NT-530 XML tonometry and pachymetry data.");
+    }
+
+    private static ExportProfileDefinition CreateMedistarNidekNt530PVariantDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description)
+    {
+        var profile = CreateMedistarNidekNt530PDefault();
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return profile with
+        {
+            Metadata = new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            SourceDeviceProfileId = deviceProfileId
+        };
     }
 
     public static ExportProfileDefinition CreateMedistarDocumentAttachmentDefault()

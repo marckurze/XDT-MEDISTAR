@@ -76,6 +76,39 @@ public static class DefaultInterfaceProfileDefinitions
             Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK AR360 profile candidate.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarNidekAr1Default()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-ar1-default",
+            name: "MEDISTAR + NIDEK AR-1",
+            product: "MEDISTAR/NIDEK AR-1",
+            deviceProfileId: "device-nidek-ar1-default",
+            exportProfileId: "export-medistar-nidek-ar1-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK AR-1 XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekAr1SDefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-ar1s-default",
+            name: "MEDISTAR + NIDEK AR-1S",
+            product: "MEDISTAR/NIDEK AR-1S",
+            deviceProfileId: "device-nidek-ar1s-default",
+            exportProfileId: "export-medistar-nidek-ar1s-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK AR-1S XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekAr310ADefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-ar310a-default",
+            name: "MEDISTAR + NIDEK AR-310A",
+            product: "MEDISTAR/NIDEK AR-310A",
+            deviceProfileId: "device-nidek-ar310a-default",
+            exportProfileId: "export-medistar-nidek-ar310a-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK AR-310A XML files.");
+    }
+
     public static InterfaceProfileDefinition CreateMedistarNidekArk510ADefault()
     {
         return CreateMedistarNidekXmlDefault(
@@ -107,6 +140,17 @@ public static class DefaultInterfaceProfileDefinitions
             deviceProfileId: "device-nidek-lm1800p-default",
             exportProfileId: "export-medistar-nidek-lm1800p-default",
             description: "Built-in inactive default interface definition for MEDISTAR and NIDEK LM-1800P XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekLm1800PdDefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-lm1800pd-default",
+            name: "MEDISTAR + NIDEK LM-1800PD",
+            product: "MEDISTAR/NIDEK LM-1800PD",
+            deviceProfileId: "device-nidek-lm1800pd-default",
+            exportProfileId: "export-medistar-nidek-lm1800pd-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK LM-1800PD XML files.");
     }
 
     private static InterfaceProfileDefinition CreateMedistarNidekXmlDefault(
@@ -224,6 +268,61 @@ public static class DefaultInterfaceProfileDefinitions
             IsActive: false,
             IsLicenseRequired: true,
             Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK NT-530P tonometry and pachymetry profile candidate.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekNt1Default()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-nt1-default",
+            name: "MEDISTAR + NIDEK NT-1",
+            product: "MEDISTAR/NIDEK NT-1",
+            deviceProfileId: "device-nidek-nt1-default",
+            exportProfileId: "export-medistar-nidek-nt1-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK NT-1 XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekNt1EDefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-nt1e-default",
+            name: "MEDISTAR + NIDEK NT-1E",
+            product: "MEDISTAR/NIDEK NT-1E",
+            deviceProfileId: "device-nidek-nt1e-default",
+            exportProfileId: "export-medistar-nidek-nt1e-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK NT-1E XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekNt1PDefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-nt1p-default",
+            name: "MEDISTAR + NIDEK NT-1P",
+            product: "MEDISTAR/NIDEK NT-1P",
+            deviceProfileId: "device-nidek-nt1p-default",
+            exportProfileId: "export-medistar-nidek-nt1p-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK NT-1P XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekNt510Default()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-nt510-default",
+            name: "MEDISTAR + NIDEK NT-510",
+            product: "MEDISTAR/NIDEK NT-510",
+            deviceProfileId: "device-nidek-nt510-default",
+            exportProfileId: "export-medistar-nidek-nt510-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK NT-510 XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekNt530Default()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-nt530-default",
+            name: "MEDISTAR + NIDEK NT-530",
+            product: "MEDISTAR/NIDEK NT-530",
+            deviceProfileId: "device-nidek-nt530-default",
+            exportProfileId: "export-medistar-nidek-nt530-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK NT-530 XML files.");
     }
 
     public static InterfaceProfileDefinition CreateMedistarTopconCl300Default()
