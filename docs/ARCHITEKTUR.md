@@ -109,7 +109,9 @@ Die serielle NIDEK-RT-Phoropterfamilie RT-2100 / RT-3100 / RT-5100 ist darauf au
 
 ### 1.5b TOMEY Referenzdatenfamilie
 
-`TomeyDeviceParser` ist als isolierter Parser fuer aus Referenzlogik abgeleitete TOMEY-Daten vorbereitet. Er greift nur bei Geraeteprofilen mit Parsermodus `Tomey` und veraendert bestehende XML-, NIDEK-RT-, TOPCON-, Huvitz- oder Dokumentgeraete-Parser nicht. Die erste abgesicherte Familie umfasst CF-2000 als serielles Lensmeter, TL-2000C/TL-6000/TL-7000 als CSV-Lensmeterdateien, MR-6000 als REF/KM/Tonometrie/Pachymetrie-Kombigeraet und TOP-1000 als Tonometer/Pachymeter. Die Parserausgabe wird in normale `MeasurementValue`-SourcePaths ueberfuehrt; Exportprofile erzeugen daraus `6228`, `6221`, `6205` und `6220`. Die aktuellen Fixtures sind synthetisch aus Referenzlogik und muessen spaeter durch echte Praxisrohdateien ergaenzt werden.
+`TomeyDeviceParser` ist als isolierter Parser fuer aus Referenzlogik abgeleitete TOMEY-Daten vorbereitet. Er greift nur bei Geraeteprofilen mit Parsermodus `Tomey` und veraendert bestehende XML-, NIDEK-RT-, TOPCON-, Huvitz- oder Dokumentgeraete-Parser nicht. Die erste abgesicherte Familie umfasst CF-2000 als serielles Lensmeter, TL-2000C/TL-6000/TL-7000 als CSV-Lensmeterdateien, MR-6000 als REF/KM/Tonometrie/Pachymetrie-Kombigeraet und TOP-1000 als Tonometer/Pachymeter. Die Parserausgabe wird in normale `MeasurementValue`-SourcePaths ueberfuehrt; Exportprofile erzeugen daraus `6228`, `6221`, `6205` und `6220`.
+
+`TomeyEmDeviceParser` ergaenzt die EM-3000-/EM-4000-CSV-Familie als getrennten Parsermodus `TomeyEm`. Er liest nur die abgeleiteten Endothel-/Zellmessungs-Tokens, erzeugt `6228` fuer Messwerte, `6227` fuer belegte Kommentare und `6302` fuer Bild-/Dateiverweise. Echte Bilddateien, Referenzrohdateien und Skripte werden nicht in den Installer aufgenommen. TAP-2000 ist trotz sichtbarer COM-/Framebausteine noch nicht als produktives BuiltIn umgesetzt, weil echte Rueckgabe- und Live-Sendeframes fehlen. Die aktuellen Fixtures sind synthetisch aus Referenzlogik und muessen spaeter durch echte Praxisrohdateien ergaenzt werden.
 
 ### 1.6 NIDEK RT-6100 bidirektional
 

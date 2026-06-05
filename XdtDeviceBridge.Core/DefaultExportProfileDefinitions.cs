@@ -1559,6 +1559,28 @@ public static class DefaultExportProfileDefinitions
             timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
     }
 
+    public static ExportProfileDefinition CreateMedistarTomeyEm3000Default()
+    {
+        return CreateMedistarTomeyEmDefault(
+            id: "export-medistar-tomey-em3000-default",
+            name: "MEDISTAR + TOMEY EM-3000 Export",
+            product: "MEDISTAR/TOMEY EM-3000",
+            deviceProfileId: "device-tomey-em3000-default",
+            description: "Built-in MEDISTAR export profile for TOMEY EM-3000 endothelial CSV data. Measurements map to 6228, comments to 6227 and image references to 6302. No 6330 or artificial separators are emitted.",
+            isEm4000: false);
+    }
+
+    public static ExportProfileDefinition CreateMedistarTomeyEm4000Default()
+    {
+        return CreateMedistarTomeyEmDefault(
+            id: "export-medistar-tomey-em4000-default",
+            name: "MEDISTAR + TOMEY EM-4000 Export",
+            product: "MEDISTAR/TOMEY EM-4000",
+            deviceProfileId: "device-tomey-em4000-default",
+            description: "Built-in MEDISTAR export profile for TOMEY EM-4000 endothelial CSV data. Measurements map to 6228, comments to 6227 and image references to 6302. No 6330 or artificial separators are emitted.",
+            isEm4000: true);
+    }
+
     private static ExportProfileDefinition CreateMedistarTomeyLensDefault(
         string id,
         string name,
@@ -1611,6 +1633,35 @@ public static class DefaultExportProfileDefinitions
             Rules: CreateMedistarTomeyRules(includeLens, includeRef, includeKm, includeTonoPachy));
     }
 
+    private static ExportProfileDefinition CreateMedistarTomeyEmDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        bool isEm4000)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarTomeyEmRules(isEm4000));
+    }
+
     private static IReadOnlyList<ExportRuleDefinition> CreateMedistarTomeyRules(
         bool includeLens,
         bool includeRef,
@@ -1651,6 +1702,41 @@ public static class DefaultExportProfileDefinitions
             rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "Tonometry", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/TonoListLine", "{value}", sortOrder++, true, "MEDISTAR 6205 tonometry line from TOMEY data."));
             rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "TonometryCorrected", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/CorrectedLine", "{value}", sortOrder++, true, "MEDISTAR 6205 corrected tonometry line from TOMEY data."));
             rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6220", "Pachymetry", ExportRuleType.Template, "Device.Measure[@Type='CCT']/Pachy/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6220 pachymetry line from TOMEY data."));
+        }
+
+        return rules;
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarTomeyEmRules(bool isEm4000)
+    {
+        var rules = new List<ExportRuleDefinition>
+        {
+            new("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+            new("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+            new("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+            new("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+            new("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+            new("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS.")
+        };
+
+        var sortOrder = 7;
+        if (isEm4000)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "EndotheliumRightCd", ExportRuleType.Template, "Device.Measure[@Type='EM']/Endothelium/R/CellDensity/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye EM CD line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "EndotheliumRightCct", ExportRuleType.Template, "Device.Measure[@Type='EM']/Endothelium/R/CCT/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye EM CCT line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "EndotheliumLeftCd", ExportRuleType.Template, "Device.Measure[@Type='EM']/Endothelium/L/CellDensity/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye EM CD line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "EndotheliumLeftCct", ExportRuleType.Template, "Device.Measure[@Type='EM']/Endothelium/L/CCT/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye EM CCT line from TOMEY data."));
+        }
+        else
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "EndotheliumRight", ExportRuleType.Template, "Device.Measure[@Type='EM']/Endothelium/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye EM line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "EndotheliumLeft", ExportRuleType.Template, "Device.Measure[@Type='EM']/Endothelium/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye EM line from TOMEY data."));
+        }
+
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6227", "EndotheliumComment", ExportRuleType.Template, "Device.Measure[@Type='EM']/Comment/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6227 EM comment line from TOMEY data."));
+        for (var imageIndex = 1; imageIndex <= 4; imageIndex++)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6302", $"EndotheliumImage{imageIndex}", ExportRuleType.Template, $"Device.Measure[@Type='EM']/Attachment/Image{imageIndex}/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6302 EM image reference from TOMEY data."));
         }
 
         return rules;

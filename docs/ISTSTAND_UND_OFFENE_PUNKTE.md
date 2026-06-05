@@ -25,6 +25,8 @@ Besonders stabil wirken aktuell:
 
 - MEDISTAR + NIDEK ARK1S Kernworkflow
 - Aus Referenzdaten abgeleitete erste BuiltIn-Erweiterung: NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P sind mit Geraete-, Export- und Schnittstellenprofilen sowie synthetischen Parser-/Exporttests vorbereitet. TOPCON KR-800 wird als Alias der vorhandenen KR800S-XML-Familie erkannt. Scriptbasierte Geraete ohne echte Rohdaten sind in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md` als Parser-Kandidaten fuer Folge-Batches dokumentiert.
+- Finaler lokaler EM-3000/EM-4000-Pruefstand vom 2026-06-05: Marc hat `dotnet build XdtDeviceBridge.sln` vollstaendig erfolgreich ausgefuehrt (Core, Infrastructure, LicenseIssuer, LicenseManager, Tests, App; 18,9 Sekunden) und `dotnet test XdtDeviceBridge.sln` mit 1816 erfolgreichen Tests, 0 Fehlern und 0 uebersprungenen Tests bestaetigt (Testdauer 12,4 Sekunden, Gesamt 16,4 Sekunden).
+- Der Installer-Build ist gegen fehlgeschlagene Publish-/SDK-Zugriffe abgesichert: `scripts\build-xdtbox-installer.ps1` nutzt jetzt einen Staging-Ordner und ersetzt finale Publish-/Installer-Artefakte erst nach erfolgreichem Publish, sauberer Kundenpublish-Validierung und erfolgreichem Inno-Build. Ein kontrollierter Fehlversuch bestaetigte, dass bestehende Artefakte erhalten bleiben. Der aktuelle Installer wurde unter `artifacts\installer\XDTBox_Setup_1.0.exe` mit 63.404.236 Bytes erzeugt; die Publish-App startete erfolgreich aus `artifacts\publish\XDTBox`.
 - MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link im Pflicht-Anhang-Praxislauf
 - zentrale XDT-Erzeugung ueber `XdtExportBuilder`
 - BuiltIn/UserDefined-Profiltrennung
@@ -546,14 +548,16 @@ Der neue `HuvitzTextDeviceParser` ist in Baukasten und manueller Verarbeitung an
 
 ## 8b. TOMEY-Referenzdatenbatch
 
-Aus neutral ausgewerteter TOMEY-Referenzlogik sind sechs BuiltIns vorbereitet:
+Aus neutral ausgewerteter TOMEY-Referenzlogik sind acht BuiltIns vorbereitet:
 
 - TOMEY CF-2000: serielles Lensmeterprofil, Lensmeter nach `6228`, Default RS232 `9600 8O1`.
 - TOMEY TL-2000C, TL-6000 und TL-7000: dateibasierte TL-Lensmeterprofile, Lensmeter nach `6228`.
 - TOMEY MR-6000: REF nach `6228`, KM nach `6221`, Tonometrie nach `6205`, Pachymetrie/CCT nach `6220`.
 - TOMEY TOP-1000: Tonometrie nach `6205`, Pachymetrie/CCT nach `6220`.
+- TOMEY EM-3000: Endothel-/Zellmesswerte nach `6228`, Kommentare nach `6227`, Bild-/Dateiverweise nach `6302`.
+- TOMEY EM-4000: CD-/CCT-Zellmesswerte nach `6228`, Kommentare nach `6227`, Bild-/Dateiverweise nach `6302`.
 
-Der neue `TomeyDeviceParser` ist in Baukasten und manueller Verarbeitung angebunden und akzeptiert TOMEY-Text-, CSV- und XML-Daten ohne pauschalen XML-Zwang. Die Tests nutzen synthetische Fixtures aus der Referenzlogik; echte Praxisrohdateien und MEDISTAR-Importabnahme bleiben offen. AP-2500, EM-3000/EM-4000 und TAP-2000 sind weiterhin Kandidaten, aber noch keine BuiltIns.
+Der neue `TomeyDeviceParser` ist in Baukasten und manueller Verarbeitung angebunden und akzeptiert TOMEY-Text-, CSV- und XML-Daten ohne pauschalen XML-Zwang. `TomeyEmDeviceParser` ergaenzt die EM-3000-/EM-4000-CSV-Familie. Die Tests nutzen synthetische Fixtures aus der Referenzlogik; echte Praxisrohdateien und MEDISTAR-Importabnahme bleiben offen. AP-2500 und TAP-2000 sind weiterhin Kandidaten, aber noch keine BuiltIns. TAP-2000 wurde erneut geprueft; COM-Parameter und Framebausteine sind sichtbar, echte Rueckgabe-/Live-Sendeframes fehlen aber weiterhin.
 
 ## 9. Empfohlener naechster Codex-Schritt
 

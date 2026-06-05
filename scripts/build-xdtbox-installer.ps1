@@ -11,6 +11,9 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $publishDir = Join-Path $repoRoot "artifacts\publish\XDTBox"
 $installerDir = Join-Path $repoRoot "artifacts\installer"
+$stagingRoot = Join-Path $repoRoot "artifacts\staging\xdtbox-installer"
+$stagedPublishDir = Join-Path $stagingRoot "publish\XDTBox"
+$stagedInstallerDir = Join-Path $stagingRoot "installer"
 $projectPath = Join-Path $repoRoot "XdtDeviceBridge.App\XdtDeviceBridge.App.csproj"
 $innoScript = Join-Path $repoRoot "installer\XDTBox.iss"
 
@@ -42,6 +45,50 @@ function Reset-BuildArtifactDirectory {
     }
 
     New-Item -ItemType Directory -Force -Path $Path | Out-Null
+}
+
+function Replace-BuildArtifactDirectory {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourcePath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$DestinationPath
+    )
+
+    Assert-PathInsideRepository -Path $SourcePath -RepositoryRoot $repoRoot
+    Assert-PathInsideRepository -Path $DestinationPath -RepositoryRoot $repoRoot
+
+    if (-not (Test-Path -LiteralPath $SourcePath)) {
+        throw "Staging-Artefaktordner wurde nicht gefunden: $SourcePath"
+    }
+
+    $destinationParent = Split-Path -Parent $DestinationPath
+    New-Item -ItemType Directory -Force -Path $destinationParent | Out-Null
+
+    $backupPath = "$DestinationPath.previous-$([DateTime]::UtcNow.ToString('yyyyMMddHHmmssfff'))"
+    Assert-PathInsideRepository -Path $backupPath -RepositoryRoot $repoRoot
+
+    $hasBackup = $false
+    try {
+        if (Test-Path -LiteralPath $DestinationPath) {
+            Move-Item -LiteralPath $DestinationPath -Destination $backupPath
+            $hasBackup = $true
+        }
+
+        Move-Item -LiteralPath $SourcePath -Destination $DestinationPath
+
+        if ($hasBackup -and (Test-Path -LiteralPath $backupPath)) {
+            Remove-Item -LiteralPath $backupPath -Recurse -Force
+        }
+    }
+    catch {
+        if ((-not (Test-Path -LiteralPath $DestinationPath)) -and $hasBackup -and (Test-Path -LiteralPath $backupPath)) {
+            Move-Item -LiteralPath $backupPath -Destination $DestinationPath
+        }
+
+        throw
+    }
 }
 
 function Test-IsTextFileForPublishValidation {
@@ -213,64 +260,82 @@ function Assert-CustomerPublishIsClean {
     }
 }
 
-Reset-BuildArtifactDirectory -Path $publishDir
-Reset-BuildArtifactDirectory -Path $installerDir
-Assert-BuiltInDeviceAssetsExist
+try {
+    Reset-BuildArtifactDirectory -Path $stagingRoot
+    New-Item -ItemType Directory -Force -Path $stagedPublishDir | Out-Null
+    New-Item -ItemType Directory -Force -Path $stagedInstallerDir | Out-Null
+    Assert-BuiltInDeviceAssetsExist
 
-New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
-New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
+    dotnet publish $projectPath `
+        -c $Configuration `
+        -r $Runtime `
+        --self-contained true `
+        -p:PublishSingleFile=false `
+        -p:Version=$Version `
+        -p:AssemblyVersion=1.0.0.0 `
+        -p:FileVersion=1.0.0.0 `
+        -p:InformationalVersion=$Version `
+        -o $stagedPublishDir
 
-dotnet publish $projectPath `
-    -c $Configuration `
-    -r $Runtime `
-    --self-contained true `
-    -p:PublishSingleFile=false `
-    -p:Version=$Version `
-    -p:AssemblyVersion=1.0.0.0 `
-    -p:FileVersion=1.0.0.0 `
-    -p:InformationalVersion=$Version `
-    -o $publishDir
-
-Assert-CustomerPublishIsClean -Path $publishDir
-
-if ($SkipInstaller) {
-    Write-Host "Publish fertig: $publishDir"
-    Write-Host "Installer-Build wurde durch -SkipInstaller uebersprungen."
-    return
-}
-
-$iscc = $env:ISCC_EXE
-if ([string]::IsNullOrWhiteSpace($iscc)) {
-    $cmd = Get-Command iscc.exe -ErrorAction SilentlyContinue
-    if ($cmd) {
-        $iscc = $cmd.Source
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet publish ist fehlgeschlagen. Finale Publish-/Installer-Artefakte wurden nicht ersetzt."
     }
-}
 
-if ([string]::IsNullOrWhiteSpace($iscc)) {
-    $candidates = @(
-        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-        "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
-    )
+    Assert-CustomerPublishIsClean -Path $stagedPublishDir
 
-    foreach ($candidate in $candidates) {
-        if ($candidate -and (Test-Path -LiteralPath $candidate)) {
-            $iscc = $candidate
-            break
+    if ($SkipInstaller) {
+        Replace-BuildArtifactDirectory -SourcePath $stagedPublishDir -DestinationPath $publishDir
+        Write-Host "Publish fertig: $publishDir"
+        Write-Host "Installer-Build wurde durch -SkipInstaller uebersprungen."
+        return
+    }
+
+    $iscc = $env:ISCC_EXE
+    if ([string]::IsNullOrWhiteSpace($iscc)) {
+        $cmd = Get-Command iscc.exe -ErrorAction SilentlyContinue
+        if ($cmd) {
+            $iscc = $cmd.Source
         }
     }
+
+    if ([string]::IsNullOrWhiteSpace($iscc)) {
+        $candidates = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+        )
+
+        foreach ($candidate in $candidates) {
+            if ($candidate -and (Test-Path -LiteralPath $candidate)) {
+                $iscc = $candidate
+                break
+            }
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($iscc) -or -not (Test-Path -LiteralPath $iscc)) {
+        throw "Inno Setup 6 Compiler wurde nicht gefunden. Bitte Inno Setup 6 installieren oder ISCC_EXE auf ISCC.exe setzen. Validierte Publish-Ausgabe liegt vorlaeufig unter: $stagedPublishDir"
+    }
+
+    & $iscc "/DMyPublishDir=$stagedPublishDir" "/DMyInstallerOutputDir=$stagedInstallerDir" $innoScript
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Inno Setup Build ist fehlgeschlagen. Finale Publish-/Installer-Artefakte wurden nicht ersetzt."
+    }
+
+    $stagedSetupFile = Join-Path $stagedInstallerDir "XDTBox_Setup_1.0.exe"
+    if (-not (Test-Path -LiteralPath $stagedSetupFile)) {
+        throw "Installer wurde nicht gefunden: $stagedSetupFile"
+    }
+
+    Replace-BuildArtifactDirectory -SourcePath $stagedPublishDir -DestinationPath $publishDir
+    Replace-BuildArtifactDirectory -SourcePath $stagedInstallerDir -DestinationPath $installerDir
+
+    $setupFile = Join-Path $installerDir "XDTBox_Setup_1.0.exe"
+    Write-Host "Publish fertig: $publishDir"
+    Write-Host "Installer fertig: $setupFile"
 }
-
-if ([string]::IsNullOrWhiteSpace($iscc) -or -not (Test-Path -LiteralPath $iscc)) {
-    throw "Inno Setup 6 Compiler wurde nicht gefunden. Bitte Inno Setup 6 installieren oder ISCC_EXE auf ISCC.exe setzen. Publish-Ausgabe liegt unter: $publishDir"
+finally {
+    if (Test-Path -LiteralPath $stagingRoot) {
+        Remove-Item -LiteralPath $stagingRoot -Recurse -Force
+    }
 }
-
-& $iscc $innoScript
-
-$setupFile = Join-Path $installerDir "XDTBox_Setup_1.0.exe"
-if (-not (Test-Path -LiteralPath $setupFile)) {
-    throw "Installer wurde nicht gefunden: $setupFile"
-}
-
-Write-Host "Publish fertig: $publishDir"
-Write-Host "Installer fertig: $setupFile"

@@ -120,6 +120,8 @@ public sealed class MedistarTomeyTemplatePackageTests
         yield return new object[] { "interface-medistar-tomey-tl7000-default", "device-tomey-tl7000-default", "export-medistar-tomey-tl7000-default", false };
         yield return new object[] { "interface-medistar-tomey-mr6000-default", "device-tomey-mr6000-default", "export-medistar-tomey-mr6000-default", false };
         yield return new object[] { "interface-medistar-tomey-top1000-default", "device-tomey-top1000-default", "export-medistar-tomey-top1000-default", false };
+        yield return new object[] { "interface-medistar-tomey-em3000-default", "device-tomey-em3000-default", "export-medistar-tomey-em3000-default", false };
+        yield return new object[] { "interface-medistar-tomey-em4000-default", "device-tomey-em4000-default", "export-medistar-tomey-em4000-default", false };
     }
 
     private string ExportTemplateCandidate(string interfaceProfileId)
@@ -143,7 +145,9 @@ public sealed class MedistarTomeyTemplatePackageTests
                 DefaultDeviceProfileDefinitions.CreateTomeyTl6000Default(),
                 DefaultDeviceProfileDefinitions.CreateTomeyTl7000Default(),
                 DefaultDeviceProfileDefinitions.CreateTomeyMr6000Default(),
-                DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default()
+                DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default(),
+                DefaultDeviceProfileDefinitions.CreateTomeyEm3000Default(),
+                DefaultDeviceProfileDefinitions.CreateTomeyEm4000Default()
             },
             ExportProfiles: new[]
             {
@@ -152,7 +156,9 @@ public sealed class MedistarTomeyTemplatePackageTests
                 DefaultExportProfileDefinitions.CreateMedistarTomeyTl6000Default(),
                 DefaultExportProfileDefinitions.CreateMedistarTomeyTl7000Default(),
                 DefaultExportProfileDefinitions.CreateMedistarTomeyMr6000Default(),
-                DefaultExportProfileDefinitions.CreateMedistarTomeyTop1000Default()
+                DefaultExportProfileDefinitions.CreateMedistarTomeyTop1000Default(),
+                DefaultExportProfileDefinitions.CreateMedistarTomeyEm3000Default(),
+                DefaultExportProfileDefinitions.CreateMedistarTomeyEm4000Default()
             },
             InterfaceProfiles: new[]
             {
@@ -161,7 +167,9 @@ public sealed class MedistarTomeyTemplatePackageTests
                 DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl6000Default(),
                 DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl7000Default(),
                 DefaultInterfaceProfileDefinitions.CreateMedistarTomeyMr6000Default(),
-                DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTop1000Default()
+                DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTop1000Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarTomeyEm3000Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarTomeyEm4000Default()
             });
     }
 

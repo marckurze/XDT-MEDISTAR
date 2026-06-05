@@ -45,6 +45,8 @@ Hinweis zur Namenskorrektur: Der Hersteller wird in XDTBox als `Möller-Wedel` g
 | TOMEY | TL-7000 | Lensmeter | Datei/CSV | gleiche TL-CSV-Familie wie TL-2000C | `6228` Lensmeter-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
 | TOMEY | MR-6000 | Kombigeraet REF/KM/Tonometrie/Pachymetrie | Datei/XML | MR-XML-Strukturen fuer REF, KM, TM und PM; synthetische Fixture | `6228`, `6221`, `6205`, `6220` | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, Baukasten-Preview-Test und Templatepaket-Test ergaenzt |
 | TOMEY | TOP-1000 | Tonometer/Pachymeter | Datei/XML | TOP-XML-Strukturen fuer IOP/CorrectedIOP/CCT; synthetische Fixture | `6205` Tonometrie, `6220` Pachymetrie | BuiltIn Geraet, Exportprofil, Schnittstellenprofil und Templatepaket-Test ergaenzt |
+| TOMEY | EM-3000 | Endothel-/Zellmessung | Datei/CSV | CSV-Token fuer `[RL]`, `[NUMBER]`, `[DENSITY]`, `[THK]`, `[FILES_N]`, `[FILE]`; synthetische Fixture | `6228` Messwerte, `6227` Kommentare, `6302` Bild-/Dateiverweise | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `TomeyEmDeviceParser`, Baukasten-Preview-Test und Templatepaket-Test ergaenzt |
+| TOMEY | EM-4000 | Endothel-/Zellmessung | Datei/CSV | CSV-Token fuer `[RL_1]`, `[DENSITY_1]`, `[THK_1]`, `[RL_2]`, `[DENSITY_2]`, `[THK_2]`, `[FILE]`; synthetische Fixture | `6228` CD/CCT-Messwerte, `6227` Kommentare, `6302` Bild-/Dateiverweise | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `TomeyEmDeviceParser`, BuiltIn- und Templatepaket-Tests ergaenzt |
 
 ## Bestehende Anbindungen mit sicherer Verbesserung
 
@@ -70,8 +72,7 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | Huvitz | HLM-1, HLM-7000P, HLM-9000 | Lensmeter-Parserlogik ableitbar, echte Rohdateien fehlen | Lensmeter-Textparser vorbereiten, Prisma/ADD/PD nur bei belegter Regel ausgeben |
 | Huvitz | HDR-7000, HDR-9000 | Phoropter-/Refraktor-Kandidaten mit bidirektionaler Relevanz | Rueckgabe und PC->Geraet getrennt analysieren, kein BuiltIn ohne Sendeframe-Test |
 | TOMEY | AP-2500 | Setup-/Konfigurationshinweise ohne ausreichend belegte Messwertrohstruktur | erst mit klarer Rohdaten- oder Parserstrecke als BuiltIn entscheiden |
-| TOMEY | EM-3000, EM-4000 | Endothel-/Zellmessdaten erkennbar, aber MEDISTAR-Zielfeld ausserhalb der aktuellen Messart-Standards unklar | Messart- und AIS-Zieldefinition klaeren, danach eigene Auswertung |
-| TOMEY | TAP-2000 | bidirektionaler Phoropterkandidat mit serieller Relevanz | Rueckgabe und PC->Geraet getrennt mit Live-/Framefixtures absichern |
+| TOMEY | TAP-2000 | bidirektionaler Phoropterkandidat mit serieller Relevanz; COM-Parameter und Framebausteine sind sichtbar, aber echte Rueckgabe-/Live-Sendeframes fehlen | Rueckgabe und PC->Geraet getrennt mit Live-/Framefixtures absichern |
 | Shin-Nippon | Accuref/DL/DR/NCT/SLM-Familien | teilweise Parserlogik, keine einheitliche Rohdatenbasis | pro Formatfamilie synthetische Fixtures ableiten |
 | Reichert | 7CR NCT, LensChek Plus | teilweise Setup-/Parserhinweise | getrennte Tonometer-/Lensmeter-Batches |
 | Rodenstock | CX 800, Phoromat 2000 | teilweise Refraktor-/Phoropterhinweise | erst nach klarer Frame-/Textstruktur als BuiltIn |
@@ -94,8 +95,7 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | Huvitz | HDR-7000 / HDR-9000 | Bidirektionaler Phoropter-/Refraktorbereich; Rueckgabe- und PC->Geraet-Frames sind noch nicht sicher genug fuer ein BuiltIn. |
 | Huvitz | HLM-1 / HLM-7000P / HLM-9000 | Lensmeter-Familie mit erkennbarer COM-/Parserlogik, aber ohne ausreichend abgesicherte Rohdatenstruktur fuer ADD/PD/Prisma und MEDISTAR-`6228`. |
 | TOMEY | AP-2500 | Keine ausreichend belastbare Messwertrohstruktur fuer einen XDTBox-Parser. |
-| TOMEY | EM-3000 / EM-4000 | Zell-/Endothelmessung ohne freigegebenes MEDISTAR-Zielfeld in den aktuellen Geraeteart-Standards. |
-| TOMEY | TAP-2000 | Phoropter-/Sendeframe-Workflow waere zu risikoreich ohne echte Rueckgabe- und PC->Geraet-Validierung. |
+| TOMEY | TAP-2000 | Phoropter-/Sendeframe-Workflow waere zu risikoreich ohne echte Rueckgabe- und PC->Geraet-Validierung. Die statisch sichtbaren COM-/Framefragmente werden dokumentiert, aber noch nicht produktiv freigegeben. |
 
 ## Uebernommene technische Regeln
 
@@ -103,13 +103,13 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 - NIDEK LM-1800P: die Schreibvariante `Sphare` wird ueber vorhandene Aliaslogik als `Sphere` verfuegbar; alternative Augenbloecke `I` und `S` werden fuer die vorbereiteten MEDISTAR-Lines auf `R` und `L` abgebildet.
 - TOPCON KR-800: Modellalias `KR-800` nutzt die vorhandene KR800S-Erkennung, ohne die bestehende KR800S-Fachlogik zu veraendern.
 - Huvitz-Textparser: nur eindeutig abgeleitete Tokens werden ausgewertet. `S-R-*` wird als REF nach `6228`, `S-K-*` als KM nach `6221`, `T-*` als Tonometrie nach `6205` und `P-*` als Pachymetrie/CCT nach `6220` vorbereitet. Die Fixtures sind synthetisch aus Referenzlogik abgeleitet und ersetzen keine Praxisrohdateien.
-- TOMEY-Parser: CF-2000 und TL-2000C/TL-6000/TL-7000 werden als Lensmeter nach `6228` vorbereitet. MR-6000 trennt REF nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`. TOP-1000 liefert Tonometrie nach `6205` und Pachymetrie nach `6220`. Nur erkannte Werte werden exportiert; fehlende Teilmessungen erzeugen keine kuenstlichen Zeilen.
+- TOMEY-Parser: CF-2000 und TL-2000C/TL-6000/TL-7000 werden als Lensmeter nach `6228` vorbereitet. MR-6000 trennt REF nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`. TOP-1000 liefert Tonometrie nach `6205` und Pachymetrie nach `6220`. EM-3000/EM-4000 liefern Endothel-/Zellmesswerte nach `6228`, Kommentare nach `6227` und Bild-/Dateiverweise nach `6302`. Nur erkannte Werte werden exportiert; fehlende Teilmessungen erzeugen keine kuenstlichen Zeilen.
 - Scriptbasierte Textparser: Feldkennungen wie `6228`, `6227`, `6221`, `6220` und `6205` werden als Hinweise dokumentiert, aber nicht blind als XDTBox-Code kopiert.
 
 ## Offene Folgeschritte
 
 1. Echte Huvitz-Praxisrohdateien fuer HRK-8000A/HRK-9000A/HNT-1P/HTR-1A sammeln und gegen die synthetischen Fixtures validieren.
-2. Echte TOMEY-Praxisrohdateien fuer CF-2000/TL-2000C/TL-6000/TL-7000/MR-6000/TOP-1000 sammeln und gegen `TomeyDeviceParser` validieren.
+2. Echte TOMEY-Praxisrohdateien fuer CF-2000/TL-2000C/TL-6000/TL-7000/MR-6000/TOP-1000 sowie EM-3000/EM-4000 sammeln und gegen `TomeyDeviceParser` beziehungsweise `TomeyEmDeviceParser` validieren.
 3. Huvitz-HLM-Lensmeter, Huvitz-HDR-Phoropter und TOMEY-TAP-2000 erst nach klarer Rohdaten-/Frame-Struktur als BuiltIn entscheiden.
 4. Shin-Nippon danach nach Geraeteart trennen.
 5. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.

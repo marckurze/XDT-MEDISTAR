@@ -5,7 +5,12 @@
 #define MyAppVersion "1.0"
 #define MyAppPublisher "Technik-Apparat M.Kurze"
 #define MyAppExeName "XdtDeviceBridge.App.exe"
+#ifndef MyPublishDir
 #define MyPublishDir "..\artifacts\publish\XDTBox"
+#endif
+#ifndef MyInstallerOutputDir
+#define MyInstallerOutputDir "..\artifacts\installer"
+#endif
 
 [Setup]
 AppId={{7E45D05D-7E53-4B47-961D-9113C3D42623}
@@ -21,7 +26,7 @@ DefaultGroupName=XDTBox
 DisableProgramGroupPage=no
 DisableDirPage=no
 UsePreviousAppDir=yes
-OutputDir=..\artifacts\installer
+OutputDir={#MyInstallerOutputDir}
 OutputBaseFilename=XDTBox_Setup_1.0
 SetupIconFile=..\XdtDeviceBridge.App\Assets\App\XDTBox.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}

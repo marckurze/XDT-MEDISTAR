@@ -21,11 +21,12 @@ Der Kundeninstaller wird self-contained fuer `win-x64` gebaut. Kunden muessen da
 
 Das Skript fuehrt aus:
 
-1. Bereinigung von `artifacts\publish\XDTBox` und `artifacts\installer`
+1. Bereinigung nur des Staging-Ordners `artifacts\staging\xdtbox-installer`
 2. Pruefung, dass die offiziellen BuiltIn-Geraetebilder als App-Assets unter `XdtDeviceBridge.App\Assets\Devices` vorhanden sind
-3. `dotnet publish` fuer `XdtDeviceBridge.App`
-4. harte Sicherheitspruefung der Publish-Ausgabe
-5. Inno-Setup-Build von `installer\XDTBox.iss`
+3. `dotnet publish` fuer `XdtDeviceBridge.App` in den Staging-Publish
+4. harte Sicherheitspruefung der Staging-Publish-Ausgabe
+5. Inno-Setup-Build von `installer\XDTBox.iss` gegen den Staging-Publish
+6. Ersetzen der finalen Ordner `artifacts\publish\XDTBox` und `artifacts\installer` erst nach erfolgreichem Publish, erfolgreicher Publish-Validierung und erfolgreichem Inno-Build
 
 Ergebnis:
 
@@ -48,6 +49,41 @@ artifacts\installer\XDTBox_Setup_1.0.exe
 Die erzeugte Setup-Datei ist noch nicht digital codesigniert. Das ist fuer die erste technische Pruefung dokumentiert; vor Kundenverteilung ist eine Codesignatur beziehungsweise ein definierter Verteilprozess noch offen.
 
 Eine stille Testinstallation aus der Codex-Sitzung konnte nicht vollautomatisch ausgefuehrt werden, weil der aktuelle Prozess nicht mit Administratorrechten lief. Das ist erwartbar, da das Setup fuer `C:\XDTBox` und HKLM/Windows "Programme & Features" bewusst `PrivilegesRequired=admin` nutzt. Die praktische Installation, Update-Erkennung und Deinstallation sollen daher mit Admin-Rechten auf einem Windows-Testsystem ausgefuehrt werden.
+
+## Nachtrag 2026-06-05: EM-3000/EM-4000-Finalstand
+
+Marc hat den finalen EM-3000/EM-4000-Code-/Teststand lokal ausserhalb der Sandbox bestaetigt:
+
+- `dotnet build XdtDeviceBridge.sln`: erfolgreich fuer `XdtDeviceBridge.Core`, `XdtDeviceBridge.Infrastructure`, `XdtBox.LicenseIssuer`, `XdtBox.LicenseManager`, `XdtDeviceBridge.Tests` und `XdtDeviceBridge.App`; Dauer 18,9 Sekunden.
+- `dotnet test XdtDeviceBridge.sln`: 1816 Tests insgesamt, 1816 erfolgreich, 0 fehlgeschlagen, 0 uebersprungen; Testdauer 12,4 Sekunden, Gesamt erfolgreich in 16,4 Sekunden.
+
+Der Installer-Build wurde in der Codex-Sandbox erneut gestartet, konnte dort aber nicht final bestaetigt werden: `dotnet publish` brach mit verweigertem Zugriff auf `C:\Users\MarcK\AppData\Local\Microsoft SDKs` ab. Im frueheren Buildskript wurden `artifacts\publish\XDTBox` und `artifacts\installer` noch vor dem Publish bereinigt; dadurch waren nach diesem fehlgeschlagenen Sandbox-Lauf keine finalen Installer-Artefakte mehr vorhanden.
+
+Dieses Risiko ist im Buildskript jetzt abgesichert: `scripts\build-xdtbox-installer.ps1` arbeitet zuerst in `artifacts\staging\xdtbox-installer`. Finale Publish-/Installer-Artefakte werden nur noch ersetzt, wenn `dotnet publish`, die Kundenpublish-Validierung und der Inno-Build erfolgreich waren. Ein Publish-Fehler, ein blockierter SDK-Zugriff oder ein fehlendes Inno-Setup loescht dadurch nicht mehr das letzte funktionierende Setup.
+
+Nach dem Staging-Umbau wurde der Installer-Build mit Vollzugriff erfolgreich ausgefuehrt:
+
+- Setup-Datei: `C:\GitHub\XDT-MEDISTAR\artifacts\installer\XDTBox_Setup_1.0.exe`
+- Dateigroesse: 63.404.236 Bytes
+- Zeitstempel: 2026-06-05 12:43:43
+- Publish-EXE: `C:\GitHub\XDT-MEDISTAR\artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
+- Publish-EXE-Groesse: 421.376 Bytes
+- Publish-Validierung: sauber durchlaufen; der Inno-Build wurde erst nach der Kundenpublish-Pruefung gestartet
+- App-Start aus Publish: `XdtDeviceBridge.App.exe` startete erfolgreich aus `artifacts\publish\XDTBox` und wurde fuer die Pruefung wieder beendet
+
+Ein absichtlich fehlschlagender Kontrolllauf mit ungueltigem RuntimeIdentifier bestaetigte den Schutz: `dotnet publish` brach ab, das Script meldete den Fehler und ersetzte weder `artifacts\publish\XDTBox` noch `artifacts\installer`.
+
+Fuer kuenftige Release-Artefakte muss auf dem lokalen Build-PC erneut ausgefuehrt und protokolliert werden:
+
+```powershell
+.\scripts\build-xdtbox-installer.ps1
+```
+
+Zu dokumentieren sind danach:
+
+- Pfad und Groesse von `artifacts\installer\XDTBox_Setup_1.0.exe`
+- erfolgreiche Publish-Validierung ohne lokale Entwicklungs-/Kundendaten
+- erfolgreicher App-Start aus `artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
 
 ## Kundeninstaller-Inhalt
 

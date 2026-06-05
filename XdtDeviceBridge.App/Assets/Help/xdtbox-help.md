@@ -74,7 +74,7 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
-Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A sowie TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000 und TOP-1000. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
+Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A sowie TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000, TOP-1000, EM-3000 und EM-4000. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
 
 # Profilverwaltung
 
@@ -264,13 +264,15 @@ Huvitz HNT-1P ist als Tonometer/Pachymeter vorbereitet: Tonometrie geht nach `62
 
 Diese Huvitz-Profile beruhen aktuell auf neutral abgeleiteter Referenzlogik und synthetischen Testfixtures. Echte Praxisrohdateien und MEDISTAR-Importabnahme sollten vor produktiver Nutzung gesammelt und geprueft werden.
 
-# TOMEY CF/TL/MR/TOP
+# TOMEY CF/TL/MR/TOP/EM
 
 TOMEY CF-2000 ist als serielles Lensmeterprofil vorbereitet. TL-2000C, TL-6000 und TL-7000 sind als dateibasierte Lensmeterprofile vorbereitet. Lensmeter-Werte werden fuer MEDISTAR nach `6228` abgebildet.
 
 TOMEY MR-6000 ist als Kombigeraet vorbereitet: REF geht nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`. TOMEY TOP-1000 ist als Tonometer/Pachymeter vorbereitet und nutzt `6205` und `6220`.
 
-Diese TOMEY-Profile beruhen aktuell auf neutral abgeleiteter Referenzlogik und synthetischen Testfixtures. Echte Praxisrohdateien und MEDISTAR-Importabnahme sollten vor produktiver Nutzung gesammelt und geprueft werden.
+TOMEY EM-3000 und EM-4000 sind als dateibasierte Endothel-/Zellmessgeraete vorbereitet. Messwerte werden nach `6228`, Kommentare nach `6227` und Bild-/Dateiverweise nach `6302` vorbereitet. Bilddateien selbst werden nicht in den Kundeninstaller aufgenommen.
+
+Diese TOMEY-Profile beruhen aktuell auf neutral abgeleiteter Referenzlogik und synthetischen Testfixtures. Echte Praxisrohdateien und MEDISTAR-Importabnahme sollten vor produktiver Nutzung gesammelt und geprueft werden. TAP-2000 wurde technisch geprueft, bleibt ohne echte Rueckgabe- und Live-Sendeframes aber noch kein produktives BuiltIn.
 
 # Fehlerbehebung
 

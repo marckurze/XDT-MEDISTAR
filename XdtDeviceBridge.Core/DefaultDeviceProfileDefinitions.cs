@@ -1359,6 +1359,26 @@ public static class DefaultDeviceProfileDefinitions
             timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
     }
 
+    public static DeviceProfileDefinition CreateTomeyEm3000Default()
+    {
+        return CreateTomeyEmDefault(
+            id: "device-tomey-em3000-default",
+            name: "TOMEY EM-3000",
+            product: "EM-3000",
+            model: "EM-3000",
+            description: "Built-in file profile for TOMEY EM-3000 endothelial CSV data derived from neutral reference parser rules. Measurements map to 6228, comments to 6227 and image references to 6302; practical raw-data validation remains open.");
+    }
+
+    public static DeviceProfileDefinition CreateTomeyEm4000Default()
+    {
+        return CreateTomeyEmDefault(
+            id: "device-tomey-em4000-default",
+            name: "TOMEY EM-4000",
+            product: "EM-4000",
+            model: "EM-4000",
+            description: "Built-in file profile for TOMEY EM-4000 endothelial CSV data derived from neutral reference parser rules. Measurements map to 6228, comments to 6227 and image references to 6302; practical raw-data validation remains open.");
+    }
+
     private static DeviceProfileDefinition CreateTomeyLensFileDefault(string id, string name, string model)
     {
         return CreateTomeyDefault(
@@ -1375,6 +1395,40 @@ public static class DefaultDeviceProfileDefinitions
             includeKm: false,
             includeTonoPachy: false,
             timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static DeviceProfileDefinition CreateTomeyEmDefault(
+        string id,
+        string name,
+        string product,
+        string model,
+        string description)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "TOMEY",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOMEY",
+            Model: model,
+            DeviceType: "Endothelmikroskop/Zellmessgerät",
+            ParserMode: TomeyEmDeviceParser.ParserMode,
+            Measurements: CreateTomeyEmMeasurements(product),
+            SupportedExaminationTypes: new[] { "EM", "Endothel", "Zellmessung", "CCT" },
+            CanContainMultipleExaminationTypes: true,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: DeviceConnectionKind.FileImport);
     }
 
     private static DeviceProfileDefinition CreateTomeyDefault(
@@ -1518,6 +1572,40 @@ public static class DefaultDeviceProfileDefinitions
             measurements.Add(new($"{prefix}-tono-line", "Tonometrie MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 tonometry line."));
             measurements.Add(new($"{prefix}-tono-corrected-line", "Tonometrie Korrektur MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/CorrectedLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 corrected tonometry line."));
             measurements.Add(new($"{prefix}-pachy-line", "Pachymetrie MEDISTAR-Zeile", "Measure[@Type='CCT']/Pachy/MedistarLine", "CCT", string.Empty, string.Empty, false, "Prepared MEDISTAR 6220 pachymetry line."));
+        }
+
+        return measurements;
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateTomeyEmMeasurements(string product)
+    {
+        var prefix = $"tomey-{product.Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase).ToLowerInvariant()}";
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "TOMEY common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "TOMEY model name."),
+            new($"{prefix}-patient-id", "Geräte-Patient-ID", "Patient/Id", "Patient", string.Empty, string.Empty, false, "Patient id from TOMEY EM CSV when present."),
+            new($"{prefix}-comment-line", "Endothel Kommentar MEDISTAR-Zeile", "Measure[@Type='EM']/Comment/MedistarLine", "EM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6227 endothelial comment line.")
+        };
+
+        foreach (var eye in new[] { "R", "L" })
+        {
+            var eyePrefix = $"{prefix}-em-{eye.ToLowerInvariant()}";
+            measurements.Add(new($"{eyePrefix}-number", $"Endothel {eye} Anzahl", $"Measure[@Type='EM']/Endothelium/{eye}/Number", "EM", eye, string.Empty, false, "EM-3000 endothelial cell count."));
+            measurements.Add(new($"{eyePrefix}-density", $"Endothel {eye} Dichte", $"Measure[@Type='EM']/Endothelium/{eye}/Density", "EM", eye, "mm2", false, "EM-3000 endothelial density."));
+            measurements.Add(new($"{eyePrefix}-thickness", $"Endothel {eye} Hornhautdicke", $"Measure[@Type='EM']/Endothelium/{eye}/Thickness", "EM", eye, "um", false, "EM-3000 corneal thickness."));
+            measurements.Add(new($"{eyePrefix}-em3000-line", $"Endothel {eye} MEDISTAR-Zeile", $"Measure[@Type='EM']/Endothelium/{eye}/MedistarLine", "EM", eye, string.Empty, false, "Prepared MEDISTAR 6228 EM-3000 endothelial result line."));
+            measurements.Add(new($"{eyePrefix}-cd", $"Endothel {eye} CD", $"Measure[@Type='EM']/Endothelium/{eye}/CellDensity", "EM", eye, string.Empty, false, "EM-4000 endothelial CD value."));
+            measurements.Add(new($"{eyePrefix}-cct", $"Endothel {eye} CCT", $"Measure[@Type='EM']/Endothelium/{eye}/CCT", "EM", eye, string.Empty, false, "EM-4000 endothelial CCT value."));
+            measurements.Add(new($"{eyePrefix}-cd-line", $"Endothel {eye} CD MEDISTAR-Zeile", $"Measure[@Type='EM']/Endothelium/{eye}/CellDensity/MedistarLine", "EM", eye, string.Empty, false, "Prepared MEDISTAR 6228 EM-4000 CD line."));
+            measurements.Add(new($"{eyePrefix}-cct-line", $"Endothel {eye} CCT MEDISTAR-Zeile", $"Measure[@Type='EM']/Endothelium/{eye}/CCT/MedistarLine", "EM", eye, string.Empty, false, "Prepared MEDISTAR 6228 EM-4000 CCT line."));
+        }
+
+        for (var index = 1; index <= 4; index++)
+        {
+            var imagePrefix = $"{prefix}-attachment-image{index}";
+            measurements.Add(new($"{imagePrefix}-path", $"Endothel Bild {index} Pfad", $"Measure[@Type='EM']/Attachment/Image{index}/Path", "EM", string.Empty, string.Empty, false, "Endothelial image path."));
+            measurements.Add(new($"{imagePrefix}-line", $"Endothel Bild {index} Verweis", $"Measure[@Type='EM']/Attachment/Image{index}/MedistarLine", "EM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6302 image reference line."));
         }
 
         return measurements;

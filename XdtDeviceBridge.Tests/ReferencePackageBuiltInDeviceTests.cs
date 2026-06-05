@@ -8,6 +8,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
     private readonly XmlDeviceParser _parser = new();
     private readonly HuvitzTextDeviceParser _huvitzParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
+    private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
 
@@ -298,6 +299,48 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void TomeyEm3000Profile_ShouldParseAndExportEndothelialMeasurementsCommentsAndImageReferences()
+    {
+        var parseResult = _tomeyEmParser.ParseFile(GetTomeyFixturePath("EM3000", "EM3000_reference.csv"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTomeyEm3000Default();
+        var xdt = BuildXdt(CreatePatientData("EM3000"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "EM-3000");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='EM']/Endothelium/R/Number" && measurement.Value == "2530");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='EM']/Endothelium/L/MedistarLine" && measurement.Value == "L: Anzahl = 2420; Dichte = 2390 mm2; Hornhautdicke = 529 um");
+        Assert.Contains("6228R: Anzahl = 2530; Dichte = 2488 mm2; Hornhautdicke = 534 um", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L: Anzahl = 2420; Dichte = 2390 mm2; Hornhautdicke = 529 um", xdt, StringComparison.Ordinal);
+        Assert.Contains("6227Kontrolle Endothelmessung", xdt, StringComparison.Ordinal);
+        Assert.Contains("6302em3000-right.jpg", xdt, StringComparison.Ordinal);
+        Assert.Contains("6302em3000-left.bmp", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TomeyEm4000Profile_ShouldParseAndExportCellDensityCctCommentsAndImageReferences()
+    {
+        var parseResult = _tomeyEmParser.ParseFile(GetTomeyFixturePath("EM4000", "EM4000_reference.csv"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTomeyEm4000Default();
+        var xdt = BuildXdt(CreatePatientData("EM4000"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "EM-4000");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='EM']/Endothelium/R/CellDensity" && measurement.Value == "2440");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='EM']/Endothelium/L/CCT/MedistarLine" && measurement.Value == "L CCT = 527");
+        Assert.Contains("6228R CD = 2440", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228R CCT = 531", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L CD = 2388", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L CCT = 527", xdt, StringComparison.Ordinal);
+        Assert.Contains("6227Kontrolle Zellmessung", xdt, StringComparison.Ordinal);
+        Assert.Contains("6302em4000-right.jpg", xdt, StringComparison.Ordinal);
+        Assert.Contains("6302em4000-left.jpg", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NewReferenceBackedBuiltIns_ShouldBeValid()
     {
         var deviceProfiles = new[]
@@ -314,7 +357,9 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultDeviceProfileDefinitions.CreateTomeyTl6000Default(),
             DefaultDeviceProfileDefinitions.CreateTomeyTl7000Default(),
             DefaultDeviceProfileDefinitions.CreateTomeyMr6000Default(),
-            DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default()
+            DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyEm3000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyEm4000Default()
         };
         var exportProfiles = new[]
         {
@@ -330,7 +375,9 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultExportProfileDefinitions.CreateMedistarTomeyTl6000Default(),
             DefaultExportProfileDefinitions.CreateMedistarTomeyTl7000Default(),
             DefaultExportProfileDefinitions.CreateMedistarTomeyMr6000Default(),
-            DefaultExportProfileDefinitions.CreateMedistarTomeyTop1000Default()
+            DefaultExportProfileDefinitions.CreateMedistarTomeyTop1000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyEm3000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyEm4000Default()
         };
         var interfaceProfiles = new[]
         {
@@ -346,7 +393,9 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl6000Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl7000Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarTomeyMr6000Default(),
-            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTop1000Default()
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTop1000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyEm3000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyEm4000Default()
         };
 
         Assert.All(deviceProfiles, profile => Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile)));
@@ -391,6 +440,26 @@ public sealed class ReferencePackageBuiltInDeviceTests
         Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
         Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/MedistarLine");
         Assert.Contains("6228R.:S=+ 1.00 Z=- 0.25*103 P=0.75 OUT 1.00 UP PD= 59 A=+ 0.25 A2=+ 1.25", result.ExportContent, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TomeyEmPreview_ShouldAcceptEndothelialCsvInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = GetTomeyFixturePath("EM3000", "EM3000_reference.csv");
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarTomeyEm3000Default(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateTomeyEm3000Default(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarTomeyEm3000Default(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='EM']/Endothelium/R/MedistarLine");
+        Assert.Contains("6228R: Anzahl = 2530; Dichte = 2488 mm2; Hornhautdicke = 534 um", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6302em3000-right.jpg", result.ExportContent, StringComparison.Ordinal);
     }
 
     private static PatientData CreatePatientData(string examinationType)

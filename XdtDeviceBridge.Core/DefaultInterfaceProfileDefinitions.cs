@@ -822,6 +822,16 @@ public static class DefaultInterfaceProfileDefinitions
         return CreateMedistarTomeyFileDefault("interface-medistar-tomey-top1000-default", "MEDISTAR + TOMEY TOP-1000", "MEDISTAR/TOMEY TOP-1000", "device-tomey-top1000-default", "export-medistar-tomey-top1000-default", "Built-in inactive file profile for TOMEY TOP-1000 XML imports.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarTomeyEm3000Default()
+    {
+        return CreateMedistarTomeyFileDefault("interface-medistar-tomey-em3000-default", "MEDISTAR + TOMEY EM-3000", "MEDISTAR/TOMEY EM-3000", "device-tomey-em3000-default", "export-medistar-tomey-em3000-default", "Built-in inactive file profile for TOMEY EM-3000 endothelial CSV imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarTomeyEm4000Default()
+    {
+        return CreateMedistarTomeyFileDefault("interface-medistar-tomey-em4000-default", "MEDISTAR + TOMEY EM-4000", "MEDISTAR/TOMEY EM-4000", "device-tomey-em4000-default", "export-medistar-tomey-em4000-default", "Built-in inactive file profile for TOMEY EM-4000 endothelial CSV imports.");
+    }
+
     private static InterfaceProfileDefinition CreateMedistarTomeyFileDefault(
         string id,
         string name,

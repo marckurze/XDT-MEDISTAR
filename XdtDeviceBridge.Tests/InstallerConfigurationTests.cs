@@ -81,11 +81,16 @@ public sealed class InstallerConfigurationTests
     {
         var script = File.ReadAllText(FindWorkspaceFile("scripts", "build-xdtbox-installer.ps1"));
 
-        Assert.Contains("Reset-BuildArtifactDirectory -Path $publishDir", script);
-        Assert.Contains("Reset-BuildArtifactDirectory -Path $installerDir", script);
+        Assert.Contains("Reset-BuildArtifactDirectory -Path $stagingRoot", script);
+        Assert.DoesNotContain("Reset-BuildArtifactDirectory -Path $publishDir", script);
+        Assert.DoesNotContain("Reset-BuildArtifactDirectory -Path $installerDir", script);
         Assert.Contains("Remove-Item -LiteralPath $Path -Recurse -Force", script);
         Assert.Contains("Assert-PathInsideRepository", script);
-        Assert.Contains("Assert-CustomerPublishIsClean -Path $publishDir", script);
+        Assert.Contains("Assert-CustomerPublishIsClean -Path $stagedPublishDir", script);
+        Assert.Contains("Replace-BuildArtifactDirectory -SourcePath $stagedPublishDir -DestinationPath $publishDir", script);
+        Assert.Contains("Replace-BuildArtifactDirectory -SourcePath $stagedInstallerDir -DestinationPath $installerDir", script);
+        Assert.Contains("if ($LASTEXITCODE -ne 0)", script);
+        Assert.Contains("Finale Publish-/Installer-Artefakte wurden nicht ersetzt", script);
         Assert.Contains("Assert-BuiltInDeviceAssetsExist", script);
         Assert.Contains("XdtDeviceBridge.App\\XdtDeviceBridge.App.csproj", script);
         Assert.Contains("dotnet publish", script);
@@ -151,7 +156,8 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("XdtBox.LicenseManager", buildGuide);
         Assert.Contains("private Hersteller-Schluessel", buildGuide);
         Assert.Contains("Kundeninstaller enthaelt ausschliesslich App-Dateien und BuiltIn-Werksvorlagen", buildGuide);
-        Assert.Contains("Bereinigung von `artifacts\\publish\\XDTBox` und `artifacts\\installer`", buildGuide);
+        Assert.Contains("Bereinigung nur des Staging-Ordners `artifacts\\staging\\xdtbox-installer`", buildGuide);
+        Assert.Contains("Ersetzen der finalen Ordner `artifacts\\publish\\XDTBox` und `artifacts\\installer` erst nach erfolgreichem Publish", buildGuide);
         Assert.Contains("# Installation, Update und Deinstallation", help);
         Assert.Contains("Der Deinstaller entfernt standardmäßig nur die App", help);
     }

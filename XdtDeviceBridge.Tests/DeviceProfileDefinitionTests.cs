@@ -778,6 +778,8 @@ public sealed class DeviceProfileDefinitionTests
             DefaultDeviceProfileDefinitions.CreateTomeyTl7000Default(),
             DefaultDeviceProfileDefinitions.CreateTomeyMr6000Default(),
             DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyEm3000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyEm4000Default(),
             DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(),
             DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault()
         };

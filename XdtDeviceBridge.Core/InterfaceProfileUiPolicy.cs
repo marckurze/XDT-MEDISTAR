@@ -45,6 +45,8 @@ public static class InterfaceProfileUiPolicy
     public const string TomeyTl7000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-tl7000-default.png";
     public const string TomeyMr6000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-mr6000-default.png";
     public const string TomeyTop1000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-top1000-default.png";
+    public const string TomeyEm3000DeviceImagePath = TomeyTop1000DeviceImagePath;
+    public const string TomeyEm4000DeviceImagePath = TomeyTop1000DeviceImagePath;
     public const string TopconCl300DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-cl300-default.png";
     public const string TopconSolosDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-solos-default.png";
     public const string TopconKr800DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-kr800-default.png";
@@ -75,6 +77,8 @@ public static class InterfaceProfileUiPolicy
             ["device-tomey-tl7000-default"] = TomeyTl7000DeviceImagePath,
             ["device-tomey-mr6000-default"] = TomeyMr6000DeviceImagePath,
             ["device-tomey-top1000-default"] = TomeyTop1000DeviceImagePath,
+            ["device-tomey-em3000-default"] = TomeyEm3000DeviceImagePath,
+            ["device-tomey-em4000-default"] = TomeyEm4000DeviceImagePath,
             ["device-topcon-cl300-default"] = TopconCl300DeviceImagePath,
             ["device-topcon-solos-default"] = TopconSolosDeviceImagePath,
             ["device-topcon-kr800-default"] = TopconKr800DeviceImagePath,

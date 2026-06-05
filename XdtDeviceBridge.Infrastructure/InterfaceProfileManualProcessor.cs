@@ -11,6 +11,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     private readonly NidekRtSerialPhoropterParser _nidekRtSerialParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
+    private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -35,6 +36,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var issues = new List<ProcessingIssue>();
         var usesNidekRtSerialParser = UsesNidekRtSerialParser(interfaceProfile, exportProfile);
         var usesHuvitzTextParser = UsesHuvitzTextParser(interfaceProfile, exportProfile);
+        var usesTomeyEmParser = UsesTomeyEmParser(interfaceProfile, exportProfile);
         var usesTomeyParser = UsesTomeyParser(interfaceProfile, exportProfile);
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ExportFolder))
@@ -54,6 +56,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         if (!isAttachmentOnlyMode
             && !usesNidekRtSerialParser
             && !usesHuvitzTextParser
+            && !usesTomeyEmParser
             && !usesTomeyParser
             && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {
@@ -92,9 +95,11 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 ? _nidekRtSerialParser.ParseFile(deviceFilePath)
                 : usesHuvitzTextParser
                     ? _huvitzTextParser.ParseFile(deviceFilePath)
-                    : usesTomeyParser
-                        ? _tomeyParser.ParseFile(deviceFilePath)
-            : _xmlDeviceParser.ParseFile(deviceFilePath);
+                    : usesTomeyEmParser
+                        ? _tomeyEmParser.ParseFile(deviceFilePath)
+                        : usesTomeyParser
+                            ? _tomeyParser.ParseFile(deviceFilePath)
+                            : _xmlDeviceParser.ParseFile(deviceFilePath);
         if (!isAttachmentOnlyMode)
         {
             issues.AddRange(deviceResult.Issues.Select(issue => new ProcessingIssue(
@@ -860,6 +865,14 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             || IsTomeyId(exportProfile.SourceDeviceProfileId);
     }
 
+    private static bool UsesTomeyEmParser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsTomeyEmId(interfaceProfile.DeviceProfileId)
+            || IsTomeyEmId(exportProfile.SourceDeviceProfileId);
+    }
+
     private static bool IsNidekRtSerialId(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
@@ -877,5 +890,11 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("tomey", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTomeyEmId(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("tomey-em", StringComparison.OrdinalIgnoreCase);
     }
 }
