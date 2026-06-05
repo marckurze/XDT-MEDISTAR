@@ -19,6 +19,10 @@ public sealed class XdtBaukastenDeviceCompatibilityServiceTests
         yield return new object[] { "Huvitz HRK-8000A", DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(), DeviceFixture("Huvitz", "HRK8000A", "HRK8000A_reference_text.txt") };
         yield return new object[] { "Huvitz HNT-1P", DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(), DeviceFixture("Huvitz", "HNT1P", "HNT1P_reference_text.txt") };
         yield return new object[] { "Huvitz HTR-1A", DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(), DeviceFixture("Huvitz", "HTR1A", "HTR1A_reference_text.txt") };
+        yield return new object[] { "TOMEY CF-2000", DefaultDeviceProfileDefinitions.CreateTomeyCf2000Default(), DeviceFixture("Tomey", "CF2000", "CF2000_reference_text.txt") };
+        yield return new object[] { "TOMEY TL-2000C", DefaultDeviceProfileDefinitions.CreateTomeyTl2000CDefault(), DeviceFixture("Tomey", "TL2000C", "TL2000C_reference.csv") };
+        yield return new object[] { "TOMEY MR-6000", DefaultDeviceProfileDefinitions.CreateTomeyMr6000Default(), DeviceFixture("Tomey", "MR6000", "MR6000_reference.xml") };
+        yield return new object[] { "TOMEY TOP-1000", DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default(), DeviceFixture("Tomey", "TOP1000", "TOP1000_reference.xml") };
         yield return new object[] { "TOPCON CL-300", DefaultDeviceProfileDefinitions.CreateTopconCl300Default(), DeviceFixture("Topcon", "CL300", "M-Serial0001_20120101_000000_TOPCON_CL-300_00.xml") };
         yield return new object[] { "TOPCON KR800S", DefaultDeviceProfileDefinitions.CreateTopconKr800Default(), DeviceFixture("Topcon", "KR800S", "M-Serial0036_20131206_213127_TOPCON_KR-800S_.xml") };
         yield return new object[] { "TOPCON KR-1", DefaultDeviceProfileDefinitions.CreateTopconKr1Default(), DeviceFixture("Topcon", "KR1", "M-Serial0001_20190411_120732_TOPCON_KR-1_4430227.xml") };

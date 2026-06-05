@@ -74,7 +74,7 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
-Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P sowie Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
+Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A sowie TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000 und TOP-1000. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
 
 # Profilverwaltung
 
@@ -263,6 +263,14 @@ Huvitz HRK-8000A und HRK-9000A sind als serielle Textprofile fuer Autorefraktion
 Huvitz HNT-1P ist als Tonometer/Pachymeter vorbereitet: Tonometrie geht nach `6205`, Pachymetrie nach `6220`. Huvitz HTR-1A kombiniert REF, KM, Tonometrie und Pachymetrie in einem Profil.
 
 Diese Huvitz-Profile beruhen aktuell auf neutral abgeleiteter Referenzlogik und synthetischen Testfixtures. Echte Praxisrohdateien und MEDISTAR-Importabnahme sollten vor produktiver Nutzung gesammelt und geprueft werden.
+
+# TOMEY CF/TL/MR/TOP
+
+TOMEY CF-2000 ist als serielles Lensmeterprofil vorbereitet. TL-2000C, TL-6000 und TL-7000 sind als dateibasierte Lensmeterprofile vorbereitet. Lensmeter-Werte werden fuer MEDISTAR nach `6228` abgebildet.
+
+TOMEY MR-6000 ist als Kombigeraet vorbereitet: REF geht nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`. TOMEY TOP-1000 ist als Tonometer/Pachymeter vorbereitet und nutzt `6205` und `6220`.
+
+Diese TOMEY-Profile beruhen aktuell auf neutral abgeleiteter Referenzlogik und synthetischen Testfixtures. Echte Praxisrohdateien und MEDISTAR-Importabnahme sollten vor produktiver Nutzung gesammelt und geprueft werden.
 
 # Fehlerbehebung
 

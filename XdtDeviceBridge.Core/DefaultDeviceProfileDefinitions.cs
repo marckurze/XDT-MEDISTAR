@@ -1279,6 +1279,250 @@ public static class DefaultDeviceProfileDefinitions
         return measurements;
     }
 
+    public static DeviceProfileDefinition CreateTomeyCf2000Default()
+    {
+        return CreateTomeyDefault(
+            id: "device-tomey-cf2000-default",
+            name: "TOMEY CF-2000",
+            product: "CF-2000",
+            model: "CF-2000",
+            deviceType: "Lensmeter",
+            description: "Built-in serial text profile for TOMEY CF-2000 lensmeter data derived from neutral reference parser rules. Lensmeter lines map to 6228; practical raw-data validation remains open.",
+            connectionKind: DeviceConnectionKind.SerialRs232,
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 9600,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.Odd,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CR,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            includeLens: true,
+            includeRef: false,
+            includeKm: false,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateTomeyTl2000CDefault()
+    {
+        return CreateTomeyLensFileDefault("device-tomey-tl2000c-default", "TOMEY TL-2000C", "TL-2000C");
+    }
+
+    public static DeviceProfileDefinition CreateTomeyTl6000Default()
+    {
+        return CreateTomeyLensFileDefault("device-tomey-tl6000-default", "TOMEY TL-6000", "TL-6000");
+    }
+
+    public static DeviceProfileDefinition CreateTomeyTl7000Default()
+    {
+        return CreateTomeyLensFileDefault("device-tomey-tl7000-default", "TOMEY TL-7000", "TL-7000");
+    }
+
+    public static DeviceProfileDefinition CreateTomeyMr6000Default()
+    {
+        return CreateTomeyDefault(
+            id: "device-tomey-mr6000-default",
+            name: "TOMEY MR-6000",
+            product: "MR-6000",
+            model: "MR-6000",
+            deviceType: "Autorefraktor/Keratometer/Tonometer/Pachymeter",
+            description: "Built-in XML profile for TOMEY MR-6000 combined REF/KM/IOP/CCT data derived from neutral reference parser rules. REF maps to 6228, KM to 6221, IOP to 6205 and CCT to 6220; practical raw-data validation remains open.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeLens: false,
+            includeRef: true,
+            includeKm: true,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateTomeyTop1000Default()
+    {
+        return CreateTomeyDefault(
+            id: "device-tomey-top1000-default",
+            name: "TOMEY TOP-1000",
+            product: "TOP-1000",
+            model: "TOP-1000",
+            deviceType: "Tonometer/Pachymeter",
+            description: "Built-in XML profile for TOMEY TOP-1000 tonometry and pachymetry data derived from neutral reference parser rules. IOP maps to 6205 and CCT to 6220; practical raw-data validation remains open.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeLens: false,
+            includeRef: false,
+            includeKm: false,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static DeviceProfileDefinition CreateTomeyLensFileDefault(string id, string name, string model)
+    {
+        return CreateTomeyDefault(
+            id: id,
+            name: name,
+            product: model,
+            model: model,
+            deviceType: "Lensmeter",
+            description: $"Built-in file profile for TOMEY {model} lensmeter CSV data derived from neutral reference parser rules. Lensmeter lines map to 6228; practical raw-data validation remains open.",
+            connectionKind: DeviceConnectionKind.FileImport,
+            serialSettings: null,
+            includeLens: true,
+            includeRef: false,
+            includeKm: false,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static DeviceProfileDefinition CreateTomeyDefault(
+        string id,
+        string name,
+        string product,
+        string model,
+        string deviceType,
+        string description,
+        DeviceConnectionKind connectionKind,
+        SerialCommunicationSettings? serialSettings,
+        bool includeLens,
+        bool includeRef,
+        bool includeKm,
+        bool includeTonoPachy,
+        DateTimeOffset timestamp)
+    {
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "TOMEY",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "TOMEY",
+            Model: model,
+            DeviceType: deviceType,
+            ParserMode: TomeyDeviceParser.ParserMode,
+            Measurements: CreateTomeyMeasurements(product, includeLens, includeRef, includeKm, includeTonoPachy),
+            SupportedExaminationTypes: CreateTomeySupportedExaminationTypes(includeLens, includeRef, includeKm, includeTonoPachy),
+            CanContainMultipleExaminationTypes: (includeRef && includeKm) || includeTonoPachy,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: connectionKind,
+            SerialSettings: serialSettings);
+    }
+
+    private static IReadOnlyList<string> CreateTomeySupportedExaminationTypes(
+        bool includeLens,
+        bool includeRef,
+        bool includeKm,
+        bool includeTonoPachy)
+    {
+        var values = new List<string>();
+        if (includeLens)
+        {
+            values.AddRange(new[] { "LM", "Lensmeter" });
+        }
+
+        if (includeRef)
+        {
+            values.AddRange(new[] { "REF", "Autorefraktor" });
+        }
+
+        if (includeKm)
+        {
+            values.AddRange(new[] { "KM", "Keratometer" });
+        }
+
+        if (includeTonoPachy)
+        {
+            values.AddRange(new[] { "TM", "Tonometrie", "CCT", "Pachymetrie" });
+        }
+
+        return values;
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateTomeyMeasurements(
+        string product,
+        bool includeLens,
+        bool includeRef,
+        bool includeKm,
+        bool includeTonoPachy)
+    {
+        var prefix = $"tomey-{product.Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase).ToLowerInvariant()}";
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "TOMEY common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "TOMEY model name.")
+        };
+
+        if (includeLens)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-lm-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"LM {eye} Sphere", $"Measure[@Type='LM']/LM/{eye}/Sphere", "LM", eye, "dpt", false, "Lensmeter sphere from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"LM {eye} Cylinder", $"Measure[@Type='LM']/LM/{eye}/Cylinder", "LM", eye, "dpt", false, "Lensmeter cylinder from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-axis", $"LM {eye} Axis", $"Measure[@Type='LM']/LM/{eye}/Axis", "LM", eye, "deg", false, "Lensmeter axis from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-add", $"LM {eye} ADD", $"Measure[@Type='LM']/LM/{eye}/ADD", "LM", eye, "dpt", false, "Lensmeter addition from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-add2", $"LM {eye} ADD2", $"Measure[@Type='LM']/LM/{eye}/ADD2", "LM", eye, "dpt", false, "Second lensmeter addition from TOMEY data when present."));
+                measurements.Add(new($"{eyePrefix}-pd", $"LM {eye} PD", $"Measure[@Type='LM']/LM/{eye}/PD", "LM", eye, "mm", false, "Lensmeter PD from TOMEY data when present."));
+                measurements.Add(new($"{eyePrefix}-medistar-line", $"LM {eye} MEDISTAR-Zeile", $"Measure[@Type='LM']/LM/{eye}/MedistarLine", "LM", eye, string.Empty, false, "Prepared MEDISTAR 6228 lensmeter line."));
+            }
+        }
+
+        if (includeRef)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-ref-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"REF {eye} Sphere", $"Measure[@Type='REF']/REF/{eye}/Sphere", "REF", eye, "dpt", false, "REF sphere from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"REF {eye} Cylinder", $"Measure[@Type='REF']/REF/{eye}/Cylinder", "REF", eye, "dpt", false, "REF cylinder from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-axis", $"REF {eye} Axis", $"Measure[@Type='REF']/REF/{eye}/Axis", "REF", eye, "deg", false, "REF axis from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-medistar-line", $"REF {eye} MEDISTAR-Zeile", $"Measure[@Type='REF']/REF/{eye}/MedistarLine", "REF", eye, string.Empty, false, "Prepared MEDISTAR 6228 REF line."));
+            }
+        }
+
+        if (includeKm)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-km-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-r1-radius", $"KM {eye} R1 Radius", $"Measure[@Type='KM']/KM/{eye}/R1/Radius", "KM", eye, "mm", false, "KM R1 radius from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-r1-power", $"KM {eye} R1 Power", $"Measure[@Type='KM']/KM/{eye}/R1/Power", "KM", eye, "dpt", false, "KM R1 power from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-r2-radius", $"KM {eye} R2 Radius", $"Measure[@Type='KM']/KM/{eye}/R2/Radius", "KM", eye, "mm", false, "KM R2 radius from TOMEY data."));
+                measurements.Add(new($"{eyePrefix}-r2-power", $"KM {eye} R2 Power", $"Measure[@Type='KM']/KM/{eye}/R2/Power", "KM", eye, "dpt", false, "KM R2 power from TOMEY data."));
+            }
+
+            measurements.Add(new($"{prefix}-km-radii-line", "KM MEDISTAR R1/R2-Zeile", "Measure[@Type='KM']/KM/MedistarLine1", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 KM R1/R2 line."));
+            measurements.Add(new($"{prefix}-km-average-line", "KM MEDISTAR AV/CYL-Zeile", "Measure[@Type='KM']/KM/MedistarLine2", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 KM average/cylinder line."));
+        }
+
+        if (includeTonoPachy)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var tonoPrefix = $"{prefix}-tono-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{tonoPrefix}-average", $"Tonometrie {eye} Mittelwert", $"Measure[@Type='TM']/Tono/{eye}/Average", "TM", eye, "mmHg", false, "Average IOP value from TOMEY data."));
+                var pachyPrefix = $"{prefix}-pachy-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{pachyPrefix}-average", $"Pachymetrie {eye} Mittelwert", $"Measure[@Type='CCT']/Pachy/{eye}/Average", "CCT", eye, "um", false, "Average CCT value from TOMEY data."));
+            }
+
+            measurements.Add(new($"{prefix}-tono-line", "Tonometrie MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 tonometry line."));
+            measurements.Add(new($"{prefix}-tono-corrected-line", "Tonometrie Korrektur MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/CorrectedLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 corrected tonometry line."));
+            measurements.Add(new($"{prefix}-pachy-line", "Pachymetrie MEDISTAR-Zeile", "Measure[@Type='CCT']/Pachy/MedistarLine", "CCT", string.Empty, string.Empty, false, "Prepared MEDISTAR 6220 pachymetry line."));
+        }
+
+        return measurements;
+    }
+
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

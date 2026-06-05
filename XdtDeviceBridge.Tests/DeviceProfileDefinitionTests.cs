@@ -772,6 +772,12 @@ public sealed class DeviceProfileDefinitionTests
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk9000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(),
+            DefaultDeviceProfileDefinitions.CreateTomeyCf2000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTl2000CDefault(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTl6000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTl7000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyMr6000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default(),
             DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(),
             DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault()
         };

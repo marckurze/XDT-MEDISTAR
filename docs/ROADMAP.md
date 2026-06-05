@@ -406,6 +406,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 - Produktive Attachment-Automatik: Pflicht-Anhang vorhanden/fehlt wurde für MEDISTAR + NIDEK ARK1S praktisch geprüft; weitere E2E-Fälle bleiben offen.
 - Langsam schreibende Geräte: Stabilitätszeiten müssen im Praxisbetrieb je Gerät justiert werden.
 - Huvitz-Referenzdaten: HRK-8000A, HRK-9000A, HNT-1P und HTR-1A sind als serielle Text-BuiltIns mit synthetischen Fixtures vorbereitet. Die naechste Entscheidung ist keine weitere Theoriearbeit, sondern echte Praxisrohdateien sammeln und gegen `HuvitzTextDeviceParser` validieren.
+- TOMEY-Referenzdaten: CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000 und TOP-1000 sind als BuiltIns mit synthetischen Fixtures vorbereitet. Die naechste Entscheidung ist Praxisrohdaten sammeln und gegen `TomeyDeviceParser` validieren; AP-2500, EM-3000/EM-4000 und TAP-2000 bleiben Kandidaten ohne produktive BuiltIn-Freigabe.
 
 ## 8. Abnahmekriterien für nächsten Meilenstein
 

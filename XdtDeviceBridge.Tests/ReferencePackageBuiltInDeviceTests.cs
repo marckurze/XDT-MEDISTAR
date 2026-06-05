@@ -7,6 +7,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
 {
     private readonly XmlDeviceParser _parser = new();
     private readonly HuvitzTextDeviceParser _huvitzParser = new();
+    private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
 
@@ -209,6 +210,94 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void TomeyCf2000Profile_ShouldParseAndExportLensmeterLines()
+    {
+        var parseResult = _tomeyParser.ParseFile(GetTomeyFixturePath("CF2000", "CF2000_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTomeyCf2000Default();
+        var xdt = BuildXdt(CreatePatientData("CF2000"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "CF-2000");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/Sphere" && measurement.Value == "+6.50");
+        Assert.Contains("6228R.:S=+ 6.50 Z=- 1.75*172 P=0.75 OUT 1.00 UP A=+ 0.25 A2=+ 1.25", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 6.00 Z=- 2.25*  2 P=0.50 OUT 1.50 UP A=+ 0.25", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("TL2000C", "TL2000C_reference.csv", "TL-2000C", "6228R.:S=+ 1.00 Z=- 0.25*103 P=0.75 OUT 1.00 UP PD= 59 A=+ 0.25 A2=+ 1.25", "6228L.:S=+ 0.25 Z=- 1.25* 62 A=+ 0.25")]
+    [InlineData("TL6000", "TL6000_reference.csv", "TL-6000", "6228R.:S=+ 6.50 Z=- 1.75*172 P=0.75 OUT 1.00 UP PD= 59", "6228L.:S=+ 6.00 Z=- 2.25*  2 P=0.50 OUT 1.50 UP")]
+    [InlineData("TL7000", "TL7000_reference.csv", "TL-7000", "6228R.:S=+ 1.00 Z=- 0.25*103", "6228L.:S=+ 0.25 Z=- 1.25* 62")]
+    public void TomeyTlProfiles_ShouldParseAndExportLensmeterLines(
+        string familyFolder,
+        string fileName,
+        string model,
+        string expectedRight,
+        string expectedLeft)
+    {
+        var parseResult = _tomeyParser.ParseFile(GetTomeyFixturePath(familyFolder, fileName));
+        var exportProfile = model switch
+        {
+            "TL-6000" => DefaultExportProfileDefinitions.CreateMedistarTomeyTl6000Default(),
+            "TL-7000" => DefaultExportProfileDefinitions.CreateMedistarTomeyTl7000Default(),
+            _ => DefaultExportProfileDefinitions.CreateMedistarTomeyTl2000CDefault()
+        };
+        var xdt = BuildXdt(CreatePatientData(model), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == model);
+        Assert.Contains(expectedRight, xdt, StringComparison.Ordinal);
+        Assert.Contains(expectedLeft, xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TomeyMr6000Profile_ShouldParseAndExportCombinedMeasurementsByMeasurementType()
+    {
+        var parseResult = _tomeyParser.ParseFile(GetTomeyFixturePath("MR6000", "MR6000_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTomeyMr6000Default();
+        var xdt = BuildXdt(CreatePatientData("MR6000"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "MR-6000");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='CCT']/Pachy/MedistarLine" && measurement.Value == "RA: 0.559 // LA: 0.560");
+        Assert.Contains("6228R.:S=- 3.75 Z=- 1.25* 98 PD= 66 VD= 12.00", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 4.25 Z=- 2.00*105", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.67 44.00 *173 R2=7.57 44.50 * 83 // L: R1=7.68 44.00 *175 R2=7.52 45.00 * 85", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: AV=7.62 44.25 CYL=-0.50 173 // L: AV=7.60 44.50 CYL=-1.00 175", xdt, StringComparison.Ordinal);
+        Assert.Contains("6205R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg", xdt, StringComparison.Ordinal);
+        Assert.Contains("6205PR: Gemessen = 12.7 mmHg; Korrigiert = 12.3 mmHg; CCT = 559um", xdt, StringComparison.Ordinal);
+        Assert.Contains("6220RA: 0.559 // LA: 0.560", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TomeyTop1000Profile_ShouldParseAndExportTonometrieAndPachymetrieLines()
+    {
+        var parseResult = _tomeyParser.ParseFile(GetTomeyFixturePath("TOP1000", "TOP1000_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarTomeyTop1000Default();
+        var xdt = BuildXdt(CreatePatientData("TOP1000"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "TOP-1000");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine" && measurement.Value == "R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='CCT']/Pachy/MedistarLine" && measurement.Value == "RA: 0.559 // LA: 0.560");
+        Assert.Contains("6205R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg", xdt, StringComparison.Ordinal);
+        Assert.Contains("6205PR: Gemessen = 12.7 mmHg; Korrigiert = 12.3 mmHg; CCT = 559um", xdt, StringComparison.Ordinal);
+        Assert.Contains("6220RA: 0.559 // LA: 0.560", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NewReferenceBackedBuiltIns_ShouldBeValid()
     {
         var deviceProfiles = new[]
@@ -219,7 +308,13 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk9000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(),
-            DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault()
+            DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(),
+            DefaultDeviceProfileDefinitions.CreateTomeyCf2000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTl2000CDefault(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTl6000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTl7000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyMr6000Default(),
+            DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default()
         };
         var exportProfiles = new[]
         {
@@ -229,7 +324,13 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
-            DefaultExportProfileDefinitions.CreateMedistarHuvitzHtr1ADefault()
+            DefaultExportProfileDefinitions.CreateMedistarHuvitzHtr1ADefault(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyCf2000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyTl2000CDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyTl6000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyTl7000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyMr6000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarTomeyTop1000Default()
         };
         var interfaceProfiles = new[]
         {
@@ -239,7 +340,13 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
-            DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHtr1ADefault()
+            DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHtr1ADefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyCf2000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl2000CDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl6000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl7000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyMr6000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTop1000Default()
         };
 
         Assert.All(deviceProfiles, profile => Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile)));
@@ -265,6 +372,25 @@ public sealed class ReferencePackageBuiltInDeviceTests
         Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
         Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
         Assert.Contains("6228R.:S=+ 0.75 Z=- 1.25*110 PD= 63", result.ExportContent, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TomeyPreview_ShouldAcceptNonXmlDeviceFileInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = GetTomeyFixturePath("TL2000C", "TL2000C_reference.csv");
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarTomeyTl2000CDefault(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateTomeyTl2000CDefault(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarTomeyTl2000CDefault(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/MedistarLine");
+        Assert.Contains("6228R.:S=+ 1.00 Z=- 0.25*103 P=0.75 OUT 1.00 UP PD= 59 A=+ 0.25 A2=+ 1.25", result.ExportContent, StringComparison.Ordinal);
     }
 
     private static PatientData CreatePatientData(string examinationType)
@@ -305,6 +431,11 @@ public sealed class ReferencePackageBuiltInDeviceTests
     private static string GetHuvitzFixturePath(string familyFolder, string fileName)
     {
         return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Huvitz", familyFolder, fileName);
+    }
+
+    private static string GetTomeyFixturePath(string familyFolder, string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Tomey", familyFolder, fileName);
     }
 
     private static string WriteTempGdt()

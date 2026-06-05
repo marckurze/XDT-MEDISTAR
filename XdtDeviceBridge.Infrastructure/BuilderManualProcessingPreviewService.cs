@@ -9,6 +9,7 @@ public sealed class BuilderManualProcessingPreviewService
     private readonly MedistarHistoricalMeasurementParser _medistarHistoricalMeasurementParser = new();
     private readonly XmlDeviceParser _xmlDeviceParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextDeviceParser = new();
+    private readonly TomeyDeviceParser _tomeyDeviceParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -111,6 +112,23 @@ public sealed class BuilderManualProcessingPreviewService
             try
             {
                 return _huvitzTextDeviceParser.ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                    });
+            }
+        }
+
+        if (TomeyDeviceParser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return _tomeyDeviceParser.ParseFile(deviceFilePath);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {

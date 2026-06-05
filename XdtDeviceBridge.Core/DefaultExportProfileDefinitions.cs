@@ -1498,4 +1498,161 @@ public static class DefaultExportProfileDefinitions
 
         return rules;
     }
+
+    public static ExportProfileDefinition CreateMedistarTomeyCf2000Default()
+    {
+        return CreateMedistarTomeyDefault(
+            id: "export-medistar-tomey-cf2000-default",
+            name: "MEDISTAR + TOMEY CF-2000 Export",
+            product: "MEDISTAR/TOMEY CF-2000",
+            deviceProfileId: "device-tomey-cf2000-default",
+            description: "Built-in MEDISTAR export profile for TOMEY CF-2000 text data. Lensmeter lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeLens: true,
+            includeRef: false,
+            includeKm: false,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarTomeyTl2000CDefault()
+    {
+        return CreateMedistarTomeyLensDefault("export-medistar-tomey-tl2000c-default", "MEDISTAR + TOMEY TL-2000C Export", "MEDISTAR/TOMEY TL-2000C", "device-tomey-tl2000c-default", "TL-2000C");
+    }
+
+    public static ExportProfileDefinition CreateMedistarTomeyTl6000Default()
+    {
+        return CreateMedistarTomeyLensDefault("export-medistar-tomey-tl6000-default", "MEDISTAR + TOMEY TL-6000 Export", "MEDISTAR/TOMEY TL-6000", "device-tomey-tl6000-default", "TL-6000");
+    }
+
+    public static ExportProfileDefinition CreateMedistarTomeyTl7000Default()
+    {
+        return CreateMedistarTomeyLensDefault("export-medistar-tomey-tl7000-default", "MEDISTAR + TOMEY TL-7000 Export", "MEDISTAR/TOMEY TL-7000", "device-tomey-tl7000-default", "TL-7000");
+    }
+
+    public static ExportProfileDefinition CreateMedistarTomeyMr6000Default()
+    {
+        return CreateMedistarTomeyDefault(
+            id: "export-medistar-tomey-mr6000-default",
+            name: "MEDISTAR + TOMEY MR-6000 Export",
+            product: "MEDISTAR/TOMEY MR-6000",
+            deviceProfileId: "device-tomey-mr6000-default",
+            description: "Built-in MEDISTAR export profile for TOMEY MR-6000 XML data. REF maps to 6228, KM to 6221, tonometry to 6205 and pachymetry/CCT to 6220. No 6330 or artificial separators are emitted.",
+            includeLens: false,
+            includeRef: true,
+            includeKm: true,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarTomeyTop1000Default()
+    {
+        return CreateMedistarTomeyDefault(
+            id: "export-medistar-tomey-top1000-default",
+            name: "MEDISTAR + TOMEY TOP-1000 Export",
+            product: "MEDISTAR/TOMEY TOP-1000",
+            deviceProfileId: "device-tomey-top1000-default",
+            description: "Built-in MEDISTAR export profile for TOMEY TOP-1000 XML data. Tonometry maps to 6205 and pachymetry/CCT maps to 6220. No 6330 or artificial separators are emitted.",
+            includeLens: false,
+            includeRef: false,
+            includeKm: false,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static ExportProfileDefinition CreateMedistarTomeyLensDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string model)
+    {
+        return CreateMedistarTomeyDefault(
+            id: id,
+            name: name,
+            product: product,
+            deviceProfileId: deviceProfileId,
+            description: $"Built-in MEDISTAR export profile for TOMEY {model} lensmeter data. Lensmeter lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeLens: true,
+            includeRef: false,
+            includeKm: false,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static ExportProfileDefinition CreateMedistarTomeyDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        bool includeLens,
+        bool includeRef,
+        bool includeKm,
+        bool includeTonoPachy,
+        DateTimeOffset timestamp)
+    {
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarTomeyRules(includeLens, includeRef, includeKm, includeTonoPachy));
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarTomeyRules(
+        bool includeLens,
+        bool includeRef,
+        bool includeKm,
+        bool includeTonoPachy)
+    {
+        var rules = new List<ExportRuleDefinition>
+        {
+            new("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+            new("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+            new("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+            new("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+            new("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+            new("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS.")
+        };
+
+        var sortOrder = 7;
+        if (includeLens)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultRight", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right lensmeter line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultLeft", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left lensmeter line from TOMEY data."));
+        }
+
+        if (includeRef)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultRight", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye REF line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultLeft", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye REF line from TOMEY data."));
+        }
+
+        if (includeKm)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryRadii", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine1", "{value}", sortOrder++, true, "MEDISTAR 6221 KM R1/R2 line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryAverage", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine2", "{value}", sortOrder++, true, "MEDISTAR 6221 KM average/cylinder line from TOMEY data."));
+        }
+
+        if (includeTonoPachy)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "Tonometry", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/TonoListLine", "{value}", sortOrder++, true, "MEDISTAR 6205 tonometry line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "TonometryCorrected", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/CorrectedLine", "{value}", sortOrder++, true, "MEDISTAR 6205 corrected tonometry line from TOMEY data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6220", "Pachymetry", ExportRuleType.Template, "Device.Measure[@Type='CCT']/Pachy/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6220 pachymetry line from TOMEY data."));
+        }
+
+        return rules;
+    }
 }

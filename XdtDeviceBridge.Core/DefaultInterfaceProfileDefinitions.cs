@@ -785,6 +785,140 @@ public static class DefaultInterfaceProfileDefinitions
             WriteTimeoutMilliseconds: 1000);
     }
 
+    public static InterfaceProfileDefinition CreateMedistarTomeyCf2000Default()
+    {
+        return CreateMedistarTomeySerialDefault(
+            id: "interface-medistar-tomey-cf2000-default",
+            name: "MEDISTAR + TOMEY CF-2000",
+            product: "MEDISTAR/TOMEY CF-2000",
+            deviceProfileId: "device-tomey-cf2000-default",
+            exportProfileId: "export-medistar-tomey-cf2000-default",
+            description: "Built-in inactive serial profile for TOMEY CF-2000 lensmeter text imports. COM defaults use 9600 8O1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarTomeyTl2000CDefault()
+    {
+        return CreateMedistarTomeyFileDefault("interface-medistar-tomey-tl2000c-default", "MEDISTAR + TOMEY TL-2000C", "MEDISTAR/TOMEY TL-2000C", "device-tomey-tl2000c-default", "export-medistar-tomey-tl2000c-default", "Built-in inactive file profile for TOMEY TL-2000C lensmeter CSV imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarTomeyTl6000Default()
+    {
+        return CreateMedistarTomeyFileDefault("interface-medistar-tomey-tl6000-default", "MEDISTAR + TOMEY TL-6000", "MEDISTAR/TOMEY TL-6000", "device-tomey-tl6000-default", "export-medistar-tomey-tl6000-default", "Built-in inactive file profile for TOMEY TL-6000 lensmeter CSV imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarTomeyTl7000Default()
+    {
+        return CreateMedistarTomeyFileDefault("interface-medistar-tomey-tl7000-default", "MEDISTAR + TOMEY TL-7000", "MEDISTAR/TOMEY TL-7000", "device-tomey-tl7000-default", "export-medistar-tomey-tl7000-default", "Built-in inactive file profile for TOMEY TL-7000 lensmeter CSV imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarTomeyMr6000Default()
+    {
+        return CreateMedistarTomeyFileDefault("interface-medistar-tomey-mr6000-default", "MEDISTAR + TOMEY MR-6000", "MEDISTAR/TOMEY MR-6000", "device-tomey-mr6000-default", "export-medistar-tomey-mr6000-default", "Built-in inactive file profile for TOMEY MR-6000 XML imports.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarTomeyTop1000Default()
+    {
+        return CreateMedistarTomeyFileDefault("interface-medistar-tomey-top1000-default", "MEDISTAR + TOMEY TOP-1000", "MEDISTAR/TOMEY TOP-1000", "device-tomey-top1000-default", "export-medistar-tomey-top1000-default", "Built-in inactive file profile for TOMEY TOP-1000 XML imports.");
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarTomeyFileDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: $"{description} Practical raw-data validation remains open.",
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: $"{description} Practical raw-data validation remains open.");
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarTomeySerialDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description,
+        DateTimeOffset timestamp)
+    {
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description,
+            SerialSettings: new SerialCommunicationSettings(
+                BaudRate: 9600,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.Odd,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CR,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000));
+    }
+
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

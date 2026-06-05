@@ -11,6 +11,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
     private readonly XmlDeviceParser _parser;
     private readonly NidekRtSerialPhoropterParser _rtSerialParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
+    private readonly TomeyDeviceParser _tomeyParser = new();
 
     public XdtBaukastenDeviceCompatibilityService()
         : this(new XmlDeviceParser())
@@ -76,6 +77,21 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 }
 
                 return EvaluateForWorkbench(deviceProfile, huvitzResult.Measurements);
+            }
+
+            if (TomeyDeviceParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var tomeyResult = _tomeyParser.ParseFile(deviceFilePath);
+                if (tomeyResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
+                        tomeyResult.Measurements,
+                        FindCompany(tomeyResult.Measurements),
+                        FindModelName(tomeyResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, tomeyResult.Measurements);
             }
 
             var parseResult = _parser.ParseFile(deviceFilePath);

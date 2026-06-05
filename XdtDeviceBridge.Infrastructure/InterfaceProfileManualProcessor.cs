@@ -10,6 +10,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     private readonly XmlDeviceParser _xmlDeviceParser = new();
     private readonly NidekRtSerialPhoropterParser _nidekRtSerialParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
+    private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -34,6 +35,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var issues = new List<ProcessingIssue>();
         var usesNidekRtSerialParser = UsesNidekRtSerialParser(interfaceProfile, exportProfile);
         var usesHuvitzTextParser = UsesHuvitzTextParser(interfaceProfile, exportProfile);
+        var usesTomeyParser = UsesTomeyParser(interfaceProfile, exportProfile);
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ExportFolder))
         {
@@ -52,6 +54,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         if (!isAttachmentOnlyMode
             && !usesNidekRtSerialParser
             && !usesHuvitzTextParser
+            && !usesTomeyParser
             && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {
             return CreateFailureResult(
@@ -89,6 +92,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                 ? _nidekRtSerialParser.ParseFile(deviceFilePath)
                 : usesHuvitzTextParser
                     ? _huvitzTextParser.ParseFile(deviceFilePath)
+                    : usesTomeyParser
+                        ? _tomeyParser.ParseFile(deviceFilePath)
             : _xmlDeviceParser.ParseFile(deviceFilePath);
         if (!isAttachmentOnlyMode)
         {
@@ -847,6 +852,14 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             || IsHuvitzId(exportProfile.SourceDeviceProfileId);
     }
 
+    private static bool UsesTomeyParser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsTomeyId(interfaceProfile.DeviceProfileId)
+            || IsTomeyId(exportProfile.SourceDeviceProfileId);
+    }
+
     private static bool IsNidekRtSerialId(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
@@ -858,5 +871,11 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("huvitz", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTomeyId(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("tomey", StringComparison.OrdinalIgnoreCase);
     }
 }

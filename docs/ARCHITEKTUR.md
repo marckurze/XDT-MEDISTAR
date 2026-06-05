@@ -107,6 +107,10 @@ Die serielle NIDEK-RT-Phoropterfamilie RT-2100 / RT-3100 / RT-5100 ist darauf au
 
 `HuvitzTextDeviceParser` ist als isolierter Textparser fuer aus Referenzlogik abgeleitete Huvitz-RS232-Daten vorbereitet. Er greift nur bei Geraeteprofilen mit Parsermodus `HuvitzText` und veraendert bestehende XML-, NIDEK-RT-, TOPCON- oder Dokumentgeraete-Parser nicht. Die erste abgesicherte Familie umfasst HRK-8000A/HRK-9000A fuer REF/KM, HNT-1P fuer Tonometrie/Pachymetrie und HTR-1A als Kombigeraet. Die Parserausgabe wird in normale `MeasurementValue`-SourcePaths ueberfuehrt; Exportprofile erzeugen daraus `6228`, `6221`, `6205` und `6220`. Die aktuellen Fixtures sind synthetisch aus Referenzlogik und muessen spaeter durch echte Praxisrohdateien ergaenzt werden.
 
+### 1.5b TOMEY Referenzdatenfamilie
+
+`TomeyDeviceParser` ist als isolierter Parser fuer aus Referenzlogik abgeleitete TOMEY-Daten vorbereitet. Er greift nur bei Geraeteprofilen mit Parsermodus `Tomey` und veraendert bestehende XML-, NIDEK-RT-, TOPCON-, Huvitz- oder Dokumentgeraete-Parser nicht. Die erste abgesicherte Familie umfasst CF-2000 als serielles Lensmeter, TL-2000C/TL-6000/TL-7000 als CSV-Lensmeterdateien, MR-6000 als REF/KM/Tonometrie/Pachymetrie-Kombigeraet und TOP-1000 als Tonometer/Pachymeter. Die Parserausgabe wird in normale `MeasurementValue`-SourcePaths ueberfuehrt; Exportprofile erzeugen daraus `6228`, `6221`, `6205` und `6220`. Die aktuellen Fixtures sind synthetisch aus Referenzlogik und muessen spaeter durch echte Praxisrohdateien ergaenzt werden.
+
 ### 1.6 NIDEK RT-6100 bidirektional
 
 NIDEK RT-6100 ist als bidirektionaler LAN-/MEM-200-Phoropter-Kandidat vorbereitet. Die Architektur folgt dem CV-5000-Zweiphasenmodell, bleibt aber geraetespezifisch:

@@ -72,7 +72,9 @@ public partial class NewDeviceProfileDialog : Window
             ? "XML"
             : parserMode.Equals("Csv", StringComparison.OrdinalIgnoreCase)
                 ? "CSV"
-                : parserMode;
+                : parserMode.Equals(TomeyDeviceParser.ParserMode, StringComparison.OrdinalIgnoreCase)
+                    ? "TOMEY"
+                    : parserMode;
     }
 
     private DeviceConnectionKind ReadConnectionKind()

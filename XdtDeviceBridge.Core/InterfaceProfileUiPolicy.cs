@@ -39,6 +39,12 @@ public static class InterfaceProfileUiPolicy
     public const string HuvitzHrk9000ADeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-hrk9000a-default.png";
     public const string HuvitzHnt1PDeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-hnt1p-default.png";
     public const string HuvitzHtr1ADeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-htr1a-default.png";
+    public const string TomeyCf2000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-cf2000-default.png";
+    public const string TomeyTl2000CDeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-tl2000c-default.png";
+    public const string TomeyTl6000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-tl6000-default.png";
+    public const string TomeyTl7000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-tl7000-default.png";
+    public const string TomeyMr6000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-mr6000-default.png";
+    public const string TomeyTop1000DeviceImagePath = BuiltInDeviceImageRoot + "device-tomey-top1000-default.png";
     public const string TopconCl300DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-cl300-default.png";
     public const string TopconSolosDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-solos-default.png";
     public const string TopconKr800DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-kr800-default.png";
@@ -63,6 +69,12 @@ public static class InterfaceProfileUiPolicy
             ["device-huvitz-hrk9000a-default"] = HuvitzHrk9000ADeviceImagePath,
             ["device-huvitz-hnt1p-default"] = HuvitzHnt1PDeviceImagePath,
             ["device-huvitz-htr1a-default"] = HuvitzHtr1ADeviceImagePath,
+            ["device-tomey-cf2000-default"] = TomeyCf2000DeviceImagePath,
+            ["device-tomey-tl2000c-default"] = TomeyTl2000CDeviceImagePath,
+            ["device-tomey-tl6000-default"] = TomeyTl6000DeviceImagePath,
+            ["device-tomey-tl7000-default"] = TomeyTl7000DeviceImagePath,
+            ["device-tomey-mr6000-default"] = TomeyMr6000DeviceImagePath,
+            ["device-tomey-top1000-default"] = TomeyTop1000DeviceImagePath,
             ["device-topcon-cl300-default"] = TopconCl300DeviceImagePath,
             ["device-topcon-solos-default"] = TopconSolosDeviceImagePath,
             ["device-topcon-kr800-default"] = TopconKr800DeviceImagePath,

@@ -544,6 +544,17 @@ Aus neutral ausgewerteter Huvitz-Referenzlogik sind vier serielle Text-BuiltIns 
 
 Der neue `HuvitzTextDeviceParser` ist in Baukasten und manueller Verarbeitung angebunden und akzeptiert Huvitz-Textdaten ohne XML-Zwang. Die Tests nutzen synthetische Fixtures aus der Referenzlogik; echte Praxisrohdateien und MEDISTAR-Importabnahme bleiben offen. HLM-1/HLM-7000P/HLM-9000 sowie HDR-7000/HDR-9000 sind weiterhin Kandidaten, aber noch keine BuiltIns.
 
+## 8b. TOMEY-Referenzdatenbatch
+
+Aus neutral ausgewerteter TOMEY-Referenzlogik sind sechs BuiltIns vorbereitet:
+
+- TOMEY CF-2000: serielles Lensmeterprofil, Lensmeter nach `6228`, Default RS232 `9600 8O1`.
+- TOMEY TL-2000C, TL-6000 und TL-7000: dateibasierte TL-Lensmeterprofile, Lensmeter nach `6228`.
+- TOMEY MR-6000: REF nach `6228`, KM nach `6221`, Tonometrie nach `6205`, Pachymetrie/CCT nach `6220`.
+- TOMEY TOP-1000: Tonometrie nach `6205`, Pachymetrie/CCT nach `6220`.
+
+Der neue `TomeyDeviceParser` ist in Baukasten und manueller Verarbeitung angebunden und akzeptiert TOMEY-Text-, CSV- und XML-Daten ohne pauschalen XML-Zwang. Die Tests nutzen synthetische Fixtures aus der Referenzlogik; echte Praxisrohdateien und MEDISTAR-Importabnahme bleiben offen. AP-2500, EM-3000/EM-4000 und TAP-2000 sind weiterhin Kandidaten, aber noch keine BuiltIns.
+
 ## 9. Empfohlener naechster Codex-Schritt
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:
