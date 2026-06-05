@@ -447,7 +447,7 @@ public sealed class UserDefinedProfileCreationService
             ExportFolder: string.Empty,
             ArchiveFolder: string.Empty,
             ErrorFolder: string.Empty,
-            ClearAisImportFolderBeforeProcessing: false,
+            ClearAisImportFolderBeforeProcessing: true,
             ClearDeviceImportFolderBeforeProcessing: false,
             ClearExportFolderAfterSuccessfulTransfer: false,
             ArchiveProcessedFiles: false,

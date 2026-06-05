@@ -129,7 +129,7 @@ public sealed class ActiveInterfaceProfileStatusService
         InterfaceProfileDefinition profile,
         LicensedDeviceState? licenseState)
     {
-        if (!profile.IsLicenseRequired)
+        if (!InterfaceProfileLicensePolicy.IsLicenseRequired(profile))
         {
             return "Nicht lizenzpflichtig";
         }
@@ -153,7 +153,7 @@ public sealed class ActiveInterfaceProfileStatusService
         LicensedDeviceState? licenseState)
     {
         var hasFolderIssue = !string.Equals(folderStatus, "Ordner konfiguriert", StringComparison.Ordinal);
-        var hasLicenseIssue = profile.IsLicenseRequired
+        var hasLicenseIssue = InterfaceProfileLicensePolicy.IsLicenseRequired(profile)
             && licenseState?.IsCoveredByLicense != true
             && licenseState?.IsInGracePeriod != true;
 

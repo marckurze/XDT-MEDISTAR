@@ -28,7 +28,6 @@ public sealed class LicenseRequestBuilder
         }
 
         var devices = interfaceProfiles
-            .Where(profile => profile.IsLicenseRequired)
             .Select(profile => new LicenseRequestDevice(
                 Id: profile.Metadata.Id,
                 Name: profile.Metadata.Name,
@@ -36,7 +35,7 @@ public sealed class LicenseRequestBuilder
                 Model: string.Empty,
                 ProfileId: profile.Metadata.Id,
                 IsActive: profile.IsActive,
-                IsLicenseRequired: profile.IsLicenseRequired))
+                IsLicenseRequired: InterfaceProfileLicensePolicy.IsLicenseRequired(profile)))
             .ToArray();
 
         var activeLicensedDeviceCount = devices.Count(device => device.IsActive && device.IsLicenseRequired);
@@ -88,7 +87,6 @@ public sealed class LicenseRequestBuilder
             StringComparer.OrdinalIgnoreCase);
 
         var devices = interfaceProfiles
-            .Where(profile => profile.IsLicenseRequired)
             .Select(profile =>
             {
                 deviceProfilesById.TryGetValue(profile.DeviceProfileId, out var deviceProfile);
@@ -101,7 +99,7 @@ public sealed class LicenseRequestBuilder
                     Model: deviceProfile?.Model ?? string.Empty,
                     ProfileId: profile.Metadata.Id,
                     IsActive: profile.IsActive,
-                    IsLicenseRequired: profile.IsLicenseRequired,
+                    IsLicenseRequired: InterfaceProfileLicensePolicy.IsLicenseRequired(profile),
                     InterfaceProfileId: profile.Metadata.Id,
                     DisplayName: profile.Metadata.Name,
                     DeviceProfileId: profile.DeviceProfileId,

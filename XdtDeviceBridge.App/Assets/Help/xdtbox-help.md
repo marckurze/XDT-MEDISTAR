@@ -126,6 +126,12 @@ Ein Schnittstellenprofil verbindet AIS-Profil, Geräteprofil und Exportprofil. E
 
 Ein neues Schnittstellenprofil wird als UserDefined und inaktiv angelegt. Konfiguration und produktive Aktivierung sind getrennte Schritte.
 
+Aktive Schnittstellenprofile zaehlen immer als Geraeteanbindung. Der fruehere Lizenzpflicht-Haken wird in der App nicht mehr angezeigt; alte Profildaten koennen dadurch keine aktive Anbindung lizenzfrei schalten.
+
+Die Auswahl im Tab "Schnittstellenprofile" kann nach Geraetehersteller und AIS-System gefiltert werden. Der Button "AIS Ausgabe Info" zeigt ausschliesslich AIS-Ausgabefelder mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Geraeteausgabe, echte Messwerte, Rohdaten und Platzhalter werden dort bewusst nicht angezeigt.
+
+Die Untersuchungsart `8402` wird aus der AIS-Datei uebernommen und unveraendert wieder ausgegeben. Empfohlene Defaultwerte fuer neue Profile sind zum Beispiel `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS`; eine eingehende Untersuchungsart wird dadurch nicht blockiert.
+
 # Ordner Default und Ordner anlegen
 
 "Ordner Default" trägt Standardpfade unter C:\XDTBox\<Gerätename> in die sichtbaren Pfadfelder ein. Dabei werden noch keine Ordner erstellt.

@@ -59,29 +59,31 @@ public sealed class LicenseRequestBuilderTests
     }
 
     [Fact]
-    public void Build_ShouldCountOnlyActiveLicenseRequiredProfiles()
+    public void Build_ShouldCountAllActiveDeviceConnectionsAsLicenseRelevant()
     {
         var request = BuildDefaultRequest();
 
-        Assert.Equal(1, request.ActiveLicensedDeviceCount);
+        Assert.Equal(2, request.ActiveLicensedDeviceCount);
     }
 
     [Fact]
-    public void Build_ShouldIncludeInactiveLicenseRequiredProfilesWithoutCountingThemAsActive()
+    public void Build_ShouldIncludeInactiveProfilesWithoutCountingThemAsActive()
     {
         var request = BuildDefaultRequest();
 
-        Assert.Equal(2, request.Devices.Count);
+        Assert.Equal(3, request.Devices.Count);
         Assert.Contains(request.Devices, device => device.Id == "interface-inactive" && !device.IsActive);
-        Assert.Equal(1, request.ActiveLicensedDeviceCount);
+        Assert.Equal(2, request.ActiveLicensedDeviceCount);
     }
 
     [Fact]
-    public void Build_ShouldIgnoreProfilesThatAreNotLicenseRequired()
+    public void Build_ShouldTreatLegacyNotLicenseRequiredProfilesAsLicenseRelevant()
     {
         var request = BuildDefaultRequest();
 
-        Assert.DoesNotContain(request.Devices, device => device.Id == "interface-not-licensed");
+        var device = Assert.Single(request.Devices, device => device.Id == "interface-not-licensed");
+        Assert.True(device.IsLicenseRequired);
+        Assert.True(device.IsActive);
     }
 
     [Fact]
@@ -150,7 +152,7 @@ public sealed class LicenseRequestBuilderTests
             "1.0.0",
             CreatedAtUtc);
 
-        Assert.Equal(1, request.ActiveLicensedDeviceCount);
+        Assert.Equal(2, request.ActiveLicensedDeviceCount);
         Assert.Contains(request.Devices, device => device.DisplayName == "Umbenannte Geräteanbindung");
     }
 

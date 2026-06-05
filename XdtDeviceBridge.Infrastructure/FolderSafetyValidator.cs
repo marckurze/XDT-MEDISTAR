@@ -68,17 +68,20 @@ public sealed class FolderSafetyValidator
 
         var issues = new List<FolderSafetyValidationIssue>();
 
-        if (options.ClearAisImportFolderBeforeProcessing)
+        if (options.ClearAisImportFolderBeforeProcessing
+            && !string.IsNullOrWhiteSpace(options.AisImportFolder))
         {
             issues.AddRange(ValidateFolderForCleanup(options.AisImportFolder).Issues);
         }
 
-        if (options.ClearDeviceImportFolderBeforeProcessing)
+        if (options.ClearDeviceImportFolderBeforeProcessing
+            && !string.IsNullOrWhiteSpace(options.DeviceImportFolder))
         {
             issues.AddRange(ValidateFolderForCleanup(options.DeviceImportFolder).Issues);
         }
 
-        if (options.ClearExportFolderAfterSuccessfulTransfer)
+        if (options.ClearExportFolderAfterSuccessfulTransfer
+            && !string.IsNullOrWhiteSpace(options.ExportFolder))
         {
             issues.AddRange(ValidateFolderForCleanup(options.ExportFolder).Issues);
         }

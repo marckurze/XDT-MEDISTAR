@@ -62,13 +62,15 @@ public static class InterfaceProfileDefinitionValidator
             }
         }
 
-        if (profile.FolderOptions.ClearAisImportFolderBeforeProcessing
+        if (profile.IsActive
+            && profile.FolderOptions.ClearAisImportFolderBeforeProcessing
             && string.IsNullOrWhiteSpace(profile.FolderOptions.AisImportFolder))
         {
             issues.Add("AisImportFolder must be set when ClearAisImportFolderBeforeProcessing is true.");
         }
 
-        if (!usesSerialDevice
+        if (profile.IsActive
+            && !usesSerialDevice
             && profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing
             && string.IsNullOrWhiteSpace(profile.FolderOptions.DeviceImportFolder))
         {
@@ -80,7 +82,8 @@ public static class InterfaceProfileDefinitionValidator
             issues.Add("ClearDeviceImportFolderBeforeProcessing must be false for serial RS232 profiles.");
         }
 
-        if (profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer
+        if (profile.IsActive
+            && profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer
             && string.IsNullOrWhiteSpace(profile.FolderOptions.ExportFolder))
         {
             issues.Add("ExportFolder must be set when ClearExportFolderAfterSuccessfulTransfer is true.");

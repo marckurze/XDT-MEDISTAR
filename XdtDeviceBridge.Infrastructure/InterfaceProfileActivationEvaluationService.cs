@@ -498,12 +498,6 @@ public sealed class InterfaceProfileActivationEvaluationService
         IReadOnlyList<LicensedDeviceState> licenseStates,
         List<InterfaceProfileActivationCheckResult> checks)
     {
-        if (!profile.IsLicenseRequired)
-        {
-            AddInfo(checks, LicenseArea, "license.notRequired", "Schnittstellenprofil ist nicht lizenzpflichtig.");
-            return;
-        }
-
         AddWarning(
             checks,
             LicenseArea,

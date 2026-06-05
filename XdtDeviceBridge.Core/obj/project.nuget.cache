@@ -1,12 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "iOLjMTDxwNQ=",
+  "dgSpecHash": "4WhpNNXB8i8=",
   "success": true,
   "projectFilePath": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\MarcK\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\8.0.26\\microsoft.netcore.app.runtime.win-x64.8.0.26.nupkg.sha512",
-    "C:\\Users\\MarcK\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\8.0.26\\microsoft.windowsdesktop.app.runtime.win-x64.8.0.26.nupkg.sha512",
-    "C:\\Users\\MarcK\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\8.0.26\\microsoft.aspnetcore.app.runtime.win-x64.8.0.26.nupkg.sha512"
-  ],
+  "expectedPackageFiles": [],
   "logs": []
 }

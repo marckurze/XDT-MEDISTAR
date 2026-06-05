@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private const string MonitoringNotificationSoundRelativePath = @"Assets\Sounds\04_praxis_terminal_signal.wav";
     private const string AppIconResourcePath = "Assets/App/XDTBox.ico";
     private const bool MonitoringNotificationSoundEnabled = true;
+    private const string InterfaceProfileFilterAll = "Alle";
 
     private static readonly DependencyProperty RadarAnimationKeyProperty = DependencyProperty.RegisterAttached(
         "RadarAnimationKey",
@@ -85,6 +86,7 @@ public partial class MainWindow : Window
     private readonly UserDefinedProfileRenameService _userDefinedProfileRenameService = new();
     private readonly ProfileManagementService _profileManagementService = new();
     private readonly InterfaceProfileConfigurationService _interfaceProfileConfigurationService = new();
+    private readonly AisOutputInfoService _aisOutputInfoService = new();
     private readonly SaveFeedbackDisplayService _saveFeedbackDisplayService = new();
     private readonly ExportProfileDeletionService _exportProfileDeletionService = new();
     private readonly InterfaceProfileScanIntervalUpdateService _interfaceProfileScanIntervalUpdateService = new();
@@ -161,6 +163,7 @@ public partial class MainWindow : Window
     private bool _hasAutoStartedPeriodicScan;
     private bool _hasAppliedStartupTrayPreference;
     private bool _userStoppedPeriodicScan;
+    private bool _isUpdatingInterfaceProfileFilters;
     private XdtBoxAppSettings _appSettings = XdtBoxAppSettings.CreateDefault();
     private object? _interfaceProfileSaveButtonOriginalContent;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBackground;
@@ -357,8 +360,6 @@ public partial class MainWindow : Window
         RoutedEventHandler routedHandler = (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
         InterfaceIsActiveCheckBox.Checked += routedHandler;
         InterfaceIsActiveCheckBox.Unchecked += routedHandler;
-        InterfaceIsLicenseRequiredCheckBox.Checked += routedHandler;
-        InterfaceIsLicenseRequiredCheckBox.Unchecked += routedHandler;
         InterfaceDeviceOutputEnabledCheckBox.Checked += routedHandler;
         InterfaceDeviceOutputEnabledCheckBox.Unchecked += routedHandler;
         InterfaceAttachmentProcessingEnabledCheckBox.Checked += routedHandler;
@@ -1276,9 +1277,73 @@ public partial class MainWindow : Window
 
     private void InitializeInterfaceProfileConfiguration(ProfileCatalog catalog, string? selectedInterfaceProfileId = null)
     {
-        var interfaceProfiles = catalog.InterfaceProfiles
-            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
-            .ToList();
+        PopulateInterfaceProfileFilters(catalog);
+        RefreshInterfaceProfileSelection(selectedInterfaceProfileId);
+    }
+
+    private void PopulateInterfaceProfileFilters(ProfileCatalog catalog)
+    {
+        _isUpdatingInterfaceProfileFilters = true;
+        try
+        {
+            var previousManufacturer = InterfaceManufacturerFilterComboBox.SelectedItem as string;
+            var previousAis = InterfaceAisFilterComboBox.SelectedItem as string;
+
+            var manufacturerOptions = catalog.InterfaceProfiles
+                .Select(profile => GetDeviceProfile(catalog, profile.DeviceProfileId)?.Manufacturer)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                .OrderBy(value => value, StringComparer.CurrentCultureIgnoreCase)
+                .Prepend(InterfaceProfileFilterAll)
+                .ToArray();
+
+            var aisOptions = catalog.InterfaceProfiles
+                .Select(profile => GetAisProfile(catalog, profile.AisProfileId)?.Name ?? profile.AisProfileId)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                .OrderBy(value => value, StringComparer.CurrentCultureIgnoreCase)
+                .Prepend(InterfaceProfileFilterAll)
+                .ToArray();
+
+            InterfaceManufacturerFilterComboBox.ItemsSource = manufacturerOptions;
+            InterfaceAisFilterComboBox.ItemsSource = aisOptions;
+            InterfaceManufacturerFilterComboBox.SelectedItem = manufacturerOptions.FirstOrDefault(option =>
+                string.Equals(option, previousManufacturer, StringComparison.CurrentCultureIgnoreCase))
+                ?? InterfaceProfileFilterAll;
+            InterfaceAisFilterComboBox.SelectedItem = aisOptions.FirstOrDefault(option =>
+                string.Equals(option, previousAis, StringComparison.CurrentCultureIgnoreCase))
+                ?? InterfaceProfileFilterAll;
+        }
+        finally
+        {
+            _isUpdatingInterfaceProfileFilters = false;
+        }
+    }
+
+    private void InterfaceProfileFilter_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_isUpdatingInterfaceProfileFilters)
+        {
+            return;
+        }
+
+        var selectedId = InterfaceProfileComboBox.SelectedItem is InterfaceProfileDefinition profile
+            ? profile.Metadata.Id
+            : null;
+        RefreshInterfaceProfileSelection(selectedId);
+    }
+
+    private void RefreshInterfaceProfileSelection(string? selectedInterfaceProfileId = null)
+    {
+        if (_profileCatalog is null)
+        {
+            InterfaceProfileComboBox.ItemsSource = Array.Empty<InterfaceProfileDefinition>();
+            InterfaceProfileComboBox.SelectedIndex = -1;
+            ClearInterfaceProfileEditor();
+            return;
+        }
+
+        var interfaceProfiles = GetFilteredInterfaceProfiles(_profileCatalog);
 
         InterfaceProfileComboBox.ItemsSource = interfaceProfiles;
         if (interfaceProfiles.Count == 0)
@@ -1296,6 +1361,70 @@ public partial class MainWindow : Window
         ShowInterfaceProfileForSelectedProfile();
     }
 
+    private IReadOnlyList<InterfaceProfileDefinition> GetFilteredInterfaceProfiles(ProfileCatalog catalog)
+    {
+        var manufacturerFilter = InterfaceManufacturerFilterComboBox.SelectedItem as string;
+        var aisFilter = InterfaceAisFilterComboBox.SelectedItem as string;
+
+        return catalog.InterfaceProfiles
+            .Where(profile => MatchesInterfaceManufacturerFilter(catalog, profile, manufacturerFilter))
+            .Where(profile => MatchesInterfaceAisFilter(catalog, profile, aisFilter))
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+    private static bool MatchesInterfaceManufacturerFilter(
+        ProfileCatalog catalog,
+        InterfaceProfileDefinition profile,
+        string? manufacturerFilter)
+    {
+        if (string.IsNullOrWhiteSpace(manufacturerFilter)
+            || string.Equals(manufacturerFilter, InterfaceProfileFilterAll, StringComparison.CurrentCultureIgnoreCase))
+        {
+            return true;
+        }
+
+        var manufacturer = GetDeviceProfile(catalog, profile.DeviceProfileId)?.Manufacturer;
+        return string.Equals(manufacturer, manufacturerFilter, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private static bool MatchesInterfaceAisFilter(
+        ProfileCatalog catalog,
+        InterfaceProfileDefinition profile,
+        string? aisFilter)
+    {
+        if (string.IsNullOrWhiteSpace(aisFilter)
+            || string.Equals(aisFilter, InterfaceProfileFilterAll, StringComparison.CurrentCultureIgnoreCase))
+        {
+            return true;
+        }
+
+        var aisName = GetAisProfile(catalog, profile.AisProfileId)?.Name ?? profile.AisProfileId;
+        return string.Equals(aisName, aisFilter, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private static AisProfile? GetAisProfile(ProfileCatalog catalog, string? profileId)
+    {
+        if (string.IsNullOrWhiteSpace(profileId))
+        {
+            return null;
+        }
+
+        return catalog.AisProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, profileId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static DeviceProfileDefinition? GetDeviceProfile(ProfileCatalog catalog, string? profileId)
+    {
+        if (string.IsNullOrWhiteSpace(profileId))
+        {
+            return null;
+        }
+
+        return catalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, profileId, StringComparison.OrdinalIgnoreCase));
+    }
+
     private void InterfaceProfileComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         ShowInterfaceProfileForSelectedProfile();
@@ -1308,6 +1437,38 @@ public partial class MainWindow : Window
             RenameInterfaceProfileButton,
             InterfaceProfileComboBox.SelectedItem is InterfaceProfileDefinition interfaceProfile ? interfaceProfile.Metadata : null,
             "Schnittstellenprofil");
+    }
+
+    private void ShowAisOutputInfo_Click(object sender, RoutedEventArgs e)
+    {
+        if (_profileCatalog is null)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "Profilkatalog ist nicht geladen.",
+                "AIS Ausgabe Info",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition interfaceProfile)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "Bitte zuerst ein Schnittstellenprofil auswählen.",
+                "AIS Ausgabe Info",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var info = _aisOutputInfoService.Create(_profileCatalog, interfaceProfile);
+        var window = new AisOutputInfoWindow(info)
+        {
+            Owner = this
+        };
+        window.ShowDialog();
     }
 
     private void RefreshInterfaceActivationPreview_Click(object sender, RoutedEventArgs e)
@@ -1379,7 +1540,6 @@ public partial class MainWindow : Window
         InterfaceDeviceProfileText.Text = GetDeviceProfileDisplayName(profile.DeviceProfileId);
         InterfaceExportProfileText.Text = GetExportProfileDisplayName(profile.ExportProfileId);
         InterfaceIsActiveCheckBox.IsChecked = profile.IsActive;
-        InterfaceIsLicenseRequiredCheckBox.IsChecked = profile.IsLicenseRequired;
 
         InterfaceAisImportFolderTextBox.Text = profile.FolderOptions.AisImportFolder;
         InterfaceDeviceImportFolderTextBox.Text = profile.FolderOptions.DeviceImportFolder;
@@ -1435,7 +1595,6 @@ public partial class MainWindow : Window
         InterfaceDeviceProfileText.Text = string.Empty;
         InterfaceExportProfileText.Text = string.Empty;
         InterfaceIsActiveCheckBox.IsChecked = false;
-        InterfaceIsLicenseRequiredCheckBox.IsChecked = false;
         InterfaceAisImportFolderTextBox.Text = string.Empty;
         InterfaceDeviceImportFolderTextBox.Text = string.Empty;
         InterfaceExportFolderTextBox.Text = string.Empty;
@@ -1467,7 +1626,7 @@ public partial class MainWindow : Window
         InterfaceAttachmentLinkPathTemplateTextBox.Text = string.Empty;
         InterfaceFolderSetupStatusTextBlock.Text = string.Empty;
         InterfaceAttachmentFolderSetupStatusTextBlock.Text = string.Empty;
-        InterfaceClearAisImportFolderCheckBox.IsChecked = false;
+        InterfaceClearAisImportFolderCheckBox.IsChecked = true;
         InterfaceClearDeviceImportFolderCheckBox.IsChecked = false;
         InterfaceArchiveProcessedFilesCheckBox.IsChecked = false;
         InterfaceMoveFailedFilesToErrorFolderCheckBox.IsChecked = false;
@@ -1677,7 +1836,7 @@ public partial class MainWindow : Window
             NidekRtSerialSendMode = CreateNidekRtSerialSendModeFromEditor(profile),
             NidekRtSerialOutputFrameVariant = CreateNidekRtSerialOutputFrameVariantFromEditor(profile),
             IsActive = InterfaceIsActiveCheckBox.IsChecked == true,
-            IsLicenseRequired = InterfaceIsLicenseRequiredCheckBox.IsChecked == true
+            IsLicenseRequired = InterfaceProfileLicensePolicy.IsLicenseRequired(profile)
         };
     }
 
@@ -1825,7 +1984,7 @@ public partial class MainWindow : Window
             selectedProfile,
             folderOptions,
             InterfaceIsActiveCheckBox.IsChecked == true,
-            InterfaceIsLicenseRequiredCheckBox.IsChecked == true,
+            InterfaceProfileLicensePolicy.IsLicenseRequired(selectedProfile),
             CreateInterfaceDeviceOutputFromEditor(selectedProfile),
             serialSettings,
             nidekRtSerialSendMode,
@@ -3063,7 +3222,7 @@ public partial class MainWindow : Window
 
     private int CountActiveLicensedDevices()
     {
-        return _profileCatalog?.InterfaceProfiles.Count(profile => profile.IsActive && profile.IsLicenseRequired) ?? 0;
+        return _profileCatalog?.InterfaceProfiles.Count(InterfaceProfileLicensePolicy.IsActiveLicenseRelevant) ?? 0;
     }
 
     private int CountActiveDeviceConnectionsForLicenseV1()

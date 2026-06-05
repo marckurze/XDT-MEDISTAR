@@ -29,7 +29,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
         Assert.Equal(exportProfile.TargetAisProfileId, profile.AisProfileId);
         Assert.Equal(exportProfile.SourceDeviceProfileId, profile.DeviceProfileId);
         Assert.Equal(exportProfile.Metadata.Id, profile.ExportProfileId);
-        Assert.False(profile.FolderOptions.ClearAisImportFolderBeforeProcessing);
+        Assert.True(profile.FolderOptions.ClearAisImportFolderBeforeProcessing);
         Assert.False(profile.FolderOptions.ClearDeviceImportFolderBeforeProcessing);
         Assert.False(profile.FolderOptions.ClearExportFolderAfterSuccessfulTransfer);
         Assert.False(profile.FolderOptions.ArchiveProcessedFiles);
@@ -97,7 +97,7 @@ public sealed class InterfaceProfileConfigurationServiceTests
 
         Assert.True(result.Success);
         Assert.Equal("interface-user", result.Profile!.Metadata.Id);
-        Assert.False(result.Profile.IsLicenseRequired);
+        Assert.True(result.Profile.IsLicenseRequired);
         Assert.Equal(_timestamp, result.Profile.Metadata.UpdatedAt);
         Assert.Equal(@"\\SERVER\Freigabe\XDT\Export", result.Profile.FolderOptions.ExportFolder);
     }

@@ -153,7 +153,13 @@ public sealed class TemplatePackageImportValidatorTests
         var aisProfile = DefaultAisProfiles.CreateMedistarDefault();
         var deviceProfile = DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault();
         var exportProfile = DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault();
-        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault();
+        var interfaceProfile = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault() with
+        {
+            FolderOptions = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions with
+            {
+                ClearAisImportFolderBeforeProcessing = false
+            }
+        };
 
         var package = CreatePackage(new[]
         {

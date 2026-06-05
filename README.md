@@ -122,9 +122,13 @@ Ein Schnittstellenprofil enthaelt:
 - Ordnerabfrage-Intervall für den periodischen Scan, Standard 5 Sekunden
 - Wartezeit auf Gerätedatei nach AIS-Datei, Standard 10 Minuten
 - Aktiv-Haken fuer automatische Verarbeitung
-- Lizenzpflicht-Haken
+- aktive Schnittstellenprofile zaehlen immer als Geraeteanbindung; ein separater Lizenzpflicht-Haken wird nicht mehr angezeigt
 - Archivierungsoptionen
 - Fehlerablageoptionen
+
+Die Schnittstellenprofil-Auswahl kann nach `Geraetehersteller` und `AIS-System` gefiltert werden. Neue BuiltIn-, Template- und Repair-Profile nutzen sichere Betriebsdefaults: AIS-Importordner vor Verarbeitung bereinigen ist aktiv, Archivierung ist aus und Fehlerablage ist aktiv. Bewusst gespeicherte UserDefined-Einstellungen werden dadurch nicht ungefragt ueberschrieben.
+
+Der Button `AIS Ausgabe Info` zeigt fuer das aktuelle Schnittstellenprofil eine reine AIS-Ausgabetabelle mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweisen. `8402` bleibt die aus AIS empfangene Untersuchungsart und wird unveraendert wieder ausgegeben; empfohlene Defaultwerte wie `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` oder `MESS` dienen nur neuen Profilen und blockieren keine eingehende Untersuchungsart.
 
 ### 3. Ueberwachung
 

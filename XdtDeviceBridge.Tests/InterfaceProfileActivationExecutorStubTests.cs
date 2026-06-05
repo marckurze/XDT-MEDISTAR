@@ -132,7 +132,7 @@ public sealed class InterfaceProfileActivationExecutorStubTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithStoreAndFinalServicesReady_ShouldSimulateFinalEvaluationAndSaveDryRun()
+    public async Task ExecuteAsync_WithStoreAndFinalServicesReady_ShouldBlockV1WhenLicenseWarningIsPresent()
     {
         using var folders = TestFolders.Create();
         var context = CreateFinalEvaluationContext(folders);
@@ -151,18 +151,18 @@ public sealed class InterfaceProfileActivationExecutorStubTests
             GuardResult: null,
             InterfaceProfileId: context.Profile.Metadata.Id));
 
-        Assert.Equal(InterfaceProfileActivationExecutorStatus.ReadyButNotExecuted, result.Status);
+        Assert.Equal(InterfaceProfileActivationExecutorStatus.Blocked, result.Status);
         Assert.True(result.FinalEvaluationPerformed);
         Assert.True(result.GuardRechecked);
         Assert.False(result.RequiresFinalEvaluation);
-        Assert.True(result.SaveDryRunPerformed);
-        Assert.False(result.SaveDryRunBlocked);
-        Assert.Equal(1, store.SaveCallCount);
-        Assert.NotNull(store.LastSaveRequest);
-        Assert.True(store.LastSaveRequest.FinalReEvaluationCompleted);
+        Assert.False(result.SaveDryRunPerformed);
+        Assert.True(result.SaveDryRunBlocked);
+        Assert.Equal(0, store.SaveCallCount);
+        Assert.Null(store.LastSaveRequest);
         Assert.False(result.ProfileChanged);
         Assert.False(result.Saved);
         Assert.False(result.ProcessingStarted);
+        Assert.Contains(result.Preconditions, item => item.Code == "evaluation.readyWithoutWarnings" && !item.IsSatisfied);
         Assert.Equal(originalIsActive, context.Profile.IsActive);
         Assert.Equal(originalAttachmentEnabled, context.Profile.FolderOptions.IsAttachmentProcessingEnabled);
     }

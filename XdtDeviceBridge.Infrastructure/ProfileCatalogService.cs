@@ -638,11 +638,6 @@ public sealed class ProfileCatalogService
 
     private void RepairBuiltInInterfaceProfileIfNeeded(string folder, InterfaceProfileDefinition defaultProfile)
     {
-        if (!IsNidekRtSerialDefaultInterfaceProfileId(defaultProfile.Metadata.Id))
-        {
-            return;
-        }
-
         var filePath = CreateProfilePath(folder, defaultProfile.Metadata.Id);
         if (!File.Exists(filePath))
         {
@@ -655,8 +650,7 @@ public sealed class ProfileCatalogService
             return;
         }
 
-        if (existingProfile.NidekRtSerialSendMode == NidekRtSerialSendMode.DirectWriterFrame
-            && existingProfile.NidekRtSerialOutputFrameVariant == defaultProfile.NidekRtSerialOutputFrameVariant)
+        if (!NeedsBuiltInInterfaceProfileRepair(existingProfile, defaultProfile))
         {
             return;
         }
@@ -679,6 +673,38 @@ public sealed class ProfileCatalogService
         return string.Equals(profileId, NidekRt2100SerialDefaultInterfaceProfileId, StringComparison.Ordinal)
             || string.Equals(profileId, NidekRt3100SerialDefaultInterfaceProfileId, StringComparison.Ordinal)
             || string.Equals(profileId, NidekRt5100SerialDefaultInterfaceProfileId, StringComparison.Ordinal);
+    }
+
+    private static bool NeedsBuiltInInterfaceProfileRepair(
+        InterfaceProfileDefinition existingProfile,
+        InterfaceProfileDefinition defaultProfile)
+    {
+        if (existingProfile.IsLicenseRequired != defaultProfile.IsLicenseRequired)
+        {
+            return true;
+        }
+
+        if (existingProfile.FolderOptions.ClearAisImportFolderBeforeProcessing
+            != defaultProfile.FolderOptions.ClearAisImportFolderBeforeProcessing)
+        {
+            return true;
+        }
+
+        if (existingProfile.FolderOptions.ArchiveProcessedFiles
+            != defaultProfile.FolderOptions.ArchiveProcessedFiles)
+        {
+            return true;
+        }
+
+        if (existingProfile.FolderOptions.MoveFailedFilesToErrorFolder
+            != defaultProfile.FolderOptions.MoveFailedFilesToErrorFolder)
+        {
+            return true;
+        }
+
+        return IsNidekRtSerialDefaultInterfaceProfileId(defaultProfile.Metadata.Id)
+            && (existingProfile.NidekRtSerialSendMode != NidekRtSerialSendMode.DirectWriterFrame
+                || existingProfile.NidekRtSerialOutputFrameVariant != defaultProfile.NidekRtSerialOutputFrameVariant);
     }
 
     private static bool NeedsBuiltInDeviceProfileRepair(DeviceProfileDefinition profile)

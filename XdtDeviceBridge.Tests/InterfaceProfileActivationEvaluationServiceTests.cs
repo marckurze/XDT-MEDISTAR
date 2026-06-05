@@ -17,8 +17,9 @@ public sealed class InterfaceProfileActivationEvaluationServiceTests
         var result = _service.Evaluate(context.InterfaceProfile, context.Catalog);
 
         Assert.True(result.CanActivate);
-        Assert.Equal(InterfaceProfileActivationStatus.Ready, result.ActivationStatus);
+        Assert.Equal(InterfaceProfileActivationStatus.ReadyWithWarnings, result.ActivationStatus);
         Assert.Empty(result.Blockers);
+        Assert.Contains(result.Warnings, check => check.Code == "license.required");
     }
 
     [Fact]

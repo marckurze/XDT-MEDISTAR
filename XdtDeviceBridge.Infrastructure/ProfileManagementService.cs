@@ -291,7 +291,7 @@ public sealed class ProfileManagementService
             {
                 $"Schnittstellenprofil: {profile.Metadata.Name}",
                 $"Aktiv: {DisplayBool(profile.IsActive)}",
-                $"Lizenzpflichtig: {DisplayBool(profile.IsLicenseRequired)}",
+                $"Lizenzzählung: {(InterfaceProfileLicensePolicy.IsActiveLicenseRelevant(profile) ? "aktive Geräteanbindung" : "zählt erst bei Aktivierung")}",
                 $"AIS: {ais?.Metadata.Name ?? profile.AisProfileId}",
                 $"Gerät: {device?.Metadata.Name ?? profile.DeviceProfileId}",
                 $"Export: {export?.Metadata.Name ?? profile.ExportProfileId}",

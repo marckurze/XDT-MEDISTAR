@@ -87,7 +87,10 @@ public sealed class InterfaceProfileDefinitionTests
     [Fact]
     public void Validate_ShouldReportClearAisImportFolderWithoutAisImportFolder()
     {
-        var profile = WithFolderOptions(CreateFolderOptions(clearAisImportFolderBeforeProcessing: true));
+        var profile = WithFolderOptions(CreateFolderOptions(clearAisImportFolderBeforeProcessing: true)) with
+        {
+            IsActive = true
+        };
 
         var issues = InterfaceProfileDefinitionValidator.Validate(profile);
 
@@ -97,7 +100,10 @@ public sealed class InterfaceProfileDefinitionTests
     [Fact]
     public void Validate_ShouldReportClearDeviceImportFolderWithoutDeviceImportFolder()
     {
-        var profile = WithFolderOptions(CreateFolderOptions(clearDeviceImportFolderBeforeProcessing: true));
+        var profile = WithFolderOptions(CreateFolderOptions(clearDeviceImportFolderBeforeProcessing: true)) with
+        {
+            IsActive = true
+        };
 
         var issues = InterfaceProfileDefinitionValidator.Validate(profile);
 
@@ -107,7 +113,10 @@ public sealed class InterfaceProfileDefinitionTests
     [Fact]
     public void Validate_ShouldReportClearExportFolderWithoutExportFolder()
     {
-        var profile = WithFolderOptions(CreateFolderOptions(clearExportFolderAfterSuccessfulTransfer: true));
+        var profile = WithFolderOptions(CreateFolderOptions(clearExportFolderAfterSuccessfulTransfer: true)) with
+        {
+            IsActive = true
+        };
 
         var issues = InterfaceProfileDefinitionValidator.Validate(profile);
 
@@ -142,11 +151,11 @@ public sealed class InterfaceProfileDefinitionTests
     }
 
     [Fact]
-    public void CreateMedistarNidekArk1sDefault_ShouldDisableDeleteOptionsByDefault()
+    public void CreateMedistarNidekArk1sDefault_ShouldUseSafeProcessingDefaults()
     {
         var options = DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault().FolderOptions;
 
-        Assert.False(options.ClearAisImportFolderBeforeProcessing);
+        Assert.True(options.ClearAisImportFolderBeforeProcessing);
         Assert.False(options.ClearDeviceImportFolderBeforeProcessing);
         Assert.False(options.ClearExportFolderAfterSuccessfulTransfer);
         Assert.False(options.ArchiveProcessedFiles);

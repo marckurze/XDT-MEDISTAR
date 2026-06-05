@@ -26,7 +26,7 @@ Besonders stabil wirken aktuell:
 - MEDISTAR + NIDEK ARK1S Kernworkflow
 - Aus Referenzdaten abgeleitete BuiltIn-Erweiterungen: NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P sind mit Geraete-, Export- und Schnittstellenprofilen sowie synthetischen Parser-/Exporttests vorbereitet. Der NIDEK-Restbatch ergaenzt AR-1, AR-1S, AR-310A, LM-1800PD, NT-1, NT-1E, NT-1P, NT-510 und NT-530 als testseitig abgesicherte XML-Varianten vorhandener Parserfamilien. TOPCON KR-800 wird als Alias der vorhandenen KR800S-XML-Familie erkannt; TOPCON CL-300PDL, RM-800 und TRK-3 Omnia sind als eigene Varianten vorhandener TOPCON-XML-Familien mit synthetischen Fixtures und Templatepaket-Tests ergaenzt. Huvitz-, TOMEY- und Shin-Nippon-Batches besitzen eigene isolierte Parser, BuiltIns, synthetische Fixtures und Templatepaket-Tests. Reichert 7CR NCT, Reichert LensChek Plus und Rodenstock CX 800 sind zusaetzlich als testseitig abgesicherte Textparser-BuiltIns vorbereitet. Echte Praxisrohdateien und MEDISTAR-Abnahmen bleiben je Kandidat offen. Scriptbasierte Geraete ohne echte Rohdaten sind in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md` als Parser-Kandidaten fuer Folge-Batches dokumentiert; Rodenstock Phoromat 2000 und Möller-Wedel Visutron bleiben bewusst Kandidaten.
 - Finaler lokaler EM-3000/EM-4000-Pruefstand vom 2026-06-05: Marc hat `dotnet build XdtDeviceBridge.sln` vollstaendig erfolgreich ausgefuehrt (Core, Infrastructure, LicenseIssuer, LicenseManager, Tests, App; 18,9 Sekunden) und `dotnet test XdtDeviceBridge.sln` mit 1816 erfolgreichen Tests, 0 Fehlern und 0 uebersprungenen Tests bestaetigt (Testdauer 12,4 Sekunden, Gesamt 16,4 Sekunden).
-- Der Installer-Build ist gegen fehlgeschlagene Publish-/SDK-Zugriffe abgesichert: `scripts\build-xdtbox-installer.ps1` nutzt jetzt einen Staging-Ordner und ersetzt finale Publish-/Installer-Artefakte erst nach erfolgreichem Publish, sauberer Kundenpublish-Validierung und erfolgreichem Inno-Build. Ein kontrollierter Fehlversuch bestaetigte, dass bestehende Artefakte erhalten bleiben. Der aktuelle Installer wurde unter `artifacts\installer\XDTBox_Setup_1.0.exe` mit 63.404.236 Bytes erzeugt; die Publish-App startete erfolgreich aus `artifacts\publish\XDTBox`.
+- Der Installer-Build ist gegen fehlgeschlagene Publish-/SDK-Zugriffe abgesichert: `scripts\build-xdtbox-installer.ps1` nutzt jetzt einen Staging-Ordner und ersetzt finale Publish-/Installer-Artefakte erst nach erfolgreichem Publish, sauberer Kundenpublish-Validierung und erfolgreichem Inno-Build. Ein kontrollierter Fehlversuch bestaetigte, dass bestehende Artefakte erhalten bleiben. Der aktuelle Installer wurde unter `artifacts\installer\XDTBox_Setup_1.0.exe` mit 63.429.793 Bytes erzeugt; die Publish-App startete erfolgreich aus `artifacts\publish\XDTBox`.
 - MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link im Pflicht-Anhang-Praxislauf
 - zentrale XDT-Erzeugung ueber `XdtExportBuilder`
 - BuiltIn/UserDefined-Profiltrennung
@@ -195,6 +195,12 @@ Aktuelle Felder und Konzepte:
 - Wartezeit auf XDT-Anhang, Standard `30` Sekunden
 - Dateistabilitaet abwarten, Standard `2` Sekunden
 - XDT-Felder `6302`, `6303`, optional `6304`, `6305`
+
+Die Schnittstellenprofil-Auswahl besitzt Filter nach `Geraetehersteller` und `AIS-System`. Aktive Schnittstellenprofile zaehlen immer als Geraeteanbindung; der fruehere UI-Haken fuer eine separate Lizenzpflicht ist entfernt und Legacy-Profile mit deaktivierter Lizenzpflicht umgehen die Geraetezaehlung nicht mehr.
+
+Neue BuiltIn-, Template- und Repair-Profile verwenden als sichere Defaults: AIS-Importordner vor Verarbeitung bereinigen aktiv, Archivierung aus und Fehlerablage aktiv. Explizit gespeicherte UserDefined-Entscheidungen werden nicht ungefragt ueberschrieben.
+
+`AIS Ausgabe Info` zeigt im Tab `Schnittstellenprofile` fuer das aktuelle Profil eine reine AIS-Ausgabetabelle mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. `8402` wird aus der AIS-Datei uebernommen und unveraendert wieder ausgegeben; empfohlene Untersuchungsart-Defaults fuer neue Profile sind unter anderem `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS`.
 
 ### Aktivierungsassistent fuer importierte Schnittstellenprofile - Uebergabestand
 

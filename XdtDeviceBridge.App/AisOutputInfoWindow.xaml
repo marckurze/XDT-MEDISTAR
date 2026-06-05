@@ -1,0 +1,111 @@
+<Window x:Class="XdtDeviceBridge.App.AisOutputInfoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:infrastructure="clr-namespace:XdtDeviceBridge.Infrastructure;assembly=XdtDeviceBridge.Infrastructure"
+        Title="AIS Ausgabe Info"
+        Width="1040"
+        Height="650"
+        MinWidth="820"
+        MinHeight="520"
+        WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <Style x:Key="AisOutputInfoRowStyle" TargetType="{x:Type DataGridRow}">
+            <Setter Property="Background" Value="White"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCardField}" Value="True">
+                    <Setter Property="Background" Value="#EAF7EF"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsOptional}" Value="True">
+                    <Setter Property="Background" Value="#FFF6DC"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="AIS Ausgabe Info"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"/>
+
+        <Border Grid.Row="1"
+                BorderBrush="#D2E4EF"
+                BorderThickness="1"
+                Padding="10"
+                Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="155"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Schnittstellenprofil:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding InterfaceProfileName}" TextWrapping="Wrap" Margin="0,0,18,6"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Status:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ActiveText}" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AisProfileName}" TextWrapping="Wrap" Margin="0,0,18,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Geräteprofil:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding DeviceProfileName}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ExportProfileName}" TextWrapping="Wrap" Margin="0,0,18,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="Gerät:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding DeviceSummary}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="8402 Default:" FontWeight="Bold" Margin="0,0,8,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DefaultExaminationType}" Margin="0,0,18,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="Verbindung:" FontWeight="Bold" Margin="0,0,8,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="3" Text="{Binding ConnectionKind}" TextWrapping="Wrap"/>
+            </Grid>
+        </Border>
+
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Fields}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  RowStyle="{StaticResource AisOutputInfoRowStyle}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Feldkennung" Binding="{Binding FieldCode}" Width="110"/>
+                <DataGridTextColumn Header="Ausgabeart/Bedeutung" Binding="{Binding Meaning}" Width="220"/>
+                <DataGridTextColumn Header="AIS-Relevanz" Binding="{Binding AisRelevance}" Width="250"/>
+                <DataGridTextColumn Header="Karteikarte" Binding="{Binding CardVisibility}" Width="110"/>
+                <DataGridTextColumn Header="Hinweis" Binding="{Binding Hint}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <DockPanel Grid.Row="3" Margin="0,12,0,0">
+            <TextBlock Text="{Binding ExaminationTypeHint}"
+                       TextWrapping="Wrap"
+                       Foreground="DimGray"
+                       VerticalAlignment="Center"
+                       DockPanel.Dock="Left"/>
+            <Button Content="Schließen"
+                    Width="120"
+                    Margin="16,0,0,0"
+                    HorizontalAlignment="Right"
+                    Click="Close_Click"
+                    DockPanel.Dock="Right"/>
+        </DockPanel>
+    </Grid>
+</Window>

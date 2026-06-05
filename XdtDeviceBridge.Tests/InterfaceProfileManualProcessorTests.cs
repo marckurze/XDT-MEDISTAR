@@ -708,6 +708,7 @@ public sealed class InterfaceProfileManualProcessorTests
             {
                 ExportFolder = exportFolder,
                 AttachmentExportFolder = CreateTempFolder(),
+                ClearAisImportFolderBeforeProcessing = false,
                 ClearDeviceImportFolderBeforeProcessing = clearDeviceImportFolderBeforeProcessing,
                 IsAttachmentProcessingEnabled = true,
                 IsAttachmentOnlyMode = true
@@ -734,7 +735,8 @@ public sealed class InterfaceProfileManualProcessorTests
             {
                 ExportFolder = exportFolder,
                 ErrorFolder = CreateTempFolder(),
-                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder
+                MoveFailedFilesToErrorFolder = moveFailedFilesToErrorFolder,
+                ClearAisImportFolderBeforeProcessing = false
             },
             IsActive = true
         };
@@ -756,7 +758,8 @@ public sealed class InterfaceProfileManualProcessorTests
             {
                 ExportFolder = exportFolder,
                 ErrorFolder = CreateTempFolder(),
-                MoveFailedFilesToErrorFolder = true
+                MoveFailedFilesToErrorFolder = true,
+                ClearAisImportFolderBeforeProcessing = false
             },
             SerialSettings = NidekRs232CommunicationPresets.CreateRt3100Type1Preset("COM5") with
             {

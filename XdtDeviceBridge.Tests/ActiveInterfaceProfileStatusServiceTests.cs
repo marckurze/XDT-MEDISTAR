@@ -1,4 +1,4 @@
-using XdtDeviceBridge.Core;
+﻿using XdtDeviceBridge.Core;
 
 namespace XdtDeviceBridge.Tests;
 
@@ -26,7 +26,7 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
         Assert.Contains("AIS-Importordner fehlt", row.FolderStatus);
         Assert.Contains("Geräte-Importordner fehlt", row.FolderStatus);
         Assert.Contains("Exportordner fehlt", row.FolderStatus);
-        Assert.Equal("Unvollständig", row.ProcessingStatus);
+        Assert.Equal("Prüfen", row.ProcessingStatus);
     }
 
     [Fact]
@@ -40,20 +40,20 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
                 exportFolder: @"C:\XDT\Export")
         };
 
-        var row = Assert.Single(BuildRows(profile));
+        var row = Assert.Single(BuildRows(profile, CreateLicenseState(profile, isCovered: true, isInGracePeriod: false)));
 
         Assert.Equal("Ordner konfiguriert", row.FolderStatus);
         Assert.Equal("Bereit für spätere Automatik", row.ProcessingStatus);
     }
 
     [Fact]
-    public void BuildRows_ShouldShowNotLicenseRequiredStatus()
+    public void BuildRows_ShouldTreatLegacyNotLicenseRequiredProfileAsLicenseRelevant()
     {
         var profile = CreateProfile(isActive: true, isLicenseRequired: false);
 
         var row = Assert.Single(BuildRows(profile));
 
-        Assert.Equal("Nicht lizenzpflichtig", row.LicenseStatus);
+        Assert.Equal("Nicht gedeckt", row.LicenseStatus);
     }
 
     [Fact]
@@ -556,3 +556,5 @@ public sealed class ActiveInterfaceProfileStatusServiceTests
             StatusMessage: "Teststatus");
     }
 }
+
+

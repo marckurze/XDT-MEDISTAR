@@ -213,6 +213,63 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void InterfaceProfilesTab_ShouldExposeFiltersAndAisOutputInfoWithoutLicenseCheckbox()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var section = ExtractSection(
+            xaml,
+            "<TabItem Header=\"Schnittstellenprofile\">",
+            "<TabItem Header=\"Sicherung/Umzug\">");
+
+        Assert.Contains("InterfaceManufacturerFilterComboBox", section);
+        Assert.Contains("InterfaceAisFilterComboBox", section);
+        Assert.Contains("Gerätehersteller:", section);
+        Assert.Contains("AIS-System:", section);
+        Assert.Contains("AIS Ausgabe Info", section);
+        Assert.Contains("Aktive Schnittstellenprofile zählen immer als Geräteanbindung.", section);
+        Assert.DoesNotContain("InterfaceIsLicenseRequiredCheckBox", section);
+        Assert.DoesNotContain("Lizenzpflichtig", section);
+        Assert.Contains("PopulateInterfaceProfileFilters", code);
+        Assert.Contains("GetFilteredInterfaceProfiles", code);
+        Assert.Contains("ShowAisOutputInfo_Click", code);
+    }
+
+    [Fact]
+    public void InterfaceProfilesTab_ShouldKeepAttachment6305PathSeparateFromFolderButtons()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var section = ExtractSection(
+            xaml,
+            "x:Name=\"InterfaceAttachmentLinkPathTemplateLabel\"",
+            "x:Name=\"InterfaceAttachmentFolderSetupStatusTextBlock\"");
+
+        Assert.Contains("Grid.Row=\"14\"", section);
+        Assert.Contains("Grid.Column=\"1\"", section);
+        Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", section);
+        Assert.Contains("x:Name=\"InterfaceAttachmentFolderSetupPanel\"", section);
+        Assert.Contains("Grid.Row=\"14\"", section);
+        Assert.Contains("Grid.Column=\"2\"", section);
+    }
+
+    [Fact]
+    public void AisOutputInfoDialog_ShouldExposeFieldTableAndCardHighlighting()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AisOutputInfoWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AisOutputInfoWindow.xaml.cs"));
+
+        Assert.Contains("AIS Ausgabe Info", xaml);
+        Assert.Contains("Feldkennung", xaml);
+        Assert.Contains("Ausgabeart/Bedeutung", xaml);
+        Assert.Contains("AIS-Relevanz", xaml);
+        Assert.Contains("Karteikarte", xaml);
+        Assert.Contains("Hinweis", xaml);
+        Assert.Contains("IsCardField", xaml);
+        Assert.Contains("IsOptional", xaml);
+        Assert.Contains("AisOutputInfoViewModel", code);
+    }
+
+    [Fact]
     public void XdtBaukastenTab_ShouldNotDependOnOldProfileTemplatesControlNames()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));

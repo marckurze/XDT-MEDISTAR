@@ -29,14 +29,15 @@ public sealed class LicensedDeviceStateEvaluator
 
         foreach (var profile in interfaceProfiles)
         {
-            var isLicenseRelevant = profile.IsActive && profile.IsLicenseRequired;
+            var isLicenseRequired = InterfaceProfileLicensePolicy.IsLicenseRequired(profile);
+            var isLicenseRelevant = profile.IsActive && isLicenseRequired;
             var isCovered = false;
             var isInGracePeriod = false;
             DateTime? gracePeriodStartedAt = null;
             DateTime? gracePeriodEndsAt = null;
             string statusMessage;
 
-            if (!profile.IsLicenseRequired)
+            if (!isLicenseRequired)
             {
                 statusMessage = "Nicht lizenzpflichtig.";
             }
@@ -80,7 +81,7 @@ public sealed class LicensedDeviceStateEvaluator
                 InterfaceProfileId: profile.Metadata.Id,
                 DisplayName: profile.Metadata.Name,
                 IsActive: profile.IsActive,
-                IsLicenseRequired: profile.IsLicenseRequired,
+                IsLicenseRequired: isLicenseRequired,
                 IsCoveredByLicense: isLicenseRelevant && isCovered,
                 IsInGracePeriod: isInGracePeriod,
                 GracePeriodStartedAt: gracePeriodStartedAt,

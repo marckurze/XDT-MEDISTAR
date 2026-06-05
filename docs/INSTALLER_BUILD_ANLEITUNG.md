@@ -64,11 +64,11 @@ Dieses Risiko ist im Buildskript jetzt abgesichert: `scripts\build-xdtbox-instal
 Nach dem Staging-Umbau wurde der Installer-Build mit Vollzugriff erfolgreich ausgefuehrt:
 
 - Setup-Datei: `C:\GitHub\XDT-MEDISTAR\artifacts\installer\XDTBox_Setup_1.0.exe`
-- Dateigroesse: 63.413.022 Bytes
-- Zeitstempel: 2026-06-05 14:34:40
+- Dateigroesse: 63.429.793 Bytes
+- Zeitstempel: 2026-06-05 18:27:42
 - Publish-EXE: `C:\GitHub\XDT-MEDISTAR\artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
 - Publish-EXE-Groesse: 421.376 Bytes
-- Publish-EXE-Zeitstempel: 2026-06-05 14:33:58
+- Publish-EXE-Zeitstempel: 2026-06-05 18:26:43
 - Publish-Validierung: sauber durchlaufen; der Inno-Build wurde erst nach der Kundenpublish-Pruefung gestartet
 - App-Start aus Publish: `XdtDeviceBridge.App.exe` startete erfolgreich aus `artifacts\publish\XDTBox` und wurde fuer die Pruefung wieder beendet
 - Zusaetzliche Sperrmarker-Pruefung nach dem Installer-Build: Repository-Textscan und Publish-/Setup-Klartextscan ohne Treffer fuer die vier gesperrten externen Marker. Bei einer rein binaeren Suche nach dem sehr kurzen 3-Byte-Marker entstehen erwartbare Zufallsfolgen in kompilierten DLL-/Setup-Binaerdaten; es gibt keinen lesbaren Klartexttreffer.
