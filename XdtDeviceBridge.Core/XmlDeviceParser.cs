@@ -308,7 +308,7 @@ public sealed class XmlDeviceParser
         var company = GetChildValue(common, "Company");
         var modelName = GetChildValue(common, "ModelName");
         if (!string.Equals(company, "NIDEK", StringComparison.OrdinalIgnoreCase)
-            || !IsNidekLm7Model(modelName))
+            || !IsNidekLensmeterModel(modelName))
         {
             return;
         }
@@ -322,8 +322,8 @@ public sealed class XmlDeviceParser
         var pd = FindChild(measure, "PD");
         var distance = pd is null ? null : GetChildValue(pd, "Distance");
 
-        AddLensmeterLine(measurements, "R", FindChild(lm, "R"), distance);
-        AddLensmeterLine(measurements, "L", FindChild(lm, "L"), null);
+        AddLensmeterLine(measurements, "R", FindChild(lm, "R") ?? FindChild(lm, "I"), distance);
+        AddLensmeterLine(measurements, "L", FindChild(lm, "L") ?? FindChild(lm, "S"), null);
     }
 
     private static void AddTopconCl300MedistarLines(XElement root, List<MeasurementValue> measurements)
@@ -2053,11 +2053,12 @@ public sealed class XmlDeviceParser
         return decimal.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out number);
     }
 
-    private static bool IsNidekLm7Model(string? modelName)
+    private static bool IsNidekLensmeterModel(string? modelName)
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return string.Equals(normalized, "LM7", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(normalized, "LM7P", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(normalized, "LM7P", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "LM1800P", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconCl300Model(string? modelName)
@@ -2075,7 +2076,8 @@ public sealed class XmlDeviceParser
     private static bool IsTopconKr800SModel(string? modelName)
     {
         var normalized = modelName?.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
-        return string.Equals(normalized, "KR800S", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(normalized, "KR800S", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(normalized, "KR800", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTopconKr1Model(string? modelName)

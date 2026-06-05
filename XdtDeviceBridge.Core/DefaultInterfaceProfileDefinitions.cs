@@ -76,6 +76,82 @@ public static class DefaultInterfaceProfileDefinitions
             Description: "Built-in inactive default interface definition for the MEDISTAR/NIDEK AR360 profile candidate.");
     }
 
+    public static InterfaceProfileDefinition CreateMedistarNidekArk510ADefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-ark510a-default",
+            name: "MEDISTAR + NIDEK ARK-510A",
+            product: "MEDISTAR/NIDEK ARK-510A",
+            deviceProfileId: "device-nidek-ark510a-default",
+            exportProfileId: "export-medistar-nidek-ark510a-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK ARK-510A XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekArk560ADefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-ark560a-default",
+            name: "MEDISTAR + NIDEK ARK-560A",
+            product: "MEDISTAR/NIDEK ARK-560A",
+            deviceProfileId: "device-nidek-ark560a-default",
+            exportProfileId: "export-medistar-nidek-ark560a-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK ARK-560A XML files.");
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarNidekLm1800PDefault()
+    {
+        return CreateMedistarNidekXmlDefault(
+            id: "interface-medistar-nidek-lm1800p-default",
+            name: "MEDISTAR + NIDEK LM-1800P",
+            product: "MEDISTAR/NIDEK LM-1800P",
+            deviceProfileId: "device-nidek-lm1800p-default",
+            exportProfileId: "export-medistar-nidek-lm1800p-default",
+            description: "Built-in inactive default interface definition for MEDISTAR and NIDEK LM-1800P XML files.");
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarNidekXmlDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description);
+    }
+
     public static InterfaceProfileDefinition CreateMedistarNidekLm7Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 18, 12, 0, 0, TimeSpan.Zero);

@@ -74,6 +74,8 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
+Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
+
 # Profilverwaltung
 
 Der Tab "Profilverwaltung" bündelt die reine Profilpflege. Dort finden Sie AIS-, Geräte-, Export- und Schnittstellenprofile sowie lokale Templatepakete und Baukasten-Templates in einer gemeinsamen Übersicht mit Suche, BuiltIn/UserDefined-Filter und Profiltypfilter.

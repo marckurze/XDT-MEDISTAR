@@ -354,6 +354,9 @@ public sealed class ProfileCatalogService
         {
             DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
             DefaultDeviceProfileDefinitions.CreateNidekAr360Default(),
+            DefaultDeviceProfileDefinitions.CreateNidekArk510ADefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekArk560ADefault(),
+            DefaultDeviceProfileDefinitions.CreateNidekLm1800PDefault(),
             DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
             DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(),
             DefaultDeviceProfileDefinitions.CreateNidekRt6100Default(),
@@ -379,6 +382,9 @@ public sealed class ProfileCatalogService
         {
             DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
             DefaultExportProfileDefinitions.CreateMedistarNidekAr360Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk510ADefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk560ADefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekLm1800PDefault(),
             DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default(),
             DefaultExportProfileDefinitions.CreateMedistarNidekNt530PDefault(),
             DefaultExportProfileDefinitions.CreateMedistarNidekRt6100Default(),
@@ -404,6 +410,9 @@ public sealed class ProfileCatalogService
         {
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekAr360Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk510ADefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk560ADefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm1800PDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekNt530PDefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt6100Default(),

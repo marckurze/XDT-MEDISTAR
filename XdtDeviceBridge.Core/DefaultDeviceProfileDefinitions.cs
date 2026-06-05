@@ -85,6 +85,121 @@ public static class DefaultDeviceProfileDefinitions
             DeviceImagePath: InterfaceProfileUiPolicy.NidekAr360DeviceImagePath);
     }
 
+    public static DeviceProfileDefinition CreateNidekArk510ADefault()
+    {
+        return CreateNidekArk5xxDefault(
+            id: "device-nidek-ark510a-default",
+            name: "NIDEK ARK-510A",
+            model: "ARK-510A",
+            description: "Default device profile definition for NIDEK ARK-510A XML autorefractor measurement files.");
+    }
+
+    public static DeviceProfileDefinition CreateNidekArk560ADefault()
+    {
+        return CreateNidekArk5xxDefault(
+            id: "device-nidek-ark560a-default",
+            name: "NIDEK ARK-560A",
+            model: "ARK-560A",
+            description: "Default device profile definition for NIDEK ARK-560A XML autorefractor measurement files.");
+    }
+
+    private static DeviceProfileDefinition CreateNidekArk5xxDefault(
+        string id,
+        string name,
+        string model,
+        string description)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "NIDEK",
+                Product: model,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: model,
+            DeviceType: "Autorefractor",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition($"{id}-company", "Company", "Company", "Common", string.Empty, string.Empty, true, "NIDEK XML company field."),
+                new DeviceMeasurementDefinition($"{id}-model-name", "ModelName", "ModelName", "Common", string.Empty, string.Empty, true, $"NIDEK XML model name field; expected {model}."),
+                new DeviceMeasurementDefinition($"{id}-date", "Date", "Date", "Common", string.Empty, string.Empty, false, "NIDEK XML measurement date."),
+                new DeviceMeasurementDefinition($"{id}-time", "Time", "Time", "Common", string.Empty, string.Empty, false, "NIDEK XML measurement time."),
+                new DeviceMeasurementDefinition($"{id}-vd", "VD", "VD", "ARMedian", string.Empty, "mm", false, "Vertex distance from NIDEK XML."),
+                new DeviceMeasurementDefinition($"{id}-r-sphere", "R Sphere", "R/AR/ARMedian/Sphere", "ARMedian", "R", "dpt", true, "Right eye sphere from ARMedian."),
+                new DeviceMeasurementDefinition($"{id}-r-cylinder", "R Cylinder", "R/AR/ARMedian/Cylinder", "ARMedian", "R", "dpt", true, "Right eye cylinder from ARMedian."),
+                new DeviceMeasurementDefinition($"{id}-r-axis", "R Axis", "R/AR/ARMedian/Axis", "ARMedian", "R", "deg", true, "Right eye axis from ARMedian."),
+                new DeviceMeasurementDefinition($"{id}-l-sphere", "L Sphere", "L/AR/ARMedian/Sphere", "ARMedian", "L", "dpt", true, "Left eye sphere from ARMedian."),
+                new DeviceMeasurementDefinition($"{id}-l-cylinder", "L Cylinder", "L/AR/ARMedian/Cylinder", "ARMedian", "L", "dpt", true, "Left eye cylinder from ARMedian."),
+                new DeviceMeasurementDefinition($"{id}-l-axis", "L Axis", "L/AR/ARMedian/Axis", "ARMedian", "L", "deg", true, "Left eye axis from ARMedian."),
+                new DeviceMeasurementDefinition($"{id}-far-pd", "FarPD", "PD/PDList[@No='1']/FarPD", "PDList", string.Empty, "mm", false, "Far pupillary distance from NIDEK XML.")
+            },
+            SupportedExaminationTypes: new[] { "Refraktion", "AR", "PD" },
+            CanContainMultipleExaminationTypes: false);
+    }
+
+    public static DeviceProfileDefinition CreateNidekLm1800PDefault()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "device-nidek-lm1800p-default",
+                Name: "NIDEK LM-1800P",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Default device profile definition for NIDEK LM-1800P XML lensmeter measurement files.",
+                Vendor: "NIDEK",
+                Product: "LM-1800P",
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "NIDEK",
+            Model: "LM-1800P",
+            DeviceType: "Lensmeter",
+            ParserMode: "Xml",
+            Measurements: new[]
+            {
+                new DeviceMeasurementDefinition("lm1800p-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "NIDEK LM-1800P XML company field."),
+                new DeviceMeasurementDefinition("lm1800p-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "NIDEK LM-1800P XML model name field."),
+                new DeviceMeasurementDefinition("lm1800p-date", "Date", "Common/Date", "Common", string.Empty, string.Empty, false, "NIDEK LM-1800P measurement date."),
+                new DeviceMeasurementDefinition("lm1800p-time", "Time", "Common/Time", "Common", string.Empty, string.Empty, false, "NIDEK LM-1800P measurement time."),
+                new DeviceMeasurementDefinition("lm1800p-r-sphere", "R Sphere", "Measure[@Type='LM']/LM/R/Sphere", "LM", "R", "dpt", false, "Right lens sphere from the R block."),
+                new DeviceMeasurementDefinition("lm1800p-r-cylinder", "R Cylinder", "Measure[@Type='LM']/LM/R/Cylinder", "LM", "R", "dpt", false, "Right lens cylinder from the R block."),
+                new DeviceMeasurementDefinition("lm1800p-r-axis", "R Axis", "Measure[@Type='LM']/LM/R/Axis", "LM", "R", "deg", false, "Right lens axis from the R block."),
+                new DeviceMeasurementDefinition("lm1800p-i-sphere", "I Sphere", "Measure[@Type='LM']/LM/I/Sphere", "LM", "R", "dpt", false, "Right lens sphere from the LM-1800P I block."),
+                new DeviceMeasurementDefinition("lm1800p-i-cylinder", "I Cylinder", "Measure[@Type='LM']/LM/I/Cylinder", "LM", "R", "dpt", false, "Right lens cylinder from the LM-1800P I block."),
+                new DeviceMeasurementDefinition("lm1800p-i-axis", "I Axis", "Measure[@Type='LM']/LM/I/Axis", "LM", "R", "deg", false, "Right lens axis from the LM-1800P I block."),
+                new DeviceMeasurementDefinition("lm1800p-l-sphere", "L Sphere", "Measure[@Type='LM']/LM/L/Sphere", "LM", "L", "dpt", false, "Left lens sphere from the L block."),
+                new DeviceMeasurementDefinition("lm1800p-l-cylinder", "L Cylinder", "Measure[@Type='LM']/LM/L/Cylinder", "LM", "L", "dpt", false, "Left lens cylinder from the L block."),
+                new DeviceMeasurementDefinition("lm1800p-l-axis", "L Axis", "Measure[@Type='LM']/LM/L/Axis", "LM", "L", "deg", false, "Left lens axis from the L block."),
+                new DeviceMeasurementDefinition("lm1800p-s-sphere", "S Sphere", "Measure[@Type='LM']/LM/S/Sphere", "LM", "L", "dpt", false, "Left lens sphere from the LM-1800P S block."),
+                new DeviceMeasurementDefinition("lm1800p-s-cylinder", "S Cylinder", "Measure[@Type='LM']/LM/S/Cylinder", "LM", "L", "dpt", false, "Left lens cylinder from the LM-1800P S block."),
+                new DeviceMeasurementDefinition("lm1800p-s-axis", "S Axis", "Measure[@Type='LM']/LM/S/Axis", "LM", "L", "deg", false, "Left lens axis from the LM-1800P S block."),
+                new DeviceMeasurementDefinition("lm1800p-r-add", "R ADD", "Measure[@Type='LM']/LM/R/ADD", "LM", "R", "dpt", false, "Right addition from the R block."),
+                new DeviceMeasurementDefinition("lm1800p-i-add", "I ADD", "Measure[@Type='LM']/LM/I/ADD", "LM", "R", "dpt", false, "Right addition from the I block."),
+                new DeviceMeasurementDefinition("lm1800p-l-add", "L ADD", "Measure[@Type='LM']/LM/L/ADD", "LM", "L", "dpt", false, "Left addition from the L block."),
+                new DeviceMeasurementDefinition("lm1800p-s-add", "S ADD", "Measure[@Type='LM']/LM/S/ADD", "LM", "L", "dpt", false, "Left addition from the S block."),
+                new DeviceMeasurementDefinition("lm1800p-pd-distance", "PD Distance", "Measure[@Type='LM']/PD/Distance", "PD", string.Empty, "mm", false, "Lensmeter pupillary distance."),
+                new DeviceMeasurementDefinition("lm1800p-medistar-r-line", "R MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/R/MedistarLine", "LM", "R", string.Empty, false, "Computed MEDISTAR lensmeter line for the right lens."),
+                new DeviceMeasurementDefinition("lm1800p-medistar-l-line", "L MEDISTAR Lensmeter-Zeile", "Measure[@Type='LM']/LM/L/MedistarLine", "LM", "L", string.Empty, false, "Computed MEDISTAR lensmeter line for the left lens.")
+            },
+            SupportedExaminationTypes: new[] { "Lensmeter", "PD", "Prism" },
+            CanContainMultipleExaminationTypes: false);
+    }
+
     public static DeviceProfileDefinition CreateNidekLm7Default()
     {
         var timestamp = new DateTimeOffset(2026, 5, 3, 12, 0, 0, TimeSpan.Zero);

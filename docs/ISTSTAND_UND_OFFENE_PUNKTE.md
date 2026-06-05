@@ -24,6 +24,7 @@ Kritische Abweichungen, bei denen die Dokumentation eine produktiv fertige Funkt
 Besonders stabil wirken aktuell:
 
 - MEDISTAR + NIDEK ARK1S Kernworkflow
+- Aus Referenzdaten abgeleitete erste BuiltIn-Erweiterung: NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P sind mit Geraete-, Export- und Schnittstellenprofilen sowie synthetischen Parser-/Exporttests vorbereitet. TOPCON KR-800 wird als Alias der vorhandenen KR800S-XML-Familie erkannt. Scriptbasierte Geraete ohne echte Rohdaten sind in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md` als Parser-Kandidaten fuer Folge-Batches dokumentiert.
 - MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link im Pflicht-Anhang-Praxislauf
 - zentrale XDT-Erzeugung ueber `XdtExportBuilder`
 - BuiltIn/UserDefined-Profiltrennung

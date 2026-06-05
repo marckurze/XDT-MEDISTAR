@@ -208,13 +208,13 @@ public sealed class TopconKr800SProfileTests
     }
 
     [Fact]
-    public void NonKr800STopconXml_ShouldNotCreateKr800SMedistarLines()
+    public void UnsupportedTopconRefXml_ShouldNotCreateKr800FamilyMedistarLines()
     {
         var path = WriteTempXml("""
             <Ophthalmology>
               <Common>
                 <Company>TOPCON</Company>
-                <ModelName>KR-800</ModelName>
+                <ModelName>UNSUPPORTED-REF</ModelName>
               </Common>
               <Measure type="REF">
                 <REF>

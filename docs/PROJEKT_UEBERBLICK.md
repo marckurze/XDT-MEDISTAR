@@ -27,6 +27,8 @@ Konkret bedeutet das fuer den aktuellen Produktivbetrieb: Beim Oeffnen der XDTBo
 
 Aktuelle Entwicklungsleitlinie: Fertige Geraeteprofile und Templatepakete haben Vorrang vor weiterer Aktivierungs- oder Assistentenarchitektur. Der Baukasten bleibt Werkzeug fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen, nicht der normale Bedienweg.
 
+Der erste systematische Referenzdaten-Batch wurde statisch ausgewertet. Als sichere neue BuiltIns sind NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P vorbereitet; TOPCON KR-800 nutzt die vorhandene KR800S-XML-Familie als Alias. Scriptbasierte Geraete ohne echte Rohdaten bleiben als Parser-Kandidaten dokumentiert und werden in spaeteren, getrennten Parser-Batches umgesetzt. Details stehen in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md`.
+
 ## 2. Aktuelle Version
 
 Aktuelle Version laut `VERSION` und `Directory.Build.props`:
