@@ -6,6 +6,7 @@ namespace XdtDeviceBridge.Tests;
 public sealed class ReferencePackageBuiltInDeviceTests
 {
     private readonly XmlDeviceParser _parser = new();
+    private readonly HuvitzTextDeviceParser _huvitzParser = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
 
@@ -153,31 +154,117 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void HuvitzHrkProfiles_ShouldParseAndExportRefAndKeratometryLines()
+    {
+        var parseResult = _huvitzParser.ParseFile(GetHuvitzFixturePath("HRK8000A", "HRK8000A_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault();
+        var xdt = BuildXdt(CreatePatientData("HRK8000A"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "HRK-8000A");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/Sphere" && measurement.Value == "-0.75");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains("6228R.:S=- 0.75 Z=- 0.50* 25 PD= 66", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 0.25 Z=- 0.75*111 PD= 66", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.82 R2=7.7 *108 // L: R1=7.9 R2=7.81 * 33", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HuvitzHnt1PProfile_ShouldParseAndExportTonometrieAndPachymetrieLines()
+    {
+        var parseResult = _huvitzParser.ParseFile(GetHuvitzFixturePath("HNT1P", "HNT1P_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarHuvitzHnt1PDefault();
+        var xdt = BuildXdt(CreatePatientData("HNT1P"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "HNT-1P");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine" && measurement.Value == "R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='CCT']/Pachy/MedistarLine" && measurement.Value == "RA: 0.559 // LA: 0.560");
+        Assert.Contains("6205R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg", xdt, StringComparison.Ordinal);
+        Assert.Contains("6220RA: 0.559 // LA: 0.560", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6228", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6221", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HuvitzHtr1AProfile_ShouldParseAndExportCombinedMeasurementsByMeasurementType()
+    {
+        var parseResult = _huvitzParser.ParseFile(GetHuvitzFixturePath("HTR1A", "HTR1A_reference_text.txt"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarHuvitzHtr1ADefault();
+        var xdt = BuildXdt(CreatePatientData("HTR1A"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "HTR-1A");
+        Assert.Contains("6228R.:S=+ 0.75 Z=- 1.25*110 PD= 63", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 0.25 Z=- 0.75* 77 PD= 63", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.82 R2=7.7 *108 // L: R1=7.9 R2=7.81 * 33", xdt, StringComparison.Ordinal);
+        Assert.Contains("6205R = 12 11 15 [12.7] // L = 14 13 15 [14.0] mmHg", xdt, StringComparison.Ordinal);
+        Assert.Contains("6220RA: 0.559 // LA: 0.560", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6227", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NewReferenceBackedBuiltIns_ShouldBeValid()
     {
         var deviceProfiles = new[]
         {
             DefaultDeviceProfileDefinitions.CreateNidekArk510ADefault(),
             DefaultDeviceProfileDefinitions.CreateNidekArk560ADefault(),
-            DefaultDeviceProfileDefinitions.CreateNidekLm1800PDefault()
+            DefaultDeviceProfileDefinitions.CreateNidekLm1800PDefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHrk9000ADefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault()
         };
         var exportProfiles = new[]
         {
             DefaultExportProfileDefinitions.CreateMedistarNidekArk510ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarNidekArk560ADefault(),
-            DefaultExportProfileDefinitions.CreateMedistarNidekLm1800PDefault()
+            DefaultExportProfileDefinitions.CreateMedistarNidekLm1800PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
+            DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
+            DefaultExportProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarHuvitzHtr1ADefault()
         };
         var interfaceProfiles = new[]
         {
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk510ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk560ADefault(),
-            DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm1800PDefault()
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm1800PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHtr1ADefault()
         };
 
         Assert.All(deviceProfiles, profile => Assert.Empty(DeviceProfileDefinitionValidator.Validate(profile)));
         Assert.All(exportProfiles, profile => Assert.Empty(ExportProfileDefinitionValidator.Validate(profile)));
         Assert.All(interfaceProfiles, profile => Assert.Empty(InterfaceProfileDefinitionValidator.Validate(profile)));
         Assert.All(interfaceProfiles, profile => Assert.False(profile.IsActive));
+    }
+
+    [Fact]
+    public void HuvitzTextPreview_ShouldAcceptNonXmlDeviceFileInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = GetHuvitzFixturePath("HTR1A", "HTR1A_reference_text.txt");
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHtr1ADefault(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarHuvitzHtr1ADefault(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains("6228R.:S=+ 0.75 Z=- 1.25*110 PD= 63", result.ExportContent, StringComparison.Ordinal);
     }
 
     private static PatientData CreatePatientData(string examinationType)
@@ -202,6 +289,40 @@ public sealed class ReferencePackageBuiltInDeviceTests
         Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, "reference-device.xml");
         File.WriteAllText(path, content);
+        return path;
+    }
+
+    private string BuildXdt(PatientData patient, DeviceParseResult parseResult, ExportProfileDefinition exportProfile)
+    {
+        var mappingResult = _mappingEngine.Map(patient, parseResult.Measurements, _mappingAdapter.Adapt(exportProfile));
+        var xdt = new XdtExportBuilder().Build(mappingResult.Records);
+
+        Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
+        Assert.Empty(xdt.Issues);
+        return xdt.Content;
+    }
+
+    private static string GetHuvitzFixturePath(string familyFolder, string fileName)
+    {
+        return Path.Combine(AppContext.BaseDirectory, "TestData", "Devices", "Huvitz", familyFolder, fileName);
+    }
+
+    private static string WriteTempGdt()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, "patient.gdt");
+        File.WriteAllText(path, """
+            01380006302
+            014810000304
+            01092063
+            014921802.10
+            0143000PAT-REF
+            0113101Test
+            0133102Person
+            015310301012000
+            0128402HTR1A
+            """);
         return path;
     }
 }

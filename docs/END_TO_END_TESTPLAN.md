@@ -628,7 +628,17 @@ Die folgende Tabelle bleibt als kompakte Schnellübersicht erhalten.
 | 11 |  |  |  |  |  |  |  |  |
 | 12 |  |  |  |  |  |  |  |  |
 
-## 16. Abnahmekriterien
+## 16. Huvitz-Referenzdaten-Pruefung
+
+Fuer Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A sind zunaechst synthetische Fixtures aus Referenzlogik massgeblich:
+
+- HRK-8000A/HRK-9000A: REF-Zeilen erzeugen `6228`, KM-Zeile erzeugt `6221`.
+- HNT-1P: Tonometrie erzeugt `6205`, Pachymetrie erzeugt `6220`.
+- HTR-1A: REF/KM/Tonometrie/Pachymetrie koennen gemeinsam verarbeitet werden, ohne `6330` oder kuenstliche Trennzeilen zu erzeugen.
+- Baukasten und manuelle Vorschau muessen Huvitz-Textdaten ohne XML-Zwang akzeptieren.
+- Echte Huvitz-Rohdaten sind als spaetere Praxisfixtures zu sammeln und gegen diese Regeln zu validieren.
+
+## 17. Abnahmekriterien
 
 Der automatische AIS-/Geräte-/XDT-Anhang-Ablauf gilt für diesen Prototyp als abgenommen, wenn:
 

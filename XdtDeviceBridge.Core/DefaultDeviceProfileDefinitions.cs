@@ -1097,6 +1097,188 @@ public static class DefaultDeviceProfileDefinitions
         };
     }
 
+    public static DeviceProfileDefinition CreateHuvitzHrk8000ADefault()
+    {
+        return CreateHuvitzTextSerialDefault(
+            id: "device-huvitz-hrk8000a-default",
+            name: "Huvitz HRK-8000A",
+            product: "HRK-8000A",
+            model: "HRK-8000A",
+            deviceType: "Autorefraktor/Keratometer",
+            description: "Built-in serial text profile for Huvitz HRK-8000A REF/KM data derived from neutral reference parser rules. REF is exported to 6228 and KM to 6221; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeRefKm: true,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateHuvitzHrk9000ADefault()
+    {
+        return CreateHuvitzTextSerialDefault(
+            id: "device-huvitz-hrk9000a-default",
+            name: "Huvitz HRK-9000A",
+            product: "HRK-9000A",
+            model: "HRK-9000A",
+            deviceType: "Autorefraktor/Keratometer",
+            description: "Built-in serial text profile for Huvitz HRK-9000A REF/KM data derived from neutral reference parser rules. REF is exported to 6228 and KM to 6221; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeRefKm: true,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateHuvitzHnt1PDefault()
+    {
+        return CreateHuvitzTextSerialDefault(
+            id: "device-huvitz-hnt1p-default",
+            name: "Huvitz HNT-1P",
+            product: "HNT-1P",
+            model: "HNT-1P",
+            deviceType: "Tonometer/Pachymeter",
+            description: "Built-in serial text profile for Huvitz HNT-1P tonometry and pachymetry data derived from neutral reference parser rules. IOP is exported to 6205 and CCT to 6220; practical raw-data validation remains open.",
+            baudRate: 115200,
+            includeRefKm: false,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateHuvitzHtr1ADefault()
+    {
+        return CreateHuvitzTextSerialDefault(
+            id: "device-huvitz-htr1a-default",
+            name: "Huvitz HTR-1A",
+            product: "HTR-1A",
+            model: "HTR-1A",
+            deviceType: "Autorefraktor/Keratometer/Tonometer/Pachymeter",
+            description: "Built-in serial text profile for Huvitz HTR-1A combined REF/KM/IOP/CCT data derived from neutral reference parser rules. REF maps to 6228, KM to 6221, IOP to 6205 and CCT to 6220; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeRefKm: true,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static DeviceProfileDefinition CreateHuvitzTextSerialDefault(
+        string id,
+        string name,
+        string product,
+        string model,
+        string deviceType,
+        string description,
+        int baudRate,
+        bool includeRefKm,
+        bool includeTonoPachy,
+        DateTimeOffset timestamp)
+    {
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "Huvitz",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "Huvitz",
+            Model: model,
+            DeviceType: deviceType,
+            ParserMode: HuvitzTextDeviceParser.ParserMode,
+            Measurements: CreateHuvitzTextMeasurements(product, includeRefKm, includeTonoPachy),
+            SupportedExaminationTypes: CreateHuvitzSupportedExaminationTypes(includeRefKm, includeTonoPachy),
+            CanContainMultipleExaminationTypes: includeRefKm && includeTonoPachy,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: DeviceConnectionKind.SerialRs232,
+            SerialSettings: new SerialCommunicationSettings(
+                BaudRate: baudRate,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000));
+    }
+
+    private static IReadOnlyList<string> CreateHuvitzSupportedExaminationTypes(bool includeRefKm, bool includeTonoPachy)
+    {
+        var values = new List<string>();
+        if (includeRefKm)
+        {
+            values.AddRange(new[] { "REF", "Autorefraktor", "KM", "Keratometer" });
+        }
+
+        if (includeTonoPachy)
+        {
+            values.AddRange(new[] { "TM", "Tonometrie", "CCT", "Pachymetrie" });
+        }
+
+        return values;
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateHuvitzTextMeasurements(
+        string product,
+        bool includeRefKm,
+        bool includeTonoPachy)
+    {
+        var prefix = $"huvitz-{product.Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase).ToLowerInvariant()}";
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "Huvitz common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "Huvitz model name when present in the text payload.")
+        };
+
+        if (includeRefKm)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-ref-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"REF {eye} Sphere", $"Measure[@Type='REF']/REF/{eye}/Sphere", "REF", eye, "dpt", false, "REF sphere from Huvitz serial text."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"REF {eye} Cylinder", $"Measure[@Type='REF']/REF/{eye}/Cylinder", "REF", eye, "dpt", false, "REF cylinder from Huvitz serial text."));
+                measurements.Add(new($"{eyePrefix}-axis", $"REF {eye} Axis", $"Measure[@Type='REF']/REF/{eye}/Axis", "REF", eye, "deg", false, "REF axis from Huvitz serial text."));
+                measurements.Add(new($"{eyePrefix}-pd", $"REF {eye} PD", $"Measure[@Type='REF']/REF/{eye}/PD", "REF", eye, "mm", false, "REF PD from Huvitz serial text when present."));
+                measurements.Add(new($"{eyePrefix}-medistar-line", $"REF {eye} MEDISTAR-Zeile", $"Measure[@Type='REF']/REF/{eye}/MedistarLine", "REF", eye, string.Empty, false, "Prepared MEDISTAR 6228 REF line."));
+
+                var kmPrefix = $"{prefix}-km-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{kmPrefix}-r1", $"KM {eye} R1", $"Measure[@Type='KM']/KM/{eye}/Radius1", "KM", eye, "mm", false, "KM radius 1 from Huvitz serial text."));
+                measurements.Add(new($"{kmPrefix}-r2", $"KM {eye} R2", $"Measure[@Type='KM']/KM/{eye}/Radius2", "KM", eye, "mm", false, "KM radius 2 from Huvitz serial text."));
+                measurements.Add(new($"{kmPrefix}-axis", $"KM {eye} Axis", $"Measure[@Type='KM']/KM/{eye}/Axis", "KM", eye, "deg", false, "KM axis from Huvitz serial text."));
+            }
+
+            measurements.Add(new($"{prefix}-km-medistar-line", "KM MEDISTAR-Zeile", "Measure[@Type='KM']/KM/MedistarLine1", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 KM line."));
+        }
+
+        if (includeTonoPachy)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var tonoPrefix = $"{prefix}-tono-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{tonoPrefix}-value1", $"Tonometrie {eye} Wert 1", $"Measure[@Type='TM']/Tono/{eye}/Value1", "TM", eye, "mmHg", false, "First IOP value from Huvitz serial text."));
+                measurements.Add(new($"{tonoPrefix}-value2", $"Tonometrie {eye} Wert 2", $"Measure[@Type='TM']/Tono/{eye}/Value2", "TM", eye, "mmHg", false, "Second IOP value from Huvitz serial text."));
+                measurements.Add(new($"{tonoPrefix}-value3", $"Tonometrie {eye} Wert 3", $"Measure[@Type='TM']/Tono/{eye}/Value3", "TM", eye, "mmHg", false, "Third IOP value from Huvitz serial text."));
+                measurements.Add(new($"{tonoPrefix}-average", $"Tonometrie {eye} Mittelwert", $"Measure[@Type='TM']/Tono/{eye}/Average", "TM", eye, "mmHg", false, "Average IOP value from Huvitz serial text."));
+
+                var pachyPrefix = $"{prefix}-pachy-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{pachyPrefix}-value1", $"Pachymetrie {eye} Wert 1", $"Measure[@Type='CCT']/Pachy/{eye}/Value1", "CCT", eye, "um", false, "First CCT value from Huvitz serial text."));
+                measurements.Add(new($"{pachyPrefix}-value2", $"Pachymetrie {eye} Wert 2", $"Measure[@Type='CCT']/Pachy/{eye}/Value2", "CCT", eye, "um", false, "Second CCT value from Huvitz serial text."));
+                measurements.Add(new($"{pachyPrefix}-value3", $"Pachymetrie {eye} Wert 3", $"Measure[@Type='CCT']/Pachy/{eye}/Value3", "CCT", eye, "um", false, "Third CCT value from Huvitz serial text."));
+                measurements.Add(new($"{pachyPrefix}-average", $"Pachymetrie {eye} Mittelwert", $"Measure[@Type='CCT']/Pachy/{eye}/Average", "CCT", eye, "um", false, "Average CCT value from Huvitz serial text."));
+            }
+
+            measurements.Add(new($"{prefix}-tono-medistar-line", "Tonometrie MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 tonometry line."));
+            measurements.Add(new($"{prefix}-pachy-medistar-line", "Pachymetrie MEDISTAR-Zeile", "Measure[@Type='CCT']/Pachy/MedistarLine", "CCT", string.Empty, string.Empty, false, "Prepared MEDISTAR 6220 pachymetry line."));
+        }
+
+        return measurements;
+    }
+
     public static DeviceProfileDefinition CreateDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

@@ -534,6 +534,16 @@ Teilweise praktisch abgeschlossen ist die manuelle Praxisabnahme fuer MEDISTAR +
 | MEDISTAR-Exporttemplates | Bewusst zurueckgestellt. | Neues Fachkonzept erforderlich; bis dahin keine Umsetzung und keine automatische 6330-Ergaenzung. |
 | Archivloeschung | Cleanup-Service vorbereitet, keine automatische Ausfuehrung. | Soll es eine sichere, explizite UI-Aktion geben? |
 
+## 8a. Huvitz-Referenzdatenbatch
+
+Aus neutral ausgewerteter Huvitz-Referenzlogik sind vier serielle Text-BuiltIns vorbereitet:
+
+- Huvitz HRK-8000A und HRK-9000A: REF nach `6228`, KM nach `6221`, Default RS232 `9600 8N1`.
+- Huvitz HNT-1P: Tonometrie nach `6205`, Pachymetrie nach `6220`, Default RS232 `115200 8N1`.
+- Huvitz HTR-1A: kombinierte REF/KM/IOP/CCT-Auswertung nach `6228`, `6221`, `6205` und `6220`, Default RS232 `9600 8N1`.
+
+Der neue `HuvitzTextDeviceParser` ist in Baukasten und manueller Verarbeitung angebunden und akzeptiert Huvitz-Textdaten ohne XML-Zwang. Die Tests nutzen synthetische Fixtures aus der Referenzlogik; echte Praxisrohdateien und MEDISTAR-Importabnahme bleiben offen. HLM-1/HLM-7000P/HLM-9000 sowie HDR-7000/HDR-9000 sind weiterhin Kandidaten, aber noch keine BuiltIns.
+
 ## 9. Empfohlener naechster Codex-Schritt
 
 Empfohlen wird als naechster kleiner, sicherer und testbarer Schritt:

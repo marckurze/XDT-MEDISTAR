@@ -10,6 +10,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
 
     private readonly XmlDeviceParser _parser;
     private readonly NidekRtSerialPhoropterParser _rtSerialParser = new();
+    private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
 
     public XdtBaukastenDeviceCompatibilityService()
         : this(new XmlDeviceParser())
@@ -60,6 +61,21 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 }
 
                 return EvaluateForWorkbench(deviceProfile, serialResult.Measurements);
+            }
+
+            if (HuvitzTextDeviceParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var huvitzResult = _huvitzTextParser.ParseFile(deviceFilePath);
+                if (huvitzResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
+                        huvitzResult.Measurements,
+                        FindCompany(huvitzResult.Measurements),
+                        FindModelName(huvitzResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, huvitzResult.Measurements);
             }
 
             var parseResult = _parser.ParseFile(deviceFilePath);
@@ -240,6 +256,10 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         AddAliasIfContains(aliases, normalizedProfileText, "CT1P", "CT1P");
         AddAliasIfContains(aliases, normalizedProfileText, "CT800A", "CT800A", "CT800");
         AddAliasIfContains(aliases, normalizedProfileText, "CV5000", "CV5000", "CV5000S");
+        AddAliasIfContains(aliases, normalizedProfileText, "HRK8000A", "HRK8000A", "HRK-8000A");
+        AddAliasIfContains(aliases, normalizedProfileText, "HRK9000A", "HRK9000A", "HRK-9000A");
+        AddAliasIfContains(aliases, normalizedProfileText, "HNT1P", "HNT1P", "HNT-1P");
+        AddAliasIfContains(aliases, normalizedProfileText, "HTR1A", "HTR1A", "HTR-1A");
     }
 
     private static void AddAliasIfContains(HashSet<string> aliases, string normalizedProfileText, string marker, params string[] values)

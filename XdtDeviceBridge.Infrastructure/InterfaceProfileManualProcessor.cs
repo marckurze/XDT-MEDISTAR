@@ -9,6 +9,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     private readonly MedistarHistoricalMeasurementParser _medistarHistoricalMeasurementParser = new();
     private readonly XmlDeviceParser _xmlDeviceParser = new();
     private readonly NidekRtSerialPhoropterParser _nidekRtSerialParser = new();
+    private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -32,6 +33,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var messages = new List<string>();
         var issues = new List<ProcessingIssue>();
         var usesNidekRtSerialParser = UsesNidekRtSerialParser(interfaceProfile, exportProfile);
+        var usesHuvitzTextParser = UsesHuvitzTextParser(interfaceProfile, exportProfile);
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ExportFolder))
         {
@@ -49,6 +51,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var isAttachmentOnlyMode = interfaceProfile.FolderOptions.IsAttachmentOnlyMode;
         if (!isAttachmentOnlyMode
             && !usesNidekRtSerialParser
+            && !usesHuvitzTextParser
             && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {
             return CreateFailureResult(
@@ -84,6 +87,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             ? CreateAttachmentOnlyDeviceResult(documentationTextProvider?.Invoke(patient), out documentationText)
             : usesNidekRtSerialParser
                 ? _nidekRtSerialParser.ParseFile(deviceFilePath)
+                : usesHuvitzTextParser
+                    ? _huvitzTextParser.ParseFile(deviceFilePath)
             : _xmlDeviceParser.ParseFile(deviceFilePath);
         if (!isAttachmentOnlyMode)
         {
@@ -834,10 +839,24 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             || IsNidekRtSerialId(exportProfile.SourceDeviceProfileId);
     }
 
+    private static bool UsesHuvitzTextParser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsHuvitzId(interfaceProfile.DeviceProfileId)
+            || IsHuvitzId(exportProfile.SourceDeviceProfileId);
+    }
+
     private static bool IsNidekRtSerialId(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("nidek-rt", StringComparison.OrdinalIgnoreCase)
             && value.Contains("serial", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsHuvitzId(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("huvitz", StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -123,6 +123,7 @@ public partial class MainWindow : Window
     private readonly XdtBaukastenTextEncodingReader _xdtBaukastenTextEncodingReader = new();
     private readonly XdtBaukastenPlaceholderValueService _xdtBaukastenPlaceholderValueService = new();
     private readonly XmlDeviceParser _xdtBaukastenDeviceParser = new();
+    private readonly HuvitzTextDeviceParser _xdtBaukastenHuvitzTextParser = new();
     private readonly XdtBaukastenDeviceCompatibilityService _xdtBaukastenDeviceCompatibilityService = new();
     private readonly Dictionary<string, InterfaceMonitoringRuntimeState> _interfaceMonitoringRuntimeStates = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, InterfaceMonitoringCardDisplay> _interfaceMonitoringRuntimeCards = new(StringComparer.OrdinalIgnoreCase);
@@ -8553,7 +8554,10 @@ public partial class MainWindow : Window
 
         try
         {
-            var result = _xdtBaukastenDeviceParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath);
+            var parserMode = _xdtBaukastenState.DeviceProfile?.ParserMode;
+            var result = HuvitzTextDeviceParser.IsParserMode(parserMode)
+                ? _xdtBaukastenHuvitzTextParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath)
+                : _xdtBaukastenDeviceParser.ParseFile(_xdtBaukastenState.DeviceInput.SourcePath);
             if (result.HasErrors)
             {
                 return false;

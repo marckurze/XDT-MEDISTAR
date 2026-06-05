@@ -673,6 +673,118 @@ public static class DefaultInterfaceProfileDefinitions
             LineTerminator: SerialLineTerminatorSetting.CR);
     }
 
+    public static InterfaceProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
+    {
+        return CreateMedistarHuvitzTextSerialDefault(
+            id: "interface-medistar-huvitz-hrk8000a-default",
+            name: "MEDISTAR + Huvitz HRK-8000A",
+            product: "MEDISTAR/Huvitz HRK-8000A",
+            deviceProfileId: "device-huvitz-hrk8000a-default",
+            exportProfileId: "export-medistar-huvitz-hrk8000a-default",
+            description: "Built-in inactive serial profile for Huvitz HRK-8000A REF/KM text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 9600,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarHuvitzHrk9000ADefault()
+    {
+        return CreateMedistarHuvitzTextSerialDefault(
+            id: "interface-medistar-huvitz-hrk9000a-default",
+            name: "MEDISTAR + Huvitz HRK-9000A",
+            product: "MEDISTAR/Huvitz HRK-9000A",
+            deviceProfileId: "device-huvitz-hrk9000a-default",
+            exportProfileId: "export-medistar-huvitz-hrk9000a-default",
+            description: "Built-in inactive serial profile for Huvitz HRK-9000A REF/KM text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 9600,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarHuvitzHnt1PDefault()
+    {
+        return CreateMedistarHuvitzTextSerialDefault(
+            id: "interface-medistar-huvitz-hnt1p-default",
+            name: "MEDISTAR + Huvitz HNT-1P",
+            product: "MEDISTAR/Huvitz HNT-1P",
+            deviceProfileId: "device-huvitz-hnt1p-default",
+            exportProfileId: "export-medistar-huvitz-hnt1p-default",
+            description: "Built-in inactive serial profile for Huvitz HNT-1P tonometry/pachymetry text imports. COM defaults use 115200 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 115200,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarHuvitzHtr1ADefault()
+    {
+        return CreateMedistarHuvitzTextSerialDefault(
+            id: "interface-medistar-huvitz-htr1a-default",
+            name: "MEDISTAR + Huvitz HTR-1A",
+            product: "MEDISTAR/Huvitz HTR-1A",
+            deviceProfileId: "device-huvitz-htr1a-default",
+            exportProfileId: "export-medistar-huvitz-htr1a-default",
+            description: "Built-in inactive serial profile for Huvitz HTR-1A combined REF/KM/IOP/CCT text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            baudRate: 9600,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarHuvitzTextSerialDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description,
+        int baudRate,
+        DateTimeOffset timestamp)
+    {
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description,
+            SerialSettings: CreateHuvitzTextSerialSettings(baudRate));
+    }
+
+    private static SerialCommunicationSettings CreateHuvitzTextSerialSettings(int baudRate)
+    {
+        return new SerialCommunicationSettings(
+            BaudRate: baudRate,
+            DataBits: 8,
+            StopBits: SerialStopBitsSetting.One,
+            Parity: SerialParitySetting.None,
+            Handshake: SerialHandshakeSetting.None,
+            DtrEnable: false,
+            RtsEnable: false,
+            IsBidirectional: false,
+            LineTerminator: SerialLineTerminatorSetting.CRLF,
+            ReadTimeoutMilliseconds: 5000,
+            WriteTimeoutMilliseconds: 1000);
+    }
+
     public static InterfaceProfileDefinition CreateMedistarDocumentAttachmentDefault()
     {
         var timestamp = new DateTimeOffset(2026, 5, 20, 12, 0, 0, TimeSpan.Zero);

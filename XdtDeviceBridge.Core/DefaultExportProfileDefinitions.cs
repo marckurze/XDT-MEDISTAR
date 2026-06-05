@@ -1385,4 +1385,117 @@ public static class DefaultExportProfileDefinitions
                 new ExportRuleDefinition("12", "6227", "SubjectiveLeft", ExportRuleType.Template, "Device.Measure[@Type='RTSERIAL']/Subjective/L/MedistarLine", "{value}", 12, true, "MEDISTAR 6227 left-eye Subjective/Full Correction from NIDEK RT serial data.")
             });
     }
+
+    public static ExportProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
+    {
+        return CreateMedistarHuvitzTextDefault(
+            id: "export-medistar-huvitz-hrk8000a-default",
+            name: "MEDISTAR + Huvitz HRK-8000A Export",
+            product: "MEDISTAR/Huvitz HRK-8000A",
+            deviceProfileId: "device-huvitz-hrk8000a-default",
+            description: "Built-in MEDISTAR export profile for Huvitz HRK-8000A text data. REF lines map to 6228 and KM lines map to 6221. No 6330 or artificial separators are emitted.",
+            includeRefKm: true,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarHuvitzHrk9000ADefault()
+    {
+        return CreateMedistarHuvitzTextDefault(
+            id: "export-medistar-huvitz-hrk9000a-default",
+            name: "MEDISTAR + Huvitz HRK-9000A Export",
+            product: "MEDISTAR/Huvitz HRK-9000A",
+            deviceProfileId: "device-huvitz-hrk9000a-default",
+            description: "Built-in MEDISTAR export profile for Huvitz HRK-9000A text data. REF lines map to 6228 and KM lines map to 6221. No 6330 or artificial separators are emitted.",
+            includeRefKm: true,
+            includeTonoPachy: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarHuvitzHnt1PDefault()
+    {
+        return CreateMedistarHuvitzTextDefault(
+            id: "export-medistar-huvitz-hnt1p-default",
+            name: "MEDISTAR + Huvitz HNT-1P Export",
+            product: "MEDISTAR/Huvitz HNT-1P",
+            deviceProfileId: "device-huvitz-hnt1p-default",
+            description: "Built-in MEDISTAR export profile for Huvitz HNT-1P text data. Tonometrie maps to 6205 and pachymetry/CCT maps to 6220. No 6330 or artificial separators are emitted.",
+            includeRefKm: false,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarHuvitzHtr1ADefault()
+    {
+        return CreateMedistarHuvitzTextDefault(
+            id: "export-medistar-huvitz-htr1a-default",
+            name: "MEDISTAR + Huvitz HTR-1A Export",
+            product: "MEDISTAR/Huvitz HTR-1A",
+            deviceProfileId: "device-huvitz-htr1a-default",
+            description: "Built-in MEDISTAR export profile for Huvitz HTR-1A text data. REF maps to 6228, KM to 6221, tonometry to 6205 and pachymetry/CCT to 6220. No 6330 or artificial separators are emitted.",
+            includeRefKm: true,
+            includeTonoPachy: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static ExportProfileDefinition CreateMedistarHuvitzTextDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        bool includeRefKm,
+        bool includeTonoPachy,
+        DateTimeOffset timestamp)
+    {
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarHuvitzTextRules(includeRefKm, includeTonoPachy));
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarHuvitzTextRules(
+        bool includeRefKm,
+        bool includeTonoPachy)
+    {
+        var rules = new List<ExportRuleDefinition>
+        {
+            new("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+            new("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+            new("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+            new("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+            new("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+            new("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS.")
+        };
+
+        var sortOrder = 7;
+        if (includeRefKm)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultRight", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye REF line from Huvitz text data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultLeft", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye REF line from Huvitz text data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "Keratometry", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine1", "{value}", sortOrder++, true, "MEDISTAR 6221 KM line from Huvitz text data."));
+        }
+
+        if (includeTonoPachy)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6220", "Pachymetry", ExportRuleType.Template, "Device.Measure[@Type='CCT']/Pachy/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6220 pachymetry line from Huvitz text data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "Tonometry", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/TonoListLine", "{value}", sortOrder++, true, "MEDISTAR 6205 tonometry line from Huvitz text data."));
+        }
+
+        return rules;
+    }
 }

@@ -768,6 +768,10 @@ public sealed class DeviceProfileDefinitionTests
             DefaultDeviceProfileDefinitions.CreateNidekRt2100SerialDefault(),
             DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault(),
             DefaultDeviceProfileDefinitions.CreateNidekRt5100SerialDefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHrk9000ADefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(),
+            DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(),
             DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(),
             DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault()
         };

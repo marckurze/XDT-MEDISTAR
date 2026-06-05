@@ -405,6 +405,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 - Zweite AIS-Unterstützung außerhalb MEDISTAR: Feldlogik, Dateinamen, Importsteuerung und externe Links können je AIS abweichen.
 - Produktive Attachment-Automatik: Pflicht-Anhang vorhanden/fehlt wurde für MEDISTAR + NIDEK ARK1S praktisch geprüft; weitere E2E-Fälle bleiben offen.
 - Langsam schreibende Geräte: Stabilitätszeiten müssen im Praxisbetrieb je Gerät justiert werden.
+- Huvitz-Referenzdaten: HRK-8000A, HRK-9000A, HNT-1P und HTR-1A sind als serielle Text-BuiltIns mit synthetischen Fixtures vorbereitet. Die naechste Entscheidung ist keine weitere Theoriearbeit, sondern echte Praxisrohdateien sammeln und gegen `HuvitzTextDeviceParser` validieren.
 
 ## 8. Abnahmekriterien für nächsten Meilenstein
 

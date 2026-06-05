@@ -162,3 +162,6 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\N
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Nidek\RT6100\ARK_              _20150528151629.xml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Nidek\RT6100\LM__20251128120038_05D67D.xml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Nidek\RT6100\RT__20260602_095132__.xml
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Huvitz\HNT1P\HNT1P_reference_text.txt
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Huvitz\HRK8000A\HRK8000A_reference_text.txt
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\Huvitz\HTR1A\HTR1A_reference_text.txt

@@ -16,6 +16,9 @@ public sealed class XdtBaukastenDeviceCompatibilityServiceTests
         yield return new object[] { "NIDEK LM7", DefaultDeviceProfileDefinitions.CreateNidekLm7Default(), DeviceFixture("Nidek", "LM7", "NIDEK LM7.xml") };
         yield return new object[] { "NIDEK NT530P", DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(), DeviceFixture("Nidek", "NT530P", "NIDEK_NT530P.xml") };
         yield return new object[] { "NIDEK RT-6100", DefaultDeviceProfileDefinitions.CreateNidekRt6100Default(), WriteTempXml("nidek-rt6100.xml", CreateRt6100ReturnXml(), Encoding.Unicode) };
+        yield return new object[] { "Huvitz HRK-8000A", DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(), DeviceFixture("Huvitz", "HRK8000A", "HRK8000A_reference_text.txt") };
+        yield return new object[] { "Huvitz HNT-1P", DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(), DeviceFixture("Huvitz", "HNT1P", "HNT1P_reference_text.txt") };
+        yield return new object[] { "Huvitz HTR-1A", DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(), DeviceFixture("Huvitz", "HTR1A", "HTR1A_reference_text.txt") };
         yield return new object[] { "TOPCON CL-300", DefaultDeviceProfileDefinitions.CreateTopconCl300Default(), DeviceFixture("Topcon", "CL300", "M-Serial0001_20120101_000000_TOPCON_CL-300_00.xml") };
         yield return new object[] { "TOPCON KR800S", DefaultDeviceProfileDefinitions.CreateTopconKr800Default(), DeviceFixture("Topcon", "KR800S", "M-Serial0036_20131206_213127_TOPCON_KR-800S_.xml") };
         yield return new object[] { "TOPCON KR-1", DefaultDeviceProfileDefinitions.CreateTopconKr1Default(), DeviceFixture("Topcon", "KR1", "M-Serial0001_20190411_120732_TOPCON_KR-1_4430227.xml") };

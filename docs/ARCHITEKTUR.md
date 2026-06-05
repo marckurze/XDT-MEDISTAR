@@ -103,6 +103,10 @@ Fuer die NIDEK-RS232-Familie ist eine konservative Protokollschicht vorbereitet.
 
 Die serielle NIDEK-RT-Phoropterfamilie RT-2100 / RT-3100 / RT-5100 ist darauf aufbauend als eigener Parser-/Writer-/Kommunikationszweig vorbereitet. `NidekRtSerialPhoropterParser` wertet die PDF-basierten ASCII-Frames mit `SH/SX/EB/ET/CR` aus, erkennt Standard- und Expanded-Header, Datenquellen wie `LM`, `RM`, `WF`, `RT`, `KM` und `NT` und stellt Final-/Subjective-Phoropterwerte als MEDISTAR-SourcePaths bereit. `NidekRtSerialPhoropterOutputWriter` erzeugt PC->RT-Sendeframes fuer vorhandene LM-/AR-Historienwerte; RT-2100 nutzt keinen ID-Block, RT-3100/RT-5100 koennen einen ID-Block tragen. Im produktiven Ablauf oeffnet der RT-Dialog erst nach stabiler AIS-Patientendatei. Nach ausdruecklichem Anwenderklick sendet `NidekRtSerialPhoropterCommunicationService` die RS-Anforderung, wartet auf `SD`, schreibt den Sendeframe ueber den COM-Port des Schnittstellenprofils und sammelt die Rueckgabe bis `EOT` plus Stabilitaetswartezeit. Serielle RT-Profile benoetigen keinen Geraete-Eingangsordner und keinen dateibasierten Geraete-Ausgabeordner; die praktische Live-Abnahme am echten RT bleibt erforderlich.
 
+### 1.5a Huvitz serielle Textfamilie
+
+`HuvitzTextDeviceParser` ist als isolierter Textparser fuer aus Referenzlogik abgeleitete Huvitz-RS232-Daten vorbereitet. Er greift nur bei Geraeteprofilen mit Parsermodus `HuvitzText` und veraendert bestehende XML-, NIDEK-RT-, TOPCON- oder Dokumentgeraete-Parser nicht. Die erste abgesicherte Familie umfasst HRK-8000A/HRK-9000A fuer REF/KM, HNT-1P fuer Tonometrie/Pachymetrie und HTR-1A als Kombigeraet. Die Parserausgabe wird in normale `MeasurementValue`-SourcePaths ueberfuehrt; Exportprofile erzeugen daraus `6228`, `6221`, `6205` und `6220`. Die aktuellen Fixtures sind synthetisch aus Referenzlogik und muessen spaeter durch echte Praxisrohdateien ergaenzt werden.
+
 ### 1.6 NIDEK RT-6100 bidirektional
 
 NIDEK RT-6100 ist als bidirektionaler LAN-/MEM-200-Phoropter-Kandidat vorbereitet. Die Architektur folgt dem CV-5000-Zweiphasenmodell, bleibt aber geraetespezifisch:

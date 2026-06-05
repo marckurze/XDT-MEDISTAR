@@ -35,6 +35,10 @@ public static class InterfaceProfileUiPolicy
     public const string NidekRt2100SerialDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-rt2100-serial-default.png";
     public const string NidekRt3100SerialDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-rt3100-serial-default.png";
     public const string NidekRt5100SerialDeviceImagePath = BuiltInDeviceImageRoot + "device-nidek-rt5100-serial-default.png";
+    public const string HuvitzHrk8000ADeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-hrk8000a-default.png";
+    public const string HuvitzHrk9000ADeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-hrk9000a-default.png";
+    public const string HuvitzHnt1PDeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-hnt1p-default.png";
+    public const string HuvitzHtr1ADeviceImagePath = BuiltInDeviceImageRoot + "device-huvitz-htr1a-default.png";
     public const string TopconCl300DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-cl300-default.png";
     public const string TopconSolosDeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-solos-default.png";
     public const string TopconKr800DeviceImagePath = BuiltInDeviceImageRoot + "device-topcon-kr800-default.png";
@@ -55,6 +59,10 @@ public static class InterfaceProfileUiPolicy
             ["device-nidek-rt2100-serial-default"] = NidekRt2100SerialDeviceImagePath,
             ["device-nidek-rt3100-serial-default"] = NidekRt3100SerialDeviceImagePath,
             ["device-nidek-rt5100-serial-default"] = NidekRt5100SerialDeviceImagePath,
+            ["device-huvitz-hrk8000a-default"] = HuvitzHrk8000ADeviceImagePath,
+            ["device-huvitz-hrk9000a-default"] = HuvitzHrk9000ADeviceImagePath,
+            ["device-huvitz-hnt1p-default"] = HuvitzHnt1PDeviceImagePath,
+            ["device-huvitz-htr1a-default"] = HuvitzHtr1ADeviceImagePath,
             ["device-topcon-cl300-default"] = TopconCl300DeviceImagePath,
             ["device-topcon-solos-default"] = TopconSolosDeviceImagePath,
             ["device-topcon-kr800-default"] = TopconKr800DeviceImagePath,

@@ -74,7 +74,7 @@ BuiltIn-Profile liefern geprüfte Startkonfigurationen. UserDefined-Profile sind
 
 Templatepakete können exportiert und importiert werden. Importierte Profile bleiben inaktiv, bis sie bewusst konfiguriert und später aktiviert werden.
 
-Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
+Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK LM-1800P sowie Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind.
 
 # Profilverwaltung
 
@@ -255,6 +255,14 @@ Das RT-Fenster enthaelt fuer die Praxisabnahme eine einklappbare serielle Diagno
 Der Bereich "Sendetest" im RT-Fenster ist nur fuer die Praxisdiagnose: "RS anfordern" sendet nur RS und wartet auf SD, "DTR-Toggle + RS" schaltet DTR kurz aus/ein und fordert danach RS an, "Direkt Writer-Frame senden" sendet den PC->RT-Frame ohne RS/SD und "RS + Writer ohne SD-Warten" sendet nach kurzer Wartezeit auch ohne SD. In diesem Bereich koennen Frame-Variante und optional "CR nach EOT" getestet werden, ohne den gespeicherten Profilwert zu aendern. Empfohlener Testplan bei Nichtuebernahme: zuerst RT-Referenz ohne ID (AR/AL), danach RT-3100 Praxisvariante, Nur Lensmeter ohne ADD, Nur Lensmeter, Nur Autoref, Varianten ohne ID, optional CR nach EOT. Diese Modi laufen nur nach explizitem Klick, erzeugen keinen produktiven XDT-Export und aendern den gespeicherten Sendemodus im Schnittstellenprofil nicht.
 
 Echte Daten vom RT werden aus RS232-Rohdaten geparst; Final-Werte werden fuer MEDISTAR als 6228 und Subjective-Werte als 6227 vorbereitet. Ein Geraete-Eingangsordner und ein dateibasierter Ausgabeordner an das Geraet sind fuer diese seriellen Phoropter nicht erforderlich. Wenn nach dem Senden nicht sofort eine Rueckgabe kommt, bleibt XDTBox im Wartestatus: Fuehren Sie die Untersuchung am Phoropter durch, loesen Sie danach PRINT/SEND aus und starten Sie bei Bedarf "Rueckgabe abhoeren und verarbeiten". Ohne Rueckgabe erzeugt XDTBox kein leeres XDT. MEDISTAR-Import muss am Geraet weiter praktisch geprueft werden.
+
+# Huvitz HRK/HNT/HTR
+
+Huvitz HRK-8000A und HRK-9000A sind als serielle Textprofile fuer Autorefraktion und Keratometrie vorbereitet. REF-Werte werden fuer MEDISTAR nach `6228`, KM-Werte nach `6221` abgebildet.
+
+Huvitz HNT-1P ist als Tonometer/Pachymeter vorbereitet: Tonometrie geht nach `6205`, Pachymetrie nach `6220`. Huvitz HTR-1A kombiniert REF, KM, Tonometrie und Pachymetrie in einem Profil.
+
+Diese Huvitz-Profile beruhen aktuell auf neutral abgeleiteter Referenzlogik und synthetischen Testfixtures. Echte Praxisrohdateien und MEDISTAR-Importabnahme sollten vor produktiver Nutzung gesammelt und geprueft werden.
 
 # Fehlerbehebung
 
