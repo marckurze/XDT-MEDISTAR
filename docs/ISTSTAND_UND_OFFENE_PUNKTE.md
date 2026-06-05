@@ -200,7 +200,7 @@ Die Schnittstellenprofil-Auswahl besitzt Filter nach `Geraetehersteller` und `AI
 
 Neue BuiltIn-, Template- und Repair-Profile verwenden als sichere Defaults: AIS-Importordner vor Verarbeitung bereinigen aktiv, Archivierung aus und Fehlerablage aktiv. Explizit gespeicherte UserDefined-Entscheidungen werden nicht ungefragt ueberschrieben.
 
-`AIS Ausgabe Info` zeigt im Tab `Schnittstellenprofile` fuer das aktuelle Profil eine reine AIS-Ausgabetabelle mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. `8402` wird aus der AIS-Datei uebernommen und unveraendert wieder ausgegeben; empfohlene Untersuchungsart-Defaults fuer neue Profile sind unter anderem `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS`.
+`AIS Ausgabe Info` zeigt im Tab `Schnittstellenprofile` fuer das aktuelle Profil eine reine AIS-Ausgabetabelle mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Reine Dokumentgeraete zeigen `6302`, `6303` und `6305` als Karteikarten-relevant; Messgeraete mit optionalem Anhang behalten diese Linkfelder als optionale Zusatzfelder. `8402` wird als `Untersuchungsart` erklaert, aus der AIS-Datei uebernommen und unveraendert wieder ausgegeben; empfohlene Untersuchungsart-Defaults fuer neue Profile sind unter anderem `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS`.
 
 ### Aktivierungsassistent fuer importierte Schnittstellenprofile - Uebergabestand
 
@@ -272,8 +272,9 @@ Der Tab `Lizenz` enthaelt:
 - Lizenzstatus anzeigen
 - Bewertung aktiver lizenzpflichtiger Schnittstellenprofile
 - Karenzzeitmodell
+- lokale Lizenz entfernen
 
-Die echte V1-Signaturpruefung ist vorbereitet: `.xdtboxlic`-Dateien werden als `LicenseEnvelope` gelesen, `RSA-PSS-SHA256` prueft die Signatur ueber die Payload-Bytes, und ProductCode, InstallationId, Ablauf/Karenz sowie `MaxActiveDeviceConnections` werden bewertet. Erfolgreich importierte `.xdtboxlic`-Dateien werden automatisch dauerhaft gespeichert und sind die fuehrende lokale Lizenzquelle vor Legacy-`license.json`; `Karenzzeiten aktualisieren` veraendert die Lizenzdatei nicht. Das interne Herstellerwerkzeug `XdtBox.LicenseIssuer` erzeugt signierte `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId und laedt den privaten Schluessel extern aus PEM. Eine harte produktive Lizenzsperre ist noch nicht aktiv umgesetzt.
+Die echte V1-Signaturpruefung ist vorbereitet: `.xdtboxlic`-Dateien werden als `LicenseEnvelope` gelesen, `RSA-PSS-SHA256` prueft die Signatur ueber die Payload-Bytes, und ProductCode, InstallationId, Ablauf/Karenz sowie `MaxActiveDeviceConnections` werden bewertet. Erfolgreich importierte `.xdtboxlic`-Dateien werden automatisch dauerhaft gespeichert und sind die fuehrende lokale Lizenzquelle vor Legacy-`license.json`; `Karenzzeiten aktualisieren` veraendert die Lizenzdatei nicht. `Lizenz entfernen` loescht nur die lokal importierte Lizenzdatei und eine eventuelle Legacy-`license.json`; Kundendaten, Lizenzanfragen, Profile, Historien und Schluesseldateien bleiben erhalten. Neue Lizenzanforderungen bilden immer den aktuellen Gesamtzustand der Installation mit allen aktiven Geraeteanbindungen ab. Das interne Herstellerwerkzeug `XdtBox.LicenseIssuer` erzeugt signierte `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId und laedt den privaten Schluessel extern aus PEM. Eine harte produktive Lizenzsperre ist noch nicht aktiv umgesetzt.
 
 Fachliche V1-Entscheidung: Lizenzpflichtig ist nur die Anzahl aktiver Schnittstellenprofile. Nach Ablauf der Karenzzeit duerfen nicht lizenzierte aktive Geraeteanbindungen nicht mehr starten. Bei ungueltiger Signatur soll exakt `Lizenzdatei ist ungültig oder wurde verändert.` angezeigt werden. InstallationId bleibt fuehrend; bei Hardwaretausch ist eine neue Lizenzanforderung noetig, mit 7 Tagen Karenzzeit ab Umzug.
 

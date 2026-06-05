@@ -69,7 +69,7 @@
                 <TextBlock Grid.Row="2" Grid.Column="2" Text="Gerät:" FontWeight="Bold" Margin="0,0,8,6"/>
                 <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding DeviceSummary}" TextWrapping="Wrap" Margin="0,0,0,6"/>
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="8402 Default:" FontWeight="Bold" Margin="0,0,8,0"/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Untersuchungsart:" FontWeight="Bold" Margin="0,0,8,0"/>
                 <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DefaultExaminationType}" Margin="0,0,18,0"/>
                 <TextBlock Grid.Row="3" Grid.Column="2" Text="Verbindung:" FontWeight="Bold" Margin="0,0,8,0"/>
                 <TextBlock Grid.Row="3" Grid.Column="3" Text="{Binding ConnectionKind}" TextWrapping="Wrap"/>
@@ -95,17 +95,31 @@
         </DataGrid>
 
         <DockPanel Grid.Row="3" Margin="0,12,0,0">
-            <TextBlock Text="{Binding ExaminationTypeHint}"
-                       TextWrapping="Wrap"
-                       Foreground="DimGray"
-                       VerticalAlignment="Center"
-                       DockPanel.Dock="Left"/>
             <Button Content="Schließen"
                     Width="120"
                     Margin="16,0,0,0"
                     HorizontalAlignment="Right"
                     Click="Close_Click"
                     DockPanel.Dock="Right"/>
+            <Border BorderBrush="#E6B23A"
+                    BorderThickness="1"
+                    Background="#FFF7D8"
+                    Padding="10"
+                    CornerRadius="4"
+                    DockPanel.Dock="Left">
+                <DockPanel>
+                    <TextBlock Text="💡"
+                               FontSize="18"
+                               Margin="0,0,8,0"
+                               VerticalAlignment="Top"/>
+                    <TextBlock Text="{Binding ExaminationTypeHint}"
+                               TextWrapping="Wrap"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="#5A3A00"
+                               VerticalAlignment="Center"/>
+                </DockPanel>
+            </Border>
         </DockPanel>
     </Grid>
 </Window>

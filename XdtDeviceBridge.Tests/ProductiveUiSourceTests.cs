@@ -246,10 +246,11 @@ public sealed class ProductiveUiSourceTests
 
         Assert.Contains("Grid.Row=\"14\"", section);
         Assert.Contains("Grid.Column=\"1\"", section);
-        Assert.DoesNotContain("Grid.ColumnSpan=\"2\"", section);
+        Assert.Contains("Grid.ColumnSpan=\"2\"", section);
         Assert.Contains("x:Name=\"InterfaceAttachmentFolderSetupPanel\"", section);
-        Assert.Contains("Grid.Row=\"14\"", section);
-        Assert.Contains("Grid.Column=\"2\"", section);
+        Assert.Contains("Grid.Row=\"15\"", section);
+        Assert.Contains("Grid.Column=\"1\"", section);
+        Assert.Contains("MinWidth=\"130\"", section);
     }
 
     [Fact]
@@ -259,6 +260,8 @@ public sealed class ProductiveUiSourceTests
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AisOutputInfoWindow.xaml.cs"));
 
         Assert.Contains("AIS Ausgabe Info", xaml);
+        Assert.Contains("Untersuchungsart:", xaml);
+        Assert.DoesNotContain("8402 Default:", xaml);
         Assert.Contains("Feldkennung", xaml);
         Assert.Contains("Ausgabeart/Bedeutung", xaml);
         Assert.Contains("AIS-Relevanz", xaml);
@@ -266,6 +269,9 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Hinweis", xaml);
         Assert.Contains("IsCardField", xaml);
         Assert.Contains("IsOptional", xaml);
+        Assert.Contains("💡", xaml);
+        Assert.Contains("FontSize=\"14\"", xaml);
+        Assert.Contains("#FFF7D8", xaml);
         Assert.Contains("AisOutputInfoViewModel", code);
     }
 

@@ -128,7 +128,7 @@ Ein Schnittstellenprofil enthaelt:
 
 Die Schnittstellenprofil-Auswahl kann nach `Geraetehersteller` und `AIS-System` gefiltert werden. Neue BuiltIn-, Template- und Repair-Profile nutzen sichere Betriebsdefaults: AIS-Importordner vor Verarbeitung bereinigen ist aktiv, Archivierung ist aus und Fehlerablage ist aktiv. Bewusst gespeicherte UserDefined-Einstellungen werden dadurch nicht ungefragt ueberschrieben.
 
-Der Button `AIS Ausgabe Info` zeigt fuer das aktuelle Schnittstellenprofil eine reine AIS-Ausgabetabelle mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweisen. `8402` bleibt die aus AIS empfangene Untersuchungsart und wird unveraendert wieder ausgegeben; empfohlene Defaultwerte wie `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` oder `MESS` dienen nur neuen Profilen und blockieren keine eingehende Untersuchungsart.
+Der Button `AIS Ausgabe Info` zeigt fuer das aktuelle Schnittstellenprofil eine reine AIS-Ausgabetabelle mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweisen. Reine Dokumentgeraete zeigen `6302`, `6303` und `6305` als Karteikarten-relevant; Messgeraete mit optionalem Anhang behalten diese Felder als optional. `8402` wird als `Untersuchungsart` erklaert, bleibt die aus AIS empfangene Untersuchungsart und wird unveraendert wieder ausgegeben; empfohlene Defaultwerte wie `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` oder `MESS` dienen nur neuen Profilen und blockieren keine eingehende Untersuchungsart.
 
 ### 3. Ueberwachung
 
@@ -352,6 +352,8 @@ dotnet run --project XdtDeviceBridge.App
 - Eine signierte Offline-Lizenzdatei kann als `.xdtboxlic` importiert werden.
 - Die Lizenzdatei wird mit RSA-PSS/SHA-256 validiert und beim Import automatisch lokal gespeichert; ein zusaetzlicher Speicherschritt ist nicht erforderlich.
 - Die gespeicherte `.xdtboxlic` ist fuehrende Lizenzquelle vor Legacy-`license.json`; `Karenzzeiten aktualisieren` bewertet nur neu und setzt die lizenzierte Geraeteanzahl nicht zurueck.
+- `Lizenz entfernen` loescht nur die lokal importierte `.xdtboxlic` und eine eventuelle Legacy-`license.json`. Kundendaten, Lizenzanfragen, Profile, Historien und Schluesseldateien bleiben unangetastet.
+- Neue Lizenzanforderungen beschreiben immer den aktuellen Gesamtzustand der Installation mit allen aktiven Geraeteanbindungen, nicht nur Differenzen zu einer alten Lizenz.
 - Legacy-JSON bleibt nur als unsignierter Uebergang erkennbar.
 - Das interne Herstellerwerkzeug `XdtBox.LicenseIssuer.exe` erzeugt `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId. Es ist ein Kommandozeilentool; Doppelklick ohne Parameter zeigt Hilfe und wartet auf Tastendruck.
 - Die grafische Hersteller-App `XdtBox.LicenseManager.exe` liest Lizenzanfragen, erzeugt signierte `.xdtboxlic`-Dateien, fuehrt eine lokale Historie ausgestellter Lizenzen und speichert Hersteller-Einstellungen. Sie ist nicht Teil der Endkunden-App; private Schluessel bleiben externe Dateien.

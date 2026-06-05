@@ -157,6 +157,38 @@ public sealed class LicenseRequestBuilderTests
     }
 
     [Fact]
+    public void Build_WithDeviceProfiles_ShouldRepresentCurrentOverallInstallationState()
+    {
+        var currentProfiles = new[]
+        {
+            CreateInterfaceProfile("interface-existing-1", "Bestand 1", isActive: false, isLicenseRequired: true),
+            CreateInterfaceProfile("interface-existing-2", "Bestand 2", isActive: true, isLicenseRequired: true),
+            CreateInterfaceProfile("interface-existing-3", "Bestand 3", isActive: true, isLicenseRequired: true),
+            CreateInterfaceProfile("interface-existing-4", "Bestand 4", isActive: true, isLicenseRequired: true),
+            CreateInterfaceProfile("interface-existing-5", "Bestand 5", isActive: true, isLicenseRequired: true),
+            CreateInterfaceProfile("interface-new-1", "Neu 1", isActive: true, isLicenseRequired: true),
+            CreateInterfaceProfile("interface-new-2", "Neu 2", isActive: true, isLicenseRequired: true),
+            CreateInterfaceProfile("interface-new-3", "Neu 3", isActive: true, isLicenseRequired: true)
+        };
+
+        var request = _builder.Build(
+            CreateInstallationInfo(),
+            currentProfiles,
+            CreateDeviceProfiles(),
+            LicenseRequestCustomer.Empty,
+            XdtBoxLicenseConstants.ProductCode,
+            "1.0.0",
+            CreatedAtUtc);
+
+        Assert.Equal(7, request.ActiveLicensedDeviceCount);
+        Assert.Equal(currentProfiles.Length, request.Devices.Count);
+        Assert.Contains(request.Devices, device => device.Id == "interface-existing-1" && !device.IsActive);
+        Assert.Contains(request.Devices, device => device.Id == "interface-new-1" && device.IsActive);
+        Assert.Contains(request.Devices, device => device.Id == "interface-new-2" && device.IsActive);
+        Assert.Contains(request.Devices, device => device.Id == "interface-new-3" && device.IsActive);
+    }
+
+    [Fact]
     public void Build_ShouldThrowArgumentNullExceptionForNullInstallation()
     {
         Assert.Throws<ArgumentNullException>(() => _builder.Build(

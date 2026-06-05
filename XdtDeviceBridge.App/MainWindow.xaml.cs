@@ -60,6 +60,7 @@ public partial class MainWindow : Window
     private readonly LicensedDeviceGracePeriodRepository _licensedDeviceGracePeriodRepository = new();
     private readonly LicenseEvaluator _licenseEvaluator = new();
     private readonly LicenseImportService _licenseImportService = new();
+    private readonly LocalLicenseRemovalService _localLicenseRemovalService = new();
     private readonly LicensedDeviceStateEvaluator _licensedDeviceStateEvaluator = new();
     private readonly LicensedDeviceGracePeriodService _licensedDeviceGracePeriodService = new();
     private readonly ActiveInterfaceProfileStatusService _activeInterfaceProfileStatusService = new();
@@ -3706,7 +3707,7 @@ public partial class MainWindow : Window
 
     private static string GetSignedLicenseFilePath(AppDataPaths paths)
     {
-        return Path.Combine(paths.LicensesFolder, "license.xdtboxlic");
+        return LocalLicenseRemovalService.GetSignedLicenseFilePath(paths);
     }
 
     private static string GetLicenseCustomerDataFilePath(AppDataPaths paths)
@@ -7244,6 +7245,49 @@ public partial class MainWindow : Window
             && result.PolicyEvaluation?.Status == LicenseV1PolicyStatus.Valid)
         {
             AppendLicenseMessage(XdtBoxLicenseConstants.CreateSuccessfulLicenseImportMessage(result.Payload.MaxActiveDeviceConnections));
+        }
+    }
+
+    private void RemoveLicenseFile_Click(object sender, RoutedEventArgs e)
+    {
+        var confirmation = System.Windows.MessageBox.Show(
+            this,
+            "Möchten Sie die lokal importierte XDTBox-Lizenz wirklich entfernen? Die Geräteanbindungen gelten danach als nicht lizenziert, bis eine gültige Lizenz erneut importiert wird.",
+            "XDTBox-Lizenz entfernen",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirmation != System.Windows.MessageBoxResult.Yes)
+        {
+            AppendLicenseMessage("Lizenz entfernen abgebrochen. Die lokale Lizenz bleibt erhalten.");
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var installation = _installationInfo ?? _installationInfoProvider.GetOrCreate(paths.BaseFolder);
+            _installationInfo = installation;
+
+            var result = _localLicenseRemovalService.RemoveLocalLicense(paths);
+            var activeLicensedDeviceCount = CountActiveLicensedDevices();
+
+            ShowLicensedDeviceStates(license: null);
+            ShowLicenseStatus(
+                installation,
+                "Nicht lizenziert / keine lokale Lizenz vorhanden",
+                activeLicensedDeviceCount,
+                licensedDeviceCount: 0);
+
+            var removalText = result.RemovedAnyLicense
+                ? "Lokale Lizenz entfernt. Die aktiven Geräteanbindungen gelten bis zum erneuten Lizenzimport als nicht gedeckt."
+                : "Keine lokale Lizenzdatei vorhanden. Die aktiven Geräteanbindungen gelten weiterhin als nicht gedeckt.";
+            AppendLicenseMessage(removalText);
+            AppendLicenseMessage("Lizenzanfragen können weiterhin mit dem aktuellen Gesamtzustand der Einrichtung exportiert werden.");
+        }
+        catch (Exception ex)
+        {
+            AppendLicenseMessage($"Lizenz konnte nicht entfernt werden: {ex.Message}");
         }
     }
 

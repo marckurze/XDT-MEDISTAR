@@ -34,11 +34,26 @@ public sealed class LicenseUiSourceTests
     public void MainWindow_ShouldPersistSignedLicenseImportAndShowThanksMessage()
     {
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
-        var body = ExtractMethodBody(code, "ImportSignedLicenseFile", "UpdateGracePeriods_Click");
+        var body = ExtractMethodBody(code, "ImportSignedLicenseFile", "RemoveLicenseFile_Click");
 
         Assert.Contains("File.Copy(filePath, GetSignedLicenseFilePath(paths), overwrite: true);", body);
         Assert.Contains("persistedSignedLicense", body);
         Assert.Contains("XdtBoxLicenseConstants.CreateSuccessfulLicenseImportMessage", body);
+    }
+
+    [Fact]
+    public void MainWindow_ShouldExposeLocalLicenseRemoval()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var body = ExtractMethodBody(code, "RemoveLicenseFile_Click", "UpdateGracePeriods_Click");
+
+        Assert.Contains("Lizenz entfernen", xaml);
+        Assert.Contains("Click=\"RemoveLicenseFile_Click\"", xaml);
+        Assert.Contains("Möchten Sie die lokal importierte XDTBox-Lizenz wirklich entfernen?", body);
+        Assert.Contains("_localLicenseRemovalService.RemoveLocalLicense(paths)", body);
+        Assert.Contains("ShowLicensedDeviceStates(license: null)", body);
+        Assert.Contains("Lizenzanfragen können weiterhin", body);
     }
 
     [Fact]

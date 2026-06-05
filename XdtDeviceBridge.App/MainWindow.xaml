@@ -1650,6 +1650,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                      <Grid.ColumnDefinitions>
                                          <ColumnDefinition Width="230"/>
@@ -2111,24 +2112,26 @@
                                          <TextBlock Grid.Row="14" Grid.Column="0" x:Name="InterfaceAttachmentLinkPathTemplateLabel" Text="XDT-Feld 6305 vollständiger Dateipfad:" FontWeight="Bold" Margin="0,0,8,8"/>
                                          <TextBox Grid.Row="14"
                                                   Grid.Column="1"
+                                                  Grid.ColumnSpan="2"
                                                   x:Name="InterfaceAttachmentLinkPathTemplateTextBox"
-                                                  Margin="0,0,8,8"
+                                                  Margin="0,0,0,8"
                                                   ToolTip="Vorlage für Feld 6305. Der endgültige vollständige Pfad soll später automatisch aus Exportordner und erzeugtem Dateinamen entstehen, z. B. {Attachment.TargetFullPath}."/>
 
                                          <WrapPanel x:Name="InterfaceAttachmentFolderSetupPanel"
-                                                    Grid.Row="14"
-                                                    Grid.Column="2"
+                                                    Grid.Row="15"
+                                                    Grid.Column="1"
+                                                    Grid.ColumnSpan="2"
                                                     Margin="0,0,0,8"
                                                     VerticalAlignment="Center">
                                              <Button x:Name="InterfaceAttachmentFolderDefaultButton"
                                                      Content="Ordner Default"
-                                                     Width="120"
+                                                     MinWidth="130"
                                                      Margin="0,0,8,6"
                                                      Click="ApplyInterfaceAttachmentFolderDefaults_Click"
                                                      ToolTip="Trägt Standardpfade für XDT-Anhänge unter C:\XDTBox für das aktuelle Geräteprofil ein. Es werden noch keine Ordner erstellt."/>
                                              <Button x:Name="InterfaceCreateAttachmentFoldersButton"
                                                      Content="Ordner anlegen"
-                                                     Width="120"
+                                                     MinWidth="130"
                                                      Margin="0,0,12,6"
                                                      Click="CreateInterfaceAttachmentFolders_Click"
                                                      ToolTip="Legt die aktuell eingetragenen XDT-Anhang-Ordner an. Vorhandene Ordner gelten als OK."/>
@@ -2567,6 +2570,7 @@
                         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
                             <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
                             <Button Content="Lizenz importieren" Width="190" Margin="0,0,8,0" Click="ImportLicenseFile_Click"/>
+                            <Button Content="Lizenz entfernen" Width="170" Margin="0,0,8,0" Click="RemoveLicenseFile_Click"/>
                             <Button Content="Karenzzeiten aktualisieren" Width="210" Click="UpdateGracePeriods_Click"/>
                         </StackPanel>
 

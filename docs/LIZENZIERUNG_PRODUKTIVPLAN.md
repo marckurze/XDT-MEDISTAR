@@ -269,6 +269,8 @@ V1 bevorzugt Dateiimport:
 - Erfolgreich importierte `.xdtboxlic`-Dateien werden automatisch dauerhaft unter `%LocalAppData%\XdtDeviceBridge\licenses\license.xdtboxlic` gespeichert; ein zusaetzlicher Speichern-Schritt ist nicht erforderlich.
 - Die lokal gespeicherte `.xdtboxlic` ist die fuehrende Lizenzquelle fuer Lizenzstatus, Geraeteanzahl und Karenzzeitbewertung.
 - `Karenzzeiten aktualisieren` veraendert die Lizenzdatei nicht, sondern zaehlt aktive Geraeteanbindungen neu und bewertet sie gegen die aktuell fuehrende Lizenzquelle.
+- `Lizenz entfernen` loescht nur die lokal importierte `.xdtboxlic` und eine eventuelle Legacy-`license.json`. Kundendaten, Lizenzanforderungen, Profile, Historien und Schluesseldateien bleiben erhalten.
+- Neue Lizenzanforderungen bilden immer den aktuellen Gesamtzustand der Installation mit allen aktiven Geraeteanbindungen ab, unabhaengig von einer vorher importierten Lizenz.
 - Legacy-`license.json` bleibt fuer den Uebergang lesbar, wird aber als unsigniert gekennzeichnet.
 
 Spaeter kann ein Textkey ergaenzt werden:

@@ -49,7 +49,7 @@ public sealed class AisOutputInfoService
             ConnectionKind: FormatConnectionKind(deviceProfile?.ConnectionKind),
             IsActive: interfaceProfile.IsActive,
             DefaultExaminationType: defaultExaminationType,
-            ExaminationTypeHint: "Feld 8402 wird aus der AIS-Datei übernommen und unverändert zurückgegeben. Der Default dient nur als Empfehlung, falls ein neues Profil ohne eingehende Untersuchungsart eingerichtet wird.",
+            ExaminationTypeHint: "Die Feldkennung 8402 enthält die Untersuchungsart. Sie wird häufig im AIS-System für die XDT-Einstellungen benötigt. XDTBox akzeptiert auch abweichende Untersuchungsarten aus dem AIS; wichtig ist, dass die Feldkennung 8402 im AIS korrekt eingerichtet ist.",
             Fields: fields);
     }
 
@@ -79,10 +79,12 @@ public sealed class AisOutputInfoService
             fieldCodes.Add("6305");
         }
 
+        var attachmentOnlyProfile = IsRequiredAttachmentOnlyProfile(interfaceProfile, deviceProfile);
+
         return fieldCodes
             .OrderBy(GetFieldSortKey)
             .ThenBy(code => code, CodeComparer)
-            .Select(code => CreateFieldInfo(code, deviceProfile, defaultExaminationType))
+            .Select(code => CreateFieldInfo(code, deviceProfile, defaultExaminationType, attachmentOnlyProfile))
             .ToArray();
     }
 
@@ -103,7 +105,8 @@ public sealed class AisOutputInfoService
     private static AisOutputFieldInfo CreateFieldInfo(
         string fieldCode,
         DeviceProfileDefinition? deviceProfile,
-        string defaultExaminationType)
+        string defaultExaminationType,
+        bool attachmentOnlyProfile)
     {
         var deviceMeaning = CreateDeviceResultMeaning(deviceProfile);
         return fieldCode switch
@@ -126,10 +129,10 @@ public sealed class AisOutputInfoService
             "6221" => Card(fieldCode, "Keratometerwerte", "Karteikartentext für Keratometrie."),
             "6220" => Card(fieldCode, "Pachymetrie / CCT", "Karteikartentext für Hornhautdicke."),
             "6205" => Card(fieldCode, "Tonometrie / Augeninnendruck", "Karteikartentext für Druckwerte."),
-            "6302" => Optional(fieldCode, "Dokumentenname", "AIS-Anhang: Anzeige-/Dokumentenname."),
-            "6303" => Optional(fieldCode, "Dateiformat", "AIS-Anhang: Dateityp."),
+            "6302" => Attachment(fieldCode, "Dokumentenname", "AIS-Anhang: Anzeige-/Dokumentenname.", attachmentOnlyProfile),
+            "6303" => Attachment(fieldCode, "Dateiformat", "AIS-Anhang: Dateityp.", attachmentOnlyProfile),
             "6304" => Optional(fieldCode, "Beschreibung", "AIS-Anhang: optionale Beschreibung."),
-            "6305" => Optional(fieldCode, "Vollständiger Dateipfad", "AIS-Anhang: Pfad zur vorbereiteten Datei."),
+            "6305" => Attachment(fieldCode, "Vollständiger Dateipfad", "AIS-Anhang: Pfad zur vorbereiteten Datei.", attachmentOnlyProfile),
             _ => Card(fieldCode, "AIS-Ausgabefeld", "Ausgabe gemäß Exportprofil.")
         };
     }
@@ -170,10 +173,17 @@ public sealed class AisOutputInfoService
             IsOptional: true);
     }
 
+    private static AisOutputFieldInfo Attachment(string fieldCode, string meaning, string hint, bool attachmentOnlyProfile)
+    {
+        return attachmentOnlyProfile
+            ? Card(fieldCode, meaning, $"{hint} Bei reinen Dokumentgeräten ist dieses Feld Bestandteil der Karteikartenübergabe.")
+            : Optional(fieldCode, meaning, hint);
+    }
+
     private static string CreateDeviceResultMeaning(DeviceProfileDefinition? deviceProfile)
     {
         var text = CreateDeviceClassifier(deviceProfile);
-        if (ContainsAny(text, "phoropter", "refractor", "rt-"))
+        if (IsPhoropterDeviceText(text))
         {
             return "Phoropter finaler Verordnungswert";
         }
@@ -209,7 +219,7 @@ public sealed class AisOutputInfoService
     private static string CreateSecondaryResultMeaning(DeviceProfileDefinition? deviceProfile)
     {
         var text = CreateDeviceClassifier(deviceProfile);
-        if (ContainsAny(text, "phoropter", "refractor", "rt-"))
+        if (IsPhoropterDeviceText(text))
         {
             return "Phoropter Maximalwert / subjektive Refraktion";
         }
@@ -226,15 +236,41 @@ public sealed class AisOutputInfoService
 
         return string.Join(
             ' ',
+            deviceProfile.Metadata.Name,
+            deviceProfile.Metadata.Product ?? string.Empty,
+            deviceProfile.Manufacturer,
             deviceProfile.DeviceType,
             deviceProfile.Model,
             deviceProfile.ParserMode,
             string.Join(' ', deviceProfile.SupportedExaminationTypes ?? Array.Empty<string>()));
     }
 
+    private static bool IsRequiredAttachmentOnlyProfile(
+        InterfaceProfileDefinition interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        if (interfaceProfile.FolderOptions.IsAttachmentOnlyMode)
+        {
+            return true;
+        }
+
+        var text = CreateDeviceClassifier(deviceProfile);
+        return ContainsAny(text, "document", "dokument", "attachmentonly", "attachment only", "anhang", "manual");
+    }
+
     private static bool ContainsAny(string text, params string[] needles)
     {
         return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsPhoropterDeviceText(string text)
+    {
+        if (text.Contains("autorefractor", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return ContainsAny(text, "phoropter", "refractor", "rt-");
     }
 
     private static int GetFieldSortKey(string fieldCode)
@@ -301,12 +337,19 @@ public static class AisExaminationTypeDefaults
             return Fallback;
         }
 
-        var text = string.Join(
+        var profileText = string.Join(
             ' ',
+            deviceProfile.Metadata.Name,
+            deviceProfile.Metadata.Product ?? string.Empty,
+            deviceProfile.Manufacturer,
             deviceProfile.DeviceType,
             deviceProfile.Model,
-            deviceProfile.ParserMode,
-            string.Join(' ', deviceProfile.SupportedExaminationTypes ?? Array.Empty<string>()));
+            deviceProfile.ParserMode);
+        var supportedText = string.Join(' ', deviceProfile.SupportedExaminationTypes ?? Array.Empty<string>());
+        var text = string.Join(
+            ' ',
+            profileText,
+            supportedText);
 
         if (ContainsAny(text, "document", "dokument", "attachment", "anhang", "manual"))
         {
@@ -323,12 +366,17 @@ public static class AisExaminationTypeDefaults
             return "ENDO";
         }
 
+        if (IsCombinationDevice(text))
+        {
+            return "KOMB";
+        }
+
         if (ContainsAny(text, "pachy", "cct"))
         {
             return "PACHY";
         }
 
-        if (ContainsAny(text, "tonometer", "nct", "nt-", "ct-"))
+        if (ContainsAny(text, "tonometer", "nct", "nt-", "tm", "ct-"))
         {
             return "TONO";
         }
@@ -343,7 +391,7 @@ public static class AisExaminationTypeDefaults
             return "KERA";
         }
 
-        if (ContainsAny(text, "phoropter", "refractor", "rt-"))
+        if (IsPhoropterDeviceText(text))
         {
             return "PHORO";
         }
@@ -361,8 +409,37 @@ public static class AisExaminationTypeDefaults
         return Fallback;
     }
 
+    private static bool IsCombinationDevice(string text)
+    {
+        if (ContainsAny(text, "combo", "kombi", "komb", "trk-", "tonoref", "ref/km", "ref-km"))
+        {
+            return true;
+        }
+
+        var hasRef = ContainsAny(text, "autorefr", "refrak", "ref", "ark", "ar-");
+        var hasKerato = ContainsAny(text, "kerato", "keratometer", "km");
+        var hasTono = ContainsAny(text, "tonometer", "nct", "nt-", "tm");
+        var hasPachy = ContainsAny(text, "pachy", "cct");
+
+        return (hasRef && hasKerato)
+            || (hasRef && hasTono)
+            || (hasRef && hasPachy)
+            || (hasKerato && hasTono)
+            || (hasTono && hasPachy);
+    }
+
     private static bool ContainsAny(string text, params string[] needles)
     {
         return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsPhoropterDeviceText(string text)
+    {
+        if (text.Contains("autorefractor", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return ContainsAny(text, "phoropter", "refractor", "rt-");
     }
 }

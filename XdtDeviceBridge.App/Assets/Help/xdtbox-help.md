@@ -142,6 +142,8 @@ Die Untersuchungsart `8402` wird aus der AIS-Datei uebernommen und unveraendert 
 
 XDT-Anhang Import und XDT-Anhang Export steuern die Übergabe externer Dokumentdateien an das AIS. Je Datei können Linkfelder 6302 bis 6305 erzeugt werden, wenn das jeweilige Profil diese Funktion nutzt.
 
+In `AIS Ausgabe Info` zeigen reine Dokumentgeräte die Felder `6302`, `6303` und `6305` als Karteikarten-relevant. Messgeräte mit optionalem XDT-Anhang behalten diese Linkfelder als optionale Zusatzfelder.
+
 Dokumentanhang-Workflows verändern keine Messwertparser und erzeugen keine künstlichen Messwerte.
 
 # Lizenzstatus verstehen
@@ -155,6 +157,10 @@ Die endgültige produktive Lizenzblockade ist in dieser Version nicht hart aktiv
 Tragen Sie im Tab "Lizenz" die Kundendaten ein und exportieren Sie die Lizenzanforderung. Gerätenamen in der Anfrage dienen nur der Dokumentation beim Hersteller; lizenzpflichtig ist ausschließlich die Anzahl aktiver Geräteanbindungen.
 
 Eine signierte .xdtboxlic-Lizenz wird über "Lizenz importieren" eingelesen und lokal gespeichert.
+
+`Lizenz entfernen` entfernt nur die lokal importierte Lizenzdatei und eine eventuelle Legacy-Lizenz. Profile, Kundendaten, Lizenzanfragen, Historien und Schlüsseldateien bleiben erhalten. Danach gelten aktive Geräteanbindungen bis zu einem erneuten Lizenzimport als nicht lizenziert.
+
+Eine neue Lizenzanforderung beschreibt immer den aktuellen Gesamtzustand der Installation mit allen aktiven Geräteanbindungen.
 
 # Hardwaretausch und 7 Tage Karenzzeit
 
