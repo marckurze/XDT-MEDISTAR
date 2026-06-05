@@ -12,6 +12,8 @@ public sealed class XdtBaukastenDeviceCompatibilityService
     private readonly NidekRtSerialPhoropterParser _rtSerialParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
     private readonly ShinNipponDeviceParser _shinNipponParser = new();
+    private readonly ReichertDeviceParser _reichertParser = new();
+    private readonly RodenstockDeviceParser _rodenstockParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
 
@@ -94,6 +96,36 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 }
 
                 return EvaluateForWorkbench(deviceProfile, shinNipponResult.Measurements);
+            }
+
+            if (ReichertDeviceParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var reichertResult = _reichertParser.ParseFile(deviceFilePath);
+                if (reichertResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        reichertResult.Measurements,
+                        FindCompany(reichertResult.Measurements),
+                        FindModelName(reichertResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, reichertResult.Measurements);
+            }
+
+            if (RodenstockDeviceParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var rodenstockResult = _rodenstockParser.ParseFile(deviceFilePath);
+                if (rodenstockResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        rodenstockResult.Measurements,
+                        FindCompany(rodenstockResult.Measurements),
+                        FindModelName(rodenstockResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, rodenstockResult.Measurements);
             }
 
             if (TomeyDeviceParser.IsParserMode(deviceProfile.ParserMode))
@@ -338,6 +370,9 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         AddAliasIfContains(aliases, normalizedProfileText, "DL900", "DL900", "DL-900");
         AddAliasIfContains(aliases, normalizedProfileText, "NCT200", "NCT200", "NCT-200");
         AddAliasIfContains(aliases, normalizedProfileText, "SLM4000", "SLM4000", "SLM-4000");
+        AddAliasIfContains(aliases, normalizedProfileText, "7CR", "7CR", "7CRNCT");
+        AddAliasIfContains(aliases, normalizedProfileText, "LENSCHEKPLUS", "LensChek Plus", "LensChek", "LCHECKP");
+        AddAliasIfContains(aliases, normalizedProfileText, "CX800", "CX800", "CX-800", "CX 800");
     }
 
     private static void AddAliasIfContains(HashSet<string> aliases, string normalizedProfileText, string marker, params string[] values)

@@ -10,6 +10,8 @@ public sealed class BuilderManualProcessingPreviewService
     private readonly XmlDeviceParser _xmlDeviceParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextDeviceParser = new();
     private readonly ShinNipponDeviceParser _shinNipponDeviceParser = new();
+    private readonly ReichertDeviceParser _reichertDeviceParser = new();
+    private readonly RodenstockDeviceParser _rodenstockDeviceParser = new();
     private readonly TomeyDeviceParser _tomeyDeviceParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmDeviceParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
@@ -131,6 +133,40 @@ public sealed class BuilderManualProcessingPreviewService
             try
             {
                 return _shinNipponDeviceParser.ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                });
+            }
+        }
+
+        if (ReichertDeviceParser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return _reichertDeviceParser.ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                    });
+            }
+        }
+
+        if (RodenstockDeviceParser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return _rodenstockDeviceParser.ParseFile(deviceFilePath);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {

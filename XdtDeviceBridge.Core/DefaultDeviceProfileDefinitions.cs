@@ -1642,6 +1642,224 @@ public static class DefaultDeviceProfileDefinitions
         return measurements;
     }
 
+    public static DeviceProfileDefinition CreateReichert7CrNctDefault()
+    {
+        return CreateReichertDefault(
+            id: "device-reichert-7cr-nct-default",
+            name: "Reichert 7CR NCT",
+            product: "7CR NCT",
+            model: "7CR NCT",
+            deviceType: "Tonometer",
+            description: "Built-in serial text profile for Reichert 7CR NCT tonometry data derived from neutral reference parser rules. IOP values map to MEDISTAR 6205; practical raw-data validation remains open.",
+            baudRate: 19200,
+            includeLens: false,
+            includeTono: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static DeviceProfileDefinition CreateReichertLensChekPlusDefault()
+    {
+        return CreateReichertDefault(
+            id: "device-reichert-lenschek-plus-default",
+            name: "Reichert LensChek Plus",
+            product: "LensChek Plus",
+            model: "LensChek Plus",
+            deviceType: "Lensmeter",
+            description: "Built-in serial text/XML profile for Reichert LensChek Plus lensmeter data derived from neutral reference parser rules. Lensmeter lines map to MEDISTAR 6228; practical raw-data validation remains open.",
+            baudRate: 9600,
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static DeviceProfileDefinition CreateReichertDefault(
+        string id,
+        string name,
+        string product,
+        string model,
+        string deviceType,
+        string description,
+        int baudRate,
+        bool includeLens,
+        bool includeTono,
+        DateTimeOffset timestamp)
+    {
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: description,
+                Vendor: "Reichert",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "Reichert",
+            Model: model,
+            DeviceType: deviceType,
+            ParserMode: ReichertDeviceParser.ParserMode,
+            Measurements: CreateReichertMeasurements(product, includeLens, includeTono),
+            SupportedExaminationTypes: CreateReichertSupportedExaminationTypes(includeLens, includeTono),
+            CanContainMultipleExaminationTypes: false,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: DeviceConnectionKind.SerialRs232,
+            SerialSettings: new SerialCommunicationSettings(
+                BaudRate: baudRate,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: includeTono ? SerialLineTerminatorSetting.CR : SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: includeTono ? 30000 : 5000,
+                WriteTimeoutMilliseconds: 1000));
+    }
+
+    private static IReadOnlyList<string> CreateReichertSupportedExaminationTypes(bool includeLens, bool includeTono)
+    {
+        var values = new List<string>();
+        if (includeLens)
+        {
+            values.AddRange(new[] { "LM", "Lensmeter" });
+        }
+
+        if (includeTono)
+        {
+            values.AddRange(new[] { "TM", "Tonometrie" });
+        }
+
+        return values;
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateReichertMeasurements(
+        string product,
+        bool includeLens,
+        bool includeTono)
+    {
+        var prefix = $"reichert-{product.Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase).Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase).ToLowerInvariant()}";
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "Reichert common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "Reichert model name.")
+        };
+
+        if (includeLens)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-lm-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-sphere", $"LM {eye} Sphere", $"Measure[@Type='LM']/LM/{eye}/Sphere", "LM", eye, "dpt", false, "Lensmeter sphere from Reichert data."));
+                measurements.Add(new($"{eyePrefix}-cylinder", $"LM {eye} Cylinder", $"Measure[@Type='LM']/LM/{eye}/Cylinder", "LM", eye, "dpt", false, "Lensmeter cylinder from Reichert data."));
+                measurements.Add(new($"{eyePrefix}-axis", $"LM {eye} Axis", $"Measure[@Type='LM']/LM/{eye}/Axis", "LM", eye, "deg", false, "Lensmeter axis from Reichert data."));
+                measurements.Add(new($"{eyePrefix}-add", $"LM {eye} ADD", $"Measure[@Type='LM']/LM/{eye}/ADD", "LM", eye, "dpt", false, "Lensmeter ADD from Reichert data."));
+                measurements.Add(new($"{eyePrefix}-prism", $"LM {eye} Prism", $"Measure[@Type='LM']/LM/{eye}/Prism", "LM", eye, "pdpt", false, "Lensmeter prism from Reichert data."));
+                measurements.Add(new($"{eyePrefix}-pd", $"LM {eye} PD", $"Measure[@Type='LM']/LM/{eye}/PD", "LM", eye, "mm", false, "Lensmeter PD from Reichert data."));
+                measurements.Add(new($"{eyePrefix}-medistar-line", $"LM {eye} MEDISTAR-Zeile", $"Measure[@Type='LM']/LM/{eye}/MedistarLine", "LM", eye, string.Empty, false, "Prepared MEDISTAR 6228 lensmeter line."));
+            }
+        }
+
+        if (includeTono)
+        {
+            foreach (var eye in new[] { "R", "L" })
+            {
+                var eyePrefix = $"{prefix}-tono-{eye.ToLowerInvariant()}";
+                measurements.Add(new($"{eyePrefix}-iop", $"Tonometrie {eye} IOP", $"Measure[@Type='TM']/Tono/{eye}/IOP", "TM", eye, "mmHg", false, "IOP value from Reichert 7CR data."));
+                measurements.Add(new($"{eyePrefix}-score", $"Tonometrie {eye} Score", $"Measure[@Type='TM']/Tono/{eye}/Score", "TM", eye, string.Empty, false, "Quality score from Reichert 7CR data."));
+            }
+
+            measurements.Add(new($"{prefix}-tono-medistar-line", "Tonometrie MEDISTAR-Zeile", "Measure[@Type='TM']/Tono/TonoListLine", "TM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6205 tonometry line."));
+        }
+
+        return measurements;
+    }
+
+    public static DeviceProfileDefinition CreateRodenstockCx800Default()
+    {
+        var id = "device-rodenstock-cx800-default";
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: "Rodenstock CX 800",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Built-in serial text profile for Rodenstock CX 800 REF/KM data derived from neutral reference parser rules. REF maps to 6228 and KM to 6221; practical raw-data validation remains open.",
+                Vendor: "Rodenstock",
+                Product: "CX 800",
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "Rodenstock",
+            Model: "CX 800",
+            DeviceType: "Autorefraktor/Keratometer",
+            ParserMode: RodenstockDeviceParser.ParserMode,
+            Measurements: CreateRodenstockCx800Measurements(),
+            SupportedExaminationTypes: new[] { "REF", "Autorefraktor", "KM", "Keratometer" },
+            CanContainMultipleExaminationTypes: true,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: DeviceConnectionKind.SerialRs232,
+            SerialSettings: new SerialCommunicationSettings(
+                BaudRate: 9600,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.None,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000));
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateRodenstockCx800Measurements()
+    {
+        var prefix = "rodenstock-cx800";
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "Rodenstock common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "Rodenstock model name."),
+            new($"{prefix}-ref-pd", "REF PD", "Measure[@Type='REF']/REF/PD", "REF", string.Empty, "mm", false, "REF PD from Rodenstock CX 800 data."),
+            new($"{prefix}-ref-vd", "REF VD", "Measure[@Type='REF']/REF/VD", "REF", string.Empty, "mm", false, "REF VD from Rodenstock CX 800 data.")
+        };
+
+        foreach (var eye in new[] { "R", "L" })
+        {
+            var refPrefix = $"{prefix}-ref-{eye.ToLowerInvariant()}";
+            measurements.Add(new($"{refPrefix}-sphere", $"REF {eye} Sphere", $"Measure[@Type='REF']/REF/{eye}/Sphere", "REF", eye, "dpt", false, "REF sphere from Rodenstock CX 800 data."));
+            measurements.Add(new($"{refPrefix}-cylinder", $"REF {eye} Cylinder", $"Measure[@Type='REF']/REF/{eye}/Cylinder", "REF", eye, "dpt", false, "REF cylinder from Rodenstock CX 800 data."));
+            measurements.Add(new($"{refPrefix}-axis", $"REF {eye} Axis", $"Measure[@Type='REF']/REF/{eye}/Axis", "REF", eye, "deg", false, "REF axis from Rodenstock CX 800 data."));
+            measurements.Add(new($"{refPrefix}-medistar-line", $"REF {eye} MEDISTAR-Zeile", $"Measure[@Type='REF']/REF/{eye}/MedistarLine", "REF", eye, string.Empty, false, "Prepared MEDISTAR 6228 REF line."));
+
+            var kmPrefix = $"{prefix}-km-{eye.ToLowerInvariant()}";
+            measurements.Add(new($"{kmPrefix}-r1-radius", $"KM {eye} R1 Radius", $"Measure[@Type='KM']/KM/{eye}/R1/Radius", "KM", eye, "mm", false, "KM R1 radius from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-r1-power", $"KM {eye} R1 Power", $"Measure[@Type='KM']/KM/{eye}/R1/Power", "KM", eye, "dpt", false, "KM R1 power from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-r1-axis", $"KM {eye} R1 Axis", $"Measure[@Type='KM']/KM/{eye}/R1/Axis", "KM", eye, "deg", false, "KM R1 axis from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-r2-radius", $"KM {eye} R2 Radius", $"Measure[@Type='KM']/KM/{eye}/R2/Radius", "KM", eye, "mm", false, "KM R2 radius from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-r2-power", $"KM {eye} R2 Power", $"Measure[@Type='KM']/KM/{eye}/R2/Power", "KM", eye, "dpt", false, "KM R2 power from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-r2-axis", $"KM {eye} R2 Axis", $"Measure[@Type='KM']/KM/{eye}/R2/Axis", "KM", eye, "deg", false, "KM R2 axis from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-av-radius", $"KM {eye} AV Radius", $"Measure[@Type='KM']/KM/{eye}/AV/Radius", "KM", eye, "mm", false, "KM average radius from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-av-power", $"KM {eye} AV Power", $"Measure[@Type='KM']/KM/{eye}/AV/Power", "KM", eye, "dpt", false, "KM average power from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-cylinder", $"KM {eye} Cylinder", $"Measure[@Type='KM']/KM/{eye}/Cylinder", "KM", eye, "dpt", false, "KM cylinder from Rodenstock CX 800 data."));
+            measurements.Add(new($"{kmPrefix}-cylinder-axis", $"KM {eye} Cylinder Axis", $"Measure[@Type='KM']/KM/{eye}/CylinderAxis", "KM", eye, "deg", false, "KM cylinder axis from Rodenstock CX 800 data."));
+        }
+
+        measurements.Add(new($"{prefix}-km-radii-line", "KM MEDISTAR R1/R2-Zeile", "Measure[@Type='KM']/KM/MedistarLine1", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 KM R1/R2 line."));
+        measurements.Add(new($"{prefix}-km-average-line", "KM MEDISTAR AV/CYL-Zeile", "Measure[@Type='KM']/KM/MedistarLine2", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6221 KM average/cylinder line."));
+        return measurements;
+    }
+
     public static DeviceProfileDefinition CreateHuvitzHrk8000ADefault()
     {
         return CreateHuvitzTextSerialDefault(

@@ -1875,6 +1875,128 @@ public static class DefaultExportProfileDefinitions
         return rules;
     }
 
+    public static ExportProfileDefinition CreateMedistarReichert7CrNctDefault()
+    {
+        return CreateMedistarReichertDefault(
+            id: "export-medistar-reichert-7cr-nct-default",
+            name: "MEDISTAR + Reichert 7CR NCT Export",
+            product: "MEDISTAR/Reichert 7CR NCT",
+            deviceProfileId: "device-reichert-7cr-nct-default",
+            description: "Built-in MEDISTAR export profile for Reichert 7CR NCT tonometry text data. IOP values map to 6205. No 6330 or artificial separators are emitted.",
+            includeLens: false,
+            includeTono: true,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static ExportProfileDefinition CreateMedistarReichertLensChekPlusDefault()
+    {
+        return CreateMedistarReichertDefault(
+            id: "export-medistar-reichert-lenschek-plus-default",
+            name: "MEDISTAR + Reichert LensChek Plus Export",
+            product: "MEDISTAR/Reichert LensChek Plus",
+            deviceProfileId: "device-reichert-lenschek-plus-default",
+            description: "Built-in MEDISTAR export profile for Reichert LensChek Plus lensmeter data. Lensmeter lines map to 6228. No 6330 or artificial separators are emitted.",
+            includeLens: true,
+            includeTono: false,
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static ExportProfileDefinition CreateMedistarReichertDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string description,
+        bool includeLens,
+        bool includeTono,
+        DateTimeOffset timestamp)
+    {
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: deviceProfileId,
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarReichertRules(includeLens, includeTono));
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarReichertRules(bool includeLens, bool includeTono)
+    {
+        var rules = CreateMedistarBaseRules();
+        var sortOrder = rules.Count + 1;
+        if (includeLens)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultRight", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right lensmeter line from Reichert data."));
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "LensmeterResultLeft", ExportRuleType.Template, "Device.Measure[@Type='LM']/LM/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left lensmeter line from Reichert data."));
+        }
+
+        if (includeTono)
+        {
+            rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6205", "Tonometry", ExportRuleType.Template, "Device.Measure[@Type='TM']/Tono/TonoListLine", "{value}", sortOrder++, true, "MEDISTAR 6205 tonometry line from Reichert data."));
+        }
+
+        return rules;
+    }
+
+    public static ExportProfileDefinition CreateMedistarRodenstockCx800Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-rodenstock-cx800-default",
+                Name: "MEDISTAR + Rodenstock CX 800 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Built-in MEDISTAR export profile for Rodenstock CX 800 REF/KM text data. REF maps to 6228 and KM to 6221. No 6330 or artificial separators are emitted.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/Rodenstock CX 800",
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-rodenstock-cx800-default",
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarRodenstockCx800Rules());
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarRodenstockCx800Rules()
+    {
+        var rules = CreateMedistarBaseRules();
+        var sortOrder = rules.Count + 1;
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultRight", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye REF line from Rodenstock CX 800 data."));
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "RefResultLeft", ExportRuleType.Template, "Device.Measure[@Type='REF']/REF/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye REF line from Rodenstock CX 800 data."));
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryRadii", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine1", "{value}", sortOrder++, true, "MEDISTAR 6221 KM R1/R2 line from Rodenstock CX 800 data."));
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6221", "KeratometryAverage", ExportRuleType.Template, "Device.Measure[@Type='KM']/KM/MedistarLine2", "{value}", sortOrder++, true, "MEDISTAR 6221 KM AV/CYL line from Rodenstock CX 800 data."));
+        return rules;
+    }
+
+    private static List<ExportRuleDefinition> CreateMedistarBaseRules()
+    {
+        return new List<ExportRuleDefinition>
+        {
+            new("1", "8000", "MessageType", ExportRuleType.StaticValue, null, "6310", 1, true, "MEDISTAR XDT import control."),
+            new("2", "3000", "PatientNumber", ExportRuleType.AisField, "AIS.PatientNumber", "{value}", 2, true, "Patient number from AIS."),
+            new("3", "3101", "LastName", ExportRuleType.AisField, "AIS.LastName", "{value}", 3, true, "Last name from AIS."),
+            new("4", "3102", "FirstName", ExportRuleType.AisField, "AIS.FirstName", "{value}", 4, true, "First name from AIS."),
+            new("5", "3103", "BirthDate", ExportRuleType.AisField, "AIS.BirthDate", "{value}", 5, true, "Birth date from AIS."),
+            new("6", "8402", "ExaminationType", ExportRuleType.AisField, "AIS.ExaminationType", "{value}", 6, true, "Examination type from AIS.")
+        };
+    }
+
     public static ExportProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
     {
         return CreateMedistarHuvitzTextDefault(

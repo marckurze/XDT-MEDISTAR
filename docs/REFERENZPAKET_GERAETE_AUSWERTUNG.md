@@ -1,4 +1,4 @@
-# Referenzdaten-Geraeteauswertung
+﻿# Referenzdaten-Geraeteauswertung
 
 Stand: 2026-06-05
 
@@ -66,6 +66,9 @@ Hinweis zur Namenskorrektur: Der Hersteller wird in XDTBox als `Möller-Wedel` g
 | TOPCON | CL-300PDL | Lensmeter | Datei/LAN XML | `Ophthalmology`/JOIA-XML mit `Common.ModelName=CL-300PDL`, `Measure Type="LM"`; CL-300-Familie, synthetische neutrale Fixture | `6228` Lensmeter-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, ModelName-Alias, Baukasten-Kompatibilitaet und Templatepaket-Test ergaenzt |
 | TOPCON | RM-800 | Autorefraktor | Datei/LAN XML | `Ophthalmology`/JOIA-XML mit `Common.ModelName=RM-800`, `Measure Type="REF"`; REF-Familie, synthetische neutrale Fixture | `6228` REF-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, ModelName-Alias und Templatepaket-Test ergaenzt |
 | TOPCON | TRK-3 Omnia | Autorefraktor/Keratometer/Tonometer/Pachymeter | Datei/LAN XML | `Ophthalmology`/JOIA-XML mit `Common.ModelName=TRK-3`, REF/KM/TM/CCT wie TRK-2P-Familie; synthetische neutrale Fixture | `6228`, `6221`, `6220`, `6205` | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, ModelName-Alias, Baukasten-Kompatibilitaet und Templatepaket-Test ergaenzt |
+| Reichert | 7CR NCT | Non-Contact-Tonometer | RS232 Text | Setup-/Parserlogik mit `IOP`, rechten/linken Augenmarkern und CR/EOT-Framehinweisen; synthetische neutrale Fixture | `6205` Tonometrie | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `ReichertDeviceParser`, Baukasten-Preview-Test und Exporttest ergaenzt |
+| Reichert | LensChek Plus | Lensmeter | RS232 Text / XML | Parserlogik fuer serielle R/L-SCA/ADD/Prisma-Zeilen sowie einfache Spectacle-XML-Pfade; synthetische neutrale Fixture | `6228` Lensmeter-Zeilen rechts/links | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `ReichertDeviceParser` und Exporttest ergaenzt |
+| Rodenstock | CX 800 | Autorefraktor/Keratometer | RS232 Text | Abschnittsbasierte Textlogik fuer REF mit PD/VD und KM mit R1/R2/AV/CYL; synthetische neutrale Fixture | `6228` REF-Zeilen, `6221` KM-Zeilen | BuiltIn Geraet, Exportprofil, Schnittstellenprofil, `RodenstockDeviceParser`, Baukasten-Preview-Test und Exporttest ergaenzt |
 
 ## Bestehende Anbindungen mit sicherer Verbesserung
 
@@ -98,9 +101,8 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | TOPCON | EZ-200 Advance | serielle/RDD-Logik mit `CLM`/`SD`-Handshake und Lensmeter-Ziel `6228`, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen Parser umsetzen |
 | TOPCON | RM-8000 | serielle/RDD-Logik mit `6228`/`6227`-Hinweisen, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen REF/SBJ-Parser entscheiden |
 | NIDEK | AR-600, AR-660A, ARK-500A, LM-970, LM-1000P, NT-2000 | vorwiegend RDD-/COM- beziehungsweise scriptnahe Logik ohne ausreichend belastbare neutrale Rohfixture | Folge-Batch mit eigener Parserklasse erst starten, wenn die Rohstruktur oder ein synthetisch eindeutig herleitbares Frame abgesichert werden kann |
-| Reichert | 7CR NCT, LensChek Plus | teilweise Setup-/Parserhinweise | getrennte Tonometer-/Lensmeter-Batches |
-| Rodenstock | CX 800, Phoromat 2000 | teilweise Refraktor-/Phoropterhinweise | erst nach klarer Frame-/Textstruktur als BuiltIn |
-| Möller-Wedel | Visutron-Familie | teilweise Hinweise, Herstellername korrigiert | Parserdetails und Anschlussart nachziehen |
+| Rodenstock | Phoromat 2000 | Phoropterhinweise mit widerspruechlicher Hersteller-/Modellzuordnung und bidirektionaler Relevanz | erst nach klarer Rueckgabe- und PC->Geraet-Frameprobe als Phoropter-BuiltIn entscheiden |
+| Möller-Wedel | Visutron Plus, Visutron 900 Plus, Visutron 900 Touch | COM-/Parserhinweise und ACK/NAK-nahe bidirektionale Logik, aber keine ausreichend belastbare neutrale Rohfixture fuer MEDISTAR-Ausgabe | Parserdetails, Anschlussart und echte Rueckgabe-/Sendeframes nachziehen |
 | Canon | RK-F2, TX-20P, OCT A-1 Xephilo | teilweise Daten; OCT/Bildgeraet gesondert zu bewerten | Messwertgeraete vor Bild-/OCT-Workflows priorisieren |
 | ZEISS | IOLMaster/VISU-Familien | teilweise Daten, teils Spezialgeraete | erst nach klarer XDTBox-Messartzuordnung |
 | Visionix | Optovue/Retinomax/VX-Familien | Spezialgeraete und gemischte Datenlage | nur bei klarer Messwert- oder Dokumentuebergabe umsetzen |
@@ -119,6 +121,8 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | TOMEY | AP-2500 | Keine ausreichend belastbare Messwertrohstruktur fuer einen XDTBox-Parser. |
 | TOMEY | TAP-2000 | Phoropter-/Sendeframe-Workflow waere zu risikoreich ohne echte Rueckgabe- und PC->Geraet-Validierung. Die statisch sichtbaren COM-/Framefragmente werden dokumentiert, aber noch nicht produktiv freigegeben. |
 | Shin-Nippon | DR-900 | Refraktions-/Phoropterkandidat mit bidirektionaler Relevanz; Anschluss- und Sendeframe-Datenlage reicht nicht fuer ein sicheres BuiltIn. Kein halbfertiger produktiver Parser ohne getrennte Rueckgabe- und PC->Geraet-Validierung. |
+| Rodenstock | Phoromat 2000 | Die Datenlage enthaelt Phoropter-Token, aber auch eine widerspruechliche Hersteller-/Modellzuordnung. Ohne echte Rueckgabe und PC->Geraet-Frameprobe bleibt das Geraet Kandidat. |
+| Möller-Wedel | Visutron Plus / Visutron 900 Plus / Visutron 900 Touch | Die COM-Parameter und STX/ETX-Hinweise sind sichtbar, die Messwertrohstruktur und bidirektionalen Sendeframes sind aber noch nicht belastbar genug fuer ein BuiltIn. |
 
 ## Uebernommene technische Regeln
 
@@ -131,6 +135,8 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 - Huvitz-Textparser: nur eindeutig abgeleitete Tokens werden ausgewertet. `S-R-*` wird als REF nach `6228`, `S-K-*` als KM nach `6221`, `T-*` als Tonometrie nach `6205` und `P-*` als Pachymetrie/CCT nach `6220` vorbereitet. Die Fixtures sind synthetisch aus Referenzlogik abgeleitet und ersetzen keine Praxisrohdateien.
 - TOMEY-Parser: CF-2000 und TL-2000C/TL-6000/TL-7000 werden als Lensmeter nach `6228` vorbereitet. MR-6000 trennt REF nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`. TOP-1000 liefert Tonometrie nach `6205` und Pachymetrie nach `6220`. EM-3000/EM-4000 liefern Endothel-/Zellmesswerte nach `6228`, Kommentare nach `6227` und Bild-/Dateiverweise nach `6302`. Nur erkannte Werte werden exportiert; fehlende Teilmessungen erzeugen keine kuenstlichen Zeilen.
 - Shin-Nippon-Textparser: Accuref R-800/K-900 wird als REF beziehungsweise REF/KM ausgewertet, DL-1000/DL-800/DL-900/SLM-4000 als Lensmeter und NCT-200 als Tonometrie. COM-Defaults stammen aus neutraler Referenzlogik: Accuref 115200 8N1, DL-/SLM-Lensmeter 9600 8N1, NCT-200 19200 8N1. Die Fixtures sind synthetisch und ersetzen keine Praxisrohdateien.
+- Reichert-Textparser: 7CR NCT wird als Tonometrie nach `6205` vorbereitet; LensChek Plus wird als Lensmeter nach `6228` vorbereitet. Die Parser akzeptieren die abgeleiteten seriellen Textformen und bei LensChek Plus zusaetzlich einfache XML-Pfade, exportieren aber nur erkannte Werte.
+- Rodenstock-CX-800-Textparser: REF wird nach `6228`, KM nach `6221` vorbereitet. PD/VD und KM-R1/R2/AV/CYL werden nur bei vorhandenen Tokens ausgegeben; Phoromat-Phoropterdaten werden nicht ueber diesen Parser geraten.
 - Scriptbasierte Textparser: Feldkennungen wie `6228`, `6227`, `6221`, `6220` und `6205` werden als Hinweise dokumentiert, aber nicht blind als XDTBox-Code kopiert.
 - Externe Referenzartefakte wurden nicht in das Repository uebernommen. Ein Repo-Scan prueft die vier gesperrten externen Marker dynamisch und ohne Klartextspeicherung.
 
@@ -141,6 +147,8 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 3. Huvitz-HLM-Lensmeter, Huvitz-HDR-Phoropter und TOMEY-TAP-2000 erst nach klarer Rohdaten-/Frame-Struktur als BuiltIn entscheiden.
 4. Echte Shin-Nippon-Praxisrohdateien fuer Accuref R-800/K-900, DL-1000/DL-800/DL-900, NCT-200 und SLM-4000 sammeln und gegen `ShinNipponDeviceParser` validieren.
 5. Shin-Nippon DR-900 erst nach klarer Rueckgabe- und PC->Geraet-Frame-Struktur entscheiden.
-6. TOPCON EZ-200 Advance und RM-8000 erst mit echter serieller Rohdatenprobe oder eindeutigem Framefixture als Parser umsetzen.
-7. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.
-8. Keine Referenzrohdateien, PDFs oder fremden Skripte in den Kundeninstaller aufnehmen.
+6. Echte Reichert-7CR-/LensChek-Plus- und Rodenstock-CX-800-Praxisrohdateien sammeln und gegen die synthetischen Fixtures validieren.
+7. Rodenstock Phoromat 2000 und Möller-Wedel Visutron erst nach klarer Rueckgabe- und PC->Geraet-Frame-Struktur entscheiden.
+8. TOPCON EZ-200 Advance und RM-8000 erst mit echter serieller Rohdatenprobe oder eindeutigem Framefixture als Parser umsetzen.
+9. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.
+10. Keine Referenzrohdateien, PDFs oder fremden Skripte in den Kundeninstaller aufnehmen.

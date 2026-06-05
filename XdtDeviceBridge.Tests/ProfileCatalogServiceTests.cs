@@ -5,7 +5,7 @@ namespace XdtDeviceBridge.Tests;
 
 public sealed class ProfileCatalogServiceTests
 {
-    private const int ExpectedBuiltInProfileCount = 52;
+    private const int ExpectedBuiltInProfileCount = 55;
 
     private readonly ProfileCatalogService _service = new();
 

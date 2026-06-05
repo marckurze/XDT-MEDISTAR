@@ -11,6 +11,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     private readonly NidekRtSerialPhoropterParser _nidekRtSerialParser = new();
     private readonly HuvitzTextDeviceParser _huvitzTextParser = new();
     private readonly ShinNipponDeviceParser _shinNipponParser = new();
+    private readonly ReichertDeviceParser _reichertParser = new();
+    private readonly RodenstockDeviceParser _rodenstockParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
@@ -38,6 +40,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var usesNidekRtSerialParser = UsesNidekRtSerialParser(interfaceProfile, exportProfile);
         var usesHuvitzTextParser = UsesHuvitzTextParser(interfaceProfile, exportProfile);
         var usesShinNipponParser = UsesShinNipponParser(interfaceProfile, exportProfile);
+        var usesReichertParser = UsesReichertParser(interfaceProfile, exportProfile);
+        var usesRodenstockParser = UsesRodenstockParser(interfaceProfile, exportProfile);
         var usesTomeyEmParser = UsesTomeyEmParser(interfaceProfile, exportProfile);
         var usesTomeyParser = UsesTomeyParser(interfaceProfile, exportProfile);
 
@@ -59,6 +63,8 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             && !usesNidekRtSerialParser
             && !usesHuvitzTextParser
             && !usesShinNipponParser
+            && !usesReichertParser
+            && !usesRodenstockParser
             && !usesTomeyEmParser
             && !usesTomeyParser
             && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
@@ -100,11 +106,15 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                     ? _huvitzTextParser.ParseFile(deviceFilePath)
                     : usesShinNipponParser
                         ? _shinNipponParser.ParseFile(deviceFilePath)
-                        : usesTomeyEmParser
-                            ? _tomeyEmParser.ParseFile(deviceFilePath)
-                            : usesTomeyParser
-                                ? _tomeyParser.ParseFile(deviceFilePath)
-                                : _xmlDeviceParser.ParseFile(deviceFilePath);
+                        : usesReichertParser
+                            ? _reichertParser.ParseFile(deviceFilePath)
+                            : usesRodenstockParser
+                                ? _rodenstockParser.ParseFile(deviceFilePath)
+                                : usesTomeyEmParser
+                                    ? _tomeyEmParser.ParseFile(deviceFilePath)
+                                    : usesTomeyParser
+                                        ? _tomeyParser.ParseFile(deviceFilePath)
+                                        : _xmlDeviceParser.ParseFile(deviceFilePath);
         if (!isAttachmentOnlyMode)
         {
             issues.AddRange(deviceResult.Issues.Select(issue => new ProcessingIssue(
@@ -870,6 +880,22 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             || IsShinNipponId(exportProfile.SourceDeviceProfileId);
     }
 
+    private static bool UsesReichertParser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsReichertId(interfaceProfile.DeviceProfileId)
+            || IsReichertId(exportProfile.SourceDeviceProfileId);
+    }
+
+    private static bool UsesRodenstockParser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsRodenstockId(interfaceProfile.DeviceProfileId)
+            || IsRodenstockId(exportProfile.SourceDeviceProfileId);
+    }
+
     private static bool UsesTomeyParser(
         InterfaceProfileDefinition interfaceProfile,
         ExportProfileDefinition exportProfile)
@@ -903,6 +929,18 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("shin-nippon", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsReichertId(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("reichert", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRodenstockId(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("rodenstock", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTomeyId(string? value)

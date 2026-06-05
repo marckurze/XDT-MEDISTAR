@@ -1011,6 +1011,122 @@ public static class DefaultInterfaceProfileDefinitions
             WriteTimeoutMilliseconds: 1000);
     }
 
+    public static InterfaceProfileDefinition CreateMedistarReichert7CrNctDefault()
+    {
+        return CreateMedistarReferenceTextSerialDefault(
+            id: "interface-medistar-reichert-7cr-nct-default",
+            name: "MEDISTAR + Reichert 7CR NCT",
+            product: "MEDISTAR/Reichert 7CR NCT",
+            deviceProfileId: "device-reichert-7cr-nct-default",
+            exportProfileId: "export-medistar-reichert-7cr-nct-default",
+            description: "Built-in inactive serial profile for Reichert 7CR NCT tonometry text imports. COM defaults use 19200 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 19200,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CR,
+                ReadTimeoutMilliseconds: 30000,
+                WriteTimeoutMilliseconds: 1000),
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarReichertLensChekPlusDefault()
+    {
+        return CreateMedistarReferenceTextSerialDefault(
+            id: "interface-medistar-reichert-lenschek-plus-default",
+            name: "MEDISTAR + Reichert LensChek Plus",
+            product: "MEDISTAR/Reichert LensChek Plus",
+            deviceProfileId: "device-reichert-lenschek-plus-default",
+            exportProfileId: "export-medistar-reichert-lenschek-plus-default",
+            description: "Built-in inactive serial profile for Reichert LensChek Plus lensmeter text/XML imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 9600,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.CRLF,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    public static InterfaceProfileDefinition CreateMedistarRodenstockCx800Default()
+    {
+        return CreateMedistarReferenceTextSerialDefault(
+            id: "interface-medistar-rodenstock-cx800-default",
+            name: "MEDISTAR + Rodenstock CX 800",
+            product: "MEDISTAR/Rodenstock CX 800",
+            deviceProfileId: "device-rodenstock-cx800-default",
+            exportProfileId: "export-medistar-rodenstock-cx800-default",
+            description: "Built-in inactive serial profile for Rodenstock CX 800 REF/KM text imports. COM defaults use 9600 8N1 without DTR/RTS according to the neutral reference settings; practical raw-data validation remains open.",
+            serialSettings: new SerialCommunicationSettings(
+                BaudRate: 9600,
+                DataBits: 8,
+                StopBits: SerialStopBitsSetting.One,
+                Parity: SerialParitySetting.None,
+                Handshake: SerialHandshakeSetting.None,
+                DtrEnable: false,
+                RtsEnable: false,
+                IsBidirectional: false,
+                LineTerminator: SerialLineTerminatorSetting.None,
+                ReadTimeoutMilliseconds: 5000,
+                WriteTimeoutMilliseconds: 1000),
+            timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
+    }
+
+    private static InterfaceProfileDefinition CreateMedistarReferenceTextSerialDefault(
+        string id,
+        string name,
+        string product,
+        string deviceProfileId,
+        string exportProfileId,
+        string description,
+        SerialCommunicationSettings serialSettings,
+        DateTimeOffset timestamp)
+    {
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: name,
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: product,
+                Version: "0.1.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: deviceProfileId,
+            ExportProfileId: exportProfileId,
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: false,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description,
+            SerialSettings: serialSettings);
+    }
+
     public static InterfaceProfileDefinition CreateMedistarHuvitzHrk8000ADefault()
     {
         return CreateMedistarHuvitzTextSerialDefault(

@@ -8,6 +8,8 @@ public sealed class ReferencePackageBuiltInDeviceTests
     private readonly XmlDeviceParser _parser = new();
     private readonly HuvitzTextDeviceParser _huvitzParser = new();
     private readonly ShinNipponDeviceParser _shinNipponParser = new();
+    private readonly ReichertDeviceParser _reichertParser = new();
+    private readonly RodenstockDeviceParser _rodenstockParser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly MappingEngine _mappingEngine = new();
@@ -427,6 +429,86 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void Reichert7CrNctProfile_ShouldParseAndExportTonometryLine()
+    {
+        var parseResult = _reichertParser.ParseText("""
+            REI7CR
+            IOP
+            (R) 12.7 9
+            (L) 14.0 8
+            """, "REI7CR_reference.txt");
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarReichert7CrNctDefault();
+        var xdt = BuildXdt(CreatePatientData("TONO"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "7CR NCT");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine" && measurement.Value == "R = 12.7 // L = 14 mmHg");
+        Assert.Contains("6205R = 12.7 // L = 14 mmHg", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReichertLensChekPlusProfile_ShouldParseSerialAndExportLensmeterLines()
+    {
+        var parseResult = _reichertParser.ParseText("""
+            LensChek Plus
+            <R>
+            S : +1.00
+            C : -0.25
+            A : 103
+            ADD: +0.25
+            P : 0.75 OUT 1.00 UP
+            PD: 59
+            <L>
+            S : +0.25
+            C : -1.25
+            A : 62
+            """, "RLCHECKP_reference.txt");
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarReichertLensChekPlusDefault();
+        var xdt = BuildXdt(CreatePatientData("LM"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "LensChek Plus");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='LM']/LM/R/MedistarLine" && measurement.Value == "R.:S=+ 1.00 Z=- 0.25*103 P=0.75 OUT 1.00 UP PD= 59 A=+ 0.25");
+        Assert.Contains("6228R.:S=+ 1.00 Z=- 0.25*103 P=0.75 OUT 1.00 UP PD= 59 A=+ 0.25", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 0.25 Z=- 1.25* 62", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RodenstockCx800Profile_ShouldParseAndExportRefAndKeratometryLines()
+    {
+        var parseResult = _rodenstockParser.ParseText("""
+            CX 800
+            [VD],12.00
+            [PD],59
+            [POWER_R],A,+0.25,-0.75,141
+            [POWER_L],A,+0.00,+0.00,0
+            [K1_R],7.67,44.00,173
+            [K2_R],7.57,44.50,83
+            [AV_R],7.62,44.25
+            [CYL_R],-0.50,173
+            [K1_L],7.68,44.00,175
+            [K2_L],7.52,45.00,85
+            [AV_L],7.60,44.50
+            [CYL_L],-1.00,175
+            """, "CX800_reference.txt");
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarRodenstockCx800Default();
+        var xdt = BuildXdt(CreatePatientData("REF"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "CX 800");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12.00", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 0.00 Z=+ 0.00*  0", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: R1=7.67 44.00 *173 R2=7.57 44.50 *83 // L: R1=7.68 44.00 *175 R2=7.52 45.00 *85", xdt, StringComparison.Ordinal);
+        Assert.Contains("6221R: AV=7.62 44.25 CYL=-0.50 173 // L: AV=7.60 44.50 CYL=-1.00 175", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("--", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void NewReferenceBackedBuiltIns_ShouldBeValid()
     {
         var deviceProfiles = new[]
@@ -441,6 +523,9 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultDeviceProfileDefinitions.CreateShinNipponDl900Default(),
             DefaultDeviceProfileDefinitions.CreateShinNipponNct200Default(),
             DefaultDeviceProfileDefinitions.CreateShinNipponSlm4000Default(),
+            DefaultDeviceProfileDefinitions.CreateReichert7CrNctDefault(),
+            DefaultDeviceProfileDefinitions.CreateReichertLensChekPlusDefault(),
+            DefaultDeviceProfileDefinitions.CreateRodenstockCx800Default(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk8000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHrk9000ADefault(),
             DefaultDeviceProfileDefinitions.CreateHuvitzHnt1PDefault(),
@@ -466,6 +551,9 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultExportProfileDefinitions.CreateMedistarShinNipponDl900Default(),
             DefaultExportProfileDefinitions.CreateMedistarShinNipponNct200Default(),
             DefaultExportProfileDefinitions.CreateMedistarShinNipponSlm4000Default(),
+            DefaultExportProfileDefinitions.CreateMedistarReichert7CrNctDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarReichertLensChekPlusDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarRodenstockCx800Default(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultExportProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
@@ -491,6 +579,9 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponDl900Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponNct200Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarShinNipponSlm4000Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarReichert7CrNctDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarReichertLensChekPlusDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarRodenstockCx800Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk8000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHrk9000ADefault(),
             DefaultInterfaceProfileDefinitions.CreateMedistarHuvitzHnt1PDefault(),
@@ -549,6 +640,60 @@ public sealed class ReferencePackageBuiltInDeviceTests
         Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
         Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12", result.ExportContent, StringComparison.Ordinal);
         Assert.Contains("6221R: R1=7.67 *173 R2=7.57 * 83 // L: R1=7.68 *175 R2=7.52 * 85", result.ExportContent, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReichertTextPreview_ShouldAcceptNonXmlDeviceFileInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = WriteTempText("""
+            REI7CR
+            IOP
+            (R) 12.7 9
+            (L) 14.0 8
+            """);
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarReichert7CrNctDefault(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateReichert7CrNctDefault(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarReichert7CrNctDefault(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='TM']/Tono/TonoListLine");
+        Assert.Contains("6205R = 12.7 // L = 14 mmHg", result.ExportContent, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RodenstockTextPreview_ShouldAcceptNonXmlDeviceFileInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = WriteTempText("""
+            CX 800
+            [VD],12.00
+            [PD],59
+            [POWER_R],A,+0.25,-0.75,141
+            [POWER_L],A,+0.00,+0.00,0
+            [K1_R],7.67,44.00,173
+            [K2_R],7.57,44.50,83
+            [K1_L],7.68,44.00,175
+            [K2_L],7.52,45.00,85
+            """);
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarRodenstockCx800Default(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateRodenstockCx800Default(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarRodenstockCx800Default(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
+        Assert.Contains("6228R.:S=+ 0.25 Z=- 0.75*141 PD= 59 VD= 12.00", result.ExportContent, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -611,6 +756,15 @@ public sealed class ReferencePackageBuiltInDeviceTests
         var folder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, "reference-device.xml");
+        File.WriteAllText(path, content);
+        return path;
+    }
+
+    private static string WriteTempText(string content)
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "XdtDeviceBridgeTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, "reference-device.txt");
         File.WriteAllText(path, content);
         return path;
     }
