@@ -183,6 +183,11 @@ public sealed class AisOutputInfoService
     private static string CreateDeviceResultMeaning(DeviceProfileDefinition? deviceProfile)
     {
         var text = CreateDeviceClassifier(deviceProfile);
+        if (IsIolMasterDeviceText(text))
+        {
+            return "Keratometerwerte R1/R2";
+        }
+
         if (IsPhoropterDeviceText(text))
         {
             return "Phoropter finaler Verordnungswert";
@@ -219,6 +224,11 @@ public sealed class AisOutputInfoService
     private static string CreateSecondaryResultMeaning(DeviceProfileDefinition? deviceProfile)
     {
         var text = CreateDeviceClassifier(deviceProfile);
+        if (IsIolMasterDeviceText(text))
+        {
+            return "Biometrie / VKT und Achslaenge";
+        }
+
         if (IsPhoropterDeviceText(text))
         {
             return "Phoropter Maximalwert / subjektive Refraktion";
@@ -301,6 +311,11 @@ public sealed class AisOutputInfoService
         return ContainsAny(text, "phoropter", "refractor", "rt-");
     }
 
+    private static bool IsIolMasterDeviceText(string text)
+    {
+        return ContainsAny(text, "iolmaster", "iol master", "biometrie", "biometry", "achslaenge", "achsl", "axial");
+    }
+
     private static int GetFieldSortKey(string fieldCode)
     {
         return fieldCode switch
@@ -313,9 +328,9 @@ public sealed class AisOutputInfoService
             "8402" => 20,
             "6228" => 30,
             "6227" => 31,
-            "6221" => 32,
-            "6220" => 33,
-            "6205" => 34,
+            "6221" => 33,
+            "6220" => 34,
+            "6205" => 35,
             "6302" => 40,
             "6303" => 41,
             "6304" => 42,
@@ -392,6 +407,11 @@ public static class AisExaminationTypeDefaults
         if (ContainsAny(text, "endo", "em-"))
         {
             return "ENDO";
+        }
+
+        if (IsIolMasterDeviceText(text))
+        {
+            return "IOL";
         }
 
         if (IsCombinationDevice(text))
@@ -484,5 +504,10 @@ public static class AisExaminationTypeDefaults
         }
 
         return ContainsAny(text, "phoropter", "refractor", "rt-");
+    }
+
+    private static bool IsIolMasterDeviceText(string text)
+    {
+        return ContainsAny(text, "iolmaster", "iol master", "biometrie", "biometry", "achslaenge", "achsl", "axial");
     }
 }

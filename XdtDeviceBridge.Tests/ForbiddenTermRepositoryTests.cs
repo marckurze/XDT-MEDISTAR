@@ -37,7 +37,8 @@ public sealed class ForbiddenTermRepositoryTests
             string.Concat("Kai", " ", "Zirle", "wagen"),
             string.Concat("Zirle", "wagen"),
             string.Concat("T", "2", "W"),
-            string.Concat("Team", "2", "Work")
+            string.Concat("Team", "2", "Work"),
+            string.Concat("Middle", "ware")
         };
     }
 

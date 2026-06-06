@@ -122,7 +122,7 @@ Die NIDEK-RS232-Auswertung erkennt SOH/STX/ETB/EOT-Frames, optionale Checksummen
 
 # Weitere vorbereitete Referenzgeraete
 
-Canon RK-F2, Canon TX-20P, ZEISS VISULENS 550, ZEISS VISUPLAN 500, ZEISS VISUREF 100, Visionix Retinomax 5, Visionix VX 120 und Visionix VX 650 sind als inaktive BuiltIn-Kandidaten vorbereitet. Die Ausgaben folgen den XDTBox-Regeln: REF/Lensmeter nach `6228`, KM nach `6221`, Tonometrie nach `6205` und Pachymetrie/CCT nach `6220`.
+Canon RK-F2, Canon TX-20P, ZEISS VISULENS 550, ZEISS VISUPLAN 500, ZEISS VISUREF 100, ZEISS IOLMaster 700, Visionix Retinomax 5, Visionix VX 120 und Visionix VX 650 sind als inaktive BuiltIn-Kandidaten vorbereitet. Die Ausgaben folgen den XDTBox-Regeln: REF/Lensmeter nach `6228`, KM nach `6221`, Tonometrie nach `6205`, Pachymetrie/CCT nach `6220`, IOLMaster-VKT/AL nach `6227` und IOLMaster-R1/R2 nach `6228`.
 
 OCT- und Biometrie-/IOL-Workflows werden in diesen Kandidaten nicht automatisch geraten. Solche Profile bleiben offen, bis Messart, Ziel-Feldkennung und praktische Rohdaten eindeutig sind.
 

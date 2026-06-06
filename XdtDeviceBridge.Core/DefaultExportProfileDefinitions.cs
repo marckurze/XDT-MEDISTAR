@@ -2072,6 +2072,52 @@ public static class DefaultExportProfileDefinitions
             includePachy: false);
     }
 
+    public static ExportProfileDefinition CreateMedistarZeissIolMaster700Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
+        var rules = CreateMedistarBaseRules();
+        var sortOrder = rules.Count + 1;
+        rules.Add(new ExportRuleDefinition(
+            sortOrder.ToString(),
+            "6227",
+            "IolBiometry",
+            ExportRuleType.Template,
+            "Device.Measure[@Type='IOL']/IOL/MedistarLine",
+            "{value}",
+            sortOrder++,
+            true,
+            "MEDISTAR 6227 VKT/AL biometry line from ZEISS IOLMaster 700 XML data."));
+        rules.Add(new ExportRuleDefinition(
+            sortOrder.ToString(),
+            "6228",
+            "IolKeratometry",
+            ExportRuleType.Template,
+            "Device.Measure[@Type='KM']/KM/MedistarLine",
+            "{value}",
+            sortOrder,
+            true,
+            "MEDISTAR 6228 R1/R2 keratometry line from ZEISS IOLMaster 700 XML data."));
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-zeiss-iolmaster700-default",
+                Name: "MEDISTAR + ZEISS IOLMaster 700 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Built-in MEDISTAR export profile for ZEISS IOLMaster 700 XML data. VKT/AL maps to 6227 and R1/R2 keratometry maps to 6228. No 6330 or artificial separators are emitted.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/ZEISS IOLMaster 700",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-zeiss-iolmaster700-default",
+            OutputEncoding: "Windows-1252",
+            Rules: rules);
+    }
+
     public static ExportProfileDefinition CreateMedistarVisionixRetinomax5Default()
     {
         return CreateMedistarCanonZeissVisionixDefault(

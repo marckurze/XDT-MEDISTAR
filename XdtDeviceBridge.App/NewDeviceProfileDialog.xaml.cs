@@ -80,7 +80,9 @@ public partial class NewDeviceProfileDialog : Window
                             ? "Shin-Nippon"
                             : parserMode.Equals(CanonZeissVisionixDeviceParser.ParserMode, StringComparison.OrdinalIgnoreCase)
                                 ? "Canon / ZEISS / Visionix"
-                                : parserMode;
+                                : parserMode.Equals(ZeissIolMaster700DeviceParser.ParserMode, StringComparison.OrdinalIgnoreCase)
+                                    ? "ZEISS IOLMaster 700"
+                                    : parserMode;
     }
 
     private DeviceConnectionKind ReadConnectionKind()

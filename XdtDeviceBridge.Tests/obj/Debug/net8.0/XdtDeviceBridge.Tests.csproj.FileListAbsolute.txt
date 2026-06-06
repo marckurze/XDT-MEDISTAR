@@ -191,3 +191,4 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\V
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\ZEISS\VISULENS550\VISULENS550_reference.xml
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\ZEISS\VISUPLAN500\VISUPLAN500_reference_text.txt
 C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\ZEISS\VISUREF100\VISUREF100_reference_text.txt
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\TestData\Devices\ZEISS\IOLMASTER700\IOLMASTER700_reference.xml

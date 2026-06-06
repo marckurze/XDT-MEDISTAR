@@ -130,6 +130,7 @@ public sealed class AisOutputInfoServiceTests
     [InlineData("Tonometer", "NT-530P", "Xml", "TONO")]
     [InlineData("Pachymeter", "CCT", "Xml", "PACHY")]
     [InlineData("Endothel", "EM-4000", "Xml", "ENDO")]
+    [InlineData("Biometrie/IOL/Keratometer", "IOLMaster 700", "ZeissIolMaster700", "IOL")]
     [InlineData("OCT", "OCT", "Xml", "OCT")]
     [InlineData("Dokument", "Dokument", "Manual", "DOKU")]
     [InlineData("Sonstiges", "Unbekannt", "Text", "MESS")]
@@ -202,6 +203,7 @@ public sealed class AisOutputInfoServiceTests
             "TONO",
             "PACHY",
             "ENDO",
+            "IOL",
             "OCT",
             "DOKU",
             "MESS"
@@ -269,6 +271,7 @@ public sealed class AisOutputInfoServiceTests
         yield return new object[] { DefaultDeviceProfileDefinitions.CreateHuvitzHtr1ADefault(), "KOMB" };
         yield return new object[] { DefaultDeviceProfileDefinitions.CreateTopconCt1PDefault(), "TONO" };
         yield return new object[] { DefaultDeviceProfileDefinitions.CreateTomeyEm3000Default(), "ENDO" };
+        yield return new object[] { DefaultDeviceProfileDefinitions.CreateZeissIolMaster700Default(), "IOL" };
         yield return new object[] { DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(), "DOKU" };
         yield return new object[] { DefaultDeviceProfileDefinitions.CreateManualDocumentSelectionDefault(), "DOKU" };
     }
@@ -299,6 +302,11 @@ public sealed class AisOutputInfoServiceTests
         if (ContainsAny(text, "endo", "em-"))
         {
             return "ENDO";
+        }
+
+        if (ContainsAny(text, "iolmaster", "iol master", "biometrie", "biometry", "achslaenge", "achsl", "axial"))
+        {
+            return "IOL";
         }
 
         if (IsExpectedCombinationDevice(text))

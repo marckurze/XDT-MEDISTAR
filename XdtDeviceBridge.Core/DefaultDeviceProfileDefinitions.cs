@@ -2491,6 +2491,37 @@ public static class DefaultDeviceProfileDefinitions
             includePachy: false);
     }
 
+    public static DeviceProfileDefinition CreateZeissIolMaster700Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
+        var id = "device-zeiss-iolmaster700-default";
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: "ZEISS IOLMaster 700",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Built-in ZEISS IOLMaster 700 XML profile derived from reference XPath rules. Biometry maps to 6227 and keratometry maps to 6228.",
+                Vendor: "ZEISS",
+                Product: "IOLMaster 700",
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "ZEISS",
+            Model: "IOLMaster 700",
+            DeviceType: "Biometrie/IOL/Keratometer",
+            ParserMode: ZeissIolMaster700DeviceParser.ParserMode,
+            Measurements: CreateZeissIolMaster700Measurements(id),
+            SupportedExaminationTypes: new[] { "IOL", "BIOM", "Biometrie", "Achslaenge", "KM", "Keratometer" },
+            CanContainMultipleExaminationTypes: true,
+            IsBidirectional: false,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: DeviceConnectionKind.FileImport,
+            SerialSettings: null);
+    }
+
     public static DeviceProfileDefinition CreateVisionixRetinomax5Default()
     {
         return CreateCanonZeissVisionixDefault(
@@ -2699,6 +2730,32 @@ public static class DefaultDeviceProfileDefinitions
         if (includePachy)
         {
             measurements.Add(new($"{prefix}-cct-line", "Pachymetrie MEDISTAR-Zeile", "Measure[@Type='CCT']/Pachy/MedistarLine", "CCT", string.Empty, string.Empty, false, "Prepared MEDISTAR 6220 pachymetry line."));
+        }
+
+        return measurements;
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateZeissIolMaster700Measurements(string id)
+    {
+        var prefix = id.Replace("device-", string.Empty, StringComparison.OrdinalIgnoreCase).Replace("-default", string.Empty, StringComparison.OrdinalIgnoreCase);
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "ZEISS common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "ZEISS model name."),
+            new($"{prefix}-patient-id", "Patient ID", "Common/PatientId", "Common", string.Empty, string.Empty, false, "Patient ID reported by the device, when present."),
+            new($"{prefix}-iol-line", "IOL Biometrie MEDISTAR-Zeile", "Measure[@Type='IOL']/IOL/MedistarLine", "IOL", string.Empty, string.Empty, false, "Prepared MEDISTAR 6227 VKT/AL line."),
+            new($"{prefix}-km-line", "IOLMaster Keratometrie MEDISTAR-Zeile", "Measure[@Type='KM']/KM/MedistarLine", "KM", string.Empty, string.Empty, false, "Prepared MEDISTAR 6228 R1/R2 line.")
+        };
+
+        foreach (var eye in new[] { "R", "L" })
+        {
+            var eyePrefix = $"{prefix}-{eye.ToLowerInvariant()}";
+            measurements.Add(new($"{eyePrefix}-vkt", $"IOL {eye} VKT", $"Measure[@Type='IOL']/IOL/{eye}/VKT", "IOL", eye, "mm", false, "Anterior chamber depth/VKT."));
+            measurements.Add(new($"{eyePrefix}-al", $"IOL {eye} AL", $"Measure[@Type='IOL']/IOL/{eye}/AL", "IOL", eye, "mm", false, "Axial length."));
+            measurements.Add(new($"{eyePrefix}-r1", $"KM {eye} R1", $"Measure[@Type='KM']/KM/{eye}/R1", "KM", eye, "mm", false, "Keratometry R1 radius."));
+            measurements.Add(new($"{eyePrefix}-r1-axis", $"KM {eye} R1 Achse", $"Measure[@Type='KM']/KM/{eye}/R1Axis", "KM", eye, "deg", false, "Keratometry R1 axis."));
+            measurements.Add(new($"{eyePrefix}-r2", $"KM {eye} R2", $"Measure[@Type='KM']/KM/{eye}/R2", "KM", eye, "mm", false, "Keratometry R2 radius."));
+            measurements.Add(new($"{eyePrefix}-r2-axis", $"KM {eye} R2 Achse", $"Measure[@Type='KM']/KM/{eye}/R2Axis", "KM", eye, "deg", false, "Keratometry R2 axis."));
         }
 
         return measurements;

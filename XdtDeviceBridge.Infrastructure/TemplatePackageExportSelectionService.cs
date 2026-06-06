@@ -236,6 +236,7 @@ public sealed class TemplatePackageExportSelectionService
         "M.Kurze",
         "MarcK",
         "11253",
-        "4711"
+        "4711",
+        string.Concat("Middle", "ware")
     };
 }

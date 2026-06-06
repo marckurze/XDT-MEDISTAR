@@ -15,6 +15,7 @@ public sealed class BuilderManualProcessingPreviewService
     private readonly TomeyDeviceParser _tomeyDeviceParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmDeviceParser = new();
     private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixDeviceParser = new();
+    private readonly ZeissIolMaster700DeviceParser _zeissIolMaster700DeviceParser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -219,6 +220,23 @@ public sealed class BuilderManualProcessingPreviewService
             try
             {
                 return _canonZeissVisionixDeviceParser.ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                });
+            }
+        }
+
+        if (ZeissIolMaster700DeviceParser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return _zeissIolMaster700DeviceParser.ParseFile(deviceFilePath);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {

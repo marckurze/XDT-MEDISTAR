@@ -29,6 +29,7 @@ public sealed class XdtBaukastenDeviceCompatibilityServiceTests
         yield return new object[] { "TOMEY TOP-1000", DefaultDeviceProfileDefinitions.CreateTomeyTop1000Default(), DeviceFixture("Tomey", "TOP1000", "TOP1000_reference.xml") };
         yield return new object[] { "TOMEY EM-3000", DefaultDeviceProfileDefinitions.CreateTomeyEm3000Default(), DeviceFixture("Tomey", "EM3000", "EM3000_reference.csv") };
         yield return new object[] { "TOMEY EM-4000", DefaultDeviceProfileDefinitions.CreateTomeyEm4000Default(), DeviceFixture("Tomey", "EM4000", "EM4000_reference.csv") };
+        yield return new object[] { "ZEISS IOLMaster 700", DefaultDeviceProfileDefinitions.CreateZeissIolMaster700Default(), DeviceFixture("ZEISS", "IOLMASTER700", "IOLMASTER700_reference.xml") };
         yield return new object[] { "TOPCON CL-300", DefaultDeviceProfileDefinitions.CreateTopconCl300Default(), DeviceFixture("Topcon", "CL300", "M-Serial0001_20120101_000000_TOPCON_CL-300_00.xml") };
         yield return new object[] { "TOPCON KR800S", DefaultDeviceProfileDefinitions.CreateTopconKr800Default(), DeviceFixture("Topcon", "KR800S", "M-Serial0036_20131206_213127_TOPCON_KR-800S_.xml") };
         yield return new object[] { "TOPCON KR-1", DefaultDeviceProfileDefinitions.CreateTopconKr1Default(), DeviceFixture("Topcon", "KR1", "M-Serial0001_20190411_120732_TOPCON_KR-1_4430227.xml") };

@@ -1190,6 +1190,18 @@ public static class DefaultInterfaceProfileDefinitions
             timestamp: new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero));
     }
 
+    public static InterfaceProfileDefinition CreateMedistarZeissIolMaster700Default()
+    {
+        return CreateMedistarCanonZeissVisionixFileDefault(
+            "interface-medistar-zeiss-iolmaster700-default",
+            "MEDISTAR + ZEISS IOLMaster 700",
+            "MEDISTAR/ZEISS IOLMaster 700",
+            "device-zeiss-iolmaster700-default",
+            "export-medistar-zeiss-iolmaster700-default",
+            "Built-in inactive file profile for ZEISS IOLMaster 700 XML biometry imports. No device output is sent.",
+            attachmentExternalLinkPathTemplate: string.Empty);
+    }
+
     public static InterfaceProfileDefinition CreateMedistarVisionixRetinomax5Default()
     {
         return CreateMedistarReferenceTextSerialDefault(
@@ -1230,7 +1242,8 @@ public static class DefaultInterfaceProfileDefinitions
         string product,
         string deviceProfileId,
         string exportProfileId,
-        string description)
+        string description,
+        string attachmentExternalLinkPathTemplate = "{Attachment.TargetFullPath}")
     {
         var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
         return new InterfaceProfileDefinition(
@@ -1260,7 +1273,8 @@ public static class DefaultInterfaceProfileDefinitions
                 ClearDeviceImportFolderBeforeProcessing: false,
                 ClearExportFolderAfterSuccessfulTransfer: false,
                 ArchiveProcessedFiles: false,
-                MoveFailedFilesToErrorFolder: true),
+                MoveFailedFilesToErrorFolder: true,
+                AttachmentExternalLinkPathTemplate: attachmentExternalLinkPathTemplate),
             IsActive: false,
             IsLicenseRequired: true,
             Description: description);

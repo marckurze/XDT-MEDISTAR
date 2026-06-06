@@ -16,6 +16,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixParser = new();
+    private readonly ZeissIolMaster700DeviceParser _zeissIolMaster700Parser = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
@@ -45,6 +46,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var usesRodenstockParser = UsesRodenstockParser(interfaceProfile, exportProfile);
         var usesTomeyEmParser = UsesTomeyEmParser(interfaceProfile, exportProfile);
         var usesTomeyParser = UsesTomeyParser(interfaceProfile, exportProfile);
+        var usesZeissIolMaster700Parser = UsesZeissIolMaster700Parser(interfaceProfile, exportProfile);
         var usesCanonZeissVisionixParser = UsesCanonZeissVisionixParser(interfaceProfile, exportProfile);
 
         if (string.IsNullOrWhiteSpace(interfaceProfile.FolderOptions.ExportFolder))
@@ -69,6 +71,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             && !usesRodenstockParser
             && !usesTomeyEmParser
             && !usesTomeyParser
+            && !usesZeissIolMaster700Parser
             && !usesCanonZeissVisionixParser
             && !string.Equals(Path.GetExtension(deviceFilePath), ".xml", StringComparison.OrdinalIgnoreCase))
         {
@@ -115,8 +118,10 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                                 ? _rodenstockParser.ParseFile(deviceFilePath)
                                 : usesTomeyEmParser
                                     ? _tomeyEmParser.ParseFile(deviceFilePath)
-                                    : usesTomeyParser
-                                        ? _tomeyParser.ParseFile(deviceFilePath)
+                                : usesTomeyParser
+                                    ? _tomeyParser.ParseFile(deviceFilePath)
+                                    : usesZeissIolMaster700Parser
+                                        ? _zeissIolMaster700Parser.ParseFile(deviceFilePath)
                                         : usesCanonZeissVisionixParser
                                             ? _canonZeissVisionixParser.ParseFile(deviceFilePath)
                                             : _xmlDeviceParser.ParseFile(deviceFilePath);
@@ -925,6 +930,14 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             || IsCanonZeissVisionixId(exportProfile.SourceDeviceProfileId);
     }
 
+    private static bool UsesZeissIolMaster700Parser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsZeissIolMaster700Id(interfaceProfile.DeviceProfileId)
+            || IsZeissIolMaster700Id(exportProfile.SourceDeviceProfileId);
+    }
+
     private static bool IsNidekRtSerialId(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
@@ -974,5 +987,11 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             && (value.Contains("canon-", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("zeiss-", StringComparison.OrdinalIgnoreCase)
                 || value.Contains("visionix-", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsZeissIolMaster700Id(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("zeiss-iolmaster700", StringComparison.OrdinalIgnoreCase);
     }
 }

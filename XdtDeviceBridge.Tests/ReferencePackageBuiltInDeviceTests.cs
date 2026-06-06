@@ -13,6 +13,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixParser = new();
+    private readonly ZeissIolMaster700DeviceParser _zeissIolMaster700Parser = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly ExportProfileMappingAdapter _mappingAdapter = new();
 
@@ -592,6 +593,27 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void ZeissIolMaster700Profile_ShouldParseAndExportBiometryAndKeratometryLines()
+    {
+        var parseResult = _zeissIolMaster700Parser.ParseFile(GetZeissFixturePath("IOLMASTER700", "IOLMASTER700_reference.xml"));
+        var exportProfile = DefaultExportProfileDefinitions.CreateMedistarZeissIolMaster700Default();
+        var xdt = BuildXdt(CreatePatientData("IOL"), parseResult, exportProfile);
+
+        Assert.Empty(parseResult.Issues);
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Common/ModelName" && measurement.Value == "IOLMaster 700");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='IOL']/IOL/MedistarLine" && measurement.Value == "R: VKT=3.33 AL=24.16 // L: VKT=3.38 AL=24.49");
+        Assert.Contains(parseResult.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine" && measurement.Value == "R: R1=+ 7.48*1.69 R2=+ 7.20*91.69 // L: R1=+ 7.58*172.75 R2=+ 7.24*82.75");
+        Assert.Contains("6227R: VKT=3.33 AL=24.16 // L: VKT=3.38 AL=24.49", xdt, StringComparison.Ordinal);
+        Assert.Contains("6228R: R1=+ 7.48*1.69 R2=+ 7.20*91.69 // L: R1=+ 7.58*172.75 R2=+ 7.24*82.75", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6302", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6303", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("6305", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("V7", xdt, StringComparison.Ordinal);
+        Assert.DoesNotContain("V8", xdt, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void VisionixRetinomax5Profile_ShouldParseAndExportRefAndKeratometryLines()
     {
         var parseResult = _canonZeissVisionixParser.ParseFile(GetVisionixFixturePath("Retinomax5", "Retinomax5_reference_text.txt"));
@@ -658,6 +680,28 @@ public sealed class ReferencePackageBuiltInDeviceTests
     }
 
     [Fact]
+    public void ZeissIolMaster700Preview_ShouldUseProfileAwareParserInBaukastenPreview()
+    {
+        var service = new BuilderManualProcessingPreviewService();
+        var aisPath = WriteTempGdt();
+        var devicePath = GetZeissFixturePath("IOLMASTER700", "IOLMASTER700_reference.xml");
+
+        var result = service.BuildPreview(new BuilderManualProcessingPreviewRequest(
+            InterfaceProfile: DefaultInterfaceProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
+            DeviceProfile: DefaultDeviceProfileDefinitions.CreateZeissIolMaster700Default(),
+            ExportProfile: DefaultExportProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
+            AisFilePath: aisPath,
+            DeviceFilePath: devicePath));
+
+        Assert.False(result.HasErrors, string.Join(Environment.NewLine, result.Issues.Select(issue => issue.Message)));
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='IOL']/IOL/MedistarLine");
+        Assert.Contains(result.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine");
+        Assert.Contains("6227R: VKT=3.33 AL=24.16 // L: VKT=3.38 AL=24.49", result.ExportContent, StringComparison.Ordinal);
+        Assert.Contains("6228R: R1=+ 7.48*1.69 R2=+ 7.20*91.69 // L: R1=+ 7.58*172.75 R2=+ 7.24*82.75", result.ExportContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("6330", result.ExportContent, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void AisOutputInfo_ShouldShowCanonTx20PMeasurementFields()
     {
         var catalog = CreateCatalog(
@@ -674,12 +718,30 @@ public sealed class ReferencePackageBuiltInDeviceTests
         Assert.DoesNotContain(info.Fields, field => field.FieldCode == "6228");
     }
 
+    [Fact]
+    public void AisOutputInfo_ShouldShowIolMaster700BiometryAndKeratometryFields()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateZeissIolMaster700Default(),
+            DefaultExportProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarZeissIolMaster700Default());
+        var service = new AisOutputInfoService();
+
+        var info = service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        Assert.Equal("IOL", info.DefaultExaminationType);
+        Assert.Contains(info.Fields, field => field.FieldCode == "6227" && field.IsCardField && field.Meaning.Contains("Biometrie", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(info.Fields, field => field.FieldCode == "6228" && field.IsCardField && field.Meaning.Contains("R1/R2", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(info.Fields, field => field.FieldCode is "6302" or "6303" or "6305");
+    }
+
     [Theory]
     [InlineData("interface-medistar-canon-rkf2-default", "package-medistar-canon-rk-f2-v1")]
     [InlineData("interface-medistar-canon-tx20p-default", "package-medistar-canon-tx-20p-v1")]
     [InlineData("interface-medistar-zeiss-visulens550-default", "package-medistar-zeiss-visulens-550-v1")]
     [InlineData("interface-medistar-zeiss-visuplan500-default", "package-medistar-zeiss-visuplan-500-v1")]
     [InlineData("interface-medistar-zeiss-visuref100-default", "package-medistar-zeiss-visuref-100-v1")]
+    [InlineData("interface-medistar-zeiss-iolmaster700-default", "package-medistar-zeiss-iolmaster-700-v1")]
     [InlineData("interface-medistar-visionix-retinomax5-default", "package-medistar-visionix-retinomax-5-v1")]
     [InlineData("interface-medistar-visionix-vx120-default", "package-medistar-visionix-vx-120-v1")]
     [InlineData("interface-medistar-visionix-vx650-default", "package-medistar-visionix-vx-650-v1")]
@@ -719,6 +781,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultDeviceProfileDefinitions.CreateZeissVisulens550Default(),
             DefaultDeviceProfileDefinitions.CreateZeissVisuplan500Default(),
             DefaultDeviceProfileDefinitions.CreateZeissVisuref100Default(),
+            DefaultDeviceProfileDefinitions.CreateZeissIolMaster700Default(),
             DefaultDeviceProfileDefinitions.CreateVisionixRetinomax5Default(),
             DefaultDeviceProfileDefinitions.CreateVisionixVx120Default(),
             DefaultDeviceProfileDefinitions.CreateVisionixVx650Default(),
@@ -755,6 +818,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultExportProfileDefinitions.CreateMedistarZeissVisulens550Default(),
             DefaultExportProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
             DefaultExportProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+            DefaultExportProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
             DefaultExportProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
             DefaultExportProfileDefinitions.CreateMedistarVisionixVx120Default(),
             DefaultExportProfileDefinitions.CreateMedistarVisionixVx650Default(),
@@ -791,6 +855,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
             DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisulens550Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx120Default(),
             DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx650Default(),
@@ -1044,6 +1109,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
                 DefaultDeviceProfileDefinitions.CreateZeissVisulens550Default(),
                 DefaultDeviceProfileDefinitions.CreateZeissVisuplan500Default(),
                 DefaultDeviceProfileDefinitions.CreateZeissVisuref100Default(),
+                DefaultDeviceProfileDefinitions.CreateZeissIolMaster700Default(),
                 DefaultDeviceProfileDefinitions.CreateVisionixRetinomax5Default(),
                 DefaultDeviceProfileDefinitions.CreateVisionixVx120Default(),
                 DefaultDeviceProfileDefinitions.CreateVisionixVx650Default()
@@ -1055,6 +1121,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
                 DefaultExportProfileDefinitions.CreateMedistarZeissVisulens550Default(),
                 DefaultExportProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
                 DefaultExportProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+                DefaultExportProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
                 DefaultExportProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
                 DefaultExportProfileDefinitions.CreateMedistarVisionixVx120Default(),
                 DefaultExportProfileDefinitions.CreateMedistarVisionixVx650Default()
@@ -1066,6 +1133,7 @@ public sealed class ReferencePackageBuiltInDeviceTests
                 DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisulens550Default(),
                 DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuplan500Default(),
                 DefaultInterfaceProfileDefinitions.CreateMedistarZeissVisuref100Default(),
+                DefaultInterfaceProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
                 DefaultInterfaceProfileDefinitions.CreateMedistarVisionixRetinomax5Default(),
                 DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx120Default(),
                 DefaultInterfaceProfileDefinitions.CreateMedistarVisionixVx650Default()

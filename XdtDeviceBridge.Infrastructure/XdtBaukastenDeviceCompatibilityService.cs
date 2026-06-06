@@ -17,6 +17,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixParser = new();
+    private readonly ZeissIolMaster700DeviceParser _zeissIolMaster700Parser = new();
 
     public XdtBaukastenDeviceCompatibilityService()
         : this(new XmlDeviceParser())
@@ -172,6 +173,21 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 }
 
                 return EvaluateForWorkbench(deviceProfile, canonZeissVisionixResult.Measurements);
+            }
+
+            if (ZeissIolMaster700DeviceParser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var zeissIolMaster700Result = _zeissIolMaster700Parser.ParseFile(deviceFilePath);
+                if (zeissIolMaster700Result.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die GerÃƒÂ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃƒÂ¼fen Sie Datei und Format.",
+                        zeissIolMaster700Result.Measurements,
+                        FindCompany(zeissIolMaster700Result.Measurements),
+                        FindModelName(zeissIolMaster700Result.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, zeissIolMaster700Result.Measurements);
             }
 
             var parseResult = _parser.ParseFile(deviceFilePath);
@@ -389,6 +405,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         AddAliasIfContains(aliases, normalizedProfileText, "7CR", "7CR", "7CRNCT");
         AddAliasIfContains(aliases, normalizedProfileText, "LENSCHEKPLUS", "LensChek Plus", "LensChek", "LCHECKP");
         AddAliasIfContains(aliases, normalizedProfileText, "CX800", "CX800", "CX-800", "CX 800");
+        AddAliasIfContains(aliases, normalizedProfileText, "IOLMASTER700", "IOLMaster 700", "IOL Master 700", "IOLM700");
     }
 
     private static void AddAliasIfContains(HashSet<string> aliases, string normalizedProfileText, string marker, params string[] values)

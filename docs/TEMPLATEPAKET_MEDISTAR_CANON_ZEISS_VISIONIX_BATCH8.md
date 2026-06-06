@@ -17,6 +17,7 @@ Dieses Dokument beschreibt die vorbereiteten Templatepaket-Kandidaten aus Refere
 | MEDISTAR + ZEISS VISULENS 550 | `device-zeiss-visulens550-default` | `export-medistar-zeiss-visulens550-default` | `interface-medistar-zeiss-visulens550-default` | `6228` Lensmeter |
 | MEDISTAR + ZEISS VISUPLAN 500 | `device-zeiss-visuplan500-default` | `export-medistar-zeiss-visuplan500-default` | `interface-medistar-zeiss-visuplan500-default` | `6205` Tono |
 | MEDISTAR + ZEISS VISUREF 100 | `device-zeiss-visuref100-default` | `export-medistar-zeiss-visuref100-default` | `interface-medistar-zeiss-visuref100-default` | `6228` REF, `6221` KM |
+| MEDISTAR + ZEISS IOLMaster 700 | `device-zeiss-iolmaster700-default` | `export-medistar-zeiss-iolmaster700-default` | `interface-medistar-zeiss-iolmaster700-default` | `6227` VKT/AL, `6228` R1/R2 |
 | MEDISTAR + Visionix Retinomax 5 | `device-visionix-retinomax5-default` | `export-medistar-visionix-retinomax5-default` | `interface-medistar-visionix-retinomax5-default` | `6228` REF, `6221` KM |
 | MEDISTAR + Visionix VX 120 | `device-visionix-vx120-default` | `export-medistar-visionix-vx120-default` | `interface-medistar-visionix-vx120-default` | `6228` REF |
 | MEDISTAR + Visionix VX 650 | `device-visionix-vx650-default` | `export-medistar-visionix-vx650-default` | `interface-medistar-visionix-vx650-default` | `6228` REF, `6205` Tono |
@@ -25,7 +26,6 @@ Dieses Dokument beschreibt die vorbereiteten Templatepaket-Kandidaten aus Refere
 
 - Canon OCT A-1 Xephilo: bewusst ausgeschlossen.
 - Visionix Optovue iVue 80 und iVue 100: bewusst ausgeschlossen.
-- ZEISS IOLMaster 700: Kandidat ohne klare MEDISTAR-Ziel-Feldkennung.
 
 ## Testabdeckung
 
