@@ -282,6 +282,7 @@ public sealed class ProductiveUiSourceTests
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AisOutputInfoWindow.xaml"));
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AisOutputInfoWindow.xaml.cs"));
+        var service = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.Infrastructure", "AisOutputInfoService.cs"));
 
         Assert.Contains("AIS Ausgabe Info", xaml);
         Assert.Contains("Untersuchungsart:", xaml);
@@ -297,6 +298,16 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("FontSize=\"14\"", xaml);
         Assert.Contains("#FFF7D8", xaml);
         Assert.Contains("AisOutputInfoViewModel", code);
+        Assert.Contains("Standard Zeilenbenennung in MEDISTAR", xaml);
+        Assert.Contains("StandardCardLineInfos", code);
+        Assert.Contains("MedistarCardLineInfoService", service);
+        Assert.Contains("V8", service);
+        Assert.DoesNotContain("R.:S=", xaml + code + service);
+        Assert.DoesNotContain("L.:S=", xaml + code + service);
+        Assert.DoesNotContain("VKT=3.33", xaml + code + service);
+        Assert.DoesNotContain("AL=24.16", xaml + code + service);
+        Assert.DoesNotContain("SourcePath}", xaml + code);
+        Assert.DoesNotContain("{value}", xaml + code);
     }
 
     [Fact]

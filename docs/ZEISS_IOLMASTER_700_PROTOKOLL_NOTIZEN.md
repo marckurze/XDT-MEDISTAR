@@ -25,6 +25,7 @@ Diese Notizen dokumentieren die testseitig vorbereitete XDTBox-Anbindung fuer ZE
 
 - `6227`: IOLMaster-Biometrie mit VKT/AL.
 - `6228`: IOLMaster-Keratometrie R1/R2 mit Achsen.
+- Techniker-Hilfe in `AIS Ausgabe Info`: MEDISTAR-Zeilenkennung `V8` fuer Biometrie und `V7` fuer Keratometer. Diese Zeilenkennungen werden nicht von XDTBox erzeugt, sondern im MEDISTAR-XDT-Setup zur jeweiligen XDT-Feldkennung gepflegt.
 - `6330` wird nicht erzeugt.
 - Kuenstliche Trenner werden nicht erzeugt.
 - Automatische Anhangsfelder `6302`, `6303` und `6305` sind im IOLMaster-BuiltIn nicht aktiv.
@@ -41,7 +42,7 @@ Beispiel fuer die vorbereitete synthetische Fixture:
 - Parser liest die synthetische IOLMaster-XML-Fixture.
 - Exportprofil erzeugt `6227` fuer VKT/AL und `6228` fuer R1/R2.
 - Baukasten-Preview nutzt den IOLMaster-spezifischen Parser.
-- AIS-Ausgabe-Info zeigt `IOL` als Default-Untersuchungsart sowie `6227`/`6228`, aber keine automatischen Anhangsfelder.
+- AIS-Ausgabe-Info zeigt `IOL` als Default-Untersuchungsart, `6227`/`6228`, die Standard-Zeilenbenennung `V7`/`V8`, aber keine automatischen Anhangsfelder.
 
 ## Offene Abnahme
 

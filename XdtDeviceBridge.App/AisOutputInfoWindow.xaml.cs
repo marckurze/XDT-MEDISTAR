@@ -33,6 +33,10 @@ public sealed class AisOutputInfoViewModel
         DefaultExaminationType = info.DefaultExaminationType;
         ExaminationTypeHint = info.ExaminationTypeHint;
         Fields = info.Fields;
+        StandardCardLineInfos = info.StandardCardLineInfos;
+        StandardCardLineInfoVisibility = StandardCardLineInfos.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     public string InterfaceProfileName { get; }
@@ -54,4 +58,8 @@ public sealed class AisOutputInfoViewModel
     public string ExaminationTypeHint { get; }
 
     public IReadOnlyList<AisOutputFieldInfo> Fields { get; }
+
+    public IReadOnlyList<MedistarCardLineInfo> StandardCardLineInfos { get; }
+
+    public Visibility StandardCardLineInfoVisibility { get; }
 }

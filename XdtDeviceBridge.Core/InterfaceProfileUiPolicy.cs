@@ -60,8 +60,14 @@ public static class InterfaceProfileUiPolicy
     private static readonly IReadOnlyDictionary<string, string> BuiltInDeviceImagePathsByDeviceProfileId =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
+            ["device-canon-rkf2-default"] = GetBuiltInDeviceImagePathFromFileName("device-canon-rkf2-default.png"),
+            ["device-canon-tx20p-default"] = GetBuiltInDeviceImagePathFromFileName("device-canon-tx20p-default.png"),
             ["device-nidek-ark1s-default"] = NidekArk1sDeviceImagePath,
             ["device-nidek-ar360-default"] = NidekAr360DeviceImagePath,
+            ["device-nidek-ark510a-default"] = GetBuiltInDeviceImagePathFromFileName("device-nidek-ark510a-default.png"),
+            ["device-nidek-ark560a-default"] = GetBuiltInDeviceImagePathFromFileName("device-nidek-ark560a-default.png"),
+            ["device-nidek-lm1800p-default"] = GetBuiltInDeviceImagePathFromFileName("device-nidek-lm1800p-default.png"),
+            ["device-nidek-lm1800pd-default"] = GetBuiltInDeviceImagePathFromFileName("device-nidek-lm1800pd-default.png"),
             ["device-nidek-lm7-default"] = NidekLm7DeviceImagePath,
             ["device-nidek-nt530p-default"] = NidekNt530PDeviceImagePath,
             ["device-nidek-rt6100-default"] = NidekRt6100DeviceImagePath,
@@ -72,24 +78,24 @@ public static class InterfaceProfileUiPolicy
             ["device-huvitz-hrk9000a-default"] = HuvitzHrk9000ADeviceImagePath,
             ["device-huvitz-hnt1p-default"] = HuvitzHnt1PDeviceImagePath,
             ["device-huvitz-htr1a-default"] = HuvitzHtr1ADeviceImagePath,
-            ["device-shin-nippon-accuref-r800-default"] = ShinNipponTextDeviceImagePath,
-            ["device-shin-nippon-accuref-k900-default"] = ShinNipponTextDeviceImagePath,
-            ["device-shin-nippon-dl1000-default"] = ShinNipponTextDeviceImagePath,
-            ["device-shin-nippon-dl800-default"] = ShinNipponTextDeviceImagePath,
-            ["device-shin-nippon-dl900-default"] = ShinNipponTextDeviceImagePath,
-            ["device-shin-nippon-nct200-default"] = ShinNipponTextDeviceImagePath,
-            ["device-shin-nippon-slm4000-default"] = ShinNipponTextDeviceImagePath,
-            ["device-reichert-7cr-nct-default"] = DocumentAttachmentDeviceImagePath,
-            ["device-reichert-lenschek-plus-default"] = DocumentAttachmentDeviceImagePath,
-            ["device-rodenstock-cx800-default"] = DocumentAttachmentDeviceImagePath,
+            ["device-shin-nippon-accuref-r800-default"] = GetBuiltInDeviceImagePathFromFileName("device-shin-nippon-accuref-r800-default.png"),
+            ["device-shin-nippon-accuref-k900-default"] = GetBuiltInDeviceImagePathFromFileName("device-shin-nippon-accuref-k900-default.png"),
+            ["device-shin-nippon-dl1000-default"] = GetBuiltInDeviceImagePathFromFileName("device-shin-nippon-dl1000-default.png"),
+            ["device-shin-nippon-dl800-default"] = GetBuiltInDeviceImagePathFromFileName("device-shin-nippon-dl800-default.png"),
+            ["device-shin-nippon-dl900-default"] = GetBuiltInDeviceImagePathFromFileName("device-shin-nippon-dl900-default.png"),
+            ["device-shin-nippon-nct200-default"] = GetBuiltInDeviceImagePathFromFileName("device-shin-nippon-nct200-default.png"),
+            ["device-shin-nippon-slm4000-default"] = GetBuiltInDeviceImagePathFromFileName("device-shin-nippon-slm4000-default.png"),
+            ["device-reichert-7cr-nct-default"] = GetBuiltInDeviceImagePathFromFileName("device-reichert-7cr-nct-default.png"),
+            ["device-reichert-lenschek-plus-default"] = GetBuiltInDeviceImagePathFromFileName("device-reichert-lenschek-plus-default.png"),
+            ["device-rodenstock-cx800-default"] = GetBuiltInDeviceImagePathFromFileName("device-rodenstock-cx800-default.png"),
             ["device-tomey-cf2000-default"] = TomeyCf2000DeviceImagePath,
             ["device-tomey-tl2000c-default"] = TomeyTl2000CDeviceImagePath,
             ["device-tomey-tl6000-default"] = TomeyTl6000DeviceImagePath,
             ["device-tomey-tl7000-default"] = TomeyTl7000DeviceImagePath,
             ["device-tomey-mr6000-default"] = TomeyMr6000DeviceImagePath,
             ["device-tomey-top1000-default"] = TomeyTop1000DeviceImagePath,
-            ["device-tomey-em3000-default"] = TomeyEm3000DeviceImagePath,
-            ["device-tomey-em4000-default"] = TomeyEm4000DeviceImagePath,
+            ["device-tomey-em3000-default"] = GetBuiltInDeviceImagePathFromFileName("device-tomey-em3000-default.png"),
+            ["device-tomey-em4000-default"] = GetBuiltInDeviceImagePathFromFileName("device-tomey-em4000-default.png"),
             ["device-topcon-cl300-default"] = TopconCl300DeviceImagePath,
             ["device-topcon-solos-default"] = TopconSolosDeviceImagePath,
             ["device-topcon-kr800-default"] = TopconKr800DeviceImagePath,
@@ -98,6 +104,13 @@ public static class InterfaceProfileUiPolicy
             ["device-topcon-ct1p-default"] = TopconCt1PDeviceImagePath,
             ["device-topcon-ct800a-default"] = TopconCt800ADeviceImagePath,
             ["device-topcon-cv5000-default"] = TopconCv5000DeviceImagePath,
+            ["device-visionix-retinomax5-default"] = GetBuiltInDeviceImagePathFromFileName("device-visionix-retinomax5-default.png"),
+            ["device-visionix-vx120-default"] = GetBuiltInDeviceImagePathFromFileName("device-visionix-vx120-default.png"),
+            ["device-visionix-vx650-default"] = GetBuiltInDeviceImagePathFromFileName("device-visionix-vx650-default.png"),
+            ["device-zeiss-iolmaster700-default"] = GetBuiltInDeviceImagePathFromFileName("device-zeiss-iolmaster700-default.png"),
+            ["device-zeiss-visulens550-default"] = GetBuiltInDeviceImagePathFromFileName("device-zeiss-visulens550-default.png"),
+            ["device-zeiss-visuplan500-default"] = GetBuiltInDeviceImagePathFromFileName("device-zeiss-visuplan500-default.png"),
+            ["device-zeiss-visuref100-default"] = GetBuiltInDeviceImagePathFromFileName("device-zeiss-visuref100-default.png"),
             ["device-document-attachment-default"] = DocumentAttachmentDeviceImagePath,
             ["device-manual-document-selection-default"] = ManualDocumentSelectionDeviceImagePath
         };
@@ -183,6 +196,11 @@ public static class InterfaceProfileUiPolicy
         return BuiltInDeviceImagePathsByDeviceProfileId.TryGetValue(deviceProfileId.Trim(), out var imagePath)
             ? imagePath
             : string.Empty;
+    }
+
+    private static string GetBuiltInDeviceImagePathFromFileName(string fileName)
+    {
+        return BuiltInDeviceImageRoot + fileName;
     }
 
     public static string GetMonitoringDeviceImagePath(

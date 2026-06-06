@@ -13,7 +13,8 @@ public sealed record AisOutputInfo(
     bool IsActive,
     string DefaultExaminationType,
     string ExaminationTypeHint,
-    IReadOnlyList<AisOutputFieldInfo> Fields);
+    IReadOnlyList<AisOutputFieldInfo> Fields,
+    IReadOnlyList<MedistarCardLineInfo> StandardCardLineInfos);
 
 public sealed record AisOutputFieldInfo(
     string FieldCode,
@@ -24,9 +25,27 @@ public sealed record AisOutputFieldInfo(
     bool IsCardField,
     bool IsOptional);
 
+public enum MedistarCardLineCategory
+{
+    Lensmeter,
+    Autorefractor,
+    Phoropter,
+    SubjectiveRefraction,
+    Keratometer,
+    Biometry,
+    Tonometry,
+    Pachymetry
+}
+
+public sealed record MedistarCardLineInfo(
+    string LineCode,
+    string Meaning,
+    MedistarCardLineCategory Category);
+
 public sealed class AisOutputInfoService
 {
     private static readonly StringComparer CodeComparer = StringComparer.OrdinalIgnoreCase;
+    private readonly MedistarCardLineInfoService _cardLineInfoService = new();
 
     public AisOutputInfo Create(ProfileCatalog catalog, InterfaceProfileDefinition interfaceProfile)
     {
@@ -38,6 +57,7 @@ public sealed class AisOutputInfoService
         var exportProfile = FindExportProfile(catalog, interfaceProfile.ExportProfileId);
         var defaultExaminationType = AisExaminationTypeDefaults.Resolve(deviceProfile);
         var fields = CreateFields(interfaceProfile, deviceProfile, exportProfile, defaultExaminationType);
+        var standardCardLineInfos = _cardLineInfoService.Create(deviceProfile, exportProfile);
 
         return new AisOutputInfo(
             InterfaceProfileName: interfaceProfile.Metadata.Name,
@@ -50,7 +70,8 @@ public sealed class AisOutputInfoService
             IsActive: interfaceProfile.IsActive,
             DefaultExaminationType: defaultExaminationType,
             ExaminationTypeHint: "Die Feldkennung 8402 enthält die Untersuchungsart. Sie wird häufig im AIS-System für die XDT-Einstellungen benötigt. XDTBox akzeptiert auch abweichende Untersuchungsarten aus dem AIS; wichtig ist, dass die Feldkennung 8402 im AIS korrekt eingerichtet ist.",
-            Fields: fields);
+            Fields: fields,
+            StandardCardLineInfos: standardCardLineInfos);
     }
 
     private static IReadOnlyList<AisOutputFieldInfo> CreateFields(
@@ -366,6 +387,225 @@ public sealed class AisOutputInfoService
             null => "-",
             _ => connectionKind.Value.ToString()
         };
+    }
+}
+
+public sealed class MedistarCardLineInfoService
+{
+    private static readonly MedistarCardLineInfo Lensmeter = new("V0", "Lensmeter", MedistarCardLineCategory.Lensmeter);
+    private static readonly MedistarCardLineInfo Autorefractor = new("V1", "Autorefraktor", MedistarCardLineCategory.Autorefractor);
+    private static readonly MedistarCardLineInfo Phoropter = new("V2", "Phoropter", MedistarCardLineCategory.Phoropter);
+    private static readonly MedistarCardLineInfo SubjectiveRefraction = new("V4", "subjektive Refraktion", MedistarCardLineCategory.SubjectiveRefraction);
+    private static readonly MedistarCardLineInfo Keratometer = new("V7", "Keratometer", MedistarCardLineCategory.Keratometer);
+    private static readonly MedistarCardLineInfo Biometry = new("V8", "Biometrie", MedistarCardLineCategory.Biometry);
+    private static readonly MedistarCardLineInfo Tonometry = new("Y", "Tonometrie", MedistarCardLineCategory.Tonometry);
+    private static readonly MedistarCardLineInfo Pachymetry = new("P", "Pachymetrie", MedistarCardLineCategory.Pachymetry);
+
+    public IReadOnlyList<MedistarCardLineInfo> Create(
+        DeviceProfileDefinition? deviceProfile,
+        ExportProfileDefinition? exportProfile)
+    {
+        if (exportProfile is null)
+        {
+            return Array.Empty<MedistarCardLineInfo>();
+        }
+
+        var categories = new HashSet<MedistarCardLineCategory>();
+        var deviceText = CreateDeviceClassifier(deviceProfile);
+        var isIolMaster = IsIolMasterDeviceText(deviceText);
+        var isPhoropter = IsPhoropterDeviceText(deviceText);
+
+        foreach (var rule in exportProfile.Rules.Where(rule => rule.IsEnabled))
+        {
+            AddRuleCategories(categories, rule, deviceText, isIolMaster, isPhoropter);
+        }
+
+        return categories
+            .OrderBy(GetSortKey)
+            .Select(CreateInfo)
+            .ToArray();
+    }
+
+    private static void AddRuleCategories(
+        ISet<MedistarCardLineCategory> categories,
+        ExportRuleDefinition rule,
+        string deviceText,
+        bool isIolMaster,
+        bool isPhoropter)
+    {
+        var fieldCode = rule.TargetFieldCode.Trim();
+        if (fieldCode is not ("6228" or "6227" or "6221" or "6220" or "6205"))
+        {
+            return;
+        }
+
+        var ruleText = CreateRuleClassifier(rule);
+        if (isIolMaster)
+        {
+            if (fieldCode == "6227" || ContainsAny(ruleText, "iol", "biometr", "vkt", "al ", "axial", "achs"))
+            {
+                categories.Add(MedistarCardLineCategory.Biometry);
+            }
+
+            if (fieldCode is "6228" or "6221" || ContainsAny(ruleText, "km", "kerato", "r1", "r2"))
+            {
+                categories.Add(MedistarCardLineCategory.Keratometer);
+            }
+
+            return;
+        }
+
+        switch (fieldCode)
+        {
+            case "6221":
+                categories.Add(MedistarCardLineCategory.Keratometer);
+                return;
+            case "6220":
+                categories.Add(MedistarCardLineCategory.Pachymetry);
+                return;
+            case "6205":
+                categories.Add(MedistarCardLineCategory.Tonometry);
+                return;
+            case "6228":
+                AddPrimaryResultCategory(categories, ruleText, deviceText, isPhoropter);
+                return;
+            case "6227":
+                AddSecondaryResultCategory(categories, ruleText, isPhoropter);
+                return;
+        }
+    }
+
+    private static void AddPrimaryResultCategory(
+        ISet<MedistarCardLineCategory> categories,
+        string ruleText,
+        string deviceText,
+        bool isPhoropter)
+    {
+        if (ContainsAny(ruleText, "lm", "lens", "lensmeter", "scheitel"))
+        {
+            categories.Add(MedistarCardLineCategory.Lensmeter);
+            return;
+        }
+
+        if (ContainsAny(ruleText, "ref", "autorefr", "ark", " ar", "rm"))
+        {
+            categories.Add(MedistarCardLineCategory.Autorefractor);
+            return;
+        }
+
+        if (ContainsAny(ruleText, "km", "kerato", "r1", "r2"))
+        {
+            categories.Add(MedistarCardLineCategory.Keratometer);
+            return;
+        }
+
+        if (isPhoropter || ContainsAny(ruleText, "phoropter", "final", "prescription", "rts"))
+        {
+            categories.Add(MedistarCardLineCategory.Phoropter);
+            return;
+        }
+
+        if (ContainsAny(deviceText, "lens", "lensmeter", "scheitel"))
+        {
+            categories.Add(MedistarCardLineCategory.Lensmeter);
+            return;
+        }
+
+        if (ContainsAny(deviceText, "autorefr", "refrak", "ark", "ar-"))
+        {
+            categories.Add(MedistarCardLineCategory.Autorefractor);
+        }
+    }
+
+    private static void AddSecondaryResultCategory(
+        ISet<MedistarCardLineCategory> categories,
+        string ruleText,
+        bool isPhoropter)
+    {
+        if (isPhoropter || ContainsAny(ruleText, "subjective", "subjekt", "sbj", "full", "correction", "vollkorrektion"))
+        {
+            categories.Add(MedistarCardLineCategory.SubjectiveRefraction);
+        }
+    }
+
+    private static string CreateRuleClassifier(ExportRuleDefinition rule)
+    {
+        return string.Join(
+            ' ',
+            rule.TargetFieldCode,
+            rule.TargetName,
+            rule.SourcePath ?? string.Empty,
+            rule.Description ?? string.Empty);
+    }
+
+    private static string CreateDeviceClassifier(DeviceProfileDefinition? deviceProfile)
+    {
+        if (deviceProfile is null)
+        {
+            return string.Empty;
+        }
+
+        return string.Join(
+            ' ',
+            deviceProfile.Metadata.Name,
+            deviceProfile.Metadata.Product ?? string.Empty,
+            deviceProfile.Manufacturer,
+            deviceProfile.DeviceType,
+            deviceProfile.Model,
+            deviceProfile.ParserMode,
+            string.Join(' ', deviceProfile.SupportedExaminationTypes ?? Array.Empty<string>()));
+    }
+
+    private static MedistarCardLineInfo CreateInfo(MedistarCardLineCategory category)
+    {
+        return category switch
+        {
+            MedistarCardLineCategory.Lensmeter => Lensmeter,
+            MedistarCardLineCategory.Autorefractor => Autorefractor,
+            MedistarCardLineCategory.Phoropter => Phoropter,
+            MedistarCardLineCategory.SubjectiveRefraction => SubjectiveRefraction,
+            MedistarCardLineCategory.Keratometer => Keratometer,
+            MedistarCardLineCategory.Biometry => Biometry,
+            MedistarCardLineCategory.Tonometry => Tonometry,
+            MedistarCardLineCategory.Pachymetry => Pachymetry,
+            _ => throw new ArgumentOutOfRangeException(nameof(category), category, null)
+        };
+    }
+
+    private static int GetSortKey(MedistarCardLineCategory category)
+    {
+        return category switch
+        {
+            MedistarCardLineCategory.Lensmeter => 10,
+            MedistarCardLineCategory.Autorefractor => 20,
+            MedistarCardLineCategory.Phoropter => 30,
+            MedistarCardLineCategory.SubjectiveRefraction => 40,
+            MedistarCardLineCategory.Keratometer => 50,
+            MedistarCardLineCategory.Biometry => 60,
+            MedistarCardLineCategory.Tonometry => 70,
+            MedistarCardLineCategory.Pachymetry => 80,
+            _ => 100
+        };
+    }
+
+    private static bool ContainsAny(string text, params string[] needles)
+    {
+        return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsPhoropterDeviceText(string text)
+    {
+        if (text.Contains("autorefractor", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return ContainsAny(text, "phoropter", "refractor", "rt-");
+    }
+
+    private static bool IsIolMasterDeviceText(string text)
+    {
+        return ContainsAny(text, "iolmaster", "iol master", "biometrie", "biometry", "achslaenge", "achsl", "axial");
     }
 }
 

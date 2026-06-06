@@ -26,6 +26,129 @@ public sealed class AisOutputInfoServiceTests
     }
 
     [Fact]
+    public void Create_ShouldShowStandardMedistarLineForLensmeter()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekLm7Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default());
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        AssertCardLines(info, ("V0", "Lensmeter"));
+    }
+
+    [Fact]
+    public void Create_ShouldShowStandardMedistarLineForAutorefractor()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateNidekArk1sDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekArk1sDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekArk1sDefault());
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "V1" && line.Meaning == "Autorefraktor");
+    }
+
+    [Fact]
+    public void Create_ShouldShowStandardMedistarLinesForPhoropterAndSubjectiveRefraction()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekRt3100SerialDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekRt3100SerialDefault());
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "V2" && line.Meaning == "Phoropter");
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "V4" && line.Meaning == "subjektive Refraktion");
+    }
+
+    [Fact]
+    public void Create_ShouldShowStandardMedistarLineForKeratometer()
+    {
+        var device = CreateSyntheticDevice("Keratometer", "KM-1", "Keratometer");
+        var export = CreateSyntheticExport("6221", "KeratometryRadii", "Device.Measure[@Type='KM']/KM/MedistarLine1");
+        var catalog = CreateCatalog(device, export, CreateSyntheticInterface(device, export));
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        AssertCardLines(info, ("V7", "Keratometer"));
+    }
+
+    [Fact]
+    public void Create_ShouldShowStandardMedistarLinesForIolMaster()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateZeissIolMaster700Default(),
+            DefaultExportProfileDefinitions.CreateMedistarZeissIolMaster700Default(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarZeissIolMaster700Default());
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        AssertCardLines(info, ("V7", "Keratometer"), ("V8", "Biometrie"));
+        Assert.Contains(info.Fields, field => field.FieldCode == "6227" && field.Meaning.Contains("Biometrie", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(info.Fields, field => field.FieldCode == "6228" && field.Meaning.Contains("Keratometer", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Create_ShouldShowStandardMedistarLineForTonometry()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateNidekNt1EDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarNidekNt1EDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarNidekNt1EDefault());
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "Y" && line.Meaning == "Tonometrie");
+    }
+
+    [Fact]
+    public void Create_ShouldShowStandardMedistarLineForPachymetry()
+    {
+        var device = CreateSyntheticDevice("Pachymeter", "CCT", "Pachymetrie");
+        var export = CreateSyntheticExport("6220", "Pachymetry", "Device.Measure[@Type='CCT']/Pachy/MedistarLine");
+        var catalog = CreateCatalog(device, export, CreateSyntheticInterface(device, export));
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        AssertCardLines(info, ("P", "Pachymetrie"));
+    }
+
+    [Fact]
+    public void Create_ShouldShowStandardMedistarLinesForRefKmTmCctCombination()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateTopconTrk2PDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarTopconTrk2PDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarTopconTrk2PDefault());
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "V1" && line.Meaning == "Autorefraktor");
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "V7" && line.Meaning == "Keratometer");
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "Y" && line.Meaning == "Tonometrie");
+        Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == "P" && line.Meaning == "Pachymetrie");
+    }
+
+    [Fact]
+    public void Create_ShouldNotShowStandardMedistarLinesForDocumentAttachmentOnlyProfile()
+    {
+        var catalog = CreateCatalog(
+            DefaultDeviceProfileDefinitions.CreateDocumentAttachmentDefault(),
+            DefaultExportProfileDefinitions.CreateMedistarDocumentAttachmentDefault(),
+            DefaultInterfaceProfileDefinitions.CreateMedistarDocumentAttachmentDefault());
+
+        var info = _service.Create(catalog, catalog.InterfaceProfiles.Single());
+
+        Assert.Empty(info.StandardCardLineInfos);
+        Assert.DoesNotContain(info.StandardCardLineInfos, line =>
+            line.LineCode is "8000" or "3000" or "3101" or "3102" or "3103" or "8402");
+    }
+
+    [Fact]
     public void Create_ShouldMarkPureDocumentAttachmentFieldsAsCardRelevant()
     {
         var catalog = CreateCatalog(
@@ -379,6 +502,82 @@ public sealed class AisOutputInfoServiceTests
     private static bool ContainsAny(string text, params string[] needles)
     {
         return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void AssertCardLines(AisOutputInfo info, params (string Code, string Meaning)[] expected)
+    {
+        Assert.Equal(expected.Length, info.StandardCardLineInfos.Count);
+        foreach (var (code, meaning) in expected)
+        {
+            Assert.Contains(info.StandardCardLineInfos, line => line.LineCode == code && line.Meaning == meaning);
+        }
+    }
+
+    private static DeviceProfileDefinition CreateSyntheticDevice(string deviceType, string model, string supportedExaminationType)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: $"device-test-{model.ToLowerInvariant()}",
+                Name: model,
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Synthetic device profile for AIS output info tests.",
+                Vendor: "XdtDeviceBridge",
+                Product: model,
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: false,
+                IsUserDefined: true),
+            Manufacturer: "Test",
+            Model: model,
+            DeviceType: deviceType,
+            ParserMode: "Text",
+            Measurements: Array.Empty<DeviceMeasurementDefinition>(),
+            SupportedExaminationTypes: new[] { supportedExaminationType },
+            CanContainMultipleExaminationTypes: false);
+    }
+
+    private static ExportProfileDefinition CreateSyntheticExport(string fieldCode, string targetName, string sourcePath)
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 6, 12, 0, 0, TimeSpan.Zero);
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: $"export-test-{targetName.ToLowerInvariant()}",
+                Name: $"MEDISTAR + {targetName}",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Synthetic export profile for AIS output info tests.",
+                Vendor: "XdtDeviceBridge",
+                Product: targetName,
+                Version: "1.0.0",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: false,
+                IsUserDefined: true),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-test",
+            OutputEncoding: "Windows-1252",
+            Rules: new[]
+            {
+                new ExportRuleDefinition("1", fieldCode, targetName, ExportRuleType.Template, sourcePath, "{value}", 1, true, "Synthetic measurement rule.")
+            });
+    }
+
+    private static InterfaceProfileDefinition CreateSyntheticInterface(DeviceProfileDefinition device, ExportProfileDefinition export)
+    {
+        var baseInterface = DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default();
+        return baseInterface with
+        {
+            Metadata = baseInterface.Metadata with
+            {
+                Id = $"interface-test-{device.Metadata.Id}",
+                Name = $"MEDISTAR + {device.Metadata.Name}"
+            },
+            DeviceProfileId = device.Metadata.Id,
+            ExportProfileId = export.Metadata.Id
+        };
     }
 
     private static ProfileCatalog CreateCatalog(

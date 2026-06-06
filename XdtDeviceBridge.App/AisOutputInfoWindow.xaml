@@ -28,6 +28,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock Text="AIS Ausgabe Info"
@@ -94,7 +95,49 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <DockPanel Grid.Row="3" Margin="0,12,0,0">
+        <Border Grid.Row="3"
+                Visibility="{Binding StandardCardLineInfoVisibility}"
+                BorderBrush="#CFE3EF"
+                BorderThickness="1"
+                Background="#F7FBFD"
+                Padding="10"
+                Margin="0,10,0,0">
+            <StackPanel>
+                <TextBlock Text="Standard Zeilenbenennung in MEDISTAR:"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,6"/>
+                <ItemsControl ItemsSource="{Binding StandardCardLineInfos}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type infrastructure:MedistarCardLineInfo}">
+                            <Border BorderBrush="#BCD7E5"
+                                    BorderThickness="1"
+                                    Background="White"
+                                    Padding="8,4"
+                                    Margin="0,0,8,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding LineCode}"
+                                               FontWeight="Bold"
+                                               Width="26"/>
+                                    <TextBlock Text="{Binding Meaning}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="XDTBox erzeugt diese Zeilenkennungen nicht. Sie dienen Technikern als Hinweis fuer das MEDISTAR-XDT-Setup."
+                           TextWrapping="Wrap"
+                           Foreground="#52636F"
+                           FontSize="12"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <DockPanel Grid.Row="4" Margin="0,12,0,0">
             <Button Content="Schließen"
                     Width="120"
                     Margin="16,0,0,0"
