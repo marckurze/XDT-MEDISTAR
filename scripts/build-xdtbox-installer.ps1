@@ -122,6 +122,7 @@ function Test-IsTextFileForPublishValidation {
 
 function Assert-BuiltInDeviceAssetsExist {
     $deviceAssetsDir = Join-Path $repoRoot "XdtDeviceBridge.App\Assets\Devices"
+    $deviceInfoAssetsDir = Join-Path $repoRoot "XdtDeviceBridge.App\Assets\DeviceInfo"
     $requiredBuiltInDeviceAssets = @(
         "Topcon_CV5000_freigestellt.png",
         "device-document-attachment-default.png",
@@ -153,6 +154,11 @@ function Assert-BuiltInDeviceAssetsExist {
     if ($missingAssets) {
         $list = $missingAssets -join [Environment]::NewLine
         throw "Offizielle BuiltIn-Geraetebilder fehlen im App-Asset-Ordner:$([Environment]::NewLine)$list"
+    }
+
+    $deviceInfoCatalogPath = Join-Path $deviceInfoAssetsDir "device-technical-profiles.de.json"
+    if (-not (Test-Path -LiteralPath $deviceInfoCatalogPath)) {
+        throw "Offizielle BuiltIn-Geraete-Steckbriefe fehlen im App-Asset-Ordner:$([Environment]::NewLine)$deviceInfoCatalogPath"
     }
 }
 

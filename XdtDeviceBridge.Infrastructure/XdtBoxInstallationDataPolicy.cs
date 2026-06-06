@@ -67,6 +67,7 @@ public sealed class XdtBoxInstallationDataPolicy
             AppItem("help", "Hilfe und lokale Dokumentation", Path.Combine(root, "Assets", "Help"), "Hilfe darf mit der App aktualisiert werden."),
             AppItem("icons", "Icons und Branding-Assets", Path.Combine(root, "Assets"), "Standard-Assets sind App-Bestandteil."),
             AppItem("standard-device-images", "Standard-Gerätebilder als App-Assets", Path.Combine(root, "Assets", "Devices"), "Nur App-Assets; lokale Gerätebild-Overrides liegen in Kundendaten."),
+            AppItem("standard-device-info", "Standard-Geräte-Steckbriefe als App-Assets", Path.Combine(root, "Assets", "DeviceInfo"), "Nur App-Assets; lokale Steckbrief-Anpassungen liegen in Kundendaten."),
             new(
                 "builtin-definitions",
                 "BuiltIn-Definitionen im Code",
@@ -101,6 +102,7 @@ public sealed class XdtBoxInstallationDataPolicy
             CustomerItem("license-requests", "Lizenzanforderungen", paths.LicenseRequestsFolder, "Lokale Lizenzanforderungsdateien; keine App-Dateien."),
             CustomerItem("device-images", "Lokale Gerätebilder", Path.Combine(paths.BaseFolder, "DeviceImages"), "Vom Kunden gepflegte Gerätebilder."),
             CustomerItem("device-image-overrides", "Gerätebild-Overrides", Path.Combine(paths.BaseFolder, "device-image-overrides.json"), "Verweist BuiltIn-Geräte auf lokale Bild-Overrides."),
+            CustomerItem("device-info-overrides", "Geräte-Steckbrief-Anpassungen", Path.Combine(paths.BaseFolder, DeviceTechnicalProfileService.DefaultOverrideFileName), "Lokale Techniker-Notizen und fachliche Ergänzungen zu Geräte-Steckbriefen."),
             CustomerItem("app-settings", "AppSettings", Path.Combine(paths.BaseFolder, "ui", "app-settings.json"), "Autostart-/Tray-/Komforteinstellungen."),
             CustomerItem("floating-window-state", "UI-Komfortdaten Floating-Fenster", Path.Combine(paths.BaseFolder, "ui", "floating-interface-windows.json"), "Fensterpositionen und Abdockstatus."),
             CustomerItem("installation-info", "Installationsinformation", paths.InstallationInfoFile, "Lokale Installationskennung und technische Metadaten."),

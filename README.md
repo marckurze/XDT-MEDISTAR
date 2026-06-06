@@ -36,6 +36,12 @@ Der Tab `XDT-Baukasten` ist die eigenständige Arbeitsoberfläche für Entwürfe
 
 Der Tab `Profilverwaltung` bündelt die reine Profilpflege: Suche, BuiltIn/UserDefined-Filter, Profiltypfilter, Details, Nutzungshinweise, Umbenennen, Duplizieren, geschütztes Löschen, lokales Template-Aufräumen, BuiltIn-Reparatur sowie Aktionen zum Anlegen/Laden von AIS-, Geräte-, Export- und Schnittstellenprofilen. Lokale Baukasten-Templates und Templatepakete können dort umbenannt beziehungsweise exportiert werden; der sichere Templatepaket-Import und das Speichern von Baukasten-Templates laufen über den XDT-Baukasten. BuiltIn-Profile werden nicht überschrieben oder gelöscht; verwendete Profile und aktive Schnittstellenprofile blockieren blindes Löschen.
 
+## Geraete-Steckbriefe
+
+Fuer alle aktuellen BuiltIn-Geraete ist ein kurzer technischer Steckbrief vorbereitet. Die Originaldaten liegen als App-Asset unter `XdtDeviceBridge.App\Assets\DeviceInfo\device-technical-profiles.de.json` und werden ueber die BuiltIn-`deviceProfileId` zugeordnet. Jeder Steckbrief nutzt das offizielle BuiltIn-Geraetebild aus `XdtDeviceBridge.App\Assets\Devices`, beschreibt das Geraet, die sicher ableitbaren Messarten und technische Hinweise ohne interne Ausgabe-Syntax.
+
+Lokale Anpassungen werden nicht ins Original geschrieben. `DeviceTechnicalProfileService` fuehrt Original und lokale Overrides aus `%LocalAppData%\XdtDeviceBridge\device-info-overrides.json` zusammen. Die vorbereitete Steckbriefansicht kann Kurzbeschreibung, technische Hinweise und die `Notiz Techniker zum Geraet` lokal speichern und wieder auf das Original zuruecksetzen. Sicherung/Umzug nimmt diese lokale Override-Datei mit; eine Kopplung an den Profil-/Templateexport ist vorbereitet und als Folgeschritt offen. Die gesammelte Pruefansicht fuer Marc steht in [`docs/GERAETE_STECKBRIEFE.md`](docs/GERAETE_STECKBRIEFE.md).
+
 ## Installation, Update und Kundendaten
 
 XDTBox 1.0 besitzt ein reproduzierbares Inno-Setup-Skript und eine Buildanleitung in [`docs/INSTALLER_BUILD_ANLEITUNG.md`](docs/INSTALLER_BUILD_ANLEITUNG.md). Der Default-Installationspfad ist `C:\XDTBox`, der Benutzer kann ihn bei Neuinstallation aendern. Das Setup unterscheidet Neuinstallation und Update, erzeugt `XDTBox_Setup_1.0.exe`, nutzt das offizielle `XDTBox.ico`, legt Startmenue- und optional Desktop-Verknuepfungen an und traegt XDTBox in Windows "Programme & Features" ein.

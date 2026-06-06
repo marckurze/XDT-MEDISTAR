@@ -579,9 +579,26 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("FileShare.ReadWrite | FileShare.Delete", converter);
         Assert.Contains("bitmap.Freeze()", converter);
         Assert.Contains(@"<Resource Include=""Assets\Devices\*.png"" />", appProject);
+        Assert.Contains(@"<Resource Include=""Assets\DeviceInfo\*.json"" />", appProject);
         Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "device-nidek-rt3100-serial-default.png"))));
         Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "device-document-attachment-default.png"))));
         Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "Devices", "Topcon_CV5000_freigestellt.png"))));
+        Assert.True(File.Exists(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Assets", "DeviceInfo", "device-technical-profiles.de.json"))));
+    }
+
+    [Fact]
+    public void DeviceTechnicalProfileWindow_ShouldPrepareEditableLocalOverrides()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "DeviceTechnicalProfileWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "DeviceTechnicalProfileWindow.xaml.cs"));
+
+        Assert.Contains("DeviceTechnicalProfileService", code);
+        Assert.Contains("SaveOverride", code);
+        Assert.Contains("ResetOverride", code);
+        Assert.Contains("Save_Click", xaml);
+        Assert.Contains("Reset_Click", xaml);
+        Assert.Contains("Notiz Techniker zum Gerät", xaml);
+        Assert.Contains("Der Original-Steckbrief wird nicht überschrieben", code);
     }
 
     [Fact]
@@ -671,6 +688,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Sicherung/Umzug: Sichern und Wiederherstellen", help);
         Assert.Contains("Lizenz: Lizenzstatus", help);
         Assert.Contains("# RS232 NIDEK allgemein", help);
+        Assert.Contains("# Geräte-Steckbriefe", help);
+        Assert.Contains("Notiz \"Techniker zum Gerät\"", help);
         Assert.Contains("# TOPCON CV-5000/CV-5000S", help);
         Assert.Contains("# Fehlerbehebung", help);
         Assert.Contains("Die Untersuchungsart 8402 kommt aus AIS", help);

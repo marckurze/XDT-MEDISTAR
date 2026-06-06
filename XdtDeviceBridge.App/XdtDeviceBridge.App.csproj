@@ -22,5 +22,6 @@
     <Resource Include="Assets\Branding\XDTBox_Logo_Schriftzug.png" />
     <Resource Include="Assets\Help\xdtbox-help.md" />
     <Resource Include="Assets\Devices\*.png" />
+    <Resource Include="Assets\DeviceInfo\*.json" />
   </ItemGroup>
 </Project>

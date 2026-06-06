@@ -12,6 +12,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
 
     private const string DeviceImagesFolderName = "DeviceImages";
     private const string DeviceImageOverridesFileName = "device-image-overrides.json";
+    private const string DeviceInfoOverridesFileName = DeviceTechnicalProfileService.DefaultOverrideFileName;
     private const string SignedLicenseFileName = "license.xdtboxlic";
     private const string LicenseCustomerDataFileName = "license-customer-data.json";
     private const string DeviceImageLockWarning =
@@ -85,6 +86,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             }
 
             AddFileIfExists(archive, GetDeviceImageOverridesFilePath(paths), "settings/device-image-overrides.json", includedAreas, "Gerätebild-Overrides");
+            AddFileIfExists(archive, GetDeviceInfoOverridesFilePath(paths), "settings/device-info-overrides.json", includedAreas, "Geräte-Steckbrief-Anpassungen");
             AddFileIfExists(archive, GetFloatingWindowStateFilePath(paths), "settings/ui/floating-interface-windows.json", includedAreas, "UI-Einstellungen");
             AddFileIfExists(archive, GetAppSettingsFilePath(paths), "settings/ui/app-settings.json", includedAreas, "App-Einstellungen");
             AddFileIfExists(archive, GetLicenseCustomerDataFilePath(paths), "license-customer/license-customer-data.json", includedAreas, "Lizenz-Kundendaten");
@@ -156,6 +158,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             RestoreDirectory(archive, "template-packages/", paths.TemplatePackagesFolder);
             RestoreDirectoryTolerant(archive, "device-images/", GetDeviceImagesFolder(paths), warnings);
             RestoreFile(archive, "settings/device-image-overrides.json", GetDeviceImageOverridesFilePath(paths));
+            RestoreFile(archive, "settings/device-info-overrides.json", GetDeviceInfoOverridesFilePath(paths));
             RestoreFile(archive, "settings/ui/floating-interface-windows.json", GetFloatingWindowStateFilePath(paths));
             RestoreFile(archive, "settings/ui/app-settings.json", GetAppSettingsFilePath(paths));
             RestoreFile(archive, "license-customer/license-customer-data.json", GetLicenseCustomerDataFilePath(paths));
@@ -382,6 +385,11 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
     private static string GetDeviceImageOverridesFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.BaseFolder, DeviceImageOverridesFileName);
+    }
+
+    private static string GetDeviceInfoOverridesFilePath(AppDataPaths paths)
+    {
+        return Path.Combine(paths.BaseFolder, DeviceInfoOverridesFileName);
     }
 
     private static string GetFloatingWindowStateFilePath(AppDataPaths paths)

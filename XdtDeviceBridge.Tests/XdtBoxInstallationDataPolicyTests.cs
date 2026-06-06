@@ -22,6 +22,7 @@ public sealed class XdtBoxInstallationDataPolicyTests
         Assert.Equal(paths.TemplatePackagesFolder, byKey["template-packages"].Location);
         Assert.Equal(Path.Combine(paths.LicensesFolder, "license.xdtboxlic"), byKey["license-file"].Location);
         Assert.Equal(Path.Combine(paths.BaseFolder, "device-image-overrides.json"), byKey["device-image-overrides"].Location);
+        Assert.Equal(Path.Combine(paths.BaseFolder, DeviceTechnicalProfileService.DefaultOverrideFileName), byKey["device-info-overrides"].Location);
         Assert.Equal(Path.Combine(paths.BaseFolder, "ui", "app-settings.json"), byKey["app-settings"].Location);
         Assert.Equal(paths.DeviceGracePeriodsFile, byKey["grace-periods"].Location);
         Assert.Equal(backupFolder, byKey["backups"].Location);
@@ -46,6 +47,10 @@ public sealed class XdtBoxInstallationDataPolicyTests
             && item.UpdateRule == XdtBoxInstallationUpdateRule.MayRepairBuiltInOnly);
         Assert.Contains(items, item =>
             item.Key == "standard-device-images"
+            && item.BackupRule.Contains("Nicht als Kundendaten", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(items, item =>
+            item.Key == "standard-device-info"
+            && item.Location.EndsWith(Path.Combine("Assets", "DeviceInfo"), StringComparison.OrdinalIgnoreCase)
             && item.BackupRule.Contains("Nicht als Kundendaten", StringComparison.OrdinalIgnoreCase));
     }
 

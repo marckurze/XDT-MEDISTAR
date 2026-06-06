@@ -34,6 +34,7 @@ public sealed class XdtBoxBackupServiceTests
         Assert.NotNull(archive.GetEntry("template-packages/workbench-template.xdtbaukasten.json"));
         Assert.NotNull(archive.GetEntry("device-images/device-user.png"));
         Assert.NotNull(archive.GetEntry("settings/device-image-overrides.json"));
+        Assert.NotNull(archive.GetEntry("settings/device-info-overrides.json"));
         Assert.NotNull(archive.GetEntry("settings/ui/app-settings.json"));
         Assert.NotNull(archive.GetEntry("license-customer/license-customer-data.json"));
         Assert.NotNull(archive.GetEntry("license/device-grace-periods.json"));
@@ -59,6 +60,7 @@ public sealed class XdtBoxBackupServiceTests
         Assert.True(File.Exists(Path.Combine(targetPaths.TemplatePackagesFolder, "workbench-template.xdtbaukasten.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "DeviceImages", "device-user.png")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "device-image-overrides.json")));
+        Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "device-info-overrides.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "ui", "app-settings.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license-customer-data.json")));
         Assert.True(File.Exists(targetPaths.DeviceGracePeriodsFile));
@@ -169,6 +171,9 @@ public sealed class XdtBoxBackupServiceTests
         Directory.CreateDirectory(Path.Combine(paths.BaseFolder, "DeviceImages"));
         File.WriteAllText(Path.Combine(paths.BaseFolder, "DeviceImages", "device-user.png"), "image");
         File.WriteAllText(Path.Combine(paths.BaseFolder, "device-image-overrides.json"), """{"device-user":"DeviceImages/device-user.png"}""");
+        File.WriteAllText(
+            Path.Combine(paths.BaseFolder, "device-info-overrides.json"),
+            """{"profiles":[{"deviceProfileId":"device-user","technicianNote":"Notiz"}]}""");
         Directory.CreateDirectory(Path.Combine(paths.BaseFolder, "ui"));
         File.WriteAllText(Path.Combine(paths.BaseFolder, "ui", "app-settings.json"), """{"AutoStartMonitoringOnAppStart":true}""");
 

@@ -76,6 +76,14 @@ Templatepakete können exportiert und importiert werden. Importierte Profile ble
 
 Aus geprüften Referenzdaten sind zusätzliche BuiltIn-Profile vorbereitet, zum Beispiel NIDEK ARK-510A, NIDEK ARK-560A, NIDEK AR-1, NIDEK AR-1S, NIDEK AR-310A, NIDEK LM-1800P, NIDEK LM-1800PD, NIDEK NT-1, NIDEK NT-1E, NIDEK NT-1P, NIDEK NT-510, NIDEK NT-530, TOPCON CL-300PDL, TOPCON RM-800, TOPCON TRK-3 Omnia, Huvitz HRK-8000A, HRK-9000A, HNT-1P und HTR-1A, TOMEY CF-2000, TL-2000C, TL-6000, TL-7000, MR-6000, TOP-1000, EM-3000 und EM-4000, Shin-Nippon Accuref R-800, Accuref K-900, DL-1000, DL-800, DL-900, NCT-200 und SLM-4000 sowie Reichert 7CR NCT, Reichert LensChek Plus und Rodenstock CX 800. Weitere Geräte können aus vorhandener Parser- oder COM-Logik abgeleitet werden, werden aber erst als BuiltIn ausgeliefert, wenn Parser, Mapping und Tests ausreichend abgesichert sind. Rodenstock Phoromat 2000 und Möller-Wedel Visutron bleiben Kandidaten.
 
+# Geräte-Steckbriefe
+
+Für BuiltIn-Geräte sind kurze technische Steckbriefe vorbereitet. Sie beschreiben Gerät, Anschlussart, Messarten, wichtige Messwerte und technische Hinweise, ohne interne Ausgabe- oder Mappingdetails zu zeigen.
+
+Die Original-Steckbriefe sind App-Bestandteil und werden bei Updates aus der App-Version geliefert. Lokale Änderungen werden separat gespeichert. Die Notiz "Techniker zum Gerät" ist für eigene Praxis- oder Supporthinweise gedacht und bleibt Kundendaten.
+
+Sicherung/Umzug nimmt lokale Steckbriefanpassungen und Techniker-Notizen mit. Der finale Öffnen-Button für die Steckbriefansicht wird in einem späteren Schritt in die passende Geräte-UI eingebaut.
+
 # Profilverwaltung
 
 Der Tab "Profilverwaltung" bündelt die reine Profilpflege. Dort finden Sie AIS-, Geräte-, Export- und Schnittstellenprofile sowie lokale Templatepakete und Baukasten-Templates in einer gemeinsamen Übersicht mit Suche, BuiltIn/UserDefined-Filter und Profiltypfilter.

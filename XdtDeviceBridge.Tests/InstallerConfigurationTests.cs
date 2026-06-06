@@ -109,7 +109,9 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("device-document-attachment-default.png", script);
         Assert.Contains("device-nidek-rt3100-serial-default.png", script);
         Assert.Contains("Topcon_CV5000_freigestellt.png", script);
+        Assert.Contains("device-technical-profiles.de.json", script);
         Assert.Contains("Offizielle BuiltIn-Geraetebilder fehlen im App-Asset-Ordner", script);
+        Assert.Contains("Offizielle BuiltIn-Geraete-Steckbriefe fehlen im App-Asset-Ordner", script);
         Assert.Contains("license.xdtboxlic", script);
         Assert.Contains("C:\\Users\\MarcK", script);
         Assert.Contains("Kundenpublish enthaelt lokale Kundendaten/Entwicklungsdaten", script);

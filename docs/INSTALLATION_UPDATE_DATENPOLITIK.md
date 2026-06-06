@@ -52,6 +52,7 @@ Diese Bestandteile sind Teil der installierten Anwendung und duerfen bei Updates
 - lokale Hilfe unter `Assets/Help`
 - Branding, Icons und Standard-Assets
 - Standard-Geraetebilder als App-Assets unter `XdtDeviceBridge.App\Assets\Devices`, referenziert ueber `pack://application:,,,/Assets/Devices/...`
+- Standard-Geraete-Steckbriefe als App-Assets unter `XdtDeviceBridge.App\Assets\DeviceInfo`
 - BuiltIn-Definitionen im Code
 
 BuiltIn-Definitionen sind keine Kundendaten. Sie duerfen durch eine neue App-Version bereitgestellt und ueber BuiltIn-Repair aktualisiert werden. Dabei gilt: Nur BuiltIns werden repariert, UserDefined-Profile und konkrete Praxisparameter nicht.
@@ -76,6 +77,7 @@ Folgende Daten sind Kundendaten und bleiben bei Updates erhalten:
 - Lizenzanforderungen unter `license-requests`
 - lokale Geraetebilder unter `DeviceImages`
 - `device-image-overrides.json`
+- `device-info-overrides.json` fuer lokale Geraete-Steckbrief-Anpassungen und Techniker-Notizen
 - UI-Komfortdaten wie `ui/app-settings.json`
 - UI-Floating-Fensterstatus `ui/floating-interface-windows.json`
 - `installation.json`
@@ -123,6 +125,7 @@ Der Tab `Sicherung/Umzug` erzeugt `.xdtboxbackup`-Dateien. Gesichert werden aktu
 - lokale Templatepakete und Baukasten-Templates
 - lokale Geraetebilder
 - `device-image-overrides.json`
+- `device-info-overrides.json`
 - UI-AppSettings
 - Floating-Fensterstatus
 - Lizenz-Kundendaten

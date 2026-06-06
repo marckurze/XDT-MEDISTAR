@@ -1,0 +1,2718 @@
+{
+  "profiles": [
+    {
+      "deviceProfileId": "device-canon-rkf2-default",
+      "manufacturer": "Canon",
+      "model": "RK-F2",
+      "deviceType": "Autorefraktor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-canon-rkf2-default.png",
+      "shortDescription": "Canon RK-F2 ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-canon-tx20p-default",
+      "manufacturer": "Canon",
+      "model": "TX-20P",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-canon-tx20p-default.png",
+      "shortDescription": "Canon TX-20P ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-document-attachment-default",
+      "manufacturer": "Generisch",
+      "model": "Dokumentanhang",
+      "deviceType": "Dokument/Anhang",
+      "connectionType": "Datei / Dokument\u00FCbergabe",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-document-attachment-default.png",
+      "shortDescription": "Generisch Dokumentanhang beschreibt eine dokumentbasierte Ger\u00E4te\u00FCbergabe ohne Messwertauswertung.",
+      "measurements": [],
+      "technicalNotes": [
+        "Anschlussart: Datei / Dokument\u00FCbergabe.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "Dieses Profil behandelt Dateien als Dokument\u00FCbergabe und wertet keine Messwerte aus."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-huvitz-hnt1p-default",
+      "manufacturer": "Huvitz",
+      "model": "HNT-1P",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-huvitz-hnt1p-default.png",
+      "shortDescription": "Huvitz HNT-1P ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-huvitz-hrk8000a-default",
+      "manufacturer": "Huvitz",
+      "model": "HRK-8000A",
+      "deviceType": "Autorefraktor/Keratometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-huvitz-hrk8000a-default.png",
+      "shortDescription": "Huvitz HRK-8000A ist ein kombiniertes Messger\u00E4t f\u00FCr objektive Refraktions- und Hornhautkr\u00FCmmungswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-huvitz-hrk9000a-default",
+      "manufacturer": "Huvitz",
+      "model": "HRK-9000A",
+      "deviceType": "Autorefraktor/Keratometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-huvitz-hrk9000a-default.png",
+      "shortDescription": "Huvitz HRK-9000A ist ein kombiniertes Messger\u00E4t f\u00FCr objektive Refraktions- und Hornhautkr\u00FCmmungswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-huvitz-htr1a-default",
+      "manufacturer": "Huvitz",
+      "model": "HTR-1A",
+      "deviceType": "Autorefraktor/Keratometer/Tonometer/Pachymeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-huvitz-htr1a-default.png",
+      "shortDescription": "Huvitz HTR-1A ist ein kombiniertes Messger\u00E4t f\u00FCr Refraktions-, Hornhaut-, Druck- und Hornhautdickenwerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        },
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-manual-document-selection-default",
+      "manufacturer": "Manuell",
+      "model": "Dokumentauswahl",
+      "deviceType": "Dokument/Manuell",
+      "connectionType": "Datei / Dokument\u00FCbergabe",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-manual-document-selection-default.png",
+      "shortDescription": "Manuell Dokumentauswahl beschreibt eine dokumentbasierte Ger\u00E4te\u00FCbergabe ohne Messwertauswertung.",
+      "measurements": [],
+      "technicalNotes": [
+        "Anschlussart: Datei / Dokument\u00FCbergabe.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "Dieses Profil behandelt Dateien als Dokument\u00FCbergabe und wertet keine Messwerte aus."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-ar1-default",
+      "manufacturer": "NIDEK",
+      "model": "AR-1",
+      "deviceType": "Autorefractor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-ar360-default.png",
+      "shortDescription": "NIDEK AR-1 ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-ar1s-default",
+      "manufacturer": "NIDEK",
+      "model": "AR-1S",
+      "deviceType": "Autorefractor/Subjective",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-ar360-default.png",
+      "shortDescription": "NIDEK AR-1S ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-ar310a-default",
+      "manufacturer": "NIDEK",
+      "model": "AR-310A",
+      "deviceType": "Autorefractor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-ar360-default.png",
+      "shortDescription": "NIDEK AR-310A ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-ar360-default",
+      "manufacturer": "NIDEK",
+      "model": "AR-360A",
+      "deviceType": "Autorefractor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-ar360-default.png",
+      "shortDescription": "NIDEK AR-360A ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-ark510a-default",
+      "manufacturer": "NIDEK",
+      "model": "ARK-510A",
+      "deviceType": "Autorefractor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-ark510a-default.png",
+      "shortDescription": "NIDEK ARK-510A ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-ark560a-default",
+      "manufacturer": "NIDEK",
+      "model": "ARK-560A",
+      "deviceType": "Autorefractor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-ark560a-default.png",
+      "shortDescription": "NIDEK ARK-560A ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-ark1s-default",
+      "manufacturer": "NIDEK",
+      "model": "ARK1S",
+      "deviceType": "Autorefractor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-ark1s-default.png",
+      "shortDescription": "NIDEK ARK1S ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-lm1800p-default",
+      "manufacturer": "NIDEK",
+      "model": "LM-1800P",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-lm1800p-default.png",
+      "shortDescription": "NIDEK LM-1800P ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-lm1800pd-default",
+      "manufacturer": "NIDEK",
+      "model": "LM-1800PD",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-lm1800pd-default.png",
+      "shortDescription": "NIDEK LM-1800PD ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-lm7-default",
+      "manufacturer": "NIDEK",
+      "model": "LM7",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-lm7-default.png",
+      "shortDescription": "NIDEK LM7 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-nt1-default",
+      "manufacturer": "NIDEK",
+      "model": "NT-1",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-nt530p-default.png",
+      "shortDescription": "NIDEK NT-1 ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-nt1e-default",
+      "manufacturer": "NIDEK",
+      "model": "NT-1E",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-nt530p-default.png",
+      "shortDescription": "NIDEK NT-1E ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-nt1p-default",
+      "manufacturer": "NIDEK",
+      "model": "NT-1P",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-nt530p-default.png",
+      "shortDescription": "NIDEK NT-1P ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-nt510-default",
+      "manufacturer": "NIDEK",
+      "model": "NT-510",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-nt530p-default.png",
+      "shortDescription": "NIDEK NT-510 ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-nt530-default",
+      "manufacturer": "NIDEK",
+      "model": "NT-530",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-nt530p-default.png",
+      "shortDescription": "NIDEK NT-530 ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-nt530p-default",
+      "manufacturer": "NIDEK",
+      "model": "NT-530P",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-nt530p-default.png",
+      "shortDescription": "NIDEK NT-530P ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-rt2100-serial-default",
+      "manufacturer": "NIDEK",
+      "model": "RT-2100",
+      "deviceType": "Phoropter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": true,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-rt2100-serial-default.png",
+      "shortDescription": "NIDEK RT-2100 ist ein Phoropter f\u00FCr subjektive Refraktionsdaten und vorbereitete Ger\u00E4teausgaben.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz in Dioptrien.",
+          "usedFor": "Dokumentation von Nahanteilen."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Visus",
+          "description": "Sehsch\u00E4rfewert aus der Phoropterausgabe.",
+          "usedFor": "Dokumentation des Refraktionsergebnisses."
+        },
+        {
+          "name": "Arbeitsabstand",
+          "description": "Abstandswert f\u00FCr die Nah- oder Arbeitsdistanz.",
+          "usedFor": "Dokumentation der Refraktionsbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Bidirektionale Nutzung ist f\u00FCr dieses Ger\u00E4t vorgesehen.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-rt3100-serial-default",
+      "manufacturer": "NIDEK",
+      "model": "RT-3100",
+      "deviceType": "Phoropter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": true,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-rt3100-serial-default.png",
+      "shortDescription": "NIDEK RT-3100 ist ein Phoropter f\u00FCr subjektive Refraktionsdaten und vorbereitete Ger\u00E4teausgaben.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz in Dioptrien.",
+          "usedFor": "Dokumentation von Nahanteilen."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Visus",
+          "description": "Sehsch\u00E4rfewert aus der Phoropterausgabe.",
+          "usedFor": "Dokumentation des Refraktionsergebnisses."
+        },
+        {
+          "name": "Arbeitsabstand",
+          "description": "Abstandswert f\u00FCr die Nah- oder Arbeitsdistanz.",
+          "usedFor": "Dokumentation der Refraktionsbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Bidirektionale Nutzung ist f\u00FCr dieses Ger\u00E4t vorgesehen.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-rt5100-serial-default",
+      "manufacturer": "NIDEK",
+      "model": "RT-5100",
+      "deviceType": "Phoropter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": true,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-rt5100-serial-default.png",
+      "shortDescription": "NIDEK RT-5100 ist ein Phoropter f\u00FCr subjektive Refraktionsdaten und vorbereitete Ger\u00E4teausgaben.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz in Dioptrien.",
+          "usedFor": "Dokumentation von Nahanteilen."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Visus",
+          "description": "Sehsch\u00E4rfewert aus der Phoropterausgabe.",
+          "usedFor": "Dokumentation des Refraktionsergebnisses."
+        },
+        {
+          "name": "Arbeitsabstand",
+          "description": "Abstandswert f\u00FCr die Nah- oder Arbeitsdistanz.",
+          "usedFor": "Dokumentation der Refraktionsbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Bidirektionale Nutzung ist f\u00FCr dieses Ger\u00E4t vorgesehen.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-nidek-rt6100-default",
+      "manufacturer": "NIDEK",
+      "model": "RT-6100",
+      "deviceType": "Phoropter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": true,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-nidek-rt6100-default.png",
+      "shortDescription": "NIDEK RT-6100 ist ein Phoropter f\u00FCr subjektive Refraktionsdaten und vorbereitete Ger\u00E4teausgaben.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz in Dioptrien.",
+          "usedFor": "Dokumentation von Nahanteilen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Bidirektionale Nutzung ist f\u00FCr dieses Ger\u00E4t vorgesehen."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-reichert-7cr-nct-default",
+      "manufacturer": "Reichert",
+      "model": "7CR NCT",
+      "deviceType": "Tonometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-reichert-7cr-nct-default.png",
+      "shortDescription": "Reichert 7CR NCT ist ein Tonometer f\u00FCr Augeninnendruckwerte.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-reichert-lenschek-plus-default",
+      "manufacturer": "Reichert",
+      "model": "LensChek Plus",
+      "deviceType": "Lensmeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-reichert-lenschek-plus-default.png",
+      "shortDescription": "Reichert LensChek Plus ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-rodenstock-cx800-default",
+      "manufacturer": "Rodenstock",
+      "model": "CX 800",
+      "deviceType": "Autorefraktor/Keratometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-rodenstock-cx800-default.png",
+      "shortDescription": "Rodenstock CX 800 ist ein kombiniertes Messger\u00E4t f\u00FCr objektive Refraktions- und Hornhautkr\u00FCmmungswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-shin-nippon-accuref-k900-default",
+      "manufacturer": "Shin-Nippon",
+      "model": "Accuref K-900",
+      "deviceType": "Autorefraktor/Keratometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-shin-nippon-accuref-k900-default.png",
+      "shortDescription": "Shin-Nippon Accuref K-900 ist ein kombiniertes Messger\u00E4t f\u00FCr objektive Refraktions- und Hornhautkr\u00FCmmungswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-shin-nippon-accuref-r800-default",
+      "manufacturer": "Shin-Nippon",
+      "model": "Accuref R-800",
+      "deviceType": "Autorefraktor",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-shin-nippon-accuref-r800-default.png",
+      "shortDescription": "Shin-Nippon Accuref R-800 ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-shin-nippon-dl1000-default",
+      "manufacturer": "Shin-Nippon",
+      "model": "DL-1000",
+      "deviceType": "Lensmeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-shin-nippon-dl1000-default.png",
+      "shortDescription": "Shin-Nippon DL-1000 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-shin-nippon-dl800-default",
+      "manufacturer": "Shin-Nippon",
+      "model": "DL-800",
+      "deviceType": "Lensmeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-shin-nippon-dl800-default.png",
+      "shortDescription": "Shin-Nippon DL-800 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-shin-nippon-dl900-default",
+      "manufacturer": "Shin-Nippon",
+      "model": "DL-900",
+      "deviceType": "Lensmeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-shin-nippon-dl900-default.png",
+      "shortDescription": "Shin-Nippon DL-900 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-shin-nippon-nct200-default",
+      "manufacturer": "Shin-Nippon",
+      "model": "NCT-200",
+      "deviceType": "Non-Contact-Tonometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-shin-nippon-nct200-default.png",
+      "shortDescription": "Shin-Nippon NCT-200 ist ein Tonometer f\u00FCr Augeninnendruckwerte.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-shin-nippon-slm4000-default",
+      "manufacturer": "Shin-Nippon",
+      "model": "SLM-4000",
+      "deviceType": "Lensmeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-shin-nippon-slm4000-default.png",
+      "shortDescription": "Shin-Nippon SLM-4000 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-cf2000-default",
+      "manufacturer": "TOMEY",
+      "model": "CF-2000",
+      "deviceType": "Lensmeter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-cf2000-default.png",
+      "shortDescription": "TOMEY CF-2000 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-em3000-default",
+      "manufacturer": "TOMEY",
+      "model": "EM-3000",
+      "deviceType": "Endothelmikroskop/Zellmessger\u00E4t",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-em3000-default.png",
+      "shortDescription": "TOMEY EM-3000 ist ein Endothelmikroskop f\u00FCr Zellmesswerte und Hornhautdickenwerte.",
+      "measurements": [
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        },
+        {
+          "name": "Endothelzelldichte",
+          "description": "Zellbezogener Messwert des Hornhautendothels.",
+          "usedFor": "Dokumentation von Endothelmessungen."
+        },
+        {
+          "name": "Ger\u00E4tebilder",
+          "description": "Vom Ger\u00E4t bereitgestellte Bildverweise oder Bilddateien.",
+          "usedFor": "Erg\u00E4nzung der Endothelmessung."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-em4000-default",
+      "manufacturer": "TOMEY",
+      "model": "EM-4000",
+      "deviceType": "Endothelmikroskop/Zellmessger\u00E4t",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-em4000-default.png",
+      "shortDescription": "TOMEY EM-4000 ist ein Endothelmikroskop f\u00FCr Zellmesswerte und Hornhautdickenwerte.",
+      "measurements": [
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        },
+        {
+          "name": "Endothelzelldichte",
+          "description": "Zellbezogener Messwert des Hornhautendothels.",
+          "usedFor": "Dokumentation von Endothelmessungen."
+        },
+        {
+          "name": "Ger\u00E4tebilder",
+          "description": "Vom Ger\u00E4t bereitgestellte Bildverweise oder Bilddateien.",
+          "usedFor": "Erg\u00E4nzung der Endothelmessung."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-mr6000-default",
+      "manufacturer": "TOMEY",
+      "model": "MR-6000",
+      "deviceType": "Autorefraktor/Keratometer/Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-mr6000-default.png",
+      "shortDescription": "TOMEY MR-6000 ist ein kombiniertes Messger\u00E4t f\u00FCr Refraktions-, Hornhaut-, Druck- und Hornhautdickenwerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        },
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-tl2000c-default",
+      "manufacturer": "TOMEY",
+      "model": "TL-2000C",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-tl2000c-default.png",
+      "shortDescription": "TOMEY TL-2000C ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-tl6000-default",
+      "manufacturer": "TOMEY",
+      "model": "TL-6000",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-tl6000-default.png",
+      "shortDescription": "TOMEY TL-6000 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-tl7000-default",
+      "manufacturer": "TOMEY",
+      "model": "TL-7000",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-tl7000-default.png",
+      "shortDescription": "TOMEY TL-7000 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-tomey-top1000-default",
+      "manufacturer": "TOMEY",
+      "model": "TOP-1000",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-tomey-top1000-default.png",
+      "shortDescription": "TOMEY TOP-1000 ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-cl300-default",
+      "manufacturer": "TOPCON",
+      "model": "CL-300",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-cl300-default.png",
+      "shortDescription": "TOPCON CL-300 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-cl300pdl-default",
+      "manufacturer": "TOPCON",
+      "model": "CL-300PDL",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-cl300-default.png",
+      "shortDescription": "TOPCON CL-300PDL ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-ct1p-default",
+      "manufacturer": "TOPCON",
+      "model": "CT-1P",
+      "deviceType": "Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-ct1p-default.png",
+      "shortDescription": "TOPCON CT-1P ist ein kombiniertes Ger\u00E4t f\u00FCr Augeninnendruck und Hornhautdicke.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-ct800a-default",
+      "manufacturer": "TOPCON",
+      "model": "CT-800A",
+      "deviceType": "Tonometer / Non-Contact-Tonometer",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-ct800a-default.png",
+      "shortDescription": "TOPCON CT-800A ist ein Tonometer f\u00FCr Augeninnendruckwerte.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-cv5000-default",
+      "manufacturer": "TOPCON",
+      "model": "CV-5000 / CV-5000S",
+      "deviceType": "Phoropter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": true,
+      "imagePath": "pack://application:,,,/Assets/Devices/Topcon_CV5000_freigestellt.png",
+      "shortDescription": "TOPCON CV-5000 / CV-5000S ist ein Phoropter f\u00FCr subjektive Refraktionsdaten und vorbereitete Ger\u00E4teausgaben.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Bidirektionale Nutzung ist f\u00FCr dieses Ger\u00E4t vorgesehen."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-kr1-default",
+      "manufacturer": "TOPCON",
+      "model": "KR-1",
+      "deviceType": "Keratorefraktometer / Autorefraktor-Keratometer-Kandidat",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-kr1-default.png",
+      "shortDescription": "TOPCON KR-1 ist ein kombiniertes Messger\u00E4t f\u00FCr objektive Refraktions- und Hornhautkr\u00FCmmungswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-kr800-default",
+      "manufacturer": "TOPCON",
+      "model": "KR-800S",
+      "deviceType": "Autorefractor/Keratometer/Subjective",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-kr800-default.png",
+      "shortDescription": "TOPCON KR-800S ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-rm800-default",
+      "manufacturer": "TOPCON",
+      "model": "RM-800",
+      "deviceType": "Autorefraktor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-kr800-default.png",
+      "shortDescription": "TOPCON RM-800 ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-solos-default",
+      "manufacturer": "TOPCON",
+      "model": "SOLOS",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-solos-default.png",
+      "shortDescription": "TOPCON SOLOS ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-trk2p-default",
+      "manufacturer": "TOPCON",
+      "model": "TRK-2P",
+      "deviceType": "Autorefraktometer/Keratometer/Tonometer/Pachymeter/Subjektivtest",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-trk2p-default.png",
+      "shortDescription": "TOPCON TRK-2P ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        },
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-topcon-trk3-omnia-default",
+      "manufacturer": "TOPCON",
+      "model": "TRK-3 Omnia",
+      "deviceType": "Autorefraktometer/Keratometer/Tonometer/Pachymeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-topcon-trk2p-default.png",
+      "shortDescription": "TOPCON TRK-3 Omnia ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert einer subjektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Korrekturanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Korrekturanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        },
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        },
+        {
+          "name": "Mittelwert",
+          "description": "Zusammengefasster Wert aus mehreren Druckmessungen.",
+          "usedFor": "Dokumentation einer Messreihe."
+        },
+        {
+          "name": "Hornhautdicke",
+          "description": "Dickenmesswert der Hornhaut.",
+          "usedFor": "Dokumentation pachymetrischer Werte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-visionix-retinomax5-default",
+      "manufacturer": "Visionix",
+      "model": "Retinomax 5",
+      "deviceType": "Autorefraktor/Keratometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-visionix-retinomax5-default.png",
+      "shortDescription": "Visionix Retinomax 5 ist ein kombiniertes Messger\u00E4t f\u00FCr objektive Refraktions- und Hornhautkr\u00FCmmungswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-visionix-vx120-default",
+      "manufacturer": "Visionix",
+      "model": "VX 120",
+      "deviceType": "Autorefraktor",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-visionix-vx120-default.png",
+      "shortDescription": "Visionix VX 120 ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-visionix-vx650-default",
+      "manufacturer": "Visionix",
+      "model": "VX 650",
+      "deviceType": "Autorefraktor/Tonometer",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-visionix-vx650-default.png",
+      "shortDescription": "Visionix VX 650 ist ein Autorefraktor f\u00FCr objektive Refraktionswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-zeiss-iolmaster700-default",
+      "manufacturer": "ZEISS",
+      "model": "IOLMaster 700",
+      "deviceType": "Biometrie/IOL/Keratometer",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-zeiss-iolmaster700-default.png",
+      "shortDescription": "ZEISS IOLMaster 700 ist ein Biometrieger\u00E4t f\u00FCr L\u00E4ngen- und Keratometriedaten des Auges.",
+      "measurements": [
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        },
+        {
+          "name": "Axiale L\u00E4nge",
+          "description": "L\u00E4ngenmesswert des Auges.",
+          "usedFor": "Dokumentation biometrischer Messwerte."
+        },
+        {
+          "name": "Vorderkammertiefe",
+          "description": "Abstandswert im vorderen Augenabschnitt.",
+          "usedFor": "Dokumentation biometrischer Messwerte."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-zeiss-visulens550-default",
+      "manufacturer": "ZEISS",
+      "model": "VISULENS 550",
+      "deviceType": "Lensmeter",
+      "connectionType": "LAN / Datei / UNC",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-zeiss-visulens550-default.png",
+      "shortDescription": "ZEISS VISULENS 550 ist ein Scheitelbrechwertmesser f\u00FCr Brillenglaswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert eines Brillenglases.",
+          "usedFor": "Dokumentation der Glaswirkung."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente eines Brillenglases.",
+          "usedFor": "Dokumentation zylindrischer Glasanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz eines Mehrst\u00E4rken- oder Gleitsichtglases.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Glaswirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: LAN / Datei / UNC.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-zeiss-visuplan500-default",
+      "manufacturer": "ZEISS",
+      "model": "VISUPLAN 500",
+      "deviceType": "Tonometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-zeiss-visuplan500-default.png",
+      "shortDescription": "ZEISS VISUPLAN 500 ist ein Tonometer f\u00FCr Augeninnendruckwerte.",
+      "measurements": [
+        {
+          "name": "Augeninnendruck",
+          "description": "Druckmesswert des Auges in mmHg.",
+          "usedFor": "Dokumentation von Tonometriewerten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    },
+    {
+      "deviceProfileId": "device-zeiss-visuref100-default",
+      "manufacturer": "ZEISS",
+      "model": "VISUREF 100",
+      "deviceType": "Autorefraktor/Keratometer",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": false,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-zeiss-visuref100-default.png",
+      "shortDescription": "ZEISS VISUREF 100 ist ein kombiniertes Messger\u00E4t f\u00FCr objektive Refraktions- und Hornhautkr\u00FCmmungswerte.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der objektiven Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der objektiven Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert der Pupillen in Millimetern.",
+          "usedFor": "Dokumentation von Zentrier- oder Refraktionsdaten."
+        },
+        {
+          "name": "Vertex-Distanz",
+          "description": "Abstand zwischen Hornhautebene und Mess- oder Korrekturebene.",
+          "usedFor": "Dokumentation der Messbedingungen."
+        },
+        {
+          "name": "Keratometrieradien",
+          "description": "Hornhautkr\u00FCmmungswerte f\u00FCr zwei Hauptschnitte.",
+          "usedFor": "Dokumentation der Hornhautkr\u00FCmmung."
+        },
+        {
+          "name": "Keratometerachsen",
+          "description": "Achslagen der gemessenen Hornhautkr\u00FCmmungen.",
+          "usedFor": "Zuordnung der Hornhautradien."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Das Profil ist f\u00FCr eine Richtung vom Ger\u00E4t zur Anwendung ausgelegt.",
+        "COM-Port und serielle Parameter werden im Schnittstellenprofil gepflegt."
+      ],
+      "technicianNote": ""
+    }
+  ]
+}

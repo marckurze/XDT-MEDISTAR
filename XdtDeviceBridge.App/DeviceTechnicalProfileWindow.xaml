@@ -1,0 +1,185 @@
+<Window x:Class="XdtDeviceBridge.App.DeviceTechnicalProfileWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Geräte-Steckbrief"
+        Width="980"
+        Height="720"
+        MinWidth="820"
+        MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        Background="#F4FAFD">
+    <Window.Resources>
+        <Style x:Key="SectionBorderStyle" TargetType="{x:Type Border}">
+            <Setter Property="BorderBrush" Value="#D2E4EF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+        <Style x:Key="SectionTitleStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style x:Key="MetaLabelStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#1F3442"/>
+            <Setter Property="Margin" Value="0,0,8,4"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="14">
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+            <Button Content="Schließen"
+                    Width="120"
+                    Margin="8,0,0,0"
+                    HorizontalAlignment="Right"
+                    DockPanel.Dock="Right"
+                    Click="Close_Click"/>
+            <Button Content="Speichern"
+                    Width="140"
+                    Margin="8,0,0,0"
+                    HorizontalAlignment="Right"
+                    DockPanel.Dock="Right"
+                    Click="Save_Click"/>
+            <Button Content="Auf Original zurücksetzen"
+                    Width="190"
+                    Margin="8,0,0,0"
+                    HorizontalAlignment="Right"
+                    DockPanel.Dock="Right"
+                    Click="Reset_Click"/>
+            <TextBlock Text="{Binding StatusMessage}"
+                       VerticalAlignment="Center"
+                       Foreground="#52636F"
+                       TextWrapping="Wrap"/>
+        </DockPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource SectionBorderStyle}" Background="#EEF9F9">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="190"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="170"
+                                Height="170"
+                                Background="White"
+                                BorderBrush="#CFE0EA"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="8"
+                                HorizontalAlignment="Left">
+                            <Image Source="{Binding ImagePath}"
+                                   Stretch="Uniform"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock Text="{Binding Model}"
+                                       FontSize="28"
+                                       FontWeight="SemiBold"
+                                       Foreground="#102A3A"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding Manufacturer}"
+                                       FontSize="16"
+                                       Foreground="#486170"
+                                       Margin="0,2,0,16"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Geräteart:" Style="{StaticResource MetaLabelStyle}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding DeviceType}" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Anschlussart:" Style="{StaticResource MetaLabelStyle}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding ConnectionType}" TextWrapping="Wrap"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Bidirektional:" Style="{StaticResource MetaLabelStyle}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding BidirectionalText}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SectionBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Kurzbeschreibung" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBox Text="{Binding EditableShortDescription, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="70"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Wichtige Messwerte und Bedeutung" Style="{StaticResource SectionTitleStyle}"/>
+                        <DataGrid ItemsSource="{Binding Measurements}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  MinHeight="120">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Messwert" Binding="{Binding Name}" Width="170"/>
+                                <DataGridTextColumn Header="Bedeutung" Binding="{Binding Description}" Width="*"/>
+                                <DataGridTextColumn Header="Verwendung" Binding="{Binding UsedFor}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionBorderStyle}" Visibility="{Binding ExampleMeasurementsVisibility}">
+                    <StackPanel>
+                        <TextBlock Text="Beispielhafte Messwerte" Style="{StaticResource SectionTitleStyle}"/>
+                        <ItemsControl ItemsSource="{Binding ExampleMeasurements}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,0,0,4">
+                                        <TextBlock Text="{Binding Label}" FontWeight="SemiBold" Width="190"/>
+                                        <TextBlock Text="{Binding Value}" TextWrapping="Wrap"/>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Technische Hinweise" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBox Text="{Binding EditableTechnicalNotes, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="95"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Notiz Techniker zum Gerät" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBox Text="{Binding TechnicianNote, UpdateSourceTrigger=PropertyChanged}"
+                                 MinHeight="110"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
