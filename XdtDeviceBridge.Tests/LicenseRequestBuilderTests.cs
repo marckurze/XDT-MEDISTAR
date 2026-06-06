@@ -96,7 +96,13 @@ public sealed class LicenseRequestBuilderTests
             City: "Musterstadt",
             Phone: "01234",
             Email: "info@example.test",
-            ContactPerson: "Frau Muster");
+            ContactPerson: "Frau Muster",
+            Iban: "DE00123456780000000000",
+            Bic: "TESTDEFFXXX",
+            AccountHolder: "Praxis Muster",
+            SepaDirectDebitConsent: true,
+            AlwaysInvoice: false,
+            InvoiceEmail: "rechnung@example.test");
 
         var request = _builder.Build(
             CreateInstallationInfo(),
@@ -110,6 +116,9 @@ public sealed class LicenseRequestBuilderTests
         Assert.NotNull(request.Customer);
         Assert.Equal("Praxis Muster", request.Customer.CustomerName);
         Assert.Equal("Musterstadt", request.Customer.City);
+        Assert.Equal("DE00123456780000000000", request.Customer.Iban);
+        Assert.True(request.Customer.SepaDirectDebitConsent);
+        Assert.Equal("rechnung@example.test", request.Customer.InvoiceEmail);
     }
 
     [Fact]

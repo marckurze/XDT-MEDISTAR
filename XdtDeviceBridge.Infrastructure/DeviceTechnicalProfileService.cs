@@ -15,8 +15,9 @@ public sealed class DeviceTechnicalProfileService
         WriteIndented = true
     };
 
-    private readonly string _originalCatalogPath;
+    private readonly string? _originalCatalogPath;
     private readonly string _overrideCatalogPath;
+    private readonly Func<Stream?>? _originalCatalogStreamFactory;
 
     public DeviceTechnicalProfileService(string originalCatalogPath, string overrideCatalogPath)
     {
@@ -34,6 +35,19 @@ public sealed class DeviceTechnicalProfileService
         _overrideCatalogPath = overrideCatalogPath;
     }
 
+    public DeviceTechnicalProfileService(Func<Stream?> originalCatalogStreamFactory, string overrideCatalogPath)
+    {
+        ArgumentNullException.ThrowIfNull(originalCatalogStreamFactory);
+
+        if (string.IsNullOrWhiteSpace(overrideCatalogPath))
+        {
+            throw new ArgumentException("Override catalog path must not be empty.", nameof(overrideCatalogPath));
+        }
+
+        _originalCatalogStreamFactory = originalCatalogStreamFactory;
+        _overrideCatalogPath = overrideCatalogPath;
+    }
+
     public static string GetDefaultOverrideFilePath(AppDataPaths paths)
     {
         ArgumentNullException.ThrowIfNull(paths);
@@ -42,7 +56,15 @@ public sealed class DeviceTechnicalProfileService
 
     public IReadOnlyList<DeviceTechnicalProfile> LoadOriginalProfiles()
     {
-        if (!File.Exists(_originalCatalogPath))
+        if (_originalCatalogStreamFactory is not null)
+        {
+            using var resourceStream = _originalCatalogStreamFactory();
+            return resourceStream is null
+                ? Array.Empty<DeviceTechnicalProfile>()
+                : LoadOriginalProfiles(resourceStream);
+        }
+
+        if (string.IsNullOrWhiteSpace(_originalCatalogPath) || !File.Exists(_originalCatalogPath))
         {
             return Array.Empty<DeviceTechnicalProfile>();
         }

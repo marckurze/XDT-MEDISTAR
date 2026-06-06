@@ -14,6 +14,8 @@ Profilverwaltung: Zentrale Verwaltung von AIS-, Geräte-, Export- und Schnittste
 
 Schnittstellenprofile: Konkrete Praxisanbindung. Hier werden Ordner, COM-Port, DTR/RTS, RS232-Diagnose, Ausgabeordner, Aktivierungsprüfung und profilbezogene Betriebsparameter eingestellt.
 
+Notizen Techniker: Lokales Whiteboard fuer installationsbezogene Notizen, Bilder, aktive Geraeteuebersichten und PDF-Export. Die Notizen sind Kundendaten und werden von Sicherung/Umzug mitgenommen.
+
 Sicherung/Umzug: Sichern und Wiederherstellen der XDTBox-Konfiguration. Wichtig vor Updates, Hardwarewechsel oder Neuinstallation.
 
 Lizenz: Lizenzstatus, Lizenzanforderung, Lizenzimport, lizenzierte Geräteanzahl und Hinweise zum Hardwaretausch.
@@ -82,7 +84,19 @@ Für BuiltIn-Geräte sind kurze technische Steckbriefe vorbereitet. Sie beschrei
 
 Die Original-Steckbriefe sind App-Bestandteil und werden bei Updates aus der App-Version geliefert. Lokale Änderungen werden separat gespeichert. Die Notiz "Techniker zum Gerät" ist für eigene Praxis- oder Supporthinweise gedacht und bleibt Kundendaten.
 
-Sicherung/Umzug nimmt lokale Steckbriefanpassungen und Techniker-Notizen mit. Der finale Öffnen-Button für die Steckbriefansicht wird in einem späteren Schritt in die passende Geräte-UI eingebaut.
+Sicherung/Umzug nimmt lokale Steckbriefanpassungen und Techniker-Notizen mit. Die Steckbriefe koennen im Tab "Schnittstellenprofile" und im "XDT-Baukasten" ueber "Geraetesteckbrief" geoeffnet werden.
+
+# Notizen Techniker
+
+Der Tab "Notizen Techniker" speichert ein freies Whiteboard fuer die jeweilige Installation. Sie koennen Textbloecke anlegen, Bilder einfuegen oder per Drag-and-Drop ablegen, Elemente verschieben, Bilder skalieren, Text formatieren und aktive Geraeteanbindungen als Textblock einfuegen.
+
+Die Daten werden lokal unter `%LocalAppData%\XdtDeviceBridge\technician-notes` gespeichert. Bilder werden dorthin kopiert, damit externe Bildpfade oder Wechselmedien nicht benoetigt werden. "Als PDF speichern" erzeugt eine lokale PDF-Datei aus der aktuellen Whiteboard-Ansicht.
+
+# Tab-Schutz
+
+Der optionale Tab-Schutz sperrt alle Haupttabs ausser "Verarbeitung". Er wird ueber das Zahnrad eingerichtet, kann dort auch wieder entfernt werden und ist standardmaessig ausgeschaltet. Das Passwort wird lokal nicht im Klartext gespeichert, sondern mit Salt und Hash gesichert. Sicherung/Umzug nimmt die Tab-Schutz-Konfiguration mit.
+
+Der Tab-Schutz ersetzt keine Windows-Benutzerrechte und keine Lizenzpruefung. Er ist eine Bedienhilfe, damit produktive Rechner im Alltag nicht versehentlich in Pflege-, Baukasten- oder Lizenzbereiche wechseln.
 
 # Profilverwaltung
 
@@ -196,7 +210,7 @@ Nach der Wiederherstellung werden Profile und Lizenzstatus neu geladen. Auf neue
 
 # Installation und Updates
 
-Updates duerfen App-Dateien, Hilfe, Themes und BuiltIn-Definitionen ersetzen. Ihre lokalen Kundendaten bleiben erhalten: Profile, Schnittstellenprofile, Baukasten-Templates, lokale Gerätebilder, Bild-Overrides, Lizenzdateien, UI-Einstellungen und Backups.
+Updates duerfen App-Dateien, Hilfe, Themes und BuiltIn-Definitionen ersetzen. Ihre lokalen Kundendaten bleiben erhalten: Profile, Schnittstellenprofile, Baukasten-Templates, lokale Gerätebilder, Bild-Overrides, Geraetesteckbrief-Overrides, Techniker-Whiteboard, Tab-Schutz-Konfiguration, Lizenzdateien, erweiterte Lizenz-Kundendaten, UI-Einstellungen und Backups.
 
 Bei einer spaeteren Deinstallation bleiben Kundendaten standardmaessig erhalten. Loeschen Sie Kundendaten nur nach bewusster Bestaetigung und vorheriger Sicherung. Externe Praxisordner wie AIS-Import, Geraete-Import, Export, Archiv und Fehlerordner werden von XDTBox nicht blind geloescht.
 

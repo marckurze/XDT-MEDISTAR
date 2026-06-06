@@ -95,11 +95,66 @@
     </Style>
 
     <Style TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource XdtBoxPanelBackgroundBrush}" />
+        <Setter Property="Background" Value="#F2FAFD" />
         <Setter Property="Foreground" Value="{StaticResource XdtBoxDarkTextBrush}" />
-        <Setter Property="BorderBrush" Value="{StaticResource XdtBoxBorderBrush}" />
+        <Setter Property="BorderBrush" Value="#BFDCEB" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <Style x:Key="XdtBoxInterfaceActivationToggleStyle" TargetType="ToggleButton">
+        <Setter Property="MinWidth" Value="190" />
+        <Setter Property="Height" Value="52" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ToolTip" Value="Klicken um Status zu ändern" />
+        <Setter Property="Content" Value="Anbindung deaktiviert" />
+        <Setter Property="Background" Value="#FCEEEE" />
+        <Setter Property="Foreground" Value="#7F1D1D" />
+        <Setter Property="BorderBrush" Value="#D8A5A5" />
+        <Setter Property="BorderThickness" Value="2" />
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="Aktivierte Anbindung" />
+                <Setter Property="Background" Value="#EAF8E9" />
+                <Setter Property="Foreground" Value="#14532D" />
+                <Setter Property="BorderBrush" Value="#76B86A" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource XdtBoxPrimaryBrush}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.55" />
+                <Setter Property="Cursor" Value="Arrow" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="XdtBoxTabProtectionToggleStyle" TargetType="ToggleButton">
+        <Setter Property="Width" Value="44" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Margin" Value="4,0,0,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Content" Value="🔒" />
+        <Setter Property="Background" Value="#FCEEEE" />
+        <Setter Property="Foreground" Value="#7F1D1D" />
+        <Setter Property="BorderBrush" Value="#D8A5A5" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="ToolTip" Value="Tab-Schutz sperren oder entsperren" />
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="✓" />
+                <Setter Property="Background" Value="#EAF8E9" />
+                <Setter Property="Foreground" Value="#14532D" />
+                <Setter Property="BorderBrush" Value="#76B86A" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.55" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <Style TargetType="TextBox">

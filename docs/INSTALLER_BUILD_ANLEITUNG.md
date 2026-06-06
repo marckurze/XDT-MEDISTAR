@@ -93,6 +93,22 @@ Zu dokumentieren sind danach:
 - erfolgreiche Publish-Validierung ohne lokale Entwicklungs-/Kundendaten
 - erfolgreicher App-Start aus `artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
 
+## Nachtrag 2026-06-06: UI-Ausbau-Finalstand
+
+Nach dem UI-Ausbau fuer Geraetesteckbrief-Buttons, Aktivierungsstatusbutton, Techniker-Whiteboard, Tab-Schutz und erweiterte Lizenz-Kundendaten wurde der vollstaendige Stand erneut geprueft:
+
+- `dotnet build XdtDeviceBridge.sln`: erfolgreich, 0 Warnungen, 0 Fehler.
+- `dotnet test XdtDeviceBridge.sln`: 1984 Tests insgesamt, 1984 erfolgreich, 0 fehlgeschlagen, 0 uebersprungen.
+- Installer-Build: `scripts\build-xdtbox-installer.ps1` erfolgreich.
+- Setup-Datei: `C:\GitHub\XDT-MEDISTAR\artifacts\installer\XDTBox_Setup_1.0.exe`
+- Dateigroesse: 79.314.259 Bytes
+- Zeitstempel: 2026-06-06 17:55:40
+- Publish-EXE: `C:\GitHub\XDT-MEDISTAR\artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
+- Publish-EXE-Groesse: 421.376 Bytes
+- Publish-EXE-Zeitstempel: 2026-06-06 17:53:41
+- Publish-Validierung: sauber durchlaufen; der Inno-Build wurde erst nach der Kundenpublish-Pruefung gestartet.
+- App-Start aus Publish: `XdtDeviceBridge.App.exe` startete erfolgreich aus `artifacts\publish\XDTBox` und wurde fuer die Pruefung wieder beendet.
+
 ## Kundeninstaller-Inhalt
 
 Der Kundeninstaller enthaelt ausschliesslich App-Dateien und BuiltIn-Werksvorlagen. BuiltIns liegen im App-Code beziehungsweise in App-Assets und sind erlaubt. Persistierte Profile, UserDefined-Profile und konkrete Schnittstellenprofile sind Kundendaten und duerfen nicht in den Installer.
@@ -113,6 +129,9 @@ Nicht enthalten:
 - lokale Baukasten-Templates und Templatepakete
 - `device-image-overrides.json`
 - lokale `DeviceImages` aus `%LocalAppData%\XdtDeviceBridge`
+- lokale `device-info-overrides.json`
+- lokale `technician-notes`
+- lokale `ui\tab-protection.json`
 - `app-settings.json`
 - `license.xdtboxlic`, `license.json`, `device-grace-periods.json`
 - Backups und Diagnose-Logs
@@ -167,7 +186,10 @@ Updates ersetzen nur App-Dateien. Geschuetzt bleiben unter anderem:
 - Lizenzdaten inklusive `license.xdtboxlic`
 - Baukasten-Templates und Templatepakete
 - lokale Geraetebilder und `device-image-overrides.json`
+- lokale Geraetesteckbrief-Overrides und Techniker-Whiteboard-Notizen
+- Tab-Schutz-Konfiguration
 - AppSettings und UI-State
+- erweiterte Lizenz-Kundendaten fuer Rechnung, SEPA und Bankdaten
 - externe AIS-/Geraete-/Archiv-/Fehlerordner
 
 Eine Migration nach `%ProgramData%\XDTBox` ist nicht Teil dieses Installers und braucht spaeter ein eigenes Migrationskonzept.

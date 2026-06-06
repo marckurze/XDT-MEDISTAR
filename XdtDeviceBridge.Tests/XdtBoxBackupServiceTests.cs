@@ -35,7 +35,10 @@ public sealed class XdtBoxBackupServiceTests
         Assert.NotNull(archive.GetEntry("device-images/device-user.png"));
         Assert.NotNull(archive.GetEntry("settings/device-image-overrides.json"));
         Assert.NotNull(archive.GetEntry("settings/device-info-overrides.json"));
+        Assert.NotNull(archive.GetEntry("technician-notes/whiteboard-state.json"));
+        Assert.NotNull(archive.GetEntry("technician-notes/images/note-image.png"));
         Assert.NotNull(archive.GetEntry("settings/ui/app-settings.json"));
+        Assert.NotNull(archive.GetEntry("settings/ui/tab-protection.json"));
         Assert.NotNull(archive.GetEntry("license-customer/license-customer-data.json"));
         Assert.NotNull(archive.GetEntry("license/device-grace-periods.json"));
         Assert.NotNull(archive.GetEntry("license/license.xdtboxlic"));
@@ -61,7 +64,10 @@ public sealed class XdtBoxBackupServiceTests
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "DeviceImages", "device-user.png")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "device-image-overrides.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "device-info-overrides.json")));
+        Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "technician-notes", "whiteboard-state.json")));
+        Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "technician-notes", "images", "note-image.png")));
         Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "ui", "app-settings.json")));
+        Assert.True(File.Exists(Path.Combine(targetPaths.BaseFolder, "ui", "tab-protection.json")));
         Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license-customer-data.json")));
         Assert.True(File.Exists(targetPaths.DeviceGracePeriodsFile));
         Assert.True(File.Exists(Path.Combine(targetPaths.LicensesFolder, "license.xdtboxlic")));
@@ -174,8 +180,12 @@ public sealed class XdtBoxBackupServiceTests
         File.WriteAllText(
             Path.Combine(paths.BaseFolder, "device-info-overrides.json"),
             """{"profiles":[{"deviceProfileId":"device-user","technicianNote":"Notiz"}]}""");
+        Directory.CreateDirectory(Path.Combine(paths.BaseFolder, "technician-notes", "images"));
+        File.WriteAllText(Path.Combine(paths.BaseFolder, "technician-notes", "whiteboard-state.json"), """{"TextItems":[],"ImageItems":[]}""");
+        File.WriteAllText(Path.Combine(paths.BaseFolder, "technician-notes", "images", "note-image.png"), "image");
         Directory.CreateDirectory(Path.Combine(paths.BaseFolder, "ui"));
         File.WriteAllText(Path.Combine(paths.BaseFolder, "ui", "app-settings.json"), """{"AutoStartMonitoringOnAppStart":true}""");
+        File.WriteAllText(Path.Combine(paths.BaseFolder, "ui", "tab-protection.json"), """{"IsEnabled":false}""");
 
         Directory.CreateDirectory(paths.LicensesFolder);
         File.WriteAllText(Path.Combine(paths.LicensesFolder, "license-customer-data.json"), """{"CustomerName":"Praxis"}""");

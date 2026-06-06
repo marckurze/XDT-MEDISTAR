@@ -13,6 +13,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
     private const string DeviceImagesFolderName = "DeviceImages";
     private const string DeviceImageOverridesFileName = "device-image-overrides.json";
     private const string DeviceInfoOverridesFileName = DeviceTechnicalProfileService.DefaultOverrideFileName;
+    private const string TechnicianNotesFolderName = TechnicianWhiteboardService.FolderName;
     private const string SignedLicenseFileName = "license.xdtboxlic";
     private const string LicenseCustomerDataFileName = "license-customer-data.json";
     private const string DeviceImageLockWarning =
@@ -87,8 +88,15 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
 
             AddFileIfExists(archive, GetDeviceImageOverridesFilePath(paths), "settings/device-image-overrides.json", includedAreas, "Gerätebild-Overrides");
             AddFileIfExists(archive, GetDeviceInfoOverridesFilePath(paths), "settings/device-info-overrides.json", includedAreas, "Geräte-Steckbrief-Anpassungen");
+            var technicianNotesFolder = GetTechnicianNotesFolder(paths);
+            if (Directory.Exists(technicianNotesFolder))
+            {
+                AddDirectory(archive, technicianNotesFolder, "technician-notes", messages);
+                includedAreas.Add("Techniker-Notizen");
+            }
             AddFileIfExists(archive, GetFloatingWindowStateFilePath(paths), "settings/ui/floating-interface-windows.json", includedAreas, "UI-Einstellungen");
             AddFileIfExists(archive, GetAppSettingsFilePath(paths), "settings/ui/app-settings.json", includedAreas, "App-Einstellungen");
+            AddFileIfExists(archive, GetTabProtectionSettingsFilePath(paths), "settings/ui/tab-protection.json", includedAreas, "Tab-Schutz Einstellungen");
             AddFileIfExists(archive, GetLicenseCustomerDataFilePath(paths), "license-customer/license-customer-data.json", includedAreas, "Lizenz-Kundendaten");
             AddFileIfExists(archive, paths.DeviceGracePeriodsFile, "license/device-grace-periods.json", includedAreas, "Lizenz-Karenzzeiten");
 
@@ -159,8 +167,10 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             RestoreDirectoryTolerant(archive, "device-images/", GetDeviceImagesFolder(paths), warnings);
             RestoreFile(archive, "settings/device-image-overrides.json", GetDeviceImageOverridesFilePath(paths));
             RestoreFile(archive, "settings/device-info-overrides.json", GetDeviceInfoOverridesFilePath(paths));
+            RestoreDirectory(archive, "technician-notes/", GetTechnicianNotesFolder(paths));
             RestoreFile(archive, "settings/ui/floating-interface-windows.json", GetFloatingWindowStateFilePath(paths));
             RestoreFile(archive, "settings/ui/app-settings.json", GetAppSettingsFilePath(paths));
+            RestoreFile(archive, "settings/ui/tab-protection.json", GetTabProtectionSettingsFilePath(paths));
             RestoreFile(archive, "license-customer/license-customer-data.json", GetLicenseCustomerDataFilePath(paths));
             RestoreFile(archive, "license/device-grace-periods.json", paths.DeviceGracePeriodsFile);
             RestoreFile(archive, "license/license.xdtboxlic", GetSignedLicenseFilePath(paths));
@@ -392,6 +402,11 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
         return Path.Combine(paths.BaseFolder, DeviceInfoOverridesFileName);
     }
 
+    private static string GetTechnicianNotesFolder(AppDataPaths paths)
+    {
+        return Path.Combine(paths.BaseFolder, TechnicianNotesFolderName);
+    }
+
     private static string GetFloatingWindowStateFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.BaseFolder, "ui", "floating-interface-windows.json");
@@ -400,6 +415,11 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
     private static string GetAppSettingsFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.BaseFolder, "ui", "app-settings.json");
+    }
+
+    private static string GetTabProtectionSettingsFilePath(AppDataPaths paths)
+    {
+        return TabProtectionService.GetDefaultSettingsFilePath(paths);
     }
 
     private static string GetLicenseCustomerDataFilePath(AppDataPaths paths)

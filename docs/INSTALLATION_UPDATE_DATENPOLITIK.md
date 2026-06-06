@@ -73,11 +73,14 @@ Folgende Daten sind Kundendaten und bleiben bei Updates erhalten:
 - `license.json`
 - `license.xdtboxlic`
 - `license-customer-data.json`
+- Rechnungs-E-Mail, Bankdaten, SEPA-Zustimmung und Rechnung-Option in den Lizenz-Kundendaten
 - `device-grace-periods.json`
 - Lizenzanforderungen unter `license-requests`
 - lokale Geraetebilder unter `DeviceImages`
 - `device-image-overrides.json`
 - `device-info-overrides.json` fuer lokale Geraete-Steckbrief-Anpassungen und Techniker-Notizen
+- Techniker-Whiteboard unter `technician-notes`
+- Tab-Schutz-Konfiguration unter `ui/tab-protection.json`
 - UI-Komfortdaten wie `ui/app-settings.json`
 - UI-Floating-Fensterstatus `ui/floating-interface-windows.json`
 - `installation.json`
@@ -126,6 +129,8 @@ Der Tab `Sicherung/Umzug` erzeugt `.xdtboxbackup`-Dateien. Gesichert werden aktu
 - lokale Geraetebilder
 - `device-image-overrides.json`
 - `device-info-overrides.json`
+- Techniker-Whiteboard unter `technician-notes`
+- Tab-Schutz-Konfiguration unter `ui/tab-protection.json`
 - UI-AppSettings
 - Floating-Fensterstatus
 - Lizenz-Kundendaten
@@ -158,6 +163,7 @@ Bei einem Update gilt:
 - Schnittstellenprofile mit Praxisordnern oder COM-Port-Parametern ueberschreiben: nicht erlaubt.
 - Lizenzdateien loeschen: nicht erlaubt.
 - lokale Geraetebilder und Overrides loeschen: nicht erlaubt.
+- lokale Techniker-Notizen oder Tab-Schutz-Konfiguration loeschen: nicht erlaubt.
 - Backups loeschen: nicht erlaubt.
 - externe Praxisordner anraeitern oder bereinigen: nicht erlaubt.
 

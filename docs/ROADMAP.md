@@ -24,6 +24,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Der Aktivierungsassistent ist fuer den Moment ausreichend vorbereitet und wird nicht weiter ausgebaut.
 - Naechste Entwicklungsarbeit soll konkrete Geraete-/Template-Luecken schliessen.
 - Der alte Tab `Profile & Templates` ist entfernt. `XDT-Baukasten` funktioniert als eigenstaendige Entwurfs-/Vorschauflaeche, `Profilverwaltung` ist die zentrale Pflege- und Wartungsflaeche, und `Schnittstellenprofile` bleibt fuer konkrete Praxisparameter zustaendig.
+- UI-Ausbau fuer Techniker und Support ist umgesetzt: `Schnittstellenprofile` zeigt Geraetebild, `AIS Ausgabe Info`, `Geraetesteckbrief` und einen grossen Aktivierungsstatusbutton; der XDT-Baukasten oeffnet denselben Steckbrief aus der Geraeteidentitaet. Der neue Tab `Notizen Techniker` speichert Whiteboard-Notizen, Bilder, aktive Geraeteuebersichten und PDF-Export als Kundendaten. Optionaler Tab-Schutz sperrt alle Tabs ausser `Verarbeitung`.
 - Referenzdaten werden defensiv als Geraetequelle ausgewertet: XML-nahe und scriptbasiert belastbar ableitbare Geraete duerfen als isolierte BuiltIns mit Tests aufgenommen werden; echte Rohdaten bleiben fuer die Praxisabnahme erforderlich. Huvitz, TOMEY, Shin-Nippon, Reichert, Rodenstock-CX-800 und belastbare TOPCON-Varianten wurden inzwischen batchweise mit eigenen Profilketten beziehungsweise Parsern, synthetischen Fixtures und Templatepaket-Tests vorbereitet; unzureichend belegte Geraete wie Rodenstock Phoromat 2000 und Möller-Wedel Visutron bleiben Kandidaten.
 
 ### Validierter Kernworkflow MEDISTAR + NIDEK ARK1S
@@ -63,6 +64,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Der Tab `Sicherung/Umzug` erstellt `.xdtboxbackup`-Konfigurationssicherungen als ZIP mit Manifest.
 - Gesichert werden Profile, lokale Gerätebilder, Bild-Overrides, Lizenz-Kundendaten, UI-Komfortdaten und optional die importierte `.xdtboxlic`.
+- Gesichert werden zusaetzlich lokale Geraetesteckbrief-Overrides, Techniker-Whiteboard-Notizen und Tab-Schutz-Konfiguration.
 - Nicht gesichert werden Patientendaten, Messdateien, Import-/Export-/Archiv-/Fehlerordner-Inhalte und private Hersteller-Schlüssel.
 - Restore prüft Manifest/ProductCode und ist nur bei gestoppter Überwachung möglich.
 - Im Header öffnet `?` die lokale Hilfe oder den Info-Dialog mit Herstellerdaten.

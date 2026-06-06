@@ -121,7 +121,13 @@ public sealed class LicenseRequestTests
                 City: "Musterstadt",
                 Phone: "01234",
                 Email: "info@example.test",
-                ContactPerson: "Frau Muster")
+                ContactPerson: "Frau Muster",
+                Iban: "DE00123456780000000000",
+                Bic: "TESTDEFFXXX",
+                AccountHolder: "Praxis Muster",
+                SepaDirectDebitConsent: true,
+                AlwaysInvoice: false,
+                InvoiceEmail: "rechnung@example.test")
         };
 
         _repository.Save(filePath, request);
@@ -130,6 +136,12 @@ public sealed class LicenseRequestTests
         Assert.NotNull(loaded.Customer);
         Assert.Equal("Praxis Muster", loaded.Customer.CustomerName);
         Assert.Equal("info@example.test", loaded.Customer.Email);
+        Assert.Equal("DE00123456780000000000", loaded.Customer.Iban);
+        Assert.Equal("TESTDEFFXXX", loaded.Customer.Bic);
+        Assert.Equal("Praxis Muster", loaded.Customer.AccountHolder);
+        Assert.True(loaded.Customer.SepaDirectDebitConsent);
+        Assert.False(loaded.Customer.AlwaysInvoice);
+        Assert.Equal("rechnung@example.test", loaded.Customer.InvoiceEmail);
     }
 
     [Fact]

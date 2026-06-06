@@ -93,7 +93,13 @@ public sealed class LicenseManagerRepositoryTests
             City: "Musterstadt",
             Phone: "01234",
             Email: "info@example.test",
-            ContactPerson: "Frau Muster");
+            ContactPerson: "Frau Muster",
+            Iban: "DE00123456780000000000",
+            Bic: "TESTDEFFXXX",
+            AccountHolder: "Praxis Muster",
+            SepaDirectDebitConsent: true,
+            AlwaysInvoice: false,
+            InvoiceEmail: "rechnung@example.test");
 
         repository.Save(filePath, customer);
         var loaded = repository.LoadOrEmpty(filePath);
@@ -101,6 +107,12 @@ public sealed class LicenseManagerRepositoryTests
         Assert.Equal("Praxis Muster", loaded.CustomerName);
         Assert.Equal("Musterstadt", loaded.City);
         Assert.Equal("Frau Muster", loaded.ContactPerson);
+        Assert.Equal("DE00123456780000000000", loaded.Iban);
+        Assert.Equal("TESTDEFFXXX", loaded.Bic);
+        Assert.Equal("Praxis Muster", loaded.AccountHolder);
+        Assert.True(loaded.SepaDirectDebitConsent);
+        Assert.False(loaded.AlwaysInvoice);
+        Assert.Equal("rechnung@example.test", loaded.InvoiceEmail);
     }
 
     private static IssuedLicenseRecord CreateRecord(string licenseId, string customerName)

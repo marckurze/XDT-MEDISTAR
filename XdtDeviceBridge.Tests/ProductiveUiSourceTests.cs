@@ -57,6 +57,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("x:Name=\"TabUtilityButtonsPanel\"", xaml);
         Assert.Contains("x:Name=\"TabHelpButton\"", xaml);
         Assert.Contains("x:Name=\"AppSettingsButton\"", xaml);
+        Assert.Contains("x:Name=\"TabProtectionStatusTextBlock\"", xaml);
+        Assert.Contains("x:Name=\"TabProtectionToggleButton\"", xaml);
         Assert.Contains("x:Name=\"AppExitButton\"", xaml);
         Assert.Contains("Content=\"Beenden\"", xaml);
         Assert.Contains("ToolTip=\"XDTBox vollständig beenden\"", xaml);
@@ -67,6 +69,9 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("OpenHelpCenter_Click", code);
         Assert.Contains("OpenAboutDialog_Click", code);
         Assert.Contains("OpenAppSettings_Click", code);
+        Assert.Contains("MainTabControl_SelectionChanged", code);
+        Assert.Contains("TabProtectionToggleButton_Click", code);
+        Assert.Contains("PromptForTabProtectionPassword", code);
         Assert.Contains("TabHelpButton_Click", code);
         Assert.Contains("AppExitButton_Click", code);
         Assert.Contains("RequestApplicationExit();", ExtractMethodBody(code, "private void AppExitButton_Click", "private void InitializeProfileOverview"));
@@ -103,8 +108,67 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Bestätigung anzeigen, wenn bei laufender Überwachung beendet werden soll", xaml);
         Assert.Contains("LoadAppSettings", code);
         Assert.Contains("SaveAppSettings", code);
+        Assert.Contains("TabProtectionPasswordBox", xaml);
+        Assert.Contains("TabProtectionPasswordRepeatBox", xaml);
+        Assert.Contains("RemoveTabProtectionCheckBox", xaml);
+        Assert.Contains("LoadTabProtectionSettings", code);
+        Assert.Contains("SaveTabProtectionSettings", code);
         Assert.Contains("ApplyStartupTrayPreferenceOnce", code);
         Assert.Contains("_appSettings.CloseToTrayInsteadOfExit", code);
+    }
+
+    [Fact]
+    public void InterfaceAndWorkbenchTabs_ShouldExposeDeviceTechnicalProfilesAndActivationButton()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("x:Name=\"InterfaceDeviceTechnicalProfileButton\"", xaml);
+        Assert.Contains("x:Name=\"XdtBaukastenDeviceTechnicalProfileButton\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceDeviceImage\"", xaml);
+        Assert.Contains("x:Name=\"InterfaceActivationStatusButton\"", xaml);
+        Assert.Contains("XdtBoxInterfaceActivationToggleStyle", xaml);
+        Assert.DoesNotContain("InterfaceIsActiveCheckBox", xaml);
+        Assert.DoesNotContain("InterfaceIsActiveCheckBox", code);
+        Assert.Contains("ShowInterfaceDeviceTechnicalProfile_Click", code);
+        Assert.Contains("ShowXdtBaukastenDeviceTechnicalProfile_Click", code);
+        Assert.Contains("CreateDeviceTechnicalProfileService", code);
+    }
+
+    [Fact]
+    public void TechnicianNotesTab_ShouldExposeWhiteboardActions()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("<TabItem Header=\"Notizen Techniker\">", xaml);
+        Assert.Contains("x:Name=\"TechnicianWhiteboardCanvas\"", xaml);
+        Assert.Contains("TechnicianWhiteboardAddText_Click", xaml);
+        Assert.Contains("TechnicianWhiteboardAddImage_Click", xaml);
+        Assert.Contains("TechnicianWhiteboardInsertActiveDevices_Click", xaml);
+        Assert.Contains("TechnicianWhiteboardExportPdf_Click", xaml);
+        Assert.Contains("TechnicianWhiteboardCanvas_Drop", xaml);
+        Assert.Contains("LoadTechnicianWhiteboard", code);
+        Assert.Contains("CreateTechnicianWhiteboardStateFromCanvas", code);
+        Assert.Contains("ExportWhiteboardCanvasAsPdf", code);
+    }
+
+    [Fact]
+    public void LicenseTab_ShouldExposeBankSepaAndInvoiceFields()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("LicenseCustomerIbanTextBox", xaml);
+        Assert.Contains("LicenseCustomerBicTextBox", xaml);
+        Assert.Contains("LicenseCustomerAccountHolderTextBox", xaml);
+        Assert.Contains("LicenseSepaConsentCheckBox", xaml);
+        Assert.Contains("LicenseAlwaysInvoiceCheckBox", xaml);
+        Assert.Contains("LicenseInvoiceEmailTextBox", xaml);
+        Assert.Contains("SepaDirectDebitConsent", code);
+        Assert.Contains("AlwaysInvoice", code);
+        Assert.Contains("InvoiceEmail", code);
+        Assert.Contains("LicensePaymentOption_Checked", code);
     }
 
     [Fact]

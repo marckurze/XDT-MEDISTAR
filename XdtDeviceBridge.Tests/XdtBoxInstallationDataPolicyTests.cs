@@ -23,7 +23,9 @@ public sealed class XdtBoxInstallationDataPolicyTests
         Assert.Equal(Path.Combine(paths.LicensesFolder, "license.xdtboxlic"), byKey["license-file"].Location);
         Assert.Equal(Path.Combine(paths.BaseFolder, "device-image-overrides.json"), byKey["device-image-overrides"].Location);
         Assert.Equal(Path.Combine(paths.BaseFolder, DeviceTechnicalProfileService.DefaultOverrideFileName), byKey["device-info-overrides"].Location);
+        Assert.Equal(Path.Combine(paths.BaseFolder, TechnicianWhiteboardService.FolderName), byKey["technician-notes"].Location);
         Assert.Equal(Path.Combine(paths.BaseFolder, "ui", "app-settings.json"), byKey["app-settings"].Location);
+        Assert.Equal(TabProtectionService.GetDefaultSettingsFilePath(paths), byKey["tab-protection"].Location);
         Assert.Equal(paths.DeviceGracePeriodsFile, byKey["grace-periods"].Location);
         Assert.Equal(backupFolder, byKey["backups"].Location);
         Assert.Equal(XdtBoxInstallationDataCategory.TemporaryDiagnosticData, byKey["logs"].Category);

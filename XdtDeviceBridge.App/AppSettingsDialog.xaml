@@ -3,10 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="XDTBox Einstellungen"
         Icon="Assets/App/XDTBox.ico"
-        Height="360"
-        Width="560"
-        MinHeight="320"
-        MinWidth="520"
+        Height="540"
+        Width="600"
+        MinHeight="520"
+        MinWidth="560"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource XdtBoxWindowBackgroundBrush}">
@@ -42,24 +42,57 @@
                 BorderThickness="1"
                 CornerRadius="6"
                 Padding="12">
-            <StackPanel>
-                <CheckBox x:Name="StartMinimizedToTrayCheckBox"
-                          Content="App beim Start direkt minimieren und ins Systray legen"
-                          Margin="0,0,0,12"/>
-                <CheckBox x:Name="AutoStartMonitoringCheckBox"
-                          Content="Überwachung der Ordner beim Start automatisch starten"
-                          Margin="0,0,0,12"/>
-                <CheckBox x:Name="CloseToTrayInsteadOfExitCheckBox"
-                          Content="Beim Schließen ins Systray minimieren statt beenden"
-                          Margin="0,0,0,12"/>
-                <CheckBox x:Name="ConfirmExitWhileMonitoringCheckBox"
-                          Content="Bestätigung anzeigen, wenn bei laufender Überwachung beendet werden soll"
-                          Margin="0,0,0,12"/>
-                <TextBlock Text="Hinweis: Es wird kein Windows-Autostart, kein Dienst und kein FileSystemWatcher aktiviert. Die Optionen gelten nur, wenn XDTBox normal geöffnet ist."
-                           Foreground="{StaticResource XdtBoxMutedTextBrush}"
-                           TextWrapping="Wrap"
-                           Margin="0,4,0,0"/>
-            </StackPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <CheckBox x:Name="StartMinimizedToTrayCheckBox"
+                              Content="App beim Start direkt minimieren und ins Systray legen"
+                              Margin="0,0,0,12"/>
+                    <CheckBox x:Name="AutoStartMonitoringCheckBox"
+                              Content="Überwachung der Ordner beim Start automatisch starten"
+                              Margin="0,0,0,12"/>
+                    <CheckBox x:Name="CloseToTrayInsteadOfExitCheckBox"
+                              Content="Beim Schließen ins Systray minimieren statt beenden"
+                              Margin="0,0,0,12"/>
+                    <CheckBox x:Name="ConfirmExitWhileMonitoringCheckBox"
+                              Content="Bestätigung anzeigen, wenn bei laufender Überwachung beendet werden soll"
+                              Margin="0,0,0,12"/>
+                    <TextBlock Text="Hinweis: Es wird kein Windows-Autostart, kein Dienst und kein FileSystemWatcher aktiviert. Die Optionen gelten nur, wenn XDTBox normal geöffnet ist."
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,4,0,0"/>
+
+                    <Separator Margin="0,14,0,12"/>
+                    <TextBlock Text="Tab-Schutz"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource XdtBoxPrimaryBrush}"
+                               Margin="0,0,0,6"/>
+                    <TextBlock x:Name="TabProtectionCurrentStateTextBlock"
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Neues Passwort:" FontWeight="Bold" Margin="0,0,8,8"/>
+                        <PasswordBox Grid.Row="0" Grid.Column="1" x:Name="TabProtectionPasswordBox" Margin="0,0,0,8"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Wiederholen:" FontWeight="Bold" Margin="0,0,8,8"/>
+                        <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="TabProtectionPasswordRepeatBox" Margin="0,0,0,8"/>
+                    </Grid>
+                    <CheckBox x:Name="RemoveTabProtectionCheckBox"
+                              Content="Tab-Schutz Passwort entfernen / deaktivieren"
+                              Margin="0,0,0,8"/>
+                    <TextBlock Text="Standardmäßig ist kein Passwort gesetzt. Der Schutz ist ein lokaler Bedienerschutz für Konfigurations-Tabs."
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <DockPanel Grid.Row="2" Margin="0,16,0,0" LastChildFill="False">

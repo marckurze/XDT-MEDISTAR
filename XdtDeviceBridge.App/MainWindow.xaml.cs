@@ -5,11 +5,15 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using XdtDeviceBridge.Core;
 using XdtDeviceBridge.Infrastructure;
@@ -105,6 +109,8 @@ public partial class MainWindow : Window
     private readonly IXdtBoxBackupService _xdtBoxBackupService = new XdtBoxBackupService();
     private readonly XdtBoxBackupPathService _xdtBoxBackupPathService = new();
     private readonly XdtBoxAppSettingsRepository _appSettingsRepository = new();
+    private readonly TabProtectionService _tabProtectionService = new();
+    private readonly TechnicianWhiteboardService _technicianWhiteboardService = new();
     private readonly ISerialPortDiscoveryService _serialPortDiscoveryService = new SerialPortDiscoveryService();
     private readonly ISerialDeviceCommunicationService _serialDeviceCommunicationService = new SerialDeviceCommunicationService();
     private readonly INidekRtSerialPhoropterCommunicationService _nidekRtSerialCommunicationService;
@@ -168,10 +174,17 @@ public partial class MainWindow : Window
     private bool _userStoppedPeriodicScan;
     private bool _isUpdatingInterfaceProfileFilters;
     private XdtBoxAppSettings _appSettings = XdtBoxAppSettings.CreateDefault();
+    private TabProtectionSettings _tabProtectionSettings = TabProtectionSettings.Disabled;
     private object? _interfaceProfileSaveButtonOriginalContent;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBackground;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalForeground;
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBorderBrush;
+    private System.Windows.Point? _technicianWhiteboardDragStart;
+    private FrameworkElement? _technicianWhiteboardDraggedElement;
+    private TabItem? _lastAllowedMainTabItem;
+    private bool _isTabProtectionUnlocked;
+    private bool _isRestoringProtectedTabSelection;
+    private bool _updatingTabProtectionUi;
 
     private enum NidekRtSerialSendTestMode
     {
@@ -195,6 +208,9 @@ public partial class MainWindow : Window
         _nidekRtSerialCommunicationService = new NidekRtSerialPhoropterCommunicationService(_serialDeviceCommunicationService);
         InitializeComponent();
         LoadAppSettings();
+        LoadTabProtectionSettings();
+        _lastAllowedMainTabItem = MainTabControl.SelectedItem as TabItem;
+        UpdateTabProtectionUi();
         LoadFloatingWindowStates();
         LicensedDeviceStatesGrid.ItemsSource = _licensedDeviceStateRows;
         InterfaceMonitoringCardsItemsControl.ItemsSource = _interfaceMonitoringCards;
@@ -215,6 +231,7 @@ public partial class MainWindow : Window
         InitializeProfileOverview();
         InitializeLicenseOverview();
         InitializeBackupOverview();
+        LoadTechnicianWhiteboard();
     }
 
     protected override void OnClosing(CancelEventArgs e)
@@ -283,6 +300,87 @@ public partial class MainWindow : Window
     private static string GetAppSettingsFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.BaseFolder, "ui", "app-settings.json");
+    }
+
+    private void LoadTabProtectionSettings()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _tabProtectionSettings = _tabProtectionService.LoadOrDefault(TabProtectionService.GetDefaultSettingsFilePath(paths));
+            _isTabProtectionUnlocked = false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            _tabProtectionSettings = TabProtectionSettings.Disabled;
+            _isTabProtectionUnlocked = false;
+            AppendMessage($"Tab-Schutz Einstellungen konnten nicht geladen werden: {ex.Message}");
+        }
+    }
+
+    private void SaveTabProtectionSettings()
+    {
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        _tabProtectionService.Save(TabProtectionService.GetDefaultSettingsFilePath(paths), _tabProtectionSettings);
+    }
+
+    private bool IsTabProtectionConfigured()
+    {
+        return _tabProtectionSettings.HasPassword;
+    }
+
+    private static bool IsProtectedMainTab(TabItem? tabItem)
+    {
+        var header = tabItem?.Header?.ToString();
+        return !string.Equals(header, "Verarbeitung", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private TabItem? FindProcessingTab()
+    {
+        return MainTabControl.Items
+            .OfType<TabItem>()
+            .FirstOrDefault(tab => string.Equals(tab.Header?.ToString(), "Verarbeitung", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void UpdateTabProtectionUi()
+    {
+        if (TabProtectionStatusTextBlock is null || TabProtectionToggleButton is null)
+        {
+            return;
+        }
+
+        _updatingTabProtectionUi = true;
+        try
+        {
+            if (!IsTabProtectionConfigured())
+            {
+                TabProtectionStatusTextBlock.Text = "TAB Schutz nicht aktiviert";
+                TabProtectionStatusTextBlock.Foreground = (System.Windows.Media.Brush)FindResource("XdtBoxMutedTextBrush");
+                TabProtectionToggleButton.IsEnabled = false;
+                TabProtectionToggleButton.IsChecked = false;
+                TabProtectionToggleButton.Content = "AUS";
+                return;
+            }
+
+            TabProtectionToggleButton.IsEnabled = true;
+            TabProtectionToggleButton.IsChecked = _isTabProtectionUnlocked;
+            if (_isTabProtectionUnlocked)
+            {
+                TabProtectionStatusTextBlock.Text = "TAB Schutz entsperrt";
+                TabProtectionStatusTextBlock.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(20, 83, 45));
+                TabProtectionToggleButton.Content = "AUF";
+            }
+            else
+            {
+                TabProtectionStatusTextBlock.Text = "TAB Schutz aktiv";
+                TabProtectionStatusTextBlock.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(127, 29, 29));
+                TabProtectionToggleButton.Content = "ZU";
+            }
+        }
+        finally
+        {
+            _updatingTabProtectionUi = false;
+        }
     }
 
     private bool ConfirmExitWhileMonitoringRuns()
@@ -361,8 +459,8 @@ public partial class MainWindow : Window
         }
 
         RoutedEventHandler routedHandler = (_, _) => RefreshInterfaceActivationPreviewForDraftChange();
-        InterfaceIsActiveCheckBox.Checked += routedHandler;
-        InterfaceIsActiveCheckBox.Unchecked += routedHandler;
+        InterfaceActivationStatusButton.Checked += routedHandler;
+        InterfaceActivationStatusButton.Unchecked += routedHandler;
         InterfaceDeviceOutputEnabledCheckBox.Checked += routedHandler;
         InterfaceDeviceOutputEnabledCheckBox.Unchecked += routedHandler;
         InterfaceAttachmentProcessingEnabledCheckBox.Checked += routedHandler;
@@ -1474,6 +1572,69 @@ public partial class MainWindow : Window
         window.ShowDialog();
     }
 
+    private void ShowInterfaceDeviceTechnicalProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (InterfaceProfileComboBox.SelectedItem is not InterfaceProfileDefinition interfaceProfile)
+        {
+            ShowDeviceTechnicalProfileMissingMessage("Bitte zuerst ein Schnittstellenprofil auswählen.");
+            return;
+        }
+
+        ShowDeviceTechnicalProfile(interfaceProfile.DeviceProfileId);
+    }
+
+    private void ShowDeviceTechnicalProfile(string? deviceProfileId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceProfileId))
+        {
+            ShowDeviceTechnicalProfileMissingMessage("Bitte zuerst ein Geräteprofil auswählen.");
+            return;
+        }
+
+        try
+        {
+            var service = CreateDeviceTechnicalProfileService();
+            if (service.LoadProfile(deviceProfileId) is null)
+            {
+                ShowDeviceTechnicalProfileMissingMessage("Für dieses Geräteprofil ist noch kein Gerätesteckbrief hinterlegt.");
+                return;
+            }
+
+            var window = new DeviceTechnicalProfileWindow(service, deviceProfileId)
+            {
+                Owner = this
+            };
+            window.ShowDialog();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or NotSupportedException)
+        {
+            ShowDeviceTechnicalProfileMissingMessage($"Der Gerätesteckbrief konnte nicht geöffnet werden: {ex.Message}");
+        }
+    }
+
+    private DeviceTechnicalProfileService CreateDeviceTechnicalProfileService()
+    {
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        return new DeviceTechnicalProfileService(
+            () => System.Windows.Application.GetResourceStream(new Uri("Assets/DeviceInfo/device-technical-profiles.de.json", UriKind.Relative))?.Stream,
+            DeviceTechnicalProfileService.GetDefaultOverrideFilePath(paths));
+    }
+
+    private void ShowDeviceTechnicalProfileMissingMessage(string message)
+    {
+        System.Windows.MessageBox.Show(
+            this,
+            message,
+            "Gerätesteckbrief",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    private void InterfaceActivationStatusButton_Changed(object sender, RoutedEventArgs e)
+    {
+        RefreshInterfaceActivationPreviewForDraftChange();
+    }
+
     private void RefreshInterfaceActivationPreview_Click(object sender, RoutedEventArgs e)
     {
         RefreshInterfaceActivationPreview();
@@ -1542,7 +1703,8 @@ public partial class MainWindow : Window
         InterfaceAisProfileText.Text = GetAisProfileDisplayName(profile.AisProfileId);
         InterfaceDeviceProfileText.Text = GetDeviceProfileDisplayName(profile.DeviceProfileId);
         InterfaceExportProfileText.Text = GetExportProfileDisplayName(profile.ExportProfileId);
-        InterfaceIsActiveCheckBox.IsChecked = profile.IsActive;
+        InterfaceActivationStatusButton.IsChecked = profile.IsActive;
+        UpdateInterfaceDeviceProfileVisual(profile);
 
         InterfaceAisImportFolderTextBox.Text = profile.FolderOptions.AisImportFolder;
         InterfaceDeviceImportFolderTextBox.Text = profile.FolderOptions.DeviceImportFolder;
@@ -1597,7 +1759,8 @@ public partial class MainWindow : Window
         InterfaceAisProfileText.Text = string.Empty;
         InterfaceDeviceProfileText.Text = string.Empty;
         InterfaceExportProfileText.Text = string.Empty;
-        InterfaceIsActiveCheckBox.IsChecked = false;
+        InterfaceActivationStatusButton.IsChecked = false;
+        ClearInterfaceDeviceProfileVisual();
         InterfaceAisImportFolderTextBox.Text = string.Empty;
         InterfaceDeviceImportFolderTextBox.Text = string.Empty;
         InterfaceExportFolderTextBox.Text = string.Empty;
@@ -1638,6 +1801,41 @@ public partial class MainWindow : Window
         SyncAttachmentCompletionControls(null);
         SyncInterfaceDeviceOutputAndAttachmentVisibility(null);
         ShowInterfaceActivationPreview(_interfaceProfileActivationPreviewDisplayService.CreateEmpty());
+    }
+
+    private void UpdateInterfaceDeviceProfileVisual(InterfaceProfileDefinition interfaceProfile)
+    {
+        var deviceProfile = GetDeviceProfile(interfaceProfile.DeviceProfileId);
+        if (deviceProfile is null)
+        {
+            ClearInterfaceDeviceProfileVisual();
+            return;
+        }
+
+        var imagePath = string.Empty;
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _deviceProfileImageOverrideService.LoadOverrides(paths).TryGetValue(deviceProfile.Metadata.Id, out var overridePath);
+            imagePath = _deviceProfileImageOverrideService.ResolveEffectiveImagePath(deviceProfile, overridePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            imagePath = deviceProfile.DeviceImagePath;
+        }
+
+        InterfaceDeviceImagePathTextBox.Text = imagePath;
+        InterfaceDeviceImagePlaceholder.Visibility = string.IsNullOrWhiteSpace(imagePath)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        InterfaceDeviceTechnicalProfileButton.IsEnabled = true;
+    }
+
+    private void ClearInterfaceDeviceProfileVisual()
+    {
+        InterfaceDeviceImagePathTextBox.Text = string.Empty;
+        InterfaceDeviceImagePlaceholder.Visibility = Visibility.Visible;
+        InterfaceDeviceTechnicalProfileButton.IsEnabled = false;
     }
 
     private void InterfaceAttachmentCompletionModeComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -1838,7 +2036,7 @@ public partial class MainWindow : Window
             SerialSettings = CreateInterfaceSerialSettingsFromEditor(profile),
             NidekRtSerialSendMode = CreateNidekRtSerialSendModeFromEditor(profile),
             NidekRtSerialOutputFrameVariant = CreateNidekRtSerialOutputFrameVariantFromEditor(profile),
-            IsActive = InterfaceIsActiveCheckBox.IsChecked == true,
+            IsActive = InterfaceActivationStatusButton.IsChecked == true,
             IsLicenseRequired = InterfaceProfileLicensePolicy.IsLicenseRequired(profile)
         };
     }
@@ -1986,7 +2184,7 @@ public partial class MainWindow : Window
         var result = _interfaceProfileConfigurationService.CreateConfiguredProfile(
             selectedProfile,
             folderOptions,
-            InterfaceIsActiveCheckBox.IsChecked == true,
+            InterfaceActivationStatusButton.IsChecked == true,
             InterfaceProfileLicensePolicy.IsLicenseRequired(selectedProfile),
             CreateInterfaceDeviceOutputFromEditor(selectedProfile),
             serialSettings,
@@ -3433,9 +3631,114 @@ public partial class MainWindow : Window
         TabHelpButton.ContextMenu.IsOpen = true;
     }
 
+    private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, MainTabControl) || _isRestoringProtectedTabSelection)
+        {
+            return;
+        }
+
+        var selectedTab = MainTabControl.SelectedItem as TabItem;
+        if (!IsProtectedMainTab(selectedTab) || !IsTabProtectionConfigured() || _isTabProtectionUnlocked)
+        {
+            _lastAllowedMainTabItem = selectedTab;
+            return;
+        }
+
+        if (PromptForTabProtectionPassword(selectedTab?.Header?.ToString() ?? "geschützten Bereich"))
+        {
+            _isTabProtectionUnlocked = true;
+            _lastAllowedMainTabItem = selectedTab;
+            UpdateTabProtectionUi();
+            return;
+        }
+
+        _isRestoringProtectedTabSelection = true;
+        try
+        {
+            MainTabControl.SelectedItem = _lastAllowedMainTabItem ?? FindProcessingTab();
+        }
+        finally
+        {
+            _isRestoringProtectedTabSelection = false;
+        }
+    }
+
+    private void TabProtectionToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_updatingTabProtectionUi)
+        {
+            return;
+        }
+
+        if (!IsTabProtectionConfigured())
+        {
+            _isTabProtectionUnlocked = false;
+            UpdateTabProtectionUi();
+            return;
+        }
+
+        if (TabProtectionToggleButton.IsChecked == true)
+        {
+            if (PromptForTabProtectionPassword("Konfiguration"))
+            {
+                _isTabProtectionUnlocked = true;
+                UpdateTabProtectionUi();
+                return;
+            }
+
+            _isTabProtectionUnlocked = false;
+            UpdateTabProtectionUi();
+            return;
+        }
+
+        _isTabProtectionUnlocked = false;
+        if (IsProtectedMainTab(MainTabControl.SelectedItem as TabItem))
+        {
+            _isRestoringProtectedTabSelection = true;
+            try
+            {
+                MainTabControl.SelectedItem = FindProcessingTab();
+                _lastAllowedMainTabItem = MainTabControl.SelectedItem as TabItem;
+            }
+            finally
+            {
+                _isRestoringProtectedTabSelection = false;
+            }
+        }
+
+        UpdateTabProtectionUi();
+    }
+
+    private bool PromptForTabProtectionPassword(string tabName)
+    {
+        var dialog = new TabProtectionPasswordDialog(tabName)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return false;
+        }
+
+        var isValid = _tabProtectionService.VerifyAnyPassword(_tabProtectionSettings, dialog.EnteredPassword);
+        if (!isValid)
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "Passwort nicht korrekt.",
+                "Tab-Schutz",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+
+        return isValid;
+    }
+
     private void OpenAppSettings_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new AppSettingsDialog(_appSettings)
+        var dialog = new AppSettingsDialog(_appSettings, IsTabProtectionConfigured())
         {
             Owner = this
         };
@@ -3449,6 +3752,20 @@ public partial class MainWindow : Window
         try
         {
             SaveAppSettings();
+            if (dialog.NewTabProtectionPassword is not null)
+            {
+                _tabProtectionSettings = _tabProtectionService.CreateEnabledSettings(dialog.NewTabProtectionPassword);
+                _isTabProtectionUnlocked = true;
+                SaveTabProtectionSettings();
+            }
+            else if (dialog.RemoveTabProtection)
+            {
+                _tabProtectionSettings = TabProtectionSettings.Disabled;
+                _isTabProtectionUnlocked = false;
+                SaveTabProtectionSettings();
+            }
+
+            UpdateTabProtectionUi();
             AppendMessage("App-Einstellungen gespeichert.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -3489,6 +3806,12 @@ public partial class MainWindow : Window
         LicenseCustomerPhoneTextBox.Text = customer.Phone;
         LicenseCustomerEmailTextBox.Text = customer.Email ?? string.Empty;
         LicenseCustomerContactPersonTextBox.Text = customer.ContactPerson ?? string.Empty;
+        LicenseCustomerIbanTextBox.Text = customer.Iban ?? string.Empty;
+        LicenseCustomerBicTextBox.Text = customer.Bic ?? string.Empty;
+        LicenseCustomerAccountHolderTextBox.Text = customer.AccountHolder ?? string.Empty;
+        LicenseSepaConsentCheckBox.IsChecked = customer.SepaDirectDebitConsent;
+        LicenseAlwaysInvoiceCheckBox.IsChecked = customer.AlwaysInvoice;
+        LicenseInvoiceEmailTextBox.Text = customer.InvoiceEmail ?? string.Empty;
     }
 
     private LicenseRequestCustomer ReadLicenseCustomerDataFromEditor()
@@ -3500,7 +3823,13 @@ public partial class MainWindow : Window
             City: LicenseCustomerCityTextBox.Text.Trim(),
             Phone: LicenseCustomerPhoneTextBox.Text.Trim(),
             Email: NormalizeOptionalText(LicenseCustomerEmailTextBox.Text),
-            ContactPerson: NormalizeOptionalText(LicenseCustomerContactPersonTextBox.Text));
+            ContactPerson: NormalizeOptionalText(LicenseCustomerContactPersonTextBox.Text),
+            Iban: NormalizeOptionalText(LicenseCustomerIbanTextBox.Text),
+            Bic: NormalizeOptionalText(LicenseCustomerBicTextBox.Text),
+            AccountHolder: NormalizeOptionalText(LicenseCustomerAccountHolderTextBox.Text),
+            SepaDirectDebitConsent: LicenseSepaConsentCheckBox.IsChecked == true,
+            AlwaysInvoice: LicenseAlwaysInvoiceCheckBox.IsChecked == true,
+            InvoiceEmail: NormalizeOptionalText(LicenseInvoiceEmailTextBox.Text));
     }
 
     private IReadOnlyList<string> ValidateLicenseCustomerDataForExport(LicenseRequestCustomer customer)
@@ -3517,7 +3846,34 @@ public partial class MainWindow : Window
             issues.Add("Bitte Telefonnummer oder E-Mail für Rückfragen angeben.");
         }
 
+        if (customer.SepaDirectDebitConsent && customer.AlwaysInvoice)
+        {
+            issues.Add("Bitte entweder SEPA-Lastschrift oder Rechnung auswählen, nicht beides.");
+        }
+
+        if (customer.SepaDirectDebitConsent && string.IsNullOrWhiteSpace(customer.Iban))
+        {
+            issues.Add("Für SEPA-Lastschrift bitte eine IBAN angeben.");
+        }
+
+        if (customer.SepaDirectDebitConsent && string.IsNullOrWhiteSpace(customer.AccountHolder))
+        {
+            issues.Add("Für SEPA-Lastschrift bitte den Kontoinhaber angeben.");
+        }
+
         return issues;
+    }
+
+    private void LicensePaymentOption_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender == LicenseSepaConsentCheckBox && LicenseSepaConsentCheckBox.IsChecked == true)
+        {
+            LicenseAlwaysInvoiceCheckBox.IsChecked = false;
+        }
+        else if (sender == LicenseAlwaysInvoiceCheckBox && LicenseAlwaysInvoiceCheckBox.IsChecked == true)
+        {
+            LicenseSepaConsentCheckBox.IsChecked = false;
+        }
     }
 
     private void SaveLicenseCustomerData_Click(object sender, RoutedEventArgs e)
@@ -3535,6 +3891,453 @@ public partial class MainWindow : Window
             LicenseCustomerDataStatusText.Text = $"Kundendaten konnten nicht gespeichert werden: {ex.Message}";
             AppendLicenseMessage($"Kundendaten konnten nicht gespeichert werden: {ex.Message}");
         }
+    }
+
+    private sealed record TechnicianWhiteboardElementTag(string Id, string Kind, string? ImagePath);
+
+    private void LoadTechnicianWhiteboard()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var state = _technicianWhiteboardService.LoadOrEmpty(paths);
+            TechnicianWhiteboardCanvas.Children.Clear();
+            foreach (var item in state.TextItems)
+            {
+                AddTechnicianWhiteboardTextElement(item);
+            }
+
+            foreach (var item in state.ImageItems)
+            {
+                AddTechnicianWhiteboardImageElement(item);
+            }
+
+            TechnicianWhiteboardStatusText.Text = state.TextItems.Count == 0 && state.ImageItems.Count == 0
+                ? "Techniker-Notizen bereit. Es werden keine Patientendaten automatisch eingefügt."
+                : "Techniker-Notizen geladen.";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or JsonException or NotSupportedException)
+        {
+            TechnicianWhiteboardStatusText.Text = $"Techniker-Notizen konnten nicht geladen werden: {ex.Message}";
+        }
+    }
+
+    private void TechnicianWhiteboardAddText_Click(object sender, RoutedEventArgs e)
+    {
+        var item = new TechnicianWhiteboardTextItem(
+            Guid.NewGuid().ToString("N"),
+            "Neue Notiz",
+            40,
+            40 + TechnicianWhiteboardCanvas.Children.Count * 18,
+            260,
+            90,
+            TechnicianWhiteboardBoldCheckBox.IsChecked == true,
+            TechnicianWhiteboardItalicCheckBox.IsChecked == true,
+            TechnicianWhiteboardUnderlineCheckBox.IsChecked == true,
+            TechnicianWhiteboardColorComboBox.SelectedValue as string ?? "#24313A");
+        AddTechnicianWhiteboardTextElement(item);
+    }
+
+    private void TechnicianWhiteboardAddImage_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Bild für Techniker-Notiz auswählen",
+            Filter = "Bilder (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|Alle Dateien (*.*)|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var copiedImage = _technicianWhiteboardService.CopyImageIntoWhiteboard(paths, dialog.FileName);
+            AddTechnicianWhiteboardImageElement(new TechnicianWhiteboardImageItem(
+                Guid.NewGuid().ToString("N"),
+                copiedImage,
+                60,
+                60 + TechnicianWhiteboardCanvas.Children.Count * 18,
+                220,
+                160));
+            TechnicianWhiteboardStatusText.Text = "Bild eingefügt. Beim Speichern wird es als Kundendatenbestand gesichert.";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or NotSupportedException)
+        {
+            TechnicianWhiteboardStatusText.Text = $"Bild konnte nicht eingefügt werden: {ex.Message}";
+        }
+    }
+
+    private void TechnicianWhiteboardCanvas_Drop(object sender, System.Windows.DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
+        {
+            return;
+        }
+
+        if (e.Data.GetData(System.Windows.DataFormats.FileDrop) is not string[] files)
+        {
+            return;
+        }
+
+        var dropPoint = e.GetPosition(TechnicianWhiteboardCanvas);
+        foreach (var file in files)
+        {
+            try
+            {
+                var paths = _appDataPathProvider.GetDefaultUserPaths();
+                var copiedImage = _technicianWhiteboardService.CopyImageIntoWhiteboard(paths, file);
+                AddTechnicianWhiteboardImageElement(new TechnicianWhiteboardImageItem(
+                    Guid.NewGuid().ToString("N"),
+                    copiedImage,
+                    dropPoint.X,
+                    dropPoint.Y,
+                    220,
+                    160));
+                dropPoint.Offset(24, 24);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or NotSupportedException)
+            {
+                TechnicianWhiteboardStatusText.Text = $"Ein Bild konnte nicht eingefügt werden: {ex.Message}";
+            }
+        }
+    }
+
+    private void TechnicianWhiteboardInsertActiveDevices_Click(object sender, RoutedEventArgs e)
+    {
+        if (_profileCatalog is null)
+        {
+            TechnicianWhiteboardStatusText.Text = "Profilkatalog ist nicht geladen.";
+            return;
+        }
+
+        var activeProfiles = _profileCatalog.InterfaceProfiles
+            .Where(profile => profile.IsActive)
+            .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+        if (activeProfiles.Length == 0)
+        {
+            TechnicianWhiteboardStatusText.Text = "Es sind aktuell keine Geräteanbindungen aktiv.";
+            return;
+        }
+
+        var y = 40d;
+        foreach (var interfaceProfile in activeProfiles)
+        {
+            var deviceProfile = GetDeviceProfile(interfaceProfile.DeviceProfileId);
+            var text = deviceProfile is null
+                ? interfaceProfile.Metadata.Name
+                : $"{deviceProfile.Metadata.Name}\n{deviceProfile.Manufacturer}";
+            AddTechnicianWhiteboardTextElement(new TechnicianWhiteboardTextItem(
+                Guid.NewGuid().ToString("N"),
+                text,
+                40,
+                y,
+                260,
+                70,
+                IsBold: true,
+                IsItalic: false,
+                IsUnderline: false,
+                Color: "#24313A"));
+
+            if (deviceProfile is not null)
+            {
+                var imagePath = ResolveDeviceImagePath(deviceProfile);
+                if (!string.IsNullOrWhiteSpace(imagePath))
+                {
+                    AddTechnicianWhiteboardImageElement(new TechnicianWhiteboardImageItem(
+                        Guid.NewGuid().ToString("N"),
+                        imagePath,
+                        330,
+                        y,
+                        130,
+                        95));
+                }
+            }
+
+            y += 120;
+        }
+
+        TechnicianWhiteboardStatusText.Text = "Aktivierte Geräte wurden ohne Patientendaten, Ordnerpfade oder Lizenzdetails eingefügt.";
+    }
+
+    private void TechnicianWhiteboardSave_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _technicianWhiteboardService.Save(paths, CreateTechnicianWhiteboardStateFromCanvas());
+            TechnicianWhiteboardStatusText.Text = "Techniker-Notizen gespeichert.";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or NotSupportedException)
+        {
+            TechnicianWhiteboardStatusText.Text = $"Techniker-Notizen konnten nicht gespeichert werden: {ex.Message}";
+        }
+    }
+
+    private void TechnicianWhiteboardExportPdf_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Techniker-Notizen als PDF speichern",
+            Filter = "PDF-Datei (*.pdf)|*.pdf",
+            DefaultExt = ".pdf",
+            FileName = $"XDTBox-Techniker-Notizen-{DateTime.Now:yyyyMMdd-HHmm}.pdf"
+        };
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            ExportWhiteboardCanvasAsPdf(TechnicianWhiteboardCanvas, dialog.FileName);
+            TechnicianWhiteboardStatusText.Text = $"PDF gespeichert: {dialog.FileName}";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or NotSupportedException)
+        {
+            TechnicianWhiteboardStatusText.Text = $"PDF konnte nicht gespeichert werden: {ex.Message}";
+        }
+    }
+
+    private void AddTechnicianWhiteboardTextElement(TechnicianWhiteboardTextItem item)
+    {
+        var textBox = new System.Windows.Controls.TextBox
+        {
+            Text = item.Text,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            BorderThickness = new Thickness(0),
+            Background = System.Windows.Media.Brushes.Transparent,
+            FontWeight = item.IsBold ? FontWeights.Bold : FontWeights.Normal,
+            FontStyle = item.IsItalic ? FontStyles.Italic : FontStyles.Normal,
+            TextDecorations = item.IsUnderline ? TextDecorations.Underline : null,
+            Foreground = CreateBrush(item.Color)
+        };
+
+        var border = CreateWhiteboardElementBorder(item.Id, "Text", null, item.Width, item.Height, textBox);
+        Canvas.SetLeft(border, item.X);
+        Canvas.SetTop(border, item.Y);
+        TechnicianWhiteboardCanvas.Children.Add(border);
+    }
+
+    private void AddTechnicianWhiteboardImageElement(TechnicianWhiteboardImageItem item)
+    {
+        var image = new System.Windows.Controls.Image
+        {
+            Stretch = Stretch.Uniform,
+            Source = new DeviceImageSourceConverter().Convert(item.ImagePath, typeof(ImageSource), null, CultureInfo.CurrentCulture) as ImageSource
+        };
+        var border = CreateWhiteboardElementBorder(item.Id, "Image", item.ImagePath, item.Width, item.Height, image);
+        Canvas.SetLeft(border, item.X);
+        Canvas.SetTop(border, item.Y);
+        TechnicianWhiteboardCanvas.Children.Add(border);
+    }
+
+    private Border CreateWhiteboardElementBorder(string id, string kind, string? imagePath, double width, double height, UIElement content)
+    {
+        var root = new Grid();
+        root.Children.Add(content);
+        var resizeThumb = new Thumb
+        {
+            Width = 14,
+            Height = 14,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+            VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
+            Cursor = System.Windows.Input.Cursors.SizeNWSE,
+            Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(11, 77, 147)),
+            Opacity = 0.55
+        };
+        resizeThumb.DragDelta += (_, args) =>
+        {
+            if (root.Parent is Border border)
+            {
+                border.Width = Math.Max(80, border.Width + args.HorizontalChange);
+                border.Height = Math.Max(45, border.Height + args.VerticalChange);
+            }
+        };
+        root.Children.Add(resizeThumb);
+
+        var element = new Border
+        {
+            Width = width,
+            Height = height,
+            MinWidth = 80,
+            MinHeight = 45,
+            Padding = new Thickness(6),
+            Background = System.Windows.Media.Brushes.White,
+            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(215, 227, 234)),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+            Tag = new TechnicianWhiteboardElementTag(id, kind, imagePath),
+            Child = root
+        };
+        element.PreviewMouseLeftButtonDown += TechnicianWhiteboardElement_MouseLeftButtonDown;
+        element.PreviewMouseMove += TechnicianWhiteboardElement_MouseMove;
+        element.PreviewMouseLeftButtonUp += TechnicianWhiteboardElement_MouseLeftButtonUp;
+        return element;
+    }
+
+    private void TechnicianWhiteboardElement_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement element)
+        {
+            return;
+        }
+
+        _technicianWhiteboardDraggedElement = element;
+        _technicianWhiteboardDragStart = e.GetPosition(TechnicianWhiteboardCanvas);
+        element.CaptureMouse();
+    }
+
+    private void TechnicianWhiteboardElement_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_technicianWhiteboardDraggedElement is null || _technicianWhiteboardDragStart is null || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var current = e.GetPosition(TechnicianWhiteboardCanvas);
+        var dx = current.X - _technicianWhiteboardDragStart.Value.X;
+        var dy = current.Y - _technicianWhiteboardDragStart.Value.Y;
+        Canvas.SetLeft(_technicianWhiteboardDraggedElement, Math.Max(0, Canvas.GetLeft(_technicianWhiteboardDraggedElement) + dx));
+        Canvas.SetTop(_technicianWhiteboardDraggedElement, Math.Max(0, Canvas.GetTop(_technicianWhiteboardDraggedElement) + dy));
+        _technicianWhiteboardDragStart = current;
+    }
+
+    private void TechnicianWhiteboardElement_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        _technicianWhiteboardDraggedElement?.ReleaseMouseCapture();
+        _technicianWhiteboardDraggedElement = null;
+        _technicianWhiteboardDragStart = null;
+    }
+
+    private TechnicianWhiteboardState CreateTechnicianWhiteboardStateFromCanvas()
+    {
+        var textItems = new List<TechnicianWhiteboardTextItem>();
+        var imageItems = new List<TechnicianWhiteboardImageItem>();
+        foreach (var child in TechnicianWhiteboardCanvas.Children.OfType<Border>())
+        {
+            if (child.Tag is not TechnicianWhiteboardElementTag tag)
+            {
+                continue;
+            }
+
+            var x = Canvas.GetLeft(child);
+            var y = Canvas.GetTop(child);
+            if (string.Equals(tag.Kind, "Text", StringComparison.OrdinalIgnoreCase)
+                && child.Child is Grid grid
+                && grid.Children.OfType<System.Windows.Controls.TextBox>().FirstOrDefault() is { } textBox)
+            {
+                textItems.Add(new TechnicianWhiteboardTextItem(
+                    tag.Id,
+                    textBox.Text,
+                    x,
+                    y,
+                    child.Width,
+                    child.Height,
+                    textBox.FontWeight == FontWeights.Bold,
+                    textBox.FontStyle == FontStyles.Italic,
+                    textBox.TextDecorations is not null && textBox.TextDecorations.Count > 0,
+                    BrushToHex(textBox.Foreground)));
+            }
+            else if (string.Equals(tag.Kind, "Image", StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(tag.ImagePath))
+            {
+                imageItems.Add(new TechnicianWhiteboardImageItem(tag.Id, tag.ImagePath, x, y, child.Width, child.Height));
+            }
+        }
+
+        return new TechnicianWhiteboardState(textItems, imageItems);
+    }
+
+    private string ResolveDeviceImagePath(DeviceProfileDefinition deviceProfile)
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _deviceProfileImageOverrideService.LoadOverrides(paths).TryGetValue(deviceProfile.Metadata.Id, out var overridePath);
+            return _deviceProfileImageOverrideService.ResolveEffectiveImagePath(deviceProfile, overridePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return deviceProfile.DeviceImagePath;
+        }
+    }
+
+    private static SolidColorBrush CreateBrush(string colorText)
+    {
+        try
+        {
+            return (SolidColorBrush)new BrushConverter().ConvertFromString(colorText)!;
+        }
+        catch (Exception ex) when (ex is FormatException or NotSupportedException)
+        {
+            return new SolidColorBrush(System.Windows.Media.Color.FromRgb(36, 49, 58));
+        }
+    }
+
+    private static string BrushToHex(System.Windows.Media.Brush brush)
+    {
+        return brush is SolidColorBrush solid
+            ? $"#{solid.Color.R:X2}{solid.Color.G:X2}{solid.Color.B:X2}"
+            : "#24313A";
+    }
+
+    private static void ExportWhiteboardCanvasAsPdf(Canvas canvas, string filePath)
+    {
+        var width = Math.Max(1, (int)Math.Ceiling(canvas.ActualWidth > 0 ? canvas.ActualWidth : canvas.Width));
+        var height = Math.Max(1, (int)Math.Ceiling(canvas.ActualHeight > 0 ? canvas.ActualHeight : canvas.Height));
+        canvas.Measure(new System.Windows.Size(width, height));
+        canvas.Arrange(new Rect(0, 0, width, height));
+        canvas.UpdateLayout();
+
+        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(canvas);
+        var encoder = new JpegBitmapEncoder { QualityLevel = 90 };
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var imageStream = new MemoryStream();
+        encoder.Save(imageStream);
+        WriteSingleImagePdf(filePath, imageStream.ToArray(), width, height);
+    }
+
+    private static void WriteSingleImagePdf(string filePath, byte[] jpegBytes, int width, int height)
+    {
+        var offsets = new List<long> { 0 };
+        using var stream = File.Create(filePath);
+        WriteAscii(stream, "%PDF-1.4\n");
+
+        offsets.Add(stream.Position);
+        WriteAscii(stream, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+        offsets.Add(stream.Position);
+        WriteAscii(stream, "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+        offsets.Add(stream.Position);
+        WriteAscii(stream, $"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n");
+        offsets.Add(stream.Position);
+        WriteAscii(stream, $"4 0 obj\n<< /Type /XObject /Subtype /Image /Width {width} /Height {height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length {jpegBytes.Length} >>\nstream\n");
+        stream.Write(jpegBytes, 0, jpegBytes.Length);
+        WriteAscii(stream, "\nendstream\nendobj\n");
+        var content = $"q\n{width} 0 0 {height} 0 0 cm\n/Im0 Do\nQ\n";
+        offsets.Add(stream.Position);
+        WriteAscii(stream, $"5 0 obj\n<< /Length {Encoding.ASCII.GetByteCount(content)} >>\nstream\n{content}endstream\nendobj\n");
+
+        var xrefOffset = stream.Position;
+        WriteAscii(stream, "xref\n0 6\n0000000000 65535 f \n");
+        foreach (var offset in offsets.Skip(1))
+        {
+            WriteAscii(stream, $"{offset:0000000000} 00000 n \n");
+        }
+
+        WriteAscii(stream, $"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{xrefOffset}\n%%EOF\n");
+    }
+
+    private static void WriteAscii(Stream stream, string text)
+    {
+        var bytes = Encoding.ASCII.GetBytes(text);
+        stream.Write(bytes, 0, bytes.Length);
     }
 
     private void RefreshLicensedDeviceStatesFromLocalLicense()
@@ -7637,6 +8440,7 @@ public partial class MainWindow : Window
         XdtBaukastenBidirectionalText.Text = profile.IsBidirectional ? "Ja" : "Nein";
         XdtBaukastenParserText.Text = DisplayOrDash(profile.ParserMode);
         XdtBaukastenProfileNameText.Text = profile.Metadata.Name;
+        XdtBaukastenDeviceTechnicalProfileButton.IsEnabled = true;
 
         var imagePath = string.Empty;
         try
@@ -7665,8 +8469,14 @@ public partial class MainWindow : Window
         XdtBaukastenBidirectionalText.Text = "-";
         XdtBaukastenParserText.Text = "-";
         XdtBaukastenProfileNameText.Text = "-";
+        XdtBaukastenDeviceTechnicalProfileButton.IsEnabled = false;
         XdtBaukastenDeviceImagePathTextBox.Text = string.Empty;
         XdtBaukastenDeviceImagePlaceholder.Visibility = Visibility.Visible;
+    }
+
+    private void ShowXdtBaukastenDeviceTechnicalProfile_Click(object sender, RoutedEventArgs e)
+    {
+        ShowDeviceTechnicalProfile(_xdtBaukastenState.DeviceProfile?.Metadata.Id);
     }
 
     private void XdtBaukastenLoadTemplatePackage_Click(object sender, RoutedEventArgs e)

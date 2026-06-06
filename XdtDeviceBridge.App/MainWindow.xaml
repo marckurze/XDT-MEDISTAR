@@ -46,7 +46,8 @@
             </Grid>
         </Border>
         <Grid Grid.Row="1">
-        <TabControl x:Name="MainTabControl">
+        <TabControl x:Name="MainTabControl"
+                    SelectionChanged="MainTabControl_SelectionChanged">
             <TabItem Header="Verarbeitung">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="8" MinHeight="700">
@@ -960,6 +961,16 @@
 
                                     <TextBlock Grid.Row="5" Grid.Column="0" Text="Profilname:" FontWeight="SemiBold" Margin="0,0,8,6" />
                                     <TextBlock x:Name="XdtBaukastenProfileNameText" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Text="-" />
+                                    <Button x:Name="XdtBaukastenDeviceTechnicalProfileButton"
+                                            Grid.Row="6"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2"
+                                            Content="Gerätesteckbrief"
+                                            Width="190"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,10,0,0"
+                                            Click="ShowXdtBaukastenDeviceTechnicalProfile_Click"
+                                            ToolTip="Öffnet den Geräte-Steckbrief des aktuell gewählten Baukasten-Geräteprofils."/>
                                 </Grid>
                             </Grid>
                         </GroupBox>
@@ -1632,7 +1643,7 @@
                                                Text=""/>
                                 </WrapPanel>
 
-                                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,14">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
@@ -1642,7 +1653,9 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="160"/>
                                         <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="190"/>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="230"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,6"/>
                                     <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InterfaceAisProfileText" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
@@ -1652,22 +1665,62 @@
                                     <TextBlock Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportProfileText" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Lizenzzählung:" FontWeight="Bold" Margin="0,0,8,0"/>
                                     <TextBlock Grid.Row="3" Grid.Column="1" Text="Aktive Schnittstellenprofile zählen immer als Geräteanbindung." Foreground="DimGray" TextWrapping="Wrap"/>
-                                    <Button Grid.Row="0"
-                                            Grid.Column="2"
+
+                                    <StackPanel Grid.Row="0"
+                                                Grid.Column="2"
+                                                Grid.RowSpan="4"
+                                                Margin="18,0,0,0"
+                                                VerticalAlignment="Top">
+                                        <Button Content="AIS Ausgabe Info"
+                                                MinWidth="170"
+                                                Margin="0,0,0,8"
+                                                Click="ShowAisOutputInfo_Click"
+                                                ToolTip="Zeigt, welche AIS-Feldkennungen dieses Schnittstellenprofil ausgibt."/>
+                                        <Button x:Name="InterfaceDeviceTechnicalProfileButton"
+                                                Content="Gerätesteckbrief"
+                                                MinWidth="170"
+                                                Click="ShowInterfaceDeviceTechnicalProfile_Click"
+                                                ToolTip="Öffnet den Geräte-Steckbrief des ausgewählten Geräteprofils."/>
+                                    </StackPanel>
+
+                                    <Border Grid.Row="0"
+                                            Grid.Column="3"
                                             Grid.RowSpan="4"
-                                            Content="AIS Ausgabe Info"
-                                            Width="170"
-                                            Margin="16,0,0,0"
+                                            Width="150"
+                                            Height="112"
+                                            Margin="28,0,18,0"
+                                            Padding="6"
+                                            HorizontalAlignment="Center"
                                             VerticalAlignment="Top"
-                                            Click="ShowAisOutputInfo_Click"
-                                            ToolTip="Zeigt, welche AIS-Feldkennungen dieses Schnittstellenprofil ausgibt."/>
+                                            BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Background="White">
+                                        <Grid>
+                                            <Image x:Name="InterfaceDeviceImage"
+                                                   Source="{Binding Text, ElementName=InterfaceDeviceImagePathTextBox, Converter={StaticResource DeviceImageSourceConverter}}"
+                                                   Stretch="Uniform"/>
+                                            <TextBlock x:Name="InterfaceDeviceImagePlaceholder"
+                                                       Text="Kein Gerätebild"
+                                                       TextAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{StaticResource XdtBoxMutedTextBrush}"/>
+                                            <TextBox x:Name="InterfaceDeviceImagePathTextBox" Visibility="Collapsed"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <ToggleButton x:Name="InterfaceActivationStatusButton"
+                                                  Grid.Row="0"
+                                                  Grid.Column="4"
+                                                  Grid.RowSpan="4"
+                                                  Style="{StaticResource XdtBoxInterfaceActivationToggleStyle}"
+                                                  VerticalAlignment="Top"
+                                                  Margin="10,8,0,0"
+                                                  Checked="InterfaceActivationStatusButton_Changed"
+                                                  Unchecked="InterfaceActivationStatusButton_Changed"/>
                                 </Grid>
 
-                                <WrapPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
-                                    <CheckBox x:Name="InterfaceIsActiveCheckBox" Content="Für automatische Verarbeitung aktiv" Margin="0,0,24,8"/>
-                                </WrapPanel>
-
-                                <Expander Header="Ordner" IsExpanded="True" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Ordner" IsExpanded="True" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2403,6 +2456,55 @@
                 </ScrollViewer>
             </TabItem>
 
+            <TabItem Header="Notizen Techniker">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+                        <Button Content="Text hinzufügen" Width="130" Margin="0,0,8,8" Click="TechnicianWhiteboardAddText_Click"/>
+                        <Button Content="Bild einfügen" Width="120" Margin="0,0,8,8" Click="TechnicianWhiteboardAddImage_Click"/>
+                        <Button Content="Aktivierte Geräte einfügen" Width="190" Margin="0,0,8,8" Click="TechnicianWhiteboardInsertActiveDevices_Click"/>
+                        <Button Content="Speichern" Width="110" Margin="0,0,8,8" Click="TechnicianWhiteboardSave_Click"/>
+                        <Button Content="Als PDF speichern" Width="150" Margin="0,0,18,8" Click="TechnicianWhiteboardExportPdf_Click"/>
+                        <CheckBox x:Name="TechnicianWhiteboardBoldCheckBox" Content="Fett" Margin="0,4,10,8"/>
+                        <CheckBox x:Name="TechnicianWhiteboardItalicCheckBox" Content="Kursiv" Margin="0,4,10,8"/>
+                        <CheckBox x:Name="TechnicianWhiteboardUnderlineCheckBox" Content="Unterstrichen" Margin="0,4,10,8"/>
+                        <ComboBox x:Name="TechnicianWhiteboardColorComboBox"
+                                  Width="120"
+                                  SelectedValuePath="Tag"
+                                  SelectedValue="#24313A"
+                                  Margin="0,0,8,8">
+                            <ComboBoxItem Content="Dunkel" Tag="#24313A"/>
+                            <ComboBoxItem Content="Blau" Tag="#0B4D93"/>
+                            <ComboBoxItem Content="Türkis" Tag="#0E8E92"/>
+                            <ComboBoxItem Content="Rot" Tag="#8B1E1E"/>
+                        </ComboBox>
+                    </WrapPanel>
+                    <Border Grid.Row="1"
+                            Background="White"
+                            BorderBrush="{StaticResource XdtBoxBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                            <Canvas x:Name="TechnicianWhiteboardCanvas"
+                                    Width="1600"
+                                    Height="1000"
+                                    Background="White"
+                                    AllowDrop="True"
+                                    Drop="TechnicianWhiteboardCanvas_Drop"/>
+                        </ScrollViewer>
+                    </Border>
+                    <TextBlock Grid.Row="2"
+                               x:Name="TechnicianWhiteboardStatusText"
+                               Margin="0,8,0,0"
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               Text="Techniker-Notizen werden als Kundendaten gespeichert. Es werden keine Patientendaten automatisch eingefügt."/>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="Sicherung/Umzug">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="8">
@@ -2446,6 +2548,12 @@
                         <GroupBox Header="Sicherung wiederherstellen" Grid.Row="1" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -2598,8 +2706,28 @@
                                 <TextBox Grid.Row="2" Grid.Column="3" x:Name="LicenseCustomerEmailTextBox" Margin="0,0,0,6"/>
 
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Ansprechpartner:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="LicenseCustomerContactPersonTextBox" Margin="0,0,16,0"/>
-                                <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="LicenseCustomerContactPersonTextBox" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="3" Grid.Column="2" Text="Rechnungs-E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="3" Grid.Column="3" x:Name="LicenseInvoiceEmailTextBox" Margin="0,0,0,6"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="IBAN:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="LicenseCustomerIbanTextBox" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="BIC:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="4" Grid.Column="3" x:Name="LicenseCustomerBicTextBox" Margin="0,0,0,6"/>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Kontoinhaber:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="5" Grid.Column="1" x:Name="LicenseCustomerAccountHolderTextBox" Margin="0,0,16,6"/>
+                                <StackPanel Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,6">
+                                    <CheckBox x:Name="LicenseSepaConsentCheckBox"
+                                              Content="Einwilligung SEPA-Lastschrift"
+                                              Margin="0,0,16,0"
+                                              Checked="LicensePaymentOption_Checked"/>
+                                    <CheckBox x:Name="LicenseAlwaysInvoiceCheckBox"
+                                              Content="Kein SEPA - bitte immer Rechnung zusenden"
+                                              Checked="LicensePaymentOption_Checked"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal">
                                     <Button Content="Speichern" Width="120" Margin="0,0,8,0" Click="SaveLicenseCustomerData_Click"/>
                                     <TextBlock x:Name="LicenseCustomerDataStatusText"
                                                VerticalAlignment="Center"
@@ -2708,6 +2836,21 @@
                         Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
                         ToolTip="App-Einstellungen"
                         Click="OpenAppSettings_Click"/>
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="4,0,6,0">
+                    <TextBlock x:Name="TabProtectionStatusTextBlock"
+                               Text="TAB Schutz nicht aktiviert"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               Margin="0,0,6,0"/>
+                    <ToggleButton x:Name="TabProtectionToggleButton"
+                                  Style="{StaticResource XdtBoxTabProtectionToggleStyle}"
+                                  ToolTip="Tab-Schutz sperren oder entsperren"
+                                  Click="TabProtectionToggleButton_Click"/>
+                </StackPanel>
                 <Button x:Name="AppExitButton"
                         Content="Beenden"
                         Width="86"
