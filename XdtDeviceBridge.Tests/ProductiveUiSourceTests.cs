@@ -217,6 +217,12 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("TechnicianWhiteboardCanvas_Drop", xaml);
         Assert.Contains("XdtBoxWhiteboardSurfaceStyle", xaml);
         Assert.Contains("XdtBoxWhiteboardBrush", xaml);
+        var saveButtonSection = ExtractSection(
+            xaml,
+            "<Button Content=\"Speichern\" Width=\"110\"",
+            "TechnicianWhiteboardExportPdf_Click");
+        Assert.Contains("XdtBoxSecondaryButtonStyle", saveButtonSection);
+        Assert.DoesNotContain("XdtBoxPrimaryButtonStyle", saveButtonSection);
         Assert.Contains("TechnicianWhiteboardMode.Text", code);
         Assert.Contains("TechnicianWhiteboardMode.Hand", code);
         Assert.Contains("AddTechnicianWhiteboardTextAt", code);
@@ -437,6 +443,47 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void InterfaceProfilesTab_ShouldUseFolderChooseTextAndAdjacentFolderButtons()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var section = ExtractSection(
+            xaml,
+            "<TabItem Header=\"Schnittstellenprofile\">",
+            "<TabItem Header=\"Sicherung/Umzug\">");
+        var folderSection = ExtractSection(
+            section,
+            "<Expander Header=\"Ordner\"",
+            "<Expander x:Name=\"InterfaceSerialCommunicationGroupBox\"");
+        var deviceOutputSection = ExtractSection(
+            section,
+            "<Expander x:Name=\"InterfaceDeviceOutputGroupBox\"",
+            "<Expander x:Name=\"InterfaceAttachmentSettingsGroupBox\"");
+        var attachmentSection = ExtractSection(
+            section,
+            "<Expander x:Name=\"InterfaceAttachmentSettingsGroupBox\"",
+            "InterfaceAttachmentFileNameTemplateLabel");
+
+        Assert.DoesNotContain("Content=\"Auswählen\"", section);
+        Assert.DoesNotContain("Content=\"Auswähler\"", section);
+        Assert.Contains("Content=\"Ordner wählen\"", folderSection);
+        Assert.Contains("Content=\"Ordner wählen\"", deviceOutputSection);
+        Assert.Contains("Content=\"Ordner wählen\"", attachmentSection);
+        Assert.Contains("<ColumnDefinition Width=\"*\"/>", folderSection);
+        Assert.Contains("<ColumnDefinition Width=\"Auto\"/>", folderSection);
+        Assert.Contains("<ColumnDefinition Width=\"Auto\"/>", deviceOutputSection);
+        Assert.Contains("<ColumnDefinition Width=\"Auto\"/>", attachmentSection);
+        Assert.Contains("Tag=\"AisImport\" Click=\"SelectInterfaceFolder_Click\"", folderSection);
+        Assert.Contains("Tag=\"DeviceImport\" Click=\"SelectInterfaceFolder_Click\"", folderSection);
+        Assert.Contains("Tag=\"Export\" Click=\"SelectInterfaceFolder_Click\"", folderSection);
+        Assert.Contains("Tag=\"Archive\" Click=\"SelectInterfaceFolder_Click\"", folderSection);
+        Assert.Contains("Tag=\"Error\" Click=\"SelectInterfaceFolder_Click\"", folderSection);
+        Assert.Contains("Tag=\"DeviceOutput\" Click=\"SelectInterfaceFolder_Click\"", deviceOutputSection);
+        Assert.Contains("Tag=\"AttachmentImport\" Click=\"SelectInterfaceFolder_Click\"", attachmentSection);
+        Assert.Contains("Tag=\"AttachmentExport\" Click=\"SelectInterfaceFolder_Click\"", attachmentSection);
+        Assert.DoesNotContain("Margin=\"-", folderSection + deviceOutputSection + attachmentSection);
+    }
+
+    [Fact]
     public void InterfaceProfilesTab_ShouldKeepAttachment6305PathSeparateFromFolderButtons()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
@@ -494,6 +541,12 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("💡", xaml);
         Assert.Contains("FontSize=\"14\"", xaml);
         Assert.Contains("XdtBoxWarningCardStyle", xaml);
+        var closeButtonSection = ExtractSection(
+            xaml,
+            "Content=\"Schließen\"",
+            "DockPanel.Dock=\"Right\"");
+        Assert.Contains("XdtBoxSecondaryButtonStyle", closeButtonSection);
+        Assert.DoesNotContain("XdtBoxPrimaryButtonStyle", closeButtonSection);
         Assert.Contains("AisOutputInfoViewModel", code);
         Assert.Contains("Standard Zeilenbenennung in MEDISTAR", xaml);
         Assert.Contains("StandardCardLineInfos", code);

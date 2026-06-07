@@ -1727,28 +1727,28 @@
                                      <Grid.ColumnDefinitions>
                                          <ColumnDefinition Width="230"/>
                                          <ColumnDefinition Width="*"/>
-                                         <ColumnDefinition Width="300"/>
+                                         <ColumnDefinition Width="Auto"/>
                                      </Grid.ColumnDefinitions>
 
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Patienten Datei an XDTBox:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="0" Grid.Column="1" x:Name="InterfaceAisImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="0" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AisImport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="0" Grid.Column="2" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="AisImport" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceDeviceImportFolderLabel" Text="Gerätedatei an XDTBox:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1" Grid.Column="1" x:Name="InterfaceDeviceImportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="1" Grid.Column="2" x:Name="InterfaceDeviceImportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="1" Grid.Column="2" x:Name="InterfaceDeviceImportFolderButton" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="DeviceImport" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Ergebnisdatei an AIS:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="2" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Export" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="2" Grid.Column="2" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="Export" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Archivordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="3" Grid.Column="1" x:Name="InterfaceArchiveFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="3" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Archive" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="3" Grid.Column="2" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="Archive" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Fehlerordner:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="4" Grid.Column="1" x:Name="InterfaceErrorFolderTextBox" Margin="0,0,8,8" HorizontalScrollBarVisibility="Auto" ToolTip="UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="4" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="Error" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="4" Grid.Column="2" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="Error" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Ordnerabfrage-Intervall:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
@@ -1951,7 +1951,7 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="96"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <CheckBox Grid.Row="0"
@@ -1969,7 +1969,7 @@
                                                  Margin="0,0,8,8"
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Zielordner, in dem die XML-Importdatei für den Phoropter erzeugt wird."/>
-                                        <Button Grid.Row="1" Grid.Column="2" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="DeviceOutput" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="1" Grid.Column="2" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="DeviceOutput" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="2"
@@ -2026,7 +2026,7 @@
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="230"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="96"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Grid.Row="0" Grid.Column="0" x:Name="InterfaceAttachmentImportFolderLabel" Text="XDT-Anhang Import:" FontWeight="Bold" Margin="0,0,8,8"/>
@@ -2036,7 +2036,7 @@
                                                  Margin="0,0,8,8"
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Optionaler Ordner für Geräte-Dateianhänge, die später als externe AIS-Links übergeben werden. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="0" Grid.Column="2" x:Name="InterfaceAttachmentImportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="0" Grid.Column="2" x:Name="InterfaceAttachmentImportFolderButton" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="AttachmentImport" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" x:Name="InterfaceAttachmentExportFolderLabel" Text="XDT-Anhang Export:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="1"
@@ -2045,7 +2045,7 @@
                                                  Margin="0,0,8,8"
                                                  HorizontalScrollBarVisibility="Auto"
                                                  ToolTip="Optionaler Zielordner für umbenannte Geräte-Dateianhänge und spätere externe AIS-Links. UNC-Pfade wie \\SERVER\Freigabe\Ordner sind erlaubt."/>
-                                        <Button Grid.Row="1" Grid.Column="2" x:Name="InterfaceAttachmentExportFolderButton" Content="Auswählen" Width="90" Margin="0,0,0,8" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
+                                        <Button Grid.Row="1" Grid.Column="2" x:Name="InterfaceAttachmentExportFolderButton" Content="Ordner wählen" Width="120" Margin="0,0,0,8" Tag="AttachmentExport" Click="SelectInterfaceFolder_Click"/>
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" x:Name="InterfaceAttachmentFileNameTemplateLabel" Text="XDT-Anhang Dateiname:" FontWeight="Bold" Margin="0,0,8,8"/>
                                         <TextBox Grid.Row="2"
@@ -2465,7 +2465,7 @@
                                       ToolTip="Handmodus: Elemente auswählen, verschieben und skalieren."/>
                         <Button Content="Bild einfügen" Width="120" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardAddImage_Click"/>
                         <Button Content="Aktivierte Geräte einfügen" Width="190" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardInsertActiveDevices_Click"/>
-                        <Button Content="Speichern" Width="110" Margin="0,0,8,8" Style="{StaticResource XdtBoxPrimaryButtonStyle}" Click="TechnicianWhiteboardSave_Click"/>
+                        <Button Content="Speichern" Width="110" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardSave_Click"/>
                         <Button Content="Als PDF speichern" Width="150" Margin="0,0,18,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardExportPdf_Click"/>
                         <CheckBox x:Name="TechnicianWhiteboardBoldCheckBox" Content="Fett" Margin="0,4,10,8" Checked="TechnicianWhiteboardFormatting_Changed" Unchecked="TechnicianWhiteboardFormatting_Changed"/>
                         <CheckBox x:Name="TechnicianWhiteboardItalicCheckBox" Content="Kursiv" Margin="0,4,10,8" Checked="TechnicianWhiteboardFormatting_Changed" Unchecked="TechnicianWhiteboardFormatting_Changed"/>
