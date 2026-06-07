@@ -8,6 +8,8 @@ Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Session
 
 XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die Bridge zwischen Arztinformationssystemen und augenaerztlichen Untersuchungsgeraeten. Der Produktname fuer den spaeteren Einsatz ist XDTBox. Das offizielle Programmicon `XDTBox.ico` liegt unter `XdtDeviceBridge.App/Assets/App/XDTBox.ico` und wird von Kunden-App, Systray-NotifyIcon sowie den internen Lizenzwerkzeugen verwendet. Das Logo-/Schriftzugmotiv liegt unter `XdtDeviceBridge.App/Assets/Branding/XDTBox_Logo_Schriftzug.png`; Kunden-App und grafisches Hersteller-Lizenztool nutzen es mit zentralen XDTBox-Theme-Resources fuer einen modernen, medizinisch-technischen Markenauftritt.
 
+Das zentrale UI-Theme liegt in `XdtDeviceBridge.App/Styles/XdtBoxTheme.xaml`. Es buendelt XDTBox-Farben, Kartenflaechen, Buttonvarianten, Tab-Optik, Eingabefelder, Tabellen und Toggle-Schalter. Der UI-Polish betrifft nur Darstellung und Bedienkomfort; Parser, MEDISTAR-/XDT-Ausgabe, Geraetekommunikation, Lizenzlogik, Datenablage und Installerlogik bleiben davon getrennt.
+
 Der Fokus liegt aktuell auf:
 
 - MEDISTAR als AIS/PVS-Ziel

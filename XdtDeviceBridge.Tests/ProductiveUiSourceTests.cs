@@ -97,6 +97,57 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void XdtBoxTheme_ShouldProvideModernCentralApplicationStyles()
+    {
+        var app = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "App.xaml"));
+        var theme = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", Path.Combine("Styles", "XdtBoxTheme.xaml")));
+
+        Assert.Contains("Styles/XdtBoxTheme.xaml", app);
+        Assert.Contains("XdtBoxPrimaryColor", theme);
+        Assert.Contains("XdtBoxAccentColor", theme);
+        Assert.Contains("XdtBoxWindowBackgroundBrush", theme);
+        Assert.Contains("XdtBoxHeaderGradientBrush", theme);
+        Assert.Contains("XdtBoxCardShadowEffect", theme);
+        Assert.Contains("XdtBoxBrandHeaderStyle", theme);
+        Assert.Contains("XdtBoxSectionCardStyle", theme);
+        Assert.Contains("XdtBoxHeaderCardStyle", theme);
+        Assert.Contains("XdtBoxInfoCardStyle", theme);
+        Assert.Contains("XdtBoxWarningCardStyle", theme);
+        Assert.Contains("XdtBoxWhiteboardSurfaceStyle", theme);
+        Assert.Contains("XdtBoxPrimaryButtonStyle", theme);
+        Assert.Contains("XdtBoxSecondaryButtonStyle", theme);
+        Assert.Contains("XdtBoxSuccessButtonStyle", theme);
+        Assert.Contains("XdtBoxDangerButtonStyle", theme);
+        Assert.Contains("XdtBoxIconButtonStyle", theme);
+        Assert.Contains("XdtBoxInterfaceActivationSwitchStyle", theme);
+        Assert.Contains("<Style TargetType=\"{x:Type TabItem}\">", theme);
+        Assert.Contains("<Style TargetType=\"{x:Type GroupBox}\">", theme);
+        Assert.Contains("<Style TargetType=\"{x:Type TextBox}\">", theme);
+        Assert.Contains("<Style TargetType=\"{x:Type DataGrid}\">", theme);
+    }
+
+    [Fact]
+    public void SecondaryWindows_ShouldUseCentralThemeCards()
+    {
+        var aisInfo = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AisOutputInfoWindow.xaml"));
+        var deviceProfile = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "DeviceTechnicalProfileWindow.xaml"));
+        var settings = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AppSettingsDialog.xaml"));
+
+        Assert.Contains("Styles/XdtBoxTheme.xaml", aisInfo);
+        Assert.Contains("Background=\"{DynamicResource XdtBoxWindowBackgroundBrush}\"", aisInfo);
+        Assert.Contains("Style=\"{StaticResource XdtBoxHeaderCardStyle}\"", aisInfo);
+        Assert.Contains("Style=\"{StaticResource XdtBoxInfoCardStyle}\"", aisInfo);
+        Assert.Contains("Style=\"{StaticResource XdtBoxWarningCardStyle}\"", aisInfo);
+
+        Assert.Contains("Styles/XdtBoxTheme.xaml", deviceProfile);
+        Assert.Contains("Background=\"{DynamicResource XdtBoxWindowBackgroundBrush}\"", deviceProfile);
+        Assert.Contains("BasedOn=\"{StaticResource XdtBoxSectionCardStyle}\"", deviceProfile);
+        Assert.Contains("Style=\"{StaticResource XdtBoxPrimaryButtonStyle}\"", deviceProfile);
+
+        Assert.Contains("Style=\"{StaticResource XdtBoxSectionCardStyle}\"", settings);
+    }
+
+    [Fact]
     public void AppSettingsDialog_ShouldExposeStartupAndTrayOptions()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "AppSettingsDialog.xaml"));
@@ -127,7 +178,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("x:Name=\"XdtBaukastenDeviceTechnicalProfileButton\"", xaml);
         Assert.Contains("x:Name=\"InterfaceDeviceImage\"", xaml);
         Assert.Contains("x:Name=\"InterfaceActivationStatusButton\"", xaml);
-        Assert.Contains("XdtBoxInterfaceActivationToggleStyle", xaml);
+        Assert.Contains("XdtBoxInterfaceActivationSwitchStyle", xaml);
         Assert.DoesNotContain("InterfaceIsActiveCheckBox", xaml);
         Assert.DoesNotContain("InterfaceIsActiveCheckBox", code);
         Assert.Contains("ShowInterfaceDeviceTechnicalProfile_Click", code);
@@ -147,10 +198,20 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("TechnicianWhiteboardAddImage_Click", xaml);
         Assert.Contains("TechnicianWhiteboardInsertActiveDevices_Click", xaml);
         Assert.Contains("TechnicianWhiteboardExportPdf_Click", xaml);
+        Assert.Contains("TechnicianWhiteboardFontSizeComboBox", xaml);
         Assert.Contains("TechnicianWhiteboardCanvas_Drop", xaml);
+        Assert.Contains("XdtBoxWhiteboardSurfaceStyle", xaml);
+        Assert.Contains("XdtBoxWhiteboardBrush", xaml);
         Assert.Contains("LoadTechnicianWhiteboard", code);
         Assert.Contains("CreateTechnicianWhiteboardStateFromCanvas", code);
         Assert.Contains("ExportWhiteboardCanvasAsPdf", code);
+        Assert.Contains("IsWhiteboardInteractiveSource", code);
+        Assert.Contains("ResizeTechnicianWhiteboardElement", code);
+        Assert.Contains("FontSize = NormalizeTechnicianWhiteboardFontSize", code);
+        Assert.Contains("Padding = new Thickness(4)", code);
+        Assert.Contains("BorderBrush = System.Windows.Media.Brushes.Transparent", code);
+        Assert.Contains("Background = System.Windows.Media.Brushes.Transparent", code);
+        Assert.Contains("CreateInvisibleWhiteboardThumbTemplate", code);
     }
 
     [Fact]
@@ -169,6 +230,39 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("AlwaysInvoice", code);
         Assert.Contains("InvoiceEmail", code);
         Assert.Contains("LicensePaymentOption_Checked", code);
+    }
+
+    [Fact]
+    public void LicenseTab_CustomerDataLayoutShouldKeepPaymentRowsSeparated()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var start = xaml.IndexOf("Header=\"Kundendaten für Lizenzanforderung\"", StringComparison.Ordinal);
+        var end = xaml.IndexOf("<StackPanel Grid.Row=\"3\" Orientation=\"Horizontal\"", start, StringComparison.Ordinal);
+        var section = xaml[start..end];
+
+        Assert.Contains("Grid.Row=\"4\" Grid.Column=\"0\" Text=\"IBAN:\"", section);
+        Assert.Contains("Grid.Row=\"5\" Grid.Column=\"0\" Text=\"Kontoinhaber:\"", section);
+        Assert.Contains("<WrapPanel Grid.Row=\"6\" Grid.Column=\"0\" Grid.ColumnSpan=\"4\"", section);
+        Assert.Contains("<DockPanel Grid.Row=\"7\" Grid.Column=\"0\" Grid.ColumnSpan=\"4\"", section);
+    }
+
+    [Fact]
+    public void InterfaceProfileHeader_ShouldPlaceDeviceActionsBeforeImageAndActivation()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var start = xaml.IndexOf("InterfaceAisProfileText", StringComparison.Ordinal);
+        var end = xaml.IndexOf("<Expander Header=\"Ordner\"", start, StringComparison.Ordinal);
+        var section = xaml[start..end];
+
+        Assert.Contains("Grid.Column=\"2\"", section);
+        Assert.Contains("Content=\"AIS Ausgabe Info\"", section);
+        Assert.Contains("Content=\"Gerätesteckbrief\"", section);
+        Assert.Contains("Grid.Column=\"3\"", section);
+        Assert.Contains("x:Name=\"InterfaceDeviceImage\"", section);
+        Assert.Contains("Grid.Column=\"3\"", section);
+        Assert.Contains("x:Name=\"InterfaceActivationStatusButton\"", section);
+        Assert.Contains("Grid.Column=\"4\"", section);
+        Assert.Contains("XdtBoxInterfaceActivationSwitchStyle", section);
     }
 
     [Fact]
@@ -293,8 +387,9 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("AIS-System:", section);
         Assert.Contains("Schnittstellenprofil:", section);
         Assert.Contains("x:Name=\"InterfaceProfileComboBox\"", section);
-        Assert.Contains("MaxWidth=\"560\"", section);
+        Assert.Contains("MaxWidth=\"520\"", section);
         Assert.Contains("AIS Ausgabe Info", section);
+        Assert.DoesNotContain("welche Schnittstelle automatisch Ã¼ber Ordner verarbeitet wird", section);
         Assert.Contains("Aktive Schnittstellenprofile zählen immer als Geräteanbindung.", section);
         Assert.DoesNotContain("InterfaceIsLicenseRequiredCheckBox", section);
         Assert.DoesNotContain("Lizenzpflichtig", section);
@@ -360,7 +455,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("IsOptional", xaml);
         Assert.Contains("💡", xaml);
         Assert.Contains("FontSize=\"14\"", xaml);
-        Assert.Contains("#FFF7D8", xaml);
+        Assert.Contains("XdtBoxWarningCardStyle", xaml);
         Assert.Contains("AisOutputInfoViewModel", code);
         Assert.Contains("Standard Zeilenbenennung in MEDISTAR", xaml);
         Assert.Contains("StandardCardLineInfos", code);

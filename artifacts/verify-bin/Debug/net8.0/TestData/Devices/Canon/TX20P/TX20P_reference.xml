@@ -1,0 +1,28 @@
+<Ophthalmology xmlns:nsCommon="urn:common" xmlns:nsTM="urn:tm" xmlns:nsPM="urn:pm">
+  <nsCommon:Common>
+    <nsCommon:Company>Canon</nsCommon:Company>
+    <nsCommon:ModelName>TX-20P</nsCommon:ModelName>
+  </nsCommon:Common>
+  <nsTM:Measure Type="TM">
+    <nsTM:TM>
+      <nsTM:R>
+        <nsTM:List><nsTM:IOP_mmHg>12</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List><nsTM:IOP_mmHg>11</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List><nsTM:IOP_mmHg>15</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:Average><nsTM:IOP_mmHg>12.7</nsTM:IOP_mmHg></nsTM:Average>
+      </nsTM:R>
+      <nsTM:L>
+        <nsTM:List><nsTM:IOP_mmHg>14</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List><nsTM:IOP_mmHg>13</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:List><nsTM:IOP_mmHg>15</nsTM:IOP_mmHg></nsTM:List>
+        <nsTM:Average><nsTM:IOP_mmHg>14.0</nsTM:IOP_mmHg></nsTM:Average>
+      </nsTM:L>
+    </nsTM:TM>
+  </nsTM:Measure>
+  <nsPM:Measure Type="PM">
+    <nsPM:PM>
+      <nsPM:R><nsPM:Average><nsPM:CCT>559</nsPM:CCT></nsPM:Average></nsPM:R>
+      <nsPM:L><nsPM:Average><nsPM:CCT>560</nsPM:CCT></nsPM:Average></nsPM:L>
+    </nsPM:PM>
+  </nsPM:Measure>
+</Ophthalmology>

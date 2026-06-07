@@ -1,0 +1,22 @@
+<optic>
+  <device>
+    <company>Visionix</company>
+    <model>VX 120</model>
+  </device>
+  <optometry>
+    <LSM_mesurement>
+      <measure_REF>
+        <ref_right>
+          <sphere>-3.75</sphere>
+          <cylinder>-1.25</cylinder>
+          <axis>98</axis>
+        </ref_right>
+        <ref_left>
+          <sphere>-4.25</sphere>
+          <cylinder>-2.00</cylinder>
+          <axis>105</axis>
+        </ref_left>
+      </measure_REF>
+    </LSM_mesurement>
+  </optometry>
+</optic>

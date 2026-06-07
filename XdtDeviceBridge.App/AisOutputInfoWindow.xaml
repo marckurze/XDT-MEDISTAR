@@ -7,19 +7,25 @@
         Height="650"
         MinWidth="820"
         MinHeight="520"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource XdtBoxWindowBackgroundBrush}">
     <Window.Resources>
-        <Style x:Key="AisOutputInfoRowStyle" TargetType="{x:Type DataGridRow}">
-            <Setter Property="Background" Value="White"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsCardField}" Value="True">
-                    <Setter Property="Background" Value="#EAF7EF"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsOptional}" Value="True">
-                    <Setter Property="Background" Value="#FFF6DC"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/XdtBoxTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="AisOutputInfoRowStyle" TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <Setter Property="Background" Value="{StaticResource XdtBoxPanelBackgroundBrush}"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsCardField}" Value="True">
+                        <Setter Property="Background" Value="#EAF7EF"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding IsOptional}" Value="True">
+                        <Setter Property="Background" Value="#FFF6DC"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid Margin="14">
@@ -37,9 +43,7 @@
                    Margin="0,0,0,10"/>
 
         <Border Grid.Row="1"
-                BorderBrush="#D2E4EF"
-                BorderThickness="1"
-                Padding="10"
+                Style="{StaticResource XdtBoxHeaderCardStyle}"
                 Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
@@ -97,10 +101,7 @@
 
         <Border Grid.Row="3"
                 Visibility="{Binding StandardCardLineInfoVisibility}"
-                BorderBrush="#CFE3EF"
-                BorderThickness="1"
-                Background="#F7FBFD"
-                Padding="10"
+                Style="{StaticResource XdtBoxInfoCardStyle}"
                 Margin="0,10,0,0">
             <StackPanel>
                 <TextBlock Text="Standard Zeilenbenennung in MEDISTAR:"
@@ -139,16 +140,13 @@
 
         <DockPanel Grid.Row="4" Margin="0,12,0,0">
             <Button Content="Schließen"
+                    Style="{StaticResource XdtBoxPrimaryButtonStyle}"
                     Width="120"
                     Margin="16,0,0,0"
                     HorizontalAlignment="Right"
                     Click="Close_Click"
                     DockPanel.Dock="Right"/>
-            <Border BorderBrush="#E6B23A"
-                    BorderThickness="1"
-                    Background="#FFF7D8"
-                    Padding="10"
-                    CornerRadius="4"
+            <Border Style="{StaticResource XdtBoxWarningCardStyle}"
                     DockPanel.Dock="Left">
                 <DockPanel>
                     <TextBlock Text="💡"

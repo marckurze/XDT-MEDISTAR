@@ -1,0 +1,18 @@
+<Measurement>
+  <Eye type="OD">
+    <IOP>12</IOP>
+    <IOP>11</IOP>
+    <IOP>15</IOP>
+    <IOPAvg>12.7</IOPAvg>
+    <CIOP>12.3</CIOP>
+    <CCT>559</CCT>
+  </Eye>
+  <Eye type="OS">
+    <IOP>14</IOP>
+    <IOP>13</IOP>
+    <IOP>15</IOP>
+    <IOPAvg>14.0</IOPAvg>
+    <CIOP>13.6</CIOP>
+    <CCT>560</CCT>
+  </Eye>
+</Measurement>

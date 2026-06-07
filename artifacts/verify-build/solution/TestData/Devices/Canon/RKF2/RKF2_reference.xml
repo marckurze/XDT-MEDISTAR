@@ -1,0 +1,28 @@
+<Ophthalmology xmlns:nsCommon="urn:common" xmlns:nsREF="urn:ref">
+  <nsCommon:Common>
+    <nsCommon:Company>Canon</nsCommon:Company>
+    <nsCommon:ModelName>RK-F2</nsCommon:ModelName>
+  </nsCommon:Common>
+  <nsREF:Measure Type="REF">
+    <nsREF:VD>12.00</nsREF:VD>
+    <nsREF:REF>
+      <nsREF:R>
+        <nsREF:Median>
+          <nsREF:Sphere>0.25</nsREF:Sphere>
+          <nsREF:Cylinder>-0.75</nsREF:Cylinder>
+          <nsREF:Axis>141</nsREF:Axis>
+        </nsREF:Median>
+      </nsREF:R>
+      <nsREF:L>
+        <nsREF:Median>
+          <nsREF:Sphere>0.00</nsREF:Sphere>
+          <nsREF:Cylinder>0.00</nsREF:Cylinder>
+          <nsREF:Axis>0</nsREF:Axis>
+        </nsREF:Median>
+      </nsREF:L>
+    </nsREF:REF>
+    <nsREF:PD>
+      <nsREF:Distance>59</nsREF:Distance>
+    </nsREF:PD>
+  </nsREF:Measure>
+</Ophthalmology>

@@ -1532,16 +1532,9 @@
                     <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0"
-                                   Text="Hier wird später gesteuert, welche Schnittstelle automatisch über Ordner verarbeitet wird. In diesem Schritt werden nur Einstellungen gespeichert. Es findet noch keine automatische Ordnerüberwachung statt."
-                                   Foreground="DimGray"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,8"/>
-
-                        <GroupBox Header="Schnittstellenprofil / Automatische Verarbeitung" Grid.Row="1">
+                        <GroupBox Header="Schnittstellenprofil / Automatische Verarbeitung" Grid.Row="0">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -1561,17 +1554,17 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Grid x:Name="InterfaceProfileSelectionGrid"
-                                      Grid.Row="0"
+                                      Grid.Row="1"
                                       Grid.Column="0"
                                       Grid.ColumnSpan="2"
-                                      Margin="0,0,0,10">
+                                      Margin="12,0,0,30">
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="260"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="240"/>
                                         <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="220"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="560"/>
+                                        <ColumnDefinition Width="520"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
@@ -1582,7 +1575,7 @@
                                                Margin="0,0,6,0"/>
                                     <ComboBox x:Name="InterfaceManufacturerFilterComboBox"
                                               Grid.Column="1"
-                                              MaxWidth="240"
+                                              MaxWidth="260"
                                               HorizontalAlignment="Stretch"
                                               Margin="0,0,18,0"
                                               SelectionChanged="InterfaceProfileFilter_SelectionChanged"
@@ -1594,7 +1587,7 @@
                                                Margin="0,0,6,0"/>
                                     <ComboBox x:Name="InterfaceAisFilterComboBox"
                                               Grid.Column="3"
-                                              MaxWidth="220"
+                                              MaxWidth="240"
                                               HorizontalAlignment="Stretch"
                                               Margin="0,0,18,0"
                                               SelectionChanged="InterfaceProfileFilter_SelectionChanged"
@@ -1608,114 +1601,111 @@
                                               Grid.Column="5"
                                               DisplayMemberPath="Metadata.Name"
                                               MinWidth="320"
-                                              MaxWidth="560"
+                                              MaxWidth="520"
                                               HorizontalAlignment="Stretch"
                                               ToolTip="{Binding SelectedItem.Metadata.Name, RelativeSource={RelativeSource Self}}"
                                               SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
                                 </Grid>
-                                <WrapPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="0,0,0,8">
+                                <WrapPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,42,0,54">
                                     <Button Content="Neues Schnittstellenprofil anlegen"
                                             Width="260"
-                                            Margin="0,0,8,8"
+                                            Margin="0,0,8,0"
                                             Click="CreateNewInterfaceProfile_Click"/>
                                     <Button Content="Schnittstellenprofil entfernen"
                                             Width="210"
-                                            Margin="0,0,8,8"
+                                            Margin="0,0,8,0"
                                             Click="RemoveInterfaceProfile_Click"/>
                                     <Button x:Name="RenameInterfaceProfileButton"
                                             Content="Schnittstellenprofil umbenennen"
                                             Width="250"
-                                            Margin="0,0,8,8"
+                                            Margin="0,0,8,0"
                                             Click="RenameSelectedInterfaceProfile_Click"
                                             ToolTip="Ändert nur den sichtbaren Namen eines UserDefined-Schnittstellenprofils."
                                             ToolTipService.ShowOnDisabled="True"/>
                                     <Button x:Name="SaveInterfaceProfileButton"
                                             Content="Speichern"
                                             Width="220"
-                                            Margin="0,0,0,8"
+                                            Margin="0,0,0,0"
                                             Click="SaveInterfaceProfile_Click"/>
                                     <TextBlock x:Name="InterfaceProfileSaveFeedbackText"
                                                MinWidth="95"
-                                               Margin="8,2,0,8"
+                                               Margin="8,2,0,0"
                                                VerticalAlignment="Center"
                                                Foreground="#1D7D46"
                                                FontWeight="SemiBold"
                                                Text=""/>
                                 </WrapPanel>
 
-                                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,14">
+                                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,28">
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="250"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="560"/>
+                                        <ColumnDefinition Width="260"/>
+                                        <ColumnDefinition Width="110"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="190"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="230"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InterfaceAisProfileText" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Geräteprofil:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="InterfaceDeviceProfileText" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="InterfaceExportProfileText" Margin="0,0,0,6" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Lizenzzählung:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Aktive Schnittstellenprofile zählen immer als Geräteanbindung." Foreground="DimGray" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="AIS-Profil:" FontWeight="Bold" Margin="0,0,8,12"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" x:Name="InterfaceAisProfileText" Margin="0,0,0,12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Geräteprofil:" FontWeight="Bold" Margin="0,0,8,12"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="2" x:Name="InterfaceDeviceProfileText" Margin="0,0,0,12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Exportprofil:" FontWeight="Bold" Margin="0,0,8,12"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="2" x:Name="InterfaceExportProfileText" Margin="0,0,0,12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Lizenzzählung:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="2" Text="Aktive Schnittstellenprofile zählen immer als Geräteanbindung." Foreground="DimGray" TextWrapping="Wrap"/>
 
-                                    <StackPanel Grid.Row="0"
+                                    <StackPanel Grid.Row="4"
                                                 Grid.Column="2"
-                                                Grid.RowSpan="4"
-                                                Margin="18,0,0,0"
-                                                VerticalAlignment="Top">
+                                                Orientation="Horizontal"
+                                                Margin="0,48,0,0"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center">
                                         <Button Content="AIS Ausgabe Info"
-                                                MinWidth="170"
-                                                Margin="0,0,0,8"
+                                                Width="220"
+                                                Margin="0,0,18,0"
                                                 Click="ShowAisOutputInfo_Click"
                                                 ToolTip="Zeigt, welche AIS-Feldkennungen dieses Schnittstellenprofil ausgibt."/>
                                         <Button x:Name="InterfaceDeviceTechnicalProfileButton"
                                                 Content="Gerätesteckbrief"
-                                                MinWidth="170"
+                                                Width="220"
                                                 Click="ShowInterfaceDeviceTechnicalProfile_Click"
                                                 ToolTip="Öffnet den Geräte-Steckbrief des ausgewählten Geräteprofils."/>
                                     </StackPanel>
 
-                                    <Border Grid.Row="0"
-                                            Grid.Column="3"
-                                            Grid.RowSpan="4"
-                                            Width="150"
-                                            Height="112"
-                                            Margin="28,0,18,0"
-                                            Padding="6"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Top"
-                                            BorderBrush="{StaticResource XdtBoxBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="6"
-                                            Background="White">
-                                        <Grid>
-                                            <Image x:Name="InterfaceDeviceImage"
-                                                   Source="{Binding Text, ElementName=InterfaceDeviceImagePathTextBox, Converter={StaticResource DeviceImageSourceConverter}}"
-                                                   Stretch="Uniform"/>
-                                            <TextBlock x:Name="InterfaceDeviceImagePlaceholder"
-                                                       Text="Kein Gerätebild"
-                                                       TextAlignment="Center"
-                                                       VerticalAlignment="Center"
-                                                       Foreground="{StaticResource XdtBoxMutedTextBrush}"/>
-                                            <TextBox x:Name="InterfaceDeviceImagePathTextBox" Visibility="Collapsed"/>
-                                        </Grid>
-                                    </Border>
+                                    <Grid Grid.Row="0"
+                                          Grid.Column="3"
+                                          Grid.RowSpan="5"
+                                          Width="245"
+                                          Height="205"
+                                          Margin="0,-2,0,0"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Top">
+                                        <Image x:Name="InterfaceDeviceImage"
+                                               Source="{Binding Text, ElementName=InterfaceDeviceImagePathTextBox, Converter={StaticResource DeviceImageSourceConverter}}"
+                                               Stretch="Uniform"/>
+                                        <TextBlock x:Name="InterfaceDeviceImagePlaceholder"
+                                                   Text="Kein Gerätebild"
+                                                   TextAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{StaticResource XdtBoxMutedTextBrush}"/>
+                                        <TextBox x:Name="InterfaceDeviceImagePathTextBox" Visibility="Collapsed"/>
+                                    </Grid>
 
                                     <ToggleButton x:Name="InterfaceActivationStatusButton"
                                                   Grid.Row="0"
                                                   Grid.Column="4"
-                                                  Grid.RowSpan="4"
-                                                  Style="{StaticResource XdtBoxInterfaceActivationToggleStyle}"
-                                                  VerticalAlignment="Top"
-                                                  Margin="10,8,0,0"
+                                                  Grid.RowSpan="5"
+                                                  Style="{StaticResource XdtBoxInterfaceActivationSwitchStyle}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Margin="0,24,0,0"
                                                   Checked="InterfaceActivationStatusButton_Changed"
                                                   Unchecked="InterfaceActivationStatusButton_Changed"/>
                                 </Grid>
@@ -2464,18 +2454,34 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <WrapPanel Grid.Row="0" Margin="0,0,0,8">
-                        <Button Content="Text hinzufügen" Width="130" Margin="0,0,8,8" Click="TechnicianWhiteboardAddText_Click"/>
-                        <Button Content="Bild einfügen" Width="120" Margin="0,0,8,8" Click="TechnicianWhiteboardAddImage_Click"/>
-                        <Button Content="Aktivierte Geräte einfügen" Width="190" Margin="0,0,8,8" Click="TechnicianWhiteboardInsertActiveDevices_Click"/>
-                        <Button Content="Speichern" Width="110" Margin="0,0,8,8" Click="TechnicianWhiteboardSave_Click"/>
-                        <Button Content="Als PDF speichern" Width="150" Margin="0,0,18,8" Click="TechnicianWhiteboardExportPdf_Click"/>
-                        <CheckBox x:Name="TechnicianWhiteboardBoldCheckBox" Content="Fett" Margin="0,4,10,8"/>
-                        <CheckBox x:Name="TechnicianWhiteboardItalicCheckBox" Content="Kursiv" Margin="0,4,10,8"/>
-                        <CheckBox x:Name="TechnicianWhiteboardUnderlineCheckBox" Content="Unterstrichen" Margin="0,4,10,8"/>
+                        <Button Content="Text hinzufügen" Width="130" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardAddText_Click"/>
+                        <Button Content="Bild einfügen" Width="120" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardAddImage_Click"/>
+                        <Button Content="Aktivierte Geräte einfügen" Width="190" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardInsertActiveDevices_Click"/>
+                        <Button Content="Speichern" Width="110" Margin="0,0,8,8" Style="{StaticResource XdtBoxPrimaryButtonStyle}" Click="TechnicianWhiteboardSave_Click"/>
+                        <Button Content="Als PDF speichern" Width="150" Margin="0,0,18,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardExportPdf_Click"/>
+                        <CheckBox x:Name="TechnicianWhiteboardBoldCheckBox" Content="Fett" Margin="0,4,10,8" Checked="TechnicianWhiteboardFormatting_Changed" Unchecked="TechnicianWhiteboardFormatting_Changed"/>
+                        <CheckBox x:Name="TechnicianWhiteboardItalicCheckBox" Content="Kursiv" Margin="0,4,10,8" Checked="TechnicianWhiteboardFormatting_Changed" Unchecked="TechnicianWhiteboardFormatting_Changed"/>
+                        <CheckBox x:Name="TechnicianWhiteboardUnderlineCheckBox" Content="Unterstrichen" Margin="0,4,10,8" Checked="TechnicianWhiteboardFormatting_Changed" Unchecked="TechnicianWhiteboardFormatting_Changed"/>
+                        <TextBlock Text="Schriftgröße:" VerticalAlignment="Center" Margin="0,0,6,8"/>
+                        <ComboBox x:Name="TechnicianWhiteboardFontSizeComboBox"
+                                  Width="72"
+                                  SelectedValuePath="Tag"
+                                  SelectedValue="16"
+                                  SelectionChanged="TechnicianWhiteboardFormatting_Changed"
+                                  Margin="0,0,8,8">
+                            <ComboBoxItem Content="12" Tag="12"/>
+                            <ComboBoxItem Content="14" Tag="14"/>
+                            <ComboBoxItem Content="16" Tag="16"/>
+                            <ComboBoxItem Content="18" Tag="18"/>
+                            <ComboBoxItem Content="22" Tag="22"/>
+                            <ComboBoxItem Content="28" Tag="28"/>
+                            <ComboBoxItem Content="36" Tag="36"/>
+                        </ComboBox>
                         <ComboBox x:Name="TechnicianWhiteboardColorComboBox"
                                   Width="120"
                                   SelectedValuePath="Tag"
                                   SelectedValue="#24313A"
+                                  SelectionChanged="TechnicianWhiteboardFormatting_Changed"
                                   Margin="0,0,8,8">
                             <ComboBoxItem Content="Dunkel" Tag="#24313A"/>
                             <ComboBoxItem Content="Blau" Tag="#0B4D93"/>
@@ -2484,15 +2490,12 @@
                         </ComboBox>
                     </WrapPanel>
                     <Border Grid.Row="1"
-                            Background="White"
-                            BorderBrush="{StaticResource XdtBoxBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6">
+                            Style="{StaticResource XdtBoxWhiteboardSurfaceStyle}">
                         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                             <Canvas x:Name="TechnicianWhiteboardCanvas"
                                     Width="1600"
                                     Height="1000"
-                                    Background="White"
+                                    Background="{StaticResource XdtBoxWhiteboardBrush}"
                                     AllowDrop="True"
                                     Drop="TechnicianWhiteboardCanvas_Drop"/>
                         </ScrollViewer>
@@ -2637,6 +2640,10 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -2716,25 +2723,27 @@
                                 <TextBox Grid.Row="4" Grid.Column="3" x:Name="LicenseCustomerBicTextBox" Margin="0,0,0,6"/>
 
                                 <TextBlock Grid.Row="5" Grid.Column="0" Text="Kontoinhaber:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="5" Grid.Column="1" x:Name="LicenseCustomerAccountHolderTextBox" Margin="0,0,16,6"/>
-                                <StackPanel Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerAccountHolderTextBox" Margin="0,0,0,6"/>
+
+                                <WrapPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,2,0,8">
                                     <CheckBox x:Name="LicenseSepaConsentCheckBox"
                                               Content="Einwilligung SEPA-Lastschrift"
-                                              Margin="0,0,16,0"
+                                              Margin="0,0,24,6"
                                               Checked="LicensePaymentOption_Checked"/>
                                     <CheckBox x:Name="LicenseAlwaysInvoiceCheckBox"
                                               Content="Kein SEPA - bitte immer Rechnung zusenden"
+                                              Margin="0,0,0,6"
                                               Checked="LicensePaymentOption_Checked"/>
-                                </StackPanel>
+                                </WrapPanel>
 
-                                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal">
+                                <DockPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" LastChildFill="True">
                                     <Button Content="Speichern" Width="120" Margin="0,0,8,0" Click="SaveLicenseCustomerData_Click"/>
                                     <TextBlock x:Name="LicenseCustomerDataStatusText"
                                                VerticalAlignment="Center"
                                                Foreground="#2F6F4E"
                                                TextWrapping="Wrap"
                                                Text="Die Gerätenamen dienen nur der Dokumentation der Lizenzanfrage. Lizenzpflichtig ist ausschließlich die Anzahl aktivierter Geräteanbindungen."/>
-                                </StackPanel>
+                                </DockPanel>
                             </Grid>
                         </GroupBox>
 

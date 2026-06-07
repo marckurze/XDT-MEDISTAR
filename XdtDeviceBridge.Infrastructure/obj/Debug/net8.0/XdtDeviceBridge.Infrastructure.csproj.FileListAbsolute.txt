@@ -17,3 +17,15 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Infrastructure\obj\Debug\net8.0\ref\XdtDe
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Infrastructure.deps.json
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Infrastructure.dll
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Infrastructure.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-test-bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-test-bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-test-bin\Debug\net8.0\XdtDeviceBridge.Infrastructure.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\app\XdtDeviceBridge.Infrastructure.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\app\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\app\XdtDeviceBridge.Infrastructure.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Infrastructure.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Infrastructure.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Infrastructure.pdb

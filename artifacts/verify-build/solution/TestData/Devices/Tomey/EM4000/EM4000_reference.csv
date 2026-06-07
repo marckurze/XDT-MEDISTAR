@@ -1,0 +1,11 @@
+[PT_ID],PAT-EM4000
+[COMMENT],Kontrolle Zellmessung
+[RL_1],Right
+[DENSITY_1],2440
+[THK_1],531
+[RL_2],Left
+[DENSITY_2],2388
+[THK_2],527
+[FILES_N],2
+[FILE],em4000-right.jpg,,r,
+[FILE],em4000-left.jpg,,l,

@@ -37,11 +37,7 @@
         </StackPanel>
 
         <Border Grid.Row="1"
-                Background="{StaticResource XdtBoxPanelBackgroundBrush}"
-                BorderBrush="{StaticResource XdtBoxBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="6"
-                Padding="12">
+                Style="{StaticResource XdtBoxSectionCardStyle}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <CheckBox x:Name="StartMinimizedToTrayCheckBox"

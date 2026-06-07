@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?xml-stylesheet type="text/xsl" href="NIDEK_LM_Stylesheet.xsl" ?>
+
+<Ophthalmology>
+  
+  <Common>
+  
+      <Company>NIDEK</Company>
+      <ModelName>LM-7</ModelName>
+      <MachineNo></MachineNo>
+      <ROMVersion>V1.3.6W</ROMVersion>
+      <Version>NIDEK_V1.00</Version>
+      <Date>2026-05-18</Date>
+      <Time>13:07:57</Time>
+      
+      <Patient>
+           <No.></No.>
+           <ID></ID>
+           <FirstName></FirstName>
+           <MiddleName></MiddleName>
+           <LastName></LastName>
+           <Sex></Sex>
+           <Age></Age>
+           <DOB></DOB>
+           <NameJ1></NameJ1>
+           <NameJ2></NameJ2>
+      </Patient>
+      
+  </Common>
+  
+  <Measure type="LM">
+  
+      <MeasureMode>AutoProgressive</MeasureMode>
+      <DiopterStep unit="D">0.25</DiopterStep>
+      <AxisStep unit="deg">1</AxisStep>
+      <CylinderMode>-</CylinderMode>
+      <PrismDiopterStep unit="pri">0.25</PrismDiopterStep>
+      <PrismBaseStep unit="deg">1</PrismBaseStep>
+      <PrismMode>xy</PrismMode>
+      <AddMode>add</AddMode>
+      
+      <LM>
+      
+        <R>
+               <Sphare unit="D">6.25</Sphare>
+               <Cylinder unit="D">-3.25</Cylinder>
+               <Axis unit="deg">3</Axis>
+               <SE unit="D"></SE>
+               <ADD unit="D"></ADD>
+               <ADD2 unit="D"></ADD2>
+               <NearSphare unit="D"></NearSphare>
+               <NearSphare2 unit="D"></NearSphare2>
+               <Prism unit="pri"></Prism>
+               <PrismBase unit="deg"></PrismBase>
+               <PrismX unit="pri" base="in"></PrismX>
+               <PrismY unit="pri" base="up"></PrismY>
+               <UVTransmittance unit="%"></UVTransmittance>
+        </R>
+        
+        <L>
+               <Sphare unit="D">6.50</Sphare>
+               <Cylinder unit="D">-2.75</Cylinder>
+               <Axis unit="deg">170</Axis>
+               <SE unit="D"></SE>
+               <ADD unit="D">1.50</ADD>
+               <ADD2 unit="D"></ADD2>
+               <NearSphare unit="D">8.00</NearSphare>
+               <NearSphare2 unit="D"></NearSphare2>
+               <Prism unit="pri"></Prism>
+               <PrismBase unit="deg"></PrismBase>
+               <PrismX unit="pri" base="in"></PrismX>
+               <PrismY unit="pri" base="up"></PrismY>
+               <UVTransmittance unit="%"></UVTransmittance>
+        </L>
+        
+      </LM>
+      
+  </Measure>
+  
+</Ophthalmology>
+

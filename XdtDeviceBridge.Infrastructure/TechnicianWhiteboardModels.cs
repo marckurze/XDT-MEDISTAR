@@ -19,7 +19,8 @@ public sealed record TechnicianWhiteboardTextItem(
     bool IsBold,
     bool IsItalic,
     bool IsUnderline,
-    string Color);
+    string Color,
+    double FontSize = 16);
 
 public sealed record TechnicianWhiteboardImageItem(
     string Id,

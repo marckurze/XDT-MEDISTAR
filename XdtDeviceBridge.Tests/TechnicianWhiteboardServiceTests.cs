@@ -15,7 +15,7 @@ public sealed class TechnicianWhiteboardServiceTests
         var state = new TechnicianWhiteboardState(
             new[]
             {
-                new TechnicianWhiteboardTextItem("text-1", "Techniker-Notiz", 12, 34, 220, 80, true, false, true, "#0B4D93")
+                new TechnicianWhiteboardTextItem("text-1", "Techniker-Notiz", 12, 34, 220, 80, true, false, true, "#0B4D93", 22)
             },
             new[]
             {
@@ -29,6 +29,7 @@ public sealed class TechnicianWhiteboardServiceTests
         Assert.Equal("Techniker-Notiz", text.Text);
         Assert.True(text.IsBold);
         Assert.True(text.IsUnderline);
+        Assert.Equal(22, text.FontSize);
         var image = Assert.Single(loaded.ImageItems);
         Assert.Equal(120, image.Width);
         Assert.Equal(90, image.Height);

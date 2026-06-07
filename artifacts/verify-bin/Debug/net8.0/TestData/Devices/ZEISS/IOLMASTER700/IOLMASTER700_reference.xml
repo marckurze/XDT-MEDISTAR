@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IOLMaster700Export>
+  <ExamData>
+    <Patient>
+      <Id>PAT-IOL</Id>
+    </Patient>
+    <Exam>
+      <Od>
+        <AxialData>
+          <Acd>
+            <Value>3.33</Value>
+          </Acd>
+          <Al>
+            <Value>24.16</Value>
+          </Al>
+        </AxialData>
+        <Keratometry>
+          <MaximalRadius>7.48</MaximalRadius>
+          <MaximalAxis>1.69</MaximalAxis>
+          <MinimalRadius>7.20</MinimalRadius>
+          <MinimalAxis>91.69</MinimalAxis>
+        </Keratometry>
+      </Od>
+      <Os>
+        <AxialData>
+          <Acd>
+            <Value>3.38</Value>
+          </Acd>
+          <Al>
+            <Value>24.49</Value>
+          </Al>
+        </AxialData>
+        <Keratometry>
+          <MaximalRadius>7.58</MaximalRadius>
+          <MaximalAxis>172.75</MaximalAxis>
+          <MinimalRadius>7.24</MinimalRadius>
+          <MinimalAxis>82.75</MinimalAxis>
+        </Keratometry>
+      </Os>
+    </Exam>
+  </ExamData>
+</IOLMaster700Export>

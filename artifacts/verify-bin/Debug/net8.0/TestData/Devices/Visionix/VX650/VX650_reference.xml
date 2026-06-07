@@ -1,0 +1,33 @@
+<optic>
+  <device>
+    <company>Visionix</company>
+    <model>VX 650</model>
+  </device>
+  <objective_mesurement>
+    <measure_WF>
+      <VD>12.00</VD>
+      <wf_right>
+        <Near_Vision_fast>
+          <sphere>0.25</sphere>
+          <cylinder>-0.75</cylinder>
+          <axis>141</axis>
+        </Near_Vision_fast>
+      </wf_right>
+      <wf_left>
+        <Near_Vision_fast>
+          <sphere>0.00</sphere>
+          <cylinder>0.00</cylinder>
+          <axis>0</axis>
+        </Near_Vision_fast>
+      </wf_left>
+    </measure_WF>
+  </objective_mesurement>
+  <TONO>
+    <tono_right>
+      <average><IOP_mmHg>12.7</IOP_mmHg></average>
+    </tono_right>
+    <tono_left>
+      <average><IOP_mmHg>14.0</IOP_mmHg></average>
+    </tono_left>
+  </TONO>
+</optic>

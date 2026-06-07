@@ -181,6 +181,7 @@ public partial class MainWindow : Window
     private System.Windows.Media.Brush? _interfaceProfileSaveButtonOriginalBorderBrush;
     private System.Windows.Point? _technicianWhiteboardDragStart;
     private FrameworkElement? _technicianWhiteboardDraggedElement;
+    private Border? _technicianWhiteboardSelectedElement;
     private TabItem? _lastAllowedMainTabItem;
     private bool _isTabProtectionUnlocked;
     private bool _isRestoringProtectedTabSelection;
@@ -3934,7 +3935,8 @@ public partial class MainWindow : Window
             TechnicianWhiteboardBoldCheckBox.IsChecked == true,
             TechnicianWhiteboardItalicCheckBox.IsChecked == true,
             TechnicianWhiteboardUnderlineCheckBox.IsChecked == true,
-            TechnicianWhiteboardColorComboBox.SelectedValue as string ?? "#24313A");
+            TechnicianWhiteboardColorComboBox.SelectedValue as string ?? "#24313A",
+            GetSelectedTechnicianWhiteboardFontSize());
         AddTechnicianWhiteboardTextElement(item);
     }
 
@@ -4041,7 +4043,8 @@ public partial class MainWindow : Window
                 IsBold: true,
                 IsItalic: false,
                 IsUnderline: false,
-                Color: "#24313A"));
+                Color: "#24313A",
+                FontSize: 16));
 
             if (deviceProfile is not null)
             {
@@ -4111,11 +4114,15 @@ public partial class MainWindow : Window
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             BorderThickness = new Thickness(0),
+            BorderBrush = System.Windows.Media.Brushes.Transparent,
             Background = System.Windows.Media.Brushes.Transparent,
+            FocusVisualStyle = null,
+            Padding = new Thickness(4),
             FontWeight = item.IsBold ? FontWeights.Bold : FontWeights.Normal,
             FontStyle = item.IsItalic ? FontStyles.Italic : FontStyles.Normal,
             TextDecorations = item.IsUnderline ? TextDecorations.Underline : null,
-            Foreground = CreateBrush(item.Color)
+            Foreground = CreateBrush(item.Color),
+            FontSize = NormalizeTechnicianWhiteboardFontSize(item.FontSize)
         };
 
         var border = CreateWhiteboardElementBorder(item.Id, "Text", null, item.Width, item.Height, textBox);
@@ -4141,25 +4148,14 @@ public partial class MainWindow : Window
     {
         var root = new Grid();
         root.Children.Add(content);
-        var resizeThumb = new Thumb
-        {
-            Width = 14,
-            Height = 14,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
-            VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
-            Cursor = System.Windows.Input.Cursors.SizeNWSE,
-            Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(11, 77, 147)),
-            Opacity = 0.55
-        };
-        resizeThumb.DragDelta += (_, args) =>
-        {
-            if (root.Parent is Border border)
-            {
-                border.Width = Math.Max(80, border.Width + args.HorizontalChange);
-                border.Height = Math.Max(45, border.Height + args.VerticalChange);
-            }
-        };
-        root.Children.Add(resizeThumb);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Left, System.Windows.VerticalAlignment.Top, System.Windows.Input.Cursors.SizeNWSE, true, true, false, false);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Stretch, System.Windows.VerticalAlignment.Top, System.Windows.Input.Cursors.SizeNS, false, true, false, false);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Right, System.Windows.VerticalAlignment.Top, System.Windows.Input.Cursors.SizeNESW, false, true, true, false);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Left, System.Windows.VerticalAlignment.Stretch, System.Windows.Input.Cursors.SizeWE, true, false, false, false);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Right, System.Windows.VerticalAlignment.Stretch, System.Windows.Input.Cursors.SizeWE, false, false, true, false);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Left, System.Windows.VerticalAlignment.Bottom, System.Windows.Input.Cursors.SizeNESW, true, false, false, true);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Stretch, System.Windows.VerticalAlignment.Bottom, System.Windows.Input.Cursors.SizeNS, false, false, false, true);
+        AddWhiteboardResizeThumb(root, System.Windows.HorizontalAlignment.Right, System.Windows.VerticalAlignment.Bottom, System.Windows.Input.Cursors.SizeNWSE, false, false, true, true);
 
         var element = new Border
         {
@@ -4167,23 +4163,118 @@ public partial class MainWindow : Window
             Height = height,
             MinWidth = 80,
             MinHeight = 45,
-            Padding = new Thickness(6),
-            Background = System.Windows.Media.Brushes.White,
-            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(215, 227, 234)),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(0),
+            Background = System.Windows.Media.Brushes.Transparent,
+            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            CornerRadius = new CornerRadius(0),
+            FocusVisualStyle = null,
             Tag = new TechnicianWhiteboardElementTag(id, kind, imagePath),
             Child = root
         };
         element.PreviewMouseLeftButtonDown += TechnicianWhiteboardElement_MouseLeftButtonDown;
         element.PreviewMouseMove += TechnicianWhiteboardElement_MouseMove;
         element.PreviewMouseLeftButtonUp += TechnicianWhiteboardElement_MouseLeftButtonUp;
+        if (content is System.Windows.Controls.TextBox textBox)
+        {
+            textBox.GotKeyboardFocus += (_, _) => SelectTechnicianWhiteboardElement(element);
+            textBox.PreviewMouseLeftButtonDown += (_, _) => SelectTechnicianWhiteboardElement(element);
+        }
+
         return element;
+    }
+
+    private static void AddWhiteboardResizeThumb(
+        Grid root,
+        System.Windows.HorizontalAlignment horizontalAlignment,
+        System.Windows.VerticalAlignment verticalAlignment,
+        System.Windows.Input.Cursor cursor,
+        bool resizeLeft,
+        bool resizeTop,
+        bool resizeRight,
+        bool resizeBottom)
+    {
+        var isHorizontalEdge = horizontalAlignment == System.Windows.HorizontalAlignment.Stretch;
+        var isVerticalEdge = verticalAlignment == System.Windows.VerticalAlignment.Stretch;
+        var thumb = new Thumb
+        {
+            Width = isVerticalEdge ? 8 : isHorizontalEdge ? double.NaN : 11,
+            Height = isHorizontalEdge ? 8 : isVerticalEdge ? double.NaN : 11,
+            HorizontalAlignment = horizontalAlignment,
+            VerticalAlignment = verticalAlignment,
+            Cursor = cursor,
+            Background = System.Windows.Media.Brushes.Transparent,
+            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            FocusVisualStyle = null,
+            Template = CreateInvisibleWhiteboardThumbTemplate(),
+            Opacity = 1
+        };
+        thumb.DragDelta += (_, args) =>
+        {
+            if (root.Parent is Border border)
+            {
+                ResizeTechnicianWhiteboardElement(border, resizeLeft, resizeTop, resizeRight, resizeBottom, args.HorizontalChange, args.VerticalChange);
+            }
+        };
+        root.Children.Add(thumb);
+    }
+
+    private static ControlTemplate CreateInvisibleWhiteboardThumbTemplate()
+    {
+        var border = new FrameworkElementFactory(typeof(Border));
+        border.SetValue(Border.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
+        return new ControlTemplate(typeof(Thumb))
+        {
+            VisualTree = border
+        };
+    }
+
+    private static void ResizeTechnicianWhiteboardElement(Border element, bool resizeLeft, bool resizeTop, bool resizeRight, bool resizeBottom, double dx, double dy)
+    {
+        const double minWidth = 80;
+        const double minHeight = 45;
+        var left = Canvas.GetLeft(element);
+        var top = Canvas.GetTop(element);
+        left = double.IsNaN(left) ? 0 : left;
+        top = double.IsNaN(top) ? 0 : top;
+        var width = element.Width;
+        var height = element.Height;
+
+        if (resizeLeft)
+        {
+            var constrainedDx = Math.Min(dx, width - minWidth);
+            constrainedDx = Math.Max(constrainedDx, -left);
+            element.Width = width - constrainedDx;
+            Canvas.SetLeft(element, left + constrainedDx);
+        }
+        else if (resizeRight)
+        {
+            element.Width = Math.Max(minWidth, width + dx);
+        }
+
+        if (resizeTop)
+        {
+            var constrainedDy = Math.Min(dy, height - minHeight);
+            constrainedDy = Math.Max(constrainedDy, -top);
+            element.Height = height - constrainedDy;
+            Canvas.SetTop(element, top + constrainedDy);
+        }
+        else if (resizeBottom)
+        {
+            element.Height = Math.Max(minHeight, height + dy);
+        }
     }
 
     private void TechnicianWhiteboardElement_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not FrameworkElement element)
+        if (sender is not Border element)
+        {
+            return;
+        }
+
+        SelectTechnicianWhiteboardElement(element);
+        if (IsWhiteboardInteractiveSource(e.OriginalSource as DependencyObject))
         {
             return;
         }
@@ -4191,6 +4282,7 @@ public partial class MainWindow : Window
         _technicianWhiteboardDraggedElement = element;
         _technicianWhiteboardDragStart = e.GetPosition(TechnicianWhiteboardCanvas);
         element.CaptureMouse();
+        e.Handled = true;
     }
 
     private void TechnicianWhiteboardElement_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
@@ -4213,6 +4305,71 @@ public partial class MainWindow : Window
         _technicianWhiteboardDraggedElement?.ReleaseMouseCapture();
         _technicianWhiteboardDraggedElement = null;
         _technicianWhiteboardDragStart = null;
+    }
+
+    private void SelectTechnicianWhiteboardElement(Border element)
+    {
+        _technicianWhiteboardSelectedElement = element;
+    }
+
+    private void TechnicianWhiteboardFormatting_Changed(object sender, RoutedEventArgs e)
+    {
+        ApplyTechnicianWhiteboardFormattingToSelectedText();
+    }
+
+    private void TechnicianWhiteboardFormatting_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        ApplyTechnicianWhiteboardFormattingToSelectedText();
+    }
+
+    private void ApplyTechnicianWhiteboardFormattingToSelectedText()
+    {
+        if (_technicianWhiteboardSelectedElement?.Tag is not TechnicianWhiteboardElementTag tag
+            || !string.Equals(tag.Kind, "Text", StringComparison.OrdinalIgnoreCase)
+            || _technicianWhiteboardSelectedElement.Child is not Grid grid
+            || grid.Children.OfType<System.Windows.Controls.TextBox>().FirstOrDefault() is not { } textBox)
+        {
+            return;
+        }
+
+        textBox.FontWeight = TechnicianWhiteboardBoldCheckBox.IsChecked == true ? FontWeights.Bold : FontWeights.Normal;
+        textBox.FontStyle = TechnicianWhiteboardItalicCheckBox.IsChecked == true ? FontStyles.Italic : FontStyles.Normal;
+        textBox.TextDecorations = TechnicianWhiteboardUnderlineCheckBox.IsChecked == true ? TextDecorations.Underline : null;
+        textBox.Foreground = CreateBrush(TechnicianWhiteboardColorComboBox.SelectedValue as string ?? "#24313A");
+        textBox.FontSize = GetSelectedTechnicianWhiteboardFontSize();
+    }
+
+    private double GetSelectedTechnicianWhiteboardFontSize()
+    {
+        var rawValue = TechnicianWhiteboardFontSizeComboBox.SelectedValue?.ToString();
+        return double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var fontSize)
+            ? NormalizeTechnicianWhiteboardFontSize(fontSize)
+            : 16;
+    }
+
+    private static double NormalizeTechnicianWhiteboardFontSize(double fontSize)
+    {
+        if (double.IsNaN(fontSize) || double.IsInfinity(fontSize) || fontSize <= 0)
+        {
+            return 16;
+        }
+
+        return Math.Clamp(fontSize, 8, 72);
+    }
+
+    private static bool IsWhiteboardInteractiveSource(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is System.Windows.Controls.TextBox || source is Thumb)
+            {
+                return true;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 
     private TechnicianWhiteboardState CreateTechnicianWhiteboardStateFromCanvas()
@@ -4242,7 +4399,8 @@ public partial class MainWindow : Window
                     textBox.FontWeight == FontWeights.Bold,
                     textBox.FontStyle == FontStyles.Italic,
                     textBox.TextDecorations is not null && textBox.TextDecorations.Count > 0,
-                    BrushToHex(textBox.Foreground)));
+                    BrushToHex(textBox.Foreground),
+                    textBox.FontSize));
             }
             else if (string.Equals(tag.Kind, "Image", StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(tag.ImagePath))

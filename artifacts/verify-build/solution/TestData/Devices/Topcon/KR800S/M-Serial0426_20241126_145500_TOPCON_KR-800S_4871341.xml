@@ -1,0 +1,710 @@
+<?xml version="1.0" encoding="Shift-JIS" ?>
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsREF="http://www.joia.or.jp/standardized/namespaces/REF" xmlns:nsKM="http://www.joia.or.jp/standardized/namespaces/KM" xmlns:nsSBJ="http://www.joia.or.jp/standardized/namespaces/SBJ" xsi:schemaLocation="http://www.joia.or.jp/standardized/namespaces/Common Common_schema.xsd http://www.joia.or.jp/standardized/namespaces/REF REF_schema.xsd http://www.joia.or.jp/standardized/namespaces/KM KM_schema.xsd http://www.joia.or.jp/standardized/namespaces/SBJ SBJ_schema.xsd">
+	<nsCommon:Common>
+		<nsCommon:Company>TOPCON</nsCommon:Company>
+		<nsCommon:ModelName>KR-800S</nsCommon:ModelName>
+		<nsCommon:MachineNo>01</nsCommon:MachineNo>
+		<nsCommon:ROMVersion>1.04.00</nsCommon:ROMVersion>
+		<nsCommon:Version>1.2</nsCommon:Version>
+		<nsCommon:Date>2024-11-26</nsCommon:Date>
+		<nsCommon:Time>14:55:00</nsCommon:Time>
+		<nsCommon:Patient>
+			<nsCommon:No.>0426</nsCommon:No.>
+			<nsCommon:ID>0426</nsCommon:ID>
+			<nsCommon:FirstName></nsCommon:FirstName>
+			<nsCommon:MiddleName></nsCommon:MiddleName>
+			<nsCommon:LastName></nsCommon:LastName>
+			<nsCommon:Sex></nsCommon:Sex>
+			<nsCommon:Age></nsCommon:Age>
+			<nsCommon:DOB></nsCommon:DOB>
+			<nsCommon:NameJ1></nsCommon:NameJ1>
+			<nsCommon:NameJ2></nsCommon:NameJ2>
+		</nsCommon:Patient>
+		<nsCommon:Operator>
+			<nsCommon:No.></nsCommon:No.>
+			<nsCommon:ID></nsCommon:ID>
+		</nsCommon:Operator>
+	</nsCommon:Common>
+	<nsREF:Measure type="REF">
+		<nsREF:VD unit="mm">13.75</nsREF:VD>
+		<nsREF:DiopterStep unit="D">0.25</nsREF:DiopterStep>
+		<nsREF:AxisStep unit="deg">1</nsREF:AxisStep>
+		<nsREF:CylinderMode>-</nsREF:CylinderMode>
+		<nsREF:REF>
+			<nsREF:R>
+				<nsREF:List No="1">
+					<nsREF:Error>NO CENTER</nsREF:Error>
+				</nsREF:List>
+				<nsREF:List No="2">
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-4.00</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">13</nsREF:Axis>
+					<nsREF:SE unit="D">1.75</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="3">
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-4.00</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">13</nsREF:Axis>
+					<nsREF:SE unit="D">1.75</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="4">
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-4.00</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">12</nsREF:Axis>
+					<nsREF:SE unit="D">1.75</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex>9</nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:Median>
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-4.00</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">13</nsREF:Axis>
+					<nsREF:SE unit="D">1.75</nsREF:SE>
+				</nsREF:Median>
+			</nsREF:R>
+			<nsREF:L>
+				<nsREF:List No="1">
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-2.50</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">173</nsREF:Axis>
+					<nsREF:SE unit="D">2.50</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="2">
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-2.50</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">173</nsREF:Axis>
+					<nsREF:SE unit="D">2.50</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:List No="3">
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-2.50</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">173</nsREF:Axis>
+					<nsREF:SE unit="D">2.50</nsREF:SE>
+					<nsREF:CataractMode></nsREF:CataractMode>
+					<nsREF:IOLMode></nsREF:IOLMode>
+					<nsREF:ConfidenceIndex></nsREF:ConfidenceIndex>
+				</nsREF:List>
+				<nsREF:Median>
+					<nsREF:Sphere unit="D">3.75</nsREF:Sphere>
+					<nsREF:Cylinder unit="D">-2.50</nsREF:Cylinder>
+					<nsREF:Axis unit="deg">173</nsREF:Axis>
+					<nsREF:SE unit="D">2.50</nsREF:SE>
+				</nsREF:Median>
+			</nsREF:L>
+		</nsREF:REF>
+		<nsREF:PD>
+			<nsREF:WorkingDistance unit="cm"></nsREF:WorkingDistance>
+			<nsREF:Distance unit="mm">66.00</nsREF:Distance>
+			<nsREF:Near unit="mm">66.00</nsREF:Near>
+		</nsREF:PD>
+	</nsREF:Measure>
+	<nsKM:Measure type="KM">
+		<nsKM:DiopterStep unit="D">0.25</nsKM:DiopterStep>
+		<nsKM:AxisStep unit="deg">1</nsKM:AxisStep>
+		<nsKM:CylinderMode>-</nsKM:CylinderMode>
+		<nsKM:RefractiveIndex>1.3375</nsKM:RefractiveIndex>
+		<nsKM:KM>
+			<nsKM:R>
+				<nsKM:List No="1">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.51</nsKM:Radius>
+						<nsKM:Power unit="D">39.75</nsKM:Power>
+						<nsKM:Axis unit="deg">11</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.82</nsKM:Radius>
+						<nsKM:Power unit="D">43.25</nsKM:Power>
+						<nsKM:Axis unit="deg">101</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.16</nsKM:Radius>
+						<nsKM:Power unit="D">41.50</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-3.50</nsKM:Power>
+						<nsKM:Axis unit="deg">11</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="2">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.51</nsKM:Radius>
+						<nsKM:Power unit="D">39.75</nsKM:Power>
+						<nsKM:Axis unit="deg">11</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.82</nsKM:Radius>
+						<nsKM:Power unit="D">43.25</nsKM:Power>
+						<nsKM:Axis unit="deg">101</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.16</nsKM:Radius>
+						<nsKM:Power unit="D">41.50</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-3.50</nsKM:Power>
+						<nsKM:Axis unit="deg">11</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="3">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.43</nsKM:Radius>
+						<nsKM:Power unit="D">40.00</nsKM:Power>
+						<nsKM:Axis unit="deg">8</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.72</nsKM:Radius>
+						<nsKM:Power unit="D">43.75</nsKM:Power>
+						<nsKM:Axis unit="deg">98</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.07</nsKM:Radius>
+						<nsKM:Power unit="D">42.00</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-3.75</nsKM:Power>
+						<nsKM:Axis unit="deg">8</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:Median>
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.48</nsKM:Radius>
+						<nsKM:Power unit="D">39.75</nsKM:Power>
+						<nsKM:Axis unit="deg">11</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.79</nsKM:Radius>
+						<nsKM:Power unit="D">43.50</nsKM:Power>
+						<nsKM:Axis unit="deg">101</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.14</nsKM:Radius>
+						<nsKM:Power unit="D">41.75</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-3.75</nsKM:Power>
+						<nsKM:Axis unit="deg">11</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:Median>
+			</nsKM:R>
+			<nsKM:L>
+				<nsKM:List No="1">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.33</nsKM:Radius>
+						<nsKM:Power unit="D">40.50</nsKM:Power>
+						<nsKM:Axis unit="deg">171</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.86</nsKM:Radius>
+						<nsKM:Power unit="D">43.00</nsKM:Power>
+						<nsKM:Axis unit="deg">81</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.10</nsKM:Radius>
+						<nsKM:Power unit="D">41.75</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-2.50</nsKM:Power>
+						<nsKM:Axis unit="deg">171</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="2">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.37</nsKM:Radius>
+						<nsKM:Power unit="D">40.25</nsKM:Power>
+						<nsKM:Axis unit="deg">169</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.89</nsKM:Radius>
+						<nsKM:Power unit="D">42.75</nsKM:Power>
+						<nsKM:Axis unit="deg">79</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.13</nsKM:Radius>
+						<nsKM:Power unit="D">41.50</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-2.50</nsKM:Power>
+						<nsKM:Axis unit="deg">169</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:List No="3">
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.34</nsKM:Radius>
+						<nsKM:Power unit="D">40.50</nsKM:Power>
+						<nsKM:Axis unit="deg">171</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.85</nsKM:Radius>
+						<nsKM:Power unit="D">43.00</nsKM:Power>
+						<nsKM:Axis unit="deg">81</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.10</nsKM:Radius>
+						<nsKM:Power unit="D">41.75</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-2.50</nsKM:Power>
+						<nsKM:Axis unit="deg">171</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:List>
+				<nsKM:Median>
+					<nsKM:R1>
+						<nsKM:Radius unit="mm">8.35</nsKM:Radius>
+						<nsKM:Power unit="D">40.50</nsKM:Power>
+						<nsKM:Axis unit="deg">171</nsKM:Axis>
+					</nsKM:R1>
+					<nsKM:R2>
+						<nsKM:Radius unit="mm">7.87</nsKM:Radius>
+						<nsKM:Power unit="D">43.00</nsKM:Power>
+						<nsKM:Axis unit="deg">81</nsKM:Axis>
+					</nsKM:R2>
+					<nsKM:Average>
+						<nsKM:Radius unit="mm">8.11</nsKM:Radius>
+						<nsKM:Power unit="D">41.75</nsKM:Power>
+					</nsKM:Average>
+					<nsKM:Cylinder>
+						<nsKM:Power unit="D">-2.50</nsKM:Power>
+						<nsKM:Axis unit="deg">171</nsKM:Axis>
+					</nsKM:Cylinder>
+				</nsKM:Median>
+			</nsKM:L>
+		</nsKM:KM>
+		<Confidence>
+			<R>
+				<List No="1">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="2">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="3">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<Median>
+					<ConfidenceIndex></ConfidenceIndex>
+				</Median>
+			</R>
+			<L>
+				<List No="1">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="2">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<List No="3">
+					<ConfidenceIndex></ConfidenceIndex>
+				</List>
+				<Median>
+					<ConfidenceIndex></ConfidenceIndex>
+				</Median>
+			</L>
+		</Confidence>
+	</nsKM:Measure>
+	<nsSBJ:Measure type="SBJ">
+		<nsSBJ:RefractionTest>
+			<nsSBJ:Type No="1">
+				<nsSBJ:TypeName>Full Correction</nsSBJ:TypeName>
+				<nsSBJ:ExamDistance No="1">
+					<nsSBJ:Distance unit="cm">500.000</nsSBJ:Distance>
+					<nsSBJ:RefractionData>
+						<nsSBJ:R>
+							<nsSBJ:Sph unit="D">3.75</nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D">-4.00</nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg">13</nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:R>
+						<nsSBJ:L>
+							<nsSBJ:Sph unit="D">3.75</nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D">-2.50</nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg">173</nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:L>
+						<nsSBJ:VD unit="mm">13.75</nsSBJ:VD>
+					</nsSBJ:RefractionData>
+					<nsSBJ:VA>
+						<nsSBJ:R unit="Decimal">0.6</nsSBJ:R>
+						<nsSBJ:L unit="Decimal">1.0</nsSBJ:L>
+						<nsSBJ:B unit="Decimal"></nsSBJ:B>
+					</nsSBJ:VA>
+					<nsSBJ:ContrastVA>
+						<nsSBJ:Rate No="1">
+							<nsSBJ:RateValue unit="%">0.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="2">
+							<nsSBJ:RateValue unit="%">2.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="3">
+							<nsSBJ:RateValue unit="%">5.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="4">
+							<nsSBJ:RateValue unit="%">10.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="5">
+							<nsSBJ:RateValue unit="%">12.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="6">
+							<nsSBJ:RateValue unit="%">25.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="7">
+							<nsSBJ:RateValue unit="%">50.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="8">
+							<nsSBJ:RateValue unit="%">100.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+					</nsSBJ:ContrastVA>
+					<nsSBJ:GlareVA>
+						<nsSBJ:Type No="1">
+							<nsSBJ:GlareType></nsSBJ:GlareType>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Type>
+					</nsSBJ:GlareVA>
+					<nsSBJ:PD>
+						<nsSBJ:R unit="mm"></nsSBJ:R>
+						<nsSBJ:L unit="mm"></nsSBJ:L>
+						<nsSBJ:B unit="mm">66.00</nsSBJ:B>
+					</nsSBJ:PD>
+				</nsSBJ:ExamDistance>
+				<nsSBJ:ExamDistance No="2">
+					<nsSBJ:Distance unit="cm">33.000</nsSBJ:Distance>
+					<nsSBJ:RefractionData>
+						<nsSBJ:R>
+							<nsSBJ:Sph unit="D">5.50</nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D">-4.00</nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg">13</nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:R>
+						<nsSBJ:L>
+							<nsSBJ:Sph unit="D">5.50</nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D">-2.50</nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg">173</nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:L>
+						<nsSBJ:VD unit="mm">13.75</nsSBJ:VD>
+					</nsSBJ:RefractionData>
+					<nsSBJ:VA>
+						<nsSBJ:R unit="Decimal"></nsSBJ:R>
+						<nsSBJ:L unit="Decimal"></nsSBJ:L>
+						<nsSBJ:B unit="Decimal"></nsSBJ:B>
+					</nsSBJ:VA>
+					<nsSBJ:ContrastVA>
+						<nsSBJ:Rate No="1">
+							<nsSBJ:RateValue unit="%">0.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="2">
+							<nsSBJ:RateValue unit="%">2.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="3">
+							<nsSBJ:RateValue unit="%">5.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="4">
+							<nsSBJ:RateValue unit="%">10.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="5">
+							<nsSBJ:RateValue unit="%">12.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="6">
+							<nsSBJ:RateValue unit="%">25.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="7">
+							<nsSBJ:RateValue unit="%">50.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="8">
+							<nsSBJ:RateValue unit="%">100.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+					</nsSBJ:ContrastVA>
+					<nsSBJ:GlareVA>
+						<nsSBJ:Type No="1">
+							<nsSBJ:GlareType></nsSBJ:GlareType>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Type>
+					</nsSBJ:GlareVA>
+					<nsSBJ:PD>
+						<nsSBJ:R unit="mm"></nsSBJ:R>
+						<nsSBJ:L unit="mm"></nsSBJ:L>
+						<nsSBJ:B unit="mm">66.00</nsSBJ:B>
+					</nsSBJ:PD>
+				</nsSBJ:ExamDistance>
+			</nsSBJ:Type>
+			<nsSBJ:Type No="2">
+				<nsSBJ:TypeName>Unaided Data</nsSBJ:TypeName>
+				<nsSBJ:ExamDistance No="1">
+					<nsSBJ:Distance unit="cm">500.000</nsSBJ:Distance>
+					<nsSBJ:RefractionData>
+						<nsSBJ:R>
+							<nsSBJ:Sph unit="D"></nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D"></nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg"></nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:R>
+						<nsSBJ:L>
+							<nsSBJ:Sph unit="D"></nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D"></nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg"></nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:L>
+						<nsSBJ:VD unit="mm">13.75</nsSBJ:VD>
+					</nsSBJ:RefractionData>
+					<nsSBJ:VA>
+						<nsSBJ:R unit="Decimal"></nsSBJ:R>
+						<nsSBJ:L unit="Decimal"></nsSBJ:L>
+						<nsSBJ:B unit="Decimal"></nsSBJ:B>
+					</nsSBJ:VA>
+					<nsSBJ:ContrastVA>
+						<nsSBJ:Rate No="1">
+							<nsSBJ:RateValue unit="%">0.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="2">
+							<nsSBJ:RateValue unit="%">2.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="3">
+							<nsSBJ:RateValue unit="%">5.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="4">
+							<nsSBJ:RateValue unit="%">10.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="5">
+							<nsSBJ:RateValue unit="%">12.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="6">
+							<nsSBJ:RateValue unit="%">25.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="7">
+							<nsSBJ:RateValue unit="%">50.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="8">
+							<nsSBJ:RateValue unit="%">100.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+					</nsSBJ:ContrastVA>
+					<nsSBJ:GlareVA>
+						<nsSBJ:Type No="1">
+							<nsSBJ:GlareType></nsSBJ:GlareType>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Type>
+					</nsSBJ:GlareVA>
+					<nsSBJ:PD>
+						<nsSBJ:R unit="mm"></nsSBJ:R>
+						<nsSBJ:L unit="mm"></nsSBJ:L>
+						<nsSBJ:B unit="mm">66.00</nsSBJ:B>
+					</nsSBJ:PD>
+				</nsSBJ:ExamDistance>
+				<nsSBJ:ExamDistance No="2">
+					<nsSBJ:Distance unit="cm">33.000</nsSBJ:Distance>
+					<nsSBJ:RefractionData>
+						<nsSBJ:R>
+							<nsSBJ:Sph unit="D"></nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D"></nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg"></nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:R>
+						<nsSBJ:L>
+							<nsSBJ:Sph unit="D"></nsSBJ:Sph>
+							<nsSBJ:Cyl unit="D"></nsSBJ:Cyl>
+							<nsSBJ:Axis unit="deg"></nsSBJ:Axis>
+							<nsSBJ:HPri unit="Prism"></nsSBJ:HPri>
+							<nsSBJ:HBase></nsSBJ:HBase>
+							<nsSBJ:VPri unit="Prism"></nsSBJ:VPri>
+							<nsSBJ:VBase></nsSBJ:VBase>
+							<nsSBJ:Prism unit="Prism"></nsSBJ:Prism>
+							<nsSBJ:Angle unit="deg"></nsSBJ:Angle>
+						</nsSBJ:L>
+						<nsSBJ:VD unit="mm">13.75</nsSBJ:VD>
+					</nsSBJ:RefractionData>
+					<nsSBJ:VA>
+						<nsSBJ:R unit="Decimal"></nsSBJ:R>
+						<nsSBJ:L unit="Decimal"></nsSBJ:L>
+						<nsSBJ:B unit="Decimal"></nsSBJ:B>
+					</nsSBJ:VA>
+					<nsSBJ:ContrastVA>
+						<nsSBJ:Rate No="1">
+							<nsSBJ:RateValue unit="%">0.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="2">
+							<nsSBJ:RateValue unit="%">2.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="3">
+							<nsSBJ:RateValue unit="%">5.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="4">
+							<nsSBJ:RateValue unit="%">10.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="5">
+							<nsSBJ:RateValue unit="%">12.5</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="6">
+							<nsSBJ:RateValue unit="%">25.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="7">
+							<nsSBJ:RateValue unit="%">50.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+						<nsSBJ:Rate No="8">
+							<nsSBJ:RateValue unit="%">100.0</nsSBJ:RateValue>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Rate>
+					</nsSBJ:ContrastVA>
+					<nsSBJ:GlareVA>
+						<nsSBJ:Type No="1">
+							<nsSBJ:GlareType></nsSBJ:GlareType>
+							<nsSBJ:R unit="Decimal"></nsSBJ:R>
+							<nsSBJ:L unit="Decimal"></nsSBJ:L>
+							<nsSBJ:B unit="Decimal"></nsSBJ:B>
+						</nsSBJ:Type>
+					</nsSBJ:GlareVA>
+					<nsSBJ:PD>
+						<nsSBJ:R unit="mm"></nsSBJ:R>
+						<nsSBJ:L unit="mm"></nsSBJ:L>
+						<nsSBJ:B unit="mm">66.00</nsSBJ:B>
+					</nsSBJ:PD>
+				</nsSBJ:ExamDistance>
+			</nsSBJ:Type>
+		</nsSBJ:RefractionTest>
+	</nsSBJ:Measure>
+</Ophthalmology>

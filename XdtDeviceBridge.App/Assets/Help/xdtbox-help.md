@@ -20,6 +20,12 @@ Sicherung/Umzug: Sichern und Wiederherstellen der XDTBox-Konfiguration. Wichtig 
 
 Lizenz: Lizenzstatus, Lizenzanforderung, Lizenzimport, lizenzierte Geräteanzahl und Hinweise zum Hardwaretausch.
 
+# Oberfläche und Bedienung
+
+XDTBox nutzt ein zentrales Windows-Theme mit XDTBox-Blau, Türkis, hellen Kartenflächen, abgerundeten Ecken und dezenten Hover-/Pressed-Zuständen. Die Gestaltung ist bewusst ruhig gehalten und ändert keine fachliche Verarbeitung.
+
+Buttons, Tabs, Eingabefelder, Tabellen, Infoboxen und Dialoge folgen derselben Optik. Techniker-Notizen besitzen eine eigene Whiteboard-Fläche; Zeiger, Drag-and-Drop, Größenänderung und PDF-Export bleiben unverändert bedienbar.
+
 # Grundprinzip AIS -> XDTBox -> Gerät/AIS
 
 Das AIS legt eine Patientendatei im Ordner "AIS-Patienten Datei an XDTBox" ab. XDTBox überwacht diesen Ordner und kombiniert die Patientendaten mit Messdaten des gewählten Geräteprofils.

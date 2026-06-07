@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Ophthalmology xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nsCommon="http://www.joia.or.jp/standardized/namespaces/Common" xmlns:nsREF="http://www.joia.or.jp/standardized/namespaces/REF">
+  <nsCommon:Common>
+    <nsCommon:Company>TOPCON</nsCommon:Company>
+    <nsCommon:ModelName>RM-800</nsCommon:ModelName>
+    <nsCommon:MachineNo>RM80001</nsCommon:MachineNo>
+    <nsCommon:ROMVersion>1.00.00</nsCommon:ROMVersion>
+    <nsCommon:Version>1.2</nsCommon:Version>
+    <nsCommon:Date>2026-06-05</nsCommon:Date>
+    <nsCommon:Time>12:00:00</nsCommon:Time>
+  </nsCommon:Common>
+  <nsREF:Measure type="REF">
+    <nsREF:VD unit="mm">12.00</nsREF:VD>
+    <nsREF:DiopterStep unit="D">0.25</nsREF:DiopterStep>
+    <nsREF:AxisStep unit="deg">1</nsREF:AxisStep>
+    <nsREF:CylinderMode>-</nsREF:CylinderMode>
+    <nsREF:REF>
+      <nsREF:R>
+        <nsREF:Median>
+          <nsREF:Sphere unit="D">-3.75</nsREF:Sphere>
+          <nsREF:Cylinder unit="D">-1.25</nsREF:Cylinder>
+          <nsREF:Axis unit="deg">98</nsREF:Axis>
+          <nsREF:SE unit="D">-4.38</nsREF:SE>
+        </nsREF:Median>
+      </nsREF:R>
+      <nsREF:L>
+        <nsREF:Median>
+          <nsREF:Sphere unit="D">-4.25</nsREF:Sphere>
+          <nsREF:Cylinder unit="D">-2.00</nsREF:Cylinder>
+          <nsREF:Axis unit="deg">105</nsREF:Axis>
+          <nsREF:SE unit="D">-5.25</nsREF:SE>
+        </nsREF:Median>
+      </nsREF:L>
+    </nsREF:REF>
+    <nsREF:PD>
+      <nsREF:Distance unit="mm">66.00</nsREF:Distance>
+    </nsREF:PD>
+  </nsREF:Measure>
+</Ophthalmology>

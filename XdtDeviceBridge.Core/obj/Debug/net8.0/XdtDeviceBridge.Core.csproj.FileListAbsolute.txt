@@ -13,3 +13,15 @@ C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Core\obj\Debug\net8.0\ref\XdtDeviceBridge
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Core.deps.json
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Core.dll
 C:\GitHub\XDT-MEDISTAR\.build-check\bin\XdtDeviceBridge.Core.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-bin\Debug\net8.0\XdtDeviceBridge.Core.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-bin\Debug\net8.0\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-bin\Debug\net8.0\XdtDeviceBridge.Core.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-test-bin\Debug\net8.0\XdtDeviceBridge.Core.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-test-bin\Debug\net8.0\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-test-bin\Debug\net8.0\XdtDeviceBridge.Core.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\app\XdtDeviceBridge.Core.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\app\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\app\XdtDeviceBridge.Core.pdb
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Core.deps.json
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Core.dll
+C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Core.pdb

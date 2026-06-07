@@ -1,0 +1,13 @@
+[PT_ID],PAT-EM3000
+[COMMENT],Kontrolle Endothelmessung
+[FILES_N],2
+[FILE],em3000-right.jpg,Endothel rechts
+[FILE],em3000-left.bmp,Endothel links
+[RL],Right
+[NUMBER],2530
+[DENSITY],2488
+[THK],534
+[RL],Left
+[NUMBER],2420
+[DENSITY],2390
+[THK],529

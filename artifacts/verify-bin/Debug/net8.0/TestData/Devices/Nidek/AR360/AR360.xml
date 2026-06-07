@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Data>
+  <Company>NIDEK</Company>
+  <ModelName>AR-360A</ModelName>
+  <Date>2026-05-17</Date>
+  <Time>10:00:00</Time>
+  <Patient>
+    <No.>0001</No.>
+  </Patient>
+  <VD>12.00</VD>
+  <R>
+    <AR>
+      <ARList No="1">
+        <Sphere>+2.00</Sphere>
+        <Cylinder>-1.25</Cylinder>
+        <Axis>177</Axis>
+      </ARList>
+      <ARMedian>
+        <Sphere>+2.00</Sphere>
+        <Cylinder>-1.25</Cylinder>
+        <Axis>172</Axis>
+      </ARMedian>
+      <TrialLens>
+        <Sphere>+9.99</Sphere>
+        <Cylinder>-9.99</Cylinder>
+        <Axis>9</Axis>
+      </TrialLens>
+      <ContactLens>
+        <Sphere>+8.88</Sphere>
+        <Cylinder>-8.88</Cylinder>
+        <Axis>8</Axis>
+      </ContactLens>
+    </AR>
+  </R>
+  <L>
+    <AR>
+      <ARMedian>
+        <Sphere>+1.00</Sphere>
+        <Cylinder>-0.75</Cylinder>
+        <Axis>170</Axis>
+      </ARMedian>
+      <TrialLens>
+        <Sphere>+7.77</Sphere>
+        <Cylinder>-7.77</Cylinder>
+        <Axis>7</Axis>
+      </TrialLens>
+      <ContactLens>
+        <Sphere>+6.66</Sphere>
+        <Cylinder>-6.66</Cylinder>
+        <Axis>6</Axis>
+      </ContactLens>
+    </AR>
+  </L>
+  <PD>
+    <PDList No="1">
+      <FarPD>60</FarPD>
+    </PDList>
+  </PD>
+</Data>
