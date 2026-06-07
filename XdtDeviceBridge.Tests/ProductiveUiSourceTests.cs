@@ -194,14 +194,35 @@ public sealed class ProductiveUiSourceTests
 
         Assert.Contains("<TabItem Header=\"Notizen Techniker\">", xaml);
         Assert.Contains("x:Name=\"TechnicianWhiteboardCanvas\"", xaml);
-        Assert.Contains("TechnicianWhiteboardAddText_Click", xaml);
+        Assert.Contains("x:Name=\"TechnicianWhiteboardTextModeButton\"", xaml);
+        Assert.Contains("x:Name=\"TechnicianWhiteboardHandModeButton\"", xaml);
+        Assert.Contains("Content=\"T\"", xaml);
+        Assert.Contains("Content=\"↔\"", xaml);
+        Assert.DoesNotContain("Content=\"Text\"", xaml);
+        Assert.DoesNotContain("Content=\"Hand\"", xaml);
+        Assert.Contains("ToolTip=\"Textmodus", xaml);
+        Assert.Contains("ToolTip=\"Handmodus", xaml);
+        Assert.Contains("TechnicianWhiteboardTextMode_Click", xaml);
+        Assert.Contains("TechnicianWhiteboardHandMode_Click", xaml);
         Assert.Contains("TechnicianWhiteboardAddImage_Click", xaml);
         Assert.Contains("TechnicianWhiteboardInsertActiveDevices_Click", xaml);
         Assert.Contains("TechnicianWhiteboardExportPdf_Click", xaml);
         Assert.Contains("TechnicianWhiteboardFontSizeComboBox", xaml);
+        Assert.Contains("TechnicianWhiteboardContextMenu_Opened", xaml);
+        Assert.Contains("TechnicianWhiteboardCopyMenuItem", xaml);
+        Assert.Contains("TechnicianWhiteboardPasteMenuItem", xaml);
+        Assert.Contains("TechnicianWhiteboardRemoveMenuItem", xaml);
+        Assert.Contains("TechnicianWhiteboardCanvas_PreviewMouseLeftButtonDown", xaml);
+        Assert.Contains("TechnicianWhiteboardCanvas_PreviewMouseRightButtonDown", xaml);
         Assert.Contains("TechnicianWhiteboardCanvas_Drop", xaml);
         Assert.Contains("XdtBoxWhiteboardSurfaceStyle", xaml);
         Assert.Contains("XdtBoxWhiteboardBrush", xaml);
+        Assert.Contains("TechnicianWhiteboardMode.Text", code);
+        Assert.Contains("TechnicianWhiteboardMode.Hand", code);
+        Assert.Contains("AddTechnicianWhiteboardTextAt", code);
+        Assert.Contains("TechnicianWhiteboardPaste_Click", code);
+        Assert.Contains("TechnicianWhiteboardRemove_Click", code);
+        Assert.Contains("SaveClipboardImageToTechnicianWhiteboard", code);
         Assert.Contains("LoadTechnicianWhiteboard", code);
         Assert.Contains("CreateTechnicianWhiteboardStateFromCanvas", code);
         Assert.Contains("ExportWhiteboardCanvasAsPdf", code);
@@ -211,7 +232,9 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Padding = new Thickness(4)", code);
         Assert.Contains("BorderBrush = System.Windows.Media.Brushes.Transparent", code);
         Assert.Contains("Background = System.Windows.Media.Brushes.Transparent", code);
-        Assert.Contains("CreateInvisibleWhiteboardThumbTemplate", code);
+        Assert.Contains("CreateWhiteboardThumbTemplate", code);
+        Assert.Contains("e.ClickCount >= 2", code);
+        Assert.Contains("FocusTechnicianWhiteboardTextElement(element)", code);
     }
 
     [Fact]
@@ -240,10 +263,25 @@ public sealed class ProductiveUiSourceTests
         var end = xaml.IndexOf("<StackPanel Grid.Row=\"3\" Orientation=\"Horizontal\"", start, StringComparison.Ordinal);
         var section = xaml[start..end];
 
-        Assert.Contains("Grid.Row=\"4\" Grid.Column=\"0\" Text=\"IBAN:\"", section);
-        Assert.Contains("Grid.Row=\"5\" Grid.Column=\"0\" Text=\"Kontoinhaber:\"", section);
-        Assert.Contains("<WrapPanel Grid.Row=\"6\" Grid.Column=\"0\" Grid.ColumnSpan=\"4\"", section);
-        Assert.Contains("<DockPanel Grid.Row=\"7\" Grid.Column=\"0\" Grid.ColumnSpan=\"4\"", section);
+        Assert.Contains("Header=\"Praxis/Firma und Adresse\"", section);
+        Assert.Contains("Header=\"Kontakt\"", section);
+        Assert.Contains("Header=\"Rechnungsversand\"", section);
+        Assert.Contains("Header=\"Bankverbindung / SEPA\"", section);
+        Assert.Contains("LicenseInvoiceEmailTextBox", section);
+        Assert.Contains("LicenseSepaConsentCheckBox", section);
+        Assert.Contains("LicenseAlwaysInvoiceCheckBox", section);
+        Assert.Contains("Grid.Row=\"5\"", section);
+
+        var invoiceSection = ExtractSection(section, "Header=\"Rechnungsversand\"", "</GroupBox>");
+        var bankSection = ExtractSection(section, "Header=\"Bankverbindung / SEPA\"", "</GroupBox>");
+
+        Assert.Contains("LicenseInvoiceEmailTextBox", invoiceSection);
+        Assert.DoesNotContain("LicenseAlwaysInvoiceCheckBox", invoiceSection);
+        Assert.Contains("Orientation=\"Horizontal\"", bankSection);
+        Assert.Contains("LicenseSepaConsentCheckBox", bankSection);
+        Assert.Contains("LicenseAlwaysInvoiceCheckBox", bankSection);
+        Assert.Contains("XdtBoxSecondaryButtonStyle", section);
+        Assert.DoesNotContain("XdtBoxPrimaryButtonStyle", section);
     }
 
     [Fact]
@@ -798,10 +836,55 @@ public sealed class ProductiveUiSourceTests
         Assert.True(end > start);
         var section = xaml[start..end];
 
-        Assert.Contains("<Grid.RowDefinitions>", section);
-        Assert.Contains("<StackPanel Grid.Row=\"1\"", section);
+        Assert.Contains("x:Name=\"InterfaceActivationPreviewStatusPanel\"", section);
+        Assert.Contains("x:Name=\"InterfaceActivationPreviewActionsPanel\"", section);
+        Assert.Contains("<StackPanel x:Name=\"InterfaceActivationPreviewActionsPanel\"", section);
+        Assert.Contains("Grid.Row=\"2\"", section);
+        Assert.Contains("Grid.Row=\"4\"", section);
         Assert.Contains("TextWrapping=\"Wrap\"", section);
         Assert.DoesNotContain("<WrapPanel Grid.Row=\"1\"", section);
+    }
+
+    [Fact]
+    public void InterfaceProfileBottomSections_ShouldHaveDedicatedRows()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var start = xaml.IndexOf("<GroupBox Header=\"Schnittstellenprofil / Automatische Verarbeitung\"", StringComparison.Ordinal);
+        Assert.True(start >= 0);
+        var end = xaml.IndexOf("<TabItem Header=\"Notizen Techniker\">", start, StringComparison.Ordinal);
+        Assert.True(end > start);
+        var section = xaml[start..end];
+
+        Assert.Contains("x:Name=\"InterfaceProfileSafetySectionsPanel\"", section);
+        Assert.Contains("<StackPanel x:Name=\"InterfaceProfileSafetySectionsPanel\"", section);
+        Assert.Contains("<Expander Header=\"Ordnerbereinigung\" IsExpanded=\"True\" Margin=\"0,0,0,8\"", section);
+        Assert.Contains("<Expander Header=\"Archivierung\" IsExpanded=\"True\" Margin=\"0,0,0,8\"", section);
+        Assert.Contains("<Expander Header=\"Prüfung vor Aktivierung\" IsExpanded=\"True\" Margin=\"0,0,0,8\"", section);
+        Assert.Contains("<RowDefinition Height=\"Auto\"/>", section);
+        var bottomSection = section[section.IndexOf("<Expander Header=\"Ordnerbereinigung\"", StringComparison.Ordinal)..];
+        Assert.DoesNotContain("Margin=\"0,-", bottomSection);
+        Assert.DoesNotContain("Grid.Row=\"10\"", bottomSection);
+    }
+
+    [Fact]
+    public void LoadDeviceProfileDialog_ShouldKeepImageActionsInSharedRowAndCloseSeparate()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "LoadDeviceProfileDialog.xaml"));
+
+        Assert.Contains("Height=\"840\"", xaml);
+        Assert.Contains("MinHeight=\"680\"", xaml);
+        var actionRow = ExtractSection(
+            xaml,
+            "<StackPanel Grid.Row=\"8\"",
+            "<Button Grid.Row=\"9\"");
+
+        Assert.Contains("Bild auswählen", actionRow);
+        Assert.Contains("Bild zurücksetzen", actionRow);
+        Assert.Contains("Speichern", actionRow);
+        Assert.DoesNotContain("Schließen", actionRow);
+        Assert.Contains("<Button Grid.Row=\"9\"", xaml);
+        Assert.Contains("Content=\"Schließen\"", xaml);
+        Assert.Contains("HorizontalAlignment=\"Right\"", xaml);
     }
 
     [Fact]

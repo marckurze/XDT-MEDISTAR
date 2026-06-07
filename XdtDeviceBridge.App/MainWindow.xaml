@@ -2229,7 +2229,11 @@
                                      </Grid>
                                  </Expander>
 
-                                <Expander Header="Ordnerbereinigung" IsExpanded="True" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <StackPanel x:Name="InterfaceProfileSafetySectionsPanel"
+                                            Grid.Row="8"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2">
+                                <Expander Header="Ordnerbereinigung" IsExpanded="True" Margin="0,0,0,8">
                                     <StackPanel Margin="8">
                                         <TextBlock Text="Ordnerbereinigung ist gefährlich. Es werden später nur explizit konfigurierte Arbeitsordner bereinigt. Root-, System- und Benutzerprofilordner sind nicht erlaubt. In diesem Schritt wird nur konfiguriert, nicht gelöscht."
                                                    Foreground="DarkRed"
@@ -2251,7 +2255,7 @@
                                     </StackPanel>
                                 </Expander>
 
-                                <Expander Header="Archivierung" IsExpanded="True" Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Archivierung" IsExpanded="True" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2296,7 +2300,7 @@
                                     </Grid>
                                 </Expander>
 
-                                <Expander Header="Prüfung vor Aktivierung" IsExpanded="True" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                                <Expander Header="Prüfung vor Aktivierung" IsExpanded="True" Margin="0,0,0,8">
                                     <Grid Margin="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -2315,11 +2319,9 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,8"/>
 
-                                        <Grid Grid.Row="1" Margin="0,0,0,10">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
+                                        <Grid x:Name="InterfaceActivationPreviewStatusPanel"
+                                              Grid.Row="1"
+                                              Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
@@ -2327,42 +2329,46 @@
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock x:Name="InterfaceActivationPreviewStatusText"
-                                                       Grid.Row="0"
                                                        Grid.Column="0"
                                                        Text="Status: -"
                                                        FontWeight="Bold"
-                                                       Margin="0,0,18,8"
+                                                       Margin="0,0,18,0"
                                                        TextWrapping="Wrap"/>
                                             <TextBlock x:Name="InterfaceActivationPreviewCanActivateText"
-                                                       Grid.Row="0"
                                                        Grid.Column="1"
                                                        Text="Aktivierbar: -"
                                                        FontWeight="Bold"
-                                                       Margin="0,0,18,8"
+                                                       Margin="0,0,18,0"
                                                        TextWrapping="Wrap"/>
                                             <TextBlock x:Name="InterfaceActivationPreviewCountsText"
-                                                       Grid.Row="0"
                                                        Grid.Column="2"
                                                        Text="Blocker: 0 | Warnungen: 0 | Hinweise: 0"
-                                                       Margin="0,0,0,8"
                                                        TextWrapping="Wrap"/>
-
-                                            <StackPanel Grid.Row="1"
-                                                        Grid.Column="0"
-                                                        Grid.ColumnSpan="3"
-                                                        Orientation="Horizontal"
-                                                        HorizontalAlignment="Left">
-                                                <Button Content="Prüfung aktualisieren"
-                                                        Width="180"
-                                                        Margin="0,0,8,0"
-                                                        Click="RefreshInterfaceActivationPreview_Click"/>
-                                                <Button Content="Aktivierung vorbereiten"
-                                                        Width="190"
-                                                        Click="PrepareInterfaceActivationPreview_Click"/>
-                                            </StackPanel>
                                         </Grid>
 
-                                        <Grid Grid.Row="2" Margin="0,0,0,8">
+                                        <StackPanel x:Name="InterfaceActivationPreviewActionsPanel"
+                                                    Grid.Row="2"
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Left"
+                                                    Margin="0,0,0,8">
+                                            <Button Content="Prüfung aktualisieren"
+                                                    Width="180"
+                                                    Margin="0,0,8,0"
+                                                    Click="RefreshInterfaceActivationPreview_Click"/>
+                                            <Button Content="Aktivierung vorbereiten"
+                                                    Width="190"
+                                                    Click="PrepareInterfaceActivationPreview_Click"/>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Row="3"
+                                                   x:Name="InterfaceActivationPreviewHintText"
+                                                   Text="Bitte wählen Sie ein Schnittstellenprofil aus, um die Aktivierungsprüfung anzuzeigen."
+                                                   TextWrapping="Wrap"
+                                                   Foreground="DarkOrange"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,8"/>
+
+                                        <Grid Grid.Row="4" Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="*"/>
@@ -2408,18 +2414,7 @@
                                             </GroupBox>
                                         </Grid>
 
-                                        <Grid Grid.Row="3">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
-                                            <TextBlock Grid.Row="0"
-                                                       x:Name="InterfaceActivationPreviewHintText"
-                                                       Text="Bitte wählen Sie ein Schnittstellenprofil aus, um die Aktivierungsprüfung anzuzeigen."
-                                                       TextWrapping="Wrap"
-                                                       Foreground="DimGray"
-                                                       Margin="0,0,0,6"/>
-                                            <Expander Grid.Row="1" Header="Alle Prüfpunkte" IsExpanded="True">
+                                        <Expander Grid.Row="5" Header="Alle Prüfpunkte" IsExpanded="True">
                                                 <DataGrid x:Name="InterfaceActivationPreviewChecksGrid"
                                                           AutoGenerateColumns="False"
                                                           IsReadOnly="True"
@@ -2436,10 +2431,10 @@
                                                         <DataGridTextColumn Header="Details" Binding="{Binding Detail}" Width="*"/>
                                                     </DataGrid.Columns>
                                                 </DataGrid>
-                                            </Expander>
-                                        </Grid>
+                                        </Expander>
                                     </Grid>
                                 </Expander>
+                                </StackPanel>
                              </Grid>
                          </GroupBox>
                     </Grid>
@@ -2454,7 +2449,20 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <WrapPanel Grid.Row="0" Margin="0,0,0,8">
-                        <Button Content="Text hinzufügen" Width="130" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardAddText_Click"/>
+                        <ToggleButton x:Name="TechnicianWhiteboardTextModeButton"
+                                      Content="T"
+                                      FontWeight="Bold"
+                                      Width="48"
+                                      Margin="0,0,8,8"
+                                      Click="TechnicianWhiteboardTextMode_Click"
+                                      ToolTip="Textmodus: Auf das Whiteboard klicken und direkt schreiben."/>
+                        <ToggleButton x:Name="TechnicianWhiteboardHandModeButton"
+                                      Content="↔"
+                                      FontWeight="Bold"
+                                      Width="48"
+                                      Margin="0,0,8,8"
+                                      Click="TechnicianWhiteboardHandMode_Click"
+                                      ToolTip="Handmodus: Elemente auswählen, verschieben und skalieren."/>
                         <Button Content="Bild einfügen" Width="120" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardAddImage_Click"/>
                         <Button Content="Aktivierte Geräte einfügen" Width="190" Margin="0,0,8,8" Style="{StaticResource XdtBoxSecondaryButtonStyle}" Click="TechnicianWhiteboardInsertActiveDevices_Click"/>
                         <Button Content="Speichern" Width="110" Margin="0,0,8,8" Style="{StaticResource XdtBoxPrimaryButtonStyle}" Click="TechnicianWhiteboardSave_Click"/>
@@ -2497,7 +2505,24 @@
                                     Height="1000"
                                     Background="{StaticResource XdtBoxWhiteboardBrush}"
                                     AllowDrop="True"
-                                    Drop="TechnicianWhiteboardCanvas_Drop"/>
+                                    Drop="TechnicianWhiteboardCanvas_Drop"
+                                    PreviewMouseLeftButtonDown="TechnicianWhiteboardCanvas_PreviewMouseLeftButtonDown"
+                                    PreviewMouseRightButtonDown="TechnicianWhiteboardCanvas_PreviewMouseRightButtonDown">
+                                <Canvas.ContextMenu>
+                                    <ContextMenu Opened="TechnicianWhiteboardContextMenu_Opened">
+                                        <MenuItem x:Name="TechnicianWhiteboardCopyMenuItem"
+                                                  Header="Kopieren"
+                                                  Click="TechnicianWhiteboardCopy_Click"/>
+                                        <MenuItem x:Name="TechnicianWhiteboardPasteMenuItem"
+                                                  Header="Einfügen"
+                                                  Click="TechnicianWhiteboardPaste_Click"/>
+                                        <Separator/>
+                                        <MenuItem x:Name="TechnicianWhiteboardRemoveMenuItem"
+                                                  Header="Entfernen"
+                                                  Click="TechnicianWhiteboardRemove_Click"/>
+                                    </ContextMenu>
+                                </Canvas.ContextMenu>
+                            </Canvas>
                         </ScrollViewer>
                     </Border>
                     <TextBlock Grid.Row="2"
@@ -2551,6 +2576,8 @@
                         <GroupBox Header="Sicherung wiederherstellen" Grid.Row="1" Margin="0,0,0,8">
                             <Grid Margin="8">
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -2688,62 +2715,123 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="180"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="120"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Praxis-/Firmenname:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerNameTextBox" Margin="0,0,0,6"/>
+                                <GroupBox Header="Praxis/Firma und Adresse" Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Praxis-/Firmenname:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerNameTextBox" Margin="0,0,0,6"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Straße / Hausnummer:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="LicenseCustomerStreetTextBox" Margin="0,0,16,0"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="2" Text="PLZ / Ort:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <Grid Grid.Row="1" Grid.Column="3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" x:Name="LicenseCustomerPostalCodeTextBox"/>
+                                            <TextBox Grid.Column="2" x:Name="LicenseCustomerCityTextBox"/>
+                                        </Grid>
+                                    </Grid>
+                                </GroupBox>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Straße / Hausnummer:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="LicenseCustomerStreetTextBox" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="1" Grid.Column="2" Text="PLZ / Ort:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal" Margin="0,0,0,6">
-                                    <TextBox x:Name="LicenseCustomerPostalCodeTextBox" Width="100" Margin="0,0,8,0"/>
-                                    <TextBox x:Name="LicenseCustomerCityTextBox" MinWidth="220"/>
-                                </StackPanel>
+                                <GroupBox Header="Kontakt" Grid.Row="1" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="140"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Telefon:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="LicenseCustomerPhoneTextBox" Margin="0,0,16,6"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Text="E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="0" Grid.Column="3" x:Name="LicenseCustomerEmailTextBox" Margin="0,0,0,6"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Ansprechpartner:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="LicenseCustomerContactPersonTextBox" Margin="0,0,16,0"/>
+                                    </Grid>
+                                </GroupBox>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="LicenseCustomerPhoneTextBox" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="2" Grid.Column="2" Text="E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="2" Grid.Column="3" x:Name="LicenseCustomerEmailTextBox" Margin="0,0,0,6"/>
+                                <GroupBox Header="Rechnungsversand" Grid.Row="2" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Rechnungs-E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="LicenseInvoiceEmailTextBox" Margin="0,0,0,6"/>
+                                    </Grid>
+                                </GroupBox>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Ansprechpartner:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="LicenseCustomerContactPersonTextBox" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="3" Grid.Column="2" Text="Rechnungs-E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="3" Grid.Column="3" x:Name="LicenseInvoiceEmailTextBox" Margin="0,0,0,6"/>
+                                <GroupBox Header="Bankverbindung / SEPA" Grid.Row="3" Margin="0,0,0,8">
+                                    <Grid Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="IBAN:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="LicenseCustomerIbanTextBox" Margin="0,0,16,6"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Text="BIC:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="0" Grid.Column="3" x:Name="LicenseCustomerBicTextBox" Margin="0,0,0,6"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Kontoinhaber:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerAccountHolderTextBox" Margin="0,0,0,6"/>
+                                        <StackPanel Grid.Row="2"
+                                                    Grid.Column="1"
+                                                    Grid.ColumnSpan="3"
+                                                    Orientation="Horizontal">
+                                            <CheckBox x:Name="LicenseSepaConsentCheckBox"
+                                                      Content="Einwilligung SEPA-Lastschrift"
+                                                      Margin="0,0,24,0"
+                                                      Checked="LicensePaymentOption_Checked"/>
+                                            <CheckBox x:Name="LicenseAlwaysInvoiceCheckBox"
+                                                      Content="Kein SEPA - bitte immer Rechnung zusenden"
+                                                      Checked="LicensePaymentOption_Checked"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </GroupBox>
 
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="IBAN:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="LicenseCustomerIbanTextBox" Margin="0,0,16,6"/>
-                                <TextBlock Grid.Row="4" Grid.Column="2" Text="BIC:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="4" Grid.Column="3" x:Name="LicenseCustomerBicTextBox" Margin="0,0,0,6"/>
-
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Kontoinhaber:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerAccountHolderTextBox" Margin="0,0,0,6"/>
-
-                                <WrapPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,2,0,8">
-                                    <CheckBox x:Name="LicenseSepaConsentCheckBox"
-                                              Content="Einwilligung SEPA-Lastschrift"
-                                              Margin="0,0,24,6"
-                                              Checked="LicensePaymentOption_Checked"/>
-                                    <CheckBox x:Name="LicenseAlwaysInvoiceCheckBox"
-                                              Content="Kein SEPA - bitte immer Rechnung zusenden"
-                                              Margin="0,0,0,6"
-                                              Checked="LicensePaymentOption_Checked"/>
-                                </WrapPanel>
-
-                                <DockPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" LastChildFill="True">
-                                    <Button Content="Speichern" Width="120" Margin="0,0,8,0" Click="SaveLicenseCustomerData_Click"/>
+                                <Border Grid.Row="4"
+                                        Style="{StaticResource XdtBoxInfoCardStyle}"
+                                        Margin="0,0,0,8">
                                     <TextBlock x:Name="LicenseCustomerDataStatusText"
-                                               VerticalAlignment="Center"
                                                Foreground="#2F6F4E"
                                                TextWrapping="Wrap"
                                                Text="Die Gerätenamen dienen nur der Dokumentation der Lizenzanfrage. Lizenzpflichtig ist ausschließlich die Anzahl aktivierter Geräteanbindungen."/>
-                                </DockPanel>
+                                </Border>
+
+                                <Button Grid.Row="5"
+                                        Content="Speichern"
+                                        Width="140"
+                                        HorizontalAlignment="Right"
+                                        Style="{StaticResource XdtBoxSecondaryButtonStyle}"
+                                        Click="SaveLicenseCustomerData_Click"/>
                             </Grid>
                         </GroupBox>
 

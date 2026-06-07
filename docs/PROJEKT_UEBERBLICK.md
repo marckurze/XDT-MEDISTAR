@@ -8,7 +8,7 @@ Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Session
 
 XdtDeviceBridge ist eine lokale WPF-Desktop-App fuer die Bridge zwischen Arztinformationssystemen und augenaerztlichen Untersuchungsgeraeten. Der Produktname fuer den spaeteren Einsatz ist XDTBox. Das offizielle Programmicon `XDTBox.ico` liegt unter `XdtDeviceBridge.App/Assets/App/XDTBox.ico` und wird von Kunden-App, Systray-NotifyIcon sowie den internen Lizenzwerkzeugen verwendet. Das Logo-/Schriftzugmotiv liegt unter `XdtDeviceBridge.App/Assets/Branding/XDTBox_Logo_Schriftzug.png`; Kunden-App und grafisches Hersteller-Lizenztool nutzen es mit zentralen XDTBox-Theme-Resources fuer einen modernen, medizinisch-technischen Markenauftritt.
 
-Das zentrale UI-Theme liegt in `XdtDeviceBridge.App/Styles/XdtBoxTheme.xaml`. Es buendelt XDTBox-Farben, Kartenflaechen, Buttonvarianten, Tab-Optik, Eingabefelder, Tabellen und Toggle-Schalter. Der UI-Polish betrifft nur Darstellung und Bedienkomfort; Parser, MEDISTAR-/XDT-Ausgabe, Geraetekommunikation, Lizenzlogik, Datenablage und Installerlogik bleiben davon getrennt.
+Das zentrale UI-Theme liegt in `XdtDeviceBridge.App/Styles/XdtBoxTheme.xaml`. Es buendelt XDTBox-Farben, Kartenflaechen, Buttonvarianten, Tab-Optik, Eingabefelder, Tabellen und Toggle-Schalter. Der UI-Polish betrifft nur Darstellung und Bedienkomfort; Parser, MEDISTAR-/XDT-Ausgabe, Geraetekommunikation, Lizenzlogik, Datenablage und Installerlogik bleiben davon getrennt. Nach der Sichtpruefung wurden das Fenster `Geraet laden`, die unteren Abschnitte im Tab `Schnittstellenprofile`, der Lizenz-Kundendatenbereich und das Techniker-Whiteboard layout- beziehungsweise bedienseitig korrigiert, ohne Fachlogik zu aendern. Die finale Nachkorrektur haelt Bildaktionen und Schliessen im Geraet-laden-Dialog sichtbar, trennt Status/Aktionen/Hinweise/Tabellen in der Schnittstellenprofil-Pruefung, nutzt im Techniker-Whiteboard Symbolmodi mit direkter Textbearbeitung und ordnet SEPA/Rechnung im Lizenz-Tab ohne Ueberlagerung.
 
 Der Fokus liegt aktuell auf:
 
@@ -86,7 +86,7 @@ Die App besitzt aktuell diese Haupt-Tabs:
 
 Zusaetzlich gibt es in der Tab-Zeile ein `?`-Menue fuer `Hilfe` und `Info` sowie ein Zahnrad fuer App-Einstellungen. Die Hilfe ist lokal in der App enthalten; der Info-Dialog zeigt Version und Herstellerdaten. Ueber das Zahnrad kann ausserdem ein optionaler Tab-Schutz fuer alle Tabs ausser `Verarbeitung` eingerichtet oder entfernt werden; das Passwort wird lokal als Salt/Hash gespeichert.
 
-Der Tab `Notizen Techniker` ist ein Kundendatenbereich fuer installationsbezogene Whiteboard-Notizen. Er speichert Texte, Bilder, Positionen, Groessen, Formatierungen und aktive Geraeteuebersichten unter `%LocalAppData%\XdtDeviceBridge\technician-notes` und kann die Ansicht als PDF exportieren.
+Der Tab `Notizen Techniker` ist ein Kundendatenbereich fuer installationsbezogene Whiteboard-Notizen. Er speichert Texte, Bilder, Positionen, Groessen, Formatierungen und aktive Geraeteuebersichten unter `%LocalAppData%\XdtDeviceBridge\technician-notes` und kann die Ansicht als PDF exportieren. Die Bedienung trennt Textmodus fuer direkte Texteingabe auf der Flaeche und Handmodus fuer Auswahl, Verschieben und Groessenaenderung; ein Kontextmenue bietet Kopieren, Einfuegen und Entfernen.
 
 ## 5. Tab Verarbeitung
 

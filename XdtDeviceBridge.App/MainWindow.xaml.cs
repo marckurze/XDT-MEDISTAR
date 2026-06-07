@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -182,6 +183,8 @@ public partial class MainWindow : Window
     private System.Windows.Point? _technicianWhiteboardDragStart;
     private FrameworkElement? _technicianWhiteboardDraggedElement;
     private Border? _technicianWhiteboardSelectedElement;
+    private TechnicianWhiteboardMode _technicianWhiteboardMode = TechnicianWhiteboardMode.Hand;
+    private System.Windows.Point _technicianWhiteboardContextMenuPosition;
     private TabItem? _lastAllowedMainTabItem;
     private bool _isTabProtectionUnlocked;
     private bool _isRestoringProtectedTabSelection;
@@ -193,6 +196,12 @@ public partial class MainWindow : Window
         RequestReadyWithDtrToggle,
         DirectWriter,
         RsWriterWithoutSd
+    }
+
+    private enum TechnicianWhiteboardMode
+    {
+        Text,
+        Hand
     }
 
     private sealed record NidekRtSerialSendContext(
@@ -208,6 +217,7 @@ public partial class MainWindow : Window
     {
         _nidekRtSerialCommunicationService = new NidekRtSerialPhoropterCommunicationService(_serialDeviceCommunicationService);
         InitializeComponent();
+        SetTechnicianWhiteboardMode(TechnicianWhiteboardMode.Hand);
         LoadAppSettings();
         LoadTabProtectionSettings();
         _lastAllowedMainTabItem = MainTabControl.SelectedItem as TabItem;
@@ -3923,13 +3933,29 @@ public partial class MainWindow : Window
         }
     }
 
+    private void TechnicianWhiteboardTextMode_Click(object sender, RoutedEventArgs e)
+    {
+        SetTechnicianWhiteboardMode(TechnicianWhiteboardMode.Text);
+    }
+
+    private void TechnicianWhiteboardHandMode_Click(object sender, RoutedEventArgs e)
+    {
+        SetTechnicianWhiteboardMode(TechnicianWhiteboardMode.Hand);
+    }
+
     private void TechnicianWhiteboardAddText_Click(object sender, RoutedEventArgs e)
+    {
+        SetTechnicianWhiteboardMode(TechnicianWhiteboardMode.Text);
+        AddTechnicianWhiteboardTextAt(new System.Windows.Point(40, 40 + TechnicianWhiteboardCanvas.Children.Count * 18));
+    }
+
+    private Border AddTechnicianWhiteboardTextAt(System.Windows.Point point, string text = "Neue Notiz")
     {
         var item = new TechnicianWhiteboardTextItem(
             Guid.NewGuid().ToString("N"),
-            "Neue Notiz",
-            40,
-            40 + TechnicianWhiteboardCanvas.Children.Count * 18,
+            text,
+            Math.Max(0, point.X),
+            Math.Max(0, point.Y),
             260,
             90,
             TechnicianWhiteboardBoldCheckBox.IsChecked == true,
@@ -3937,7 +3963,9 @@ public partial class MainWindow : Window
             TechnicianWhiteboardUnderlineCheckBox.IsChecked == true,
             TechnicianWhiteboardColorComboBox.SelectedValue as string ?? "#24313A",
             GetSelectedTechnicianWhiteboardFontSize());
-        AddTechnicianWhiteboardTextElement(item);
+        var element = AddTechnicianWhiteboardTextElement(item);
+        FocusTechnicianWhiteboardTextElement(element);
+        return element;
     }
 
     private void TechnicianWhiteboardAddImage_Click(object sender, RoutedEventArgs e)
@@ -4006,6 +4034,142 @@ public partial class MainWindow : Window
                 TechnicianWhiteboardStatusText.Text = $"Ein Bild konnte nicht eingefügt werden: {ex.Message}";
             }
         }
+    }
+
+    private void TechnicianWhiteboardCanvas_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is not Canvas)
+        {
+            return;
+        }
+
+        if (_technicianWhiteboardMode == TechnicianWhiteboardMode.Text)
+        {
+            AddTechnicianWhiteboardTextAt(e.GetPosition(TechnicianWhiteboardCanvas), string.Empty);
+            e.Handled = true;
+            return;
+        }
+
+        ClearTechnicianWhiteboardSelection();
+    }
+
+    private void TechnicianWhiteboardCanvas_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _technicianWhiteboardContextMenuPosition = e.GetPosition(TechnicianWhiteboardCanvas);
+        if (FindTechnicianWhiteboardElement(e.OriginalSource as DependencyObject) is { } element)
+        {
+            SelectTechnicianWhiteboardElement(element);
+        }
+    }
+
+    private void TechnicianWhiteboardElement_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        _technicianWhiteboardContextMenuPosition = e.GetPosition(TechnicianWhiteboardCanvas);
+        if (sender is Border element)
+        {
+            SelectTechnicianWhiteboardElement(element);
+        }
+    }
+
+    private void TechnicianWhiteboardContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        var hasSelection = _technicianWhiteboardSelectedElement is not null;
+        TechnicianWhiteboardCopyMenuItem.IsEnabled = hasSelection;
+        TechnicianWhiteboardRemoveMenuItem.IsEnabled = hasSelection;
+        TechnicianWhiteboardPasteMenuItem.IsEnabled = System.Windows.Clipboard.ContainsImage() || System.Windows.Clipboard.ContainsText();
+    }
+
+    private void TechnicianWhiteboardCopy_Click(object sender, RoutedEventArgs e)
+    {
+        if (_technicianWhiteboardSelectedElement?.Child is not Grid grid)
+        {
+            return;
+        }
+
+        if (grid.Children.OfType<System.Windows.Controls.TextBox>().FirstOrDefault() is { } textBox)
+        {
+            System.Windows.Clipboard.SetText(textBox.Text ?? string.Empty);
+            TechnicianWhiteboardStatusText.Text = "Text in die Zwischenablage kopiert.";
+            return;
+        }
+
+        if (grid.Children.OfType<System.Windows.Controls.Image>().FirstOrDefault()?.Source is BitmapSource bitmap)
+        {
+            System.Windows.Clipboard.SetImage(bitmap);
+            TechnicianWhiteboardStatusText.Text = "Bild in die Zwischenablage kopiert.";
+        }
+    }
+
+    private void TechnicianWhiteboardPaste_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (System.Windows.Clipboard.ContainsImage())
+            {
+                var imagePath = SaveClipboardImageToTechnicianWhiteboard();
+                AddTechnicianWhiteboardImageElement(new TechnicianWhiteboardImageItem(
+                    Guid.NewGuid().ToString("N"),
+                    imagePath,
+                    _technicianWhiteboardContextMenuPosition.X,
+                    _technicianWhiteboardContextMenuPosition.Y,
+                    220,
+                    160));
+                TechnicianWhiteboardStatusText.Text = "Bild aus der Zwischenablage eingefügt.";
+                return;
+            }
+
+            if (System.Windows.Clipboard.ContainsText())
+            {
+                SetTechnicianWhiteboardMode(TechnicianWhiteboardMode.Text);
+                AddTechnicianWhiteboardTextAt(_technicianWhiteboardContextMenuPosition, System.Windows.Clipboard.GetText());
+                TechnicianWhiteboardStatusText.Text = "Text aus der Zwischenablage eingefügt.";
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ExternalException or NotSupportedException)
+        {
+            TechnicianWhiteboardStatusText.Text = $"Einfügen ist fehlgeschlagen: {ex.Message}";
+        }
+    }
+
+    private void TechnicianWhiteboardRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (_technicianWhiteboardSelectedElement is null)
+        {
+            return;
+        }
+
+        TechnicianWhiteboardCanvas.Children.Remove(_technicianWhiteboardSelectedElement);
+        _technicianWhiteboardSelectedElement = null;
+        TechnicianWhiteboardStatusText.Text = "Element entfernt.";
+    }
+
+    private string SaveClipboardImageToTechnicianWhiteboard()
+    {
+        var bitmap = System.Windows.Clipboard.GetImage() ?? throw new InvalidOperationException("Die Zwischenablage enthält kein unterstütztes Bild.");
+        var paths = _appDataPathProvider.GetDefaultUserPaths();
+        var imagesFolder = _technicianWhiteboardService.GetImagesFolder(paths);
+        Directory.CreateDirectory(imagesFolder);
+        var targetPath = Path.Combine(imagesFolder, $"{Guid.NewGuid():N}.png");
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var stream = File.Create(targetPath);
+        encoder.Save(stream);
+        return targetPath;
+    }
+
+    private static Border? FindTechnicianWhiteboardElement(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is Border { Tag: TechnicianWhiteboardElementTag })
+            {
+                return (Border)source;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return null;
     }
 
     private void TechnicianWhiteboardInsertActiveDevices_Click(object sender, RoutedEventArgs e)
@@ -4106,7 +4270,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void AddTechnicianWhiteboardTextElement(TechnicianWhiteboardTextItem item)
+    private Border AddTechnicianWhiteboardTextElement(TechnicianWhiteboardTextItem item)
     {
         var textBox = new System.Windows.Controls.TextBox
         {
@@ -4122,16 +4286,19 @@ public partial class MainWindow : Window
             FontStyle = item.IsItalic ? FontStyles.Italic : FontStyles.Normal,
             TextDecorations = item.IsUnderline ? TextDecorations.Underline : null,
             Foreground = CreateBrush(item.Color),
-            FontSize = NormalizeTechnicianWhiteboardFontSize(item.FontSize)
+            FontSize = NormalizeTechnicianWhiteboardFontSize(item.FontSize),
+            IsReadOnly = _technicianWhiteboardMode == TechnicianWhiteboardMode.Hand
         };
 
         var border = CreateWhiteboardElementBorder(item.Id, "Text", null, item.Width, item.Height, textBox);
         Canvas.SetLeft(border, item.X);
         Canvas.SetTop(border, item.Y);
         TechnicianWhiteboardCanvas.Children.Add(border);
+        UpdateTechnicianWhiteboardElementVisual(border);
+        return border;
     }
 
-    private void AddTechnicianWhiteboardImageElement(TechnicianWhiteboardImageItem item)
+    private Border AddTechnicianWhiteboardImageElement(TechnicianWhiteboardImageItem item)
     {
         var image = new System.Windows.Controls.Image
         {
@@ -4142,6 +4309,8 @@ public partial class MainWindow : Window
         Canvas.SetLeft(border, item.X);
         Canvas.SetTop(border, item.Y);
         TechnicianWhiteboardCanvas.Children.Add(border);
+        UpdateTechnicianWhiteboardElementVisual(border);
+        return border;
     }
 
     private Border CreateWhiteboardElementBorder(string id, string kind, string? imagePath, double width, double height, UIElement content)
@@ -4175,6 +4344,7 @@ public partial class MainWindow : Window
         element.PreviewMouseLeftButtonDown += TechnicianWhiteboardElement_MouseLeftButtonDown;
         element.PreviewMouseMove += TechnicianWhiteboardElement_MouseMove;
         element.PreviewMouseLeftButtonUp += TechnicianWhiteboardElement_MouseLeftButtonUp;
+        element.PreviewMouseRightButtonDown += TechnicianWhiteboardElement_PreviewMouseRightButtonDown;
         if (content is System.Windows.Controls.TextBox textBox)
         {
             textBox.GotKeyboardFocus += (_, _) => SelectTechnicianWhiteboardElement(element);
@@ -4203,12 +4373,14 @@ public partial class MainWindow : Window
             HorizontalAlignment = horizontalAlignment,
             VerticalAlignment = verticalAlignment,
             Cursor = cursor,
-            Background = System.Windows.Media.Brushes.Transparent,
-            BorderBrush = System.Windows.Media.Brushes.Transparent,
+            Background = System.Windows.Media.Brushes.White,
+            BorderBrush = CreateBrush("#2F7FD1"),
             BorderThickness = new Thickness(0),
             FocusVisualStyle = null,
-            Template = CreateInvisibleWhiteboardThumbTemplate(),
-            Opacity = 1
+            Template = CreateWhiteboardThumbTemplate(),
+            Opacity = 1,
+            Visibility = Visibility.Collapsed,
+            Tag = "WhiteboardResizeThumb"
         };
         thumb.DragDelta += (_, args) =>
         {
@@ -4220,10 +4392,13 @@ public partial class MainWindow : Window
         root.Children.Add(thumb);
     }
 
-    private static ControlTemplate CreateInvisibleWhiteboardThumbTemplate()
+    private static ControlTemplate CreateWhiteboardThumbTemplate()
     {
         var border = new FrameworkElementFactory(typeof(Border));
-        border.SetValue(Border.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
+        border.SetValue(Border.BackgroundProperty, System.Windows.Media.Brushes.White);
+        border.SetValue(Border.BorderBrushProperty, CreateBrush("#2F7FD1"));
+        border.SetValue(Border.BorderThicknessProperty, new Thickness(1));
+        border.SetValue(Border.CornerRadiusProperty, new CornerRadius(1));
         return new ControlTemplate(typeof(Thumb))
         {
             VisualTree = border
@@ -4274,7 +4449,21 @@ public partial class MainWindow : Window
         }
 
         SelectTechnicianWhiteboardElement(element);
-        if (IsWhiteboardInteractiveSource(e.OriginalSource as DependencyObject))
+        if (IsWhiteboardResizeThumbSource(e.OriginalSource as DependencyObject))
+        {
+            return;
+        }
+
+        if (element.Tag is TechnicianWhiteboardElementTag { Kind: "Text" } && e.ClickCount >= 2)
+        {
+            SetTechnicianWhiteboardMode(TechnicianWhiteboardMode.Text);
+            FocusTechnicianWhiteboardTextElement(element);
+            e.Handled = true;
+            return;
+        }
+
+        if (_technicianWhiteboardMode != TechnicianWhiteboardMode.Hand
+            && IsWhiteboardInteractiveSource(e.OriginalSource as DependencyObject))
         {
             return;
         }
@@ -4309,7 +4498,92 @@ public partial class MainWindow : Window
 
     private void SelectTechnicianWhiteboardElement(Border element)
     {
+        if (_technicianWhiteboardSelectedElement is not null && !ReferenceEquals(_technicianWhiteboardSelectedElement, element))
+        {
+            UpdateTechnicianWhiteboardElementVisual(_technicianWhiteboardSelectedElement);
+        }
+
         _technicianWhiteboardSelectedElement = element;
+        UpdateTechnicianWhiteboardElementVisual(element);
+    }
+
+    private void ClearTechnicianWhiteboardSelection()
+    {
+        if (_technicianWhiteboardSelectedElement is not null)
+        {
+            var previous = _technicianWhiteboardSelectedElement;
+            _technicianWhiteboardSelectedElement = null;
+            UpdateTechnicianWhiteboardElementVisual(previous);
+        }
+    }
+
+    private void UpdateTechnicianWhiteboardElementVisual(Border element)
+    {
+        var isSelectedInHandMode = ReferenceEquals(_technicianWhiteboardSelectedElement, element)
+            && _technicianWhiteboardMode == TechnicianWhiteboardMode.Hand;
+        element.BorderBrush = isSelectedInHandMode
+            ? CreateBrush("#2F7FD1")
+            : System.Windows.Media.Brushes.Transparent;
+        element.BorderThickness = isSelectedInHandMode
+            ? new Thickness(1)
+            : new Thickness(0);
+        element.Padding = isSelectedInHandMode
+            ? new Thickness(4)
+            : new Thickness(0);
+
+        if (element.Child is Grid grid)
+        {
+            foreach (var thumb in grid.Children.OfType<Thumb>())
+            {
+                thumb.Visibility = isSelectedInHandMode ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            if (grid.Children.OfType<System.Windows.Controls.TextBox>().FirstOrDefault() is { } textBox)
+            {
+                textBox.IsReadOnly = _technicianWhiteboardMode == TechnicianWhiteboardMode.Hand;
+                textBox.Cursor = _technicianWhiteboardMode == TechnicianWhiteboardMode.Hand
+                    ? System.Windows.Input.Cursors.SizeAll
+                    : System.Windows.Input.Cursors.IBeam;
+            }
+        }
+    }
+
+    private void SetTechnicianWhiteboardMode(TechnicianWhiteboardMode mode)
+    {
+        _technicianWhiteboardMode = mode;
+        if (TechnicianWhiteboardTextModeButton is not null)
+        {
+            TechnicianWhiteboardTextModeButton.IsChecked = mode == TechnicianWhiteboardMode.Text;
+        }
+
+        if (TechnicianWhiteboardHandModeButton is not null)
+        {
+            TechnicianWhiteboardHandModeButton.IsChecked = mode == TechnicianWhiteboardMode.Hand;
+        }
+
+        TechnicianWhiteboardCanvas.Cursor = mode == TechnicianWhiteboardMode.Text
+            ? System.Windows.Input.Cursors.IBeam
+            : System.Windows.Input.Cursors.Arrow;
+
+        foreach (var child in TechnicianWhiteboardCanvas.Children.OfType<Border>())
+        {
+            UpdateTechnicianWhiteboardElementVisual(child);
+        }
+
+        TechnicianWhiteboardStatusText.Text = mode == TechnicianWhiteboardMode.Text
+            ? "Textmodus aktiv: Klicken Sie auf das Whiteboard und schreiben Sie direkt."
+            : "Handmodus aktiv: Elemente können ausgewählt, verschoben und skaliert werden.";
+    }
+
+    private void FocusTechnicianWhiteboardTextElement(Border element)
+    {
+        if (element.Child is Grid grid
+            && grid.Children.OfType<System.Windows.Controls.TextBox>().FirstOrDefault() is { } textBox)
+        {
+            SelectTechnicianWhiteboardElement(element);
+            textBox.Focus();
+            textBox.CaretIndex = textBox.Text.Length;
+        }
     }
 
     private void TechnicianWhiteboardFormatting_Changed(object sender, RoutedEventArgs e)
@@ -4362,6 +4636,21 @@ public partial class MainWindow : Window
         while (source is not null)
         {
             if (source is System.Windows.Controls.TextBox || source is Thumb)
+            {
+                return true;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
+    }
+
+    private static bool IsWhiteboardResizeThumbSource(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is Thumb)
             {
                 return true;
             }
@@ -10153,5 +10442,6 @@ public partial class MainWindow : Window
         }
     }
 }
+
 
 

@@ -24,7 +24,7 @@ Lizenz: Lizenzstatus, Lizenzanforderung, Lizenzimport, lizenzierte Geräteanzahl
 
 XDTBox nutzt ein zentrales Windows-Theme mit XDTBox-Blau, Türkis, hellen Kartenflächen, abgerundeten Ecken und dezenten Hover-/Pressed-Zuständen. Die Gestaltung ist bewusst ruhig gehalten und ändert keine fachliche Verarbeitung.
 
-Buttons, Tabs, Eingabefelder, Tabellen, Infoboxen und Dialoge folgen derselben Optik. Techniker-Notizen besitzen eine eigene Whiteboard-Fläche; Zeiger, Drag-and-Drop, Größenänderung und PDF-Export bleiben unverändert bedienbar.
+Buttons, Tabs, Eingabefelder, Tabellen, Infoboxen und Dialoge folgen derselben Optik. Techniker-Notizen besitzen eine eigene Whiteboard-Fläche mit Text- und Handmodus; Zeiger, Drag-and-Drop, Größenänderung, Kontextmenü und PDF-Export bleiben bedienbar.
 
 # Grundprinzip AIS -> XDTBox -> Gerät/AIS
 
@@ -94,9 +94,11 @@ Sicherung/Umzug nimmt lokale Steckbriefanpassungen und Techniker-Notizen mit. Di
 
 # Notizen Techniker
 
-Der Tab "Notizen Techniker" speichert ein freies Whiteboard fuer die jeweilige Installation. Sie koennen Textbloecke anlegen, Bilder einfuegen oder per Drag-and-Drop ablegen, Elemente verschieben, Bilder skalieren, Text formatieren und aktive Geraeteanbindungen als Textblock einfuegen.
+Die Werkzeugleiste nutzt kompakte Symbolschalter: `T` fuer direkte Texteingabe und `<->` fuer Auswahl, Verschieben und Skalieren. Im Textmodus kann auf die freie Flaeche geklickt und direkt geschrieben werden; vorhandene Texte werden per Doppelklick wieder editierbar. Auswahlrahmen und Groessengriffe erscheinen nur im Handmodus.
 
-Die Daten werden lokal unter `%LocalAppData%\XdtDeviceBridge\technician-notes` gespeichert. Bilder werden dorthin kopiert, damit externe Bildpfade oder Wechselmedien nicht benoetigt werden. "Als PDF speichern" erzeugt eine lokale PDF-Datei aus der aktuellen Whiteboard-Ansicht.
+Der Tab "Notizen Techniker" speichert ein freies Whiteboard fuer die jeweilige Installation. Im Textmodus klicken Sie auf die Flaeche und schreiben direkt. Im Handmodus koennen Sie Texte und Bilder auswaehlen, verschieben und ueber sichtbare Griffe skalieren. Bilder lassen sich per Dateiauswahl, Drag-and-Drop oder Zwischenablage einfuegen; aktive Geraeteanbindungen koennen als Textblock eingefuegt werden.
+
+Das Kontextmenue mit rechter Maustaste bietet Kopieren, Einfuegen und Entfernen. Die Daten werden lokal unter `%LocalAppData%\XdtDeviceBridge\technician-notes` gespeichert. Bilder werden dorthin kopiert, damit externe Bildpfade oder Wechselmedien nicht benoetigt werden. "Als PDF speichern" erzeugt eine lokale PDF-Datei aus der aktuellen Whiteboard-Ansicht.
 
 # Tab-Schutz
 
@@ -134,7 +136,9 @@ Die zentrale Profilpflege liegt im Tab "Profilverwaltung". Dort können Profile 
 
 # Neues Gerät anlegen und Gerät laden
 
-"Neues Gerät anlegen" erstellt ein UserDefined-Geräteprofil. "Gerät laden" zeigt bestehende Geräteprofile und erlaubt, ein Gerätebild zu setzen oder zurückzusetzen.
+"Neues Gerät anlegen" erstellt ein UserDefined-Geräteprofil. "Gerät laden" zeigt bestehende Geräteprofile und erlaubt, ein Gerätebild zu setzen oder zurückzusetzen. Die Bildaktionen und "Speichern" liegen dort in einer gemeinsamen Zeile; "Schließen" steht separat unten rechts.
+
+Der Dialog ist hoeher ausgelegt, damit Bildvorschau, Bildaktionen, Speichern und der separate Schliessen-Button auch bei normaler Fensterhoehe sichtbar bleiben.
 
 BuiltIn-Geräte werden fachlich nicht überschrieben. Bildänderungen für BuiltIns laufen über lokale Overrides.
 
@@ -156,13 +160,15 @@ OCT- und Biometrie-/IOL-Workflows werden in diesen Kandidaten nicht automatisch 
 
 # Schnittstellenprofile
 
+Die unteren Abschnitte sind strukturell getrennt: `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` liegen untereinander. In der Pruefung sind Einleitung, Status, Aktionen, Hinweistext und Tabellen in eigenen Zeilen angeordnet, damit keine Buttons, Hinweise oder Tabellen ueberlappen.
+
 Ein Schnittstellenprofil verbindet AIS-Profil, Geräteprofil und Exportprofil. Es enthält außerdem Ordner, RS232-Parameter, XDT-Anhang-Einstellungen, CV-5000-Ausgabeparameter und Laufzeitwerte.
 
 Ein neues Schnittstellenprofil wird als UserDefined und inaktiv angelegt. Konfiguration und produktive Aktivierung sind getrennte Schritte.
 
 Aktive Schnittstellenprofile zaehlen immer als Geraeteanbindung. Der fruehere Lizenzpflicht-Haken wird in der App nicht mehr angezeigt; alte Profildaten koennen dadurch keine aktive Anbindung lizenzfrei schalten.
 
-Die Auswahl im Tab "Schnittstellenprofile" kann nach Geraetehersteller und AIS-System gefiltert werden. Filter und Schnittstellenprofil-Dropdown stehen in einer kompakten Kopfzeile; das Profil-Dropdown ist begrenzt, damit es breite Fenster nicht dominiert. Der Button "AIS Ausgabe Info" zeigt ausschliesslich AIS-Ausgabefelder mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Zusaetzlich zeigt der Dialog die "Standard Zeilenbenennung in MEDISTAR" als Techniker-Hilfe fuer das MEDISTAR-XDT-Setup, zum Beispiel `V0` Lensmeter, `V1` Autorefraktor, `V2` Phoropter, `V4` subjektive Refraktion, `V7` Keratometer, `V8` Biometrie, `Y` Tonometrie und `P` Pachymetrie. XDTBox erzeugt diese Zeilenkennungen nicht selbst und zeigt dort keine Beispielwerte. Geraeteausgabe, echte Messwerte, Rohdaten und Platzhalter werden dort bewusst nicht angezeigt.
+Die Auswahl im Tab "Schnittstellenprofile" kann nach Geraetehersteller und AIS-System gefiltert werden. Filter und Schnittstellenprofil-Dropdown stehen in einer kompakten Kopfzeile; das Profil-Dropdown ist begrenzt, damit es breite Fenster nicht dominiert. Die Bereiche "Ordnerbereinigung", "Archivierung" und "Pruefung vor Aktivierung" sind getrennte Abschnitte, damit Status, Hinweise, Buttons und Tabellen lesbar bleiben. Der Button "AIS Ausgabe Info" zeigt ausschliesslich AIS-Ausgabefelder mit Feldkennung, Bedeutung, AIS-Relevanz, Karteikarten-Sichtbarkeit und Hinweis. Zusaetzlich zeigt der Dialog die "Standard Zeilenbenennung in MEDISTAR" als Techniker-Hilfe fuer das MEDISTAR-XDT-Setup, zum Beispiel `V0` Lensmeter, `V1` Autorefraktor, `V2` Phoropter, `V4` subjektive Refraktion, `V7` Keratometer, `V8` Biometrie, `Y` Tonometrie und `P` Pachymetrie. XDTBox erzeugt diese Zeilenkennungen nicht selbst und zeigt dort keine Beispielwerte. Geraeteausgabe, echte Messwerte, Rohdaten und Platzhalter werden dort bewusst nicht angezeigt.
 
 Die Untersuchungsart `8402` wird aus der AIS-Datei uebernommen und unveraendert wieder ausgegeben. Fuer empfohlene Defaultwerte priorisiert XDTBox die Geraeteidentitaet vor optionalen Anhangsfaehigkeiten: Tonometer/Pachymeter bleiben `TONO`, reine Dokument-/AttachmentOnly-Profile bleiben `DOKU`. Empfohlene Defaultwerte fuer neue Profile sind zum Beispiel `LENS`, `PHORO`, `AUTO`, `KERA`, `KOMB`, `TONO`, `PACHY`, `ENDO`, `OCT`, `DOKU` und `MESS`; eine eingehende Untersuchungsart wird dadurch nicht blockiert.
 
@@ -188,7 +194,9 @@ Die endgültige produktive Lizenzblockade ist in dieser Version nicht hart aktiv
 
 # Lizenzanforderung exportieren und Lizenz importieren
 
-Tragen Sie im Tab "Lizenz" die Kundendaten ein und exportieren Sie die Lizenzanforderung. Gerätenamen in der Anfrage dienen nur der Dokumentation beim Hersteller; lizenzpflichtig ist ausschließlich die Anzahl aktiver Geräteanbindungen.
+Die Kundendaten sind in Praxis/Firma, Kontakt, Rechnungsversand und Bankverbindung/SEPA gegliedert. Die Option "Kein SEPA - bitte immer Rechnung zusenden" steht direkt neben der SEPA-Zustimmung; die Rechnungs-E-Mail bleibt im Abschnitt Rechnungsversand.
+
+Tragen Sie im Tab "Lizenz" die Kundendaten ein und exportieren Sie die Lizenzanforderung. Die Eingaben sind in Praxis/Firma und Adresse, Kontakt, Rechnungsversand sowie Bankverbindung/SEPA gegliedert. Gerätenamen in der Anfrage dienen nur der Dokumentation beim Hersteller; lizenzpflichtig ist ausschließlich die Anzahl aktiver Geräteanbindungen.
 
 Eine signierte .xdtboxlic-Lizenz wird über "Lizenz importieren" eingelesen und lokal gespeichert.
 

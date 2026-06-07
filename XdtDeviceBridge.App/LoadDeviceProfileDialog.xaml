@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Gerät laden"
         Width="980"
-        Height="580"
+        Height="840"
         MinWidth="780"
-        MinHeight="480"
+        MinHeight="680"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -46,6 +46,7 @@
                   Header="Gerätedetails">
             <Grid Margin="8">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -109,10 +110,12 @@
                            TextWrapping="Wrap"
                            Margin="0,0,0,10"/>
 
-                <WrapPanel Grid.Row="8"
-                           Grid.Column="0"
-                           Grid.ColumnSpan="2"
-                           HorizontalAlignment="Right">
+                <StackPanel Grid.Row="8"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,0,8">
                     <Button Content="Bild auswählen"
                             Width="120"
                             Margin="0,0,8,0"
@@ -123,13 +126,18 @@
                             Click="ResetImage_Click"/>
                     <Button Content="Speichern"
                             Width="100"
-                            Margin="0,0,8,0"
+                            Margin="0,0,0,0"
                             IsDefault="True"
                             Click="Save_Click"/>
-                    <Button Content="Schließen"
-                            Width="100"
-                            IsCancel="True"/>
-                </WrapPanel>
+                </StackPanel>
+
+                <Button Grid.Row="9"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Content="Schließen"
+                        Width="100"
+                        HorizontalAlignment="Right"
+                        IsCancel="True"/>
             </Grid>
         </GroupBox>
 
