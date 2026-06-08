@@ -22,4 +22,11 @@ public sealed record IssuedLicenseRecord(
     string OutputFilePath,
     string? RequestFilePath,
     string? Notes,
-    IReadOnlyList<IssuedLicenseDeviceRecord> Devices);
+    IReadOnlyList<IssuedLicenseDeviceRecord> Devices,
+    string? MachineName = null,
+    string? InvoiceEmail = null,
+    string? Iban = null,
+    string? Bic = null,
+    string? AccountHolder = null,
+    bool SepaDirectDebitConsent = false,
+    bool AlwaysInvoice = false);

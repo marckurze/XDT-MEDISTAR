@@ -240,6 +240,9 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Signierte `.xdtboxlic`-Lizenzdateien werden lokal mit RSA-PSS/SHA-256 geprueft.
 - Internes `XdtBox.LicenseIssuer`-Tool erzeugt signierte `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId.
 - Internes grafisches `XdtBox.LicenseManager`-Tool liest Lizenzanfragen, erzeugt signierte Lizenzen, fuehrt eine lokale Historie ausgestellter Lizenzen und kann Kundendaten fuer Folgelizenzen uebernehmen.
+- `XdtBox.LicenseManager` fuehrt zusaetzlich eine Kundenliste aus Lizenzanfragen. Kundennummer oder InstallationId steuern die Zuordnung; Rechnungs-E-Mail, IBAN, BIC, Kontoinhaber, SEPA-Zustimmung und Rechnung-ohne-SEPA werden lokal im Herstellerdatenordner gespeichert.
+- Ein Netto-Einzelpreis pro Geraeteanbindung wird in den LicenseManager-Einstellungen gespeichert und fuer Kundenliste, Kundendetail und PDF-Kundenuebersicht verwendet.
+- Die LicenseManager-Sicherung umfasst Kundenliste, Bank-/SEPA-/Rechnungsdaten, Netto-Preis, Einstellungen und Lizenzhistorie. Private Keys, Signaturzertifikate und Hersteller-Master-Keys sind bewusst ausgeschlossen.
 - Produktive V1-KeyId `xdtbox-prod-2026-01` ist mit Public Key in der App hinterlegt; der private Schluessel liegt extern beim Hersteller unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`.
 - Legacy-JSON-Lizenzen bleiben nur als unsignierter Uebergang erkennbar.
 - Lizenzierte Geräte/Anbindungen werden bewertet.

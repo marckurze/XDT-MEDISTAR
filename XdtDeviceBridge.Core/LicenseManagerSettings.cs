@@ -7,7 +7,8 @@ public sealed record LicenseManagerSettings(
     string? PrivateKeyPath,
     string KeyId,
     string DefaultIssuer,
-    int DefaultGraceDays)
+    int DefaultGraceDays,
+    decimal PricePerDeviceNet = 0m)
 {
     public static LicenseManagerSettings CreateDefault(string baseFolder)
     {
@@ -20,6 +21,7 @@ public sealed record LicenseManagerSettings(
             PrivateKeyPath: null,
             KeyId: LicensePublicKeyProvider.ProductionKeyId,
             DefaultIssuer: "Technik-Apparat",
-            DefaultGraceDays: 7);
+            DefaultGraceDays: 7,
+            PricePerDeviceNet: 0m);
     }
 }

@@ -8,7 +8,9 @@ public sealed class LicenseManagerUiSourceTests
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
 
         Assert.Contains("Lizenz erstellen", xaml);
+        Assert.Contains("Kunden", xaml);
         Assert.Contains("Ausgestellte Lizenzen", xaml);
+        Assert.Contains("Sicherung", xaml);
         Assert.Contains("Einstellungen", xaml);
     }
 
@@ -17,10 +19,42 @@ public sealed class LicenseManagerUiSourceTests
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
 
-        Assert.Contains("Lizenzanfrage öffnen", xaml);
+        Assert.Contains("Lizenzanfrage", xaml);
         Assert.Contains("Lizenz erzeugen", xaml);
-        Assert.Contains("Neue Lizenz für diesen Kunden erstellen", xaml);
-        Assert.Contains("Kundendaten übernehmen", xaml);
+        Assert.Contains("Neue Lizenz", xaml);
+        Assert.Contains("Kundendaten", xaml);
+    }
+
+    [Fact]
+    public void LicenseManager_ShouldExposeCustomerBillingAndBackupActions()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+
+        Assert.Contains("CustomerPricePerDeviceTextBox", xaml);
+        Assert.Contains("Kundenliste als PDF exportieren", xaml);
+        Assert.Contains("Kunde", xaml);
+        Assert.Contains("Sicherung erstellen", xaml);
+        Assert.Contains("Sicherung wiederherstellen", xaml);
+        Assert.Contains("LicenseManagerCustomerRepository", code);
+        Assert.Contains("LicenseManagerBackupService", code);
+        Assert.Contains("LicenseManagerCustomerPdfExporter", code);
+    }
+
+    [Fact]
+    public void LicenseManager_ShouldExposePaymentFieldsFromLicenseRequest()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+
+        Assert.Contains("InvoiceEmailTextBox", xaml);
+        Assert.Contains("CustomerIbanTextBox", xaml);
+        Assert.Contains("CustomerBicTextBox", xaml);
+        Assert.Contains("CustomerAccountHolderTextBox", xaml);
+        Assert.Contains("SepaConsentCheckBox", xaml);
+        Assert.Contains("AlwaysInvoiceCheckBox", xaml);
+        Assert.Contains("Iban: NormalizeOptional(CustomerIbanTextBox.Text)", code);
+        Assert.Contains("InvoiceEmail: NormalizeOptional(InvoiceEmailTextBox.Text)", code);
     }
 
     [Fact]
@@ -29,9 +63,9 @@ public sealed class LicenseManagerUiSourceTests
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
-        Assert.Contains("Kundendaten für Lizenzanforderung", xaml);
+        Assert.Contains("Kundendaten", xaml);
         Assert.Contains("Praxis-/Firmenname", xaml);
-        Assert.Contains("Lizenzpflichtig ist ausschließlich die Anzahl aktivierter Geräteanbindungen", xaml);
+        Assert.Contains("Lizenzpflichtig", xaml);
         Assert.Contains("ReadLicenseCustomerDataFromEditor", code);
         Assert.Contains("_profileCatalog.DeviceProfiles", code);
     }

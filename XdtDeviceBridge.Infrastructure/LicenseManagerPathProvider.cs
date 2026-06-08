@@ -26,6 +26,8 @@ public sealed class LicenseManagerPathProvider
             KeysFolder: Path.Combine(normalizedBaseFolder, "keys"),
             DataFolder: dataFolder,
             HistoryFile: Path.Combine(dataFolder, "license-history.json"),
-            SettingsFile: Path.Combine(dataFolder, "license-manager-settings.json"));
+            SettingsFile: Path.Combine(dataFolder, "license-manager-settings.json"),
+            CustomersFile: Path.Combine(dataFolder, "license-manager-customers.json"),
+            BackupFolder: Path.Combine(normalizedBaseFolder, "backups"));
     }
 }

@@ -1,0 +1,122 @@
+<Window x:Class="XdtBox.LicenseManager.CustomerDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Kundendetails"
+        Height="760"
+        Width="980"
+        MinHeight="640"
+        MinWidth="880"
+        Background="{DynamicResource XdtBoxWindowBackgroundBrush}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/XdtBoxTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="10" Style="{StaticResource XdtBoxRootGridStyle}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Kundendetails" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+        <GroupBox Grid.Row="1" Header="Stammdaten / Abrechnung" Margin="0,0,0,8">
+            <Grid Margin="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Kundennummer:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="CustomerNumberTextBox" Margin="0,0,16,6"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="InstallationId:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="0" Grid.Column="3" x:Name="InstallationIdTextBox" IsReadOnly="True" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Praxis/Firma:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" x:Name="CustomerNameTextBox" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Strasse:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="2" Grid.Column="1" x:Name="StreetTextBox" Margin="0,0,16,6"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="PLZ / Ort:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBox x:Name="PostalCodeTextBox" Width="90" Margin="0,0,8,0"/>
+                    <TextBox x:Name="CityTextBox" Width="220"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Telefon:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="3" Grid.Column="1" x:Name="PhoneTextBox" Margin="0,0,16,6"/>
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="3" Grid.Column="3" x:Name="EmailTextBox" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Ansprechpartner:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="4" Grid.Column="1" x:Name="ContactPersonTextBox" Margin="0,0,16,6"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="Rechnungs-E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="4" Grid.Column="3" x:Name="InvoiceEmailTextBox" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="IBAN:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="5" Grid.Column="1" x:Name="IbanTextBox" Margin="0,0,16,6"/>
+                <TextBlock Grid.Row="5" Grid.Column="2" Text="BIC:" FontWeight="Bold" Margin="0,0,8,6"/>
+                <TextBox Grid.Row="5" Grid.Column="3" x:Name="BicTextBox" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Kontoinhaber:" FontWeight="Bold" Margin="0,0,8,0"/>
+                <TextBox Grid.Row="6" Grid.Column="1" x:Name="AccountHolderTextBox" Margin="0,0,16,0"/>
+                <StackPanel Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <CheckBox x:Name="SepaCheckBox" Content="SEPA" Margin="0,0,18,0"/>
+                    <CheckBox x:Name="AlwaysInvoiceCheckBox" Content="Rechnung statt SEPA"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <GroupBox Grid.Column="0" Header="Aktuelle lizenzierte Anbindungen" Margin="0,0,6,0">
+                <DataGrid x:Name="DevicesGrid" Margin="8" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Anbindung" Binding="{Binding DisplayName}" Width="*"/>
+                        <DataGridTextColumn Header="Geraet" Binding="{Binding DeviceDisplayName}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+            <GroupBox Grid.Column="1" Header="Lizenzhistorie" Margin="6,0,0,0">
+                <DataGrid x:Name="HistoryGrid" Margin="8" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Ausgestellt" Binding="{Binding IssuedAtDisplay}" Width="110"/>
+                        <DataGridTextColumn Header="Gueltig bis" Binding="{Binding ValidUntilDisplay}" Width="110"/>
+                        <DataGridTextColumn Header="Geraete" Binding="{Binding DeviceCount}" Width="70"/>
+                        <DataGridTextColumn Header="Datei" Binding="{Binding FileName}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+        </Grid>
+
+        <Grid Grid.Row="3" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="SummaryTextBlock" VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="Speichern" Width="120" Margin="0,0,8,0" Click="Save_Click"/>
+                <Button Content="Schliessen" Width="120" Click="Close_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

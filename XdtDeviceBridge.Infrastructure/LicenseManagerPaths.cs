@@ -7,4 +7,6 @@ public sealed record LicenseManagerPaths(
     string KeysFolder,
     string DataFolder,
     string HistoryFile,
-    string SettingsFile);
+    string SettingsFile,
+    string CustomersFile,
+    string BackupFolder);

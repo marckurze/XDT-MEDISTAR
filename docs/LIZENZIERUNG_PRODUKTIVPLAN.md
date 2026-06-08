@@ -61,9 +61,9 @@ Vorhanden sind:
 - Aktivierungsvorschau mit Lizenzhinweisen, aber ohne harte Sperre
 - echte kryptografische Signaturpruefung fuer V1-Lizenzen mit RSA-PSS/SHA-256
 - Public-Key-Auswahl ueber `KeyId`
-- Kundendaten in der Lizenzanforderung: Praxis-/Firmenname, Adresse, Telefon, optionale E-Mail und Ansprechpartner
+- Kundendaten in der Lizenzanforderung: Kundennummer, Praxis-/Firmenname, Adresse, Telefon, optionale E-Mail, Ansprechpartner, Rechnungs-E-Mail, IBAN, BIC, Kontoinhaber, SEPA-Zustimmung und Rechnung-ohne-SEPA
 - dokumentierende Liste der angefragten Geraeteanbindungen mit Schnittstellenprofilname, Geraeteprofilname und ConnectionKind; diese Namen sind nicht lizenzbindend
-- internes GUI-Werkzeug `XdtBox.LicenseManager` fuer den Hersteller: Lizenzanfragen einlesen, Kundendaten anzeigen, `.xdtboxlic` erzeugen, lokale Historie ausgestellter Lizenzen fuehren und weitere Lizenzen fuer bestehende Kunden vorbereiten
+- internes GUI-Werkzeug `XdtBox.LicenseManager` fuer den Hersteller: Lizenzanfragen einlesen, Kundendaten anzeigen, `.xdtboxlic` erzeugen, lokale Historie ausgestellter Lizenzen fuehren, Kundenliste mit Bank-/SEPA-/Rechnungsdaten pflegen, Netto-Kostenuebersicht und PDF-Kundenliste erzeugen, Kundendetails oeffnen und weitere Lizenzen fuer bestehende Kunden vorbereiten
 
 Nicht produktiv vorhanden sind:
 
@@ -129,8 +129,12 @@ Persistenzorte laut `AppDataPathProvider`:
 Herstellerseitige Persistenz fuer `XdtBox.LicenseManager`:
 
 - `C:\XDTBox\Lizenzaktivierung\data\license-history.json`
+- `C:\XDTBox\Lizenzaktivierung\data\license-manager-customers.json`
 - `C:\XDTBox\Lizenzaktivierung\data\license-manager-settings.json`
+- `C:\XDTBox\Lizenzaktivierung\backups\` fuer LicenseManager-Sicherungen
 - Standardordner `licenses`, `requests` und `keys` unter `C:\XDTBox\Lizenzaktivierung`
+
+LicenseManager-Sicherungen enthalten Kundenliste, Bank-/SEPA-/Rechnungsdaten, Netto-Einzelpreis, Einstellungen und Lizenzhistorie. Sie enthalten bewusst keine privaten Schluessel, Signaturzertifikate, Hersteller-Master-Keys oder externe Setup-Dateien.
 
 Der produktive V1-Schluesselsatz ist lokal beim Hersteller erzeugt. Die App kennt nur den Public Key zur `KeyId` `xdtbox-prod-2026-01`; der private Schluessel bleibt eine externe PEM-Datei beim Hersteller:
 

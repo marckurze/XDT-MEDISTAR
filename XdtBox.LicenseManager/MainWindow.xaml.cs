@@ -17,17 +17,22 @@ public partial class MainWindow : Window
     private readonly LicenseManagerPathProvider _pathProvider = new();
     private readonly LicenseManagerSettingsRepository _settingsRepository = new();
     private readonly IssuedLicenseHistoryRepository _historyRepository = new();
+    private readonly LicenseManagerCustomerRepository _customerRepository = new();
     private readonly LicenseRequestFileRepository _requestRepository = new();
+    private readonly LicenseManagerCustomerPdfExporter _customerPdfExporter = new();
+    private readonly LicenseManagerBackupService _backupService = new();
     private readonly LicenseIssuerService _issuerService = new();
     private readonly ObservableCollection<RequestDeviceRow> _requestDeviceRows = new();
     private readonly ObservableCollection<HistoryRow> _historyRows = new();
     private readonly ObservableCollection<IssuedLicenseDeviceRecord> _historyDeviceRows = new();
+    private readonly ObservableCollection<CustomerRow> _customerRows = new();
 
     private readonly LicenseManagerPaths _paths;
     private LicenseManagerSettings _settings;
     private LicenseRequest? _currentRequest;
     private string? _currentRequestFile;
     private IReadOnlyList<IssuedLicenseRecord> _historyRecords = Array.Empty<IssuedLicenseRecord>();
+    private IReadOnlyList<LicenseManagerCustomerRecord> _customerRecords = Array.Empty<LicenseManagerCustomerRecord>();
 
     public MainWindow()
     {
@@ -39,9 +44,11 @@ public partial class MainWindow : Window
         RequestDevicesGrid.ItemsSource = _requestDeviceRows;
         HistoryGrid.ItemsSource = _historyRows;
         HistoryDevicesGrid.ItemsSource = _historyDeviceRows;
+        CustomersGrid.ItemsSource = _customerRows;
 
         InitializeDefaults();
         LoadHistory();
+        LoadCustomers();
     }
 
     private void InitializeDefaults()
@@ -58,6 +65,9 @@ public partial class MainWindow : Window
         SettingsKeyIdTextBox.Text = _settings.KeyId;
         SettingsIssuerTextBox.Text = _settings.DefaultIssuer;
         SettingsGraceDaysTextBox.Text = _settings.DefaultGraceDays.ToString(CultureInfo.InvariantCulture);
+        var priceText = _settings.PricePerDeviceNet.ToString("N2", CultureInfo.GetCultureInfo("de-DE"));
+        CustomerPricePerDeviceTextBox.Text = priceText;
+        SettingsPricePerDeviceTextBox.Text = priceText;
         SuggestedOutputFileIfEmpty();
     }
 
@@ -95,6 +105,7 @@ public partial class MainWindow : Window
             _currentRequest = request;
             _currentRequestFile = dialog.FileName;
             ShowRequest(request, dialog.FileName);
+            UpsertCustomerFromRequest(request);
             CreateLicenseStatusText.Text = "Lizenzanfrage geladen.";
         }
         catch (Exception ex)
@@ -119,6 +130,13 @@ public partial class MainWindow : Window
         PhoneTextBox.Text = customer.Phone;
         EmailTextBox.Text = customer.Email ?? string.Empty;
         ContactPersonTextBox.Text = customer.ContactPerson ?? string.Empty;
+        InvoiceEmailTextBox.Text = customer.InvoiceEmail ?? string.Empty;
+        CustomerIbanTextBox.Text = customer.Iban ?? string.Empty;
+        CustomerBicTextBox.Text = customer.Bic ?? string.Empty;
+        CustomerAccountHolderTextBox.Text = customer.AccountHolder ?? string.Empty;
+        SepaConsentCheckBox.IsChecked = customer.SepaDirectDebitConsent;
+        AlwaysInvoiceCheckBox.IsChecked = customer.AlwaysInvoice;
+        CustomerNumberTextBox.Text = customer.CustomerNumber ?? string.Empty;
         LicenseeTextBox.Text = string.IsNullOrWhiteSpace(customer.CustomerName) ? request.MachineName : customer.CustomerName;
         MaxActiveConnectionsTextBox.Text = Math.Max(request.ActiveLicensedDeviceCount, 1).ToString(CultureInfo.InvariantCulture);
 
@@ -163,6 +181,7 @@ public partial class MainWindow : Window
             var result = _issuerService.CreateLicense(options);
             var record = CreateHistoryRecord(result, options);
             _historyRecords = _historyRepository.Add(_paths.HistoryFile, record);
+            UpsertCustomerAfterLicense(record);
             RefreshHistoryRows();
             CreateLicenseStatusText.Text = $"Lizenz erzeugt: {result.OutputFile}";
             HistoryStatusText.Text = "Historie aktualisiert.";
@@ -247,7 +266,14 @@ public partial class MainWindow : Window
             OutputFilePath: result.OutputFile,
             RequestFilePath: _currentRequestFile,
             Notes: result.Payload.Notes,
-            Devices: devices);
+            Devices: devices,
+            MachineName: _currentRequest?.MachineName,
+            InvoiceEmail: customer.InvoiceEmail,
+            Iban: customer.Iban,
+            Bic: customer.Bic,
+            AccountHolder: customer.AccountHolder,
+            SepaDirectDebitConsent: customer.SepaDirectDebitConsent,
+            AlwaysInvoice: customer.AlwaysInvoice);
     }
 
     private LicenseRequestCustomer ReadCustomerFromUi()
@@ -259,7 +285,14 @@ public partial class MainWindow : Window
             City: CityTextBox.Text.Trim(),
             Phone: PhoneTextBox.Text.Trim(),
             Email: NormalizeOptional(EmailTextBox.Text),
-            ContactPerson: NormalizeOptional(ContactPersonTextBox.Text));
+            ContactPerson: NormalizeOptional(ContactPersonTextBox.Text),
+            Iban: NormalizeOptional(CustomerIbanTextBox.Text),
+            Bic: NormalizeOptional(CustomerBicTextBox.Text),
+            AccountHolder: NormalizeOptional(CustomerAccountHolderTextBox.Text),
+            SepaDirectDebitConsent: SepaConsentCheckBox.IsChecked == true,
+            AlwaysInvoice: AlwaysInvoiceCheckBox.IsChecked == true,
+            InvoiceEmail: NormalizeOptional(InvoiceEmailTextBox.Text),
+            CustomerNumber: NormalizeOptional(CustomerNumberTextBox.Text));
     }
 
     private void OpenOutputFolder_Click(object sender, RoutedEventArgs e)
@@ -287,6 +320,12 @@ public partial class MainWindow : Window
         PhoneTextBox.Text = string.Empty;
         EmailTextBox.Text = string.Empty;
         ContactPersonTextBox.Text = string.Empty;
+        InvoiceEmailTextBox.Text = string.Empty;
+        CustomerIbanTextBox.Text = string.Empty;
+        CustomerBicTextBox.Text = string.Empty;
+        CustomerAccountHolderTextBox.Text = string.Empty;
+        SepaConsentCheckBox.IsChecked = false;
+        AlwaysInvoiceCheckBox.IsChecked = false;
         LicenseeTextBox.Text = string.Empty;
         CustomerNumberTextBox.Text = string.Empty;
         MaxActiveConnectionsTextBox.Text = string.Empty;
@@ -308,6 +347,261 @@ public partial class MainWindow : Window
         {
             _historyRecords = Array.Empty<IssuedLicenseRecord>();
             HistoryStatusText.Text = $"Historie konnte nicht geladen werden: {ex.Message}";
+        }
+    }
+
+    private void LoadCustomers()
+    {
+        try
+        {
+            _customerRecords = _customerRepository.LoadOrEmpty(_paths.CustomersFile);
+            RefreshCustomerRows();
+            CustomersStatusText.Text = $"{_customerRecords.Count} Kunde(n) geladen.";
+        }
+        catch (Exception ex)
+        {
+            _customerRecords = Array.Empty<LicenseManagerCustomerRecord>();
+            CustomersStatusText.Text = $"Kundenliste konnte nicht geladen werden: {ex.Message}";
+        }
+    }
+
+    private void UpsertCustomerFromRequest(LicenseRequest request)
+    {
+        try
+        {
+            _customerRecords = _customerRepository.Upsert(_paths.CustomersFile, LicenseManagerCustomerRecord.FromRequest(request));
+            RefreshCustomerRows();
+            CustomersStatusText.Text = "Kunde aus Lizenzanfrage angelegt oder aktualisiert.";
+        }
+        catch (Exception ex)
+        {
+            CustomersStatusText.Text = $"Kunde konnte nicht gespeichert werden: {ex.Message}";
+        }
+    }
+
+    private void UpsertCustomerAfterLicense(IssuedLicenseRecord record)
+    {
+        var customer = _currentRequest is null
+            ? CustomerFromCurrentUi(record.InstallationId)
+            : LicenseManagerCustomerRecord.FromRequest(_currentRequest);
+        customer = customer with
+        {
+            CustomerNumber = record.CustomerNumber,
+            CustomerName = record.CustomerName,
+            Street = record.Street,
+            PostalCode = record.PostalCode,
+            City = record.City,
+            Phone = record.Phone,
+            Email = record.Email,
+            ContactPerson = record.ContactPerson,
+            InvoiceEmail = record.InvoiceEmail,
+            Iban = record.Iban,
+            Bic = record.Bic,
+            AccountHolder = record.AccountHolder,
+            SepaDirectDebitConsent = record.SepaDirectDebitConsent,
+            AlwaysInvoice = record.AlwaysInvoice
+        };
+
+        _customerRecords = _customerRepository.UpsertLicense(_paths.CustomersFile, customer, record);
+        RefreshCustomerRows();
+        CustomersStatusText.Text = "Kunde und Lizenzhistorie aktualisiert.";
+    }
+
+    private LicenseManagerCustomerRecord CustomerFromCurrentUi(string installationId)
+    {
+        var customer = ReadCustomerFromUi();
+        return new LicenseManagerCustomerRecord(
+            Id: Guid.NewGuid().ToString("N"),
+            CustomerNumber: customer.CustomerNumber,
+            CustomerName: customer.CustomerName,
+            Street: customer.Street,
+            PostalCode: customer.PostalCode,
+            City: customer.City,
+            Phone: customer.Phone,
+            Email: customer.Email,
+            ContactPerson: customer.ContactPerson,
+            InvoiceEmail: customer.InvoiceEmail,
+            Iban: customer.Iban,
+            Bic: customer.Bic,
+            AccountHolder: customer.AccountHolder,
+            SepaDirectDebitConsent: customer.SepaDirectDebitConsent,
+            AlwaysInvoice: customer.AlwaysInvoice,
+            InstallationId: installationId,
+            MachineName: _currentRequest?.MachineName,
+            ActiveLicensedDeviceCount: int.TryParse(MaxActiveConnectionsTextBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count) ? count : 0,
+            Devices: _requestDeviceRows
+                .Select(row => new IssuedLicenseDeviceRecord(row.DisplayName, row.DeviceDisplayName, string.Empty, string.Empty, row.ConnectionKind))
+                .ToArray(),
+            UpdatedAtUtc: DateTime.UtcNow);
+    }
+
+    private void RefreshCustomerRows()
+    {
+        var query = CustomerSearchTextBox.Text.Trim();
+        var filtered = string.IsNullOrWhiteSpace(query)
+            ? _customerRecords
+            : _customerRecords.Where(customer => ContainsIgnoreCase(customer.CustomerName, query)
+                || ContainsIgnoreCase(customer.CustomerNumber, query)
+                || ContainsIgnoreCase(customer.ContactPerson, query)
+                || ContainsIgnoreCase(customer.InvoiceEmail, query)
+                || ContainsIgnoreCase(customer.InstallationId, query));
+
+        _customerRows.Clear();
+        foreach (var customer in filtered.OrderBy(customer => customer.CustomerName, StringComparer.CurrentCultureIgnoreCase))
+        {
+            _customerRows.Add(new CustomerRow(customer, _settings.PricePerDeviceNet));
+        }
+    }
+
+    private void CustomerSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        RefreshCustomerRows();
+    }
+
+    private void SaveCustomerPrice_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var price = ParsePrice(CustomerPricePerDeviceTextBox.Text);
+            _settings = _settings with { PricePerDeviceNet = price };
+            _settingsRepository.Save(_paths.SettingsFile, _settings);
+            SettingsPricePerDeviceTextBox.Text = price.ToString("N2", CultureInfo.GetCultureInfo("de-DE"));
+            RefreshCustomerRows();
+            CustomersStatusText.Text = "Preis gespeichert.";
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Preis konnte nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
+    private void OpenCustomer_Click(object sender, RoutedEventArgs e)
+    {
+        OpenSelectedCustomer();
+    }
+
+    private void CustomersGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        OpenSelectedCustomer();
+    }
+
+    private void OpenSelectedCustomer()
+    {
+        var selected = GetSelectedCustomer();
+        if (selected is null)
+        {
+            CustomersStatusText.Text = "Bitte zuerst einen Kunden auswaehlen.";
+            return;
+        }
+
+        var window = new CustomerDetailWindow(selected, _historyRecords, _settings.PricePerDeviceNet)
+        {
+            Owner = this
+        };
+
+        if (window.ShowDialog() == true)
+        {
+            _customerRecords = _customerRepository.Upsert(_paths.CustomersFile, window.Customer);
+            RefreshCustomerRows();
+            CustomersStatusText.Text = "Kundendetails gespeichert.";
+        }
+    }
+
+    private void ExportCustomersPdf_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Kundenliste als PDF exportieren",
+            Filter = "PDF (*.pdf)|*.pdf|Alle Dateien (*.*)|*.*",
+            FileName = $"xdtbox-kunden-lizenzuebersicht-{DateTime.Today:yyyyMMdd}.pdf",
+            DefaultExt = ".pdf",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _customerPdfExporter.ExportCustomers(dialog.FileName, _customerRecords, _settings.PricePerDeviceNet, DateTime.Now);
+            CustomersStatusText.Text = $"PDF exportiert: {dialog.FileName}";
+        }
+        catch (Exception ex)
+        {
+            ShowError($"PDF konnte nicht exportiert werden: {ex.Message}");
+        }
+    }
+
+    private void CreateBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "LicenseManager-Sicherung erstellen",
+            Filter = "XDTBox LicenseManager Backup (*.xdtbox-licensemanager-backup)|*.xdtbox-licensemanager-backup|Alle Dateien (*.*)|*.*",
+            InitialDirectory = Directory.Exists(_paths.BackupFolder) ? _paths.BackupFolder : _paths.BaseFolder,
+            FileName = $"xdtbox-licensemanager-backup-{DateTime.Today:yyyyMMdd}.xdtbox-licensemanager-backup",
+            DefaultExt = ".xdtbox-licensemanager-backup",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _backupService.CreateBackup(dialog.FileName, _customerRecords, _settings, _historyRecords);
+            BackupStatusText.Text = $"Sicherung erstellt: {dialog.FileName}";
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Sicherung konnte nicht erstellt werden: {ex.Message}");
+        }
+    }
+
+    private void RestoreBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "LicenseManager-Sicherung wiederherstellen",
+            Filter = "XDTBox LicenseManager Backup (*.xdtbox-licensemanager-backup)|*.xdtbox-licensemanager-backup|Alle Dateien (*.*)|*.*",
+            InitialDirectory = Directory.Exists(_paths.BackupFolder) ? _paths.BackupFolder : _paths.BaseFolder,
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            this,
+            "Die vorhandenen LicenseManager-Daten werden durch die Sicherung ersetzt. Fortfahren?",
+            "XDTBox Lizenzverwaltung",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            _backupService.RestoreBackup(dialog.FileName, _paths);
+            _settings = _settingsRepository.LoadOrDefault(_paths.SettingsFile, _paths.BaseFolder);
+            InitializeDefaults();
+            LoadHistory();
+            LoadCustomers();
+            BackupStatusText.Text = "Sicherung wiederhergestellt.";
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Sicherung konnte nicht wiederhergestellt werden: {ex.Message}");
         }
     }
 
@@ -454,6 +748,12 @@ public partial class MainWindow : Window
         PhoneTextBox.Text = selected.Phone;
         EmailTextBox.Text = selected.Email ?? string.Empty;
         ContactPersonTextBox.Text = selected.ContactPerson ?? string.Empty;
+        InvoiceEmailTextBox.Text = selected.InvoiceEmail ?? string.Empty;
+        CustomerIbanTextBox.Text = selected.Iban ?? string.Empty;
+        CustomerBicTextBox.Text = selected.Bic ?? string.Empty;
+        CustomerAccountHolderTextBox.Text = selected.AccountHolder ?? string.Empty;
+        SepaConsentCheckBox.IsChecked = selected.SepaDirectDebitConsent;
+        AlwaysInvoiceCheckBox.IsChecked = selected.AlwaysInvoice;
         LicenseeTextBox.Text = selected.LicenseeName;
         CustomerNumberTextBox.Text = selected.CustomerNumber ?? string.Empty;
         MaxActiveConnectionsTextBox.Text = selected.MaxActiveDeviceConnections.ToString(CultureInfo.InvariantCulture);
@@ -478,6 +778,8 @@ public partial class MainWindow : Window
             _settings = ReadSettingsFromUi();
             _settingsRepository.Save(_paths.SettingsFile, _settings);
             ApplySettingsToCreateTab();
+            CustomerPricePerDeviceTextBox.Text = _settings.PricePerDeviceNet.ToString("N2", CultureInfo.GetCultureInfo("de-DE"));
+            RefreshCustomerRows();
             SettingsStatusText.Text = "Einstellungen gespeichert.";
         }
         catch (Exception ex)
@@ -495,6 +797,7 @@ public partial class MainWindow : Window
             Directory.CreateDirectory(_settings.DefaultRequestFolder);
             Directory.CreateDirectory(_settings.DefaultKeyFolder);
             Directory.CreateDirectory(_paths.DataFolder);
+            Directory.CreateDirectory(_paths.BackupFolder);
             SettingsStatusText.Text = "Arbeitsordner angelegt.";
         }
         catch (Exception ex)
@@ -510,6 +813,8 @@ public partial class MainWindow : Window
             throw new InvalidOperationException("Standard-Karenzzeit ist keine Zahl.");
         }
 
+        var pricePerDeviceNet = ParsePrice(SettingsPricePerDeviceTextBox.Text);
+
         return new LicenseManagerSettings(
             DefaultOutputFolder: SettingsOutputFolderTextBox.Text.Trim(),
             DefaultRequestFolder: SettingsRequestFolderTextBox.Text.Trim(),
@@ -517,7 +822,8 @@ public partial class MainWindow : Window
             PrivateKeyPath: NormalizeOptional(SettingsPrivateKeyPathTextBox.Text),
             KeyId: SettingsKeyIdTextBox.Text.Trim(),
             DefaultIssuer: SettingsIssuerTextBox.Text.Trim(),
-            DefaultGraceDays: graceDays);
+            DefaultGraceDays: graceDays,
+            PricePerDeviceNet: pricePerDeviceNet);
     }
 
     private void ApplySettingsToCreateTab()
@@ -541,6 +847,11 @@ public partial class MainWindow : Window
     private IssuedLicenseRecord? GetSelectedHistoryRecord()
     {
         return (HistoryGrid.SelectedItem as HistoryRow)?.Record;
+    }
+
+    private LicenseManagerCustomerRecord? GetSelectedCustomer()
+    {
+        return (CustomersGrid.SelectedItem as CustomerRow)?.Customer;
     }
 
     private string CreateSuggestedOutputFile()
@@ -568,6 +879,28 @@ public partial class MainWindow : Window
     private static string? NormalizeOptional(string value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static decimal ParsePrice(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return 0m;
+        }
+
+        var culture = CultureInfo.GetCultureInfo("de-DE");
+        if (decimal.TryParse(value.Trim(), NumberStyles.Number, culture, out var price)
+            || decimal.TryParse(value.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out price))
+        {
+            if (price < 0)
+            {
+                throw new InvalidOperationException("Preis darf nicht negativ sein.");
+            }
+
+            return price;
+        }
+
+        throw new InvalidOperationException("Preis pro Geraeteanbindung ist keine gueltige Zahl.");
     }
 
     private static string CreateFileSlug(string value)
@@ -668,5 +1001,34 @@ public partial class MainWindow : Window
         public string ValidUntilDisplay => Record.ValidUntilUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
         public string LicenseType => Record.LicenseType;
         public string IssuedAtDisplay => Record.IssuedAtUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
+    }
+
+    private sealed class CustomerRow
+    {
+        private readonly decimal _pricePerDeviceNet;
+
+        public CustomerRow(LicenseManagerCustomerRecord customer, decimal pricePerDeviceNet)
+        {
+            Customer = customer;
+            _pricePerDeviceNet = pricePerDeviceNet;
+        }
+
+        public LicenseManagerCustomerRecord Customer { get; }
+        public string CustomerNumber => Customer.CustomerNumber ?? string.Empty;
+        public string CustomerName => Customer.CustomerName;
+        public string ContactPerson => Customer.ContactPerson ?? string.Empty;
+        public string InvoiceEmail => Customer.InvoiceEmail ?? Customer.Email ?? string.Empty;
+        public string SepaDisplay => Customer.SepaDirectDebitConsent ? "Ja" : "Nein";
+        public string Iban => Customer.Iban ?? string.Empty;
+        public string Bic => Customer.Bic ?? string.Empty;
+        public string AccountHolder => Customer.AccountHolder ?? string.Empty;
+        public int ActiveLicensedDeviceCount => Customer.ActiveLicensedDeviceCount;
+        public string PricePerDeviceNetDisplay => _pricePerDeviceNet.ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " EUR";
+        public string TotalNetDisplay => LicenseManagerCostCalculator
+            .CalculateNetTotal(Customer.ActiveLicensedDeviceCount, _pricePerDeviceNet)
+            .ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " EUR";
+        public string LastLicenseIssuedDisplay => Customer.LastLicenseIssuedAtUtc?.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture) ?? string.Empty;
+        public string LicenseValidUntilDisplay => Customer.LicenseValidUntilUtc?.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture) ?? string.Empty;
+        public string InstallationId => Customer.InstallationId;
     }
 }

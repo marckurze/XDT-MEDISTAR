@@ -204,6 +204,14 @@ Eine signierte .xdtboxlic-Lizenz wird über "Lizenz importieren" eingelesen und 
 
 Eine neue Lizenzanforderung beschreibt immer den aktuellen Gesamtzustand der Installation mit allen aktiven Geräteanbindungen.
 
+# Internes Herstellerwerkzeug LicenseManager
+
+`XdtBox.LicenseManager` ist nicht Teil der normalen Praxisbedienung, sondern ein internes Herstellerwerkzeug. Es liest Lizenzanforderungen ein, erstellt signierte `.xdtboxlic`-Dateien und fuehrt eine lokale Kundenliste.
+
+Beim Import einer Lizenzanforderung wird der Kunde ueber Kundennummer oder InstallationId angelegt beziehungsweise aktualisiert. Rechnungs-E-Mail, IBAN, BIC, Kontoinhaber, SEPA-Zustimmung und Rechnung-ohne-SEPA koennen dort angezeigt und gepflegt werden.
+
+Ein Netto-Preis pro Geraeteanbindung berechnet Kunden- und Gesamtkosten. Die Kundenliste kann als PDF exportiert werden; Kundendetails zeigen aktuelle lizenzierte Anbindungen und Lizenzhistorie. Die LicenseManager-Sicherung enthaelt Kunden, Preis, Einstellungen und Historie, aber keine privaten Schluessel oder Signaturzertifikate.
+
 # Hardwaretausch und 7 Tage Karenzzeit
 
 Bei Hardwaretausch bitte neue Lizenz anfordern. Karenzzeit 7 Tage ab Umzug der Hardware.

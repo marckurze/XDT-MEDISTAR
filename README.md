@@ -376,6 +376,9 @@ dotnet run --project XdtDeviceBridge.App
 - Legacy-JSON bleibt nur als unsignierter Uebergang erkennbar.
 - Das interne Herstellerwerkzeug `XdtBox.LicenseIssuer.exe` erzeugt `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId. Es ist ein Kommandozeilentool; Doppelklick ohne Parameter zeigt Hilfe und wartet auf Tastendruck.
 - Die grafische Hersteller-App `XdtBox.LicenseManager.exe` liest Lizenzanfragen, erzeugt signierte `.xdtboxlic`-Dateien, fuehrt eine lokale Historie ausgestellter Lizenzen und speichert Hersteller-Einstellungen. Sie ist nicht Teil der Endkunden-App; private Schluessel bleiben externe Dateien.
+- `XdtBox.LicenseManager.exe` fuehrt zusaetzlich eine lokale Kundenliste aus Lizenzanfragen. Kunden werden ueber Kundennummer oder InstallationId angelegt beziehungsweise aktualisiert; Rechnungs-E-Mail, IBAN, BIC, Kontoinhaber, SEPA-Zustimmung und Rechnung-ohne-SEPA bleiben Herstellerdaten.
+- Ein einstellbarer Netto-Einzelpreis pro Geraeteanbindung berechnet Kunden- und Gesamtkosten. Die Kundenliste kann als PDF exportiert werden; Kundendetails zeigen Stammdaten, aktuelle lizenzierte Anbindungen und Lizenzhistorie.
+- Die LicenseManager-Sicherung enthaelt Kundenliste, Bank-/SEPA-/Rechnungsdaten, Preis, Einstellungen und Lizenzhistorie. Private Keys, Signaturzertifikate und Hersteller-Master-Keys werden bewusst nicht gesichert.
 - Der produktive V1-KeyId lautet `xdtbox-prod-2026-01`. Der passende private PEM-Schluessel liegt ausschliesslich beim Hersteller, standardmaessig unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`; die App enthaelt nur den Public Key.
 - Die Lizenz wird aktuell nur angezeigt, aber noch nicht erzwungen.
 - Es gibt noch keine Online-Lizenzierung.

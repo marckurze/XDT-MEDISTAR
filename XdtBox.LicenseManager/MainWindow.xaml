@@ -91,6 +91,9 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="160"/>
@@ -113,7 +116,19 @@
                                 <TextBlock Grid.Row="2" Grid.Column="2" Text="E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
                                 <TextBox Grid.Row="2" Grid.Column="3" x:Name="EmailTextBox" Margin="0,0,0,6"/>
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Ansprechpartner:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" x:Name="ContactPersonTextBox"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="ContactPersonTextBox" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="3" Grid.Column="2" Text="Rechnungs-E-Mail:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="3" Grid.Column="3" x:Name="InvoiceEmailTextBox" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="IBAN:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" x:Name="CustomerIbanTextBox" Margin="0,0,16,6"/>
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="BIC:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="4" Grid.Column="3" x:Name="CustomerBicTextBox" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Kontoinhaber:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                <TextBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" x:Name="CustomerAccountHolderTextBox" Margin="0,0,0,6"/>
+                                <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
+                                    <CheckBox x:Name="SepaConsentCheckBox" Content="Einwilligung SEPA-Lastschrift" Margin="0,0,18,0"/>
+                                    <CheckBox x:Name="AlwaysInvoiceCheckBox" Content="Kein SEPA - bitte Rechnung zusenden"/>
+                                </StackPanel>
                             </Grid>
                         </GroupBox>
 
@@ -211,6 +226,53 @@
                 </ScrollViewer>
             </TabItem>
 
+            <TabItem Header="Kunden">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock Text="Preis pro GerÃ¤teanbindung netto:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="CustomerPricePerDeviceTextBox" Width="90" Margin="0,0,8,0"/>
+                        <TextBlock Text="EUR" VerticalAlignment="Center" Margin="0,0,18,0"/>
+                        <TextBlock Text="Suche:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="CustomerSearchTextBox" Width="260" Margin="0,0,8,0" TextChanged="CustomerSearchTextBox_TextChanged"/>
+                        <Button Content="Kunde Ã¶ffnen" Width="120" Margin="0,0,8,0" Click="OpenCustomer_Click"/>
+                        <Button Content="Kundenliste als PDF exportieren" Width="210" Margin="0,0,8,0" Click="ExportCustomersPdf_Click"/>
+                        <Button Content="Preis speichern" Width="120" Click="SaveCustomerPrice_Click"/>
+                    </WrapPanel>
+
+                    <DataGrid Grid.Row="1"
+                              x:Name="CustomersGrid"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              MouseDoubleClick="CustomersGrid_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Kundennummer" Binding="{Binding CustomerNumber}" Width="120"/>
+                            <DataGridTextColumn Header="Praxis/Firma" Binding="{Binding CustomerName}" Width="2*"/>
+                            <DataGridTextColumn Header="Ansprechpartner" Binding="{Binding ContactPerson}" Width="150"/>
+                            <DataGridTextColumn Header="Rechnungs-E-Mail" Binding="{Binding InvoiceEmail}" Width="190"/>
+                            <DataGridTextColumn Header="SEPA" Binding="{Binding SepaDisplay}" Width="70"/>
+                            <DataGridTextColumn Header="IBAN" Binding="{Binding Iban}" Width="180"/>
+                            <DataGridTextColumn Header="BIC" Binding="{Binding Bic}" Width="120"/>
+                            <DataGridTextColumn Header="Kontoinhaber" Binding="{Binding AccountHolder}" Width="170"/>
+                            <DataGridTextColumn Header="Lizenzen" Binding="{Binding ActiveLicensedDeviceCount}" Width="80"/>
+                            <DataGridTextColumn Header="Einzelpreis netto" Binding="{Binding PricePerDeviceNetDisplay}" Width="120"/>
+                            <DataGridTextColumn Header="Kosten netto" Binding="{Binding TotalNetDisplay}" Width="120"/>
+                            <DataGridTextColumn Header="Letzte Lizenz" Binding="{Binding LastLicenseIssuedDisplay}" Width="120"/>
+                            <DataGridTextColumn Header="GÃ¼ltig bis" Binding="{Binding LicenseValidUntilDisplay}" Width="120"/>
+                            <DataGridTextColumn Header="InstallationId" Binding="{Binding InstallationId}" Width="220"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="2" x:Name="CustomersStatusText" Margin="0,8,0,0"/>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="Ausgestellte Lizenzen">
                 <Grid Margin="8">
                     <Grid.RowDefinitions>
@@ -288,9 +350,28 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="Sicherung">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" BorderBrush="#E0A126" BorderThickness="1" Background="#FFF4D6" Padding="8" Margin="0,0,0,8">
+                        <TextBlock Text="Sicherungen enthalten Kunden, Bank-/SEPA-Daten, Preis, Historie und Einstellungen. Private Keys und Signaturschluessel werden nicht gesichert." TextWrapping="Wrap"/>
+                    </Border>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Sicherung erstellen" Width="160" Margin="0,0,8,0" Click="CreateBackup_Click"/>
+                        <Button Content="Sicherung wiederherstellen" Width="190" Click="RestoreBackup_Click"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="2" x:Name="BackupStatusText" TextWrapping="Wrap"/>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="Einstellungen">
                 <Grid Margin="8">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -320,8 +401,13 @@
                         <TextBox x:Name="SettingsGraceDaysTextBox" Width="80"/>
                         <TextBlock Text=" Tage" VerticalAlignment="Center"/>
                     </StackPanel>
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Preis netto je GerÃ¤t:" FontWeight="Bold" Margin="0,0,8,8"/>
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBox x:Name="SettingsPricePerDeviceTextBox" Width="100" Margin="0,0,8,0"/>
+                        <TextBlock Text="EUR" VerticalAlignment="Center"/>
+                    </StackPanel>
 
-                    <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2">
+                    <StackPanel Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2">
                         <Border BorderBrush="#E0A126" BorderThickness="1" Background="#FFF4D6" Padding="8" Margin="0,0,0,8">
                             <TextBlock Text="Der private Schlüssel bleibt ausschließlich beim Hersteller. Die Datei darf nicht weitergegeben und nicht ins Repository übernommen werden." TextWrapping="Wrap"/>
                         </Border>

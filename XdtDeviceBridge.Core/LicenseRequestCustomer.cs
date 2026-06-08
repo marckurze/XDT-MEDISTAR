@@ -13,7 +13,8 @@ public sealed record LicenseRequestCustomer(
     string? AccountHolder = null,
     bool SepaDirectDebitConsent = false,
     bool AlwaysInvoice = false,
-    string? InvoiceEmail = null)
+    string? InvoiceEmail = null,
+    string? CustomerNumber = null)
 {
     public static LicenseRequestCustomer Empty { get; } = new(
         CustomerName: string.Empty,

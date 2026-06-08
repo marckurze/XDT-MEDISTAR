@@ -16,6 +16,8 @@ public sealed class LicenseManagerRepositoryTests
         Assert.EndsWith(Path.Combine("keys"), paths.KeysFolder);
         Assert.EndsWith(Path.Combine("data", "license-history.json"), paths.HistoryFile);
         Assert.EndsWith(Path.Combine("data", "license-manager-settings.json"), paths.SettingsFile);
+        Assert.EndsWith(Path.Combine("data", "license-manager-customers.json"), paths.CustomersFile);
+        Assert.EndsWith(Path.Combine("backups"), paths.BackupFolder);
     }
 
     [Fact]
@@ -30,15 +32,25 @@ public sealed class LicenseManagerRepositoryTests
             PrivateKeyPath: @"C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem",
             KeyId: LicensePublicKeyProvider.ProductionKeyId,
             DefaultIssuer: "Technik-Apparat",
-            DefaultGraceDays: 7);
+            DefaultGraceDays: 7,
+            PricePerDeviceNet: 5m);
 
         repository.Save(filePath, settings);
         var loaded = repository.LoadOrDefault(filePath, @"C:\XDTBox\Lizenzaktivierung");
         var json = File.ReadAllText(filePath);
 
         Assert.Equal(settings.PrivateKeyPath, loaded.PrivateKeyPath);
+        Assert.Equal(5m, loaded.PricePerDeviceNet);
         Assert.Contains("xdtbox_private.pem", json);
         Assert.DoesNotContain("BEGIN PRIVATE KEY", json);
+    }
+
+    [Fact]
+    public void CostCalculator_ShouldCalculateNetTotal()
+    {
+        var total = LicenseManagerCostCalculator.CalculateNetTotal(14, 5m);
+
+        Assert.Equal(70m, total);
     }
 
     [Fact]
@@ -115,6 +127,86 @@ public sealed class LicenseManagerRepositoryTests
         Assert.Equal("rechnung@example.test", loaded.InvoiceEmail);
     }
 
+    [Fact]
+    public void LicenseManagerCustomerRepository_ShouldCreateCustomerWithoutCustomerNumber()
+    {
+        var filePath = CreateTempFilePath("customers.json");
+        var repository = new LicenseManagerCustomerRepository();
+        var customer = CreateCustomer("installation-1") with { CustomerNumber = null };
+
+        var customers = repository.Upsert(filePath, customer);
+
+        var stored = Assert.Single(customers);
+        Assert.Null(stored.CustomerNumber);
+        Assert.Equal("installation-1", stored.InstallationId);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerRepository_ShouldUpdateSameInstallationInsteadOfDuplicating()
+    {
+        var filePath = CreateTempFilePath("customers.json");
+        var repository = new LicenseManagerCustomerRepository();
+
+        repository.Upsert(filePath, CreateCustomer("installation-1") with { CustomerName = "Praxis Alt" });
+        var customers = repository.Upsert(filePath, CreateCustomer("installation-1") with { CustomerName = "Praxis Neu", CustomerNumber = "K-100" });
+
+        var stored = Assert.Single(customers);
+        Assert.Equal("Praxis Neu", stored.CustomerName);
+        Assert.Equal("K-100", stored.CustomerNumber);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerRepository_ShouldRejectCorruptedJsonWithControlledMessage()
+    {
+        var filePath = CreateTempFilePath("customers.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        File.WriteAllText(filePath, "{ invalid json");
+        var repository = new LicenseManagerCustomerRepository();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => repository.LoadOrEmpty(filePath));
+
+        Assert.Contains("Invalid license manager customer JSON:", exception.Message);
+    }
+
+    [Fact]
+    public void LicenseManagerBackupService_ShouldRoundTripCustomersSettingsAndHistoryWithoutPrivateKeyPath()
+    {
+        var baseFolder = Path.Combine(Path.GetTempPath(), "XdtBoxLicenseManagerTests", Guid.NewGuid().ToString("N"));
+        var paths = new LicenseManagerPathProvider().GetPaths(baseFolder);
+        var backupFile = Path.Combine(baseFolder, "backup.xdtbox-licensemanager-backup");
+        var settings = LicenseManagerSettings.CreateDefault(baseFolder) with
+        {
+            PrivateKeyPath = Path.Combine(baseFolder, "keys", "private.pem"),
+            PricePerDeviceNet = 5m
+        };
+        var customers = new[] { CreateCustomer("installation-1") };
+        var history = new[] { CreateRecord("license-1", "Praxis Muster") };
+        var service = new LicenseManagerBackupService();
+
+        service.CreateBackup(backupFile, customers, settings, history);
+        var data = service.ReadBackup(backupFile);
+
+        Assert.Single(data.Customers);
+        Assert.Equal(5m, data.Settings.PricePerDeviceNet);
+        Assert.Null(data.Settings.PrivateKeyPath);
+        Assert.Single(data.History);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerPdfExporter_ShouldCreatePdfWithoutPrivateKeyData()
+    {
+        var filePath = CreateTempFilePath("customers.pdf");
+        var exporter = new LicenseManagerCustomerPdfExporter();
+
+        exporter.ExportCustomers(filePath, new[] { CreateCustomer("installation-1") }, 5m, new DateTime(2026, 6, 8, 12, 0, 0));
+
+        var pdf = File.ReadAllText(filePath);
+        Assert.StartsWith("%PDF", pdf);
+        Assert.Contains("XDTBox Kunden- und Lizenzuebersicht", pdf);
+        Assert.Contains("70,00 EUR", pdf);
+        Assert.DoesNotContain("BEGIN PRIVATE KEY", pdf);
+    }
+
     private static IssuedLicenseRecord CreateRecord(string licenseId, string customerName)
     {
         var now = new DateTime(2026, 5, 27, 12, 0, 0, DateTimeKind.Utc);
@@ -142,6 +234,39 @@ public sealed class LicenseManagerRepositoryTests
             RequestFilePath: @"C:\XDTBox\Lizenzaktivierung\requests\request.json",
             Notes: null,
             Devices: Array.Empty<IssuedLicenseDeviceRecord>());
+    }
+
+    private static LicenseManagerCustomerRecord CreateCustomer(string installationId)
+    {
+        return new LicenseManagerCustomerRecord(
+            Id: Guid.NewGuid().ToString("N"),
+            CustomerNumber: "K-100",
+            CustomerName: "Praxis Muster",
+            Street: "Musterstrasse 1",
+            PostalCode: "12345",
+            City: "Musterstadt",
+            Phone: "01234",
+            Email: "info@example.test",
+            ContactPerson: "Frau Muster",
+            InvoiceEmail: "rechnung@example.test",
+            Iban: "DE00123456780000000000",
+            Bic: "TESTDEFFXXX",
+            AccountHolder: "Praxis Muster",
+            SepaDirectDebitConsent: true,
+            AlwaysInvoice: false,
+            InstallationId: installationId,
+            MachineName: "TEST-PC",
+            ActiveLicensedDeviceCount: 14,
+            Devices: new[]
+            {
+                new IssuedLicenseDeviceRecord(
+                    DisplayName: "MEDISTAR + NIDEK LM7",
+                    DeviceDisplayName: "NIDEK LM7",
+                    InterfaceProfileId: "interface-lm7",
+                    DeviceProfileId: "device-lm7",
+                    ConnectionKind: DeviceConnectionKind.NetworkLan)
+            },
+            UpdatedAtUtc: DateTime.UtcNow);
     }
 
     private static string CreateTempFilePath(string fileName)
