@@ -1,5 +1,6 @@
 using XdtDeviceBridge.Core;
 using XdtDeviceBridge.Infrastructure;
+using System.Text;
 
 namespace XdtDeviceBridge.Tests;
 
@@ -156,6 +157,76 @@ public sealed class LicenseManagerRepositoryTests
     }
 
     [Fact]
+    public void LicenseManagerCustomerRecord_FromRequest_ShouldKeepOnlyActiveLicenseRequiredDevices()
+    {
+        var request = new LicenseRequest(
+            RequestId: "request-1",
+            InstallationId: "installation-1",
+            MachineName: "TEST-PC",
+            UserName: "tester",
+            IsTerminalServer: false,
+            ProductCode: XdtBoxLicenseConstants.ProductCode,
+            AppVersion: "1.0",
+            ActiveLicensedDeviceCount: 3,
+            Devices: new[]
+            {
+                new LicenseRequestDevice("active-licensed", "MEDISTAR + NIDEK LM7", "NIDEK", "LM7", "profile-lm7", IsActive: true, IsLicenseRequired: true),
+                new LicenseRequestDevice("inactive", "MEDISTAR + NIDEK RT-6100", "NIDEK", "RT-6100", "profile-rt6100", IsActive: false, IsLicenseRequired: true),
+                new LicenseRequestDevice("free", "Nicht lizenzpflichtig", "XDTBox", "Doku", "profile-free", IsActive: true, IsLicenseRequired: false)
+            },
+            CreatedAt: DateTime.UtcNow,
+            Customer: new LicenseRequestCustomer(
+                CustomerName: "Praxis Muster",
+                Street: "Musterstraße 1",
+                PostalCode: "12345",
+                City: "Musterstadt",
+                Phone: "01234",
+                Email: "info@example.test",
+                ContactPerson: "Frau Muster",
+                Iban: "DE00123456780000000000",
+                Bic: "TESTDEFFXXX",
+                AccountHolder: "Praxis Muster",
+                SepaDirectDebitConsent: false,
+                AlwaysInvoice: true,
+                InvoiceEmail: "rechnung@example.test",
+                CustomerNumber: "K-100"));
+
+        var customer = LicenseManagerCustomerRecord.FromRequest(request);
+
+        Assert.Equal(LicenseManagerPaymentMethod.BankTransfer, customer.PaymentMethod);
+        Assert.Equal(1, customer.BillableDeviceCount);
+        Assert.Single(customer.EffectiveDevices);
+        Assert.Equal("MEDISTAR + NIDEK LM7", Assert.Single(customer.EffectiveDevices).DisplayName);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerRecord_ShouldSumMultipleInstallationsAndExcludeCancelledOnes()
+    {
+        var customer = CreateCustomer("installation-1")
+            .WithLicense(CreateRecord("license-1", "Praxis Muster") with
+            {
+                InstallationId = "installation-1",
+                Devices = CreateIssuedDevices("LM7", "AR360")
+            })
+            .WithLicense(CreateRecord("license-2", "Praxis Muster") with
+            {
+                InstallationId = "installation-2",
+                Devices = CreateIssuedDevices("RT-6100")
+            });
+
+        Assert.Equal(2, customer.ActiveInstallationCount);
+        Assert.Equal(3, customer.BillableDeviceCount);
+        Assert.Equal(15m, LicenseManagerCostCalculator.CalculateNetTotal(customer.BillableDeviceCount, 5m));
+
+        var cancelled = customer.CancelInstallation("installation-1", DateTime.UtcNow, "Teststorno");
+
+        Assert.Equal(1, cancelled.ActiveInstallationCount);
+        Assert.Equal(1, cancelled.BillableDeviceCount);
+        Assert.Equal(5m, LicenseManagerCostCalculator.CalculateNetTotal(cancelled.BillableDeviceCount, 5m));
+        Assert.Contains(cancelled.EffectiveInstallations, installation => installation.Status == LicenseManagerInstallationStatus.Cancelled);
+    }
+
+    [Fact]
     public void LicenseManagerCustomerRepository_ShouldRejectCorruptedJsonWithControlledMessage()
     {
         var filePath = CreateTempFilePath("customers.json");
@@ -197,13 +268,27 @@ public sealed class LicenseManagerRepositoryTests
     {
         var filePath = CreateTempFilePath("customers.pdf");
         var exporter = new LicenseManagerCustomerPdfExporter();
+        var customer = CreateCustomer("installation-1") with
+        {
+            LicenseValidUntilUtc = XdtBoxLicenseConstants.UnlimitedValidUntilUtc,
+            SepaDirectDebitConsent = false,
+            AlwaysInvoice = true
+        };
 
-        exporter.ExportCustomers(filePath, new[] { CreateCustomer("installation-1") }, 5m, new DateTime(2026, 6, 8, 12, 0, 0));
+        exporter.ExportCustomers(filePath, new[] { customer }, 5m, new DateTime(2026, 6, 8, 12, 0, 0));
 
-        var pdf = File.ReadAllText(filePath);
+        var pdfBytes = File.ReadAllBytes(filePath);
+        var pdf = Encoding.Latin1.GetString(pdfBytes);
         Assert.StartsWith("%PDF", pdf);
-        Assert.Contains("XDTBox Kunden- und Lizenzuebersicht", pdf);
+        Assert.Contains("/MediaBox [0 0 842 595]", pdf);
+        Assert.Contains("XDTBox Kunden- und Lizenzübersicht", pdf);
+        Assert.Contains("Geräte", pdf);
+        Assert.Contains("Banküberweisung", pdf);
+        Assert.Contains("unbefristet", pdf);
+        Assert.Contains("Summenzeile", pdf);
         Assert.Contains("70,00 EUR", pdf);
+        Assert.DoesNotContain("Kdnr | Praxis", pdf);
+        Assert.DoesNotContain("Geraete", pdf);
         Assert.DoesNotContain("BEGIN PRIVATE KEY", pdf);
     }
 
@@ -226,7 +311,7 @@ public sealed class LicenseManagerRepositoryTests
             InstallationId: "installation-1",
             MaxActiveDeviceConnections: 3,
             ValidFromUtc: now.Date,
-            ValidUntilUtc: now.Date.AddYears(1),
+            ValidUntilUtc: XdtBoxLicenseConstants.UnlimitedValidUntilUtc,
             GraceDays: 7,
             LicenseType: "Production",
             KeyId: "xdtbox-prod-2026-01",
@@ -234,6 +319,18 @@ public sealed class LicenseManagerRepositoryTests
             RequestFilePath: @"C:\XDTBox\Lizenzaktivierung\requests\request.json",
             Notes: null,
             Devices: Array.Empty<IssuedLicenseDeviceRecord>());
+    }
+
+    private static IssuedLicenseDeviceRecord[] CreateIssuedDevices(params string[] names)
+    {
+        return names
+            .Select(name => new IssuedLicenseDeviceRecord(
+                DisplayName: "MEDISTAR + NIDEK " + name,
+                DeviceDisplayName: "NIDEK " + name,
+                InterfaceProfileId: "interface-" + name.ToLowerInvariant(),
+                DeviceProfileId: "device-" + name.ToLowerInvariant(),
+                ConnectionKind: DeviceConnectionKind.NetworkLan))
+            .ToArray();
     }
 
     private static LicenseManagerCustomerRecord CreateCustomer(string installationId)

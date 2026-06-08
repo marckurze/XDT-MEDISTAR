@@ -489,7 +489,7 @@ Vorhanden:
 - Karenzzeiten speichern/laden
 - RSA-PSS/SHA-256-Signaturpruefung ueber die Payload-Bytes
 - internes Herstellerwerkzeug `XdtBox.LicenseIssuer` zum Erzeugen signierter `.xdtboxlic`-Dateien
-- internes grafisches Herstellerwerkzeug `XdtBox.LicenseManager` zum Einlesen von Lizenzanfragen, Erzeugen signierter `.xdtboxlic`, Historisieren ausgestellter Lizenzen, Fuehren einer Kundenliste mit Bank-/SEPA-/Rechnungsdaten, Netto-Kostenuebersicht, PDF-Export, Kundendetail und LicenseManager-Sicherung ohne private Schluessel
+- internes grafisches Herstellerwerkzeug `XDTBox Lizenzmanager` (`XdtBox.LicenseManager`) zum Einlesen von Lizenzanfragen, Erzeugen signierter `.xdtboxlic`, Historisieren ausgestellter Lizenzen, Fuehren einer Kundenliste mit Bank-/SEPA-/Rechnungsdaten, mehreren Installationen je Kunde, Netto-Kostenuebersicht, grafischem A4-Querformat-PDF-Export, Kundendetail, lokaler Storno-Funktion und LicenseManager-Sicherung ohne private Schluessel
 
 Aktueller Stand:
 
@@ -498,7 +498,7 @@ Aktueller Stand:
 - noch kein finaler produktiver Public-Key-/Private-Key-Prozess
 - Lizenzlogik ist Anzeige-, Bewertungs- und Vorbereitungslogik
 
-Der konkrete Produktivplan steht in `docs/LIZENZIERUNG_PRODUKTIVPLAN.md`. Fuer XDTBox V1 wird dort eine offlinefaehige `.xdtboxlic`-Lizenz mit asymmetrischer Signatur, datensparsamer Installation-ID, `MaxActiveDeviceConnections`, 7-Tage-Karenz und zentralen Gates vor Aktivierung beziehungsweise Start der Verarbeitung festgelegt. Lizenzpflichtig ist ausschliesslich die Anzahl aktiver Geraeteanbindungen; `NetworkLan`, `SerialRs232`, Dokumentanhang, Profile/Templates und Testbereiche sind keine separaten Lizenzmodule. Lizenzanfragen enthalten Kundendaten und Geraetenamen nur zur Herstellerdokumentation. Die produktive V1-KeyId `xdtbox-prod-2026-01` ist mit Public Key in der App hinterlegt; der private Schluessel bleibt extern beim Hersteller unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`. Parser und XDT-Ausgabe sollen nicht direkt lizenzseitig abbrechen. InstallationId bleibt fuehrend; bei Hardwaretausch wird eine neue Lizenzanforderung erzeugt.
+Der konkrete Produktivplan steht in `docs/LIZENZIERUNG_PRODUKTIVPLAN.md`. Fuer XDTBox V1 wird dort eine offlinefaehige `.xdtboxlic`-Lizenz mit asymmetrischer Signatur, datensparsamer Installation-ID, `MaxActiveDeviceConnections`, 7-Tage-Karenz und zentralen Gates vor Aktivierung beziehungsweise Start der Verarbeitung festgelegt. Lizenzpflichtig ist ausschliesslich die Anzahl aktiver Geraeteanbindungen; `NetworkLan`, `SerialRs232`, Dokumentanhang, Profile/Templates und Testbereiche sind keine separaten Lizenzmodule. Lizenzanfragen enthalten Kundendaten und die konkrete Liste aktiver lizenzpflichtiger Anbindungen nur zur Herstellerdokumentation. Aktuell erzeugte Lizenzen sind unbefristet gueltig, solange InstallationId/Hardware passt und die Signatur gueltig ist; Anzeigen schreiben dafuer `unbefristet`. Die produktive V1-KeyId `xdtbox-prod-2026-01` ist mit Public Key in der App hinterlegt; der private Schluessel bleibt extern beim Hersteller unter `C:\XDTBox\Lizenzaktivierung\keys\xdtbox_private.pem`. Parser und XDT-Ausgabe sollen nicht direkt lizenzseitig abbrechen. InstallationId bleibt fuehrend; bei Hardwaretausch wird eine neue Lizenzanforderung erzeugt. Das eigene Setup des XDTBox Lizenzmanagers installiert nur das Herstellerwerkzeug und keine Kunden-App, Kundendaten, History-Dateien, Backups oder privaten Schluessel.
 
 ## 17. Sicherheitsentscheidungen
 

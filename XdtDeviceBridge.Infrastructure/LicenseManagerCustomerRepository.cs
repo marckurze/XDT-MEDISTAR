@@ -25,7 +25,9 @@ public sealed class LicenseManagerCustomerRepository
         {
             var json = File.ReadAllText(filePath, Utf8NoBom);
             var records = JsonSerializer.Deserialize<List<LicenseManagerCustomerRecord>>(json, Options);
-            return records is null ? Array.Empty<LicenseManagerCustomerRecord>() : records;
+            return records is null
+                ? Array.Empty<LicenseManagerCustomerRecord>()
+                : records.Select(record => record.WithNormalizedInstallations()).ToArray();
         }
         catch (JsonException ex)
         {
@@ -44,7 +46,10 @@ public sealed class LicenseManagerCustomerRepository
             Directory.CreateDirectory(directory);
         }
 
-        var json = JsonSerializer.Serialize(records, Options);
+        var normalized = records
+            .Select(record => record.WithNormalizedInstallations())
+            .ToArray();
+        var json = JsonSerializer.Serialize(normalized, Options);
         File.WriteAllText(filePath, json, Utf8NoBom);
     }
 
@@ -107,7 +112,9 @@ public sealed class LicenseManagerCustomerRepository
         {
             for (var i = 0; i < records.Count; i++)
             {
-                if (string.Equals(records[i].InstallationId, customer.InstallationId, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(records[i].InstallationId, customer.InstallationId, StringComparison.OrdinalIgnoreCase)
+                    || records[i].EffectiveInstallations.Any(installation =>
+                        string.Equals(installation.InstallationId, customer.InstallationId, StringComparison.OrdinalIgnoreCase)))
                 {
                     return i;
                 }

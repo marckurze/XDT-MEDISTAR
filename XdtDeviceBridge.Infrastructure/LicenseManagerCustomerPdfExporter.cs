@@ -6,7 +6,28 @@ namespace XdtDeviceBridge.Infrastructure;
 
 public sealed class LicenseManagerCustomerPdfExporter
 {
-    private static readonly Encoding PdfEncoding = Encoding.ASCII;
+    private const double PageWidth = 842;
+    private const double PageHeight = 595;
+    private const double Margin = 28;
+    private const double TableTop = 485;
+    private const double RowHeight = 21;
+    private static readonly Encoding PdfEncoding = Encoding.Latin1;
+    private static readonly CultureInfo GermanCulture = CultureInfo.GetCultureInfo("de-DE");
+    private static readonly double[] ColumnWidths = { 38, 108, 118, 78, 100, 58, 82, 46, 36, 66, 56 };
+    private static readonly string[] Headers =
+    {
+        "Kdnr",
+        "Praxis/Firma",
+        "Rechnungs-E-Mail",
+        "Zahlungsart",
+        "IBAN",
+        "BIC",
+        "Kontoinhaber",
+        "Install.",
+        "Geräte",
+        "Netto",
+        "Gültig bis"
+    };
 
     public void ExportCustomers(
         string filePath,
@@ -23,50 +44,48 @@ public sealed class LicenseManagerCustomerPdfExporter
             Directory.CreateDirectory(directory);
         }
 
-        var lines = BuildLines(customers, pricePerDeviceNet, createdAt).ToArray();
-        var document = BuildPdf(lines);
+        var rows = customers
+            .OrderBy(customer => customer.CustomerName, StringComparer.CurrentCultureIgnoreCase)
+            .Select(customer => CreateRow(customer, pricePerDeviceNet))
+            .ToArray();
+
+        var document = BuildPdf(rows, customers, pricePerDeviceNet, createdAt);
         File.WriteAllBytes(filePath, document);
     }
 
-    private static IEnumerable<string> BuildLines(
+    private static PdfTableRow CreateRow(LicenseManagerCustomerRecord customer, decimal pricePerDeviceNet)
+    {
+        var total = LicenseManagerCostCalculator.CalculateNetTotal(customer.BillableDeviceCount, pricePerDeviceNet);
+        return new PdfTableRow(
+            CustomerNumber: customer.CustomerNumber ?? "-",
+            CustomerName: customer.CustomerName,
+            InvoiceEmail: customer.InvoiceEmail ?? customer.Email ?? "-",
+            PaymentMethod: FormatPaymentMethod(customer.PaymentMethod),
+            Iban: customer.Iban ?? "-",
+            Bic: customer.Bic ?? "-",
+            AccountHolder: customer.AccountHolder ?? "-",
+            Installations: customer.ActiveInstallationCount.ToString(CultureInfo.InvariantCulture),
+            Devices: customer.BillableDeviceCount.ToString(CultureInfo.InvariantCulture),
+            TotalNet: total.ToString("N2", GermanCulture) + " EUR",
+            ValidUntil: FormatValidity(customer.EffectiveLicenseValidUntilUtc));
+    }
+
+    private static byte[] BuildPdf(
+        IReadOnlyList<PdfTableRow> rows,
         IReadOnlyList<LicenseManagerCustomerRecord> customers,
         decimal pricePerDeviceNet,
         DateTime createdAt)
     {
-        var culture = CultureInfo.GetCultureInfo("de-DE");
-        yield return "XDTBox Kunden- und Lizenzuebersicht";
-        yield return $"Erstellt am: {createdAt.ToString("dd.MM.yyyy HH:mm", culture)}";
-        yield return $"Einzelpreis netto pro Geraeteanbindung: {pricePerDeviceNet.ToString("N2", culture)} EUR";
-        yield return string.Empty;
-        yield return "Kdnr | Praxis/Firma | Rechnungsmail | SEPA | IBAN | BIC | Kontoinhaber | Anzahl | Netto";
+        const int rowsPerPage = 18;
+        var pages = rows.Count == 0
+            ? new[] { Array.Empty<PdfTableRow>() }
+            : rows.Chunk(rowsPerPage).ToArray();
 
-        foreach (var customer in customers.OrderBy(customer => customer.CustomerName, StringComparer.CurrentCultureIgnoreCase))
+        var objects = new List<string>
         {
-            var total = LicenseManagerCostCalculator.CalculateNetTotal(customer.ActiveLicensedDeviceCount, pricePerDeviceNet);
-            yield return string.Join(" | ",
-                Truncate(customer.CustomerNumber ?? "-", 12),
-                Truncate(customer.CustomerName, 28),
-                Truncate(customer.InvoiceEmail ?? customer.Email ?? "-", 26),
-                customer.SepaDirectDebitConsent ? "Ja" : "Nein",
-                Truncate(customer.Iban ?? "-", 24),
-                Truncate(customer.Bic ?? "-", 12),
-                Truncate(customer.AccountHolder ?? "-", 22),
-                customer.ActiveLicensedDeviceCount.ToString(CultureInfo.InvariantCulture),
-                total.ToString("N2", culture) + " EUR");
-        }
+            "<< /Type /Catalog /Pages 2 0 R >>"
+        };
 
-        yield return string.Empty;
-        yield return $"Gesamtanzahl Geraete: {customers.Sum(customer => customer.ActiveLicensedDeviceCount)}";
-        yield return $"Gesamtkosten netto: {customers.Sum(customer => LicenseManagerCostCalculator.CalculateNetTotal(customer.ActiveLicensedDeviceCount, pricePerDeviceNet)).ToString("N2", culture)} EUR";
-    }
-
-    private static byte[] BuildPdf(IReadOnlyList<string> lines)
-    {
-        const int linesPerPage = 42;
-        var pages = lines.Chunk(linesPerPage).ToArray();
-        var objects = new List<string>();
-
-        objects.Add("<< /Type /Catalog /Pages 2 0 R >>");
         var pageObjectIds = Enumerable.Range(0, pages.Length).Select(page => 3 + page * 2).ToArray();
         objects.Add($"<< /Type /Pages /Count {pages.Length} /Kids [{string.Join(" ", pageObjectIds.Select(id => $"{id} 0 R"))}] >>");
 
@@ -74,8 +93,10 @@ public sealed class LicenseManagerCustomerPdfExporter
         {
             var pageObjectId = 3 + pageIndex * 2;
             var streamObjectId = pageObjectId + 1;
-            objects.Add($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents {streamObjectId} 0 R >>");
-            objects.Add(CreateContentStream(pages[pageIndex]));
+            objects.Add($"""
+                << /Type /Page /Parent 2 0 R /MediaBox [0 0 {PageWidth.ToString(CultureInfo.InvariantCulture)} {PageHeight.ToString(CultureInfo.InvariantCulture)}] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >> >> >> /Contents {streamObjectId} 0 R >>
+                """);
+            objects.Add(CreateContentStream(pages[pageIndex], pageIndex + 1, pages.Length, customers, pricePerDeviceNet, createdAt));
         }
 
         var builder = new StringBuilder();
@@ -106,21 +127,158 @@ public sealed class LicenseManagerCustomerPdfExporter
         return PdfEncoding.GetBytes(builder.ToString());
     }
 
-    private static string CreateContentStream(IReadOnlyList<string> lines)
+    private static string CreateContentStream(
+        IReadOnlyList<PdfTableRow> rows,
+        int pageNumber,
+        int pageCount,
+        IReadOnlyList<LicenseManagerCustomerRecord> customers,
+        decimal pricePerDeviceNet,
+        DateTime createdAt)
     {
         var content = new StringBuilder();
-        content.Append("BT\n");
-        content.Append("/F1 10 Tf\n");
-        content.Append("42 552 Td\n");
-        foreach (var line in lines)
-        {
-            content.Append('(').Append(EscapePdfText(NormalizeAscii(line))).Append(") Tj\n");
-            content.Append("0 -12 Td\n");
-        }
+        AppendRect(content, Margin, PageHeight - 94, PageWidth - Margin * 2, 46, "0.91 0.97 0.99", "0.73 0.86 0.93");
+        AppendText(content, Margin + 16, PageHeight - 68, 18, "XDTBox Kunden- und Lizenzübersicht", bold: true);
+        AppendText(content, PageWidth - 248, PageHeight - 62, 9, "Interne Hersteller-Lizenzverwaltung", bold: true);
+        AppendText(content, Margin + 16, PageHeight - 86, 9, "Erstellt am: " + createdAt.ToString("dd.MM.yyyy HH:mm", GermanCulture));
+        AppendText(content, 280, PageHeight - 86, 9, "Einzelpreis netto pro Geräteanbindung: " + pricePerDeviceNet.ToString("N2", GermanCulture) + " EUR");
+        AppendText(content, PageWidth - 95, PageHeight - 86, 8, $"Seite {pageNumber}/{pageCount}");
 
-        content.Append("ET\n");
+        DrawTable(content, rows);
+        DrawSummary(content, customers, pricePerDeviceNet);
+
         var payload = content.ToString();
         return $"<< /Length {PdfEncoding.GetByteCount(payload)} >>\nstream\n{payload}endstream";
+    }
+
+    private static void DrawTable(StringBuilder content, IReadOnlyList<PdfTableRow> rows)
+    {
+        var x = Margin;
+        var tableWidth = ColumnWidths.Sum();
+
+        AppendRect(content, x, TableTop, tableWidth, RowHeight, "0.88 0.95 0.98", "0.64 0.79 0.88");
+        var cursor = x;
+        for (var column = 0; column < Headers.Length; column++)
+        {
+            AppendText(content, cursor + 4, TableTop + 7, 7.5, Headers[column], bold: true);
+            DrawLine(content, cursor, TableTop, cursor, TableTop + RowHeight, "0.64 0.79 0.88");
+            cursor += ColumnWidths[column];
+        }
+
+        DrawLine(content, x + tableWidth, TableTop, x + tableWidth, TableTop + RowHeight, "0.64 0.79 0.88");
+        DrawLine(content, x, TableTop, x + tableWidth, TableTop, "0.64 0.79 0.88");
+        DrawLine(content, x, TableTop + RowHeight, x + tableWidth, TableTop + RowHeight, "0.64 0.79 0.88");
+
+        var y = TableTop - RowHeight;
+        for (var index = 0; index < rows.Count; index++)
+        {
+            var fill = index % 2 == 0 ? "1 1 1" : "0.96 0.99 1";
+            AppendRect(content, x, y, tableWidth, RowHeight, fill, "0.78 0.87 0.92");
+            DrawRow(content, rows[index], y);
+            y -= RowHeight;
+        }
+
+        if (rows.Count == 0)
+        {
+            AppendRect(content, x, y, tableWidth, RowHeight, "1 1 1", "0.78 0.87 0.92");
+            AppendText(content, x + 6, y + 7, 8, "Keine Kunden gespeichert.");
+        }
+    }
+
+    private static void DrawRow(StringBuilder content, PdfTableRow row, double y)
+    {
+        var values = new[]
+        {
+            row.CustomerNumber,
+            row.CustomerName,
+            row.InvoiceEmail,
+            row.PaymentMethod,
+            row.Iban,
+            row.Bic,
+            row.AccountHolder,
+            row.Installations,
+            row.Devices,
+            row.TotalNet,
+            row.ValidUntil
+        };
+
+        var cursor = Margin;
+        for (var column = 0; column < values.Length; column++)
+        {
+            var width = ColumnWidths[column];
+            var rightAligned = column is 7 or 8 or 9;
+            var value = Truncate(values[column], width, rightAligned ? 6.8 : 7.2);
+            var textWidth = EstimateTextWidth(value, rightAligned ? 6.8 : 7.2);
+            var textX = rightAligned ? cursor + width - textWidth - 4 : cursor + 4;
+            AppendText(content, textX, y + 7, rightAligned ? 6.8 : 7.2, value);
+            DrawLine(content, cursor, y, cursor, y + RowHeight, "0.78 0.87 0.92");
+            cursor += width;
+        }
+
+        DrawLine(content, cursor, y, cursor, y + RowHeight, "0.78 0.87 0.92");
+    }
+
+    private static void DrawSummary(
+        StringBuilder content,
+        IReadOnlyList<LicenseManagerCustomerRecord> customers,
+        decimal pricePerDeviceNet)
+    {
+        var totalDevices = customers.Sum(customer => customer.BillableDeviceCount);
+        var totalCost = customers.Sum(customer => LicenseManagerCostCalculator.CalculateNetTotal(customer.BillableDeviceCount, pricePerDeviceNet));
+        var y = 50;
+        AppendRect(content, Margin, y, PageWidth - Margin * 2, 32, "0.91 0.98 0.94", "0.66 0.84 0.72");
+        AppendText(content, Margin + 12, y + 19, 9, $"Summenzeile: Gesamtanzahl Geräte {totalDevices}", bold: true);
+        AppendText(content, 360, y + 19, 9, "Gesamtkosten netto: " + totalCost.ToString("N2", GermanCulture) + " EUR", bold: true);
+        AppendText(content, Margin + 12, y + 7, 7.5, "Stornierte Installationen werden in aktiven Geräte- und Kostensummen nicht berücksichtigt.");
+    }
+
+    private static void AppendText(StringBuilder content, double x, double y, double size, string text, bool bold = false)
+    {
+        content.Append("BT\n");
+        content.Append(bold ? "/F2 " : "/F1 ");
+        content.Append(size.ToString("0.##", CultureInfo.InvariantCulture)).Append(" Tf\n");
+        content.Append(x.ToString("0.##", CultureInfo.InvariantCulture)).Append(' ')
+            .Append(y.ToString("0.##", CultureInfo.InvariantCulture)).Append(" Td\n");
+        content.Append('(').Append(EscapePdfText(NormalizePdfText(text))).Append(") Tj\n");
+        content.Append("ET\n");
+    }
+
+    private static void AppendRect(StringBuilder content, double x, double y, double width, double height, string fillRgb, string strokeRgb)
+    {
+        content.Append("q\n");
+        content.Append(fillRgb).Append(" rg\n");
+        content.Append(strokeRgb).Append(" RG\n");
+        content.Append("0.6 w\n");
+        content.Append(x.ToString("0.##", CultureInfo.InvariantCulture)).Append(' ')
+            .Append(y.ToString("0.##", CultureInfo.InvariantCulture)).Append(' ')
+            .Append(width.ToString("0.##", CultureInfo.InvariantCulture)).Append(' ')
+            .Append(height.ToString("0.##", CultureInfo.InvariantCulture)).Append(" re B\n");
+        content.Append("Q\n");
+    }
+
+    private static void DrawLine(StringBuilder content, double x1, double y1, double x2, double y2, string strokeRgb)
+    {
+        content.Append("q\n");
+        content.Append(strokeRgb).Append(" RG\n");
+        content.Append("0.45 w\n");
+        content.Append(x1.ToString("0.##", CultureInfo.InvariantCulture)).Append(' ')
+            .Append(y1.ToString("0.##", CultureInfo.InvariantCulture)).Append(" m ")
+            .Append(x2.ToString("0.##", CultureInfo.InvariantCulture)).Append(' ')
+            .Append(y2.ToString("0.##", CultureInfo.InvariantCulture)).Append(" l S\n");
+        content.Append("Q\n");
+    }
+
+    private static string FormatPaymentMethod(LicenseManagerPaymentMethod paymentMethod)
+    {
+        return paymentMethod == LicenseManagerPaymentMethod.SepaDirectDebit
+            ? "SEPA-Lastschrift"
+            : "Banküberweisung";
+    }
+
+    private static string FormatValidity(DateTime? validUntilUtc)
+    {
+        return XdtBoxLicenseConstants.IsUnlimitedValidUntil(validUntilUtc)
+            ? "unbefristet"
+            : validUntilUtc?.ToLocalTime().ToString("dd.MM.yyyy", GermanCulture) ?? "unbefristet";
     }
 
     private static string EscapePdfText(string value)
@@ -131,27 +289,32 @@ public sealed class LicenseManagerCustomerPdfExporter
             .Replace(")", "\\)", StringComparison.Ordinal);
     }
 
-    private static string NormalizeAscii(string value)
+    private static string NormalizePdfText(string value)
     {
         return value
-            .Replace("ä", "ae", StringComparison.Ordinal)
-            .Replace("ö", "oe", StringComparison.Ordinal)
-            .Replace("ü", "ue", StringComparison.Ordinal)
-            .Replace("Ä", "Ae", StringComparison.Ordinal)
-            .Replace("Ö", "Oe", StringComparison.Ordinal)
-            .Replace("Ü", "Ue", StringComparison.Ordinal)
-            .Replace("ß", "ss", StringComparison.Ordinal)
-            .Replace("€", "EUR", StringComparison.Ordinal);
+            .Replace("€", "EUR", StringComparison.Ordinal)
+            .Replace("–", "-", StringComparison.Ordinal)
+            .Replace("—", "-", StringComparison.Ordinal)
+            .Replace("…", "...", StringComparison.Ordinal)
+            .Replace("\r", " ", StringComparison.Ordinal)
+            .Replace("\n", " ", StringComparison.Ordinal);
     }
 
-    private static string Truncate(string value, int maxLength)
+    private static string Truncate(string value, double columnWidth, double fontSize)
     {
-        if (value.Length <= maxLength)
+        var normalized = NormalizePdfText(value);
+        var maxCharacters = Math.Max(3, (int)Math.Floor(columnWidth / (fontSize * 0.55)));
+        if (normalized.Length <= maxCharacters)
         {
-            return value;
+            return normalized;
         }
 
-        return value[..Math.Max(0, maxLength - 3)] + "...";
+        return normalized[..Math.Max(0, maxCharacters - 3)] + "...";
+    }
+
+    private static double EstimateTextWidth(string value, double fontSize)
+    {
+        return value.Length * fontSize * 0.48;
     }
 
     private static void EnsureFilePath(string filePath)
@@ -161,4 +324,17 @@ public sealed class LicenseManagerCustomerPdfExporter
             throw new ArgumentException("File path must not be empty.", nameof(filePath));
         }
     }
+
+    private sealed record PdfTableRow(
+        string CustomerNumber,
+        string CustomerName,
+        string InvoiceEmail,
+        string PaymentMethod,
+        string Iban,
+        string Bic,
+        string AccountHolder,
+        string Installations,
+        string Devices,
+        string TotalNet,
+        string ValidUntil);
 }

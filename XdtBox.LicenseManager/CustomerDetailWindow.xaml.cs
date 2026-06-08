@@ -2,16 +2,19 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using XdtDeviceBridge.Core;
 
 namespace XdtBox.LicenseManager;
 
 public partial class CustomerDetailWindow : Window
 {
-    private readonly LicenseManagerCustomerRecord _original;
+    private readonly IReadOnlyList<IssuedLicenseRecord> _allHistory;
     private readonly decimal _pricePerDeviceNet;
+    private readonly ObservableCollection<InstallationRow> _installationRows = new();
     private readonly ObservableCollection<IssuedLicenseDeviceRecord> _deviceRows = new();
     private readonly ObservableCollection<CustomerHistoryRow> _historyRows = new();
+    private bool _updatingPaymentMethod;
 
     public CustomerDetailWindow(
         LicenseManagerCustomerRecord customer,
@@ -20,14 +23,15 @@ public partial class CustomerDetailWindow : Window
     {
         InitializeComponent();
 
-        _original = customer ?? throw new ArgumentNullException(nameof(customer));
+        Customer = (customer ?? throw new ArgumentNullException(nameof(customer))).WithNormalizedInstallations();
+        _allHistory = history ?? Array.Empty<IssuedLicenseRecord>();
         _pricePerDeviceNet = pricePerDeviceNet;
-        Customer = customer;
+
+        InstallationsGrid.ItemsSource = _installationRows;
         DevicesGrid.ItemsSource = _deviceRows;
         HistoryGrid.ItemsSource = _historyRows;
 
-        ShowCustomer(customer);
-        ShowHistory(history);
+        ShowCustomer(Customer);
     }
 
     public LicenseManagerCustomerRecord Customer { get; private set; }
@@ -46,36 +50,67 @@ public partial class CustomerDetailWindow : Window
         IbanTextBox.Text = customer.Iban ?? string.Empty;
         BicTextBox.Text = customer.Bic ?? string.Empty;
         AccountHolderTextBox.Text = customer.AccountHolder ?? string.Empty;
-        SepaCheckBox.IsChecked = customer.SepaDirectDebitConsent;
-        AlwaysInvoiceCheckBox.IsChecked = customer.AlwaysInvoice;
-        InstallationIdTextBox.Text = customer.InstallationId;
+        SetPaymentMethod(customer.PaymentMethod);
 
+        RefreshInstallations(customer);
+        RefreshDevices(customer);
+        RefreshHistory(customer);
+        UpdateSummary(customer);
+    }
+
+    private void RefreshInstallations(LicenseManagerCustomerRecord customer)
+    {
+        _installationRows.Clear();
+        foreach (var installation in customer.EffectiveInstallations
+                     .OrderByDescending(installation => installation.IsActive)
+                     .ThenByDescending(installation => installation.LastLicenseIssuedAtUtc ?? DateTime.MinValue))
+        {
+            _installationRows.Add(new InstallationRow(installation));
+        }
+
+        InstallationsGrid.SelectedIndex = _installationRows.Count > 0 ? 0 : -1;
+        UpdateCancelButtonState();
+    }
+
+    private void RefreshDevices(LicenseManagerCustomerRecord customer)
+    {
         _deviceRows.Clear();
-        foreach (var device in customer.Devices)
+        foreach (var device in customer.EffectiveDevices)
         {
             _deviceRows.Add(device);
         }
-
-        var total = LicenseManagerCostCalculator.CalculateNetTotal(customer.ActiveLicensedDeviceCount, _pricePerDeviceNet);
-        SummaryTextBlock.Text = $"{customer.ActiveLicensedDeviceCount} lizenzierte Geraeteanbindung(en), monatlich netto {total.ToString("N2", CultureInfo.GetCultureInfo("de-DE"))} EUR.";
     }
 
-    private void ShowHistory(IReadOnlyList<IssuedLicenseRecord> history)
+    private void RefreshHistory(LicenseManagerCustomerRecord customer)
     {
+        var installationIds = customer.EffectiveInstallations
+            .Select(installation => installation.InstallationId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         _historyRows.Clear();
-        foreach (var record in history
-            .Where(record => string.Equals(record.InstallationId, _original.InstallationId, StringComparison.OrdinalIgnoreCase)
-                || (!string.IsNullOrWhiteSpace(_original.CustomerNumber)
-                    && string.Equals(record.CustomerNumber, _original.CustomerNumber, StringComparison.OrdinalIgnoreCase)))
-            .OrderByDescending(record => record.IssuedAtUtc))
+        foreach (var record in _allHistory
+                     .Where(record => installationIds.Contains(record.InstallationId)
+                         || (!string.IsNullOrWhiteSpace(customer.CustomerNumber)
+                             && string.Equals(record.CustomerNumber, customer.CustomerNumber, StringComparison.OrdinalIgnoreCase)))
+                     .OrderByDescending(record => record.IssuedAtUtc))
         {
             _historyRows.Add(new CustomerHistoryRow(record));
         }
     }
 
+    private void UpdateSummary(LicenseManagerCustomerRecord customer)
+    {
+        var total = LicenseManagerCostCalculator.CalculateNetTotal(customer.BillableDeviceCount, _pricePerDeviceNet);
+        SummaryTextBlock.Text =
+            $"{customer.ActiveInstallationCount} aktive Installation(en), {customer.BillableDeviceCount} lizenzierte Geräteanbindung(en), netto {total.ToString("N2", CultureInfo.GetCultureInfo("de-DE"))} EUR.";
+    }
+
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        Customer = _original with
+        var paymentMethod = GetSelectedPaymentMethod();
+        ValidatePaymentMethod(paymentMethod, Normalize(IbanTextBox.Text), Normalize(AccountHolderTextBox.Text));
+
+        Customer = (Customer with
         {
             CustomerNumber = Normalize(CustomerNumberTextBox.Text),
             CustomerName = CustomerNameTextBox.Text.Trim(),
@@ -89,12 +124,114 @@ public partial class CustomerDetailWindow : Window
             Iban = Normalize(IbanTextBox.Text),
             Bic = Normalize(BicTextBox.Text),
             AccountHolder = Normalize(AccountHolderTextBox.Text),
-            SepaDirectDebitConsent = SepaCheckBox.IsChecked == true,
-            AlwaysInvoice = AlwaysInvoiceCheckBox.IsChecked == true,
+            SepaDirectDebitConsent = paymentMethod == LicenseManagerPaymentMethod.SepaDirectDebit,
+            AlwaysInvoice = paymentMethod == LicenseManagerPaymentMethod.BankTransfer,
             UpdatedAtUtc = DateTime.UtcNow
-        };
+        }).WithNormalizedInstallations();
+
         DialogResult = true;
         Close();
+    }
+
+    private void CancelInstallation_Click(object sender, RoutedEventArgs e)
+    {
+        if (InstallationsGrid.SelectedItem is not InstallationRow row)
+        {
+            return;
+        }
+
+        if (!row.IsActive)
+        {
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            this,
+            "Diese Installation wird nur in der lokalen Herstellerverwaltung als storniert markiert. Eine bereits beim Kunden installierte Offline-Lizenz wird dadurch nicht automatisch ungültig. Fortfahren?",
+            "Lizenz als storniert markieren",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        Customer = Customer.CancelInstallation(
+            row.InstallationId,
+            DateTime.UtcNow,
+            "Manuell im XDTBox Lizenzmanager storniert");
+
+        ShowCustomer(Customer);
+    }
+
+    private void InstallationsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateCancelButtonState();
+    }
+
+    private void UpdateCancelButtonState()
+    {
+        CancelInstallationButton.IsEnabled = InstallationsGrid.SelectedItem is InstallationRow { IsActive: true };
+    }
+
+    private void PaymentMethodCheckBox_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_updatingPaymentMethod)
+        {
+            return;
+        }
+
+        SetPaymentMethod(ReferenceEquals(sender, SepaCheckBox)
+            ? LicenseManagerPaymentMethod.SepaDirectDebit
+            : LicenseManagerPaymentMethod.BankTransfer);
+    }
+
+    private void PaymentMethodCheckBox_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (_updatingPaymentMethod)
+        {
+            return;
+        }
+
+        if (SepaCheckBox.IsChecked != true && AlwaysInvoiceCheckBox.IsChecked != true)
+        {
+            SetPaymentMethod(LicenseManagerPaymentMethod.BankTransfer);
+        }
+    }
+
+    private void SetPaymentMethod(LicenseManagerPaymentMethod method)
+    {
+        _updatingPaymentMethod = true;
+        try
+        {
+            SepaCheckBox.IsChecked = method == LicenseManagerPaymentMethod.SepaDirectDebit;
+            AlwaysInvoiceCheckBox.IsChecked = method == LicenseManagerPaymentMethod.BankTransfer;
+        }
+        finally
+        {
+            _updatingPaymentMethod = false;
+        }
+    }
+
+    private LicenseManagerPaymentMethod GetSelectedPaymentMethod()
+    {
+        return SepaCheckBox.IsChecked == true
+            ? LicenseManagerPaymentMethod.SepaDirectDebit
+            : LicenseManagerPaymentMethod.BankTransfer;
+    }
+
+    private static void ValidatePaymentMethod(LicenseManagerPaymentMethod paymentMethod, string? iban, string? accountHolder)
+    {
+        if (paymentMethod != LicenseManagerPaymentMethod.SepaDirectDebit)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(iban) || string.IsNullOrWhiteSpace(accountHolder))
+        {
+            throw new InvalidOperationException("SEPA-Lastschrift benötigt IBAN und Kontoinhaber.");
+        }
     }
 
     private void Close_Click(object sender, RoutedEventArgs e)
@@ -108,6 +245,28 @@ public partial class CustomerDetailWindow : Window
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    private static string FormatValidity(DateTime? validUntilUtc)
+    {
+        return XdtBoxLicenseConstants.IsUnlimitedValidUntil(validUntilUtc)
+            ? "unbefristet"
+            : validUntilUtc?.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture) ?? string.Empty;
+    }
+
+    private sealed class InstallationRow
+    {
+        public InstallationRow(LicenseManagerInstallationRecord installation)
+        {
+            Installation = installation;
+        }
+
+        public LicenseManagerInstallationRecord Installation { get; }
+        public string InstallationId => Installation.InstallationId;
+        public bool IsActive => Installation.IsActive;
+        public int BillableDeviceCount => Installation.BillableDeviceCount;
+        public string StatusDisplay => Installation.IsActive ? "Aktiv" : "Storniert";
+        public string ValidUntilDisplay => FormatValidity(Installation.LicenseValidUntilUtc);
+    }
+
     private sealed class CustomerHistoryRow
     {
         private readonly IssuedLicenseRecord _record;
@@ -118,7 +277,8 @@ public partial class CustomerDetailWindow : Window
         }
 
         public string IssuedAtDisplay => _record.IssuedAtUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
-        public string ValidUntilDisplay => _record.ValidUntilUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
+        public string InstallationId => _record.InstallationId;
+        public string ValidUntilDisplay => FormatValidity(_record.ValidUntilUtc);
         public int DeviceCount => _record.MaxActiveDeviceConnections;
         public string FileName => Path.GetFileName(_record.OutputFilePath);
     }

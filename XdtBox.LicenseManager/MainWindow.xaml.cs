@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     private string? _currentRequestFile;
     private IReadOnlyList<IssuedLicenseRecord> _historyRecords = Array.Empty<IssuedLicenseRecord>();
     private IReadOnlyList<LicenseManagerCustomerRecord> _customerRecords = Array.Empty<LicenseManagerCustomerRecord>();
+    private bool _updatingPaymentMethod;
 
     public MainWindow()
     {
@@ -54,7 +55,8 @@ public partial class MainWindow : Window
     private void InitializeDefaults()
     {
         ValidFromDatePicker.SelectedDate = DateTime.Today;
-        ValidUntilDatePicker.SelectedDate = DateTime.Today.AddYears(1);
+        ValidUntilDatePicker.SelectedDate = XdtBoxLicenseConstants.UnlimitedValidUntilUtc.Date;
+        SetPaymentMethod(LicenseManagerPaymentMethod.BankTransfer);
         GraceDaysTextBox.Text = _settings.DefaultGraceDays.ToString(CultureInfo.InvariantCulture);
         KeyIdTextBox.Text = _settings.KeyId;
         PrivateKeyPathTextBox.Text = _settings.PrivateKeyPath ?? string.Empty;
@@ -94,12 +96,12 @@ public partial class MainWindow : Window
             var issues = request.Validate();
             if (issues.Count > 0)
             {
-                throw new InvalidOperationException("Lizenzanfrage ist ungueltig: " + string.Join("; ", issues));
+                throw new InvalidOperationException("Lizenzanfrage ist ungültig: " + string.Join("; ", issues));
             }
 
             if (!string.Equals(request.ProductCode, XdtBoxLicenseConstants.ProductCode, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException($"Lizenzanfrage ist nicht fuer {XdtBoxLicenseConstants.ProductCode} ausgestellt.");
+                throw new InvalidOperationException($"Lizenzanfrage ist nicht für {XdtBoxLicenseConstants.ProductCode} ausgestellt.");
             }
 
             _currentRequest = request;
@@ -134,8 +136,9 @@ public partial class MainWindow : Window
         CustomerIbanTextBox.Text = customer.Iban ?? string.Empty;
         CustomerBicTextBox.Text = customer.Bic ?? string.Empty;
         CustomerAccountHolderTextBox.Text = customer.AccountHolder ?? string.Empty;
-        SepaConsentCheckBox.IsChecked = customer.SepaDirectDebitConsent;
-        AlwaysInvoiceCheckBox.IsChecked = customer.AlwaysInvoice;
+        SetPaymentMethod(customer.SepaDirectDebitConsent && !customer.AlwaysInvoice
+            ? LicenseManagerPaymentMethod.SepaDirectDebit
+            : LicenseManagerPaymentMethod.BankTransfer);
         CustomerNumberTextBox.Text = customer.CustomerNumber ?? string.Empty;
         LicenseeTextBox.Text = string.IsNullOrWhiteSpace(customer.CustomerName) ? request.MachineName : customer.CustomerName;
         MaxActiveConnectionsTextBox.Text = Math.Max(request.ActiveLicensedDeviceCount, 1).ToString(CultureInfo.InvariantCulture);
@@ -205,9 +208,8 @@ public partial class MainWindow : Window
         }
 
         var validFrom = ValidFromDatePicker.SelectedDate?.Date
-            ?? throw new InvalidOperationException("Gueltig ab fehlt.");
-        var validUntil = ValidUntilDatePicker.SelectedDate?.Date
-            ?? throw new InvalidOperationException("Gueltig bis fehlt.");
+            ?? throw new InvalidOperationException("Gültig ab fehlt.");
+        _ = ValidUntilDatePicker.SelectedDate;
 
         var outputFile = string.IsNullOrWhiteSpace(OutputFileTextBox.Text)
             ? CreateSuggestedOutputFile()
@@ -221,7 +223,7 @@ public partial class MainWindow : Window
             CustomerNumber: NormalizeOptional(CustomerNumberTextBox.Text),
             MaxActiveDeviceConnections: maxActiveConnections,
             ValidFromUtc: DateTime.SpecifyKind(validFrom, DateTimeKind.Utc),
-            ValidUntilUtc: DateTime.SpecifyKind(validUntil, DateTimeKind.Utc),
+            ValidUntilUtc: XdtBoxLicenseConstants.UnlimitedValidUntilUtc,
             GraceDays: graceDays,
             LicenseType: GetSelectedLicenseType(),
             Issuer: _settings.DefaultIssuer,
@@ -235,7 +237,9 @@ public partial class MainWindow : Window
     private IssuedLicenseRecord CreateHistoryRecord(LicenseIssuerResult result, LicenseIssuerOptions options)
     {
         var customer = ReadCustomerFromUi();
-        var devices = _currentRequest?.Devices.Select(device => new IssuedLicenseDeviceRecord(
+        var devices = _currentRequest?.Devices
+            .Where(device => device.IsActive && device.IsLicenseRequired)
+            .Select(device => new IssuedLicenseDeviceRecord(
                 DisplayName: string.IsNullOrWhiteSpace(device.DisplayName) ? device.Name : device.DisplayName,
                 DeviceDisplayName: string.IsNullOrWhiteSpace(device.DeviceDisplayName) ? device.Model : device.DeviceDisplayName,
                 InterfaceProfileId: string.IsNullOrWhiteSpace(device.InterfaceProfileId) ? device.ProfileId : device.InterfaceProfileId,
@@ -278,6 +282,12 @@ public partial class MainWindow : Window
 
     private LicenseRequestCustomer ReadCustomerFromUi()
     {
+        var paymentMethod = GetSelectedPaymentMethod();
+        ValidatePaymentMethod(
+            paymentMethod,
+            NormalizeOptional(CustomerIbanTextBox.Text),
+            NormalizeOptional(CustomerAccountHolderTextBox.Text));
+
         return new LicenseRequestCustomer(
             CustomerName: CustomerNameTextBox.Text.Trim(),
             Street: StreetTextBox.Text.Trim(),
@@ -289,8 +299,8 @@ public partial class MainWindow : Window
             Iban: NormalizeOptional(CustomerIbanTextBox.Text),
             Bic: NormalizeOptional(CustomerBicTextBox.Text),
             AccountHolder: NormalizeOptional(CustomerAccountHolderTextBox.Text),
-            SepaDirectDebitConsent: SepaConsentCheckBox.IsChecked == true,
-            AlwaysInvoice: AlwaysInvoiceCheckBox.IsChecked == true,
+            SepaDirectDebitConsent: paymentMethod == LicenseManagerPaymentMethod.SepaDirectDebit,
+            AlwaysInvoice: paymentMethod == LicenseManagerPaymentMethod.BankTransfer,
             InvoiceEmail: NormalizeOptional(InvoiceEmailTextBox.Text),
             CustomerNumber: NormalizeOptional(CustomerNumberTextBox.Text));
     }
@@ -324,8 +334,7 @@ public partial class MainWindow : Window
         CustomerIbanTextBox.Text = string.Empty;
         CustomerBicTextBox.Text = string.Empty;
         CustomerAccountHolderTextBox.Text = string.Empty;
-        SepaConsentCheckBox.IsChecked = false;
-        AlwaysInvoiceCheckBox.IsChecked = false;
+        SetPaymentMethod(LicenseManagerPaymentMethod.BankTransfer);
         LicenseeTextBox.Text = string.Empty;
         CustomerNumberTextBox.Text = string.Empty;
         MaxActiveConnectionsTextBox.Text = string.Empty;
@@ -430,6 +439,7 @@ public partial class MainWindow : Window
             MachineName: _currentRequest?.MachineName,
             ActiveLicensedDeviceCount: int.TryParse(MaxActiveConnectionsTextBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count) ? count : 0,
             Devices: _requestDeviceRows
+                .Where(row => row.IsActive && row.IsLicenseRequired)
                 .Select(row => new IssuedLicenseDeviceRecord(row.DisplayName, row.DeviceDisplayName, string.Empty, string.Empty, row.ConnectionKind))
                 .ToArray(),
             UpdatedAtUtc: DateTime.UtcNow);
@@ -444,7 +454,8 @@ public partial class MainWindow : Window
                 || ContainsIgnoreCase(customer.CustomerNumber, query)
                 || ContainsIgnoreCase(customer.ContactPerson, query)
                 || ContainsIgnoreCase(customer.InvoiceEmail, query)
-                || ContainsIgnoreCase(customer.InstallationId, query));
+                || ContainsIgnoreCase(FormatPaymentMethod(customer.PaymentMethod), query)
+                || customer.EffectiveInstallations.Any(installation => ContainsIgnoreCase(installation.InstallationId, query)));
 
         _customerRows.Clear();
         foreach (var customer in filtered.OrderBy(customer => customer.CustomerName, StringComparer.CurrentCultureIgnoreCase))
@@ -490,7 +501,7 @@ public partial class MainWindow : Window
         var selected = GetSelectedCustomer();
         if (selected is null)
         {
-            CustomersStatusText.Text = "Bitte zuerst einen Kunden auswaehlen.";
+            CustomersStatusText.Text = "Bitte zuerst einen Kunden auswählen.";
             return;
         }
 
@@ -539,8 +550,8 @@ public partial class MainWindow : Window
     {
         var dialog = new SaveFileDialog
         {
-            Title = "LicenseManager-Sicherung erstellen",
-            Filter = "XDTBox LicenseManager Backup (*.xdtbox-licensemanager-backup)|*.xdtbox-licensemanager-backup|Alle Dateien (*.*)|*.*",
+            Title = "XDTBox Lizenzmanager-Sicherung erstellen",
+            Filter = "XDTBox Lizenzmanager-Sicherung (*.xdtbox-licensemanager-backup)|*.xdtbox-licensemanager-backup|Alle Dateien (*.*)|*.*",
             InitialDirectory = Directory.Exists(_paths.BackupFolder) ? _paths.BackupFolder : _paths.BaseFolder,
             FileName = $"xdtbox-licensemanager-backup-{DateTime.Today:yyyyMMdd}.xdtbox-licensemanager-backup",
             DefaultExt = ".xdtbox-licensemanager-backup",
@@ -568,8 +579,8 @@ public partial class MainWindow : Window
     {
         var dialog = new OpenFileDialog
         {
-            Title = "LicenseManager-Sicherung wiederherstellen",
-            Filter = "XDTBox LicenseManager Backup (*.xdtbox-licensemanager-backup)|*.xdtbox-licensemanager-backup|Alle Dateien (*.*)|*.*",
+            Title = "XDTBox Lizenzmanager-Sicherung wiederherstellen",
+            Filter = "XDTBox Lizenzmanager-Sicherung (*.xdtbox-licensemanager-backup)|*.xdtbox-licensemanager-backup|Alle Dateien (*.*)|*.*",
             InitialDirectory = Directory.Exists(_paths.BackupFolder) ? _paths.BackupFolder : _paths.BaseFolder,
             CheckFileExists = true
         };
@@ -581,7 +592,7 @@ public partial class MainWindow : Window
 
         var confirmation = MessageBox.Show(
             this,
-            "Die vorhandenen LicenseManager-Daten werden durch die Sicherung ersetzt. Fortfahren?",
+            "Die vorhandenen Lizenzmanager-Daten werden durch die Sicherung ersetzt. Fortfahren?",
             "XDTBox Lizenzverwaltung",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
@@ -678,7 +689,7 @@ public partial class MainWindow : Window
             $"Adresse: {selected.Street}, {selected.PostalCode} {selected.City}{Environment.NewLine}" +
             $"Kontakt: {selected.Phone} {selected.Email} {selected.ContactPerson}{Environment.NewLine}" +
             $"InstallationId: {selected.InstallationId}{Environment.NewLine}" +
-            $"Lizenz: {selected.LicenseId}, {selected.MaxActiveDeviceConnections} Geräte, gültig bis {selected.ValidUntilUtc:yyyy-MM-dd}{Environment.NewLine}" +
+            $"Lizenz: {selected.LicenseId}, {selected.MaxActiveDeviceConnections} Geräte, gültig bis {FormatValidity(selected.ValidUntilUtc)}{Environment.NewLine}" +
             $"Ausgabe: {selected.OutputFilePath}";
 
         foreach (var device in selected.Devices)
@@ -752,8 +763,9 @@ public partial class MainWindow : Window
         CustomerIbanTextBox.Text = selected.Iban ?? string.Empty;
         CustomerBicTextBox.Text = selected.Bic ?? string.Empty;
         CustomerAccountHolderTextBox.Text = selected.AccountHolder ?? string.Empty;
-        SepaConsentCheckBox.IsChecked = selected.SepaDirectDebitConsent;
-        AlwaysInvoiceCheckBox.IsChecked = selected.AlwaysInvoice;
+        SetPaymentMethod(selected.SepaDirectDebitConsent && !selected.AlwaysInvoice
+            ? LicenseManagerPaymentMethod.SepaDirectDebit
+            : LicenseManagerPaymentMethod.BankTransfer);
         LicenseeTextBox.Text = selected.LicenseeName;
         CustomerNumberTextBox.Text = selected.CustomerNumber ?? string.Empty;
         MaxActiveConnectionsTextBox.Text = selected.MaxActiveDeviceConnections.ToString(CultureInfo.InvariantCulture);
@@ -876,6 +888,83 @@ public partial class MainWindow : Window
         return (LicenseTypeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Production";
     }
 
+    private void PaymentMethodCheckBox_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_updatingPaymentMethod)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(sender, SepaConsentCheckBox))
+        {
+            SetPaymentMethod(LicenseManagerPaymentMethod.SepaDirectDebit);
+            return;
+        }
+
+        SetPaymentMethod(LicenseManagerPaymentMethod.BankTransfer);
+    }
+
+    private void PaymentMethodCheckBox_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (_updatingPaymentMethod)
+        {
+            return;
+        }
+
+        if (SepaConsentCheckBox.IsChecked != true && AlwaysInvoiceCheckBox.IsChecked != true)
+        {
+            SetPaymentMethod(LicenseManagerPaymentMethod.BankTransfer);
+        }
+    }
+
+    private void SetPaymentMethod(LicenseManagerPaymentMethod method)
+    {
+        _updatingPaymentMethod = true;
+        try
+        {
+            SepaConsentCheckBox.IsChecked = method == LicenseManagerPaymentMethod.SepaDirectDebit;
+            AlwaysInvoiceCheckBox.IsChecked = method == LicenseManagerPaymentMethod.BankTransfer;
+        }
+        finally
+        {
+            _updatingPaymentMethod = false;
+        }
+    }
+
+    private LicenseManagerPaymentMethod GetSelectedPaymentMethod()
+    {
+        return SepaConsentCheckBox.IsChecked == true
+            ? LicenseManagerPaymentMethod.SepaDirectDebit
+            : LicenseManagerPaymentMethod.BankTransfer;
+    }
+
+    private static void ValidatePaymentMethod(LicenseManagerPaymentMethod paymentMethod, string? iban, string? accountHolder)
+    {
+        if (paymentMethod != LicenseManagerPaymentMethod.SepaDirectDebit)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(iban) || string.IsNullOrWhiteSpace(accountHolder))
+        {
+            throw new InvalidOperationException("SEPA-Lastschrift benötigt IBAN und Kontoinhaber.");
+        }
+    }
+
+    private static string FormatPaymentMethod(LicenseManagerPaymentMethod paymentMethod)
+    {
+        return paymentMethod == LicenseManagerPaymentMethod.SepaDirectDebit
+            ? "SEPA-Lastschrift"
+            : "Banküberweisung";
+    }
+
+    private static string FormatValidity(DateTime? validUntilUtc)
+    {
+        return XdtBoxLicenseConstants.IsUnlimitedValidUntil(validUntilUtc)
+            ? "unbefristet"
+            : validUntilUtc?.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture) ?? string.Empty;
+    }
+
     private static string? NormalizeOptional(string value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -900,7 +989,7 @@ public partial class MainWindow : Window
             return price;
         }
 
-        throw new InvalidOperationException("Preis pro Geraeteanbindung ist keine gueltige Zahl.");
+        throw new InvalidOperationException("Preis pro Geräteanbindung ist keine gültige Zahl.");
     }
 
     private static string CreateFileSlug(string value)
@@ -964,7 +1053,8 @@ public partial class MainWindow : Window
         string DisplayName,
         string DeviceDisplayName,
         DeviceConnectionKind ConnectionKind,
-        bool IsActive)
+        bool IsActive,
+        bool IsLicenseRequired)
     {
         public static RequestDeviceRow FromRequestDevice(int index, LicenseRequestDevice device)
         {
@@ -973,12 +1063,13 @@ public partial class MainWindow : Window
                 string.IsNullOrWhiteSpace(device.DisplayName) ? device.Name : device.DisplayName,
                 string.IsNullOrWhiteSpace(device.DeviceDisplayName) ? device.Model : device.DeviceDisplayName,
                 device.ConnectionKind,
-                device.IsActive);
+                device.IsActive,
+                device.IsLicenseRequired);
         }
 
         public static RequestDeviceRow FromIssuedDevice(int index, IssuedLicenseDeviceRecord device)
         {
-            return new RequestDeviceRow(index, device.DisplayName, device.DeviceDisplayName, device.ConnectionKind, true);
+            return new RequestDeviceRow(index, device.DisplayName, device.DeviceDisplayName, device.ConnectionKind, true, true);
         }
     }
 
@@ -998,7 +1089,7 @@ public partial class MainWindow : Window
         public string Phone => Record.Phone;
         public string ShortInstallationId => Record.InstallationId.Length <= 14 ? Record.InstallationId : Record.InstallationId[..14] + "...";
         public int MaxActiveDeviceConnections => Record.MaxActiveDeviceConnections;
-        public string ValidUntilDisplay => Record.ValidUntilUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
+        public string ValidUntilDisplay => FormatValidity(Record.ValidUntilUtc);
         public string LicenseType => Record.LicenseType;
         public string IssuedAtDisplay => Record.IssuedAtUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
     }
@@ -1018,17 +1109,23 @@ public partial class MainWindow : Window
         public string CustomerName => Customer.CustomerName;
         public string ContactPerson => Customer.ContactPerson ?? string.Empty;
         public string InvoiceEmail => Customer.InvoiceEmail ?? Customer.Email ?? string.Empty;
-        public string SepaDisplay => Customer.SepaDirectDebitConsent ? "Ja" : "Nein";
+        public string PaymentMethodDisplay => FormatPaymentMethod(Customer.PaymentMethod);
         public string Iban => Customer.Iban ?? string.Empty;
         public string Bic => Customer.Bic ?? string.Empty;
         public string AccountHolder => Customer.AccountHolder ?? string.Empty;
-        public int ActiveLicensedDeviceCount => Customer.ActiveLicensedDeviceCount;
+        public int ActiveInstallationCount => Customer.ActiveInstallationCount;
+        public int ActiveLicensedDeviceCount => Customer.BillableDeviceCount;
         public string PricePerDeviceNetDisplay => _pricePerDeviceNet.ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " EUR";
         public string TotalNetDisplay => LicenseManagerCostCalculator
-            .CalculateNetTotal(Customer.ActiveLicensedDeviceCount, _pricePerDeviceNet)
+            .CalculateNetTotal(Customer.BillableDeviceCount, _pricePerDeviceNet)
             .ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " EUR";
-        public string LastLicenseIssuedDisplay => Customer.LastLicenseIssuedAtUtc?.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture) ?? string.Empty;
-        public string LicenseValidUntilDisplay => Customer.LicenseValidUntilUtc?.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture) ?? string.Empty;
-        public string InstallationId => Customer.InstallationId;
+        public string LastLicenseIssuedDisplay => Customer.EffectiveLastLicenseIssuedAtUtc?.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture) ?? string.Empty;
+        public string LicenseValidUntilDisplay => FormatValidity(Customer.EffectiveLicenseValidUntilUtc);
+        public string InstallationIdsDisplay => string.Join("; ", Customer.EffectiveInstallations.Select(FormatInstallation));
+
+        private static string FormatInstallation(LicenseManagerInstallationRecord installation)
+        {
+            return installation.IsActive ? installation.InstallationId : installation.InstallationId + " (storniert)";
+        }
     }
 }
