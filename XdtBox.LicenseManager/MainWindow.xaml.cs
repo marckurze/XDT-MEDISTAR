@@ -247,16 +247,12 @@ public partial class MainWindow : Window
     private IssuedLicenseRecord CreateHistoryRecord(LicenseIssuerResult result, LicenseIssuerOptions options)
     {
         var customer = ReadCustomerFromUi();
-        var devices = _currentRequest?.Devices
-            .Where(device => device.IsActive && device.IsLicenseRequired)
-            .Select(device => new IssuedLicenseDeviceRecord(
-                DisplayName: string.IsNullOrWhiteSpace(device.DisplayName) ? device.Name : device.DisplayName,
-                DeviceDisplayName: string.IsNullOrWhiteSpace(device.DeviceDisplayName) ? device.Model : device.DeviceDisplayName,
-                InterfaceProfileId: string.IsNullOrWhiteSpace(device.InterfaceProfileId) ? device.ProfileId : device.InterfaceProfileId,
-                DeviceProfileId: device.DeviceProfileId,
-                ConnectionKind: device.ConnectionKind))
-            .ToArray()
-            ?? _historyDeviceRows.ToArray();
+        var devices = _requestDeviceRows.Count > 0
+            ? _requestDeviceRows
+                .Where(row => row.IsActive && row.IsLicenseRequired)
+                .Select(row => row.ToIssuedLicenseDeviceRecord())
+                .ToArray()
+            : _historyDeviceRows.ToArray();
 
         return new IssuedLicenseRecord(
             LicenseId: result.Payload.LicenseId,
@@ -452,7 +448,7 @@ public partial class MainWindow : Window
             ActiveLicensedDeviceCount: int.TryParse(MaxActiveConnectionsTextBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count) ? count : 0,
             Devices: _requestDeviceRows
                 .Where(row => row.IsActive && row.IsLicenseRequired)
-                .Select(row => new IssuedLicenseDeviceRecord(row.DisplayName, row.DeviceDisplayName, string.Empty, string.Empty, row.ConnectionKind))
+                .Select(row => row.ToIssuedLicenseDeviceRecord())
                 .ToArray(),
             UpdatedAtUtc: DateTime.UtcNow);
     }
@@ -1195,28 +1191,77 @@ public partial class MainWindow : Window
         MessageBox.Show(this, message, "XDTBox Lizenzverwaltung", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
-    private sealed record RequestDeviceRow(
-        int Index,
-        string DisplayName,
-        string DeviceDisplayName,
-        DeviceConnectionKind ConnectionKind,
-        bool IsActive,
-        bool IsLicenseRequired)
+    private sealed class RequestDeviceRow
     {
+        public RequestDeviceRow(
+            int index,
+            string displayName,
+            string deviceDisplayName,
+            string interfaceProfileId,
+            string deviceProfileId,
+            DeviceConnectionKind connectionKind,
+            bool isActive,
+            bool isLicenseRequired,
+            string? location)
+        {
+            Index = index;
+            DisplayName = displayName;
+            DeviceDisplayName = deviceDisplayName;
+            InterfaceProfileId = interfaceProfileId;
+            DeviceProfileId = deviceProfileId;
+            ConnectionKind = connectionKind;
+            IsActive = isActive;
+            IsLicenseRequired = isLicenseRequired;
+            Location = location ?? string.Empty;
+        }
+
+        public int Index { get; }
+        public string DisplayName { get; }
+        public string DeviceDisplayName { get; }
+        public string InterfaceProfileId { get; }
+        public string DeviceProfileId { get; }
+        public DeviceConnectionKind ConnectionKind { get; }
+        public bool IsActive { get; }
+        public bool IsLicenseRequired { get; }
+        public string Location { get; set; }
+
         public static RequestDeviceRow FromRequestDevice(int index, LicenseRequestDevice device)
         {
             return new RequestDeviceRow(
                 index,
                 string.IsNullOrWhiteSpace(device.DisplayName) ? device.Name : device.DisplayName,
                 string.IsNullOrWhiteSpace(device.DeviceDisplayName) ? device.Model : device.DeviceDisplayName,
+                string.IsNullOrWhiteSpace(device.InterfaceProfileId) ? device.ProfileId : device.InterfaceProfileId,
+                device.DeviceProfileId,
                 device.ConnectionKind,
                 device.IsActive,
-                device.IsLicenseRequired);
+                device.IsLicenseRequired,
+                device.Location);
         }
 
         public static RequestDeviceRow FromIssuedDevice(int index, IssuedLicenseDeviceRecord device)
         {
-            return new RequestDeviceRow(index, device.DisplayName, device.DeviceDisplayName, device.ConnectionKind, true, true);
+            return new RequestDeviceRow(
+                index,
+                device.DisplayName,
+                device.DeviceDisplayName,
+                device.InterfaceProfileId,
+                device.DeviceProfileId,
+                device.ConnectionKind,
+                true,
+                true,
+                device.Location);
+        }
+
+        public IssuedLicenseDeviceRecord ToIssuedLicenseDeviceRecord()
+        {
+            return new IssuedLicenseDeviceRecord(
+                DisplayName,
+                DeviceDisplayName,
+                InterfaceProfileId,
+                DeviceProfileId,
+                ConnectionKind,
+                NormalizeOptional(Location));
         }
     }
 
