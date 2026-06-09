@@ -29,6 +29,14 @@ SEPA benoetigt mindestens plausible IBAN- und Kontoinhaber-Daten. Bankueberweisu
 
 Der Lizenzmanager uebernimmt nur aktive lizenzpflichtige Geraeteanbindungen aus der Lizenzanfrage beziehungsweise der gespeicherten Installationshistorie. Nicht aktive Profile und nicht lizenzpflichtige Eintraege werden nicht in aktuelle Kunden-/Lizenzlisten uebernommen. Die technische Deckung bleibt weiterhin an Anzahl, InstallationId und Signatur gebunden; die Geraeteliste dient Herstellerverwaltung, Abrechnung und Nachvollziehbarkeit.
 
+Alte Lizenzanfragen ohne detaillierte Geraeteliste bleiben importierbar. In diesem Fall nutzt der Lizenzmanager die angefragte Anzahl aktiver Lizenzplaetze, zeigt aber keinen erfundenen Geraetelisteneintrag an.
+
+## Historie und Detailpflege
+
+Der Tab `Ausgestellte Lizenzen` zeigt oben eine reduzierte Historienliste mit Kundennummer, Kunde, Ort, Geraete und Ausstellungsdatum. Die Detaildaten stehen darunter strukturiert als Kunden-/Zahlungsdaten, Lizenzdaten und Geraeteliste. Einzelne Eintraege koennen aus der lokalen Lizenzmanager-Historie entfernt werden. Dabei werden keine `.xdtboxlic`-Dateien, keine privaten Schluessel und keine Kundenstammdaten geloescht.
+
+Die Kundenliste zeigt neben Einzelkosten auch die Gesamtsumme monatlicher Lizenzen ueber alle aktiven lizenzpflichtigen Geraeteanbindungen. Kundendetails ordnen Installationen, aktive lizenzierte Anbindungen und Lizenzhistorie vertikal, damit kleine Fenster keine Daten ueberlagern.
+
 ## Lokales Storno
 
 Eine Installation kann in der Kundendetailansicht lokal als storniert markiert werden. Das reduziert aktive Installationen, aktive Geraete und Kosten in der Herstellerverwaltung, loescht aber keine Kundenstammdaten und macht eine bereits beim Kunden installierte Offline-Lizenzdatei nicht automatisch ungueltig. Der Storno bleibt mit Datum und InstallationId historisch nachvollziehbar.

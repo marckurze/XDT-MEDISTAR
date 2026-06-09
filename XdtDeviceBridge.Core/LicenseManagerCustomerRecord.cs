@@ -216,8 +216,8 @@ public sealed record LicenseManagerCustomerRecord(
 
         return this with
         {
-            InstallationId = preferred?.InstallationId ?? InstallationId,
-            MachineName = preferred?.MachineName ?? MachineName,
+            InstallationId = preferred?.InstallationId ?? string.Empty,
+            MachineName = preferred?.MachineName,
             ActiveLicensedDeviceCount = BillableDeviceCount,
             Devices = ActiveInstallations.SelectMany(installation => installation.Devices).ToArray(),
             LastLicenseIssuedAtUtc = EffectiveLastLicenseIssuedAtUtc,
@@ -241,7 +241,7 @@ public sealed record LicenseManagerCustomerRecord(
 
     private IReadOnlyList<LicenseManagerInstallationRecord> NormalizeInstallations()
     {
-        if (Installations is { Count: > 0 })
+        if (Installations is not null)
         {
             return Installations.ToArray();
         }

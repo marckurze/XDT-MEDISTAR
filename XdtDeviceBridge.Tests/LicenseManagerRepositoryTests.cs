@@ -69,6 +69,24 @@ public sealed class LicenseManagerRepositoryTests
     }
 
     [Fact]
+    public void HistoryRepository_Remove_ShouldDeleteOnlyMatchingEntry()
+    {
+        var filePath = CreateTempFilePath("history.json");
+        var repository = new IssuedLicenseHistoryRepository();
+        var first = CreateRecord("license-1", "Praxis A") with { InstallationId = "installation-1" };
+        var second = CreateRecord("license-2", "Praxis B") with { InstallationId = "installation-2" };
+
+        repository.Add(filePath, first);
+        repository.Add(filePath, second);
+        var records = repository.Remove(filePath, first);
+
+        var remaining = Assert.Single(records);
+        Assert.Equal("license-2", remaining.LicenseId);
+        Assert.True(File.Exists(filePath));
+        Assert.DoesNotContain("license-1", File.ReadAllText(filePath));
+    }
+
+    [Fact]
     public void HistoryRepository_ShouldPersistDeviceDocumentation()
     {
         var filePath = CreateTempFilePath("history.json");
@@ -224,6 +242,45 @@ public sealed class LicenseManagerRepositoryTests
         Assert.Equal(1, cancelled.BillableDeviceCount);
         Assert.Equal(5m, LicenseManagerCostCalculator.CalculateNetTotal(cancelled.BillableDeviceCount, 5m));
         Assert.Contains(cancelled.EffectiveInstallations, installation => installation.Status == LicenseManagerInstallationStatus.Cancelled);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerRecord_ShouldPreserveExplicitlyEmptyInstallations()
+    {
+        var customer = CreateCustomer("installation-1") with
+        {
+            Installations = Array.Empty<LicenseManagerInstallationRecord>()
+        };
+
+        var normalized = customer.WithNormalizedInstallations();
+
+        Assert.Empty(normalized.EffectiveInstallations);
+        Assert.Equal(0, normalized.ActiveInstallationCount);
+        Assert.Equal(0, normalized.BillableDeviceCount);
+        Assert.Equal(string.Empty, normalized.InstallationId);
+        Assert.Empty(normalized.Devices);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerRecord_ShouldCalculatePortfolioMonthlyTotal()
+    {
+        var first = CreateCustomer("installation-1").WithLicense(CreateRecord("license-1", "Praxis A") with
+        {
+            InstallationId = "installation-1",
+            Devices = CreateIssuedDevices("LM7", "AR360")
+        });
+        var second = CreateCustomer("installation-2").WithLicense(CreateRecord("license-2", "Praxis B") with
+        {
+            InstallationId = "installation-2",
+            Devices = CreateIssuedDevices("RT-6100", "CV-5000", "NT-1E")
+        });
+        var customers = new[] { first, second };
+
+        var totalDevices = customers.Sum(customer => customer.BillableDeviceCount);
+        var total = LicenseManagerCostCalculator.CalculateNetTotal(totalDevices, 5m);
+
+        Assert.Equal(5, totalDevices);
+        Assert.Equal(25m, total);
     }
 
     [Fact]

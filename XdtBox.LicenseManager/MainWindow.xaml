@@ -144,8 +144,8 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="180"/>
                                 </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Margin="0,0,0,6" Foreground="#666666"
-                                           Text="Gerätenamen dienen nur der Dokumentation. Lizenzpflichtig ist ausschließlich die Anzahl aktivierter Geräteanbindungen."/>
+                                <TextBlock Grid.Row="0" x:Name="RequestDevicesHintTextBlock" Margin="0,0,0,6" Foreground="#666666"
+                                           Text="Es werden nur aktive lizenzpflichtige Geräteanbindungen angezeigt."/>
                                 <DataGrid Grid.Row="1"
                                           x:Name="RequestDevicesGrid"
                                           AutoGenerateColumns="False"
@@ -157,7 +157,6 @@
                                         <DataGridTextColumn Header="Schnittstellenprofil" Binding="{Binding DisplayName}" Width="2*"/>
                                         <DataGridTextColumn Header="Geräteprofil" Binding="{Binding DeviceDisplayName}" Width="2*"/>
                                         <DataGridTextColumn Header="Anbindung" Binding="{Binding ConnectionKind}" Width="120"/>
-                                        <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="80"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
@@ -240,6 +239,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <WrapPanel Grid.Row="0" Margin="0,0,0,8">
                         <TextBlock Text="Preis pro Geräteanbindung netto:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -281,6 +281,9 @@
                     </DataGrid>
 
                     <TextBlock Grid.Row="2" x:Name="CustomersStatusText" Margin="0,8,0,0"/>
+                    <Border Grid.Row="3" BorderBrush="#BFD9E8" BorderThickness="1" Background="#EAF7FC" Padding="10" Margin="0,8,0,0">
+                        <TextBlock x:Name="CustomerMonthlyTotalTextBlock" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    </Border>
                 </Grid>
             </TabItem>
 
@@ -288,76 +291,120 @@
                 <Grid Margin="8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="3*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
                         <TextBlock Text="Suche:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox x:Name="HistorySearchTextBox" Width="320" Margin="0,0,8,0" TextChanged="HistorySearchTextBox_TextChanged"/>
                         <Button Content="Historie neu laden" Width="150" Margin="0,0,8,0" Click="ReloadHistory_Click"/>
-                        <Button Content="Historie exportieren" Width="150" Click="ExportHistory_Click"/>
+                        <Button Content="Historie exportieren" Width="150" Margin="0,0,8,0" Click="ExportHistory_Click"/>
+                        <Button x:Name="DeleteHistoryEntryButton" Content="Eintrag entfernen" Width="150" IsEnabled="False" Click="DeleteHistoryEntry_Click"/>
                     </StackPanel>
 
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <DataGrid Grid.Column="0"
-                                  x:Name="HistoryGrid"
-                                  AutoGenerateColumns="False"
-                                  IsReadOnly="True"
-                                  CanUserAddRows="False"
-                                  CanUserDeleteRows="False"
-                                  SelectionChanged="HistoryGrid_SelectionChanged"
-                                  Margin="0,0,8,0">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Kunde" Binding="{Binding CustomerName}" Width="2*"/>
-                                <DataGridTextColumn Header="Kundennummer" Binding="{Binding CustomerNumber}" Width="120"/>
-                                <DataGridTextColumn Header="Ort" Binding="{Binding City}" Width="120"/>
-                                <DataGridTextColumn Header="Telefon" Binding="{Binding Phone}" Width="130"/>
-                                <DataGridTextColumn Header="InstallationId" Binding="{Binding ShortInstallationId}" Width="140"/>
-                                <DataGridTextColumn Header="Geräte" Binding="{Binding MaxActiveDeviceConnections}" Width="70"/>
-                                <DataGridTextColumn Header="Gültig bis" Binding="{Binding ValidUntilDisplay}" Width="110"/>
-                                <DataGridTextColumn Header="Typ" Binding="{Binding LicenseType}" Width="110"/>
-                                <DataGridTextColumn Header="Ausgestellt" Binding="{Binding IssuedAtDisplay}" Width="120"/>
-                                <DataGridTextColumn Header="LicenseId" Binding="{Binding LicenseId}" Width="180"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                    <DataGrid Grid.Row="1"
+                              x:Name="HistoryGrid"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              SelectionChanged="HistoryGrid_SelectionChanged"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              Margin="0,0,0,8">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Kundennummer" Binding="{Binding CustomerNumber}" Width="150"/>
+                            <DataGridTextColumn Header="Kunde" Binding="{Binding CustomerName}" Width="3*"/>
+                            <DataGridTextColumn Header="Ort" Binding="{Binding City}" Width="2*"/>
+                            <DataGridTextColumn Header="Geräte" Binding="{Binding MaxActiveDeviceConnections}" Width="90"/>
+                            <DataGridTextColumn Header="Ausstellungsdatum" Binding="{Binding IssuedAtDisplay}" Width="170"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
 
-                        <GroupBox Grid.Column="1" Header="Details">
-                            <Grid Margin="8">
+                    <GroupBox Grid.Row="2" Header="Details zur ausgewählten Lizenz" Margin="0,0,0,8">
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" x:Name="HistoryDetailsTextBlock" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                                <DataGrid Grid.Row="1"
-                                          x:Name="HistoryDevicesGrid"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          CanUserAddRows="False"
-                                          CanUserDeleteRows="False"
-                                          Height="180"
-                                          Margin="0,0,0,8">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Anbindung" Binding="{Binding DisplayName}" Width="*"/>
-                                        <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceDisplayName}" Width="*"/>
-                                        <DataGridTextColumn Header="Quelle" Binding="{Binding ConnectionKind}" Width="100"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                                <WrapPanel Grid.Row="2">
-                                    <Button Content="Lizenzdatei öffnen" Width="150" Margin="0,0,8,8" Click="OpenSelectedLicenseFile_Click"/>
-                                    <Button Content="Ordner öffnen" Width="130" Margin="0,0,8,8" Click="OpenSelectedLicenseFolder_Click"/>
-                                    <Button Content="Neue Lizenz für diesen Kunden erstellen" Width="260" Margin="0,0,8,8" Click="CreateNewForSelectedCustomer_Click"/>
-                                    <Button Content="Kundendaten übernehmen" Width="180" Margin="0,0,8,8" Click="UseSelectedCustomerData_Click"/>
-                                </WrapPanel>
-                            </Grid>
-                        </GroupBox>
-                    </Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Row="2" x:Name="HistoryStatusText" Margin="0,8,0,0"/>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Kunde:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="HistoryDetailCustomerText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Kundennummer:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="HistoryDetailCustomerNumberText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="4" Text="Zahlungsart:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="5" x:Name="HistoryDetailPaymentText" Margin="0,0,0,5"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Adresse:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="HistoryDetailAddressText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="Ort:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="3" x:Name="HistoryDetailCityText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="4" Text="Ansprechpartner:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="5" x:Name="HistoryDetailContactText" Margin="0,0,0,5"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Telefon:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="HistoryDetailPhoneText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="E-Mail:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="3" x:Name="HistoryDetailEmailText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="4" Text="Rechnungs-E-Mail:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="5" x:Name="HistoryDetailInvoiceEmailText" Margin="0,0,0,5"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="InstallationId:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="HistoryDetailInstallationText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="2" Text="Computername:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="3" x:Name="HistoryDetailMachineText" Margin="0,0,18,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="4" Text="Geräteanzahl:" FontWeight="Bold" Margin="0,0,8,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="5" x:Name="HistoryDetailDeviceCountText" Margin="0,0,0,5"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Lizenz:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="HistoryDetailLicenseText" Margin="0,0,18,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="Ausgestellt am:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="3" x:Name="HistoryDetailIssuedText" Margin="0,0,18,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="4" Text="Gültig bis:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Row="4" Grid.Column="5" x:Name="HistoryDetailValidUntilText"/>
+                            </Grid>
+
+                            <DataGrid Grid.Row="1"
+                                      x:Name="HistoryDevicesGrid"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      Margin="0,0,0,8">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Anbindung" Binding="{Binding DisplayName}" Width="3*"/>
+                                    <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceDisplayName}" Width="2*"/>
+                                    <DataGridTextColumn Header="Quelle / Verbindung" Binding="{Binding ConnectionKind}" Width="180"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <WrapPanel Grid.Row="2">
+                                <Button Content="Lizenzdatei öffnen" Width="150" Margin="0,0,8,0" Click="OpenSelectedLicenseFile_Click"/>
+                                <Button Content="Ordner öffnen" Width="130" Margin="0,0,8,0" Click="OpenSelectedLicenseFolder_Click"/>
+                                <Button Content="Neue Lizenz für diesen Kunden erstellen" Width="260" Margin="0,0,8,0" Click="CreateNewForSelectedCustomer_Click"/>
+                                <Button Content="Kundendaten übernehmen" Width="180" Margin="0,0,8,0" Click="UseSelectedCustomerData_Click"/>
+                            </WrapPanel>
+                        </Grid>
+                    </GroupBox>
+
+                    <TextBlock Grid.Row="3" x:Name="HistoryStatusText" Margin="0,0,0,0"/>
                 </Grid>
             </TabItem>
 

@@ -147,7 +147,7 @@ public partial class CustomerDetailWindow : Window
 
         var confirmation = MessageBox.Show(
             this,
-            "Diese Installation wird nur in der lokalen Herstellerverwaltung als storniert markiert. Eine bereits beim Kunden installierte Offline-Lizenz wird dadurch nicht automatisch ungültig. Fortfahren?",
+            "Diese Installation wird in der lokalen Lizenzmanager-Übersicht als storniert markiert. Fortfahren?",
             "Lizenz als storniert markieren",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);

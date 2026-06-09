@@ -118,11 +118,18 @@ public partial class MainWindow : Window
 
     private void ShowRequest(LicenseRequest request, string filePath)
     {
+        var billableDevices = request.Devices
+            .Where(device => device.IsActive && device.IsLicenseRequired)
+            .ToArray();
+        var requestedActiveConnections = request.Devices.Count > 0
+            ? billableDevices.Length
+            : request.ActiveLicensedDeviceCount;
+
         RequestFileTextBox.Text = filePath;
         InstallationIdTextBox.Text = request.InstallationId;
         RequestDateTextBlock.Text = request.CreatedAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture);
         RequestAppVersionTextBlock.Text = request.AppVersion;
-        RequestedActiveConnectionsTextBlock.Text = request.ActiveLicensedDeviceCount.ToString(CultureInfo.InvariantCulture);
+        RequestedActiveConnectionsTextBlock.Text = requestedActiveConnections.ToString(CultureInfo.InvariantCulture);
 
         var customer = request.Customer ?? LicenseRequestCustomer.Empty;
         CustomerNameTextBox.Text = customer.CustomerName;
@@ -141,11 +148,14 @@ public partial class MainWindow : Window
             : LicenseManagerPaymentMethod.BankTransfer);
         CustomerNumberTextBox.Text = customer.CustomerNumber ?? string.Empty;
         LicenseeTextBox.Text = string.IsNullOrWhiteSpace(customer.CustomerName) ? request.MachineName : customer.CustomerName;
-        MaxActiveConnectionsTextBox.Text = Math.Max(request.ActiveLicensedDeviceCount, 1).ToString(CultureInfo.InvariantCulture);
+        MaxActiveConnectionsTextBox.Text = Math.Max(requestedActiveConnections, 1).ToString(CultureInfo.InvariantCulture);
 
         _requestDeviceRows.Clear();
+        RequestDevicesHintTextBlock.Text = request.Devices.Count == 0
+            ? "Geräteliste in alter Anfrage nicht enthalten. Lizenzpflichtig bleibt die angeforderte Geräteanzahl."
+            : "Es werden nur aktive lizenzpflichtige Geräteanbindungen angezeigt.";
         var index = 1;
-        foreach (var device in request.Devices)
+        foreach (var device in billableDevices)
         {
             _requestDeviceRows.Add(RequestDeviceRow.FromRequestDevice(index++, device));
         }
@@ -341,6 +351,7 @@ public partial class MainWindow : Window
         NotesTextBox.Text = string.Empty;
         OutputFileTextBox.Text = string.Empty;
         _requestDeviceRows.Clear();
+        RequestDevicesHintTextBlock.Text = "Es werden nur aktive lizenzpflichtige Geräteanbindungen angezeigt.";
         CreateLicenseStatusText.Text = "Eingaben zurückgesetzt.";
     }
 
@@ -370,6 +381,7 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             _customerRecords = Array.Empty<LicenseManagerCustomerRecord>();
+            RefreshCustomerRows();
             CustomersStatusText.Text = $"Kundenliste konnte nicht geladen werden: {ex.Message}";
         }
     }
@@ -462,6 +474,18 @@ public partial class MainWindow : Window
         {
             _customerRows.Add(new CustomerRow(customer, _settings.PricePerDeviceNet));
         }
+
+        UpdateCustomerMonthlyTotal();
+    }
+
+    private void UpdateCustomerMonthlyTotal()
+    {
+        var totalDevices = _customerRecords.Sum(customer => customer.BillableDeviceCount);
+        var total = LicenseManagerCostCalculator.CalculateNetTotal(totalDevices, _settings.PricePerDeviceNet);
+        var culture = CultureInfo.GetCultureInfo("de-DE");
+        CustomerMonthlyTotalTextBlock.Text =
+            $"Gesamtsumme monatlicher Lizenzen: {total.ToString("N2", culture)} EUR netto " +
+            $"({totalDevices} aktive lizenzierte Geräteanbindung(en) × {_settings.PricePerDeviceNet.ToString("N2", culture)} EUR).";
     }
 
     private void CustomerSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -632,6 +656,8 @@ public partial class MainWindow : Window
         {
             _historyRows.Add(new HistoryRow(record));
         }
+
+        ShowHistoryDetails(GetSelectedHistoryRecord());
     }
 
     private void HistorySearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -675,27 +701,148 @@ public partial class MainWindow : Window
 
     private void HistoryGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        var selected = GetSelectedHistoryRecord();
+        ShowHistoryDetails(GetSelectedHistoryRecord());
+    }
+
+    private void ShowHistoryDetails(IssuedLicenseRecord? selected)
+    {
         _historyDeviceRows.Clear();
+        DeleteHistoryEntryButton.IsEnabled = selected is not null;
 
         if (selected is null)
         {
-            HistoryDetailsTextBlock.Text = "Keine Lizenz ausgewählt.";
+            SetHistoryDetailText("Keine Lizenz ausgewählt.");
             return;
         }
 
-        HistoryDetailsTextBlock.Text =
-            $"Kunde: {selected.CustomerName}{Environment.NewLine}" +
-            $"Adresse: {selected.Street}, {selected.PostalCode} {selected.City}{Environment.NewLine}" +
-            $"Kontakt: {selected.Phone} {selected.Email} {selected.ContactPerson}{Environment.NewLine}" +
-            $"InstallationId: {selected.InstallationId}{Environment.NewLine}" +
-            $"Lizenz: {selected.LicenseId}, {selected.MaxActiveDeviceConnections} Geräte, gültig bis {FormatValidity(selected.ValidUntilUtc)}{Environment.NewLine}" +
-            $"Ausgabe: {selected.OutputFilePath}";
+        HistoryDetailCustomerText.Text = selected.CustomerName;
+        HistoryDetailCustomerNumberText.Text = selected.CustomerNumber ?? string.Empty;
+        HistoryDetailPaymentText.Text = FormatPaymentMethod(selected.SepaDirectDebitConsent && !selected.AlwaysInvoice
+            ? LicenseManagerPaymentMethod.SepaDirectDebit
+            : LicenseManagerPaymentMethod.BankTransfer);
+        HistoryDetailAddressText.Text = selected.Street;
+        HistoryDetailCityText.Text = $"{selected.PostalCode} {selected.City}".Trim();
+        HistoryDetailContactText.Text = selected.ContactPerson ?? string.Empty;
+        HistoryDetailPhoneText.Text = selected.Phone;
+        HistoryDetailEmailText.Text = selected.Email ?? string.Empty;
+        HistoryDetailInvoiceEmailText.Text = selected.InvoiceEmail ?? string.Empty;
+        HistoryDetailInstallationText.Text = selected.InstallationId;
+        HistoryDetailMachineText.Text = selected.MachineName ?? string.Empty;
+        HistoryDetailDeviceCountText.Text = selected.MaxActiveDeviceConnections.ToString(CultureInfo.InvariantCulture);
+        var licenseFile = string.IsNullOrWhiteSpace(selected.OutputFilePath)
+            ? string.Empty
+            : Path.GetFileName(selected.OutputFilePath);
+        HistoryDetailLicenseText.Text = string.IsNullOrWhiteSpace(licenseFile)
+            ? selected.LicenseId
+            : $"{selected.LicenseId} / {licenseFile}";
+        HistoryDetailIssuedText.Text = selected.IssuedAtUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
+        HistoryDetailValidUntilText.Text = FormatValidity(selected.ValidUntilUtc);
 
         foreach (var device in selected.Devices)
         {
             _historyDeviceRows.Add(device);
         }
+    }
+
+    private void SetHistoryDetailText(string value)
+    {
+        HistoryDetailCustomerText.Text = value;
+        HistoryDetailCustomerNumberText.Text = string.Empty;
+        HistoryDetailPaymentText.Text = string.Empty;
+        HistoryDetailAddressText.Text = string.Empty;
+        HistoryDetailCityText.Text = string.Empty;
+        HistoryDetailContactText.Text = string.Empty;
+        HistoryDetailPhoneText.Text = string.Empty;
+        HistoryDetailEmailText.Text = string.Empty;
+        HistoryDetailInvoiceEmailText.Text = string.Empty;
+        HistoryDetailInstallationText.Text = string.Empty;
+        HistoryDetailMachineText.Text = string.Empty;
+        HistoryDetailDeviceCountText.Text = string.Empty;
+        HistoryDetailLicenseText.Text = string.Empty;
+        HistoryDetailIssuedText.Text = string.Empty;
+        HistoryDetailValidUntilText.Text = string.Empty;
+    }
+
+    private void DeleteHistoryEntry_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = GetSelectedHistoryRecord();
+        if (selected is null)
+        {
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            this,
+            "Möchten Sie diesen Eintrag wirklich aus der lokalen Lizenzmanager-Historie entfernen?",
+            "Eintrag entfernen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes)
+        {
+            HistoryStatusText.Text = "Entfernen abgebrochen.";
+            return;
+        }
+
+        try
+        {
+            _historyRecords = _historyRepository.Remove(_paths.HistoryFile, selected);
+            ReconcileCustomersAfterHistoryDeletion(selected);
+            RefreshHistoryRows();
+            ShowHistoryDetails(null);
+            HistoryStatusText.Text = "Historieneintrag entfernt. Lizenzdateien, Private Keys und Kundenstammdaten wurden nicht gelöscht.";
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Historieneintrag konnte nicht entfernt werden: {ex.Message}");
+        }
+    }
+
+    private void ReconcileCustomersAfterHistoryDeletion(IssuedLicenseRecord deletedRecord)
+    {
+        var customers = _customerRecords.ToList();
+        var changed = false;
+
+        for (var i = 0; i < customers.Count; i++)
+        {
+            var customer = customers[i];
+            var installations = customer.EffectiveInstallations.ToList();
+            var installationIndex = installations.FindIndex(installation =>
+                string.Equals(installation.InstallationId, deletedRecord.InstallationId, StringComparison.OrdinalIgnoreCase));
+            if (installationIndex < 0)
+            {
+                continue;
+            }
+
+            var remainingLatestLicense = _historyRecords
+                .Where(record => string.Equals(record.InstallationId, deletedRecord.InstallationId, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(record => record.IssuedAtUtc)
+                .FirstOrDefault();
+
+            if (remainingLatestLicense is null)
+            {
+                installations.RemoveAt(installationIndex);
+            }
+            else
+            {
+                installations[installationIndex] = LicenseManagerInstallationRecord.FromLicense(remainingLatestLicense);
+            }
+
+            customers[i] = (customer with
+            {
+                Installations = installations.ToArray(),
+                UpdatedAtUtc = DateTime.UtcNow
+            }).WithNormalizedInstallations();
+            changed = true;
+        }
+
+        if (!changed)
+        {
+            return;
+        }
+
+        _customerRepository.Save(_paths.CustomersFile, customers);
+        _customerRecords = customers;
+        RefreshCustomerRows();
     }
 
     private void OpenSelectedLicenseFile_Click(object sender, RoutedEventArgs e)

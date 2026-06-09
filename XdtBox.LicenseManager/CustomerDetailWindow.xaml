@@ -86,72 +86,59 @@
             </Grid>
         </GroupBox>
 
-        <Grid Grid.Row="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="1.05*"/>
-                <RowDefinition Height="1.15*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.05*"/>
-                <ColumnDefinition Width="1.25*"/>
-                <ColumnDefinition Width="1.25*"/>
-            </Grid.ColumnDefinitions>
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <GroupBox Header="Installationen / Arbeitsplätze" Margin="0,0,0,8">
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="180"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <DataGrid x:Name="InstallationsGrid"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  SelectionChanged="InstallationsGrid_SelectionChanged">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="130"/>
+                                <DataGridTextColumn Header="InstallationId" Binding="{Binding InstallationId}" Width="2*"/>
+                                <DataGridTextColumn Header="Geräte" Binding="{Binding BillableDeviceCount}" Width="120"/>
+                                <DataGridTextColumn Header="Gültig bis" Binding="{Binding ValidUntilDisplay}" Width="160"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="CancelInstallationButton"
+                                    Content="Lizenz als storniert markieren"
+                                    Width="230"
+                                    Click="CancelInstallation_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
 
-            <GroupBox Grid.Row="0" Grid.Column="0" Header="Installationen / Arbeitsplätze" Margin="0,0,6,8">
-                <Grid Margin="8">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <DataGrid x:Name="InstallationsGrid"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              SelectionChanged="InstallationsGrid_SelectionChanged">
+                <GroupBox Header="Aktive lizenzierte Anbindungen" Margin="0,0,0,8">
+                    <DataGrid x:Name="DevicesGrid" Height="190" Margin="8" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="90"/>
-                            <DataGridTextColumn Header="InstallationId" Binding="{Binding InstallationId}" Width="170"/>
-                            <DataGridTextColumn Header="Geräte" Binding="{Binding BillableDeviceCount}" Width="70"/>
-                            <DataGridTextColumn Header="Gültig bis" Binding="{Binding ValidUntilDisplay}" Width="100"/>
+                            <DataGridTextColumn Header="Anbindung" Binding="{Binding DisplayName}" Width="2*"/>
+                            <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceDisplayName}" Width="2*"/>
+                            <DataGridTextColumn Header="Quelle" Binding="{Binding ConnectionKind}" Width="180"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button x:Name="CancelInstallationButton"
-                                Content="Lizenz als storniert markieren"
-                                Width="230"
-                                Click="CancelInstallation_Click"/>
-                    </StackPanel>
-                </Grid>
-            </GroupBox>
+                </GroupBox>
 
-            <GroupBox Grid.Row="0" Grid.Column="1" Header="Aktive lizenzierte Anbindungen" Margin="6,0,6,8">
-                <DataGrid x:Name="DevicesGrid" Margin="8" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Anbindung" Binding="{Binding DisplayName}" Width="*"/>
-                        <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceDisplayName}" Width="*"/>
-                        <DataGridTextColumn Header="Quelle" Binding="{Binding ConnectionKind}" Width="110"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </GroupBox>
-
-            <GroupBox Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Header="Lizenzhistorie" Margin="6,0,0,8">
-                <DataGrid x:Name="HistoryGrid" Margin="8" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Ausgestellt" Binding="{Binding IssuedAtDisplay}" Width="105"/>
-                        <DataGridTextColumn Header="Installation" Binding="{Binding InstallationId}" Width="160"/>
-                        <DataGridTextColumn Header="Gültig bis" Binding="{Binding ValidUntilDisplay}" Width="100"/>
-                        <DataGridTextColumn Header="Geräte" Binding="{Binding DeviceCount}" Width="70"/>
-                        <DataGridTextColumn Header="Datei" Binding="{Binding FileName}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </GroupBox>
-
-            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="#E0A126" BorderThickness="1" Background="#FFF4D6" Padding="10" Margin="0,0,6,8">
-                <TextBlock TextWrapping="Wrap"
-                           Text="Hinweis: Eine Stornierung entfernt die Installation nur aus der lokalen Hersteller- und Kostenübersicht. Eine bereits beim Kunden installierte Offline-Lizenz wird dadurch nicht automatisch ungültig."/>
-            </Border>
-        </Grid>
+                <GroupBox Header="Lizenzhistorie" Margin="0,0,0,8">
+                    <DataGrid x:Name="HistoryGrid" Height="230" Margin="8" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Ausgestellt" Binding="{Binding IssuedAtDisplay}" Width="140"/>
+                            <DataGridTextColumn Header="Installation" Binding="{Binding InstallationId}" Width="2*"/>
+                            <DataGridTextColumn Header="Gültig bis" Binding="{Binding ValidUntilDisplay}" Width="140"/>
+                            <DataGridTextColumn Header="Geräte" Binding="{Binding DeviceCount}" Width="100"/>
+                            <DataGridTextColumn Header="Datei" Binding="{Binding FileName}" Width="2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
 
         <Grid Grid.Row="3" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>

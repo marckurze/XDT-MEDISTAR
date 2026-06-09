@@ -78,6 +78,91 @@ public sealed class LicenseManagerUiSourceTests
     }
 
     [Fact]
+    public void LicenseManager_ShouldShowIssuedLicensesAboveStructuredDetails()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+        var historyTab = ExtractBetween(xaml, "<TabItem Header=\"Ausgestellte Lizenzen\">", "<TabItem Header=\"Sicherung\">");
+        var historyColumns = ExtractBetween(historyTab, "x:Name=\"HistoryGrid\"", "</DataGrid.Columns>");
+
+        Assert.True(historyTab.IndexOf("x:Name=\"HistoryGrid\"", StringComparison.Ordinal) <
+            historyTab.IndexOf("Details zur ausgew", StringComparison.Ordinal));
+        Assert.Contains("Header=\"Kundennummer\"", historyColumns);
+        Assert.Contains("Header=\"Kunde\"", historyColumns);
+        Assert.Contains("Header=\"Ort\"", historyColumns);
+        Assert.Contains("Header=\"Ger", historyColumns);
+        Assert.Contains("Header=\"Ausstellungsdatum\"", historyColumns);
+        Assert.DoesNotContain("Header=\"Installation", historyColumns);
+        Assert.DoesNotContain("Header=\"Telefon", historyColumns);
+        Assert.DoesNotContain("Header=\"Lizenztyp", historyColumns);
+        Assert.DoesNotContain("Header=\"I\"", historyColumns);
+        Assert.Contains("HistoryDetailCustomerText", historyTab);
+        Assert.Contains("HistoryDevicesGrid", historyTab);
+        Assert.DoesNotContain("HistoryDetailsTextBlock", xaml);
+        Assert.Contains("ShowHistoryDetails(GetSelectedHistoryRecord())", code);
+    }
+
+    [Fact]
+    public void LicenseManager_ShouldAllowRemovingLocalHistoryEntriesOnly()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+
+        Assert.Contains("DeleteHistoryEntryButton", xaml);
+        Assert.Contains("Eintrag entfernen", xaml);
+        Assert.Contains("DeleteHistoryEntry_Click", code);
+        Assert.Contains("_historyRepository.Remove", code);
+        Assert.Contains("Lizenzdateien, Private Keys und Kundenstammdaten wurden nicht", code);
+        Assert.Contains("ReconcileCustomersAfterHistoryDeletion", code);
+    }
+
+    [Fact]
+    public void LicenseManager_ShouldShowCustomerMonthlyTotalFooter()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+
+        Assert.Contains("CustomerMonthlyTotalTextBlock", xaml);
+        Assert.Contains("UpdateCustomerMonthlyTotal", code);
+        Assert.Contains("Gesamtsumme monatlicher Lizenzen", code);
+        Assert.Contains("BillableDeviceCount", code);
+        Assert.Contains("CalculateNetTotal", code);
+    }
+
+    [Fact]
+    public void LicenseManager_ShouldShowOnlyBillableDevicesInLicenseRequest()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+        var requestGridColumns = ExtractBetween(xaml, "x:Name=\"RequestDevicesGrid\"", "</DataGrid.Columns>");
+
+        Assert.Contains("RequestDevicesHintTextBlock", xaml);
+        Assert.DoesNotContain("DataGridCheckBoxColumn", requestGridColumns);
+        Assert.DoesNotContain("Header=\"Aktiv\"", requestGridColumns);
+        Assert.Contains("device.IsActive && device.IsLicenseRequired", code);
+        Assert.Contains("request.Devices.Count == 0", code);
+        Assert.Contains("alter Anfrage", code);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerDetails_ShouldStackTablesAndRemoveCancellationWarning()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml.cs"));
+
+        var installations = xaml.IndexOf("Header=\"Installationen", StringComparison.Ordinal);
+        var devices = xaml.IndexOf("Header=\"Aktive lizenzierte Anbindungen\"", StringComparison.Ordinal);
+        var history = xaml.IndexOf("Header=\"Lizenzhistorie\"", StringComparison.Ordinal);
+
+        Assert.True(installations >= 0 && devices > installations && history > devices);
+        Assert.Contains("<ScrollViewer", xaml);
+        Assert.DoesNotContain("Eine Stornierung entfernt", xaml);
+        Assert.DoesNotContain("Offline-Lizenz wird dadurch nicht automatisch", xaml);
+        Assert.Contains("Lizenz als storniert markieren", xaml);
+        Assert.DoesNotContain("Hersteller- und Kosten", code);
+    }
+
+    [Fact]
     public void LicenseManagerSources_ShouldNotContainVisibleMojibake()
     {
         var files = new[]
@@ -144,5 +229,22 @@ public sealed class LicenseManagerUiSourceTests
         }
 
         throw new FileNotFoundException($"Workspace file not found: {projectFolder}/{fileName}");
+    }
+
+    private static string ExtractBetween(string source, string startToken, string endToken)
+    {
+        var start = source.IndexOf(startToken, StringComparison.Ordinal);
+        if (start < 0)
+        {
+            throw new InvalidOperationException($"Start token not found: {startToken}");
+        }
+
+        var end = source.IndexOf(endToken, start, StringComparison.Ordinal);
+        if (end < 0)
+        {
+            throw new InvalidOperationException($"End token not found: {endToken}");
+        }
+
+        return source[start..end];
     }
 }

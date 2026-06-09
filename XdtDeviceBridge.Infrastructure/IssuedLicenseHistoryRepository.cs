@@ -59,6 +59,29 @@ public sealed class IssuedLicenseHistoryRepository
         return records;
     }
 
+    public IReadOnlyList<IssuedLicenseRecord> Remove(string filePath, IssuedLicenseRecord record)
+    {
+        EnsureFilePath(filePath);
+        ArgumentNullException.ThrowIfNull(record);
+
+        var records = LoadOrEmpty(filePath).ToList();
+        var removed = records.RemoveAll(existing => IsSameHistoryEntry(existing, record));
+        if (removed == 0)
+        {
+            return records;
+        }
+
+        Save(filePath, records);
+        return records;
+    }
+
+    private static bool IsSameHistoryEntry(IssuedLicenseRecord left, IssuedLicenseRecord right)
+    {
+        return string.Equals(left.LicenseId, right.LicenseId, StringComparison.Ordinal)
+            && left.IssuedAtUtc == right.IssuedAtUtc
+            && string.Equals(left.InstallationId, right.InstallationId, StringComparison.Ordinal);
+    }
+
     private static void EnsureFilePath(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
