@@ -1,8 +1,13 @@
-; XDTBox 1.0 customer installer.
+; XDTBox 1.10 customer installer.
 ; Build with Inno Setup 6 after publishing the WPF app through scripts/build-xdtbox-installer.ps1.
 
 #define MyAppName "XDTBox"
-#define MyAppVersion "1.0"
+#ifndef MyAppVersion
+#define MyAppVersion "1.10"
+#endif
+#ifndef MyVersionInfoVersion
+#define MyVersionInfoVersion "1.10.0.0"
+#endif
 #define MyAppPublisher "Technik-Apparat M.Kurze"
 #define MyAppExeName "XdtDeviceBridge.App.exe"
 #ifndef MyPublishDir
@@ -27,7 +32,7 @@ DisableProgramGroupPage=no
 DisableDirPage=no
 UsePreviousAppDir=yes
 OutputDir={#MyInstallerOutputDir}
-OutputBaseFilename=XDTBox_Setup_1.0
+OutputBaseFilename=XDTBox_Setup_{#MyAppVersion}
 SetupIconFile=..\XdtDeviceBridge.App\Assets\App\XDTBox.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2
@@ -39,11 +44,11 @@ MinVersion=10.0
 PrivilegesRequired=admin
 CloseApplications=yes
 RestartApplications=no
-VersionInfoVersion=1.0.0.0
+VersionInfoVersion={#MyVersionInfoVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=XDTBox Setup
 VersionInfoProductName=XDTBox
-VersionInfoProductVersion=1.0
+VersionInfoProductVersion={#MyAppVersion}
 
 [Languages]
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"

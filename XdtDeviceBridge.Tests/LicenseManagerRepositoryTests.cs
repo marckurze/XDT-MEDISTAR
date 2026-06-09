@@ -100,7 +100,8 @@ public sealed class LicenseManagerRepositoryTests
                     DeviceDisplayName: "NIDEK LM7",
                     InterfaceProfileId: "interface-lm7",
                     DeviceProfileId: "device-lm7",
-                    ConnectionKind: DeviceConnectionKind.SerialRs232)
+                    ConnectionKind: DeviceConnectionKind.SerialRs232,
+                    Location: "Raum 2")
             }
         };
 
@@ -110,6 +111,7 @@ public sealed class LicenseManagerRepositoryTests
         var device = Assert.Single(Assert.Single(loaded).Devices);
         Assert.Equal("MEDISTAR + NIDEK LM7", device.DisplayName);
         Assert.Equal(DeviceConnectionKind.SerialRs232, device.ConnectionKind);
+        Assert.Equal("Raum 2", device.Location);
     }
 
     [Fact]
@@ -147,6 +149,24 @@ public sealed class LicenseManagerRepositoryTests
     }
 
     [Fact]
+    public void DeviceLocationRepository_ShouldRoundTripDeviceLocations()
+    {
+        var filePath = CreateTempFilePath("device-locations.json");
+        var repository = new LicenseDeviceLocationRepository();
+        var store = new LicenseDeviceLocationStore(new[]
+        {
+            new LicenseDeviceLocation("interface-lm7", "Raum 2")
+        });
+
+        repository.Save(filePath, store);
+        var loaded = repository.LoadOrEmpty(filePath);
+
+        var location = Assert.Single(loaded.DeviceLocations);
+        Assert.Equal("interface-lm7", location.InterfaceProfileId);
+        Assert.Equal("Raum 2", location.Location);
+    }
+
+    [Fact]
     public void LicenseManagerCustomerRepository_ShouldCreateCustomerWithoutCustomerNumber()
     {
         var filePath = CreateTempFilePath("customers.json");
@@ -175,6 +195,22 @@ public sealed class LicenseManagerRepositoryTests
     }
 
     [Fact]
+    public void LicenseManagerCustomerRepository_UpsertByInstallation_ShouldAllowSeparateCustomerWithSameNumber()
+    {
+        var filePath = CreateTempFilePath("customers.json");
+        var repository = new LicenseManagerCustomerRepository();
+
+        repository.Upsert(filePath, CreateCustomer("installation-1") with { CustomerName = "Praxis Bestand", CustomerNumber = "K-100" });
+        var customers = repository.UpsertByInstallation(
+            filePath,
+            CreateCustomer("installation-2") with { CustomerName = "Praxis Neu", CustomerNumber = "K-100" });
+
+        Assert.Equal(2, customers.Count);
+        Assert.Contains(customers, customer => customer.CustomerName == "Praxis Bestand");
+        Assert.Contains(customers, customer => customer.CustomerName == "Praxis Neu");
+    }
+
+    [Fact]
     public void LicenseManagerCustomerRecord_FromRequest_ShouldKeepOnlyActiveLicenseRequiredDevices()
     {
         var request = new LicenseRequest(
@@ -188,7 +224,7 @@ public sealed class LicenseManagerRepositoryTests
             ActiveLicensedDeviceCount: 3,
             Devices: new[]
             {
-                new LicenseRequestDevice("active-licensed", "MEDISTAR + NIDEK LM7", "NIDEK", "LM7", "profile-lm7", IsActive: true, IsLicenseRequired: true),
+                new LicenseRequestDevice("active-licensed", "MEDISTAR + NIDEK LM7", "NIDEK", "LM7", "profile-lm7", IsActive: true, IsLicenseRequired: true, Location: "Raum 1"),
                 new LicenseRequestDevice("inactive", "MEDISTAR + NIDEK RT-6100", "NIDEK", "RT-6100", "profile-rt6100", IsActive: false, IsLicenseRequired: true),
                 new LicenseRequestDevice("free", "Nicht lizenzpflichtig", "XDTBox", "Doku", "profile-free", IsActive: true, IsLicenseRequired: false)
             },
@@ -215,6 +251,7 @@ public sealed class LicenseManagerRepositoryTests
         Assert.Equal(1, customer.BillableDeviceCount);
         Assert.Single(customer.EffectiveDevices);
         Assert.Equal("MEDISTAR + NIDEK LM7", Assert.Single(customer.EffectiveDevices).DisplayName);
+        Assert.Equal("Raum 1", Assert.Single(customer.EffectiveDevices).Location);
     }
 
     [Fact]

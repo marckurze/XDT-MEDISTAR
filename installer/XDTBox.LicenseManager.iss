@@ -1,8 +1,13 @@
-; XDTBox Lizenzmanager 1.0 installer.
+; XDTBox Lizenzmanager 1.10 installer.
 ; Build with scripts/build-xdtbox-licensemanager-installer.ps1.
 
 #define MyAppName "XDTBox Lizenzmanager"
-#define MyAppVersion "1.0"
+#ifndef MyAppVersion
+#define MyAppVersion "1.10"
+#endif
+#ifndef MyVersionInfoVersion
+#define MyVersionInfoVersion "1.10.0.0"
+#endif
 #define MyAppPublisher "Technik-Apparat M.Kurze"
 #define MyAppExeName "XdtBox.LicenseManager.exe"
 #ifndef MyPublishDir
@@ -27,7 +32,7 @@ DisableProgramGroupPage=no
 DisableDirPage=no
 UsePreviousAppDir=yes
 OutputDir={#MyInstallerOutputDir}
-OutputBaseFilename=XDTBox_Lizenzmanager_Setup_1.0
+OutputBaseFilename=XDTBox_Lizenzmanager_Setup_{#MyAppVersion}
 SetupIconFile=..\XdtDeviceBridge.App\Assets\App\XDTBox.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2
@@ -39,11 +44,11 @@ MinVersion=10.0
 PrivilegesRequired=admin
 CloseApplications=yes
 RestartApplications=no
-VersionInfoVersion=1.0.0.0
+VersionInfoVersion={#MyVersionInfoVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=XDTBox Lizenzmanager Setup
 VersionInfoProductName=XDTBox Lizenzmanager
-VersionInfoProductVersion=1.0
+VersionInfoProductVersion={#MyAppVersion}
 
 [Languages]
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"

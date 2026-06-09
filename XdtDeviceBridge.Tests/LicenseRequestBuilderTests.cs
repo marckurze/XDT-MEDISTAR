@@ -144,6 +144,26 @@ public sealed class LicenseRequestBuilderTests
     }
 
     [Fact]
+    public void Build_WithDeviceProfiles_ShouldIncludeDeviceLocations()
+    {
+        var request = _builder.Build(
+            CreateInstallationInfo(),
+            CreateInterfaceProfiles(),
+            CreateDeviceProfiles(),
+            LicenseRequestCustomer.Empty,
+            XdtBoxLicenseConstants.ProductCode,
+            "1.0.0",
+            CreatedAtUtc,
+            new Dictionary<string, string?>
+            {
+                ["interface-active"] = "Untersuchung 2"
+            });
+
+        var activeDevice = Assert.Single(request.Devices, device => device.Id == "interface-active");
+        Assert.Equal("Untersuchung 2", activeDevice.Location);
+    }
+
+    [Fact]
     public void Build_WithDeviceProfiles_ShouldKeepDeviceNamesNonBindingForLicensedCount()
     {
         var profiles = CreateInterfaceProfiles()

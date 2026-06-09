@@ -252,12 +252,17 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("LicenseCustomerIbanTextBox", xaml);
         Assert.Contains("LicenseCustomerBicTextBox", xaml);
         Assert.Contains("LicenseCustomerAccountHolderTextBox", xaml);
+        Assert.Contains("LicenseCustomerNumberTextBox", xaml);
         Assert.Contains("LicenseSepaConsentCheckBox", xaml);
         Assert.Contains("LicenseAlwaysInvoiceCheckBox", xaml);
         Assert.Contains("LicenseInvoiceEmailTextBox", xaml);
+        Assert.Contains("SaveLicenseDeviceLocations_Click", xaml);
+        Assert.Contains("Rest-Karenzzeit", xaml);
         Assert.Contains("SepaDirectDebitConsent", code);
         Assert.Contains("AlwaysInvoice", code);
         Assert.Contains("InvoiceEmail", code);
+        Assert.Contains("CustomerNumber", code);
+        Assert.Contains("LicenseDeviceLocationRepository", code);
         Assert.Contains("LicensePaymentOption_Checked", code);
     }
 

@@ -8443,6 +8443,8 @@ public partial class MainWindow : Window
 
     private LicenseDeviceLocationStore CreateLicenseDeviceLocationStoreFromRows()
     {
+        CommitLicenseDeviceLocationEdits();
+
         var locations = _licensedDeviceStateRows
             .Where(row => !string.IsNullOrWhiteSpace(row.InterfaceProfileId))
             .Select(row => new LicenseDeviceLocation(
@@ -8472,6 +8474,12 @@ public partial class MainWindow : Window
         {
             AppendLicenseMessage($"Gerätestandorte konnten nicht gespeichert werden: {ex.Message}");
         }
+    }
+
+    private void CommitLicenseDeviceLocationEdits()
+    {
+        LicensedDeviceStatesGrid.CommitEdit(DataGridEditingUnit.Cell, exitEditingMode: true);
+        LicensedDeviceStatesGrid.CommitEdit(DataGridEditingUnit.Row, exitEditingMode: true);
     }
 
     private void ClearLicensedDeviceStates()

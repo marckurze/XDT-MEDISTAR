@@ -158,7 +158,8 @@ public sealed class LicenseRequestTests
                     DisplayName = "MEDISTAR + Gerät",
                     DeviceProfileId = "device-test",
                     DeviceDisplayName = "Testgerät",
-                    ConnectionKind = DeviceConnectionKind.SerialRs232
+                    ConnectionKind = DeviceConnectionKind.SerialRs232,
+                    Location = "Raum 2"
                 }
             }
         };
@@ -172,6 +173,7 @@ public sealed class LicenseRequestTests
         Assert.Equal("device-test", device.DeviceProfileId);
         Assert.Equal("Testgerät", device.DeviceDisplayName);
         Assert.Equal(DeviceConnectionKind.SerialRs232, device.ConnectionKind);
+        Assert.Equal("Raum 2", device.Location);
     }
 
     [Fact]

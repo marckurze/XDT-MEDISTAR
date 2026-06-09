@@ -52,7 +52,7 @@ Backups sind Konfigurationssicherungen. Patientendaten, Messdateien, Archivordne
 
 # Installation, Update und Deinstallation
 
-XDTBox 1.0 wird als klassisches Windows-Setup installiert. Der vorgeschlagene Installationsordner ist C:\XDTBox und kann bei Neuinstallation geändert werden.
+XDTBox 1.10 wird als klassisches Windows-Setup installiert. Der vorgeschlagene Installationsordner ist C:\XDTBox und kann bei Neuinstallation geändert werden.
 
 Das Setup unterscheidet Neuinstallation und Update. Bei Updates werden App-Dateien ersetzt, Kundendaten bleiben erhalten. Dazu gehören Profile, Schnittstellenprofile, COM-Port-Parameter, Lizenzen, Baukasten-Templates, Gerätebild-Overrides und lokale UI-Einstellungen.
 

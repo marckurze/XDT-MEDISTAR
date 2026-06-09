@@ -12,7 +12,7 @@ public partial class CustomerDetailWindow : Window
     private readonly IReadOnlyList<IssuedLicenseRecord> _allHistory;
     private readonly decimal _pricePerDeviceNet;
     private readonly ObservableCollection<InstallationRow> _installationRows = new();
-    private readonly ObservableCollection<IssuedLicenseDeviceRecord> _deviceRows = new();
+    private readonly ObservableCollection<CustomerDeviceRow> _deviceRows = new();
     private readonly ObservableCollection<CustomerHistoryRow> _historyRows = new();
     private bool _updatingPaymentMethod;
 
@@ -77,7 +77,7 @@ public partial class CustomerDetailWindow : Window
         _deviceRows.Clear();
         foreach (var device in customer.EffectiveDevices)
         {
-            _deviceRows.Add(device);
+            _deviceRows.Add(CustomerDeviceRow.FromDevice(device));
         }
     }
 
@@ -109,6 +109,9 @@ public partial class CustomerDetailWindow : Window
     {
         var paymentMethod = GetSelectedPaymentMethod();
         ValidatePaymentMethod(paymentMethod, Normalize(IbanTextBox.Text), Normalize(AccountHolderTextBox.Text));
+        CommitDeviceEdits();
+
+        var installations = ApplyEditedDeviceLocations(Customer.EffectiveInstallations);
 
         Customer = (Customer with
         {
@@ -126,6 +129,7 @@ public partial class CustomerDetailWindow : Window
             AccountHolder = Normalize(AccountHolderTextBox.Text),
             SepaDirectDebitConsent = paymentMethod == LicenseManagerPaymentMethod.SepaDirectDebit,
             AlwaysInvoice = paymentMethod == LicenseManagerPaymentMethod.BankTransfer,
+            Installations = installations,
             UpdatedAtUtc = DateTime.UtcNow
         }).WithNormalizedInstallations();
 
@@ -245,6 +249,55 @@ public partial class CustomerDetailWindow : Window
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    private void CommitDeviceEdits()
+    {
+        DevicesGrid.CommitEdit(DataGridEditingUnit.Cell, exitEditingMode: true);
+        DevicesGrid.CommitEdit(DataGridEditingUnit.Row, exitEditingMode: true);
+    }
+
+    private IReadOnlyList<LicenseManagerInstallationRecord> ApplyEditedDeviceLocations(
+        IReadOnlyList<LicenseManagerInstallationRecord> installations)
+    {
+        var locationsByKey = _deviceRows
+            .GroupBy(CreateDeviceKey, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => Normalize(group.Last().Location),
+                StringComparer.OrdinalIgnoreCase);
+
+        return installations
+            .Select(installation => installation with
+            {
+                Devices = installation.Devices
+                    .Select(device =>
+                    {
+                        var key = CreateDeviceKey(device);
+                        return locationsByKey.TryGetValue(key, out var location)
+                            ? device with { Location = location }
+                            : device;
+                    })
+                    .ToArray()
+            })
+            .ToArray();
+    }
+
+    private static string CreateDeviceKey(CustomerDeviceRow row)
+    {
+        return CreateDeviceKey(row.InterfaceProfileId, row.DisplayName, row.DeviceDisplayName);
+    }
+
+    private static string CreateDeviceKey(IssuedLicenseDeviceRecord device)
+    {
+        return CreateDeviceKey(device.InterfaceProfileId, device.DisplayName, device.DeviceDisplayName);
+    }
+
+    private static string CreateDeviceKey(string interfaceProfileId, string displayName, string deviceDisplayName)
+    {
+        return !string.IsNullOrWhiteSpace(interfaceProfileId)
+            ? interfaceProfileId
+            : $"{displayName}|{deviceDisplayName}";
+    }
+
     private static string FormatValidity(DateTime? validUntilUtc)
     {
         return XdtBoxLicenseConstants.IsUnlimitedValidUntil(validUntilUtc)
@@ -281,5 +334,28 @@ public partial class CustomerDetailWindow : Window
         public string ValidUntilDisplay => FormatValidity(_record.ValidUntilUtc);
         public int DeviceCount => _record.MaxActiveDeviceConnections;
         public string FileName => Path.GetFileName(_record.OutputFilePath);
+    }
+
+    private sealed class CustomerDeviceRow
+    {
+        private CustomerDeviceRow(IssuedLicenseDeviceRecord device)
+        {
+            DisplayName = device.DisplayName;
+            DeviceDisplayName = device.DeviceDisplayName;
+            InterfaceProfileId = device.InterfaceProfileId;
+            ConnectionKind = device.ConnectionKind;
+            Location = device.Location ?? string.Empty;
+        }
+
+        public string DisplayName { get; }
+        public string DeviceDisplayName { get; }
+        public string InterfaceProfileId { get; }
+        public DeviceConnectionKind ConnectionKind { get; }
+        public string Location { get; set; }
+
+        public static CustomerDeviceRow FromDevice(IssuedLicenseDeviceRecord device)
+        {
+            return new CustomerDeviceRow(device);
+        }
     }
 }

@@ -42,4 +42,27 @@ public sealed class LicenseDeviceStateRowTests
 
         Assert.Equal(status, row.Status);
     }
+
+    [Fact]
+    public void FromState_ShouldShowRemainingGraceTimeAndLocation()
+    {
+        var nowUtc = new DateTime(2026, 6, 9, 8, 0, 0, DateTimeKind.Utc);
+
+        var row = LicenseDeviceStateRow.FromState(
+            new LicensedDeviceState(
+                InterfaceProfileId: "interface-1",
+                DisplayName: "Interface 1",
+                IsActive: true,
+                IsLicenseRequired: true,
+                IsCoveredByLicense: false,
+                IsInGracePeriod: true,
+                GracePeriodStartedAt: nowUtc.AddDays(-2),
+                GracePeriodEndsAt: nowUtc.AddDays(3).AddHours(2),
+                StatusMessage: "Karenz aktiv."),
+            "Raum 2",
+            nowUtc);
+
+        Assert.Equal("Raum 2", row.Standort);
+        Assert.Equal("3 Tage", row.KarenzVerbleibendText);
+    }
 }

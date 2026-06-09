@@ -73,6 +73,28 @@ public sealed class LicenseManagerCustomerRepository
         return records;
     }
 
+    public IReadOnlyList<LicenseManagerCustomerRecord> UpsertByInstallation(
+        string filePath,
+        LicenseManagerCustomerRecord customer)
+    {
+        EnsureFilePath(filePath);
+        ArgumentNullException.ThrowIfNull(customer);
+
+        var records = LoadOrEmpty(filePath).ToList();
+        var index = FindMatchingInstallationIndex(records, customer.InstallationId);
+        if (index >= 0)
+        {
+            records[index] = records[index].MergeImported(customer);
+        }
+        else
+        {
+            records.Add(customer);
+        }
+
+        Save(filePath, records);
+        return records;
+    }
+
     public IReadOnlyList<LicenseManagerCustomerRecord> UpsertLicense(string filePath, LicenseManagerCustomerRecord customer, IssuedLicenseRecord license)
     {
         EnsureFilePath(filePath);
@@ -82,6 +104,31 @@ public sealed class LicenseManagerCustomerRepository
         var records = LoadOrEmpty(filePath).ToList();
         var enriched = customer.WithLicense(license);
         var index = FindMatchingIndex(records, enriched);
+        if (index >= 0)
+        {
+            records[index] = records[index].MergeImported(customer).WithLicense(license);
+        }
+        else
+        {
+            records.Add(enriched);
+        }
+
+        Save(filePath, records);
+        return records;
+    }
+
+    public IReadOnlyList<LicenseManagerCustomerRecord> UpsertLicenseByInstallation(
+        string filePath,
+        LicenseManagerCustomerRecord customer,
+        IssuedLicenseRecord license)
+    {
+        EnsureFilePath(filePath);
+        ArgumentNullException.ThrowIfNull(customer);
+        ArgumentNullException.ThrowIfNull(license);
+
+        var records = LoadOrEmpty(filePath).ToList();
+        var enriched = customer.WithLicense(license);
+        var index = FindMatchingInstallationIndex(records, enriched.InstallationId);
         if (index >= 0)
         {
             records[index] = records[index].MergeImported(customer).WithLicense(license);
@@ -110,14 +157,28 @@ public sealed class LicenseManagerCustomerRepository
 
         if (!string.IsNullOrWhiteSpace(customer.InstallationId))
         {
-            for (var i = 0; i < records.Count; i++)
+            return FindMatchingInstallationIndex(records, customer.InstallationId);
+        }
+
+        return -1;
+    }
+
+    private static int FindMatchingInstallationIndex(
+        IReadOnlyList<LicenseManagerCustomerRecord> records,
+        string? installationId)
+    {
+        if (string.IsNullOrWhiteSpace(installationId))
+        {
+            return -1;
+        }
+
+        for (var i = 0; i < records.Count; i++)
+        {
+            if (string.Equals(records[i].InstallationId, installationId, StringComparison.OrdinalIgnoreCase)
+                || records[i].EffectiveInstallations.Any(installation =>
+                    string.Equals(installation.InstallationId, installationId, StringComparison.OrdinalIgnoreCase)))
             {
-                if (string.Equals(records[i].InstallationId, customer.InstallationId, StringComparison.OrdinalIgnoreCase)
-                    || records[i].EffectiveInstallations.Any(installation =>
-                        string.Equals(installation.InstallationId, customer.InstallationId, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return i;
-                }
+                return i;
             }
         }
 

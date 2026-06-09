@@ -2,7 +2,7 @@
 param(
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
-    [string]$Version = "1.0",
+    [string]$Version = "1.10",
     [switch]$SkipInstaller
 )
 
@@ -16,6 +16,8 @@ $stagedPublishDir = Join-Path $stagingRoot "publish\XDTBox"
 $stagedInstallerDir = Join-Path $stagingRoot "installer"
 $projectPath = Join-Path $repoRoot "XdtDeviceBridge.App\XdtDeviceBridge.App.csproj"
 $innoScript = Join-Path $repoRoot "installer\XDTBox.iss"
+$versionInfoVersion = "$Version.0.0"
+$setupFileName = "XDTBox_Setup_$Version.exe"
 
 function Assert-PathInsideRepository {
     param(
@@ -278,8 +280,8 @@ try {
         --self-contained true `
         -p:PublishSingleFile=false `
         -p:Version=$Version `
-        -p:AssemblyVersion=1.0.0.0 `
-        -p:FileVersion=1.0.0.0 `
+        -p:AssemblyVersion=$versionInfoVersion `
+        -p:FileVersion=$versionInfoVersion `
         -p:InformationalVersion=$Version `
         -o $stagedPublishDir
 
@@ -322,13 +324,13 @@ try {
         throw "Inno Setup 6 Compiler wurde nicht gefunden. Bitte Inno Setup 6 installieren oder ISCC_EXE auf ISCC.exe setzen. Validierte Publish-Ausgabe liegt vorlaeufig unter: $stagedPublishDir"
     }
 
-    & $iscc "/DMyPublishDir=$stagedPublishDir" "/DMyInstallerOutputDir=$stagedInstallerDir" $innoScript
+    & $iscc "/DMyPublishDir=$stagedPublishDir" "/DMyInstallerOutputDir=$stagedInstallerDir" "/DMyAppVersion=$Version" "/DMyVersionInfoVersion=$versionInfoVersion" $innoScript
 
     if ($LASTEXITCODE -ne 0) {
         throw "Inno Setup Build ist fehlgeschlagen. Finale Publish-/Installer-Artefakte wurden nicht ersetzt."
     }
 
-    $stagedSetupFile = Join-Path $stagedInstallerDir "XDTBox_Setup_1.0.exe"
+    $stagedSetupFile = Join-Path $stagedInstallerDir $setupFileName
     if (-not (Test-Path -LiteralPath $stagedSetupFile)) {
         throw "Installer wurde nicht gefunden: $stagedSetupFile"
     }
@@ -336,7 +338,7 @@ try {
     Replace-BuildArtifactDirectory -SourcePath $stagedPublishDir -DestinationPath $publishDir
     Replace-BuildArtifactDirectory -SourcePath $stagedInstallerDir -DestinationPath $installerDir
 
-    $setupFile = Join-Path $installerDir "XDTBox_Setup_1.0.exe"
+    $setupFile = Join-Path $installerDir $setupFileName
     Write-Host "Publish fertig: $publishDir"
     Write-Host "Installer fertig: $setupFile"
 }

@@ -3,17 +3,17 @@ namespace XdtDeviceBridge.Tests;
 public sealed class InstallerConfigurationTests
 {
     [Fact]
-    public void VersionMetadata_ShouldBeXdtBoxVersion10()
+    public void VersionMetadata_ShouldBeXdtBoxVersion110()
     {
         var props = File.ReadAllText(FindWorkspaceFile("Directory.Build.props"));
         var version = File.ReadAllText(FindWorkspaceFile("VERSION")).Trim();
         var appCode = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
-        Assert.Equal("1.0", version);
-        Assert.Contains("<Version>1.0</Version>", props);
-        Assert.Contains("<AssemblyVersion>1.0.0.0</AssemblyVersion>", props);
-        Assert.Contains("<FileVersion>1.0.0.0</FileVersion>", props);
-        Assert.Contains("<InformationalVersion>1.0</InformationalVersion>", props);
+        Assert.Equal("1.10", version);
+        Assert.Contains("<Version>1.10</Version>", props);
+        Assert.Contains("<AssemblyVersion>1.10.0.0</AssemblyVersion>", props);
+        Assert.Contains("<FileVersion>1.10.0.0</FileVersion>", props);
+        Assert.Contains("<InformationalVersion>1.10</InformationalVersion>", props);
         Assert.Contains("<Product>XDTBox</Product>", props);
         Assert.Contains("<Company>Technik-Apparat M.Kurze</Company>", props);
         Assert.Contains("GetApplicationVersionText()", appCode);
@@ -27,10 +27,10 @@ public sealed class InstallerConfigurationTests
 
         Assert.Contains("AppId={{7E45D05D-7E53-4B47-961D-9113C3D42623}", installer);
         Assert.Contains("AppName={#MyAppName}", installer);
-        Assert.Contains("#define MyAppVersion \"1.0\"", installer);
+        Assert.Contains("#define MyAppVersion \"1.10\"", installer);
         Assert.Contains("AppVersion={#MyAppVersion}", installer);
         Assert.Contains("DefaultDirName=C:\\XDTBox", installer);
-        Assert.Contains("OutputBaseFilename=XDTBox_Setup_1.0", installer);
+        Assert.Contains("OutputBaseFilename=XDTBox_Setup_{#MyAppVersion}", installer);
         Assert.Contains("SetupIconFile=..\\XdtDeviceBridge.App\\Assets\\App\\XDTBox.ico", installer);
         Assert.Contains("UninstallDisplayIcon={app}\\{#MyAppExeName}", installer);
         Assert.Contains("PrivilegesRequired=admin", installer);
@@ -97,7 +97,7 @@ public sealed class InstallerConfigurationTests
         Assert.Contains("--self-contained true", script);
         Assert.Contains("artifacts\\publish\\XDTBox", script);
         Assert.Contains("artifacts\\installer", script);
-        Assert.Contains("XDTBox_Setup_1.0.exe", script);
+        Assert.Contains("$setupFileName = \"XDTBox_Setup_$Version.exe\"", script);
         Assert.Contains("XdtBox.LicenseManager*", script);
         Assert.Contains("XdtBox.LicenseIssuer*", script);
         Assert.Contains("*.pem", script);
@@ -139,18 +139,18 @@ public sealed class InstallerConfigurationTests
     }
 
     [Fact]
-    public void InstallerDocumentation_ShouldDescribeVersion10AndVariantB()
+    public void InstallerDocumentation_ShouldDescribeVersion110AndVariantB()
     {
         var readme = File.ReadAllText(FindWorkspaceFile("README.md"));
         var policy = File.ReadAllText(FindWorkspaceFile("docs", "INSTALLATION_UPDATE_DATENPOLITIK.md"));
         var buildGuide = File.ReadAllText(FindWorkspaceFile("docs", "INSTALLER_BUILD_ANLEITUNG.md"));
         var help = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "Assets", "Help", "xdtbox-help.md"));
 
-        Assert.Contains("`1.0`", readme);
+        Assert.Contains("XDTBox 1.10", readme);
         Assert.Contains("docs/INSTALLER_BUILD_ANLEITUNG.md", readme);
-        Assert.Contains("XDTBox 1.0", policy);
+        Assert.Contains("XDTBox 1.10", policy);
         Assert.Contains("installer/XDTBox.iss", policy);
-        Assert.Contains("XDTBox_Setup_1.0.exe", buildGuide);
+        Assert.Contains("XDTBox_Setup_1.10.exe", buildGuide);
         Assert.Contains("C:\\XDTBox", buildGuide);
         Assert.Contains("Inno Setup 6", buildGuide);
         Assert.Contains("self-contained", buildGuide);

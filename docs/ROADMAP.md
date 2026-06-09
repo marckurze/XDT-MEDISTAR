@@ -10,11 +10,11 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Aktuelle Version: `1.0`
 - `VERSION` und `Directory.Build.props` sind konsistent:
-  - `Version`: `1.0`
-  - `AssemblyVersion`: `1.0.0.0`
-  - `FileVersion`: `1.0.0.0`
-  - `InformationalVersion`: `1.0`
-- XDTBox 1.0 ist die erste offizielle Installer-Version. Der Inno-Setup-Weg ist vorbereitet; Kundeninstaller schuetzen Kundendaten nach Variante B.
+  - `Version`: `1.10`
+  - `AssemblyVersion`: `1.10.0.0`
+  - `FileVersion`: `1.10.0.0`
+  - `InformationalVersion`: `1.10`
+- XDTBox 1.10 ist die aktuelle Installer-Version. Der Inno-Setup-Weg ist vorbereitet; Kundeninstaller schuetzen Kundendaten nach Variante B.
 
 ### Projektleitlinie ab 2026-05-12
 

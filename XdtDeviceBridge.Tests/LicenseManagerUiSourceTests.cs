@@ -139,9 +139,25 @@ public sealed class LicenseManagerUiSourceTests
         Assert.Contains("RequestDevicesHintTextBlock", xaml);
         Assert.DoesNotContain("DataGridCheckBoxColumn", requestGridColumns);
         Assert.DoesNotContain("Header=\"Aktiv\"", requestGridColumns);
+        Assert.Contains("Header=\"Standort\"", requestGridColumns);
         Assert.Contains("device.IsActive && device.IsLicenseRequired", code);
         Assert.Contains("request.Devices.Count == 0", code);
         Assert.Contains("alter Anfrage", code);
+    }
+
+    [Fact]
+    public void LicenseManager_ShouldPromptForDuplicateCustomerNumberAndKeepDeviceLocationEditable()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var detailXaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+
+        Assert.Contains("Kundennummer bereits vorhanden", code);
+        Assert.Contains("diesem bestehenden Kunden zugeordnet", code);
+        Assert.Contains("UpsertByInstallation", code);
+        Assert.Contains("UpsertLicenseByInstallation", code);
+        Assert.Contains("Binding=\"{Binding Location, Mode=TwoWay", xaml);
+        Assert.Contains("Binding=\"{Binding Location, Mode=TwoWay", detailXaml);
     }
 
     [Fact]
@@ -191,8 +207,8 @@ public sealed class LicenseManagerUiSourceTests
         var script = File.ReadAllText(FindWorkspaceFile("scripts", "build-xdtbox-licensemanager-installer.ps1"));
         var inno = File.ReadAllText(FindWorkspaceFile("installer", "XDTBox.LicenseManager.iss"));
 
-        Assert.Contains("XDTBox_Lizenzmanager_Setup_1.0.exe", script);
-        Assert.Contains("XDTBox_Lizenzmanager_Setup_1.0", inno);
+        Assert.Contains("$setupFileName = \"XDTBox_Lizenzmanager_Setup_$Version.exe\"", script);
+        Assert.Contains("XDTBox_Lizenzmanager_Setup_{#MyAppVersion}", inno);
         Assert.Contains("XDTBox Lizenzmanager", inno);
         Assert.Contains("license-manager-customers.json", script);
         Assert.Contains("BEGIN PRIVATE KEY", script);

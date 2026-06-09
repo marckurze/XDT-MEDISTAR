@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private LicenseManagerSettings _settings;
     private LicenseRequest? _currentRequest;
     private string? _currentRequestFile;
+    private bool _currentRequestUsesSeparateCustomerRecord;
     private IReadOnlyList<IssuedLicenseRecord> _historyRecords = Array.Empty<IssuedLicenseRecord>();
     private IReadOnlyList<LicenseManagerCustomerRecord> _customerRecords = Array.Empty<LicenseManagerCustomerRecord>();
     private bool _updatingPaymentMethod;
@@ -106,6 +107,7 @@ public partial class MainWindow : Window
 
             _currentRequest = request;
             _currentRequestFile = dialog.FileName;
+            _currentRequestUsesSeparateCustomerRecord = false;
             ShowRequest(request, dialog.FileName);
             UpsertCustomerFromRequest(request);
             CreateLicenseStatusText.Text = "Lizenzanfrage geladen.";
@@ -190,6 +192,7 @@ public partial class MainWindow : Window
     {
         try
         {
+            CommitRequestDeviceEdits();
             var options = CreateIssuerOptions();
             var result = _issuerService.CreateLicense(options);
             var record = CreateHistoryRecord(result, options);
@@ -324,6 +327,7 @@ public partial class MainWindow : Window
     {
         _currentRequest = null;
         _currentRequestFile = null;
+        _currentRequestUsesSeparateCustomerRecord = false;
         RequestFileTextBox.Text = string.Empty;
         InstallationIdTextBox.Text = string.Empty;
         RequestDateTextBlock.Text = string.Empty;
@@ -386,7 +390,35 @@ public partial class MainWindow : Window
     {
         try
         {
-            _customerRecords = _customerRepository.Upsert(_paths.CustomersFile, LicenseManagerCustomerRecord.FromRequest(request));
+            var incoming = LicenseManagerCustomerRecord.FromRequest(request);
+            var existingByCustomerNumber = FindCustomerByCustomerNumber(incoming.CustomerNumber);
+            if (existingByCustomerNumber is not null)
+            {
+                var confirmation = MessageBox.Show(
+                    this,
+                    $"Es gibt bereits den Kunden \"{existingByCustomerNumber.CustomerName}\" mit der Kundennummer {incoming.CustomerNumber}. Soll die Lizenzanfrage diesem bestehenden Kunden zugeordnet werden?",
+                    "Kundennummer bereits vorhanden",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (confirmation == MessageBoxResult.Cancel)
+                {
+                    CustomersStatusText.Text = "Kundenzuordnung aus Lizenzanfrage abgebrochen.";
+                    return;
+                }
+
+                _customerRecords = confirmation == MessageBoxResult.Yes
+                    ? _customerRepository.Upsert(_paths.CustomersFile, incoming)
+                    : _customerRepository.UpsertByInstallation(_paths.CustomersFile, incoming);
+                _currentRequestUsesSeparateCustomerRecord = confirmation == MessageBoxResult.No;
+                RefreshCustomerRows();
+                CustomersStatusText.Text = confirmation == MessageBoxResult.Yes
+                    ? $"Lizenzanfrage wurde dem bestehenden Kunden \"{existingByCustomerNumber.CustomerName}\" zugeordnet."
+                    : "Lizenzanfrage wurde als separater Kundensatz gespeichert.";
+                return;
+            }
+
+            _customerRecords = _customerRepository.Upsert(_paths.CustomersFile, incoming);
             RefreshCustomerRows();
             CustomersStatusText.Text = "Kunde aus Lizenzanfrage angelegt oder aktualisiert.";
         }
@@ -394,6 +426,17 @@ public partial class MainWindow : Window
         {
             CustomersStatusText.Text = $"Kunde konnte nicht gespeichert werden: {ex.Message}";
         }
+    }
+
+    private LicenseManagerCustomerRecord? FindCustomerByCustomerNumber(string? customerNumber)
+    {
+        if (string.IsNullOrWhiteSpace(customerNumber))
+        {
+            return null;
+        }
+
+        return _customerRecords.FirstOrDefault(customer =>
+            string.Equals(customer.CustomerNumber, customerNumber, StringComparison.OrdinalIgnoreCase));
     }
 
     private void UpsertCustomerAfterLicense(IssuedLicenseRecord record)
@@ -419,7 +462,9 @@ public partial class MainWindow : Window
             AlwaysInvoice = record.AlwaysInvoice
         };
 
-        _customerRecords = _customerRepository.UpsertLicense(_paths.CustomersFile, customer, record);
+        _customerRecords = _currentRequestUsesSeparateCustomerRecord
+            ? _customerRepository.UpsertLicenseByInstallation(_paths.CustomersFile, customer, record)
+            : _customerRepository.UpsertLicense(_paths.CustomersFile, customer, record);
         RefreshCustomerRows();
         CustomersStatusText.Text = "Kunde und Lizenzhistorie aktualisiert.";
     }
@@ -893,6 +938,7 @@ public partial class MainWindow : Window
     {
         _currentRequest = null;
         _currentRequestFile = null;
+        _currentRequestUsesSeparateCustomerRecord = false;
         RequestFileTextBox.Text = string.Empty;
         InstallationIdTextBox.Text = includeInstallation ? selected.InstallationId : string.Empty;
         CustomerNameTextBox.Text = selected.CustomerName;
@@ -1189,6 +1235,12 @@ public partial class MainWindow : Window
     private void ShowError(string message)
     {
         MessageBox.Show(this, message, "XDTBox Lizenzverwaltung", MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
+
+    private void CommitRequestDeviceEdits()
+    {
+        RequestDevicesGrid.CommitEdit(DataGridEditingUnit.Cell, exitEditingMode: true);
+        RequestDevicesGrid.CommitEdit(DataGridEditingUnit.Row, exitEditingMode: true);
     }
 
     private sealed class RequestDeviceRow

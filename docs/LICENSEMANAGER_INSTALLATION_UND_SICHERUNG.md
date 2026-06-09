@@ -65,7 +65,7 @@ Erwartete Artefakte:
 
 - Publish: `artifacts\publish\XDTBox Lizenzmanager`
 - Setup-Ordner: `artifacts\Lizenzmanager Setup`
-- Setup-Datei: `XDTBox_Lizenzmanager_Setup_1.0.exe`
+- Setup-Datei: `XDTBox_Lizenzmanager_Setup_1.10.exe`
 - Zielordner auf Hersteller-PCs: `C:\XDTBox\Lizenzaktivierung`
 
 Das Setup enthaelt:

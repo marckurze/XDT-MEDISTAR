@@ -1,8 +1,8 @@
-# XDTBox 1.0 Installer bauen
+# XDTBox 1.10 Installer bauen
 
 Stand: 2026-06-04
 
-XDTBox 1.0 nutzt fuer das Kunden-Setup Inno Setup 6. Die Entscheidung ist bewusst pragmatisch: XDTBox ist eine klassische lokale Windows-Desktopanwendung, braucht einen frei waehlbaren Installationspfad mit Default `C:\XDTBox`, Startmenue-/Desktop-Verknuepfungen, einen Eintrag in Windows "Programme & Features", Update-Erkennung und einen Deinstaller, der Kundendaten standardmaessig behaelt.
+XDTBox 1.10 nutzt fuer das Kunden-Setup Inno Setup 6. Die Entscheidung ist bewusst pragmatisch: XDTBox ist eine klassische lokale Windows-Desktopanwendung, braucht einen frei waehlbaren Installationspfad mit Default `C:\XDTBox`, Startmenue-/Desktop-Verknuepfungen, einen Eintrag in Windows "Programme & Features", Update-Erkennung und einen Deinstaller, der Kundendaten standardmaessig behaelt.
 
 ## Voraussetzungen
 
@@ -32,7 +32,7 @@ Ergebnis:
 
 ```text
 artifacts\publish\XDTBox
-artifacts\installer\XDTBox_Setup_1.0.exe
+artifacts\installer\XDTBox_Setup_1.10.exe
 ```
 
 Wenn Inno Setup auf dem Build-PC fehlt, bleibt die Publish-Ausgabe bestehen und das Skript meldet klar, dass `ISCC.exe` installiert oder per `ISCC_EXE` angegeben werden muss.
@@ -43,7 +43,7 @@ Der Installer wurde mit Inno Setup 6.7.3 erzeugt:
 
 ```text
 C:\Program Files (x86)\Inno Setup 6\ISCC.exe
-artifacts\installer\XDTBox_Setup_1.0.exe
+artifacts\installer\XDTBox_Setup_1.10.exe
 ```
 
 Die erzeugte Setup-Datei ist noch nicht digital codesigniert. Das ist fuer die erste technische Pruefung dokumentiert; vor Kundenverteilung ist eine Codesignatur beziehungsweise ein definierter Verteilprozess noch offen.
@@ -63,7 +63,7 @@ Dieses Risiko ist im Buildskript jetzt abgesichert: `scripts\build-xdtbox-instal
 
 Nach dem Staging-Umbau wurde der Installer-Build mit Vollzugriff erfolgreich ausgefuehrt:
 
-- Setup-Datei: `C:\GitHub\XDT-MEDISTAR\artifacts\installer\XDTBox_Setup_1.0.exe`
+- Setup-Datei: `C:\GitHub\XDT-MEDISTAR\artifacts\installer\XDTBox_Setup_1.10.exe`
 - Dateigroesse: 63.430.332 Bytes
 - Zeitstempel: 2026-06-05 23:39:52
 - Publish-EXE: `C:\GitHub\XDT-MEDISTAR\artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
@@ -89,7 +89,7 @@ Fuer kuenftige Release-Artefakte muss auf dem lokalen Build-PC erneut ausgefuehr
 
 Zu dokumentieren sind danach:
 
-- Pfad und Groesse von `artifacts\installer\XDTBox_Setup_1.0.exe`
+- Pfad und Groesse von `artifacts\installer\XDTBox_Setup_1.10.exe`
 - erfolgreiche Publish-Validierung ohne lokale Entwicklungs-/Kundendaten
 - erfolgreicher App-Start aus `artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
 
@@ -100,7 +100,7 @@ Nach dem UI-Ausbau fuer Geraetesteckbrief-Buttons, Aktivierungsstatusbutton, Tec
 - `dotnet build XdtDeviceBridge.sln`: erfolgreich, 0 Warnungen, 0 Fehler.
 - `dotnet test XdtDeviceBridge.sln`: 1984 Tests insgesamt, 1984 erfolgreich, 0 fehlgeschlagen, 0 uebersprungen.
 - Installer-Build: `scripts\build-xdtbox-installer.ps1` erfolgreich.
-- Setup-Datei: `C:\GitHub\XDT-MEDISTAR\artifacts\installer\XDTBox_Setup_1.0.exe`
+- Setup-Datei: `C:\GitHub\XDT-MEDISTAR\artifacts\installer\XDTBox_Setup_1.10.exe`
 - Dateigroesse: 79.314.259 Bytes
 - Zeitstempel: 2026-06-06 17:55:40
 - Publish-EXE: `C:\GitHub\XDT-MEDISTAR\artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
@@ -205,9 +205,9 @@ Externe Praxisordner werden niemals geloescht.
 ## Manuelle Pruefschritte
 
 1. `.\scripts\build-xdtbox-installer.ps1` ausfuehren.
-2. `artifacts\installer\XDTBox_Setup_1.0.exe` starten.
+2. `artifacts\installer\XDTBox_Setup_1.10.exe` starten.
 3. Neuinstallation in einem Testordner durchfuehren.
-4. App starten und im Info-Dialog Version `1.0` pruefen.
+4. App starten und im Info-Dialog Version `1.10` pruefen.
 5. Fuer einen nackten First-Run `%LocalAppData%\XdtDeviceBridge` vorher sichern/umbenennen oder einen frischen Windows-Benutzer verwenden.
 6. App starten und in `Profilverwaltung` beziehungsweise `XDT-Baukasten` pruefen, dass BuiltIn-Geraete ihre offiziellen Bilder aus App-Assets zeigen und keine lokalen UserDefined-/Override-Daten geladen werden.
 7. Update erneut ueber denselben Ordner ausfuehren.

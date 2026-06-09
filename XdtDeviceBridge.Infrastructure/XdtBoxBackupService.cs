@@ -16,6 +16,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
     private const string TechnicianNotesFolderName = TechnicianWhiteboardService.FolderName;
     private const string SignedLicenseFileName = "license.xdtboxlic";
     private const string LicenseCustomerDataFileName = "license-customer-data.json";
+    private const string LicenseDeviceLocationsFileName = "license-device-locations.json";
     private const string DeviceImageLockWarning =
         "Einige Gerätebilder konnten nicht ersetzt werden, weil sie aktuell von XDTBox oder Windows verwendet werden. Bitte XDTBox neu starten und die Wiederherstellung bei Bedarf erneut ausführen.";
 
@@ -98,6 +99,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             AddFileIfExists(archive, GetAppSettingsFilePath(paths), "settings/ui/app-settings.json", includedAreas, "App-Einstellungen");
             AddFileIfExists(archive, GetTabProtectionSettingsFilePath(paths), "settings/ui/tab-protection.json", includedAreas, "Tab-Schutz Einstellungen");
             AddFileIfExists(archive, GetLicenseCustomerDataFilePath(paths), "license-customer/license-customer-data.json", includedAreas, "Lizenz-Kundendaten");
+            AddFileIfExists(archive, GetLicenseDeviceLocationsFilePath(paths), "license-customer/license-device-locations.json", includedAreas, "Lizenz-Gerätestandorte");
             AddFileIfExists(archive, paths.DeviceGracePeriodsFile, "license/device-grace-periods.json", includedAreas, "Lizenz-Karenzzeiten");
 
             if (includesLicenseFile)
@@ -172,6 +174,7 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
             RestoreFile(archive, "settings/ui/app-settings.json", GetAppSettingsFilePath(paths));
             RestoreFile(archive, "settings/ui/tab-protection.json", GetTabProtectionSettingsFilePath(paths));
             RestoreFile(archive, "license-customer/license-customer-data.json", GetLicenseCustomerDataFilePath(paths));
+            RestoreFile(archive, "license-customer/license-device-locations.json", GetLicenseDeviceLocationsFilePath(paths));
             RestoreFile(archive, "license/device-grace-periods.json", paths.DeviceGracePeriodsFile);
             RestoreFile(archive, "license/license.xdtboxlic", GetSignedLicenseFilePath(paths));
 
@@ -425,6 +428,11 @@ public sealed class XdtBoxBackupService : IXdtBoxBackupService
     private static string GetLicenseCustomerDataFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.LicensesFolder, LicenseCustomerDataFileName);
+    }
+
+    private static string GetLicenseDeviceLocationsFilePath(AppDataPaths paths)
+    {
+        return Path.Combine(paths.LicensesFolder, LicenseDeviceLocationsFileName);
     }
 
     private static string GetSignedLicenseFilePath(AppDataPaths paths)

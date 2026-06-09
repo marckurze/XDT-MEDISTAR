@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.App\\XdtDeviceBridge.App.csproj": {
-      "version": "1.0.0",
+      "version": "1.10.0",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.App\\XdtDeviceBridge.App.csproj",
         "projectName": "XdtDeviceBridge.App",
@@ -63,20 +63,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
@@ -87,15 +73,10 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
         }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
-        }
       }
     },
     "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj": {
-      "version": "1.0.0",
+      "version": "1.10.0",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Core\\XdtDeviceBridge.Core.csproj",
         "projectName": "XdtDeviceBridge.Core",
@@ -146,20 +127,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
@@ -167,15 +134,10 @@
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
         }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
-        }
       }
     },
     "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Infrastructure\\XdtDeviceBridge.Infrastructure.csproj": {
-      "version": "1.0.0",
+      "version": "1.10.0",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtDeviceBridge.Infrastructure\\XdtDeviceBridge.Infrastructure.csproj",
         "projectName": "XdtDeviceBridge.Infrastructure",
@@ -230,31 +192,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            },
-            {
-              "name": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
-              "version": "[8.0.26, 8.0.26]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.313/PortableRuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
         }
       }
     }
