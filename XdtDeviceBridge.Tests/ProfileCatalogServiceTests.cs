@@ -197,7 +197,7 @@ public sealed class ProfileCatalogServiceTests
         var profile = Assert.Single(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-nidek-rt3100-serial-default");
         Assert.True(profile.Metadata.IsBuiltIn);
         Assert.False(profile.Metadata.IsUserDefined);
-        Assert.Equal(NidekRtSerialSendMode.DirectWriterFrame, profile.NidekRtSerialSendMode);
+        Assert.Equal(NidekRtSerialSendMode.RsThenWriterWithoutSd, profile.NidekRtSerialSendMode);
         Assert.Equal(NidekRtSerialOutputFrameVariant.ReferenceWithoutIdArAl, profile.NidekRtSerialOutputFrameVariant);
     }
 

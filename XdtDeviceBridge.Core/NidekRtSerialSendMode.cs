@@ -9,7 +9,7 @@ public enum NidekRtSerialSendMode
 
 public static class NidekRtSerialSendModeInfo
 {
-    public const NidekRtSerialSendMode Default = NidekRtSerialSendMode.DirectWriterFrame;
+    public const NidekRtSerialSendMode Default = NidekRtSerialSendMode.RsThenWriterWithoutSd;
 
     public static NidekRtSerialSendMode Resolve(NidekRtSerialSendMode? mode)
     {
@@ -22,8 +22,8 @@ public static class NidekRtSerialSendModeInfo
         {
             NidekRtSerialSendMode.RsSdHandshake => "RS/SD-Handshake",
             NidekRtSerialSendMode.DirectWriterFrame => "Direkt Writer-Frame senden",
-            NidekRtSerialSendMode.RsThenWriterWithoutSd => "RS senden, dann Writer ohne SD",
-            _ => "Direkt Writer-Frame senden"
+            NidekRtSerialSendMode.RsThenWriterWithoutSd => "RS + Writer ohne SD-Warten",
+            _ => "RS + Writer ohne SD-Warten"
         };
     }
 }

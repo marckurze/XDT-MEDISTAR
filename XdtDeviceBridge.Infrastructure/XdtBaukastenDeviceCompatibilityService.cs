@@ -91,7 +91,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 if (shinNipponResult.HasErrors)
                 {
                     return XdtBaukastenDeviceCompatibilityResult.Malformed(
-                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
                         shinNipponResult.Measurements,
                         FindCompany(shinNipponResult.Measurements),
                         FindModelName(shinNipponResult.Measurements));
@@ -106,7 +106,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 if (reichertResult.HasErrors)
                 {
                     return XdtBaukastenDeviceCompatibilityResult.Malformed(
-                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
                         reichertResult.Measurements,
                         FindCompany(reichertResult.Measurements),
                         FindModelName(reichertResult.Measurements));
@@ -121,7 +121,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 if (rodenstockResult.HasErrors)
                 {
                     return XdtBaukastenDeviceCompatibilityResult.Malformed(
-                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
                         rodenstockResult.Measurements,
                         FindCompany(rodenstockResult.Measurements),
                         FindModelName(rodenstockResult.Measurements));
@@ -166,7 +166,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 if (canonZeissVisionixResult.HasErrors)
                 {
                     return XdtBaukastenDeviceCompatibilityResult.Malformed(
-                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
                         canonZeissVisionixResult.Measurements,
                         FindCompany(canonZeissVisionixResult.Measurements),
                         FindModelName(canonZeissVisionixResult.Measurements));
@@ -181,7 +181,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 if (zeissIolMaster700Result.HasErrors)
                 {
                     return XdtBaukastenDeviceCompatibilityResult.Malformed(
-                        "Die GerÃƒÂ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃƒÂ¼fen Sie Datei und Format.",
+                        "Die Gerätedatei konnte nicht gelesen oder ausgewertet werden. Bitte prüfen Sie Datei und Format.",
                         zeissIolMaster700Result.Measurements,
                         FindCompany(zeissIolMaster700Result.Measurements),
                         FindModelName(zeissIolMaster700Result.Measurements));

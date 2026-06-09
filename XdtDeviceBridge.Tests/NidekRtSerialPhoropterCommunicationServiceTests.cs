@@ -295,8 +295,10 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.Equal(NidekRtSerialPhoropterCommunicationService.CreateRsRequestBytes(), fakeSerial.LastExchangeRequest.RequestBytes);
         Assert.True(fakeSerial.LastExchangeRequest.ContinueWithoutHandshake);
         Assert.Equal(TimeSpan.FromMilliseconds(300), fakeSerial.LastExchangeRequest.HandshakeTimeout);
-        Assert.Contains(result.Messages, message => message.Contains("Sendemodus: RS senden, dann Writer ohne SD", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("Sendemodus: RS + Writer ohne SD-Warten", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("RS+Writer-ohne-SD-Sendekern", StringComparison.Ordinal));
         Assert.Contains(result.Messages, message => message.Contains("SD wird nicht zwingend erwartet", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Messages, message => message.Contains("Keine SD-Best", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -478,7 +480,7 @@ public sealed class NidekRtSerialPhoropterCommunicationServiceTests
         Assert.True(fakeSerial.LastExchangeRequest.ContinueWithoutHandshake);
         Assert.Equal(TimeSpan.FromMilliseconds(300), fakeSerial.LastExchangeRequest.HandshakeTimeout);
         Assert.Equal(TimeSpan.FromMilliseconds(300), fakeSerial.LastExchangeRequest.SendDelayAfterRequest);
-        Assert.Contains(result.Messages, message => message.Contains("Writer-Frame wird auch ohne SD-Bestätigung gesendet", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("Writer-Frame wird ohne SD-Pflicht gesendet", StringComparison.Ordinal));
     }
 
     private static SerialCommunicationExchangeResult CreateExchangeResult(

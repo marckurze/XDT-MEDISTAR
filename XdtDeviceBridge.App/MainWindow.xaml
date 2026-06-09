@@ -1861,7 +1861,7 @@
                                                   Grid.ColumnSpan="2"
                                                   x:Name="InterfaceNidekRtSerialSendModeComboBox"
                                                   SelectedValuePath="Tag"
-                                                  SelectedValue="DirectWriterFrame"
+                                                  SelectedValue="RsThenWriterWithoutSd"
                                                   Width="260"
                                                   HorizontalAlignment="Left"
                                                   Margin="0,0,8,8"
@@ -1874,7 +1874,7 @@
                                                    Grid.Column="3"
                                                    Grid.ColumnSpan="2"
                                                    x:Name="InterfaceNidekRtSerialSendModeHintTextBlock"
-                                                   Text="Praxisdefault für RT-2100/3100/5100: Direkt Writer-Frame senden. Testmodi im Gerätefenster ändern diesen gespeicherten Modus nicht."
+                                                   Text="Praxisdefault für RT-3100: RS senden, dann Writer ohne SD. Diagnoseaktionen in der Gerätekachel sind im normalen Praxisablauf ausgeblendet."
                                                    Foreground="DimGray"
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,8,8"/>

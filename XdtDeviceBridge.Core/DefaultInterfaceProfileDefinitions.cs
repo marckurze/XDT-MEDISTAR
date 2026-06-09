@@ -832,7 +832,7 @@ public static class DefaultInterfaceProfileDefinitions
                 FileNameTemplate: NidekRtSerialPhoropterOutputWriter.DefaultFileNameTemplate,
                 Format: NidekRtSerialPhoropterOutputWriter.DeviceOutputFormat),
             SerialSettings: CreateNidekRtSerialDefaultSettings(),
-            NidekRtSerialSendMode: NidekRtSerialSendMode.DirectWriterFrame,
+            NidekRtSerialSendMode: NidekRtSerialSendMode.RsThenWriterWithoutSd,
             NidekRtSerialOutputFrameVariant: frameVariant);
     }
 
@@ -1586,11 +1586,11 @@ public static class DefaultInterfaceProfileDefinitions
         return new InterfaceProfileDefinition(
             Metadata: new ProfileMetadata(
                 Id: "interface-medistar-manual-document-transfer-default",
-                Name: "MEDISTAR + Manuelle DokumentÃ¼bergabe",
+                Name: "MEDISTAR + Manuelle Dokumentübergabe",
                 ProfileKind: ProfileKind.InterfaceProfile,
                 Description: "Default interface profile for manual document handoff to MEDISTAR with per-file attachment links.",
                 Vendor: "XdtDeviceBridge",
-                Product: "MEDISTAR/Manuelle DokumentÃ¼bergabe",
+                Product: "MEDISTAR/Manuelle Dokumentübergabe",
                 Version: "1.0.0",
                 CreatedAt: timestamp,
                 UpdatedAt: timestamp,

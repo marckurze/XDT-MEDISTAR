@@ -344,7 +344,9 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
 
                 if (!ContainsSequence(handshakeBytes, request.ExpectedHandshakeBytes))
                 {
-                    var message = "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestätigung fehlt.";
+                    var message = request.ContinueWithoutHandshake
+                        ? "Kurze RS-Wartezeit ohne Freigabemarker abgeschlossen; der konfigurierte Modus faehrt ohne SD-Pflicht fort."
+                        : "Keine RT-Antwort auf RS-Anforderung empfangen oder SD-Bestaetigung fehlt.";
                     messages.Add(message);
                     lastModemStatus = AddModemStatusMessage(messages, handle, "nach SD-Warten ohne Bestätigung");
                     if (handshakeBytes.Length == 0)
@@ -374,7 +376,7 @@ public sealed class SerialDeviceCommunicationService : ISerialDeviceCommunicatio
                             LastModemStatus: lastModemStatus);
                     }
 
-                    messages.Add("Testmodus: Senden wird trotz fehlender SD-Bestätigung fortgesetzt.");
+                    messages.Add("Senden wird ohne SD-Pflicht fortgesetzt.");
                 }
                 else
                 {

@@ -574,11 +574,7 @@
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding UsesSerialDevice}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
+                            <Style.Triggers/>
                         </Style>
                     </Button.Style>
                 </Button>
@@ -605,95 +601,6 @@
                         </Style>
                     </Button.Style>
                 </Button>
-
-                <Expander Header="Sendetest"
-                          IsExpanded="False"
-                          Margin="0,0,0,8"
-                          AutomationProperties.Name="Sendetest">
-                    <Expander.Style>
-                        <Style TargetType="Expander">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding UsesSerialDevice}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Expander.Style>
-                    <StackPanel Margin="0,6,0,0">
-                        <TextBlock Text="Diagnosemodus: sendet nur nach explizitem Klick. Keine produktive XDT-Ausgabe."
-                                   Foreground="#4B5563"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,6"/>
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="160"/>
-                                <ColumnDefinition Width="260"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="Frame-Variante:"
-                                       FontWeight="SemiBold"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,8,6"/>
-                            <ComboBox Grid.Column="1"
-                                      x:Name="NidekRtFrameVariantComboBox"
-                                      SelectedValuePath="Tag"
-                                      SelectedValue="ReferenceWithoutIdArAl"
-                                      Margin="0,0,10,6"
-                                      ToolTip="Sendeinhalt für den Diagnose-Writer-Frame. Ändert nicht das gespeicherte Schnittstellenprofil.">
-                                <ComboBoxItem Content="Alle ausgewählten Werte" Tag="FullSelectedData"/>
-                                <ComboBoxItem Content="Nur Autoref" Tag="ArOnly"/>
-                                <ComboBoxItem Content="Nur Lensmeter" Tag="LmOnly"/>
-                                <ComboBoxItem Content="Nur Lensmeter ohne ADD" Tag="LmOnlyWithoutAdd"/>
-                                <ComboBoxItem Content="Alle ausgewählten Werte ohne ID" Tag="FullWithoutId"/>
-                                <ComboBoxItem Content="RT-Referenz ohne ID (AR/AL)" Tag="ReferenceWithoutIdArAl"/>
-                                <ComboBoxItem Content="Nur Autoref ohne ID" Tag="ArOnlyWithoutId"/>
-                                <ComboBoxItem Content="Nur Lensmeter ohne ID" Tag="LmOnlyWithoutId"/>
-                                <ComboBoxItem Content="Minimal rechts" Tag="MinimalRightOnly"/>
-                                <ComboBoxItem Content="RT-3100 Praxisvariante (getestet)" Tag="LegacyRt3100DirectFrame"/>
-                            </ComboBox>
-                            <CheckBox Grid.Column="2"
-                                      x:Name="NidekRtAppendCrAfterEotCheckBox"
-                                      Content="CR nach EOT"
-                                      Margin="0,0,0,6"
-                                      VerticalAlignment="Center"
-                                      ToolTip="Testoption: hängt nach EOT zusätzlich CR an den Writer-Frame an."/>
-                        </Grid>
-                        <TextBlock Text="Live-Testplan: Zuerst RT-Referenz ohne ID (AR/AL) testen, weil diese Form aus ausgewerteten produktiven RT-Anbindungen abgeleitet ist. Danach RT-3100 Praxisvariante (getestet), Nur Lensmeter ohne ADD, Nur Lensmeter, Nur Autoref und optional CR nach EOT testen."
-                                   Foreground="#4B5563"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,6"/>
-                        <WrapPanel>
-                            <Button Content="RS anfordern"
-                                    Margin="0,0,6,6"
-                                    Padding="10,4"
-                                    Click="SerialRequestReadyButton_Click"
-                                    ToolTip="Sendet nur die RS-Anforderung und wartet auf SD. Kein Writer-Frame."
-                                    AutomationProperties.Name="RS anfordern"/>
-                            <Button Content="DTR-Toggle + RS"
-                                    Margin="0,0,6,6"
-                                    Padding="10,4"
-                                    Click="SerialRequestReadyWithDtrToggleButton_Click"
-                                    ToolTip="Setzt DTR kurz zurück, aktiviert DTR wieder, sendet RS und wartet auf SD."
-                                    AutomationProperties.Name="DTR-Toggle + RS"/>
-                            <Button Content="Direkt Writer-Frame senden"
-                                    Margin="0,0,6,6"
-                                    Padding="10,4"
-                                    Click="SerialDirectWriterButton_Click"
-                                    ToolTip="Testmodus: sendet den Writer-Frame ohne RS/SD. Nur für Praxisdiagnose."
-                                    AutomationProperties.Name="Direkt Writer-Frame senden"/>
-                            <Button Content="RS + Writer ohne SD-Warten"
-                                    Margin="0,0,6,6"
-                                    Padding="10,4"
-                                    Click="SerialRsWriterWithoutSdButton_Click"
-                                    ToolTip="Testmodus: sendet RS, wartet kurz und sendet den Writer-Frame auch ohne SD."
-                                    AutomationProperties.Name="RS + Writer ohne SD-Warten"/>
-                        </WrapPanel>
-                    </StackPanel>
-                </Expander>
 
                 <Expander Header="Details" IsExpanded="{Binding IsDetailsExpanded, Mode=OneWay}">
                     <StackPanel Margin="0,6,0,0">

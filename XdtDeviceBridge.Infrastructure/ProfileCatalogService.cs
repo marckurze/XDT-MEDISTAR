@@ -730,7 +730,7 @@ public sealed class ProfileCatalogService
         }
 
         return IsNidekRtSerialDefaultInterfaceProfileId(defaultProfile.Metadata.Id)
-            && (existingProfile.NidekRtSerialSendMode != NidekRtSerialSendMode.DirectWriterFrame
+            && (existingProfile.NidekRtSerialSendMode != defaultProfile.NidekRtSerialSendMode
                 || existingProfile.NidekRtSerialOutputFrameVariant != defaultProfile.NidekRtSerialOutputFrameVariant);
     }
 

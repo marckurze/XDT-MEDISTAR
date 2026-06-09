@@ -5238,10 +5238,7 @@ public partial class MainWindow : Window
             window.ResetRequested += FloatingMonitoringWindow_ResetRequested;
             window.SerialListenOnlyRequested += FloatingMonitoringWindow_SerialListenOnlyRequested;
             window.SerialProcessReturnRequested += FloatingMonitoringWindow_SerialProcessReturnRequested;
-            window.SerialRequestReadyRequested += FloatingMonitoringWindow_SerialRequestReadyRequested;
-            window.SerialRequestReadyWithDtrToggleRequested += FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested;
-            window.SerialDirectWriterRequested += FloatingMonitoringWindow_SerialDirectWriterRequested;
-            window.SerialRsWriterWithoutSdRequested += FloatingMonitoringWindow_SerialRsWriterWithoutSdRequested;
+            window.Closed += FloatingMonitoringWindow_Closed;
             _floatingMonitoringWindows[card.InterfaceProfileId] = window;
             ApplyFloatingWindowPlacement(window, state);
             window.Show();
@@ -5254,6 +5251,18 @@ public partial class MainWindow : Window
         {
             window.Show();
         }
+
+        window.Activate();
+    }
+
+    private void FloatingMonitoringWindow_Closed(object? sender, EventArgs e)
+    {
+        if (sender is not FloatingInterfaceProfileWindow window)
+        {
+            return;
+        }
+
+        _floatingMonitoringWindows.Remove(window.InterfaceProfileId);
     }
 
     private void HandleFloatingWindowRestoreFailure(InterfaceMonitoringCardDisplay card, Exception ex)
@@ -5286,6 +5295,13 @@ public partial class MainWindow : Window
 
         var currentState = _floatingWindowStateService.GetOrCreate(entry.ScopeId);
         var allowAutoDetach = !IsManualDocumentSelectionProfile(entry.ScopeId);
+        if (allowAutoDetach
+            && IsNidekRtSerialWorkflowProfile(entry.ScopeId)
+            && !_nidekRtSerialSendContexts.ContainsKey(entry.ScopeId))
+        {
+            return;
+        }
+
         var decision = _interfaceProfileAutoDetachService.Evaluate(entry, currentState, allowAutoDetach);
         if (!decision.IsRelevantActivity || decision.IsSuppressedByCooldown)
         {
@@ -5324,12 +5340,48 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ShowNidekRtSerialWorkflowWindow(string interfaceProfileId)
+    {
+        var row = _activeInterfaceProfileStatusRows.FirstOrDefault(item =>
+            string.Equals(item.MonitoringCard.InterfaceProfileId, interfaceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (row is null)
+        {
+            return;
+        }
+
+        var state = _floatingWindowStateService.Detach(interfaceProfileId);
+        var card = GetRuntimeMonitoringCard(row);
+        if (TryShowOrUpdateFloatingMonitoringWindow(card, state))
+        {
+            BringFloatingMonitoringWindowToFront(interfaceProfileId, state);
+        }
+    }
+
     private bool IsManualDocumentSelectionProfile(string interfaceProfileId)
     {
         return _profileCatalog?.InterfaceProfiles.Any(profile =>
             string.Equals(profile.Metadata.Id, interfaceProfileId, StringComparison.OrdinalIgnoreCase)
             && profile.FolderOptions.IsAttachmentOnlyMode
             && profile.FolderOptions.AttachmentOnlySourceMode == AttachmentOnlySourceMode.ManualUserSelection) == true;
+    }
+
+    private bool IsNidekRtSerialWorkflowProfile(string interfaceProfileId)
+    {
+        if (_profileCatalog is null)
+        {
+            return false;
+        }
+
+        var interfaceProfile = _profileCatalog.InterfaceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfileId, StringComparison.OrdinalIgnoreCase));
+        if (interfaceProfile is null)
+        {
+            return false;
+        }
+
+        var deviceProfile = _profileCatalog.DeviceProfiles.FirstOrDefault(profile =>
+            string.Equals(profile.Metadata.Id, interfaceProfile.DeviceProfileId, StringComparison.OrdinalIgnoreCase));
+        return InterfaceProfileUiPolicy.ShouldTriggerNidekRtSerialPhoropterWorkflow(interfaceProfile, deviceProfile);
     }
 
     private static bool IsManualDocumentSelectionProfile(InterfaceProfileDefinition interfaceProfile)
@@ -5664,54 +5716,6 @@ public partial class MainWindow : Window
         await RunNidekRtSerialProcessReturnAsync(window.InterfaceProfileId).ConfigureAwait(true);
     }
 
-    private async void FloatingMonitoringWindow_SerialRequestReadyRequested(object? sender, EventArgs e)
-    {
-        if (sender is not FloatingInterfaceProfileWindow window)
-        {
-            return;
-        }
-
-        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.RequestReady).ConfigureAwait(true);
-    }
-
-    private async void FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested(object? sender, EventArgs e)
-    {
-        if (sender is not FloatingInterfaceProfileWindow window)
-        {
-            return;
-        }
-
-        await RunNidekRtSerialSendTestAsync(window.InterfaceProfileId, NidekRtSerialSendTestMode.RequestReadyWithDtrToggle).ConfigureAwait(true);
-    }
-
-    private async void FloatingMonitoringWindow_SerialDirectWriterRequested(object? sender, EventArgs e)
-    {
-        if (sender is not FloatingInterfaceProfileWindow window)
-        {
-            return;
-        }
-
-        await RunNidekRtSerialSendTestAsync(
-            window.InterfaceProfileId,
-            NidekRtSerialSendTestMode.DirectWriter,
-            window.SelectedNidekRtSerialOutputFrameVariant,
-            window.AppendCarriageReturnAfterEot).ConfigureAwait(true);
-    }
-
-    private async void FloatingMonitoringWindow_SerialRsWriterWithoutSdRequested(object? sender, EventArgs e)
-    {
-        if (sender is not FloatingInterfaceProfileWindow window)
-        {
-            return;
-        }
-
-        await RunNidekRtSerialSendTestAsync(
-            window.InterfaceProfileId,
-            NidekRtSerialSendTestMode.RsWriterWithoutSd,
-            window.SelectedNidekRtSerialOutputFrameVariant,
-            window.AppendCarriageReturnAfterEot).ConfigureAwait(true);
-    }
-
     private void CloseFloatingMonitoringWindow(string interfaceProfileId)
     {
         if (!_floatingMonitoringWindows.Remove(interfaceProfileId, out var window))
@@ -5727,10 +5731,7 @@ public partial class MainWindow : Window
         window.ResetRequested -= FloatingMonitoringWindow_ResetRequested;
         window.SerialListenOnlyRequested -= FloatingMonitoringWindow_SerialListenOnlyRequested;
         window.SerialProcessReturnRequested -= FloatingMonitoringWindow_SerialProcessReturnRequested;
-        window.SerialRequestReadyRequested -= FloatingMonitoringWindow_SerialRequestReadyRequested;
-        window.SerialRequestReadyWithDtrToggleRequested -= FloatingMonitoringWindow_SerialRequestReadyWithDtrToggleRequested;
-        window.SerialDirectWriterRequested -= FloatingMonitoringWindow_SerialDirectWriterRequested;
-        window.SerialRsWriterWithoutSdRequested -= FloatingMonitoringWindow_SerialRsWriterWithoutSdRequested;
+        window.Closed -= FloatingMonitoringWindow_Closed;
         _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
         EnsureAutoRedockTimerState();
         window.CloseWithoutDockRequest();
@@ -6797,7 +6798,13 @@ public partial class MainWindow : Window
                 : Cv5000PhoropterSelectionDialogOptions.CreateTopconCv5000();
         var dialog = new Cv5000PhoropterSelectionDialog(parseResult, dialogOptions)
         {
-            Owner = this
+            Owner = this,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        dialog.Loaded += (_, _) =>
+        {
+            dialog.Activate();
+            dialog.Focus();
         };
         var dialogResult = dialog.ShowDialog();
         var dialogAction = Cv5000DeviceOutputDialogDecision.FromDialogResult(dialogResult, dialog.SelectionOutcome);
@@ -6942,6 +6949,7 @@ public partial class MainWindow : Window
                 ? $"{interfaceProfile.Metadata.Name}: Sende ausgewählte LM-/AR-Werte an {deviceDisplayName} und warte danach auf Rückgabe."
                 : $"{interfaceProfile.Metadata.Name}: Keine Werte an {deviceDisplayName} gesendet. XDTBox wartet auf die serielle Rückgabe.");
         RefreshInterfaceMonitoringCards();
+        ShowNidekRtSerialWorkflowWindow(interfaceProfile.Metadata.Id);
 
         _ = RunNidekRtSerialWorkflowAsync(
             interfaceProfile,
@@ -7391,9 +7399,10 @@ public partial class MainWindow : Window
         {
             var cancellationToken = _periodicScanCancellationTokenSource?.Token ?? CancellationToken.None;
             var settings = GetSerialSettingsForProfile(interfaceProfile);
-            var sendMode = NidekRtSerialSendModeInfo.Resolve(interfaceProfile.NidekRtSerialSendMode);
-            var frameVariant = NidekRtSerialOutputFrameVariantInfo.Resolve(interfaceProfile.NidekRtSerialOutputFrameVariant);
             var model = DetectNidekRtSerialModel(deviceProfile);
+            var sendMode = ResolveNidekRtSerialProductiveSendMode(interfaceProfile, deviceProfile);
+            var frameVariant = NidekRtSerialOutputFrameVariantInfo.Resolve(interfaceProfile.NidekRtSerialOutputFrameVariant);
+            var deviceLogName = CreateNidekRtSerialLogName(model);
             var directWriterSendOnly = sendSelectedValues && sendMode == NidekRtSerialSendMode.DirectWriterFrame;
             NidekRtSerialPhoropterCommunicationResult communicationResult;
             if (sendSelectedValues)
@@ -7484,6 +7493,14 @@ public partial class MainWindow : Window
                 SetMonitoringRuntimeState(profileId, $"Warte auf Rückgabe vom {deviceDisplayName}", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
                 AppendNidekRtSerialDiagnostic(
                     interfaceProfile,
+                    $"{deviceOutputKey}-send-nothing:{aisKey}",
+                    "Keine Werte an den Phoropter gesendet.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-wait-after-send-nothing:{aisKey}",
+                    $"{deviceLogName}: Warte auf Rückgabe vom Phoropter.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
                     $"{deviceOutputKey}-receive-start:{aisKey}",
                     $"Warte auf serielle Rückgabe vom {deviceDisplayName}; es wird nichts gesendet. {SerialDiagnosticsFormatter.FormatSettings(settings)}");
                 communicationResult = await _nidekRtSerialCommunicationService.ReceiveReturnAsync(settings, cancellationToken);
@@ -7502,7 +7519,25 @@ public partial class MainWindow : Window
                     interfaceProfile,
                     $"{deviceOutputKey}-serial-message:{aisKey}:{messageIndex++}",
                     diagnosticMessage,
-                    communicationResult.Success || sendCompletedWithoutImmediateReturn ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
+                communicationResult.Success || sendCompletedWithoutImmediateReturn ? InterfaceMonitoringEventSeverity.Info : InterfaceMonitoringEventSeverity.Warning);
+            }
+
+            if (sendSelectedValues
+                && sendMode == NidekRtSerialSendMode.RsThenWriterWithoutSd
+                && communicationResult.SendCompleted)
+            {
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-rs-without-sd-rs-sent:{aisKey}",
+                    $"{deviceLogName}: RS gesendet.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-rs-without-sd-writer-sent:{aisKey}",
+                    $"{deviceLogName}: Writer-Frame ohne SD-Warten gesendet.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-rs-without-sd-waiting:{aisKey}",
+                    $"{deviceLogName}: Warte auf Rückgabe vom Phoropter.");
             }
 
             if (!communicationResult.Success)
@@ -7567,6 +7602,10 @@ public partial class MainWindow : Window
             }
 
             SetMonitoringRuntimeState(profileId, "Rückgabe vollständig, Verarbeitung startet", "Active", DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            AppendNidekRtSerialDiagnostic(
+                interfaceProfile,
+                $"{deviceOutputKey}-return-received:{aisKey}",
+                $"{deviceLogName}: Rückgabe empfangen.");
             AppendNidekRtSerialDiagnostic(
                 interfaceProfile,
                 $"{deviceOutputKey}-return-stable:{aisKey}",
@@ -7709,6 +7748,15 @@ public partial class MainWindow : Window
                     result,
                     "status",
                     $"{interfaceProfile.Metadata.Name}: Ausgabedatei an AIS erstellt: {result.ExportFilePath}");
+                var logName = CreateNidekRtSerialLogName(deviceDisplayName);
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-ais-output-created:{aisKey}",
+                    $"{logName}: AIS-Ausgabe erzeugt.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-workflow-completed:{aisKey}",
+                    $"{logName}: Workflow abgeschlossen.");
             }
             else
             {
@@ -7728,6 +7776,11 @@ public partial class MainWindow : Window
         }
 
         RefreshInterfaceMonitoringCards();
+        if (processedSuccessfully)
+        {
+            CloseFloatingMonitoringWindow(interfaceProfile.Metadata.Id);
+        }
+
         return processedSuccessfully;
     }
 
@@ -7809,6 +7862,41 @@ public partial class MainWindow : Window
         }
 
         return "NIDEK RT";
+    }
+
+    private static string CreateNidekRtSerialLogName(NidekRtSerialPhoropterModel model)
+    {
+        return model switch
+        {
+            NidekRtSerialPhoropterModel.Rt2100 => "RT-2100",
+            NidekRtSerialPhoropterModel.Rt5100 => "RT-5100",
+            _ => "RT-3100"
+        };
+    }
+
+    private static string CreateNidekRtSerialLogName(string deviceDisplayName)
+    {
+        if (deviceDisplayName.Contains("2100", StringComparison.OrdinalIgnoreCase))
+        {
+            return "RT-2100";
+        }
+
+        if (deviceDisplayName.Contains("5100", StringComparison.OrdinalIgnoreCase))
+        {
+            return "RT-5100";
+        }
+
+        return "RT-3100";
+    }
+
+    private static NidekRtSerialSendMode ResolveNidekRtSerialProductiveSendMode(
+        InterfaceProfileDefinition interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        var model = DetectNidekRtSerialModel(deviceProfile);
+        return model == NidekRtSerialPhoropterModel.Rt3100
+            ? NidekRtSerialSendMode.RsThenWriterWithoutSd
+            : NidekRtSerialSendModeInfo.Resolve(interfaceProfile.NidekRtSerialSendMode);
     }
 
     private static NidekRtSerialPhoropterModel DetectNidekRtSerialModel(DeviceProfileDefinition? deviceProfile)

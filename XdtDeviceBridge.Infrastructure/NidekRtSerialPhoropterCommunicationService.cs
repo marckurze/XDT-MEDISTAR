@@ -658,8 +658,9 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
             }
             else if (sendMode == NidekRtSerialSendMode.RsThenWriterWithoutSd)
             {
+                yield return "Produktiver RT-3100-Pfad verwendet denselben RS+Writer-ohne-SD-Sendekern wie der fruehere Diagnosebutton.";
                 yield return "RS wurde gesendet; SD wird nicht zwingend erwartet.";
-                yield return "Writer-Frame wird nach kurzer Wartezeit auch ohne SD-Bestätigung gesendet.";
+                yield return "Writer-Frame wird nach kurzer Wartezeit ohne SD-Pflicht gesendet.";
             }
         }
 
@@ -676,8 +677,8 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
         if (continueWithoutHandshake)
         {
             yield return productiveSendMode is null
-                ? "Sendetestmodus aktiv: Writer-Frame wird auch ohne SD-Bestätigung gesendet."
-                : "Produktiver Sendemodus aktiv: Writer-Frame wird auch ohne SD-Bestätigung gesendet.";
+                ? "Sendetestmodus aktiv: Writer-Frame wird ohne SD-Pflicht gesendet."
+                : "Produktiver Sendemodus aktiv: Writer-Frame wird ohne SD-Pflicht gesendet.";
         }
 
         if (!receiveResponse)
@@ -745,6 +746,7 @@ public sealed class NidekRtSerialPhoropterCommunicationService : INidekRtSerialP
 
         if (!exchangeResult.Success
             && expectedHandshakeBytes.Length > 0
+            && !continueWithoutHandshake
             && !exchangeResult.HandshakeBytes.ContainsSequence(expectedHandshakeBytes))
         {
             yield return $"Keine SD-Bestätigung vom {CreateModelDisplayName(model)} empfangen. Bitte COM-Port, Type1/Type2, DTR/DSR/Handshake und PC-Port-Einstellung am Phoropter prüfen.";

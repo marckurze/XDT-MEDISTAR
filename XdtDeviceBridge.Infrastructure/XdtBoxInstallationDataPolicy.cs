@@ -105,7 +105,7 @@ public sealed class XdtBoxInstallationDataPolicy
             CustomerItem("device-info-overrides", "Geräte-Steckbrief-Anpassungen", Path.Combine(paths.BaseFolder, DeviceTechnicalProfileService.DefaultOverrideFileName), "Lokale Techniker-Notizen und fachliche Ergänzungen zu Geräte-Steckbriefen."),
             CustomerItem("technician-notes", "Techniker-Notizen Whiteboard", Path.Combine(paths.BaseFolder, TechnicianWhiteboardService.FolderName), "Freie Techniker-Notizen, kopierte Bilder, Positionen und Formatierungen."),
             CustomerItem("app-settings", "AppSettings", Path.Combine(paths.BaseFolder, "ui", "app-settings.json"), "Autostart-/Tray-/Komforteinstellungen."),
-            CustomerItem("tab-protection", "Tab-Schutz Einstellungen", TabProtectionService.GetDefaultSettingsFilePath(paths), "Lokaler Bedienerschutz fÃ¼r Konfigurations-Tabs; Passwort wird als Salt/Hash gespeichert."),
+            CustomerItem("tab-protection", "Tab-Schutz Einstellungen", TabProtectionService.GetDefaultSettingsFilePath(paths), "Lokaler Bedienerschutz für Konfigurations-Tabs; Passwort wird als Salt/Hash gespeichert."),
             CustomerItem("floating-window-state", "UI-Komfortdaten Floating-Fenster", Path.Combine(paths.BaseFolder, "ui", "floating-interface-windows.json"), "Fensterpositionen und Abdockstatus."),
             CustomerItem("installation-info", "Installationsinformation", paths.InstallationInfoFile, "Lokale Installationskennung und technische Metadaten."),
             DiagnosticItem("logs", "Logs und Diagnoseausgaben", paths.LogsFolder, "Optional bereinigbar, aber nicht ungefragt beim Update löschen."),
