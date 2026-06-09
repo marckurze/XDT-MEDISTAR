@@ -86,6 +86,7 @@ public partial class MainWindow : Window
     private readonly LicenseRequestBuilder _licenseRequestBuilder = new();
     private readonly LicenseRequestFileRepository _licenseRequestFileRepository = new();
     private readonly LicenseCustomerDataRepository _licenseCustomerDataRepository = new();
+    private readonly LicenseDeviceLocationRepository _licenseDeviceLocationRepository = new();
     private readonly MappingEngine _mappingEngine = new();
     private readonly XdtExportBuilder _xdtExportBuilder = new();
     private readonly UserDefinedProfileCreationService _userDefinedProfileCreationService = new();
@@ -148,6 +149,7 @@ public partial class MainWindow : Window
     private readonly HashSet<string> _nidekRtSerialSendTestProfiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _nidekRtSerialReturnProcessingProfiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, NidekRtSerialSendContext> _nidekRtSerialSendContexts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _nidekRtSerialCompletedWorkflowProfiles = new(StringComparer.OrdinalIgnoreCase);
     private readonly InterfaceProfileFloatingWindowStateService _floatingWindowStateService = new();
     private readonly InterfaceProfileFloatingWindowRestoreGate _floatingWindowRestoreGate = new();
     private readonly Dictionary<string, FloatingInterfaceProfileWindow> _floatingMonitoringWindows = new(StringComparer.OrdinalIgnoreCase);
@@ -3810,6 +3812,7 @@ public partial class MainWindow : Window
 
     private void ShowLicenseCustomerData(LicenseRequestCustomer customer)
     {
+        LicenseCustomerNumberTextBox.Text = customer.CustomerNumber ?? string.Empty;
         LicenseCustomerNameTextBox.Text = customer.CustomerName;
         LicenseCustomerStreetTextBox.Text = customer.Street;
         LicenseCustomerPostalCodeTextBox.Text = customer.PostalCode;
@@ -3840,7 +3843,8 @@ public partial class MainWindow : Window
             AccountHolder: NormalizeOptionalText(LicenseCustomerAccountHolderTextBox.Text),
             SepaDirectDebitConsent: LicenseSepaConsentCheckBox.IsChecked == true,
             AlwaysInvoice: LicenseAlwaysInvoiceCheckBox.IsChecked == true,
-            InvoiceEmail: NormalizeOptionalText(LicenseInvoiceEmailTextBox.Text));
+            InvoiceEmail: NormalizeOptionalText(LicenseInvoiceEmailTextBox.Text),
+            CustomerNumber: NormalizeOptionalText(LicenseCustomerNumberTextBox.Text));
     }
 
     private IReadOnlyList<string> ValidateLicenseCustomerDataForExport(LicenseRequestCustomer customer)
@@ -4870,11 +4874,13 @@ public partial class MainWindow : Window
                 gracePeriodStore.GracePeriods,
                 DateTime.UtcNow)
             .ToList();
+        var deviceLocationsByInterfaceProfileId = LoadLicenseDeviceLocationStoreOrEmpty().ToDictionary();
 
         _licensedDeviceStateRows.Clear();
         foreach (var state in states.OrderBy(state => state.DisplayName, StringComparer.CurrentCultureIgnoreCase))
         {
-            _licensedDeviceStateRows.Add(LicenseDeviceStateRow.FromState(state));
+            deviceLocationsByInterfaceProfileId.TryGetValue(state.InterfaceProfileId, out var location);
+            _licensedDeviceStateRows.Add(LicenseDeviceStateRow.FromState(state, location));
         }
 
         var licenseRequiredStates = states
@@ -4965,6 +4971,11 @@ public partial class MainWindow : Window
     private static string GetLicenseCustomerDataFilePath(AppDataPaths paths)
     {
         return Path.Combine(paths.LicensesFolder, "license-customer-data.json");
+    }
+
+    private static string GetLicenseDeviceLocationsFilePath(AppDataPaths paths)
+    {
+        return Path.Combine(paths.LicensesFolder, "license-device-locations.json");
     }
 
     private static string? NormalizeOptionalText(string value)
@@ -5297,7 +5308,8 @@ public partial class MainWindow : Window
         var allowAutoDetach = !IsManualDocumentSelectionProfile(entry.ScopeId);
         if (allowAutoDetach
             && IsNidekRtSerialWorkflowProfile(entry.ScopeId)
-            && !_nidekRtSerialSendContexts.ContainsKey(entry.ScopeId))
+            && (_nidekRtSerialCompletedWorkflowProfiles.Contains(entry.ScopeId)
+                || !_nidekRtSerialSendContexts.ContainsKey(entry.ScopeId)))
         {
             return;
         }
@@ -6907,6 +6919,7 @@ public partial class MainWindow : Window
         DateTime timestamp)
     {
         _ = scanResult;
+        _nidekRtSerialCompletedWorkflowProfiles.Remove(interfaceProfile.Metadata.Id);
 
         if (dialogAction == Cv5000DeviceOutputDialogAction.CancelSelection)
         {
@@ -7736,6 +7749,7 @@ public partial class MainWindow : Window
             if (result.Success)
             {
                 processedSuccessfully = true;
+                MarkNidekRtSerialWorkflowCompleted(interfaceProfile.Metadata.Id);
                 _lastMonitoringScanQueuesByProfileId[interfaceProfile.Metadata.Id] = new PendingImportQueue();
                 _autoImportPackageStateService.ResetProfile(interfaceProfile.Metadata.Id);
                 _interfaceMonitoringCardStatusService.ResetProfile(interfaceProfile.Metadata.Id);
@@ -7757,6 +7771,10 @@ public partial class MainWindow : Window
                     interfaceProfile,
                     $"{deviceOutputKey}-workflow-completed:{aisKey}",
                     $"{logName}: Workflow abgeschlossen.");
+                AppendNidekRtSerialDiagnostic(
+                    interfaceProfile,
+                    $"{deviceOutputKey}-workflow-window-closed:{aisKey}",
+                    $"{logName}: Gerätefenster geschlossen; wartet im Hintergrund auf nächste Patientendatei.");
             }
             else
             {
@@ -7782,6 +7800,17 @@ public partial class MainWindow : Window
         }
 
         return processedSuccessfully;
+    }
+
+    private void MarkNidekRtSerialWorkflowCompleted(string interfaceProfileId)
+    {
+        _nidekRtSerialCompletedWorkflowProfiles.Add(interfaceProfileId);
+        _nidekRtSerialSendContexts.Remove(interfaceProfileId);
+        _interfaceProfileAutoRedockService.NotifyDocked(interfaceProfileId);
+        EnsureAutoRedockTimerState();
+        _floatingWindowStateService.Dock(interfaceProfileId);
+        SaveFloatingWindowStates();
+        CloseFloatingMonitoringWindow(interfaceProfileId);
     }
 
     private string? ValidateNidekRtSerialWorkflow(
@@ -7893,10 +7922,9 @@ public partial class MainWindow : Window
         InterfaceProfileDefinition interfaceProfile,
         DeviceProfileDefinition? deviceProfile)
     {
-        var model = DetectNidekRtSerialModel(deviceProfile);
-        return model == NidekRtSerialPhoropterModel.Rt3100
-            ? NidekRtSerialSendMode.RsThenWriterWithoutSd
-            : NidekRtSerialSendModeInfo.Resolve(interfaceProfile.NidekRtSerialSendMode);
+        _ = interfaceProfile;
+        _ = deviceProfile;
+        return NidekRtSerialSendMode.RsThenWriterWithoutSd;
     }
 
     private static NidekRtSerialPhoropterModel DetectNidekRtSerialModel(DeviceProfileDefinition? deviceProfile)
@@ -8399,6 +8427,53 @@ public partial class MainWindow : Window
         }
     }
 
+    private LicenseDeviceLocationStore LoadLicenseDeviceLocationStoreOrEmpty()
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            return _licenseDeviceLocationRepository.LoadOrEmpty(GetLicenseDeviceLocationsFilePath(paths));
+        }
+        catch (Exception ex)
+        {
+            AppendLicenseMessage($"Gerätestandorte konnten nicht geladen werden: {ex.Message}");
+            return LicenseDeviceLocationStore.Empty;
+        }
+    }
+
+    private LicenseDeviceLocationStore CreateLicenseDeviceLocationStoreFromRows()
+    {
+        var locations = _licensedDeviceStateRows
+            .Where(row => !string.IsNullOrWhiteSpace(row.InterfaceProfileId))
+            .Select(row => new LicenseDeviceLocation(
+                row.InterfaceProfileId,
+                NormalizeOptionalText(row.Standort)))
+            .ToArray();
+
+        return new LicenseDeviceLocationStore(locations);
+    }
+
+    private IReadOnlyDictionary<string, string?> CreateLicenseDeviceLocationDictionaryFromRows()
+    {
+        return CreateLicenseDeviceLocationStoreFromRows().ToDictionary();
+    }
+
+    private void SaveLicenseDeviceLocations_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            _licenseDeviceLocationRepository.Save(
+                GetLicenseDeviceLocationsFilePath(paths),
+                CreateLicenseDeviceLocationStoreFromRows());
+            AppendLicenseMessage("Gerätestandorte für Lizenzanfragen gespeichert.");
+        }
+        catch (Exception ex)
+        {
+            AppendLicenseMessage($"Gerätestandorte konnten nicht gespeichert werden: {ex.Message}");
+        }
+    }
+
     private void ClearLicensedDeviceStates()
     {
         _licensedDeviceStateRows.Clear();
@@ -8470,6 +8545,7 @@ public partial class MainWindow : Window
 
         try
         {
+            var deviceLocationsByInterfaceProfileId = CreateLicenseDeviceLocationDictionaryFromRows();
             var request = _licenseRequestBuilder.Build(
                 _installationInfo,
                 _profileCatalog.InterfaceProfiles,
@@ -8477,10 +8553,12 @@ public partial class MainWindow : Window
                 customer,
                 XdtBoxLicenseConstants.ProductCode,
                 GetApplicationVersionText(),
-                DateTime.UtcNow);
+                DateTime.UtcNow,
+                deviceLocationsByInterfaceProfileId);
 
             var paths = _appDataPathProvider.GetDefaultUserPaths();
             _licenseCustomerDataRepository.Save(GetLicenseCustomerDataFilePath(paths), customer);
+            _licenseDeviceLocationRepository.Save(GetLicenseDeviceLocationsFilePath(paths), CreateLicenseDeviceLocationStoreFromRows());
             _licenseRequestFileRepository.Save(dialog.FileName, request);
             AppendLicenseMessage($"Lizenzanfrage erfolgreich exportiert: {dialog.FileName}");
             AppendLicenseMessage($"Aktive Geräteanbindungen in der Anfrage: {request.ActiveLicensedDeviceCount}. Gerätenamen dienen nur der Dokumentation.");

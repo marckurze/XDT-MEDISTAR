@@ -5,4 +5,5 @@ public sealed record IssuedLicenseDeviceRecord(
     string DeviceDisplayName,
     string InterfaceProfileId,
     string DeviceProfileId,
-    DeviceConnectionKind ConnectionKind);
+    DeviceConnectionKind ConnectionKind,
+    string? Location = null);

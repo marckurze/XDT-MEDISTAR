@@ -117,11 +117,12 @@
                 </GroupBox>
 
                 <GroupBox Header="Aktive lizenzierte Anbindungen" Margin="0,0,0,8">
-                    <DataGrid x:Name="DevicesGrid" Height="190" Margin="8" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False">
+                    <DataGrid x:Name="DevicesGrid" Height="190" Margin="8" AutoGenerateColumns="False" IsReadOnly="False" CanUserAddRows="False" CanUserDeleteRows="False">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Anbindung" Binding="{Binding DisplayName}" Width="2*"/>
-                            <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceDisplayName}" Width="2*"/>
-                            <DataGridTextColumn Header="Quelle" Binding="{Binding ConnectionKind}" Width="180"/>
+                            <DataGridTextColumn Header="Anbindung" Binding="{Binding DisplayName}" Width="2*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Gerät" Binding="{Binding DeviceDisplayName}" Width="2*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Standort" Binding="{Binding Location, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="170"/>
+                            <DataGridTextColumn Header="Quelle" Binding="{Binding ConnectionKind}" Width="180" IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </GroupBox>

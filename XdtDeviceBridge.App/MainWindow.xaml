@@ -2724,6 +2724,7 @@
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="180"/>
@@ -2731,12 +2732,14 @@
                                             <ColumnDefinition Width="120"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Praxis-/Firmenname:" FontWeight="Bold" Margin="0,0,8,6"/>
-                                        <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerNameTextBox" Margin="0,0,0,6"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Straße / Hausnummer:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <TextBox Grid.Row="1" Grid.Column="1" x:Name="LicenseCustomerStreetTextBox" Margin="0,0,16,0"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="2" Text="PLZ / Ort:" FontWeight="Bold" Margin="0,0,8,0"/>
-                                        <Grid Grid.Row="1" Grid.Column="3">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Kundennummer:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerNumberTextBox" Margin="0,0,0,6"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Praxis-/Firmenname:" FontWeight="Bold" Margin="0,0,8,6"/>
+                                        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" x:Name="LicenseCustomerNameTextBox" Margin="0,0,0,6"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Straße / Hausnummer:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="LicenseCustomerStreetTextBox" Margin="0,0,16,0"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="2" Text="PLZ / Ort:" FontWeight="Bold" Margin="0,0,8,0"/>
+                                        <Grid Grid.Row="2" Grid.Column="3">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="110"/>
                                                 <ColumnDefinition Width="8"/>
@@ -2839,7 +2842,8 @@
                             <Button Content="Lizenzanfrage exportieren" Width="190" Margin="0,0,8,0" Click="ExportLicenseRequest_Click"/>
                             <Button Content="Lizenz importieren" Width="190" Margin="0,0,8,0" Click="ImportLicenseFile_Click"/>
                             <Button Content="Lizenz entfernen" Width="170" Margin="0,0,8,0" Click="RemoveLicenseFile_Click"/>
-                            <Button Content="Karenzzeiten aktualisieren" Width="210" Click="UpdateGracePeriods_Click"/>
+                            <Button Content="Karenzzeiten aktualisieren" Width="210" Margin="0,0,8,0" Click="UpdateGracePeriods_Click"/>
+                            <Button Content="Gerätestandorte speichern" Width="220" Click="SaveLicenseDeviceLocations_Click"/>
                         </StackPanel>
 
                         <GroupBox Header="Lizenzierte Geräte / Anbindungen" Grid.Row="4" Margin="0,0,0,8">
@@ -2872,20 +2876,22 @@
                                 <DataGrid Grid.Row="2"
                                           x:Name="LicensedDeviceStatesGrid"
                                           AutoGenerateColumns="False"
-                                          IsReadOnly="True"
+                                          IsReadOnly="False"
                                           CanUserAddRows="False"
                                           CanUserDeleteRows="False"
                                           HorizontalScrollBarVisibility="Auto"
                                           VerticalScrollBarVisibility="Auto"
                                           MinHeight="250">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" MinWidth="320" Width="*"/>
-                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding AktivText}" MinWidth="70" Width="70"/>
-                                        <DataGridTextColumn Header="Lizenzpflichtig" Binding="{Binding LizenzpflichtigText}" MinWidth="110" Width="110"/>
-                                        <DataGridTextColumn Header="Gedeckt" Binding="{Binding GedecktText}" MinWidth="90" Width="90"/>
-                                        <DataGridTextColumn Header="Karenz" Binding="{Binding KarenzText}" MinWidth="90" Width="90"/>
-                                        <DataGridTextColumn Header="Karenz bis" Binding="{Binding KarenzBisText}" MinWidth="140" Width="140"/>
-                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="420" Width="2*"/>
+                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" MinWidth="320" Width="*" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Standort" Binding="{Binding Standort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinWidth="170" Width="170"/>
+                                        <DataGridTextColumn Header="Aktiv" Binding="{Binding AktivText}" MinWidth="70" Width="70" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Lizenzpflichtig" Binding="{Binding LizenzpflichtigText}" MinWidth="110" Width="110" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Gedeckt" Binding="{Binding GedecktText}" MinWidth="90" Width="90" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Karenz" Binding="{Binding KarenzText}" MinWidth="90" Width="90" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Karenz bis" Binding="{Binding KarenzBisText}" MinWidth="140" Width="140" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Rest-Karenzzeit" Binding="{Binding KarenzVerbleibendText}" MinWidth="140" Width="140" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" MinWidth="420" Width="2*" IsReadOnly="True"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>

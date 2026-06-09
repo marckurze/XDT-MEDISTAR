@@ -89,7 +89,8 @@ public sealed record LicenseManagerInstallationRecord(
                 DeviceDisplayName: string.IsNullOrWhiteSpace(device.DeviceDisplayName) ? device.Model : device.DeviceDisplayName,
                 InterfaceProfileId: string.IsNullOrWhiteSpace(device.InterfaceProfileId) ? device.ProfileId : device.InterfaceProfileId,
                 DeviceProfileId: device.DeviceProfileId,
-                ConnectionKind: device.ConnectionKind))
+                ConnectionKind: device.ConnectionKind,
+                Location: Normalize(device.Location)))
             .ToArray();
     }
 

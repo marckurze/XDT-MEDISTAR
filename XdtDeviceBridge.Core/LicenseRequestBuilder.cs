@@ -60,7 +60,8 @@ public sealed class LicenseRequestBuilder
         LicenseRequestCustomer? customer,
         string productCode,
         string appVersion,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        IReadOnlyDictionary<string, string?>? deviceLocationsByInterfaceProfileId = null)
     {
         ArgumentNullException.ThrowIfNull(installation);
         ArgumentNullException.ThrowIfNull(interfaceProfiles);
@@ -104,7 +105,8 @@ public sealed class LicenseRequestBuilder
                     DisplayName: profile.Metadata.Name,
                     DeviceProfileId: profile.DeviceProfileId,
                     DeviceDisplayName: deviceDisplayName,
-                    ConnectionKind: deviceProfile?.ConnectionKind ?? DeviceConnectionKind.NetworkLan);
+                    ConnectionKind: deviceProfile?.ConnectionKind ?? DeviceConnectionKind.NetworkLan,
+                    Location: ResolveDeviceLocation(profile.Metadata.Id, deviceLocationsByInterfaceProfileId));
             })
             .ToArray();
 
@@ -122,5 +124,19 @@ public sealed class LicenseRequestBuilder
             Devices: devices,
             CreatedAt: createdAtUtc,
             Customer: customer);
+    }
+
+    private static string? ResolveDeviceLocation(
+        string interfaceProfileId,
+        IReadOnlyDictionary<string, string?>? deviceLocationsByInterfaceProfileId)
+    {
+        if (deviceLocationsByInterfaceProfileId is null
+            || !deviceLocationsByInterfaceProfileId.TryGetValue(interfaceProfileId, out var location)
+            || string.IsNullOrWhiteSpace(location))
+        {
+            return null;
+        }
+
+        return location.Trim();
     }
 }

@@ -1,8 +1,8 @@
 # E2E-Testprotokoll MEDISTAR + NIDEK RT-3100 RS232
 
-Stand: 2026-05-29
+Stand: 2026-06-09
 
-Status: echte RS232-Praxismitschnitte als Parser-/Baukasten-Fixtures validiert; patientengetriggerter Produktivablauf mit Auswahlfenster, COM-Senden und Empfang bis EOT ist technisch implementiert. Der Livebefund zeigt, dass RT-3100 Type1 im Praxisaufbau DTR aktiv benoetigt. Empfang RT->XDTBox ist damit belegt. Der erfolgreiche PC->RT-Praxispfad sendet `RS`, wartet kurz und sendet den Writer-Frame ohne harte SD-Pflicht. Der RT-3100-Produktivablauf verwendet diesen Pfad automatisch ueber `An RT-3100 senden`; die frueheren Sendetestbuttons sind aus der normalen Geraetekachel ausgeblendet. Rueckgabe nach Sendung und MEDISTAR-Import am echten Arbeitsplatz sind noch offen.
+Status: echte RS232-Praxismitschnitte als Parser-/Baukasten-Fixtures validiert; der patientengetriggerte Produktivablauf mit Auswahlfenster, `RS senden, dann Writer ohne SD`, spaeterer RT-Rueckgabe, Mapping und MEDISTAR-XDT-Ausgabe ist am echten RT-3100-Arbeitsplatz bestaetigt. Der Livebefund zeigt, dass RT-3100 Type1 im Praxisaufbau DTR aktiv benoetigt. Die frueheren Sendetestbuttons sind aus der normalen Geraetekachel ausgeblendet. Nach erfolgreicher Rueckgabe/AIS-Ausgabe schliesst die Geraetekachel terminal und darf durch nachlaufende Monitoring-Refreshes nicht erneut erscheinen.
 
 ## Ziel
 
@@ -93,6 +93,8 @@ Noch offen:
 - Modemstatussignale CTS, DSR, DCD und RI werden in der seriellen Diagnose protokolliert, soweit der Adapter sie liefert.
 - Nach erfolgreichem Senden ohne sofortige Rueckgabe bleibt der Workflow im Wartestatus; kein leerer Export und kein harter Sendefehler.
 - Der wartende Workflow haelt den AIS-Patientenkontext. `Rueckgabe abhoeren und verarbeiten` nutzt diesen Kontext fuer den spaeteren produktiven Export, waehrend `COM-Port nur abhoeren` weiterhin nur Mitschnittdiagnose ist.
+- Der Praxislauf vom 2026-06-09 bestaetigt den vollstaendigen RT-3100-Zyklus: AIS-Datei empfangen, Auswahlfenster geoeffnet, Werte gesendet, RT-Rueckgabe empfangen, XDT-Ausgabe an AIS erzeugt und Geraetekachel geschlossen.
+- Nach terminalem Erfolg wird der RT-Workflow als abgeschlossen markiert, das Floating-Fenster gedockt/geschlossen und ein erneutes Oeffnen durch Success-/Refresh-/Monitoring-Nachlauf unterdrueckt. Ein neuer Zyklus beginnt erst mit einer neuen AIS-Patientendatei und wieder zuerst mit dem Auswahlfenster.
 
 ## Offene Punkte
 
@@ -100,5 +102,5 @@ Noch offen:
 - DTR/DSR-/RTS-/Handshake-Verhalten vor Ort weiter pruefen; DTR aktiv ist fuer den getesteten RT-3100-Type1-Aufbau aktuell der bestaetigte Startpunkt
 - PC-port-Parameter am Geraet pruefen
 - PC->RT-Live-Senden mit `RS senden, dann Writer ohne SD` ist als RT-3100-Praxispfad gesetzt; RS/SD weiter nur bei Bedarf als alternativer Schnittstellenprofilmodus pruefen
-- echte Rueckgabe nach Sendung mit `Rueckgabe abhoeren und verarbeiten` separat freigeben
-- MEDISTAR-Import der produktiv erzeugten `6228`-Rueckgabe praktisch pruefen
+- weitere RT-3100-Varianten wie Type2, alternative Sendeinhalte und Subjective-/Zusatzdaten sammeln
+- RT-2100 und RT-5100 mit identischem Ablauf praktisch einzeln abnehmen

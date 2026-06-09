@@ -1,6 +1,6 @@
 # Templatepaket MEDISTAR + NIDEK NT530P
 
-Dieses Dokument beschreibt den Templatepaket-Kandidaten fuer `MEDISTAR + NIDEK NT530P` / `NT-530P`. Die technische Verarbeitung ist mit einer echten NT-530P-XML-Fixture abgesichert; eine praktische MEDISTAR-Validierung steht noch aus. Ein offizielles ZIP-Artefakt wird erst nach der Release-Regel in `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
+Dieses Dokument beschreibt den Templatepaket-Kandidaten fuer `MEDISTAR + NIDEK NT530P` / `NT-530P`. Die technische Verarbeitung ist mit einer echten NT-530P-XML-Fixture abgesichert; die Tonometrie-/Pachymetrie-XDT-Rueckgabe ist praktisch in MEDISTAR validiert. Ein offizielles ZIP-Artefakt wird erst nach der Release-Regel in `docs/TEMPLATEPAKET_RELEASE_REGEL.md` dauerhaft abgelegt.
 
 ## Enthaltene Profile
 
@@ -38,7 +38,6 @@ Die Werte stammen aus der XML. Benutzerbeispiele dienen nur als Formatvorlage un
 
 ## Offen
 
-- Praktische MEDISTAR-Nachpruefung des kompletten Importlaufs nach Nachlauf-Fix.
-- Fachliche Abnahme der korrigierten mehrzeiligen Tonometrie-/Pachymetrie-Darstellung in der Karteikarte bleibt zu protokollieren.
+- JPG-/Mehrfachanhang-Sonderfaelle inklusive Ordnernachlauf und Kartenstatus separat praktisch validieren; die Tonometrie-/Pachymetrie-XDT-Rueckgabe ist bestaetigt.
 - XDT-Anhang-Link fuer NT530P-JPG-Aufnahmen inklusive Ordnernachlauf und neutralem Kartenstatus praktisch validieren; die generische Mehrfachanhang-Mechanik ist testseitig abgesichert.
 - Offizielles ZIP-Artefakt erst nach Release-Regel und App-Abnahme ablegen.

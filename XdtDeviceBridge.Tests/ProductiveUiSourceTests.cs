@@ -773,6 +773,10 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("NidekRtSerialSendMode.RsThenWriterWithoutSd", mainCode);
         Assert.Contains("ShowNidekRtSerialWorkflowWindow", mainCode);
         Assert.Contains("FloatingMonitoringWindow_Closed", mainCode);
+        Assert.Contains("_nidekRtSerialCompletedWorkflowProfiles", mainCode);
+        Assert.Contains("MarkNidekRtSerialWorkflowCompleted", mainCode);
+        Assert.Contains("_floatingWindowStateService.Dock(interfaceProfileId)", mainCode);
+        Assert.Contains("_nidekRtSerialCompletedWorkflowProfiles.Remove(interfaceProfile.Metadata.Id)", mainCode);
         Assert.Contains("Senden angefordert", mainCode);
         Assert.Contains("Writer-Frame wird erzeugt", mainCode);
         Assert.Contains("Writer-Hexdump", mainCode);
@@ -780,6 +784,7 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Writer-Frame ohne SD-Warten gesendet", mainCode);
         Assert.Contains("Keine Werte an den Phoropter gesendet", mainCode);
         Assert.Contains("Workflow abgeschlossen", mainCode);
+        Assert.Contains("workflow-window-closed", mainCode);
         Assert.Contains("AppendNidekRtSerialDiagnostic", mainCode);
         Assert.Contains("NidekRtSerialOutputFrameVariantInfo.Resolve", mainCode);
         Assert.Contains("SendCompleted", mainCode);

@@ -12,4 +12,5 @@ public sealed record LicenseRequestDevice(
     string DisplayName = "",
     string DeviceProfileId = "",
     string DeviceDisplayName = "",
-    DeviceConnectionKind ConnectionKind = DeviceConnectionKind.NetworkLan);
+    DeviceConnectionKind ConnectionKind = DeviceConnectionKind.NetworkLan,
+    string? Location = null);

@@ -4,7 +4,7 @@ Stand: 2026-05-29
 
 ## Zweck
 
-Dieses Kandidatenpaket bereitet den seriellen NIDEK RT-3100 als bidirektionalen Phoropter fuer MEDISTAR vor. Es nutzt die gemeinsame NIDEK-RT-Serial-Parserfamilie und bleibt bis zur Praxisaufnahme ein Test-/Vorschaustand.
+Dieses Kandidatenpaket beschreibt den seriellen NIDEK RT-3100 als bidirektionalen Phoropter fuer MEDISTAR. Es nutzt die gemeinsame NIDEK-RT-Serial-Parserfamilie; der produktive Praxislauf mit AIS-Patientendatei, Auswahlfenster, `RS senden, dann Writer ohne SD`, spaeterer RT-Rueckgabe und MEDISTAR-XDT-Ausgabe ist bestaetigt.
 
 ## Enthaltene BuiltIns
 
@@ -37,5 +37,6 @@ Der XDT-Baukasten kann vorhandene LM-/AR-Historienwerte als PC->RT-Sendeframe vo
 
 - synthetische Standard- und Expanded-Header-Tests vorhanden
 - Writer-Tests fuer ID-Block und LM-/AR-Bloecke vorhanden
+- produktiver RT-3100-Praxislauf bestaetigt; nach terminalem Erfolg bleibt die Kachel geschlossen, bis eine neue AIS-Patientendatei eintrifft
 - selektiver Templatepaket-Export/-Import testseitig abgesichert
-- echte Praxis-Mitschnitte und MEDISTAR-Abnahme offen
+- weitere Praxis-Mitschnitte fuer Type2, alternative Sendeinhalte und Subjective-Faelle sammeln

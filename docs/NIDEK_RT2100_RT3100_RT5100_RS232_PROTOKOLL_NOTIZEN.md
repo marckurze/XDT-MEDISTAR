@@ -1,6 +1,6 @@
 # NIDEK RT-2100 / RT-3100 / RT-5100 RS232 Protokollnotizen
 
-Stand: 2026-05-29
+Stand: 2026-06-09
 
 Diese Notizen fassen die Auswertung der bereitgestellten Herstellerdokumente zusammen:
 
@@ -8,7 +8,7 @@ Diese Notizen fassen die Auswertung der bereitgestellten Herstellerdokumente zus
 - `RT-3100(RT-11)_IntE_34090-P982-A2.pdf`
 - `RT-5100_IntME_34085-P992-A0.pdf`
 
-Die Auswertung dient Parser, Writer, BuiltIn-Profilen, XDT-Baukasten-Vorschau und dem produktiven patientengetriggerten RS232-Ablauf. Am 2026-05-29 wurden echte RT-3100-Praxismitschnitte als Fixtures uebernommen. Der Live-Test bestaetigt ausserdem, dass der direkte PC->RT-Writer-Frame vom RT-3100 empfangen wird; der RS/SD-Handshake lieferte in dieser Praxisinstallation keine SD-Antwort. Rueckgabe nach Sendung und MEDISTAR-Import muessen weiterhin praktisch freigegeben werden.
+Die Auswertung dient Parser, Writer, BuiltIn-Profilen, XDT-Baukasten-Vorschau und dem produktiven patientengetriggerten RS232-Ablauf. Am 2026-05-29 wurden echte RT-3100-Praxismitschnitte als Fixtures uebernommen. Der Praxisabschluss am 2026-06-09 bestaetigt fuer RT-3100 den kompletten Lauf: AIS-Patientendatei, Auswahlfenster, Senden mit `RS senden, dann Writer ohne SD`, spaetere RT-Rueckgabe, MEDISTAR-XDT-Ausgabe und terminales Schliessen der Geraetekachel. RT-2100 und RT-5100 nutzen denselben vorbereiteten produktiven RS232-Modus, benoetigen aber noch eine eigene Live-Abnahme.
 
 ## Gemeinsame Familie
 
@@ -188,6 +188,7 @@ Im Diagnosebereich koennen diese Varianten unabhaengig vom gespeicherten Profilw
 - Das RT-Floating-Fenster enthaelt fuer Live-Abnahmen eine serielle Diagnose: verwendete COM-Parameter, DTR/RTS/Handshake, Port-Status, RS-Anforderung, PC->RT-Writer-Frame, Hexdump und sichtbare Steuerzeichen werden angezeigt. `COM-Port nur abhoeren` oeffnet denselben Profil-Port, sendet nichts und zeigt empfangene Bytes ohne XDT-Export.
 - Fuer den wartenden Produktivzustand nach einer Sendung gibt es zusaetzlich `Rueckgabe abhoeren und verarbeiten`. Diese Funktion sendet nichts, empfaengt aber die spaetere RT-Rueckgabe produktiv, verwendet den gespeicherten AIS-Patientenkontext des Pending-Workflows und erzeugt erst bei gueltiger Rueckgabe die MEDISTAR-XDT-Ausgabe. `COM-Port nur abhoeren` bleibt reine Diagnose und exportiert nicht.
 - Die frueheren RT-Sendetestbuttons sind aus der normalen Praxis-Geraetekachel entfernt. Der funktionierende RS+Writer-ohne-SD-Pfad laeuft automatisch ueber `An RT-3100 senden`.
+- Der RT-3100-Praxislauf vom 2026-06-09 ist vollstaendig bestaetigt: Nach gueltiger Rueckgabe erzeugt XDTBox die AIS-Ausgabedatei, markiert den Workflow als terminal abgeschlossen, dockt/schliesst das Floating-Fenster und unterdrueckt nachlaufende Success-/Refresh-Ereignisse fuer diesen Zyklus. Erst eine neue AIS-Patientendatei startet wieder einen neuen RT-Workflow mit Auswahlfenster.
 - Wenn im `RS/SD-Handshake` keine SD-Bestaetigung eintrifft, zeigt XDTBox eine konkrete Pruefliste zu COM-Port, Type1/Type2, PC-Port-Parameter am RT, DTR/RTS/Handshake und Portbelegung. Im RT-3100-Praxispfad `RS senden, dann Writer ohne SD` gibt es keine harte SD-Fehlermeldung; dort zeigt XDTBox `RS gesendet`, `Writer-Frame ohne SD-Warten gesendet` und den anschliessenden Wartestatus auf PRINT/SEND-Rueckgabe.
 
 ## XDT-Baukasten
@@ -203,6 +204,5 @@ Warnhinweis im Baukasten:
 - weitere echte RT-2100-/RT-3100-/RT-5100-RS232-Mitschnitte
 - Pruefung, welche Header-Variante das konkrete Praxisgeraet sendet
 - Pruefung von Type1/Type2 und DTR/DSR-Verhalten
-- weitere Live-Abnahmen des PC->RT-Sendeframes an RT-2100 und RT-5100; am RT-3100 ist der Pfad `RS senden, dann Writer ohne SD` als produktiver Praxispfad gesetzt
-- Rueckgabe nach einer echten Sendung am RT-3100/RT-2100/RT-5100 mit `Rueckgabe abhoeren und verarbeiten` praktisch freigeben
-- MEDISTAR-Abnahme der produktiv erzeugten `6228`-/`6227`-Rueckgabe
+- weitere Live-Abnahmen des PC->RT-Sendeframes und der Rueckgabe an RT-2100 und RT-5100; am RT-3100 ist der Pfad `RS senden, dann Writer ohne SD` inklusive Rueckgabe und MEDISTAR-XDT-Ausgabe praktisch bestaetigt
+- weitere MEDISTAR-Abnahmen fuer alternative RT-3100-Sendeinhalte, Type2-Parameter und seltene Subjective-/Zusatzdaten sammeln
