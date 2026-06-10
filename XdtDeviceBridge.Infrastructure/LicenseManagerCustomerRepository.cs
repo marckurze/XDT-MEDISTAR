@@ -7,6 +7,7 @@ namespace XdtDeviceBridge.Infrastructure;
 public sealed class LicenseManagerCustomerRepository
 {
     private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+    private readonly LicenseManagerCustomerMergeService _mergeService = new();
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true
@@ -140,6 +141,21 @@ public sealed class LicenseManagerCustomerRepository
 
         Save(filePath, records);
         return records;
+    }
+
+    public LicenseManagerCustomerMergeResult MergeCustomers(
+        string filePath,
+        IReadOnlyCollection<string> selectedCustomerIds,
+        LicenseManagerCustomerMergeSelection selection)
+    {
+        EnsureFilePath(filePath);
+        ArgumentNullException.ThrowIfNull(selectedCustomerIds);
+        ArgumentNullException.ThrowIfNull(selection);
+
+        var records = LoadOrEmpty(filePath);
+        var result = _mergeService.Merge(records, selectedCustomerIds, selection);
+        Save(filePath, result.Customers);
+        return result;
     }
 
     private static int FindMatchingIndex(IReadOnlyList<LicenseManagerCustomerRecord> records, LicenseManagerCustomerRecord customer)

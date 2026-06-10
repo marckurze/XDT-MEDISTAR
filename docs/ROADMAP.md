@@ -1,6 +1,6 @@
 ﻿# Roadmap XdtDeviceBridge
 
-Stand: 2026-06-04
+Stand: 2026-06-09
 
 Projekt: XdtDeviceBridge / XDT Verwaltung
 
@@ -8,13 +8,14 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 ### Version
 
-- Aktuelle Version: `1.0`
-- `VERSION` und `Directory.Build.props` sind konsistent:
+- Aktuelle XDTBox Kunden-App-Version: `1.10`
+- Aktuelle XDTBox Lizenzmanager-Version: `1.11`
+- `VERSION` und `Directory.Build.props` fuehren die Kunden-App:
   - `Version`: `1.10`
   - `AssemblyVersion`: `1.10.0.0`
   - `FileVersion`: `1.10.0.0`
   - `InformationalVersion`: `1.10`
-- XDTBox 1.10 ist die aktuelle Installer-Version. Der Inno-Setup-Weg ist vorbereitet; Kundeninstaller schuetzen Kundendaten nach Variante B.
+- Der Lizenzmanager fuehrt eigene Assembly-/FileVersionen und darf von der Kunden-App abweichen. XDTBox 1.10 ist die aktuelle Kundeninstaller-Version; der Lizenzmanager steht bei 1.11. Setups werden nur neu gebaut, wenn Marc dies ausdruecklich beauftragt.
 
 ### Projektleitlinie ab 2026-05-12
 
@@ -27,6 +28,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - UI-Ausbau fuer Techniker und Support ist umgesetzt: `Schnittstellenprofile` zeigt Geraetebild, `AIS Ausgabe Info`, `Geraetesteckbrief` und einen Aktivierungsstatusbutton; die Abschnitte `Ordnerbereinigung`, `Archivierung` und `Pruefung vor Aktivierung` sind layoutseitig getrennt. Der XDT-Baukasten oeffnet denselben Steckbrief aus der Geraeteidentitaet. Der neue Tab `Notizen Techniker` speichert Whiteboard-Notizen, Bilder, aktive Geraeteuebersichten und PDF-Export als Kundendaten und besitzt Text-/Handmodus plus Kontextmenue. Optionaler Tab-Schutz sperrt alle Tabs ausser `Verarbeitung`.
 - UI-Polish ist zentralisiert: `XdtBoxTheme.xaml` definiert XDTBox-Farben, Kartenflaechen, Tabs, Buttons, Eingabefelder, Tabellen, Toggle-Schalter und dezente Schatten. Hauptfenster, AIS-Ausgabe-Info, Geraetesteckbrief, App-Einstellungen und Techniker-Notizen nutzen diese gemeinsame Optik; Fachlogik, Parser, MEDISTAR-/XDT-Ausgabe, Geraetekommunikation, Lizenzierung und Installer-Datenpolitik bleiben unveraendert.
 - Die finale UI-Nachkorrektur bleibt auf Darstellung und Bedienbarkeit begrenzt: `Geraet laden` ist hoeher, `Schnittstellenprofile` trennt die unteren Sicherheits-/Pruefabschnitte in eigene Zeilen, `Notizen Techniker` arbeitet mit Symbolmodi und direkter Textbearbeitung, und der Lizenz-Tab stellt Rechnungsversand und Bank/SEPA ohne Ueberlagerung dar.
+- Der XDTBox Lizenzmanager kann im Tab `Kunden` mehrere markierte Kundensaetze ueber `Zusammenführen` in einen Zielkunden uebernehmen. Stammdaten werden feldweise gewaehlt; Installationen/Arbeitsplaetze, aktive lizenzierte Anbindungen inklusive Geraetestandort und Lizenzhistorie bleiben beim Zielkunden sichtbar. Doppelte InstallationIds werden zusammengefuehrt statt doppelt angelegt.
 - Referenzdaten werden defensiv als Geraetequelle ausgewertet: XML-nahe und scriptbasiert belastbar ableitbare Geraete duerfen als isolierte BuiltIns mit Tests aufgenommen werden; echte Rohdaten bleiben fuer die Praxisabnahme erforderlich. Huvitz, TOMEY, Shin-Nippon, Reichert, Rodenstock-CX-800 und belastbare TOPCON-Varianten wurden inzwischen batchweise mit eigenen Profilketten beziehungsweise Parsern, synthetischen Fixtures und Templatepaket-Tests vorbereitet; unzureichend belegte Geraete wie Rodenstock Phoromat 2000 und Möller-Wedel Visutron bleiben Kandidaten.
 
 ### Validierter Kernworkflow MEDISTAR + NIDEK ARK1S
@@ -239,8 +241,9 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - Lizenzdatei kann importiert werden.
 - Signierte `.xdtboxlic`-Lizenzdateien werden lokal mit RSA-PSS/SHA-256 geprueft.
 - Internes `XdtBox.LicenseIssuer`-Tool erzeugt signierte `.xdtboxlic`-Dateien aus Lizenzanforderung oder InstallationId.
-- Internes grafisches `XDTBox Lizenzmanager`-Tool liest Lizenzanfragen, erzeugt signierte Lizenzen, fuehrt eine lokale Historie ausgestellter Lizenzen und kann Kundendaten fuer Folgelizenzen uebernehmen. Das Tool hat eine eigene Version `1.0` und ein eigenes Windows-Setup.
+- Internes grafisches `XDTBox Lizenzmanager`-Tool liest Lizenzanfragen, erzeugt signierte Lizenzen, fuehrt eine lokale Historie ausgestellter Lizenzen und kann Kundendaten fuer Folgelizenzen uebernehmen. Das Tool hat eine eigene Version `1.11` und ein eigenes Windows-Setup.
 - `XDTBox Lizenzmanager` fuehrt zusaetzlich eine Kundenliste aus Lizenzanfragen. Kundennummer oder InstallationId steuern die Zuordnung; ein Kunde kann mehrere Installationen haben. Rechnungs-E-Mail, IBAN, BIC, Kontoinhaber und Zahlungsart werden lokal im Herstellerdatenordner gespeichert.
+- Zwei oder mehr Kunden koennen in der Kundenliste markiert und ueber `Zusammenführen` in einen Zielkunden uebernommen werden. Der Dialog waehlt die zu uebernehmenden Stammdaten, waehrend Installationen, aktive lizenzierte Anbindungen mit Geraetestandort und Lizenzhistorie erhalten bleiben.
 - Zahlungsart ist SEPA-Lastschrift oder Bankueberweisung; die Rechnungs-E-Mail bleibt davon unabhaengig. Alte Kein-SEPA-Daten werden als Bankueberweisung gelesen.
 - Ein Netto-Einzelpreis pro Geraeteanbindung wird in den LicenseManager-Einstellungen gespeichert und fuer Kundenliste, Kundendetail und grafische A4-Querformat-PDF-Kundenuebersicht verwendet. Lokale Stornos reduzieren aktive Installationen/Geraete/Kosten, bleiben aber historisch nachvollziehbar.
 - Die Kundenliste zeigt eine Gesamtsumme monatlicher Lizenzen. `Ausgestellte Lizenzen` nutzt eine reduzierte Listenansicht mit strukturierten Details darunter; lokale Historieneintraege koennen entfernt werden, ohne Lizenzdateien, private Schluessel oder Kundenstammdaten zu loeschen.

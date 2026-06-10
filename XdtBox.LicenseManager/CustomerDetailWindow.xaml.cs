@@ -86,15 +86,23 @@ public partial class CustomerDetailWindow : Window
         var installationIds = customer.EffectiveInstallations
             .Select(installation => installation.InstallationId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var installationStatuses = customer.EffectiveInstallations
+            .Where(installation => !string.IsNullOrWhiteSpace(installation.InstallationId))
+            .GroupBy(installation => installation.InstallationId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => group.First().Status,
+                StringComparer.OrdinalIgnoreCase);
 
         _historyRows.Clear();
         foreach (var record in _allHistory
                      .Where(record => installationIds.Contains(record.InstallationId)
                          || (!string.IsNullOrWhiteSpace(customer.CustomerNumber)
-                             && string.Equals(record.CustomerNumber, customer.CustomerNumber, StringComparison.OrdinalIgnoreCase)))
+                     && string.Equals(record.CustomerNumber, customer.CustomerNumber, StringComparison.OrdinalIgnoreCase)))
                      .OrderByDescending(record => record.IssuedAtUtc))
         {
-            _historyRows.Add(new CustomerHistoryRow(record));
+            installationStatuses.TryGetValue(record.InstallationId, out var status);
+            _historyRows.Add(new CustomerHistoryRow(record, status));
         }
     }
 
@@ -314,25 +322,37 @@ public partial class CustomerDetailWindow : Window
 
         public LicenseManagerInstallationRecord Installation { get; }
         public string InstallationId => Installation.InstallationId;
+        public string MachineName => Installation.MachineName ?? string.Empty;
         public bool IsActive => Installation.IsActive;
         public int BillableDeviceCount => Installation.BillableDeviceCount;
         public string StatusDisplay => Installation.IsActive ? "Aktiv" : "Storniert";
         public string ValidUntilDisplay => FormatValidity(Installation.LicenseValidUntilUtc);
+        public string DeviceLocationsDisplay => string.Join("; ", Installation.Devices
+            .Select(device => device.Location)
+            .Where(location => !string.IsNullOrWhiteSpace(location))
+            .Distinct(StringComparer.CurrentCultureIgnoreCase));
     }
 
     private sealed class CustomerHistoryRow
     {
         private readonly IssuedLicenseRecord _record;
+        private readonly LicenseManagerInstallationStatus _status;
 
-        public CustomerHistoryRow(IssuedLicenseRecord record)
+        public CustomerHistoryRow(IssuedLicenseRecord record, LicenseManagerInstallationStatus status)
         {
             _record = record;
+            _status = status;
         }
 
         public string IssuedAtDisplay => _record.IssuedAtUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
         public string InstallationId => _record.InstallationId;
         public string ValidUntilDisplay => FormatValidity(_record.ValidUntilUtc);
         public int DeviceCount => _record.MaxActiveDeviceConnections;
+        public string DeviceLocationsDisplay => string.Join("; ", _record.Devices
+            .Select(device => device.Location)
+            .Where(location => !string.IsNullOrWhiteSpace(location))
+            .Distinct(StringComparer.CurrentCultureIgnoreCase));
+        public string StatusDisplay => _status == LicenseManagerInstallationStatus.Cancelled ? "Storniert" : "Aktiv";
         public string FileName => Path.GetFileName(_record.OutputFilePath);
     }
 

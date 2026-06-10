@@ -7,8 +7,8 @@ Der `XDTBox Lizenzmanager` ist das interne Herstellerwerkzeug fuer Lizenzanfrage
 ## Version und Lizenzlaufzeit
 
 - Produktname: `XDTBox Lizenzmanager`
-- Version: `1.0`
-- FileVersion: `1.0.0.0`
+- Version: `1.11`
+- FileVersion: `1.11.0.0`
 - neue XDTBox-Lizenzen werden standardmaessig unbefristet erzeugt
 - `Gueltig bis` wird fuer diese Lizenzen als `unbefristet` angezeigt
 - eine Lizenz wird nicht durch Ablaufdatum ungueltig, sondern durch falsche InstallationId/Hardware, ungueltige Signatur oder bewusst entfernte lokale Kundendatei auf Kundenseite
@@ -24,6 +24,8 @@ Die Rechnungs-E-Mail ist von der Zahlungsart getrennt. Jeder Kunde kann eine Rec
 - `Bankueberweisung`
 
 SEPA benoetigt mindestens plausible IBAN- und Kontoinhaber-Daten. Bankueberweisung benoetigt keine Bankdaten. Alte Kein-SEPA-Daten werden als Bankueberweisung behandelt.
+
+Im Tab `Kunden` koennen zwei oder mehr Kundensaetze markiert und ueber `Zusammenführen` in einen Zielkunden uebernommen werden. Der Dialog fragt den Hauptkunden und die zu uebernehmenden Stammdaten ab: Kundennummer, Praxis/Firma, Ansprechpartner, Anschrift, PLZ, Ort, Telefon, E-Mail, Rechnungs-E-Mail, Zahlungsart, IBAN, BIC und Kontoinhaber. Installationen/Arbeitsplaetze, aktive lizenzierte Anbindungen inklusive Geraetestandort und die Lizenzhistorie werden in den Zielkunden uebernommen; Quellkunden werden danach nicht mehr separat in der Kundenliste angezeigt.
 
 ## Lizenzierte Geraete
 
@@ -65,7 +67,7 @@ Erwartete Artefakte:
 
 - Publish: `artifacts\publish\XDTBox Lizenzmanager`
 - Setup-Ordner: `artifacts\Lizenzmanager Setup`
-- Setup-Datei: `XDTBox_Lizenzmanager_Setup_1.10.exe`
+- Setup-Datei: `XDTBox_Lizenzmanager_Setup_1.11.exe`
 - Zielordner auf Hersteller-PCs: `C:\XDTBox\Lizenzaktivierung`
 
 Das Setup enthaelt:
@@ -85,6 +87,8 @@ Das Setup enthaelt bewusst nicht:
 - vorhandene Kunden-/History-/Settings-Dateien
 - LicenseManager-Backups
 - lokale Kundendaten
+
+Setups werden nur neu gebaut, wenn Marc dies ausdruecklich beauftragt. Die Version des Lizenzmanagers darf von der XDTBox Kunden-App abweichen.
 
 ## Sicherung und Wiederherstellung
 

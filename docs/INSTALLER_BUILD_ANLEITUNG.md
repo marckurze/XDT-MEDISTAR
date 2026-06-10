@@ -4,6 +4,8 @@ Stand: 2026-06-04
 
 XDTBox 1.10 nutzt fuer das Kunden-Setup Inno Setup 6. Die Entscheidung ist bewusst pragmatisch: XDTBox ist eine klassische lokale Windows-Desktopanwendung, braucht einen frei waehlbaren Installationspfad mit Default `C:\XDTBox`, Startmenue-/Desktop-Verknuepfungen, einen Eintrag in Windows "Programme & Features", Update-Erkennung und einen Deinstaller, der Kundendaten standardmaessig behaelt.
 
+Setups werden ab Version 1.10/1.11 nur auf ausdruecklichen Auftrag von Marc neu gebaut. Die Kunden-App und der XDTBox Lizenzmanager koennen unterschiedliche Setup-Versionen fuehren; aktuell bleibt XDTBox bei `1.10`, der Lizenzmanager steht bei `1.11`.
+
 ## Voraussetzungen
 
 - Windows 10 oder neuer

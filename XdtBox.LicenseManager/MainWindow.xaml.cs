@@ -1,8 +1,10 @@
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,10 +24,12 @@ public partial class MainWindow : Window
     private readonly LicenseManagerCustomerPdfExporter _customerPdfExporter = new();
     private readonly LicenseManagerBackupService _backupService = new();
     private readonly LicenseIssuerService _issuerService = new();
+    private readonly LicenseManagerCustomerMergeService _customerMergeService = new();
     private readonly ObservableCollection<RequestDeviceRow> _requestDeviceRows = new();
     private readonly ObservableCollection<HistoryRow> _historyRows = new();
     private readonly ObservableCollection<IssuedLicenseDeviceRecord> _historyDeviceRows = new();
     private readonly ObservableCollection<CustomerRow> _customerRows = new();
+    private readonly HashSet<string> _markedCustomerIds = new(StringComparer.Ordinal);
 
     private readonly LicenseManagerPaths _paths;
     private LicenseManagerSettings _settings;
@@ -39,6 +43,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Title = $"XDTBox Lizenzmanager {GetApplicationVersionText()}";
 
         _paths = _pathProvider.GetDefaultPaths();
         _settings = _settingsRepository.LoadOrDefault(_paths.SettingsFile, _paths.BaseFolder);
@@ -375,12 +380,14 @@ public partial class MainWindow : Window
         try
         {
             _customerRecords = _customerRepository.LoadOrEmpty(_paths.CustomersFile);
+            PruneMarkedCustomerIds();
             RefreshCustomerRows();
             CustomersStatusText.Text = $"{_customerRecords.Count} Kunde(n) geladen.";
         }
         catch (Exception ex)
         {
             _customerRecords = Array.Empty<LicenseManagerCustomerRecord>();
+            PruneMarkedCustomerIds();
             RefreshCustomerRows();
             CustomersStatusText.Text = $"Kundenliste konnte nicht geladen werden: {ex.Message}";
         }
@@ -513,10 +520,47 @@ public partial class MainWindow : Window
         _customerRows.Clear();
         foreach (var customer in filtered.OrderBy(customer => customer.CustomerName, StringComparer.CurrentCultureIgnoreCase))
         {
-            _customerRows.Add(new CustomerRow(customer, _settings.PricePerDeviceNet));
+            _customerRows.Add(new CustomerRow(
+                customer,
+                _settings.PricePerDeviceNet,
+                _markedCustomerIds.Contains(customer.Id),
+                SetCustomerMarked));
         }
 
+        UpdateMergeCustomersButtonState();
         UpdateCustomerMonthlyTotal();
+    }
+
+    private void SetCustomerMarked(string customerId, bool isMarked)
+    {
+        if (string.IsNullOrWhiteSpace(customerId))
+        {
+            return;
+        }
+
+        if (isMarked)
+        {
+            _markedCustomerIds.Add(customerId);
+        }
+        else
+        {
+            _markedCustomerIds.Remove(customerId);
+        }
+
+        UpdateMergeCustomersButtonState();
+    }
+
+    private void PruneMarkedCustomerIds()
+    {
+        var existingIds = _customerRecords
+            .Select(customer => customer.Id)
+            .ToHashSet(StringComparer.Ordinal);
+        _markedCustomerIds.RemoveWhere(id => !existingIds.Contains(id));
+    }
+
+    private void UpdateMergeCustomersButtonState()
+    {
+        MergeCustomersButton.IsEnabled = _markedCustomerIds.Count >= 2;
     }
 
     private void UpdateCustomerMonthlyTotal()
@@ -581,6 +625,99 @@ public partial class MainWindow : Window
             RefreshCustomerRows();
             CustomersStatusText.Text = "Kundendetails gespeichert.";
         }
+    }
+
+    private void MergeCustomers_Click(object sender, RoutedEventArgs e)
+    {
+        if (_markedCustomerIds.Count < 2)
+        {
+            CustomersStatusText.Text = "Bitte mindestens zwei Kunden markieren.";
+            return;
+        }
+
+        var selectedCustomers = _customerRecords
+            .Where(customer => _markedCustomerIds.Contains(customer.Id))
+            .ToArray();
+        if (selectedCustomers.Length < 2)
+        {
+            CustomersStatusText.Text = "Bitte mindestens zwei Kunden markieren.";
+            PruneMarkedCustomerIds();
+            RefreshCustomerRows();
+            return;
+        }
+
+        var dialog = new CustomerMergeWindow(selectedCustomers)
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true || dialog.MergeSelection is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var selectedIds = selectedCustomers.Select(customer => customer.Id).ToArray();
+            var preview = _customerMergeService.Merge(_customerRecords, selectedIds, dialog.MergeSelection);
+            var historyCount = CountHistoryEntriesForCustomers(selectedCustomers);
+            var confirmation = MessageBox.Show(
+                this,
+                CreateMergeConfirmationText(preview, historyCount),
+                "Kunden zusammenführen",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmation != MessageBoxResult.Yes)
+            {
+                CustomersStatusText.Text = "Kundenzusammenführung abgebrochen.";
+                return;
+            }
+
+            _customerRepository.Save(_paths.CustomersFile, preview.Customers);
+            _customerRecords = preview.Customers;
+            foreach (var removedId in preview.RemovedCustomerIds)
+            {
+                _markedCustomerIds.Remove(removedId);
+            }
+
+            _markedCustomerIds.Remove(preview.TargetCustomer.Id);
+            PruneMarkedCustomerIds();
+            RefreshCustomerRows();
+            CustomersStatusText.Text =
+                $"{preview.MergedCustomerCount} Kunden wurden in \"{preview.TargetCustomer.CustomerName}\" zusammengeführt.";
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Kunden konnten nicht zusammengeführt werden: {ex.Message}");
+        }
+    }
+
+    private int CountHistoryEntriesForCustomers(IReadOnlyList<LicenseManagerCustomerRecord> customers)
+    {
+        var installationIds = customers
+            .SelectMany(customer => customer.EffectiveInstallations)
+            .Select(installation => installation.InstallationId)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var customerNumbers = customers
+            .Select(customer => customer.CustomerNumber)
+            .Where(number => !string.IsNullOrWhiteSpace(number))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return _historyRecords.Count(record =>
+            installationIds.Contains(record.InstallationId)
+            || (!string.IsNullOrWhiteSpace(record.CustomerNumber) && customerNumbers.Contains(record.CustomerNumber)));
+    }
+
+    private static string CreateMergeConfirmationText(LicenseManagerCustomerMergeResult preview, int historyCount)
+    {
+        return
+            $"Zielkunde: {preview.TargetCustomer.CustomerName}{Environment.NewLine}" +
+            $"Zusammenzuführende Kunden: {preview.MergedCustomerCount}{Environment.NewLine}" +
+            $"Übernommene Installationen: {preview.InstallationCount}{Environment.NewLine}" +
+            $"Übernommene aktive Anbindungen: {preview.ActiveLicensedDeviceCount}{Environment.NewLine}" +
+            $"Übernommene Historieneinträge: {historyCount}{Environment.NewLine}{Environment.NewLine}" +
+            "Die Quellkunden werden nach dem Zusammenführen aus der Kundenliste entfernt. Fortfahren?";
     }
 
     private void ExportCustomersPdf_Click(object sender, RoutedEventArgs e)
@@ -1147,6 +1284,17 @@ public partial class MainWindow : Window
             : "Banküberweisung";
     }
 
+    private static string GetApplicationVersionText()
+    {
+        var assembly = typeof(MainWindow).Assembly;
+        var informationalVersion = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+        return string.IsNullOrWhiteSpace(informationalVersion)
+            ? assembly.GetName().Version?.ToString() ?? "unbekannt"
+            : informationalVersion;
+    }
+
     private static string FormatValidity(DateTime? validUntilUtc)
     {
         return XdtBoxLicenseConstants.IsUnlimitedValidUntil(validUntilUtc)
@@ -1338,17 +1486,43 @@ public partial class MainWindow : Window
         public string IssuedAtDisplay => Record.IssuedAtUtc.ToString("yyyy-MM-dd", CultureInfo.CurrentCulture);
     }
 
-    private sealed class CustomerRow
+    private sealed class CustomerRow : INotifyPropertyChanged
     {
         private readonly decimal _pricePerDeviceNet;
+        private readonly Action<string, bool> _markChanged;
+        private bool _isMarked;
 
-        public CustomerRow(LicenseManagerCustomerRecord customer, decimal pricePerDeviceNet)
+        public CustomerRow(
+            LicenseManagerCustomerRecord customer,
+            decimal pricePerDeviceNet,
+            bool isMarked,
+            Action<string, bool> markChanged)
         {
             Customer = customer;
             _pricePerDeviceNet = pricePerDeviceNet;
+            _isMarked = isMarked;
+            _markChanged = markChanged;
         }
 
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         public LicenseManagerCustomerRecord Customer { get; }
+        public bool IsMarked
+        {
+            get => _isMarked;
+            set
+            {
+                if (_isMarked == value)
+                {
+                    return;
+                }
+
+                _isMarked = value;
+                _markChanged(Customer.Id, value);
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMarked)));
+            }
+        }
+
         public string CustomerNumber => Customer.CustomerNumber ?? string.Empty;
         public string CustomerName => Customer.CustomerName;
         public string ContactPerson => Customer.ContactPerson ?? string.Empty;

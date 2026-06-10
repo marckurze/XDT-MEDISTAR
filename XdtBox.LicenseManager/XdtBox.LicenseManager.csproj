@@ -9,9 +9,9 @@
     <AssemblyTitle>XDTBox Lizenzmanager</AssemblyTitle>
     <Product>XDTBox Lizenzmanager</Product>
     <Description>XDTBox Lizenzmanager</Description>
-    <AssemblyVersion>1.10.0.0</AssemblyVersion>
-    <FileVersion>1.10.0.0</FileVersion>
-    <Version>1.10.0</Version>
+    <AssemblyVersion>1.11.0.0</AssemblyVersion>
+    <FileVersion>1.11.0.0</FileVersion>
+    <Version>1.11.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\XdtDeviceBridge.Core\XdtDeviceBridge.Core.csproj" />

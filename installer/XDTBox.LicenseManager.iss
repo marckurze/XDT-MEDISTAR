@@ -1,12 +1,12 @@
-; XDTBox Lizenzmanager 1.10 installer.
+; XDTBox Lizenzmanager 1.11 installer.
 ; Build with scripts/build-xdtbox-licensemanager-installer.ps1.
 
 #define MyAppName "XDTBox Lizenzmanager"
 #ifndef MyAppVersion
-#define MyAppVersion "1.10"
+#define MyAppVersion "1.11"
 #endif
 #ifndef MyVersionInfoVersion
-#define MyVersionInfoVersion "1.10.0.0"
+#define MyVersionInfoVersion "1.11.0.0"
 #endif
 #define MyAppPublisher "Technik-Apparat M.Kurze"
 #define MyAppExeName "XdtBox.LicenseManager.exe"

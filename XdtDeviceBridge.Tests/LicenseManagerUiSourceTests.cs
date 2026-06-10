@@ -130,6 +130,35 @@ public sealed class LicenseManagerUiSourceTests
     }
 
     [Fact]
+    public void LicenseManagerCustomers_ShouldExposeIdBoundMergeSelection()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+        var mergeXaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerMergeWindow.xaml"));
+        var mergeCode = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerMergeWindow.xaml.cs"));
+
+        Assert.Contains("DataGridCheckBoxColumn", xaml);
+        Assert.Contains("Binding=\"{Binding IsMarked, Mode=TwoWay", xaml);
+        Assert.Contains("Content=\"Zusammenführen\"", xaml);
+        Assert.DoesNotContain("Markierte Kunden zusammenführen", xaml);
+        Assert.Contains("_markedCustomerIds", code);
+        Assert.Contains("StringComparer.Ordinal", code);
+        Assert.Contains("UpdateMergeCustomersButtonState", code);
+        Assert.Contains("MergeCustomersButton.IsEnabled = _markedCustomerIds.Count >= 2", code);
+        Assert.Contains("CustomerMergeWindow", code);
+        Assert.Contains("_customerMergeService.Merge", code);
+        Assert.Contains("CreateMergeConfirmationText", code);
+        Assert.Contains("_customerRepository.Save(_paths.CustomersFile, preview.Customers)", code);
+        Assert.Contains("TargetCustomerComboBox", mergeXaml);
+        Assert.Contains("MergeFieldsGrid", mergeXaml);
+        Assert.Contains("Content=\"Zusammenführen\"", mergeXaml);
+        Assert.Contains("LicenseManagerCustomerMergeSelection", mergeCode);
+        Assert.Contains("Kundennummer", mergeCode);
+        Assert.Contains("Kunde / Praxis / Firma", mergeCode);
+        Assert.Contains("Zahlungsart", mergeCode);
+    }
+
+    [Fact]
     public void LicenseManager_ShouldShowOnlyBillableDevicesInLicenseRequest()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
@@ -179,6 +208,36 @@ public sealed class LicenseManagerUiSourceTests
     }
 
     [Fact]
+    public void LicenseManagerCustomerDetails_ShouldShowMergedInstallationAndHistoryContext()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml.cs"));
+
+        Assert.Contains("Header=\"Computername\"", xaml);
+        Assert.Contains("Header=\"Gerätestandorte\"", xaml);
+        Assert.Contains("Header=\"Status\"", xaml);
+        Assert.Contains("MachineName", code);
+        Assert.Contains("DeviceLocationsDisplay", code);
+        Assert.Contains("installationStatuses", code);
+    }
+
+    [Fact]
+    public void AppTitlesAndLicenseManagerVersion_ShouldUseSeparateAssemblyVersions()
+    {
+        var customerAppCode = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var licenseManagerCode = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+        var licenseManagerProject = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "XdtBox.LicenseManager.csproj"));
+        var props = File.ReadAllText(FindWorkspaceFile(".", "Directory.Build.props"));
+
+        Assert.Contains("Title = $\"XDTBox {GetApplicationVersionText()}\"", customerAppCode);
+        Assert.Contains("Title = $\"XDTBox Lizenzmanager {GetApplicationVersionText()}\"", licenseManagerCode);
+        Assert.Contains("<Version>1.10</Version>", props);
+        Assert.Contains("<AssemblyVersion>1.11.0.0</AssemblyVersion>", licenseManagerProject);
+        Assert.Contains("<FileVersion>1.11.0.0</FileVersion>", licenseManagerProject);
+        Assert.Contains("<Version>1.11.0</Version>", licenseManagerProject);
+    }
+
+    [Fact]
     public void LicenseManagerSources_ShouldNotContainVisibleMojibake()
     {
         var files = new[]
@@ -187,6 +246,8 @@ public sealed class LicenseManagerUiSourceTests
             FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"),
             FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml"),
             FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml.cs"),
+            FindWorkspaceFile("XdtBox.LicenseManager", "CustomerMergeWindow.xaml"),
+            FindWorkspaceFile("XdtBox.LicenseManager", "CustomerMergeWindow.xaml.cs"),
             FindWorkspaceFile("XdtDeviceBridge.Infrastructure", "LicenseManagerCustomerPdfExporter.cs")
         };
 
@@ -208,6 +269,9 @@ public sealed class LicenseManagerUiSourceTests
         var inno = File.ReadAllText(FindWorkspaceFile("installer", "XDTBox.LicenseManager.iss"));
 
         Assert.Contains("$setupFileName = \"XDTBox_Lizenzmanager_Setup_$Version.exe\"", script);
+        Assert.Contains("[string]$Version = \"1.11\"", script);
+        Assert.Contains("#define MyAppVersion \"1.11\"", inno);
+        Assert.Contains("#define MyVersionInfoVersion \"1.11.0.0\"", inno);
         Assert.Contains("XDTBox_Lizenzmanager_Setup_{#MyAppVersion}", inno);
         Assert.Contains("XDTBox Lizenzmanager", inno);
         Assert.Contains("license-manager-customers.json", script);

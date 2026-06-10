@@ -219,6 +219,7 @@ public partial class MainWindow : Window
     {
         _nidekRtSerialCommunicationService = new NidekRtSerialPhoropterCommunicationService(_serialDeviceCommunicationService);
         InitializeComponent();
+        Title = $"XDTBox {GetApplicationVersionText()}";
         SetTechnicianWhiteboardMode(TechnicianWhiteboardMode.Hand);
         LoadAppSettings();
         LoadTabProtectionSettings();

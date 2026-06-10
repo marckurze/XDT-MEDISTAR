@@ -29,24 +29,26 @@ Konkret bedeutet das fuer den aktuellen Produktivbetrieb: Beim Oeffnen der XDTBo
 
 Aktuelle Entwicklungsleitlinie: Fertige Geraeteprofile und Templatepakete haben Vorrang vor weiterer Aktivierungs- oder Assistentenarchitektur. Der Baukasten bleibt Werkzeug fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen, nicht der normale Bedienweg.
 
+Aktuelle Lizenzmanager-Leitlinie: Im Tab `Kunden` koennen zwei oder mehr Kundensaetze markiert und ueber `Zusammenführen` in einen Zielkunden uebernommen werden. Der Zielkunde behaelt seine ID; Stammdaten werden feldweise ausgewaehlt, Installationen/Arbeitsplaetze, aktive lizenzierte Anbindungen inklusive Geraetestandort und Lizenzhistorie bleiben ueber InstallationId sichtbar. Quellkunden verschwinden danach aus der aktiven Kundenliste.
+
 Die systematischen Referenzdaten-Batches werden statisch und ohne Ausfuehren fremder Programme ausgewertet. Als sichere neue BuiltIns sind NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P vorbereitet; der NIDEK-Restbatch ergaenzt AR-1, AR-1S, AR-310A, LM-1800PD, NT-1, NT-1E, NT-1P, NT-510 und NT-530 als testseitig abgesicherte XML-Varianten vorhandener Parserfamilien. TOPCON KR-800 nutzt die vorhandene KR800S-XML-Familie als Alias. Der TOPCON-Restbatch ergaenzt CL-300PDL, RM-800 und TRK-3 Omnia als testseitig abgesicherte Varianten der bestehenden TOPCON-XML-Familien. Huvitz-, TOMEY-, Shin-Nippon-, Reichert- und Rodenstock-CX-800-Geraete mit ausreichend klarer Parser-/COM-Logik besitzen isolierte Parser, synthetische Fixtures, BuiltIn-Profile und Templatepaket-Tests. Scriptbasierte Geraete ohne echte Rohdaten bleiben nicht verworfen, brauchen aber echte Praxisrohdateien vor produktiver Freigabe. Rodenstock Phoromat 2000 und Möller-Wedel Visutron bleiben wegen unzureichender beziehungsweise widerspruechlicher Datenlage Kandidaten. Details stehen in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md`.
 
-## 2. Aktuelle Version
+## 2. Aktuelle Versionen
 
-Aktuelle Version laut `VERSION` und `Directory.Build.props`:
+Aktuelle Version der XDTBox Kunden-App laut `VERSION` und `Directory.Build.props`:
 
 ```text
-1.0
+1.10
 ```
 
 Assembly-/Dateiversionen:
 
-- `Version`: `1.0`
-- `AssemblyVersion`: `1.0.0.0`
-- `FileVersion`: `1.0.0.0`
-- `InformationalVersion`: `1.0`
+- `Version`: `1.10`
+- `AssemblyVersion`: `1.10.0.0`
+- `FileVersion`: `1.10.0.0`
+- `InformationalVersion`: `1.10`
 
-Version 1.0 ist die erste offizielle Installer-Version. Das Kunden-Setup wird ueber Inno Setup 6 vorbereitet und schuetzt Kundendaten nach Deinstallationsvariante B.
+Der XDTBox Lizenzmanager fuehrt eine eigene Version und steht aktuell bei `1.11` (`FileVersion` `1.11.0.0`). Kunden-App und Lizenzmanager duerfen unterschiedliche Setup-Versionen haben. Setups werden nur gebaut, wenn Marc dies ausdruecklich beauftragt. Das Kunden-Setup wird ueber Inno Setup 6 vorbereitet und schuetzt Kundendaten nach Deinstallationsvariante B.
 
 ## 3. Praktisch validierter Kernworkflow
 

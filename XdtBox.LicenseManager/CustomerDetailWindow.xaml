@@ -103,6 +103,8 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="130"/>
                                 <DataGridTextColumn Header="InstallationId" Binding="{Binding InstallationId}" Width="2*"/>
+                                <DataGridTextColumn Header="Computername" Binding="{Binding MachineName}" Width="180"/>
+                                <DataGridTextColumn Header="Gerätestandorte" Binding="{Binding DeviceLocationsDisplay}" Width="220"/>
                                 <DataGridTextColumn Header="Geräte" Binding="{Binding BillableDeviceCount}" Width="120"/>
                                 <DataGridTextColumn Header="Gültig bis" Binding="{Binding ValidUntilDisplay}" Width="160"/>
                             </DataGrid.Columns>
@@ -132,8 +134,10 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Ausgestellt" Binding="{Binding IssuedAtDisplay}" Width="140"/>
                             <DataGridTextColumn Header="Installation" Binding="{Binding InstallationId}" Width="2*"/>
+                            <DataGridTextColumn Header="Gerätestandorte" Binding="{Binding DeviceLocationsDisplay}" Width="180"/>
                             <DataGridTextColumn Header="Gültig bis" Binding="{Binding ValidUntilDisplay}" Width="140"/>
                             <DataGridTextColumn Header="Geräte" Binding="{Binding DeviceCount}" Width="100"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding StatusDisplay}" Width="120"/>
                             <DataGridTextColumn Header="Datei" Binding="{Binding FileName}" Width="2*"/>
                         </DataGrid.Columns>
                     </DataGrid>

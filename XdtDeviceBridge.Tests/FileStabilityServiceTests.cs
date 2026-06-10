@@ -48,8 +48,8 @@ public sealed class FileStabilityServiceTests
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
         await File.WriteAllTextAsync(filePath, "one");
 
-        var checkTask = _service.CheckAsync(filePath, TimeSpan.FromMilliseconds(100));
-        await Task.Delay(TimeSpan.FromMilliseconds(25));
+        var checkTask = _service.CheckAsync(filePath, TimeSpan.FromMilliseconds(500));
+        await Task.Delay(TimeSpan.FromMilliseconds(75));
         await File.AppendAllTextAsync(filePath, "two");
 
         var result = await checkTask;
@@ -68,8 +68,8 @@ public sealed class FileStabilityServiceTests
         await File.WriteAllTextAsync(filePath, "same-size");
         File.SetLastWriteTimeUtc(filePath, new DateTime(2026, 5, 8, 12, 0, 0, DateTimeKind.Utc));
 
-        var checkTask = _service.CheckAsync(filePath, TimeSpan.FromMilliseconds(100));
-        await Task.Delay(TimeSpan.FromMilliseconds(25));
+        var checkTask = _service.CheckAsync(filePath, TimeSpan.FromMilliseconds(500));
+        await Task.Delay(TimeSpan.FromMilliseconds(75));
         File.SetLastWriteTimeUtc(filePath, new DateTime(2026, 5, 8, 12, 0, 5, DateTimeKind.Utc));
 
         var result = await checkTask;

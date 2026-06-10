@@ -321,6 +321,178 @@ public sealed class LicenseManagerRepositoryTests
     }
 
     [Fact]
+    public void LicenseManagerCustomerMergeService_ShouldMergeTwoCustomersIntoSelectedTarget()
+    {
+        var target = CreateCustomer("installation-a") with
+        {
+            Id = "customer-a",
+            CustomerNumber = "K-100",
+            CustomerName = "Praxis A"
+        };
+        target = target.WithLicense(CreateRecord("license-a", "Praxis A") with
+        {
+            InstallationId = "installation-a",
+            Devices = CreateIssuedDevices("LM7").Select(device => device with { Location = "Raum 1" }).ToArray()
+        });
+        var source = CreateCustomer("installation-b") with
+        {
+            Id = "customer-b",
+            CustomerNumber = "K-200",
+            CustomerName = "Praxis B",
+            ContactPerson = "Frau B"
+        };
+        source = source.WithLicense(CreateRecord("license-b", "Praxis B") with
+        {
+            InstallationId = "installation-b",
+            Devices = CreateIssuedDevices("AR360", "RT6100").Select(device => device with { Location = "Raum 2" }).ToArray()
+        }) with
+        {
+            ContactPerson = "Frau B"
+        };
+        var selection = new LicenseManagerCustomerMergeSelection(
+            TargetCustomerId: target.Id,
+            CustomerNumber: "K-200",
+            CustomerName: "Praxis Zusammen",
+            ContactPerson: source.ContactPerson,
+            Street: target.Street,
+            PostalCode: target.PostalCode,
+            City: target.City,
+            Phone: target.Phone,
+            Email: target.Email,
+            InvoiceEmail: source.InvoiceEmail,
+            PaymentMethod: LicenseManagerPaymentMethod.BankTransfer,
+            Iban: source.Iban,
+            Bic: source.Bic,
+            AccountHolder: source.AccountHolder);
+
+        var result = new LicenseManagerCustomerMergeService().Merge(
+            new[] { target, source },
+            new[] { target.Id, source.Id },
+            selection);
+
+        var merged = Assert.Single(result.Customers);
+        Assert.Equal(target.Id, merged.Id);
+        Assert.Equal("K-200", merged.CustomerNumber);
+        Assert.Equal("Praxis Zusammen", merged.CustomerName);
+        Assert.Equal("Frau B", merged.ContactPerson);
+        Assert.Equal(LicenseManagerPaymentMethod.BankTransfer, merged.PaymentMethod);
+        Assert.Equal(2, merged.ActiveInstallationCount);
+        Assert.Equal(3, merged.BillableDeviceCount);
+        Assert.Contains(merged.EffectiveInstallations, installation => installation.InstallationId == "installation-a");
+        Assert.Contains(merged.EffectiveInstallations, installation => installation.InstallationId == "installation-b");
+        Assert.Contains(merged.EffectiveDevices, device => device.Location == "Raum 1");
+        Assert.Contains(merged.EffectiveDevices, device => device.Location == "Raum 2");
+        Assert.Equal(new[] { source.Id }, result.RemovedCustomerIds);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerMergeService_ShouldMergeThreeCustomersAndKeepCancelledInstallationsCancelled()
+    {
+        var target = CreateCustomer("installation-a") with { Id = "customer-a" };
+        target = target.WithLicense(CreateRecord("license-a", "Praxis A") with
+        {
+            InstallationId = "installation-a",
+            Devices = CreateIssuedDevices("LM7")
+        });
+        var source = CreateCustomer("installation-b") with { Id = "customer-b" };
+        source = source.WithLicense(CreateRecord("license-b", "Praxis B") with
+        {
+            InstallationId = "installation-b",
+            Devices = CreateIssuedDevices("AR360", "NT530P")
+        });
+        var cancelled = CreateCustomer("installation-c") with { Id = "customer-c" };
+        cancelled = cancelled.WithLicense(CreateRecord("license-c", "Praxis C") with
+        {
+            InstallationId = "installation-c",
+            Devices = CreateIssuedDevices("RT6100")
+        }).CancelInstallation("installation-c", new DateTime(2026, 6, 9, 8, 0, 0, DateTimeKind.Utc), "Storno");
+
+        var result = new LicenseManagerCustomerMergeService().Merge(
+            new[] { target, source, cancelled },
+            new[] { target.Id, source.Id, cancelled.Id },
+            CreateMergeSelectionFrom(target));
+
+        var merged = Assert.Single(result.Customers);
+        Assert.Equal(3, merged.EffectiveInstallations.Count);
+        Assert.Equal(2, merged.ActiveInstallationCount);
+        Assert.Equal(3, merged.BillableDeviceCount);
+        Assert.Contains(merged.EffectiveInstallations, installation =>
+            installation.InstallationId == "installation-c"
+            && installation.Status == LicenseManagerInstallationStatus.Cancelled);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerMergeService_ShouldResolveDuplicateInstallationIdsWithoutDuplicatingDevices()
+    {
+        var target = CreateCustomer("installation-a") with { Id = "customer-a" };
+        target = target.WithLicense(CreateRecord("license-a", "Praxis A") with
+        {
+            InstallationId = "installation-a",
+            Devices = CreateIssuedDevices("LM7").Select(device => device with { Location = "Raum 1" }).ToArray()
+        });
+        var source = CreateCustomer("installation-a") with { Id = "customer-b" };
+        source = source.WithLicense(CreateRecord("license-b", "Praxis B") with
+        {
+            InstallationId = "installation-a",
+            Devices = CreateIssuedDevices("LM7", "AR360").Select(device => device with { Location = "Raum 2" }).ToArray()
+        }).CancelInstallation(
+            "installation-a",
+            new DateTime(2026, 6, 9, 9, 0, 0, DateTimeKind.Utc),
+            "Storno im Bestand");
+
+        var result = new LicenseManagerCustomerMergeService().Merge(
+            new[] { target, source },
+            new[] { target.Id, source.Id },
+            CreateMergeSelectionFrom(target));
+
+        var merged = Assert.Single(result.Customers);
+        var installation = Assert.Single(merged.EffectiveInstallations);
+        Assert.Equal("installation-a", installation.InstallationId);
+        Assert.Equal(LicenseManagerInstallationStatus.Cancelled, installation.Status);
+        Assert.Equal(0, merged.BillableDeviceCount);
+        Assert.Equal(2, installation.Devices.Count);
+        Assert.Contains(installation.Devices, device => device.DeviceDisplayName == "NIDEK LM7" && device.Location == "Raum 2");
+        Assert.Contains(installation.Devices, device => device.DeviceDisplayName == "NIDEK AR360");
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerRepository_MergeCustomers_ShouldPersistAndRoundTripThroughBackup()
+    {
+        var filePath = CreateTempFilePath("customers.json");
+        var repository = new LicenseManagerCustomerRepository();
+        var target = CreateCustomer("installation-a") with { Id = "customer-a" };
+        var source = CreateCustomer("installation-b") with { Id = "customer-b", CustomerName = "Praxis Quelle" };
+        repository.Save(filePath, new[] { target, source });
+
+        var result = repository.MergeCustomers(filePath, new[] { target.Id, source.Id }, CreateMergeSelectionFrom(target));
+        var loaded = repository.LoadOrEmpty(filePath);
+
+        var merged = Assert.Single(loaded);
+        Assert.Equal(result.TargetCustomer.Id, merged.Id);
+        Assert.Equal(2, merged.EffectiveInstallations.Count);
+        Assert.DoesNotContain(loaded, customer => customer.Id == source.Id);
+
+        var baseFolder = Path.Combine(Path.GetTempPath(), "XdtBoxLicenseManagerTests", Guid.NewGuid().ToString("N"));
+        var backupFile = Path.Combine(baseFolder, "backup.xdtbox-licensemanager-backup");
+        var settings = LicenseManagerSettings.CreateDefault(baseFolder);
+        var history = new[]
+        {
+            CreateRecord("license-a", "Praxis A") with { InstallationId = "installation-a" },
+            CreateRecord("license-b", "Praxis Quelle") with { InstallationId = "installation-b" }
+        };
+        var backupService = new LicenseManagerBackupService();
+
+        backupService.CreateBackup(backupFile, loaded, settings, history);
+        var backup = backupService.ReadBackup(backupFile);
+
+        var restoredCustomer = Assert.Single(backup.Customers);
+        Assert.Equal(target.Id, restoredCustomer.Id);
+        Assert.Equal(2, restoredCustomer.EffectiveInstallations.Count);
+        Assert.DoesNotContain(backup.Customers, customer => customer.Id == source.Id);
+        Assert.Equal(2, backup.History.Count);
+    }
+
+    [Fact]
     public void LicenseManagerCustomerRepository_ShouldRejectCorruptedJsonWithControlledMessage()
     {
         var filePath = CreateTempFilePath("customers.json");
@@ -458,6 +630,25 @@ public sealed class LicenseManagerRepositoryTests
                     ConnectionKind: DeviceConnectionKind.NetworkLan)
             },
             UpdatedAtUtc: DateTime.UtcNow);
+    }
+
+    private static LicenseManagerCustomerMergeSelection CreateMergeSelectionFrom(LicenseManagerCustomerRecord target)
+    {
+        return new LicenseManagerCustomerMergeSelection(
+            TargetCustomerId: target.Id,
+            CustomerNumber: target.CustomerNumber,
+            CustomerName: target.CustomerName,
+            ContactPerson: target.ContactPerson,
+            Street: target.Street,
+            PostalCode: target.PostalCode,
+            City: target.City,
+            Phone: target.Phone,
+            Email: target.Email,
+            InvoiceEmail: target.InvoiceEmail,
+            PaymentMethod: target.PaymentMethod,
+            Iban: target.Iban,
+            Bic: target.Bic,
+            AccountHolder: target.AccountHolder);
     }
 
     private static string CreateTempFilePath(string fileName)
