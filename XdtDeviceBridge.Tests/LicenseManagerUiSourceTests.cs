@@ -231,7 +231,7 @@ public sealed class LicenseManagerUiSourceTests
 
         Assert.Contains("Title = $\"XDTBox {GetApplicationVersionText()}\"", customerAppCode);
         Assert.Contains("Title = $\"XDTBox Lizenzmanager {GetApplicationVersionText()}\"", licenseManagerCode);
-        Assert.Contains("<Version>1.10</Version>", props);
+        Assert.Contains("<Version>1.11</Version>", props);
         Assert.Contains("<AssemblyVersion>1.11.0.0</AssemblyVersion>", licenseManagerProject);
         Assert.Contains("<FileVersion>1.11.0.0</FileVersion>", licenseManagerProject);
         Assert.Contains("<Version>1.11.0</Version>", licenseManagerProject);

@@ -83,6 +83,25 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
     }
 
     [Fact]
+    public void CreateDevicePlaceholders_ShouldExposeKr800SVisualAcuityValues()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+        var measurements = ParseFixture("Topcon", "KR800S", "M-Serial0426_20241126_145500_TOPCON_KR-800S_4871341.xml");
+
+        var placeholders = _service.CreateDevicePlaceholders(profile, measurements);
+
+        Assert.True(_service.IsCompatibleWithDeviceProfile(profile, measurements));
+        Assert.Contains(placeholders, placeholder =>
+            placeholder.Token == "{Device.Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R}"
+            && placeholder.ExampleValue == "0.6");
+        Assert.Contains(placeholders, placeholder =>
+            placeholder.Token == "{Device.Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L}"
+            && placeholder.ExampleValue == "1.0");
+        Assert.Contains(placeholders, placeholder =>
+            placeholder.Token == "{Device.Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity}");
+    }
+
+    [Fact]
     public void CreateDevicePlaceholders_ShouldShowRt3100PracticeCaptureValues()
     {
         var profile = DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault();

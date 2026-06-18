@@ -38,15 +38,15 @@ Die systematischen Referenzdaten-Batches werden statisch und ohne Ausfuehren fre
 Aktuelle Version der XDTBox Kunden-App laut `VERSION` und `Directory.Build.props`:
 
 ```text
-1.10
+1.11
 ```
 
 Assembly-/Dateiversionen:
 
-- `Version`: `1.10`
-- `AssemblyVersion`: `1.10.0.0`
-- `FileVersion`: `1.10.0.0`
-- `InformationalVersion`: `1.10`
+- `Version`: `1.11`
+- `AssemblyVersion`: `1.11.0.0`
+- `FileVersion`: `1.11.0.0`
+- `InformationalVersion`: `1.11`
 
 Der XDTBox Lizenzmanager fuehrt eine eigene Version und steht aktuell bei `1.11` (`FileVersion` `1.11.0.0`). Kunden-App und Lizenzmanager duerfen unterschiedliche Setup-Versionen haben. Setups werden nur gebaut, wenn Marc dies ausdruecklich beauftragt. Das Kunden-Setup wird ueber Inno Setup 6 vorbereitet und schuetzt Kundendaten nach Deinstallationsvariante B.
 

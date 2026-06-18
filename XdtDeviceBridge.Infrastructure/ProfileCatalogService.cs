@@ -12,6 +12,7 @@ public sealed class ProfileCatalogService
     private const string Nt530PDefaultExportProfileId = "export-medistar-nidek-nt530p-default";
     private const string TopconCl300DefaultDeviceProfileId = "device-topcon-cl300-default";
     private const string TopconCl300DefaultExportProfileId = "export-medistar-topcon-cl300-default";
+    private const string TopconKr800DefaultDeviceProfileId = "device-topcon-kr800-default";
     private const string TopconKr800DefaultExportProfileId = "export-medistar-topcon-kr800-default";
     private const string TopconTrk2PDefaultDeviceProfileId = "device-topcon-trk2p-default";
     private const string TopconTrk2PDefaultExportProfileId = "export-medistar-topcon-trk2p-default";
@@ -605,6 +606,7 @@ public sealed class ProfileCatalogService
     private void RepairBuiltInDeviceProfileIfNeeded(string folder, DeviceProfileDefinition defaultProfile)
     {
         if (!string.Equals(defaultProfile.Metadata.Id, TopconCl300DefaultDeviceProfileId, StringComparison.Ordinal)
+            && !string.Equals(defaultProfile.Metadata.Id, TopconKr800DefaultDeviceProfileId, StringComparison.Ordinal)
             && !string.Equals(defaultProfile.Metadata.Id, TopconTrk2PDefaultDeviceProfileId, StringComparison.Ordinal)
             && !string.Equals(defaultProfile.Metadata.Id, TopconCv5000DefaultDeviceProfileId, StringComparison.Ordinal))
         {
@@ -737,6 +739,7 @@ public sealed class ProfileCatalogService
     private static bool NeedsBuiltInDeviceProfileRepair(DeviceProfileDefinition profile)
     {
         return NeedsTopconCl300DeviceProfileRepair(profile)
+            || NeedsTopconKr800SDeviceProfileRepair(profile)
             || NeedsTopconTrk2PDeviceProfileRepair(profile)
             || NeedsTopconCv5000DeviceProfileRepair(profile);
     }
@@ -805,6 +808,31 @@ public sealed class ProfileCatalogService
             || profile.Measurements.Any(measurement => string.Equals(
                 measurement.SourcePath,
                 "Measure[@Type='TM']/Tono/CorrectedLine",
+                StringComparison.Ordinal));
+    }
+
+    private static bool NeedsTopconKr800SDeviceProfileRepair(DeviceProfileDefinition profile)
+    {
+        if (!string.Equals(profile.Metadata.Id, TopconKr800DefaultDeviceProfileId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R",
+                StringComparison.Ordinal))
+            || !profile.Measurements.Any(measurement => string.Equals(
+                measurement.SourcePath,
+                "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L",
                 StringComparison.Ordinal));
     }
 
@@ -920,13 +948,17 @@ public sealed class ProfileCatalogService
             IsLegacyTopconKr800SKeratometryRule(rule)
             || ContainsLegacyTopconKr800SPath(rule.SourcePath)
             || ContainsLegacyTopconKr800SPath(rule.OutputTemplate))
-            || !profile.Rules.Any(rule => string.Equals(
-                rule.TargetFieldCode,
-                "6228",
-                StringComparison.Ordinal)
+            || profile.Rules.Any(rule =>
+                rule.TargetFieldCode == "6228"
                 && string.Equals(
                     rule.SourcePath,
                     "Device.Measure[@Type='REF']/REF/R/MedistarLine",
+                    StringComparison.Ordinal))
+            || profile.Rules.Any(rule =>
+                rule.TargetFieldCode == "6228"
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='REF']/REF/L/MedistarLine",
                     StringComparison.Ordinal))
             || !profile.Rules.Any(rule => string.Equals(
                 rule.TargetFieldCode,
@@ -934,7 +966,15 @@ public sealed class ProfileCatalogService
                 StringComparison.Ordinal)
                 && string.Equals(
                     rule.SourcePath,
-                    "Device.Measure[@Type='REF']/REF/L/MedistarLine",
+                    "Device.Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity",
+                    StringComparison.Ordinal))
+            || !profile.Rules.Any(rule => string.Equals(
+                rule.TargetFieldCode,
+                "6228",
+                StringComparison.Ordinal)
+                && string.Equals(
+                    rule.SourcePath,
+                    "Device.Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity",
                     StringComparison.Ordinal))
             || !profile.Rules.Any(rule => string.Equals(
                 rule.TargetFieldCode,

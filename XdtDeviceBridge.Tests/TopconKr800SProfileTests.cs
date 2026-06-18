@@ -41,6 +41,8 @@ public sealed class TopconKr800SProfileTests
         AssertMeasurement(result, "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B", "58.50");
         AssertMeasurement(result, "Measure[@Type='REF']/REF/R/MedistarLine", "R.:S=- 5.50 Z=+ 0.00*  0 PD= 58 VD= 13.75");
         AssertMeasurement(result, "Measure[@Type='REF']/REF/L/MedistarLine", "L.:S=- 5.25 Z=+ 0.00*  0");
+        AssertMeasurement(result, "Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity", "R.:S=- 5.50 Z=+ 0.00*  0 PD= 58 VD= 13.75");
+        AssertMeasurement(result, "Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity", "L.:S=- 5.25 Z=+ 0.00*  0 VA=0.7");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine1", "R: R1=7.70 43.75 *180 R2=7.70 43.75 *90 // L: R1=7.70 43.75 *180 R2=7.69 43.75 *90");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine2", "R: AV=7.70 43.75 CYL=+0.00 0 // L: AV=7.70 43.75 CYL=+0.00 0");
         AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine1", "Subjektive Refraktion Full Correction FAR:");
@@ -76,6 +78,8 @@ public sealed class TopconKr800SProfileTests
         AssertMeasurement(result, "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L", "1.0");
         AssertMeasurement(result, "Measure[@Type='REF']/REF/R/MedistarLine", "R.:S=+ 3.75 Z=- 4.00* 13 PD= 66 VD= 13.75");
         AssertMeasurement(result, "Measure[@Type='REF']/REF/L/MedistarLine", "L.:S=+ 3.75 Z=- 2.50*173");
+        AssertMeasurement(result, "Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity", "R.:S=+ 3.75 Z=- 4.00* 13 PD= 66 VD= 13.75 VA=0.6");
+        AssertMeasurement(result, "Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity", "L.:S=+ 3.75 Z=- 2.50*173 VA=1.0");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine1", "R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81");
         AssertMeasurement(result, "Measure[@Type='KM']/KM/MedistarLine2", "R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171");
         AssertMeasurement(result, "Measure[@Type='SBJ']/MedistarLine1", "Subjektive Refraktion Full Correction FAR:");
@@ -104,7 +108,7 @@ public sealed class TopconKr800SProfileTests
         Assert.Empty(exportResult.Issues);
         Assert.Contains("8402KR800S", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6228R.:S=- 5.50 Z=+ 0.00*  0 PD= 58 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6228L.:S=- 5.25 Z=+ 0.00*  0", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=- 5.25 Z=+ 0.00*  0 VA=0.7", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6221R: R1=7.70 43.75 *180 R2=7.70 43.75 *90 // L: R1=7.70 43.75 *180 R2=7.69 43.75 *90", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6221R: AV=7.70 43.75 CYL=+0.00 0 // L: AV=7.70 43.75 CYL=+0.00 0", exportResult.Content, StringComparison.Ordinal);
         Assert.DoesNotContain("R.:S= Z=*", exportResult.Content, StringComparison.Ordinal);
@@ -122,7 +126,7 @@ public sealed class TopconKr800SProfileTests
             new[]
             {
                 "R.:S=- 5.50 Z=+ 0.00*  0 PD= 58 VD= 13.75",
-                "L.:S=- 5.25 Z=+ 0.00*  0"
+                "L.:S=- 5.25 Z=+ 0.00*  0 VA=0.7"
             },
             result.Records.Where(record => record.FieldCode == "6228").Select(record => record.Value).ToArray());
         Assert.Equal(2, result.Records.Count(record => record.FieldCode == "6221"));
@@ -141,8 +145,8 @@ public sealed class TopconKr800SProfileTests
         Assert.False(mappingResult.HasErrors, string.Join(Environment.NewLine, mappingResult.Issues.Select(issue => issue.Message)));
         Assert.Empty(exportResult.Issues);
         Assert.Contains("8402KR800S", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6228R.:S=+ 3.75 Z=- 4.00* 13 PD= 66 VD= 13.75", exportResult.Content, StringComparison.Ordinal);
-        Assert.Contains("6228L.:S=+ 3.75 Z=- 2.50*173", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228R.:S=+ 3.75 Z=- 4.00* 13 PD= 66 VD= 13.75 VA=0.6", exportResult.Content, StringComparison.Ordinal);
+        Assert.Contains("6228L.:S=+ 3.75 Z=- 2.50*173 VA=1.0", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6221R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6221R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171", exportResult.Content, StringComparison.Ordinal);
         Assert.Contains("6227Subjektive Refraktion Full Correction FAR:", exportResult.Content, StringComparison.Ordinal);
@@ -189,12 +193,15 @@ public sealed class TopconKr800SProfileTests
         Assert.Equal("KR-800S", deviceProfile.Model);
         Assert.Contains("Subjective", deviceProfile.DeviceType);
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R");
+        Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L");
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='KM']/KM/MedistarLine1");
         Assert.Contains(deviceProfile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/MedistarLine1");
         Assert.Empty(DeviceProfileDefinitionValidator.Validate(deviceProfile));
 
         Assert.Equal("device-topcon-kr800-default", exportProfile.SourceDeviceProfileId);
-        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
+        Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity");
         Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine1");
         Assert.Contains(exportProfile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
         Assert.DoesNotContain(exportProfile.Rules, rule => rule.TargetFieldCode is "6205" or "6220" or "6302" or "6303" or "6304" or "6305");

@@ -12,7 +12,7 @@ Aus einem statisch ausgewerteten Referenzdatenbestand wurden 100 Geraeteordner g
 
 Aktuelle Versionen:
 
-- XDTBox Kunden-App: `1.10`
+- XDTBox Kunden-App: `1.11`
 - XDTBox Lizenzmanager: `1.11`
 
 Die Setup-Versionen von Kunden-App und Lizenzmanager duerfen auseinanderlaufen. Setups werden ab diesem Stand nur auf ausdruecklichen Auftrag neu gebaut. XDTBox bleibt eine lokale Windows-Desktop-App ohne Cloudpflicht, ohne Windows-Dienst, ohne Windows-Autostart und ohne FileSystemWatcher. Der validierte Kernworkflow MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link wurde am 2026-05-11 praktisch geprüft; externe Anhänge können über `6302`, `6303`, optional `6304` und `6305` in das AIS übernommen und aus der Karteikarte geöffnet werden.
@@ -53,7 +53,7 @@ Der optionale Tab-Schutz sperrt alle Haupttabs ausser `Verarbeitung`. Er ist sta
 
 ## Installation, Update und Kundendaten
 
-XDTBox 1.10 besitzt ein reproduzierbares Inno-Setup-Skript und eine Buildanleitung in [`docs/INSTALLER_BUILD_ANLEITUNG.md`](docs/INSTALLER_BUILD_ANLEITUNG.md). Der Default-Installationspfad ist `C:\XDTBox`, der Benutzer kann ihn bei Neuinstallation aendern. Das Setup unterscheidet Neuinstallation und Update, erzeugt `XDTBox_Setup_1.10.exe`, nutzt das offizielle `XDTBox.ico`, legt Startmenue- und optional Desktop-Verknuepfungen an und traegt XDTBox in Windows "Programme & Features" ein.
+XDTBox 1.11 besitzt ein reproduzierbares Inno-Setup-Skript und eine Buildanleitung in [`docs/INSTALLER_BUILD_ANLEITUNG.md`](docs/INSTALLER_BUILD_ANLEITUNG.md). Der Default-Installationspfad ist `C:\XDTBox`, der Benutzer kann ihn bei Neuinstallation aendern. Das Setup unterscheidet Neuinstallation und Update, erzeugt `XDTBox_Setup_1.11.exe`, nutzt das offizielle `XDTBox.ico`, legt Startmenue- und optional Desktop-Verknuepfungen an und traegt XDTBox in Windows "Programme & Features" ein.
 
 Die Datenpolitik ist in [`docs/INSTALLATION_UPDATE_DATENPOLITIK.md`](docs/INSTALLATION_UPDATE_DATENPOLITIK.md) festgelegt. App-Dateien, Hilfe, Themes, Standard-Assets und BuiltIn-Definitionen duerfen durch Updates ersetzt beziehungsweise repariert werden. Kundendaten unter `%LocalAppData%\XdtDeviceBridge` bleiben erhalten: Profile, UserDefined-Schnittstellenprofile, COM-Port-/Ordnerparameter, Baukasten-Templates, lokale Geraetebilder, `device-image-overrides.json`, lokale Geraetesteckbrief-Overrides, Techniker-Whiteboard-Notizen, Tab-Schutz-Konfiguration, Lizenzdaten inklusive `license.xdtboxlic`, UI-Einstellungen und Backups. Die Lizenz-Kundendaten sind in der UI in Praxis/Firma, Kontakt, Rechnungsversand und Bank/SEPA getrennt und koennen optional Rechnungs-E-Mail, Bankdaten, SEPA-Zustimmung und Rechnung-Option enthalten.
 

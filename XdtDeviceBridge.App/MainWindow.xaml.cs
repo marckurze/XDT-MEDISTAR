@@ -30,6 +30,9 @@ public partial class MainWindow : Window
     private const string AppIconResourcePath = "Assets/App/XDTBox.ico";
     private const bool MonitoringNotificationSoundEnabled = true;
     private const string InterfaceProfileFilterAll = "Alle";
+    private const string InterfaceProfileScopeFilterAll = "Alle Profile";
+    private const string InterfaceProfileScopeFilterUserDefined = "Eigene Profile";
+    private const int LicensedDeviceGracePeriodDays = 30;
 
     private static readonly DependencyProperty RadarAnimationKeyProperty = DependencyProperty.RegisterAttached(
         "RadarAnimationKey",
@@ -1403,6 +1406,7 @@ public partial class MainWindow : Window
         {
             var previousManufacturer = InterfaceManufacturerFilterComboBox.SelectedItem as string;
             var previousAis = InterfaceAisFilterComboBox.SelectedItem as string;
+            var previousScope = InterfaceProfileScopeFilterComboBox.SelectedItem as string;
 
             var manufacturerOptions = catalog.InterfaceProfiles
                 .Select(profile => GetDeviceProfile(catalog, profile.DeviceProfileId)?.Manufacturer)
@@ -1420,14 +1424,24 @@ public partial class MainWindow : Window
                 .Prepend(InterfaceProfileFilterAll)
                 .ToArray();
 
+            var scopeOptions = new[]
+            {
+                InterfaceProfileScopeFilterAll,
+                InterfaceProfileScopeFilterUserDefined
+            };
+
             InterfaceManufacturerFilterComboBox.ItemsSource = manufacturerOptions;
             InterfaceAisFilterComboBox.ItemsSource = aisOptions;
+            InterfaceProfileScopeFilterComboBox.ItemsSource = scopeOptions;
             InterfaceManufacturerFilterComboBox.SelectedItem = manufacturerOptions.FirstOrDefault(option =>
                 string.Equals(option, previousManufacturer, StringComparison.CurrentCultureIgnoreCase))
                 ?? InterfaceProfileFilterAll;
             InterfaceAisFilterComboBox.SelectedItem = aisOptions.FirstOrDefault(option =>
                 string.Equals(option, previousAis, StringComparison.CurrentCultureIgnoreCase))
                 ?? InterfaceProfileFilterAll;
+            InterfaceProfileScopeFilterComboBox.SelectedItem = scopeOptions.FirstOrDefault(option =>
+                string.Equals(option, previousScope, StringComparison.CurrentCultureIgnoreCase))
+                ?? InterfaceProfileScopeFilterAll;
         }
         finally
         {
@@ -1480,10 +1494,12 @@ public partial class MainWindow : Window
     {
         var manufacturerFilter = InterfaceManufacturerFilterComboBox.SelectedItem as string;
         var aisFilter = InterfaceAisFilterComboBox.SelectedItem as string;
+        var scopeFilter = InterfaceProfileScopeFilterComboBox.SelectedItem as string;
 
         return catalog.InterfaceProfiles
             .Where(profile => MatchesInterfaceManufacturerFilter(catalog, profile, manufacturerFilter))
             .Where(profile => MatchesInterfaceAisFilter(catalog, profile, aisFilter))
+            .Where(profile => MatchesInterfaceProfileScopeFilter(profile, scopeFilter))
             .OrderBy(profile => profile.Metadata.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
     }
@@ -1516,6 +1532,20 @@ public partial class MainWindow : Window
 
         var aisName = GetAisProfile(catalog, profile.AisProfileId)?.Name ?? profile.AisProfileId;
         return string.Equals(aisName, aisFilter, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private static bool MatchesInterfaceProfileScopeFilter(
+        InterfaceProfileDefinition profile,
+        string? scopeFilter)
+    {
+        if (string.IsNullOrWhiteSpace(scopeFilter)
+            || string.Equals(scopeFilter, InterfaceProfileScopeFilterAll, StringComparison.CurrentCultureIgnoreCase))
+        {
+            return true;
+        }
+
+        return string.Equals(scopeFilter, InterfaceProfileScopeFilterUserDefined, StringComparison.CurrentCultureIgnoreCase)
+            && profile.Metadata.IsUserDefined;
     }
 
     private static AisProfile? GetAisProfile(ProfileCatalog catalog, string? profileId)
@@ -4864,16 +4894,29 @@ public partial class MainWindow : Window
 
     private void ShowLicensedDeviceStates(LicenseInfo? license)
     {
-        ShowLicensedDeviceStates(license, LoadGracePeriodStoreOrEmpty());
+        var nowUtc = DateTime.UtcNow;
+        var gracePeriodStore = EnsureGracePeriodsForUncoveredLicenseDevices(
+            license,
+            nowUtc,
+            appendResultMessage: false);
+        ShowLicensedDeviceStates(license, gracePeriodStore, nowUtc);
     }
 
     private void ShowLicensedDeviceStates(LicenseInfo? license, LicensedDeviceGracePeriodStore gracePeriodStore)
+    {
+        ShowLicensedDeviceStates(license, gracePeriodStore, DateTime.UtcNow);
+    }
+
+    private void ShowLicensedDeviceStates(
+        LicenseInfo? license,
+        LicensedDeviceGracePeriodStore gracePeriodStore,
+        DateTime nowUtc)
     {
         var states = _licensedDeviceStateEvaluator.Evaluate(
                 _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>(),
                 license,
                 gracePeriodStore.GracePeriods,
-                DateTime.UtcNow)
+                nowUtc)
             .ToList();
         var deviceLocationsByInterfaceProfileId = LoadLicenseDeviceLocationStoreOrEmpty().ToDictionary();
 
@@ -8414,6 +8457,76 @@ public partial class MainWindow : Window
             : "Mindestens eine aktive lizenzpflichtige Anbindung ist nicht durch die aktuelle Lizenz gedeckt. Die Anzeige sperrt keine Verarbeitung.";
     }
 
+    private LicensedDeviceGracePeriodStore EnsureGracePeriodsForUncoveredLicenseDevices(
+        LicenseInfo? license,
+        DateTime nowUtc,
+        bool appendResultMessage)
+    {
+        try
+        {
+            var paths = _appDataPathProvider.GetDefaultUserPaths();
+            var existingStore = _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
+            var existingGracePeriodIds = existingStore.GracePeriods
+                .Select(gracePeriod => gracePeriod.InterfaceProfileId)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var states = _licensedDeviceStateEvaluator.Evaluate(
+                _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>(),
+                license,
+                existingStore.GracePeriods,
+                nowUtc);
+            var updatedStore = _licensedDeviceGracePeriodService.EnsureGracePeriodsForUncoveredDevices(
+                states,
+                existingStore,
+                nowUtc,
+                LicensedDeviceGracePeriodDays);
+            var validationIssues = updatedStore.Validate();
+            if (validationIssues.Count > 0)
+            {
+                AppendLicenseMessage("Karenzzeiten wurden nicht gespeichert, weil die Daten ungueltig sind.");
+                foreach (var issue in validationIssues)
+                {
+                    AppendLicenseMessage($"[Karenzzeit] {issue}");
+                }
+
+                return existingStore;
+            }
+
+            var newGracePeriodCount = updatedStore.GracePeriods.Count(gracePeriod =>
+                !existingGracePeriodIds.Contains(gracePeriod.InterfaceProfileId));
+
+            if (!AreGracePeriodStoresEqual(existingStore, updatedStore))
+            {
+                _licensedDeviceGracePeriodRepository.Save(paths.DeviceGracePeriodsFile, updatedStore);
+            }
+
+            if (appendResultMessage)
+            {
+                if (newGracePeriodCount == 0)
+                {
+                    AppendLicenseMessageOnce("Keine neuen Karenzzeiten erforderlich.");
+                }
+                else
+                {
+                    AppendLicenseMessage($"Karenzzeiten aktualisiert: {newGracePeriodCount} neue Karenzzeit(en) angelegt.");
+                }
+            }
+
+            return updatedStore;
+        }
+        catch (Exception ex)
+        {
+            AppendLicenseMessage($"Karenzzeiten konnten nicht aktualisiert werden: {ex.Message}");
+            return LoadGracePeriodStoreOrEmpty();
+        }
+    }
+
+    private static bool AreGracePeriodStoresEqual(
+        LicensedDeviceGracePeriodStore left,
+        LicensedDeviceGracePeriodStore right)
+    {
+        return left.GracePeriods.SequenceEqual(right.GracePeriods);
+    }
+
     private LicensedDeviceGracePeriodStore LoadGracePeriodStoreOrEmpty()
     {
         try
@@ -8727,43 +8840,11 @@ public partial class MainWindow : Window
             var installation = _installationInfo ?? _installationInfoProvider.GetOrCreate(paths.BaseFolder);
             _installationInfo = installation;
             var license = LoadCurrentDisplayLicenseFromLocalSource(paths, installation);
-            var existingStore = _licensedDeviceGracePeriodRepository.LoadOrEmpty(paths.DeviceGracePeriodsFile);
-            var existingGracePeriodIds = existingStore.GracePeriods
-                .Select(gracePeriod => gracePeriod.InterfaceProfileId)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var states = _licensedDeviceStateEvaluator.Evaluate(
-                _profileCatalog?.InterfaceProfiles ?? Array.Empty<InterfaceProfileDefinition>(),
+            EnsureGracePeriodsForUncoveredLicenseDevices(
                 license,
-                existingStore.GracePeriods,
-                nowUtc);
-            var updatedStore = _licensedDeviceGracePeriodService.EnsureGracePeriodsForUncoveredDevices(
-                states,
-                existingStore,
                 nowUtc,
-                graceDays: 30);
-            var newGracePeriodCount = updatedStore.GracePeriods.Count(gracePeriod => !existingGracePeriodIds.Contains(gracePeriod.InterfaceProfileId));
-
-            var validationIssues = updatedStore.Validate();
-            if (validationIssues.Count > 0)
-            {
-                AppendLicenseMessage("Karenzzeiten wurden nicht gespeichert, weil die Daten ungueltig sind.");
-                foreach (var issue in validationIssues)
-                {
-                    AppendLicenseMessage($"[Karenzzeit] {issue}");
-                }
-
-                return;
-            }
-
-            _licensedDeviceGracePeriodRepository.Save(paths.DeviceGracePeriodsFile, updatedStore);
+                appendResultMessage: true);
             RefreshLicensedDeviceStatesFromLocalLicense();
-            if (newGracePeriodCount == 0)
-            {
-                AppendLicenseMessageOnce("Keine neuen Karenzzeiten erforderlich.");
-                return;
-            }
-
-            AppendLicenseMessage($"Karenzzeiten aktualisiert: {newGracePeriodCount} neue Karenzzeit(en) angelegt.");
         }
         catch (Exception ex)
         {

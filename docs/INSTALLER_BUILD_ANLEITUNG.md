@@ -1,10 +1,10 @@
-# XDTBox 1.10 Installer bauen
+# XDTBox 1.11 Installer bauen
 
 Stand: 2026-06-04
 
-XDTBox 1.10 nutzt fuer das Kunden-Setup Inno Setup 6. Die Entscheidung ist bewusst pragmatisch: XDTBox ist eine klassische lokale Windows-Desktopanwendung, braucht einen frei waehlbaren Installationspfad mit Default `C:\XDTBox`, Startmenue-/Desktop-Verknuepfungen, einen Eintrag in Windows "Programme & Features", Update-Erkennung und einen Deinstaller, der Kundendaten standardmaessig behaelt.
+XDTBox 1.11 nutzt fuer das Kunden-Setup Inno Setup 6. Die Entscheidung ist bewusst pragmatisch: XDTBox ist eine klassische lokale Windows-Desktopanwendung, braucht einen frei waehlbaren Installationspfad mit Default `C:\XDTBox`, Startmenue-/Desktop-Verknuepfungen, einen Eintrag in Windows "Programme & Features", Update-Erkennung und einen Deinstaller, der Kundendaten standardmaessig behaelt.
 
-Setups werden ab Version 1.10/1.11 nur auf ausdruecklichen Auftrag von Marc neu gebaut. Die Kunden-App und der XDTBox Lizenzmanager koennen unterschiedliche Setup-Versionen fuehren; aktuell bleibt XDTBox bei `1.10`, der Lizenzmanager steht bei `1.11`.
+Setups werden ab Version 1.11 nur auf ausdruecklichen Auftrag von Marc neu gebaut. Die Kunden-App und der XDTBox Lizenzmanager koennen unterschiedliche Setup-Versionen fuehren; aktuell steht XDTBox bei `1.11`, der Lizenzmanager steht bei `1.11`.
 
 ## Voraussetzungen
 
@@ -34,7 +34,7 @@ Ergebnis:
 
 ```text
 artifacts\publish\XDTBox
-artifacts\installer\XDTBox_Setup_1.10.exe
+artifacts\installer\XDTBox_Setup_1.11.exe
 ```
 
 Wenn Inno Setup auf dem Build-PC fehlt, bleibt die Publish-Ausgabe bestehen und das Skript meldet klar, dass `ISCC.exe` installiert oder per `ISCC_EXE` angegeben werden muss.
@@ -91,7 +91,7 @@ Fuer kuenftige Release-Artefakte muss auf dem lokalen Build-PC erneut ausgefuehr
 
 Zu dokumentieren sind danach:
 
-- Pfad und Groesse von `artifacts\installer\XDTBox_Setup_1.10.exe`
+- Pfad und Groesse von `artifacts\installer\XDTBox_Setup_1.11.exe`
 - erfolgreiche Publish-Validierung ohne lokale Entwicklungs-/Kundendaten
 - erfolgreicher App-Start aus `artifacts\publish\XDTBox\XdtDeviceBridge.App.exe`
 
@@ -207,9 +207,9 @@ Externe Praxisordner werden niemals geloescht.
 ## Manuelle Pruefschritte
 
 1. `.\scripts\build-xdtbox-installer.ps1` ausfuehren.
-2. `artifacts\installer\XDTBox_Setup_1.10.exe` starten.
+2. `artifacts\installer\XDTBox_Setup_1.11.exe` starten.
 3. Neuinstallation in einem Testordner durchfuehren.
-4. App starten und im Info-Dialog Version `1.10` pruefen.
+4. App starten und im Info-Dialog Version `1.11` pruefen.
 5. Fuer einen nackten First-Run `%LocalAppData%\XdtDeviceBridge` vorher sichern/umbenennen oder einen frischen Windows-Benutzer verwenden.
 6. App starten und in `Profilverwaltung` beziehungsweise `XDT-Baukasten` pruefen, dass BuiltIn-Geraete ihre offiziellen Bilder aus App-Assets zeigen und keine lokalen UserDefined-/Override-Daten geladen werden.
 7. Update erneut ueber denselben Ordner ausfuehren.

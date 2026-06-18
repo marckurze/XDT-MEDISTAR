@@ -8,14 +8,14 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 ### Version
 
-- Aktuelle XDTBox Kunden-App-Version: `1.10`
+- Aktuelle XDTBox Kunden-App-Version: `1.11`
 - Aktuelle XDTBox Lizenzmanager-Version: `1.11`
 - `VERSION` und `Directory.Build.props` fuehren die Kunden-App:
-  - `Version`: `1.10`
-  - `AssemblyVersion`: `1.10.0.0`
-  - `FileVersion`: `1.10.0.0`
-  - `InformationalVersion`: `1.10`
-- Der Lizenzmanager fuehrt eigene Assembly-/FileVersionen und darf von der Kunden-App abweichen. XDTBox 1.10 ist die aktuelle Kundeninstaller-Version; der Lizenzmanager steht bei 1.11. Setups werden nur neu gebaut, wenn Marc dies ausdruecklich beauftragt.
+  - `Version`: `1.11`
+  - `AssemblyVersion`: `1.11.0.0`
+  - `FileVersion`: `1.11.0.0`
+  - `InformationalVersion`: `1.11`
+- Der Lizenzmanager fuehrt eigene Assembly-/FileVersionen und darf von der Kunden-App abweichen. XDTBox 1.11 ist die aktuelle Kundeninstaller-Version; der Lizenzmanager steht bei 1.11. Setups werden nur neu gebaut, wenn Marc dies ausdruecklich beauftragt.
 
 ### Projektleitlinie ab 2026-05-12
 

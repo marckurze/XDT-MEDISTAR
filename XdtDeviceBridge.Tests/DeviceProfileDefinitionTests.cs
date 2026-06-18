@@ -458,6 +458,8 @@ public sealed class DeviceProfileDefinitionTests
         AssertRequiredMeasurement(profile, "kr800-ref-l-axis", "Measure[@Type='REF']/REF/L/Median/Axis");
         AssertOptionalMeasurement(profile, "kr800-ref-r-medistar-line", "Measure[@Type='REF']/REF/R/MedistarLine");
         AssertOptionalMeasurement(profile, "kr800-ref-l-medistar-line", "Measure[@Type='REF']/REF/L/MedistarLine");
+        AssertOptionalMeasurement(profile, "kr800-ref-r-medistar-line-va", "Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity");
+        AssertOptionalMeasurement(profile, "kr800-ref-l-medistar-line-va", "Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity");
     }
 
     [Fact]
@@ -479,8 +481,16 @@ public sealed class DeviceProfileDefinitionTests
         var profile = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
 
         AssertOptionalMeasurement(profile, "kr800-sbj-far-r-sphere", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Sph");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-r-cylinder", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Cyl");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-r-axis", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/R/Axis");
         AssertOptionalMeasurement(profile, "kr800-sbj-far-l-sphere", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Sph");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-l-cylinder", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Cyl");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-l-axis", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/RefractionData/L/Axis");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-va-r", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R");
+        AssertOptionalMeasurement(profile, "kr800-sbj-far-va-l", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L");
         AssertOptionalMeasurement(profile, "kr800-sbj-pd-b", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/PD/B");
+        AssertOptionalMeasurement(profile, "kr800-sbj-near-r-sphere", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='2']/RefractionData/R/Sph");
+        AssertOptionalMeasurement(profile, "kr800-sbj-near-l-sphere", "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='2']/RefractionData/L/Sph");
         AssertOptionalMeasurement(profile, "kr800-sbj-line1", "Measure[@Type='SBJ']/MedistarLine1");
         AssertOptionalMeasurement(profile, "kr800-sbj-line2", "Measure[@Type='SBJ']/MedistarLine2");
     }

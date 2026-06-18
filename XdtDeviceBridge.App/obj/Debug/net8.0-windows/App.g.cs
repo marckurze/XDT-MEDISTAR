@@ -58,7 +58,7 @@ namespace XdtDeviceBridge.App {
             
             #line default
             #line hidden
-            System.Uri resourceLocater = new System.Uri("/XdtDeviceBridge.App;V1.10.0.0;component/app.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/XdtDeviceBridge.App;V1.11.0.0;component/app.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\App.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

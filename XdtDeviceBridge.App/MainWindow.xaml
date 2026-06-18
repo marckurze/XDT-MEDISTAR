@@ -45,8 +45,65 @@
                 </DockPanel>
             </Grid>
         </Border>
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" ClipToBounds="True">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel x:Name="TabUtilityButtonsPanel"
+                        Grid.Row="0"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Margin="0,4,12,4">
+                <Button x:Name="TabBaukastenUndoButton"
+                        Content="↶"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        ToolTip="Letzte Baukasten-Änderung rückgängig machen"
+                        IsEnabled="False"
+                        Click="XdtBaukastenUndo_Click"/>
+                <Button x:Name="TabHelpButton"
+                        Content="?"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        ToolTip="Hilfe und Info"
+                        Click="TabHelpButton_Click">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Hilfe" Click="OpenHelpCenter_Click"/>
+                            <MenuItem Header="Info" Click="OpenAboutDialog_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+                <Button x:Name="AppSettingsButton"
+                        Content="⚙"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        ToolTip="App-Einstellungen"
+                        Click="OpenAppSettings_Click"/>
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="4,0,6,0">
+                    <TextBlock x:Name="TabProtectionStatusTextBlock"
+                               Text="TAB Schutz nicht aktiviert"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
+                               Margin="0,0,6,0"/>
+                    <ToggleButton x:Name="TabProtectionToggleButton"
+                                  Style="{StaticResource XdtBoxTabProtectionToggleStyle}"
+                                  ToolTip="Tab-Schutz sperren oder entsperren"
+                                  Click="TabProtectionToggleButton_Click"/>
+                </StackPanel>
+                <Button x:Name="AppExitButton"
+                        Content="Beenden"
+                        Width="86"
+                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
+                        FontSize="13"
+                        ToolTip="XDTBox vollständig beenden"
+                        Click="AppExitButton_Click"/>
+            </StackPanel>
         <TabControl x:Name="MainTabControl"
+                    Grid.Row="1"
                     SelectionChanged="MainTabControl_SelectionChanged">
             <TabItem Header="Verarbeitung">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -1558,13 +1615,17 @@
                                       Grid.Column="0"
                                       Grid.ColumnSpan="2"
                                       Margin="12,0,0,30">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="260"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="240"/>
                                         <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="520"/>
+                                        <ColumnDefinition Width="180"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
@@ -1593,16 +1654,31 @@
                                               SelectionChanged="InterfaceProfileFilter_SelectionChanged"
                                               ToolTip="Filtert die Schnittstellenprofile nach AIS-System."/>
                                     <TextBlock Grid.Column="4"
-                                               Text="Schnittstellenprofil:"
+                                               Text="Profilumfang:"
                                                FontWeight="Bold"
                                                VerticalAlignment="Center"
                                                Margin="0,0,6,0"/>
-                                    <ComboBox x:Name="InterfaceProfileComboBox"
+                                    <ComboBox x:Name="InterfaceProfileScopeFilterComboBox"
                                               Grid.Column="5"
+                                              MaxWidth="180"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="InterfaceProfileFilter_SelectionChanged"
+                                              ToolTip="Filtert nach allen oder nur eigenen Schnittstellenprofilen."/>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="0"
+                                               Text="Schnittstellenprofil:"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"
+                                               Margin="0,8,6,0"/>
+                                    <ComboBox x:Name="InterfaceProfileComboBox"
+                                              Grid.Row="1"
+                                              Grid.Column="1"
+                                              Grid.ColumnSpan="5"
                                               DisplayMemberPath="Metadata.Name"
                                               MinWidth="320"
                                               MaxWidth="520"
                                               HorizontalAlignment="Stretch"
+                                              Margin="0,8,0,0"
                                               ToolTip="{Binding SelectedItem.Metadata.Name, RelativeSource={RelativeSource Self}}"
                                               SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
                                 </Grid>
@@ -2910,58 +2986,6 @@
                 </ScrollViewer>
             </TabItem>
         </TabControl>
-            <StackPanel x:Name="TabUtilityButtonsPanel"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="0,4,12,0"
-                        Panel.ZIndex="10">
-                <Button x:Name="TabBaukastenUndoButton"
-                        Content="↶"
-                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
-                        ToolTip="Letzte Baukasten-Änderung rückgängig machen"
-                        IsEnabled="False"
-                        Click="XdtBaukastenUndo_Click"/>
-                <Button x:Name="TabHelpButton"
-                        Content="?"
-                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
-                        ToolTip="Hilfe und Info"
-                        Click="TabHelpButton_Click">
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Hilfe" Click="OpenHelpCenter_Click"/>
-                            <MenuItem Header="Info" Click="OpenAboutDialog_Click"/>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-                <Button x:Name="AppSettingsButton"
-                        Content="⚙"
-                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
-                        ToolTip="App-Einstellungen"
-                        Click="OpenAppSettings_Click"/>
-                <StackPanel Orientation="Horizontal"
-                            VerticalAlignment="Center"
-                            Margin="4,0,6,0">
-                    <TextBlock x:Name="TabProtectionStatusTextBlock"
-                               Text="TAB Schutz nicht aktiviert"
-                               VerticalAlignment="Center"
-                               FontSize="11"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource XdtBoxMutedTextBrush}"
-                               Margin="0,0,6,0"/>
-                    <ToggleButton x:Name="TabProtectionToggleButton"
-                                  Style="{StaticResource XdtBoxTabProtectionToggleStyle}"
-                                  ToolTip="Tab-Schutz sperren oder entsperren"
-                                  Click="TabProtectionToggleButton_Click"/>
-                </StackPanel>
-                <Button x:Name="AppExitButton"
-                        Content="Beenden"
-                        Width="86"
-                        Style="{StaticResource XdtBoxTabUtilityButtonStyle}"
-                        FontSize="13"
-                        ToolTip="XDTBox vollständig beenden"
-                        Click="AppExitButton_Click"/>
-            </StackPanel>
         </Grid>
     </Grid>
 </Window>

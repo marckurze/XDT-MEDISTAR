@@ -453,8 +453,8 @@ public sealed class ExportProfileDefinitionTests
             .ToList();
 
         Assert.Equal(2, refRules.Count);
-        Assert.Contains(refRules, rule => rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
-        Assert.Contains(refRules, rule => rule.SourcePath == "Device.Measure[@Type='REF']/REF/L/MedistarLine");
+        Assert.Contains(refRules, rule => rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity");
+        Assert.Contains(refRules, rule => rule.SourcePath == "Device.Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity");
         Assert.All(refRules, rule => Assert.Equal("{value}", rule.OutputTemplate));
     }
 

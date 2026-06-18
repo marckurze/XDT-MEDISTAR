@@ -384,10 +384,13 @@ public sealed class XmlDeviceParser
             return;
         }
 
+        var sbjMeasure = FindMeasure(root, "SBJ");
+        var sbjFarVisualAcuity = GetTopconKr800SSbjFarVisualAcuity(sbjMeasure);
+
         var refMeasure = FindMeasure(root, "REF");
         if (refMeasure is not null)
         {
-            AddTopconKr800SRefMedistarLines(measurements, refMeasure);
+            AddTopconKr800SRefMedistarLines(measurements, refMeasure, sbjFarVisualAcuity);
         }
 
         var kmMeasure = FindMeasure(root, "KM");
@@ -396,7 +399,6 @@ public sealed class XmlDeviceParser
             AddTopconKr800SKmMedistarLines(measurements, kmMeasure);
         }
 
-        var sbjMeasure = FindMeasure(root, "SBJ");
         if (sbjMeasure is not null)
         {
             AddTopconKr800SSbjMedistarLines(measurements, sbjMeasure);
@@ -427,7 +429,7 @@ public sealed class XmlDeviceParser
         var refMeasure = FindMeasure(root, "REF");
         if (refMeasure is not null)
         {
-            AddTopconKr800SRefMedistarLines(measurements, refMeasure);
+            AddTopconKr800SRefMedistarLines(measurements, refMeasure, null);
         }
     }
 
@@ -455,7 +457,7 @@ public sealed class XmlDeviceParser
         var refMeasure = FindMeasure(root, "REF");
         if (refMeasure is not null)
         {
-            AddTopconKr800SRefMedistarLines(measurements, refMeasure);
+            AddTopconKr800SRefMedistarLines(measurements, refMeasure, null);
         }
 
         var kmMeasure = FindMeasure(root, "KM");
@@ -749,7 +751,10 @@ public sealed class XmlDeviceParser
             "SBJ");
     }
 
-    private static void AddTopconKr800SRefMedistarLines(List<MeasurementValue> measurements, XElement refMeasure)
+    private static void AddTopconKr800SRefMedistarLines(
+        List<MeasurementValue> measurements,
+        XElement refMeasure,
+        TopconKr800SVisualAcuity? sbjFarVisualAcuity)
     {
         var refRoot = FindChild(refMeasure, "REF");
         if (refRoot is null)
@@ -759,9 +764,24 @@ public sealed class XmlDeviceParser
 
         var pd = GetChildValue(FindChild(refMeasure, "PD") ?? new XElement("PD"), "Distance");
         var vd = GetChildValue(refMeasure, "VD");
+        var addVisualAcuityLine = sbjFarVisualAcuity is not null;
 
-        AddTopconKr800SRefEyeLine(measurements, "R", FindChild(FindChild(refRoot, "R") ?? new XElement("R"), "Median"), pd, vd);
-        AddTopconKr800SRefEyeLine(measurements, "L", FindChild(FindChild(refRoot, "L") ?? new XElement("L"), "Median"), null, null);
+        AddTopconKr800SRefEyeLine(
+            measurements,
+            "R",
+            FindChild(FindChild(refRoot, "R") ?? new XElement("R"), "Median"),
+            pd,
+            vd,
+            sbjFarVisualAcuity?.Right,
+            addVisualAcuityLine);
+        AddTopconKr800SRefEyeLine(
+            measurements,
+            "L",
+            FindChild(FindChild(refRoot, "L") ?? new XElement("L"), "Median"),
+            null,
+            null,
+            sbjFarVisualAcuity?.Left,
+            addVisualAcuityLine);
     }
 
     private static void AddTopconKr800SRefEyeLine(
@@ -769,7 +789,9 @@ public sealed class XmlDeviceParser
         string eye,
         XElement? median,
         string? pd,
-        string? vd)
+        string? vd,
+        string? visualAcuity,
+        bool addVisualAcuityLine)
     {
         var line = BuildRefractionEyeLine(eye, median);
         if (string.IsNullOrWhiteSpace(line))
@@ -795,6 +817,71 @@ public sealed class XmlDeviceParser
             null,
             eye,
             "REF");
+
+        if (!addVisualAcuityLine)
+        {
+            return;
+        }
+
+        AddMeasurement(
+            measurements,
+            $"Measure[@Type='REF']/REF/{eye}/MedistarLineWithVisualAcuity",
+            $"{eye} MEDISTAR TOPCON KR-800S REF-Zeile mit Visus",
+            AppendVisualAcuity(line, visualAcuity),
+            null,
+            eye,
+            "REF");
+    }
+
+    private static TopconKr800SVisualAcuity GetTopconKr800SSbjFarVisualAcuity(XElement? sbjMeasure)
+    {
+        var fullCorrection = FindTopconKr800SSbjFarVisualAcuity(sbjMeasure, requireFullCorrection: true);
+        return fullCorrection.HasAny
+            ? fullCorrection
+            : FindTopconKr800SSbjFarVisualAcuity(sbjMeasure, requireFullCorrection: false);
+    }
+
+    private static TopconKr800SVisualAcuity FindTopconKr800SSbjFarVisualAcuity(XElement? sbjMeasure, bool requireFullCorrection)
+    {
+        var refractionTest = sbjMeasure is null ? null : FindChild(sbjMeasure, "RefractionTest");
+        if (refractionTest is null)
+        {
+            return TopconKr800SVisualAcuity.Empty;
+        }
+
+        foreach (var type in FindChildren(refractionTest, "Type"))
+        {
+            var typeName = NormalizeSubjectiveTypeName(GetChildValue(type, "TypeName") ?? string.Empty);
+            if (requireFullCorrection
+                && !string.Equals(typeName, "Full Correction", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            foreach (var examDistance in FindChildren(type, "ExamDistance"))
+            {
+                if (!string.Equals(DetermineDistanceLabel(GetChildValue(examDistance, "Distance")), "FAR", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var va = FindChild(examDistance, "VA");
+                if (va is null)
+                {
+                    continue;
+                }
+
+                var result = new TopconKr800SVisualAcuity(
+                    NullIfWhiteSpace(GetChildValue(va, "R")),
+                    NullIfWhiteSpace(GetChildValue(va, "L")));
+                if (result.HasAny)
+                {
+                    return result;
+                }
+            }
+        }
+
+        return TopconKr800SVisualAcuity.Empty;
     }
 
     private static void AddTopconKr800SKmMedistarLines(List<MeasurementValue> measurements, XElement kmMeasure)
@@ -1844,6 +1931,13 @@ public sealed class XmlDeviceParser
             : $"{line} VA={visualAcuity.Trim()}";
     }
 
+    private static string AppendVisualAcuity(string line, string? visualAcuity)
+    {
+        return string.IsNullOrWhiteSpace(visualAcuity)
+            ? line
+            : $"{line} VA={visualAcuity.Trim()}";
+    }
+
     private static string? BuildCv5000EyeLine(string eye, XElement? eyeElement, string? binocularPd, string? vd)
     {
         var line = BuildRefractionEyeLine(eye, eyeElement);
@@ -2392,6 +2486,11 @@ public sealed class XmlDeviceParser
         return null;
     }
 
+    private static string? NullIfWhiteSpace(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
     private static void AddMeasurement(
         List<MeasurementValue> measurements,
         string sourcePath,
@@ -2431,6 +2530,13 @@ public sealed class XmlDeviceParser
         string? Cct);
 
     private sealed record TopconTrk2PMedistarLine(string Key, string DisplayName, string Value);
+
+    private sealed record TopconKr800SVisualAcuity(string? Right, string? Left)
+    {
+        public static TopconKr800SVisualAcuity Empty { get; } = new(null, null);
+
+        public bool HasAny => !string.IsNullOrWhiteSpace(Right) || !string.IsNullOrWhiteSpace(Left);
+    }
 
     private sealed record TopconTrk2PCctValues(string? SelectedMillimeters, IReadOnlyList<string> ListMillimeters)
     {

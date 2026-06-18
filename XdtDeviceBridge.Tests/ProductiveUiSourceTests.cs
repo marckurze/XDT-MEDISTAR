@@ -55,6 +55,9 @@ public sealed class ProductiveUiSourceTests
         var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
         Assert.Contains("x:Name=\"TabUtilityButtonsPanel\"", xaml);
+        Assert.Contains("<Grid Grid.Row=\"1\" ClipToBounds=\"True\">", xaml);
+        Assert.Contains("Grid.Row=\"0\"", xaml);
+        Assert.Contains("Grid.Row=\"1\"", xaml);
         Assert.Contains("x:Name=\"TabHelpButton\"", xaml);
         Assert.Contains("x:Name=\"AppSettingsButton\"", xaml);
         Assert.Contains("x:Name=\"TabProtectionStatusTextBlock\"", xaml);
@@ -431,9 +434,11 @@ public sealed class ProductiveUiSourceTests
 
         Assert.Contains("InterfaceManufacturerFilterComboBox", section);
         Assert.Contains("InterfaceAisFilterComboBox", section);
+        Assert.Contains("InterfaceProfileScopeFilterComboBox", section);
         Assert.Contains("InterfaceProfileSelectionGrid", section);
         Assert.Contains("Gerätehersteller:", section);
         Assert.Contains("AIS-System:", section);
+        Assert.Contains("Profilumfang:", section);
         Assert.Contains("Schnittstellenprofil:", section);
         Assert.Contains("x:Name=\"InterfaceProfileComboBox\"", section);
         Assert.Contains("MaxWidth=\"520\"", section);
@@ -444,6 +449,8 @@ public sealed class ProductiveUiSourceTests
         Assert.DoesNotContain("Lizenzpflichtig", section);
         Assert.Contains("PopulateInterfaceProfileFilters", code);
         Assert.Contains("GetFilteredInterfaceProfiles", code);
+        Assert.Contains("MatchesInterfaceProfileScopeFilter", code);
+        Assert.Contains("profile.Metadata.IsUserDefined", code);
         Assert.Contains("ShowAisOutputInfo_Click", code);
     }
 

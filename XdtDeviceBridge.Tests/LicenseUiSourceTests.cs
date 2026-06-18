@@ -63,8 +63,23 @@ public sealed class LicenseUiSourceTests
         var body = ExtractMethodBody(code, "UpdateGracePeriods_Click", "ExportTemplatePackage_Click");
 
         Assert.Contains("LoadCurrentDisplayLicenseFromLocalSource(paths, installation)", body);
+        Assert.Contains("EnsureGracePeriodsForUncoveredLicenseDevices", body);
         Assert.Contains("RefreshLicensedDeviceStatesFromLocalLicense();", body);
         Assert.DoesNotContain("_licenseFileRepository.Load(paths.LicenseFile)", body);
+    }
+
+    [Fact]
+    public void MainWindow_ShowLicensedDeviceStates_ShouldStartMissingGracePeriodsAutomatically()
+    {
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var body = ExtractMethodBody(
+            code,
+            "private void ShowLicensedDeviceStates(LicenseInfo? license)",
+            "private void ShowLicensedDeviceStates(LicenseInfo? license, LicensedDeviceGracePeriodStore gracePeriodStore)");
+
+        Assert.Contains("EnsureGracePeriodsForUncoveredLicenseDevices", body);
+        Assert.Contains("appendResultMessage: false", body);
+        Assert.Contains("ShowLicensedDeviceStates(license, gracePeriodStore, nowUtc);", body);
     }
 
     [Fact]

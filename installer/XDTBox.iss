@@ -1,12 +1,12 @@
-; XDTBox 1.10 customer installer.
+; XDTBox 1.11 customer installer.
 ; Build with Inno Setup 6 after publishing the WPF app through scripts/build-xdtbox-installer.ps1.
 
 #define MyAppName "XDTBox"
 #ifndef MyAppVersion
-#define MyAppVersion "1.10"
+#define MyAppVersion "1.11"
 #endif
 #ifndef MyVersionInfoVersion
-#define MyVersionInfoVersion "1.10.0.0"
+#define MyVersionInfoVersion "1.11.0.0"
 #endif
 #define MyAppPublisher "Technik-Apparat M.Kurze"
 #define MyAppExeName "XdtDeviceBridge.App.exe"

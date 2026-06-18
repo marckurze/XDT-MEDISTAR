@@ -331,8 +331,8 @@ public sealed class ProfileCatalogServiceTests
         var profile = Assert.Single(catalog.ExportProfiles, profile => profile.Metadata.Id == "export-medistar-topcon-kr800-default");
         Assert.True(profile.Metadata.IsBuiltIn);
         Assert.False(profile.Metadata.IsUserDefined);
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLine");
-        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/L/MedistarLine");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity");
+        Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && rule.SourcePath == "Device.Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine1");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6221" && rule.SourcePath == "Device.Measure[@Type='KM']/KM/MedistarLine2");
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6227" && rule.SourcePath == "Device.Measure[@Type='SBJ']/MedistarLine1");
@@ -362,6 +362,28 @@ public sealed class ProfileCatalogServiceTests
         Assert.True(profile.Metadata.IsUserDefined);
         Assert.Contains(profile.Rules, rule => ContainsLegacyTopconKr800SPath(rule.OutputTemplate));
         Assert.Contains(profile.Rules, rule => rule.TargetFieldCode == "6228" && (rule.OutputTemplate?.Contains("K1=", StringComparison.OrdinalIgnoreCase) ?? false));
+    }
+
+    [Fact]
+    public void EnsureDefaultProfiles_ShouldRepairLegacyTopconKr800SBuiltInDeviceProfile()
+    {
+        var paths = CreateAppDataPaths();
+        _service.Save(paths, new ProfileCatalog(
+            AisProfiles: Array.Empty<AisProfile>(),
+            DeviceProfiles: new[] { CreateLegacyTopconKr800SDeviceProfile(isBuiltIn: true) },
+            ExportProfiles: Array.Empty<ExportProfileDefinition>(),
+            InterfaceProfiles: Array.Empty<InterfaceProfileDefinition>()));
+
+        _service.EnsureDefaultProfiles(paths);
+        var catalog = _service.Load(paths);
+
+        var profile = Assert.Single(catalog.DeviceProfiles, profile => profile.Metadata.Id == "device-topcon-kr800-default");
+        Assert.True(profile.Metadata.IsBuiltIn);
+        Assert.False(profile.Metadata.IsUserDefined);
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='REF']/REF/L/MedistarLineWithVisualAcuity");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R");
+        Assert.Contains(profile.Measurements, measurement => measurement.SourcePath == "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L");
     }
 
     [Fact]
@@ -996,6 +1018,31 @@ public sealed class ProfileCatalogServiceTests
                         true,
                         "Legacy TOPCON CL300 left lensmeter template with root-prefixed paths.")
                 })
+                .ToArray()
+        };
+    }
+
+    private static DeviceProfileDefinition CreateLegacyTopconKr800SDeviceProfile(bool isBuiltIn)
+    {
+        var current = DefaultDeviceProfileDefinitions.CreateTopconKr800Default();
+        return current with
+        {
+            Metadata = current.Metadata with
+            {
+                IsBuiltIn = isBuiltIn,
+                IsUserDefined = !isBuiltIn
+            },
+            Measurements = current.Measurements
+                .Where(measurement =>
+                    !measurement.SourcePath.EndsWith("/MedistarLineWithVisualAcuity", StringComparison.Ordinal)
+                    && !string.Equals(
+                        measurement.SourcePath,
+                        "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/R",
+                        StringComparison.Ordinal)
+                    && !string.Equals(
+                        measurement.SourcePath,
+                        "Measure[@Type='SBJ']/RefractionTest/Type[@No='1']/ExamDistance[@No='1']/VA/L",
+                        StringComparison.Ordinal))
                 .ToArray()
         };
     }
