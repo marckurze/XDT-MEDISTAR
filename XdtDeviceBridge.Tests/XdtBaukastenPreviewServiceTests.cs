@@ -57,6 +57,31 @@ public sealed class XdtBaukastenPreviewServiceTests
     }
 
     [Fact]
+    public void BuildPreview_ShouldUseCurrentWorkingRuleTextAfterManualDraftChanges()
+    {
+        using var temp = new TempFolder();
+        var aisPath = WriteGdt(temp.Path);
+        var devicePath = CopyLm7Fixture(temp.Path);
+        var state = CreateLm7State(aisPath, devicePath);
+        var rightRule = state.WorkingExportRules.Single(rule => rule.Id == "7");
+        var service = new XdtBaukastenPreviewService();
+
+        Assert.True(state.UpdateWorkingRule(rightRule with { OutputTemplate = "{value} LIVE-ZUSATZ" }));
+        var withAddition = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default());
+
+        Assert.True(withAddition.Success, string.Join(Environment.NewLine, withAddition.Messages));
+        Assert.Contains("R.:S=+ 6.25 Z=- 3.25*  3 LIVE-ZUSATZ", withAddition.Output.AisView);
+
+        Assert.True(state.UpdateWorkingRule(rightRule with { OutputTemplate = "{value}" }));
+        var afterDeletion = service.BuildPreview(state, DefaultInterfaceProfileDefinitions.CreateMedistarNidekLm7Default());
+
+        Assert.True(afterDeletion.Success, string.Join(Environment.NewLine, afterDeletion.Messages));
+        Assert.Contains("R.:S=+ 6.25 Z=- 3.25*  3", afterDeletion.Output.AisView);
+        Assert.DoesNotContain("LIVE-ZUSATZ", afterDeletion.Output.AisView);
+        Assert.DoesNotContain("LIVE-ZUSATZ", afterDeletion.Output.RawXdt);
+    }
+
+    [Fact]
     public void BuildPreview_ShouldKeepAr360BaukastenReferenceWorking()
     {
         using var temp = new TempFolder();

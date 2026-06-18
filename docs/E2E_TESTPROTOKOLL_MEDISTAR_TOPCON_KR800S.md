@@ -1,10 +1,10 @@
 # E2E-Testprotokoll MEDISTAR + TOPCON KR800S / KR-800S
 
-Stand: 2026-05-21
+Stand: 2026-06-18
 
 ## Status
 
-Praktisch validiert fuer REF-/KM-/SBJ-XDT-Rueckgabe aus echten TOPCON KR800S XML-Dateien.
+Praktisch validiert fuer REF-/KM-/SBJ-XDT-Rueckgabe aus echten TOPCON KR800S XML-Dateien. Die VA-/Visuswerte stammen aus den gelieferten Geraetedaten; XDTBox berechnet sie nicht.
 
 Der Workflow wurde mit dem BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON KR800S` getestet. Das Geraetefenster ist korrekt angelegt und funktionsfaehig. Nach der gezielten Reparatur alter persistierter BuiltIn-Exportprofile und der Trennung der SBJ-Header-/Messwertzeilen wird die MEDISTAR-XDT-Rueckgabe korrekt erzeugt.
 
@@ -14,11 +14,13 @@ Der Workflow wurde mit dem BuiltIn-Schnittstellenprofil `MEDISTAR + TOPCON KR800
 - TOPCON KR800S liefert eine XML-Geraetedatei.
 - Die App erkennt TOPCON KR800S XML ueber `Company = TOPCON`, `ModelName = KR-800S` und die Measure-Bloecke `REF`, `KM` und `SBJ`.
 - Die App liest REF-, KM- und SBJ-Werte aus der XML-Datei.
+- Die App uebernimmt VA-Werte nur, wenn sie in der Geraetedatei geliefert und geparst wurden.
 - Die App erzeugt eine MEDISTAR-kompatible XDT-Rueckgabedatei.
 - MEDISTAR uebernimmt `8402` / Untersuchungsart aus AIS.
 - MEDISTAR uebernimmt `6228` fuer REF / Autorefraktion.
 - MEDISTAR uebernimmt `6221` fuer KM / Keratometrie.
 - MEDISTAR uebernimmt `6227` fuer SBJ / subjektive Refraktion.
+- Der XDT-Baukasten bietet die geparsten KR800S-Einzelwerte inklusive VA als klickbare Platzhalter an.
 
 ## Validierte Ergebnisfelder
 
@@ -70,8 +72,8 @@ Fuer Serial0426 liegen testseitig validierte Erwartungswerte fuer den echten KR8
 
 ```text
 8402 KR800S
-6228 R.:S=+ 3.75 Z=- 4.00* 13 PD= 66 VD= 13.75
-6228 L.:S=+ 3.75 Z=- 2.50*173
+6228 R.:S=+ 3.75 Z=- 4.00* 13 PD= 66 VD= 13.75 VA=0.6
+6228 L.:S=+ 3.75 Z=- 2.50*173 VA=1.0
 6221 R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81
 6221 R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171
 6227 Subjektive Refraktion Full Correction FAR:
@@ -83,6 +85,7 @@ Fuer Serial0426 liegen testseitig validierte Erwartungswerte fuer den echten KR8
 Fachlich bestaetigt:
 
 - REF-Werte werden ueber `6228` ausgegeben.
+- VA wird zusaetzlich in den `6228`-REF-Zeilen ausgegeben, wenn das Geraet den Wert liefert.
 - KM-R1/R2 und KM-AV/CYL werden ueber `6221` ausgegeben.
 - SBJ Full Correction FAR/NEAR wird ueber getrennte `6227`-Header-/Messwertzeilen ausgegeben.
 - `8402` kommt aus AIS.
@@ -114,6 +117,7 @@ Fachlich bestaetigt:
 - KM-Zeilen werden nicht ueber `6228` ausgegeben.
 - Fuer KR800S werden keine `6205`- oder `6220`-Zeilen erzeugt.
 - Fuer KR800S-Messwerte werden keine Anhangfelder `6302` bis `6305` erzeugt.
+- XDTBox uebernimmt vom Geraet gelieferte Einzelwerte und stellt sie als Platzhalter bereit; es werden keine Visus- oder Messwerte berechnet.
 
 ## Grenzen und offene Punkte
 

@@ -8,14 +8,14 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 ### Version
 
-- Aktuelle XDTBox Kunden-App-Version: `1.11`
+- Aktuelle XDTBox Kunden-App-Version: `1.12`
 - Aktuelle XDTBox Lizenzmanager-Version: `1.11`
 - `VERSION` und `Directory.Build.props` fuehren die Kunden-App:
-  - `Version`: `1.11`
-  - `AssemblyVersion`: `1.11.0.0`
-  - `FileVersion`: `1.11.0.0`
-  - `InformationalVersion`: `1.11`
-- Der Lizenzmanager fuehrt eigene Assembly-/FileVersionen und darf von der Kunden-App abweichen. XDTBox 1.11 ist die aktuelle Kundeninstaller-Version; der Lizenzmanager steht bei 1.11. Setups werden nur neu gebaut, wenn Marc dies ausdruecklich beauftragt.
+  - `Version`: `1.12`
+  - `AssemblyVersion`: `1.12.0.0`
+  - `FileVersion`: `1.12.0.0`
+  - `InformationalVersion`: `1.12`
+- Der Lizenzmanager fuehrt eigene Assembly-/FileVersionen und darf von der Kunden-App abweichen. XDTBox 1.12 ist die aktuelle Kundeninstaller-Version; der Lizenzmanager steht bei 1.11. Setups werden nur neu gebaut, wenn Marc dies ausdruecklich beauftragt.
 
 ### Projektleitlinie ab 2026-05-12
 
@@ -151,7 +151,7 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 - `MEDISTAR + NIDEK NT530P` ist als praktisch validierter Tonometrie-/Pachymetrie-Kandidat vorhanden: echte UTF-16-XML-Fixture, BuiltIn-Geraeteprofil, Exportprofil mit mehrzeiliger `6205`-Tonometrie samt Header, `6220`-Pachymetrie samt Header, Schnittstellenprofil, selektiver Templatepaket-Test, korrigierter Nachlauf nach Mehrfachanhang-Export und produktive MEDISTAR-Abnahme sind abgesichert. NT530P-JPG-/Mehrfachanhang-Sonderfaelle bleiben offen.
 - `MEDISTAR + TOPCON CL300` ist als erster TOPCON-Lensmeter-Referenzkandidat praktisch validiert: echte CL-300-XML-Fixtures mit `nsCommon`/`nsLM`, BuiltIn-Geraeteprofil, Exportprofil, Schnittstellenprofil, `6228`-MedistarLine-Ausgabe mit ADD, PD und signierten H/V-Prismenkomponenten, selektiver Templatepaket-Test und Praxisprotokoll sind vorhanden.
 - `MEDISTAR + TOPCON Solos` ist als weiterer TOPCON-Lensmeter-Kandidat testseitig vorbereitet: echte `SolosExportSample.xml`-Fixture mit `ModelName = SOLOS`, BuiltIn-Geraeteprofil, Exportprofil, Schnittstellenprofil, `6228`-MedistarLine-Ausgabe mit PD und signierten H-Prismen, selektiver Templatepaket-Test und Fixture-Protokoll sind vorhanden. Transmission und PDF-Berichte bleiben ohne echte gefuellte Fixtures offen.
-- `MEDISTAR + TOPCON KR800S` ist als praktisch validierter TOPCON-Mehruntersuchungs-Kandidat vorhanden: echte Shift-JIS-XML-Fixtures mit `nsCommon`/`nsREF`/`nsKM`/`nsSBJ`, BuiltIn-Geraeteprofil, Exportprofil, Schnittstellenprofil, `6228` REF, `6221` KM, konservative `6227` SBJ-Zeilen mit getrennten Header-/Messwertzeilen, selektiver Templatepaket-Test und E2E-Praxisprotokoll sind vorhanden. Alte persistierte BuiltIn-Exportprofile mit leeren Einzelplatzhalter-Templates oder KM ueber `6228` werden gezielt repariert.
+- `MEDISTAR + TOPCON KR800S` ist als praktisch validierter TOPCON-Mehruntersuchungs-Kandidat vorhanden: echte Shift-JIS-XML-Fixtures mit `nsCommon`/`nsREF`/`nsKM`/`nsSBJ`, BuiltIn-Geraeteprofil, Exportprofil, Schnittstellenprofil, `6228` REF inklusive gelieferter VA-Werte, `6221` KM, konservative `6227` SBJ-Zeilen mit getrennten Header-/Messwertzeilen, generische Baukasten-Einzelplatzhalter, selektiver Templatepaket-Test und E2E-Praxisprotokoll sind vorhanden. XDTBox berechnet keine VA-Werte. Alte persistierte BuiltIn-Exportprofile mit leeren Einzelplatzhalter-Templates oder KM ueber `6228` werden gezielt repariert.
 - `MEDISTAR + TOPCON KR-1` ist als Keratorefraktometer-Kandidat testseitig vorbereitet: echte Shift-JIS-Serial0001-Fixture mit `ModelName = KR-1`, `Measure type="REF"`, REF-Medianwerte ueber `6228`, BuiltIn-Geraeteprofil, Exportprofil, Schnittstellenprofil, selektiver Templatepaket-Test und Fixture-Protokoll sind vorhanden. KM/KRT/periphere KRTs bleiben ohne echte KM/KRT-Fixture offen.
 - `MEDISTAR + TOPCON TRK2P` ist als praktisch validierter TOPCON-Mehruntersuchungs-Kandidat vorhanden: echte XML-Fixtures mit `nsCommon`/`nsREF`/`nsKM`/`nsTM`, inklusive TM/CCT-only-Teilmessung, BuiltIn-Geraeteprofil, Exportprofil, Schnittstellenprofil, `6228` REF, `6221` KM, `6220` CCT/Pachy mit Header, mehrzeilige `6205`-Tonometrie im NT530P-Stil, optionaler `6227` SBJ-Pfad, selektiver Templatepaket-Test, E2E-Praxisprotokoll und Repair alter persistierter BuiltIns sind vorhanden.
 - `MEDISTAR + TOPCON CT1P` ist als praktisch validierter TOPCON-Tono/Pachy-Kandidat vorhanden: echte Serial0214-XML-Fixture mit `nsCommon`/`nsTM`, BuiltIn-Geraeteprofil, Exportprofil, Schnittstellenprofil, `6205` Tonometrie im NT530P/TRK2P-Mehrzeilenformat, `6220` Pachymetrie, einseitig unvollstaendige CorrectedIOP/CCT-Bloecke ohne leere Fragmente, selektiver Templatepaket-Test und E2E-Praxisprotokoll sind vorhanden.
@@ -285,7 +285,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 - NIDEK Batch 6 XML-Varianten: AR-1, AR-1S, AR-310A, LM-1800PD, NT-1, NT-1E, NT-1P, NT-510 und NT-530 sind aus statisch gepruefter Referenzlogik als BuiltIn-Geraete-, Export- und Schnittstellenprofile vorbereitet. AR-/SR-, Lensmeter-, Tonometrie- und Pachymetrie-Ausgaben sind mit synthetischen neutralen Fixtures und einem Sammel-Templatepaket-Test abgesichert; echte Praxisrohdateien und MEDISTAR-Abnahmen bleiben offen.
 - Generisches Dokumentgeraet / AttachmentOnly: BuiltIn-Schnittstellenprofil, sichtbare Option `Dokumentationstext erfassen`, pro-Datei-Beschreibung ueber `6304`, mehrere `6302`-`6305`-Anhaenge, XML als Anhang statt Messwertdatei, Ruhezeit-/Bestaetigungsabschluss und Templatepaket-Kandidat sind testseitig vorhanden; praktische MEDISTAR-Abnahme offen.
 - TOPCON CL300: echte XML-Fixtures, BuiltIn-Schnittstellenprofil, `6228`-Lensmeter-Ausgabe, Templatepaket-Kandidat und praktische MEDISTAR-Abnahme sind vorhanden; offen bleiben weitere Beobachtung der H/V-Prismendarstellung und ein offizielles ZIP-Artefakt nach Release-Regel.
-- TOPCON KR800S: praktisch validiert; leere Live-Platzhalter durch BuiltIn-Repair behoben, getrennte SBJ-`6227`-Zeilen dokumentiert.
+- TOPCON KR800S: praktisch validiert; leere Live-Platzhalter durch BuiltIn-Repair behoben, VA aus Geraetedaten als Einzelplatzhalter und in `6228` dokumentiert, getrennte SBJ-`6227`-Zeilen dokumentiert.
 - TOPCON KR-1: fixture-validiert mit echter Shift-JIS-Serial0001-Fixture, `6228` REF aus Medianwerten, Templatepaket-Kandidat und Fixture-Protokoll; praktische MEDISTAR-Abnahme und echte KM/KRT-Fixture noch offen.
 - TOPCON TRK2P: praktisch validiert mit echten Serial0001-/Serial0135-/Serial1165-XML-Fixtures, REF-`6228`, KM-`6221`, Pachy-`6220`, Tono-`6205`, TM/CCT-only-Teilmessung, optionalem SBJ-`6227`-Pfad und Templatepaket-Kandidat.
 - TOPCON CT1P: praktisch validiert mit echter Serial0214-Fixture, `6205` Tono, `6220` Pachy, einseitig verwertbarem CorrectedIOP/CCT, Templatepaket-Kandidat und E2E-Praxisprotokoll; echte beidseitige CorrectedIOP/CCT-Datei noch sammeln.
@@ -366,7 +366,7 @@ Praxis- und Fixture-Protokolle: `docs/E2E_TESTPROTOKOLL_MEDISTAR_ARK1S_XDT_ANHAN
 - NIDEK Batch 6 XML-Varianten mit echten Dateien validieren: AR-1/AR-1S/AR-310A fuer `6228` und optional `6227`, LM-1800PD fuer `6228`, NT-1/NT-1E/NT-1P/NT-510/NT-530 fuer `6205` und `6220`. CEM-530, TONOREF II/III und script-/RDD-basierte Altgeraete bleiben Kandidaten, bis echte Rohdaten oder belastbare Protokollinformationen vorliegen.
 - TOPCON CL300 mit dem vorhandenen BuiltIn-Schnittstellenprofil als praktisch validierten Referenzkandidaten halten: Serial0001 ohne ADD/PD/Prisma und Serial1521 mit ADD, PD und signierten H/V-Prismenkomponenten sind protokolliert.
 - TOPCON Solos mit dem vorhandenen BuiltIn-Schnittstellenprofil praktisch in MEDISTAR abnehmen: `SolosExportSample.xml` deckt `6228`-Lensmeter-Ausgabe mit PD und H-Prisma ab; echte Transmission-Werte und PDF-Berichte bleiben fuer spaetere Erweiterung zu sammeln.
-- TOPCON KR800S mit dem vorhandenen BuiltIn-Schnittstellenprofil als validierten Referenzkandidaten halten: Serial0036 und Serial0426 decken `6228` REF, `6221` KM und konservative `6227` SBJ-Ausgabe mit getrennten Header-/Messwertzeilen ab.
+- TOPCON KR800S mit dem vorhandenen BuiltIn-Schnittstellenprofil als validierten Referenzkandidaten halten: Serial0036 und Serial0426 decken `6228` REF inklusive gelieferter VA-Werte, `6221` KM und konservative `6227` SBJ-Ausgabe mit getrennten Header-/Messwertzeilen ab; XDTBox berechnet keine VA-Werte.
 - TOPCON KR-1 mit dem vorhandenen BuiltIn-Schnittstellenprofil praktisch in MEDISTAR abnehmen: Serial0001 deckt Shift-JIS, `Measure type="REF"` und `6228`-Ausgabe aus REF-Medianwerten ab; echte KM/KRT-/periphere-KRT-Dateien bleiben fuer spaetere `6221`-Erweiterung zu sammeln.
 - TOPCON TRK2P mit dem vorhandenen BuiltIn-Schnittstellenprofil als validierten Referenzkandidaten halten: Serial0001 deckt REF/KM/TM ohne CCT ab, Serial0135 deckt REF/KM/TM mit CorrectedIOP-CCT-Fallback fuer `6220` ab, Serial1165 deckt TM/CCT-only mit ERROR-Eintraegen und CCT-Mittelwertregel ab; SBJ bleibt optional und ist in den aktuellen Fixtures nicht enthalten.
 - TOPCON CT1P mit dem vorhandenen BuiltIn-Schnittstellenprofil als validierten Referenzkandidaten halten: Serial0214 deckt TM-Listen/Average, rechte CorrectedIOP/CCT-Werte und ausgelassene unvollstaendige linke CCT-/Korrekturwerte ab; weitere Datei mit vollstaendigem linken CorrectedIOP/CCT waere fuer die beidseitige Praxisdarstellung wertvoll.

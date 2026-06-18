@@ -423,6 +423,28 @@ public sealed class ProductiveUiSourceTests
     }
 
     [Fact]
+    public void XdtBaukastenTab_ShouldApplyDraftRuleTextChangesLive()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
+        var draftSection = ExtractSection(
+            xaml,
+            "<TextBlock x:Name=\"XdtBaukastenDraftTargetLabel\"",
+            "<StackPanel Grid.Row=\"3\"");
+        var handlerBody = ExtractMethodBody(
+            code,
+            "private void XdtBaukastenDraftRuleTextBox_TextChanged",
+            "private void UpdateXdtBaukastenPlaceholders");
+
+        Assert.Contains("TextChanged=\"XdtBaukastenDraftRuleTextBox_TextChanged\"", draftSection);
+        Assert.Contains("_updatingXdtBaukastenDraftFields", code);
+        Assert.Contains("TryApplyXdtBaukastenDraftRule(updateStatus: false)", handlerBody);
+        Assert.Contains("RefreshXdtBaukastenPreviewIfPossible();", handlerBody);
+        Assert.Contains("Entwurf automatisch", handlerBody);
+        Assert.Contains("XdtBaukastenPlaceholder_Click", code);
+    }
+
+    [Fact]
     public void InterfaceProfilesTab_ShouldExposeFiltersAndAisOutputInfoWithoutLicenseCheckbox()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml"));
@@ -441,7 +463,8 @@ public sealed class ProductiveUiSourceTests
         Assert.Contains("Profilumfang:", section);
         Assert.Contains("Schnittstellenprofil:", section);
         Assert.Contains("x:Name=\"InterfaceProfileComboBox\"", section);
-        Assert.Contains("MaxWidth=\"520\"", section);
+        Assert.Contains("Grid.Column=\"7\"", section);
+        Assert.Contains("MaxWidth=\"380\"", section);
         Assert.Contains("AIS Ausgabe Info", section);
         Assert.DoesNotContain("welche Schnittstelle automatisch über Ordner verarbeitet wird", section);
         Assert.Contains("Aktive Schnittstellenprofile zählen immer als Geräteanbindung.", section);

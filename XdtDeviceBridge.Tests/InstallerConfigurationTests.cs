@@ -3,17 +3,17 @@ namespace XdtDeviceBridge.Tests;
 public sealed class InstallerConfigurationTests
 {
     [Fact]
-    public void VersionMetadata_ShouldBeXdtBoxVersion111()
+    public void VersionMetadata_ShouldBeXdtBoxVersion112()
     {
         var props = File.ReadAllText(FindWorkspaceFile("Directory.Build.props"));
         var version = File.ReadAllText(FindWorkspaceFile("VERSION")).Trim();
         var appCode = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "MainWindow.xaml.cs"));
 
-        Assert.Equal("1.11", version);
-        Assert.Contains("<Version>1.11</Version>", props);
-        Assert.Contains("<AssemblyVersion>1.11.0.0</AssemblyVersion>", props);
-        Assert.Contains("<FileVersion>1.11.0.0</FileVersion>", props);
-        Assert.Contains("<InformationalVersion>1.11</InformationalVersion>", props);
+        Assert.Equal("1.12", version);
+        Assert.Contains("<Version>1.12</Version>", props);
+        Assert.Contains("<AssemblyVersion>1.12.0.0</AssemblyVersion>", props);
+        Assert.Contains("<FileVersion>1.12.0.0</FileVersion>", props);
+        Assert.Contains("<InformationalVersion>1.12</InformationalVersion>", props);
         Assert.Contains("<Product>XDTBox</Product>", props);
         Assert.Contains("<Company>Technik-Apparat M.Kurze</Company>", props);
         Assert.Contains("GetApplicationVersionText()", appCode);
@@ -27,7 +27,7 @@ public sealed class InstallerConfigurationTests
 
         Assert.Contains("AppId={{7E45D05D-7E53-4B47-961D-9113C3D42623}", installer);
         Assert.Contains("AppName={#MyAppName}", installer);
-        Assert.Contains("#define MyAppVersion \"1.11\"", installer);
+        Assert.Contains("#define MyAppVersion \"1.12\"", installer);
         Assert.Contains("AppVersion={#MyAppVersion}", installer);
         Assert.Contains("DefaultDirName=C:\\XDTBox", installer);
         Assert.Contains("OutputBaseFilename=XDTBox_Setup_{#MyAppVersion}", installer);
@@ -139,18 +139,18 @@ public sealed class InstallerConfigurationTests
     }
 
     [Fact]
-    public void InstallerDocumentation_ShouldDescribeVersion111AndVariantB()
+    public void InstallerDocumentation_ShouldDescribeVersion112AndVariantB()
     {
         var readme = File.ReadAllText(FindWorkspaceFile("README.md"));
         var policy = File.ReadAllText(FindWorkspaceFile("docs", "INSTALLATION_UPDATE_DATENPOLITIK.md"));
         var buildGuide = File.ReadAllText(FindWorkspaceFile("docs", "INSTALLER_BUILD_ANLEITUNG.md"));
         var help = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.App", "Assets", "Help", "xdtbox-help.md"));
 
-        Assert.Contains("XDTBox 1.11", readme);
+        Assert.Contains("XDTBox 1.12", readme);
         Assert.Contains("docs/INSTALLER_BUILD_ANLEITUNG.md", readme);
-        Assert.Contains("XDTBox 1.11", policy);
+        Assert.Contains("XDTBox 1.12", policy);
         Assert.Contains("installer/XDTBox.iss", policy);
-        Assert.Contains("XDTBox_Setup_1.11.exe", buildGuide);
+        Assert.Contains("XDTBox_Setup_1.12.exe", buildGuide);
         Assert.Contains("C:\\XDTBox", buildGuide);
         Assert.Contains("Inno Setup 6", buildGuide);
         Assert.Contains("self-contained", buildGuide);

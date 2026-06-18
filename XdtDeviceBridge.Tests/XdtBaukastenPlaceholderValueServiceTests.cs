@@ -101,6 +101,26 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
             placeholder.Token == "{Device.Measure[@Type='REF']/REF/R/MedistarLineWithVisualAcuity}");
     }
 
+    [Theory]
+    [InlineData("AR360", "Nidek", "AR360", "AR360.xml")]
+    [InlineData("LM7", "Nidek", "LM7", "NIDEK LM7.xml")]
+    [InlineData("NT530P", "Nidek", "NT530P", "NIDEK_NT530P.xml")]
+    [InlineData("KR800S", "Topcon", "KR800S", "M-Serial0426_20241126_145500_TOPCON_KR-800S_4871341.xml")]
+    [InlineData("CV5000", "Topcon", "CV5000", "M-Serial1234_20130625_170509656_TOPCON_CV-5000_10111.xml")]
+    public void CreateDevicePlaceholders_ShouldExposeAllParsedMeasurementValuesForRepresentativeXmlDevices(
+        string profileKey,
+        string manufacturer,
+        string deviceFolder,
+        string fileName)
+    {
+        var profile = CreateRepresentativeProfile(profileKey);
+        var measurements = ParseFixture(manufacturer, deviceFolder, fileName);
+
+        var placeholders = _service.CreateDevicePlaceholders(profile, measurements);
+
+        AssertAllParsedMeasurementTokensAreOffered(measurements, placeholders);
+    }
+
     [Fact]
     public void CreateDevicePlaceholders_ShouldShowRt3100PracticeCaptureValues()
     {
@@ -121,6 +141,19 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
         Assert.Equal("+1.25", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final L ADD").ExampleValue);
         Assert.Equal("64.0", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R PD").ExampleValue);
         Assert.Equal("40", Assert.Single(placeholders, placeholder => placeholder.DisplayName == "Final R WD").ExampleValue);
+    }
+
+    [Fact]
+    public void CreateDevicePlaceholders_ShouldExposeAllParsedMeasurementValuesForRtSerialPracticeCapture()
+    {
+        var profile = DefaultDeviceProfileDefinitions.CreateNidekRt3100SerialDefault();
+        var measurements = new NidekRtSerialPhoropterParser()
+            .ParseDeviceText(Encoding.ASCII.GetString(LoadHexFixture("rt3100-final-prescription-practice-capture-202606xx.hex")))
+            .Measurements;
+
+        var placeholders = _service.CreateDevicePlaceholders(profile, measurements);
+
+        AssertAllParsedMeasurementTokensAreOffered(measurements, placeholders);
     }
 
     [Fact]
@@ -178,5 +211,46 @@ public sealed class XdtBaukastenPlaceholderValueServiceTests
             Array.Empty<DeviceMeasurementDefinition>(),
             Array.Empty<string>(),
             CanContainMultipleExaminationTypes: true);
+    }
+
+    private static DeviceProfileDefinition CreateRepresentativeProfile(string profileKey)
+    {
+        return profileKey switch
+        {
+            "AR360" => DefaultDeviceProfileDefinitions.CreateNidekAr360Default(),
+            "LM7" => DefaultDeviceProfileDefinitions.CreateNidekLm7Default(),
+            "NT530P" => DefaultDeviceProfileDefinitions.CreateNidekNt530PDefault(),
+            "KR800S" => DefaultDeviceProfileDefinitions.CreateTopconKr800Default(),
+            "CV5000" => DefaultDeviceProfileDefinitions.CreateTopconCv5000Default(),
+            _ => throw new ArgumentOutOfRangeException(nameof(profileKey), profileKey, "Unknown representative device profile.")
+        };
+    }
+
+    private static void AssertAllParsedMeasurementTokensAreOffered(
+        IReadOnlyList<MeasurementValue> measurements,
+        IReadOnlyList<XdtBaukastenPlaceholder> placeholders)
+    {
+        var expectedTokens = measurements
+            .Where(measurement => IsDeviceMeasurementPlaceholderCandidate(measurement.SourcePath))
+            .Where(measurement => !string.IsNullOrWhiteSpace(measurement.Value))
+            .Select(measurement => "{Device." + measurement.SourcePath + "}")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        Assert.NotEmpty(expectedTokens);
+        Assert.All(expectedTokens, token =>
+            Assert.Contains(placeholders, placeholder => string.Equals(placeholder.Token, token, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static bool IsDeviceMeasurementPlaceholderCandidate(string sourcePath)
+    {
+        return !sourcePath.StartsWith("Common/", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(sourcePath, "Company", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(sourcePath, "ModelName", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(sourcePath, "MachineNo", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(sourcePath, "ROMVersion", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(sourcePath, "Version", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(sourcePath, "Date", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(sourcePath, "Time", StringComparison.OrdinalIgnoreCase);
     }
 }

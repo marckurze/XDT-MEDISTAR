@@ -14,9 +14,9 @@ XDTBox trennt drei Bereiche:
 
 Die produktive Verarbeitung, Parser, MEDISTAR-Mapping, CV-5000-/RT-6100-Logik und RS232-Kommunikation werden durch diese Datenpolitik nicht fachlich veraendert.
 
-## Installer 1.11
+## Installer 1.12
 
-XDTBox 1.11 nutzt ein Inno-Setup-Skript unter `installer/XDTBox.iss`. Der Installer installiert die Kunden-App standardmaessig nach `C:\XDTBox`, erlaubt einen anderen Installationsordner, erzeugt Startmenue- und optionale Desktop-Verknuepfungen, schreibt Registry-/Uninstall-Informationen und legt im Installationsordner `XDTBox.installation.json` als Installationsmarker ab.
+XDTBox 1.12 nutzt ein Inno-Setup-Skript unter `installer/XDTBox.iss`. Der Installer installiert die Kunden-App standardmaessig nach `C:\XDTBox`, erlaubt einen anderen Installationsordner, erzeugt Startmenue- und optionale Desktop-Verknuepfungen, schreibt Registry-/Uninstall-Informationen und legt im Installationsordner `XDTBox.installation.json` als Installationsmarker ab.
 
 Der Build erfolgt reproduzierbar ueber `scripts/build-xdtbox-installer.ps1`; die Buildanleitung steht in `docs/INSTALLER_BUILD_ANLEITUNG.md`. Der Kundeninstaller enthaelt nur die Publish-Ausgabe von `XdtDeviceBridge.App`. `XdtBox.LicenseManager`, `XdtBox.LicenseIssuer`, private Hersteller-Schluessel, Lizenzhistorien und Hersteller-Einstellungen werden nicht aufgenommen.
 

@@ -1,10 +1,10 @@
 # Templatepaket MEDISTAR + TOPCON KR800S
 
-Stand: 2026-05-21
+Stand: 2026-06-18
 
 ## Zweck
 
-Testseitig abgesicherter und praktisch validierter Kandidat fuer die MEDISTAR-Anbindung des TOPCON KR-800S mit Autorefraktion, Keratometrie und konservativer subjektiver Refraktionsausgabe.
+Testseitig abgesicherter und praktisch validierter Kandidat fuer die MEDISTAR-Anbindung des TOPCON KR-800S mit Autorefraktion, Keratometrie und konservativer subjektiver Refraktionsausgabe. XDTBox uebernimmt vom Geraet gelieferte Einzelwerte und stellt sie als Platzhalter bereit; es werden keine Messwerte oder Visuswerte berechnet.
 
 ## Enthaltene Profile
 
@@ -28,19 +28,20 @@ Testseitig abgesicherter und praktisch validierter Kandidat fuer die MEDISTAR-An
 
 ## MEDISTAR-Ausgabe
 
-- `6228`: REF/Autorefraktor-Zeilen rechts und links aus den Median-Werten.
+- `6228`: REF/Autorefraktor-Zeilen rechts und links aus den Median-Werten; VA wird zusaetzlich angehaengt, wenn das Geraet den Wert liefert.
 - `6221`: KM/Keratometer-Zeilen fuer R1/R2 sowie AV/CYL.
 - `6227`: konservative SBJ-Zeilen fuer vorhandene Full-Correction-Fern-/Nahwerte; Header und Messwert werden jeweils getrennt ausgegeben.
 - `8402` kommt weiter aus der AIS-/MEDISTAR-Datei.
 - Keine `6205`, keine `6220`, keine `6330`-Automatik.
 - Keine Anhangfelder `6302` bis `6305` fuer die Messwerte.
 - Persistierte alte BuiltIn-Exportprofile werden beim Katalogstart gezielt repariert, wenn sie noch root-prefixed Einzelplatzhalter oder Keratometer-Regeln ueber `6228` enthalten.
+- KR800S-Einzelwerte wie VA, REF, KM und SBJ werden im XDT-Baukasten als klickbare `{Device...}`-Platzhalter angeboten, sofern sie in der geladenen Geraetedatei geparst wurden.
 
 Beispiele testseitig:
 
 ```text
 R.:S=- 5.50 Z=+ 0.00*  0 PD= 58 VD= 13.75
-L.:S=- 5.25 Z=+ 0.00*  0
+L.:S=- 5.25 Z=+ 0.00*  0 VA=0.7
 
 R: R1=8.48 39.75 *11 R2=7.79 43.50 *101 // L: R1=8.35 40.50 *171 R2=7.87 43.00 *81
 R: AV=8.14 41.75 CYL=-3.75 11 // L: AV=8.11 41.75 CYL=-2.50 171
@@ -65,6 +66,7 @@ R.:S=+ 5.50 Z=- 4.00* 13 / L.:S=+ 5.50 Z=- 2.50*173 PD=66 VD=13.75
 - Exportprofil-/BuiltIn-Tests: `DeviceProfileDefinitionTests`, `ExportProfileDefinitionTests`, `InterfaceProfileDefinitionTests`
 - Katalog-Reparaturtests fuer alte persistierte KR800S-BuiltIns: `ProfileCatalogServiceTests`
 - Selektiver Templatepaket-Test: `MedistarTopconKr800STemplatePackageTests`
+- Baukasten-Platzhalter-Regressionsschutz: `XdtBaukastenPlaceholderValueServiceTests`
 - Praktische MEDISTAR-Validierung: `docs/E2E_TESTPROTOKOLL_MEDISTAR_TOPCON_KR800S.md`
 
 ## Offen

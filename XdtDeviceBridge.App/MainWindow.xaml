@@ -1243,12 +1243,12 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock x:Name="XdtBaukastenDraftTargetLabel" Grid.Row="0" Grid.Column="0" Text="Ziel-Feld:" FontWeight="SemiBold" Margin="0,0,8,8" />
-                                <TextBox x:Name="XdtBaukastenDraftTargetFieldCodeTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,16,8" />
+                                <TextBox x:Name="XdtBaukastenDraftTargetFieldCodeTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,16,8" TextChanged="XdtBaukastenDraftRuleTextBox_TextChanged" />
                                 <TextBlock Grid.Row="0" Grid.Column="2" Text="Zielname:" FontWeight="SemiBold" Margin="0,0,8,8" />
-                                <TextBox x:Name="XdtBaukastenDraftTargetNameTextBox" Grid.Row="0" Grid.Column="3" Margin="0,0,0,8" />
+                                <TextBox x:Name="XdtBaukastenDraftTargetNameTextBox" Grid.Row="0" Grid.Column="3" Margin="0,0,0,8" TextChanged="XdtBaukastenDraftRuleTextBox_TextChanged" />
 
                                 <TextBlock x:Name="XdtBaukastenDraftSourceLabel" Grid.Row="1" Grid.Column="0" Text="SourcePath:" FontWeight="SemiBold" Margin="0,0,8,8" />
-                                <TextBox x:Name="XdtBaukastenDraftSourcePathTextBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,8" />
+                                <TextBox x:Name="XdtBaukastenDraftSourcePathTextBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Margin="0,0,0,8" TextChanged="XdtBaukastenDraftRuleTextBox_TextChanged" />
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Regeltext:" FontWeight="SemiBold" Margin="0,0,8,8" />
                                 <TextBox x:Name="XdtBaukastenDraftOutputTemplateTextBox"
@@ -1259,6 +1259,7 @@
                                          AcceptsReturn="True"
                                          VerticalScrollBarVisibility="Auto"
                                          FontFamily="Consolas"
+                                         TextChanged="XdtBaukastenDraftRuleTextBox_TextChanged"
                                          TextWrapping="Wrap" />
 
                                 <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,8,0,0">
@@ -1615,10 +1616,6 @@
                                       Grid.Column="0"
                                       Grid.ColumnSpan="2"
                                       Margin="12,0,0,30">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="260"/>
@@ -1626,6 +1623,8 @@
                                         <ColumnDefinition Width="240"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="380"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
@@ -1664,21 +1663,18 @@
                                               HorizontalAlignment="Stretch"
                                               SelectionChanged="InterfaceProfileFilter_SelectionChanged"
                                               ToolTip="Filtert nach allen oder nur eigenen Schnittstellenprofilen."/>
-                                    <TextBlock Grid.Row="1"
-                                               Grid.Column="0"
+                                    <TextBlock Grid.Column="6"
                                                Text="Schnittstellenprofil:"
                                                FontWeight="Bold"
                                                VerticalAlignment="Center"
-                                               Margin="0,8,6,0"/>
+                                               Margin="18,0,6,0"/>
                                     <ComboBox x:Name="InterfaceProfileComboBox"
-                                              Grid.Row="1"
-                                              Grid.Column="1"
-                                              Grid.ColumnSpan="5"
+                                              Grid.Column="7"
                                               DisplayMemberPath="Metadata.Name"
-                                              MinWidth="320"
-                                              MaxWidth="520"
+                                              MinWidth="260"
+                                              MaxWidth="380"
                                               HorizontalAlignment="Stretch"
-                                              Margin="0,8,0,0"
+                                              Margin="0"
                                               ToolTip="{Binding SelectedItem.Metadata.Name, RelativeSource={RelativeSource Self}}"
                                               SelectionChanged="InterfaceProfileComboBox_SelectionChanged"/>
                                 </Grid>

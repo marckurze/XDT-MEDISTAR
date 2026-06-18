@@ -166,6 +166,7 @@ public partial class MainWindow : Window
     private ProfileCatalog? _profileCatalog;
     private InstallationInfo? _installationInfo;
     private bool _updatingXdtBaukastenSelection;
+    private bool _updatingXdtBaukastenDraftFields;
     private bool _restoringXdtBaukastenUndo;
     private string? _xdtBaukastenSelectedRuleId;
     private CancellationTokenSource? _periodicScanCancellationTokenSource;
@@ -9121,11 +9122,19 @@ public partial class MainWindow : Window
 
     private void ClearXdtBaukastenRuleDraft()
     {
-        XdtBaukastenDraftTargetFieldCodeTextBox.Text = string.Empty;
-        XdtBaukastenDraftTargetNameTextBox.Text = string.Empty;
-        XdtBaukastenDraftSourcePathTextBox.Text = string.Empty;
-        XdtBaukastenDraftOutputTemplateTextBox.Text = string.Empty;
-        XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
+        _updatingXdtBaukastenDraftFields = true;
+        try
+        {
+            XdtBaukastenDraftTargetFieldCodeTextBox.Text = string.Empty;
+            XdtBaukastenDraftTargetNameTextBox.Text = string.Empty;
+            XdtBaukastenDraftSourcePathTextBox.Text = string.Empty;
+            XdtBaukastenDraftOutputTemplateTextBox.Text = string.Empty;
+            XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
+        }
+        finally
+        {
+            _updatingXdtBaukastenDraftFields = false;
+        }
     }
 
     private void UpdateXdtBaukastenDeviceIdentity(DeviceProfileDefinition? profile)
@@ -10010,20 +10019,38 @@ public partial class MainWindow : Window
         if (XdtBaukastenExportRulesGrid.SelectedItem is not XdtBaukastenRuleGridRow row)
         {
             _xdtBaukastenSelectedRuleId = null;
-            XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
+            _updatingXdtBaukastenDraftFields = true;
+            try
+            {
+                XdtBaukastenDraftStatusText.Text = "Keine Exportregel ausgewählt.";
+            }
+            finally
+            {
+                _updatingXdtBaukastenDraftFields = false;
+            }
+
             UpdateXdtBaukastenResultView();
             return;
         }
 
         var rule = row.Rule;
         _xdtBaukastenSelectedRuleId = rule.Id;
-        XdtBaukastenDraftTargetFieldCodeTextBox.Text = rule.TargetFieldCode;
-        XdtBaukastenDraftTargetNameTextBox.Text = rule.TargetName;
-        XdtBaukastenDraftSourcePathTextBox.Text = rule.SourcePath ?? string.Empty;
-        XdtBaukastenDraftOutputTemplateTextBox.Text = rule.OutputTemplate;
-        XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
-            ? $"Geräteausgabe-Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}"
-            : $"Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}";
+        _updatingXdtBaukastenDraftFields = true;
+        try
+        {
+            XdtBaukastenDraftTargetFieldCodeTextBox.Text = rule.TargetFieldCode;
+            XdtBaukastenDraftTargetNameTextBox.Text = rule.TargetName;
+            XdtBaukastenDraftSourcePathTextBox.Text = rule.SourcePath ?? string.Empty;
+            XdtBaukastenDraftOutputTemplateTextBox.Text = rule.OutputTemplate;
+            XdtBaukastenDraftStatusText.Text = _xdtBaukastenState.CurrentRuleDirection == XdtBaukastenRuleDirection.DeviceOutput
+                ? $"Geräteausgabe-Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}"
+                : $"Regel im Entwurf: {rule.TargetFieldCode} {rule.TargetName}";
+        }
+        finally
+        {
+            _updatingXdtBaukastenDraftFields = false;
+        }
+
         SelectXdtBaukastenResultViewForCurrentRuleDirection();
         UpdateXdtBaukastenResultView();
     }
@@ -10127,6 +10154,25 @@ public partial class MainWindow : Window
         }
 
         return true;
+    }
+
+    private void XdtBaukastenDraftRuleTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_updatingXdtBaukastenDraftFields || !IsLoaded)
+        {
+            return;
+        }
+
+        if (XdtBaukastenExportRulesGrid.SelectedItem is not XdtBaukastenRuleGridRow)
+        {
+            return;
+        }
+
+        if (TryApplyXdtBaukastenDraftRule(updateStatus: false))
+        {
+            XdtBaukastenDraftStatusText.Text = "Entwurf automatisch übernommen und Vorschau aktualisiert.";
+            RefreshXdtBaukastenPreviewIfPossible();
+        }
     }
 
     private void UpdateXdtBaukastenPlaceholders()
@@ -10337,8 +10383,17 @@ public partial class MainWindow : Window
 
         var textBox = XdtBaukastenDraftOutputTemplateTextBox;
         var caret = textBox.CaretIndex;
-        textBox.Text = textBox.Text.Insert(caret, token);
-        textBox.CaretIndex = caret + token.Length;
+        _updatingXdtBaukastenDraftFields = true;
+        try
+        {
+            textBox.Text = textBox.Text.Insert(caret, token);
+            textBox.CaretIndex = caret + token.Length;
+        }
+        finally
+        {
+            _updatingXdtBaukastenDraftFields = false;
+        }
+
         textBox.Focus();
         if (TryApplyXdtBaukastenDraftRule(updateStatus: false))
         {

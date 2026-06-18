@@ -5,7 +5,7 @@ namespace XdtDeviceBridge.Infrastructure;
 
 public sealed class XdtBaukastenPlaceholderValueService
 {
-    private const int MaximumDevicePlaceholders = 80;
+    private const int MaximumProfileDevicePlaceholders = 80;
     private readonly XdtBaukastenDeviceCompatibilityService _compatibilityService;
 
     public XdtBaukastenPlaceholderValueService()
@@ -54,21 +54,23 @@ public sealed class XdtBaukastenPlaceholderValueService
             .OrderByDescending(item => item.HasValue)
             .ThenByDescending(item => item.Definition.IsRequired)
             .ThenBy(item => item.Index)
-            .Take(MaximumDevicePlaceholders)
+            .Take(MaximumProfileDevicePlaceholders)
             .Select(item => CreatePlaceholder(item.Definition, measurementValues))
             .ToList();
 
-        if (visibleMeasurements.Count > 0
-            && (compatibility.IsWarning
-                || !deviceProfile.Metadata.IsBuiltIn
-                || selectedDefinitions.Count == 0
-                || selectedDefinitions.All(placeholder => placeholder.ExampleValue == "-")))
+        if (visibleMeasurements.Count > 0)
         {
             var dynamicPlaceholders = CreateDynamicParsedPlaceholders(visibleMeasurements).ToList();
-            if (dynamicPlaceholders.Count > 0
-                && (compatibility.IsWarning || selectedDefinitions.Count == 0 || selectedDefinitions.All(placeholder => placeholder.ExampleValue == "-")))
+            if (dynamicPlaceholders.Count > 0)
             {
-                selectedDefinitions = dynamicPlaceholders;
+                if (compatibility.IsWarning || selectedDefinitions.Count == 0 || selectedDefinitions.All(placeholder => placeholder.ExampleValue == "-"))
+                {
+                    selectedDefinitions = dynamicPlaceholders;
+                }
+                else
+                {
+                    selectedDefinitions = AppendMissingParsedPlaceholders(selectedDefinitions, dynamicPlaceholders).ToList();
+                }
             }
         }
 
@@ -115,19 +117,39 @@ public sealed class XdtBaukastenPlaceholderValueService
     {
         return measurements
             .Where(measurement => !IsCommonParsedMeasurement(measurement.SourcePath))
-            .Where(measurement => !IsAttributeMeasurement(measurement.SourcePath))
             .Where(measurement => !string.IsNullOrWhiteSpace(measurement.Value))
             .GroupBy(measurement => measurement.SourcePath, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .OrderBy(measurement => GetDynamicPlaceholderSortRank(measurement.SourcePath))
             .ThenBy(measurement => measurement.SourcePath, StringComparer.OrdinalIgnoreCase)
-            .Take(MaximumDevicePlaceholders)
             .Select(measurement => new XdtBaukastenPlaceholder(
                 "Gerät",
                 string.IsNullOrWhiteSpace(measurement.DisplayName) ? measurement.SourcePath : measurement.DisplayName,
                 "{Device." + measurement.SourcePath + "}",
                 $"{measurement.SourcePath} ({measurement.Unit ?? "ohne Einheit"})",
                 DisplayPlaceholderValue(FormatParsedMeasurementValue(measurement))));
+    }
+
+    private static IEnumerable<XdtBaukastenPlaceholder> AppendMissingParsedPlaceholders(
+        IReadOnlyList<XdtBaukastenPlaceholder> profilePlaceholders,
+        IReadOnlyList<XdtBaukastenPlaceholder> parsedPlaceholders)
+    {
+        var existingTokens = new HashSet<string>(
+            profilePlaceholders.Select(placeholder => placeholder.Token),
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var placeholder in profilePlaceholders)
+        {
+            yield return placeholder;
+        }
+
+        foreach (var placeholder in parsedPlaceholders)
+        {
+            if (existingTokens.Add(placeholder.Token))
+            {
+                yield return placeholder;
+            }
+        }
     }
 
     private static bool IsCommonParsedMeasurement(string sourcePath)
@@ -166,6 +188,11 @@ public sealed class XdtBaukastenPlaceholderValueService
             || sourcePath.Contains("/L/", StringComparison.OrdinalIgnoreCase))
         {
             return 1;
+        }
+
+        if (IsAttributeMeasurement(sourcePath))
+        {
+            return 3;
         }
 
         return 2;
