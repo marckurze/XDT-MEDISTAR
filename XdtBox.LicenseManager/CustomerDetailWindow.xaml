@@ -152,6 +152,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="SummaryTextBlock" VerticalAlignment="Center"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="PDF exportieren" Width="130" Margin="0,0,8,0" Click="ExportPdf_Click"/>
                 <Button Content="Speichern" Width="120" Margin="0,0,8,0" Click="Save_Click"/>
                 <Button Content="Schließen" Width="120" Click="Close_Click"/>
             </StackPanel>

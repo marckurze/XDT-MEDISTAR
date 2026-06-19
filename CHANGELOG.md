@@ -4,6 +4,7 @@
 
 ### Hinzugefuegt
 
+- `XdtBox.LicenseManager` kann fuer den aktuell ausgewaehlten Kunden jetzt ein eigenes Kunden-PDF exportieren. Der Export ist im Tab `Kunden` ueber `Kunden-PDF` und in den `Kundendetails` ueber `PDF exportieren` erreichbar, nutzt einen sicheren Dateinamensvorschlag, enthaelt Kundendaten, Installationen, aktive lizenzierte Geraeteanbindungen mit Standort, Lizenzhistorie sowie monatliche Netto-Summen und schreibt keine Private-Key- oder Signaturdaten in das PDF. Der bestehende Gesamtlisten-PDF-Export bleibt unveraendert.
 - XDTBox Kunden-App fuer das naechste Setup auf `1.12` erhoeht; der XDTBox Lizenzmanager bleibt unveraendert bei `1.11`, weil Kunden-App und Hersteller-App getrennte Versionen fuehren duerfen.
 - Rodenstock Phoromat 2000 als Beta-BuiltIn vorbereitet: eigener serieller Parser/Frameparser/Writer, RS232-Default `9600 8N1` ohne DTR/RTS/Handshake, inaktives bidirektionales MEDISTAR-Schnittstellenprofil, `FN`-Rueckgabe nach `6228`, `WD` nach `6227`, VA nur als Baukasten-Platzhalter und keine produktive Livevalidierung. XDTBox berechnet dabei keine medizinischen Werte und erzeugt kein Setup fuer diesen Zwischenstand.
 - XDT-Baukasten aktualisiert manuelle Aenderungen im Exportregel-Entwurf jetzt live: Tippen oder Loeschen im Regeltext schreibt sofort in die Baukasten-Arbeitskopie und aktualisiert die Vorschau, ohne produktive Dateien zu erzeugen.

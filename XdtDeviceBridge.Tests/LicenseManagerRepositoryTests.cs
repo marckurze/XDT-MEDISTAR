@@ -558,6 +558,125 @@ public sealed class LicenseManagerRepositoryTests
         Assert.DoesNotContain("BEGIN PRIVATE KEY", pdf);
     }
 
+    [Fact]
+    public void LicenseManagerCustomerPdfExporter_ShouldCreateSingleCustomerPdfWithDevicesLocationsHistoryAndTotals()
+    {
+        var filePath = CreateTempFilePath("customer.pdf");
+        var exporter = new LicenseManagerCustomerPdfExporter();
+        var activeLicense = CreateRecord("license-active", "Praxis Müller") with
+        {
+            CustomerNumber = "K-200",
+            InstallationId = "installation-active",
+            MachineName = "EMPFANG-PC",
+            Street = "Ärztestraße 7",
+            City = "Köln",
+            MaxActiveDeviceConnections = 2,
+            OutputFilePath = @"C:\XDTBox\Lizenzaktivierung\licenses\license-active.xdtboxlic",
+            Devices = new[]
+            {
+                CreateIssuedDevice("NIDEK LM7", "Raum 1"),
+                CreateIssuedDevice("TOPCON KR-800S", "Voruntersuchung")
+            }
+        };
+        var cancelledLicense = CreateRecord("license-cancelled", "Praxis Müller") with
+        {
+            CustomerNumber = "K-200",
+            InstallationId = "installation-cancelled",
+            MachineName = "ALT-PC",
+            MaxActiveDeviceConnections = 1,
+            OutputFilePath = @"C:\XDTBox\Lizenzaktivierung\licenses\license-cancelled.xdtboxlic",
+            Devices = new[] { CreateIssuedDevice("NIDEK RT-6100", "Altstandort") }
+        };
+        var mergedHistory = CreateRecord("license-merged", "Praxis Müller") with
+        {
+            CustomerNumber = "K-200",
+            InstallationId = "installation-merged",
+            MachineName = "ZWEIT-PC",
+            MaxActiveDeviceConnections = 1,
+            OutputFilePath = @"C:\XDTBox\Lizenzaktivierung\licenses\license-merged.xdtboxlic",
+            Devices = new[] { CreateIssuedDevice("NIDEK NT-530P", "Diagnostik") }
+        };
+        var otherCustomerHistory = CreateRecord("license-other", "Praxis Fremd") with
+        {
+            CustomerNumber = "K-999",
+            InstallationId = "installation-other",
+            OutputFilePath = @"C:\XDTBox\Lizenzaktivierung\licenses\license-other.xdtboxlic",
+            Devices = new[] { CreateIssuedDevice("Fremdgerät", "Nicht sichtbar") }
+        };
+        var customer = (CreateCustomer("installation-active") with
+        {
+            CustomerNumber = "K-200",
+            CustomerName = "Praxis Müller",
+            Street = "Ärztestraße 7",
+            City = "Köln",
+            InvoiceEmail = "rechnung@mueller.example",
+            AlwaysInvoice = true,
+            SepaDirectDebitConsent = false
+        })
+            .WithLicense(activeLicense)
+            .WithLicense(cancelledLicense)
+            .CancelInstallation("installation-cancelled", DateTime.UtcNow, "Altgerät abgemeldet")
+            with
+            {
+                CustomerNumber = "K-200",
+                CustomerName = "Praxis Müller",
+                Street = "Ärztestraße 7",
+                City = "Köln",
+                InvoiceEmail = "rechnung@mueller.example",
+                AlwaysInvoice = true,
+                SepaDirectDebitConsent = false
+            };
+
+        exporter.ExportCustomer(
+            filePath,
+            customer,
+            new[] { activeLicense, cancelledLicense, mergedHistory, otherCustomerHistory },
+            12.5m,
+            new DateTime(2026, 6, 19, 12, 0, 0));
+
+        var pdf = Encoding.Latin1.GetString(File.ReadAllBytes(filePath));
+        Assert.StartsWith("%PDF", pdf);
+        Assert.Contains("XDTBox Kunden-Lizenzübersicht", pdf);
+        Assert.Contains("Praxis Müller", pdf);
+        Assert.Contains("Ärztestraße 7", pdf);
+        Assert.Contains("Köln", pdf);
+        Assert.Contains("K-200", pdf);
+        Assert.Contains("installation-active", pdf);
+        Assert.Contains("installation-cancelled", pdf);
+        Assert.Contains("installation-merged", pdf);
+        Assert.Contains("NIDEK LM7", pdf);
+        Assert.Contains("TOPCON KR-800S", pdf);
+        Assert.Contains("Raum 1", pdf);
+        Assert.Contains("Voruntersuchung", pdf);
+        Assert.Contains("Altstandort", pdf);
+        Assert.Contains("Storniert", pdf);
+        Assert.Contains("Aktive Geräteanbindungen: 2", pdf);
+        Assert.Contains("Einzelpreis netto: 12,50 EUR", pdf);
+        Assert.Contains("Monatliche Summe netto: 25,00 EUR", pdf);
+        Assert.Contains("license-active.xdtboxlic", pdf);
+        Assert.DoesNotContain("Praxis Fremd", pdf);
+        Assert.DoesNotContain("Nicht sichtbar", pdf);
+        Assert.DoesNotContain("|", pdf);
+        Assert.DoesNotContain("BEGIN PRIVATE KEY", pdf);
+        Assert.DoesNotContain("PRIVATE KEY", pdf);
+        Assert.DoesNotContain("Signature", pdf);
+    }
+
+    [Fact]
+    public void LicenseManagerCustomerPdfExporter_ShouldCreateSafeSingleCustomerPdfFileName()
+    {
+        var customer = CreateCustomer("installation-1") with
+        {
+            CustomerNumber = "KD: 12/34?*"
+        };
+
+        var fileName = LicenseManagerCustomerPdfExporter.CreateSuggestedCustomerPdfFileName(
+            customer,
+            new DateTime(2026, 6, 19));
+
+        Assert.Equal("XDTBox_Kunde_KD_12_34_Lizenzuebersicht_20260619.pdf", fileName);
+    }
+
     private static IssuedLicenseRecord CreateRecord(string licenseId, string customerName)
     {
         var now = new DateTime(2026, 5, 27, 12, 0, 0, DateTimeKind.Utc);
@@ -597,6 +716,18 @@ public sealed class LicenseManagerRepositoryTests
                 DeviceProfileId: "device-" + name.ToLowerInvariant(),
                 ConnectionKind: DeviceConnectionKind.NetworkLan))
             .ToArray();
+    }
+
+    private static IssuedLicenseDeviceRecord CreateIssuedDevice(string deviceName, string location)
+    {
+        var id = deviceName.ToLowerInvariant().Replace(" ", "-", StringComparison.Ordinal);
+        return new IssuedLicenseDeviceRecord(
+            DisplayName: "MEDISTAR + " + deviceName,
+            DeviceDisplayName: deviceName,
+            InterfaceProfileId: "interface-" + id,
+            DeviceProfileId: "device-" + id,
+            ConnectionKind: DeviceConnectionKind.NetworkLan,
+            Location: location);
     }
 
     private static LicenseManagerCustomerRecord CreateCustomer(string installationId)

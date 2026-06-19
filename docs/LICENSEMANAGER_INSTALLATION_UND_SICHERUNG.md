@@ -1,6 +1,6 @@
 # XDTBox Lizenzmanager: Installation und Sicherung
 
-Stand: 2026-06-08
+Stand: 2026-06-19
 
 Der `XDTBox Lizenzmanager` ist das interne Herstellerwerkzeug fuer Lizenzanfragen, signierte `.xdtboxlic`-Dateien, Kundenverwaltung und nachvollziehbare Lizenzhistorie. Der Projektname bleibt technisch `XdtBox.LicenseManager`; sichtbarer Produktname, Fenster, Setup und PDF-Ausgaben verwenden `XDTBox Lizenzmanager`.
 
@@ -52,6 +52,18 @@ Der PDF-Export erzeugt eine A4-Querformat-Uebersicht mit grafischer Tabelle:
 - Summenzeile fuer Gesamtanzahl Geraete und Gesamtkosten netto
 - keine Pipe-Texttabelle
 - keine Private-Key- oder Signaturdaten
+
+Zusaetzlich kann fuer einen einzelnen Kunden ein eigenes Kunden-PDF erzeugt werden. Der Einstieg liegt im Tab `Kunden` ueber `Kunden-PDF` sowie in den `Kundendetails` ueber `PDF exportieren`. Der Dateivorschlag nutzt `XDTBox_Kunde_<Kundennummer oder Kundenname>_Lizenzuebersicht_<yyyyMMdd>.pdf` und bereinigt ungueltige Dateinamenzeichen.
+
+Das Einzelkunden-PDF enthaelt:
+
+- Kundendaten und Abrechnungsdaten
+- alle Installationen beziehungsweise Arbeitsplaetze mit InstallationId, Computername, Status, Geraetestandorten und Gueltigkeit
+- aktive lizenzierte Geraeteanbindungen mit Anbindung, Geraet, AIS-System, Standort des Geraets und monatlichem Nettoansatz
+- Lizenzhistorie inklusive zusammengefuehrter Kundendaten ueber Kundennummer oder InstallationId
+- aktive Geraeteanzahl, Einzelpreis netto und monatliche Netto-Summe
+
+Stornierte Installationen bleiben in Installation und Historie sichtbar, zaehlen aber nicht in aktive Geraete- und Kostensummen. Private Keys, Signaturdaten und Schluesselinhalte werden nicht in PDF-Dateien geschrieben.
 
 ## Setup
 

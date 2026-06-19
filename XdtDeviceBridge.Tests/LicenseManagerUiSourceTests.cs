@@ -42,6 +42,25 @@ public sealed class LicenseManagerUiSourceTests
     }
 
     [Fact]
+    public void LicenseManager_ShouldExposeSingleCustomerPdfExportActions()
+    {
+        var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));
+        var detailXaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml"));
+        var code = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml.cs"));
+        var detailCode = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "CustomerDetailWindow.xaml.cs"));
+        var exporter = File.ReadAllText(FindWorkspaceFile("XdtDeviceBridge.Infrastructure", "LicenseManagerCustomerPdfExporter.cs"));
+
+        Assert.Contains("ExportSelectedCustomerPdfButton", xaml);
+        Assert.Contains("Kunden-PDF", xaml);
+        Assert.Contains("SelectionChanged=\"CustomersGrid_SelectionChanged\"", xaml);
+        Assert.Contains("PDF exportieren", detailXaml);
+        Assert.Contains("ExportSelectedCustomerPdf_Click", code);
+        Assert.Contains("ExportPdf_Click", detailCode);
+        Assert.Contains("CreateSuggestedCustomerPdfFileName", exporter);
+        Assert.Contains("ExportCustomer", exporter);
+    }
+
+    [Fact]
     public void LicenseManager_ShouldExposePaymentFieldsFromLicenseRequest()
     {
         var xaml = File.ReadAllText(FindWorkspaceFile("XdtBox.LicenseManager", "MainWindow.xaml"));

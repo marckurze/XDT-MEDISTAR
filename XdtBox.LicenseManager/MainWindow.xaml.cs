@@ -528,6 +528,7 @@ public partial class MainWindow : Window
         }
 
         UpdateMergeCustomersButtonState();
+        UpdateSelectedCustomerPdfButtonState();
         UpdateCustomerMonthlyTotal();
     }
 
@@ -600,9 +601,19 @@ public partial class MainWindow : Window
         OpenSelectedCustomer();
     }
 
+    private void CustomersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateSelectedCustomerPdfButtonState();
+    }
+
     private void CustomersGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         OpenSelectedCustomer();
+    }
+
+    private void UpdateSelectedCustomerPdfButtonState()
+    {
+        ExportSelectedCustomerPdfButton.IsEnabled = GetSelectedCustomer() is not null;
     }
 
     private void OpenSelectedCustomer()
@@ -745,6 +756,43 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             ShowError($"PDF konnte nicht exportiert werden: {ex.Message}");
+        }
+    }
+
+    private void ExportSelectedCustomerPdf_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = GetSelectedCustomer();
+        if (selected is null)
+        {
+            CustomersStatusText.Text = "Bitte zuerst einen Kunden auswählen.";
+            return;
+        }
+
+        var now = DateTime.Now;
+        var dialog = new SaveFileDialog
+        {
+            Title = "Kunden-PDF exportieren",
+            Filter = "PDF (*.pdf)|*.pdf|Alle Dateien (*.*)|*.*",
+            FileName = LicenseManagerCustomerPdfExporter.CreateSuggestedCustomerPdfFileName(selected, now),
+            DefaultExt = ".pdf",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _customerPdfExporter.ExportCustomer(dialog.FileName, selected, _historyRecords, _settings.PricePerDeviceNet, now);
+            CustomersStatusText.Text = $"Kunden-PDF exportiert: {dialog.FileName}";
+            MessageBox.Show(this, "Kunden-PDF wurde exportiert.", "PDF exportieren", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Kunden-PDF konnte nicht exportiert werden: {ex.Message}");
         }
     }
 

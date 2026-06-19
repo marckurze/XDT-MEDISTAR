@@ -1,9 +1,11 @@
+using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using XdtDeviceBridge.Core;
+using XdtDeviceBridge.Infrastructure;
 
 namespace XdtBox.LicenseManager;
 
@@ -11,6 +13,7 @@ public partial class CustomerDetailWindow : Window
 {
     private readonly IReadOnlyList<IssuedLicenseRecord> _allHistory;
     private readonly decimal _pricePerDeviceNet;
+    private readonly LicenseManagerCustomerPdfExporter _customerPdfExporter = new();
     private readonly ObservableCollection<InstallationRow> _installationRows = new();
     private readonly ObservableCollection<CustomerDeviceRow> _deviceRows = new();
     private readonly ObservableCollection<CustomerHistoryRow> _historyRows = new();
@@ -115,13 +118,64 @@ public partial class CustomerDetailWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        var paymentMethod = GetSelectedPaymentMethod();
-        ValidatePaymentMethod(paymentMethod, Normalize(IbanTextBox.Text), Normalize(AccountHolderTextBox.Text));
-        CommitDeviceEdits();
+        Customer = CreateCustomerFromUi(validatePaymentMethod: true);
 
+        DialogResult = true;
+        Close();
+    }
+
+    private void ExportPdf_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Customer = CreateCustomerFromUi(validatePaymentMethod: false);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Kundendaten konnten nicht für den PDF-Export übernommen werden: {ex.Message}", "PDF exportieren", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var now = DateTime.Now;
+        var dialog = new SaveFileDialog
+        {
+            Title = "Kunden-PDF exportieren",
+            Filter = "PDF (*.pdf)|*.pdf|Alle Dateien (*.*)|*.*",
+            FileName = LicenseManagerCustomerPdfExporter.CreateSuggestedCustomerPdfFileName(Customer, now),
+            DefaultExt = ".pdf",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _customerPdfExporter.ExportCustomer(dialog.FileName, Customer, _allHistory, _pricePerDeviceNet, now);
+            SummaryTextBlock.Text = $"PDF exportiert: {dialog.FileName}";
+            MessageBox.Show(this, "Kunden-PDF wurde exportiert.", "PDF exportieren", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Kunden-PDF konnte nicht exportiert werden: {ex.Message}", "PDF exportieren", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private LicenseManagerCustomerRecord CreateCustomerFromUi(bool validatePaymentMethod)
+    {
+        var paymentMethod = GetSelectedPaymentMethod();
+        if (validatePaymentMethod)
+        {
+            ValidatePaymentMethod(paymentMethod, Normalize(IbanTextBox.Text), Normalize(AccountHolderTextBox.Text));
+        }
+
+        CommitDeviceEdits();
         var installations = ApplyEditedDeviceLocations(Customer.EffectiveInstallations);
 
-        Customer = (Customer with
+        return (Customer with
         {
             CustomerNumber = Normalize(CustomerNumberTextBox.Text),
             CustomerName = CustomerNameTextBox.Text.Trim(),
@@ -140,9 +194,6 @@ public partial class CustomerDetailWindow : Window
             Installations = installations,
             UpdatedAtUtc = DateTime.UtcNow
         }).WithNormalizedInstallations();
-
-        DialogResult = true;
-        Close();
     }
 
     private void CancelInstallation_Click(object sender, RoutedEventArgs e)

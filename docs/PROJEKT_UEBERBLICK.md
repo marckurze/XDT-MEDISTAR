@@ -1,6 +1,6 @@
 ﻿# Projektueberblick XdtDeviceBridge / XDT Verwaltung
 
-Stand: 2026-06-04
+Stand: 2026-06-19
 
 Diese Datei dient als kompakte Uebergabe fuer neue Chats, spaetere Codex-Sessions und Projektplanung. Sie trennt aktuellen Iststand, validierten Kernworkflow, vorbereitete Bausteine und Zielbild.
 
@@ -29,7 +29,7 @@ Konkret bedeutet das fuer den aktuellen Produktivbetrieb: Beim Oeffnen der XDTBo
 
 Aktuelle Entwicklungsleitlinie: Fertige Geraeteprofile und Templatepakete haben Vorrang vor weiterer Aktivierungs- oder Assistentenarchitektur. Der Baukasten bleibt Werkzeug fuer Sonderfaelle, Tests, Vorschau und kundenspezifische Anpassungen, nicht der normale Bedienweg.
 
-Aktuelle Lizenzmanager-Leitlinie: Im Tab `Kunden` koennen zwei oder mehr Kundensaetze markiert und ueber `Zusammenführen` in einen Zielkunden uebernommen werden. Der Zielkunde behaelt seine ID; Stammdaten werden feldweise ausgewaehlt, Installationen/Arbeitsplaetze, aktive lizenzierte Anbindungen inklusive Geraetestandort und Lizenzhistorie bleiben ueber InstallationId sichtbar. Quellkunden verschwinden danach aus der aktiven Kundenliste.
+Aktuelle Lizenzmanager-Leitlinie: Im Tab `Kunden` koennen zwei oder mehr Kundensaetze markiert und ueber `Zusammenführen` in einen Zielkunden uebernommen werden. Der Zielkunde behaelt seine ID; Stammdaten werden feldweise ausgewaehlt, Installationen/Arbeitsplaetze, aktive lizenzierte Anbindungen inklusive Geraetestandort und Lizenzhistorie bleiben ueber InstallationId sichtbar. Quellkunden verschwinden danach aus der aktiven Kundenliste. Die Kundenliste kann weiterhin als Gesamt-PDF exportiert werden; fuer einzelne Kunden gibt es zusaetzlich ein Kunden-PDF aus Kundenliste oder Kundendetails mit Stammdaten, Installationen, Geraetestandorten, aktiven Anbindungen, Historie und monatlichen Netto-Summen.
 
 Die systematischen Referenzdaten-Batches werden statisch und ohne Ausfuehren fremder Programme ausgewertet. Als sichere neue BuiltIns sind NIDEK ARK-510A, NIDEK ARK-560A und NIDEK LM-1800P vorbereitet; der NIDEK-Restbatch ergaenzt AR-1, AR-1S, AR-310A, LM-1800PD, NT-1, NT-1E, NT-1P, NT-510 und NT-530 als testseitig abgesicherte XML-Varianten vorhandener Parserfamilien. TOPCON KR-800 nutzt die vorhandene KR800S-XML-Familie als Alias. Der TOPCON-Restbatch ergaenzt CL-300PDL, RM-800 und TRK-3 Omnia als testseitig abgesicherte Varianten der bestehenden TOPCON-XML-Familien. Huvitz-, TOMEY-, Shin-Nippon-, Reichert- und Rodenstock-CX-800-Geraete mit ausreichend klarer Parser-/COM-Logik besitzen isolierte Parser, synthetische Fixtures, BuiltIn-Profile und Templatepaket-Tests. Rodenstock Phoromat 2000 ist als inaktives Beta-BuiltIn mit eigenem seriellen Parser/Writer vorbereitet; echte RS232-Mitschnitte, PC->Geraet-Sendetest und MEDISTAR-Abnahme fehlen noch. Scriptbasierte Geraete ohne echte Rohdaten bleiben nicht verworfen, brauchen aber echte Praxisrohdateien vor produktiver Freigabe. Moeller-Wedel Visutron bleibt Kandidat. Details stehen in `docs/REFERENZPAKET_GERAETE_AUSWERTUNG.md`.
 

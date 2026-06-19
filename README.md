@@ -15,6 +15,8 @@ Aktuelle Versionen:
 - XDTBox Kunden-App: `1.12`
 - XDTBox Lizenzmanager: `1.11`
 
+Der XDTBox Lizenzmanager bleibt ein separates internes Herstellerwerkzeug. Neben dem Gesamt-PDF der Kundenliste kann er fuer einen ausgewaehlten Kunden ein eigenes PDF mit Stammdaten, Installationen, Geraetestandorten, aktiven Anbindungen, Lizenzhistorie und monatlichen Netto-Summen erzeugen; Private Keys und Signaturdaten werden dabei nicht exportiert.
+
 Die Setup-Versionen von Kunden-App und Lizenzmanager duerfen auseinanderlaufen. Setups werden ab diesem Stand nur auf ausdruecklichen Auftrag neu gebaut. XDTBox bleibt eine lokale Windows-Desktop-App ohne Cloudpflicht, ohne Windows-Dienst, ohne Windows-Autostart und ohne FileSystemWatcher. Der validierte Kernworkflow MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link wurde am 2026-05-11 praktisch geprüft; externe Anhänge können über `6302`, `6303`, optional `6304` und `6305` in das AIS übernommen und aus der Karteikarte geöffnet werden.
 
 Praktisch validiert sind inzwischen unter anderem MEDISTAR + NIDEK ARK1S einschließlich XDT-Anhang-Link, NIDEK AR360, NIDEK LM7/LM7P, NIDEK NT530P, TOPCON KR800S sowie der produktive NIDEK RT-3100 RS232-Phoropterablauf mit Senden, Rueckgabe und XDT-Ausgabe. Weitere V2-Geraeteprofile sind vorbereitet und koennen angezeigt beziehungsweise konfiguriert werden, gelten aber erst nach eigener Praxisabnahme als produktiv validiert.

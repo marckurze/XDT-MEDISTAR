@@ -249,6 +249,7 @@
                         <TextBlock Text="Suche:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox x:Name="CustomerSearchTextBox" Width="320" Margin="0,0,8,0" TextChanged="CustomerSearchTextBox_TextChanged"/>
                         <Button Content="Kunde öffnen" Width="130" Margin="0,0,8,0" Click="OpenCustomer_Click"/>
+                        <Button x:Name="ExportSelectedCustomerPdfButton" Content="Kunden-PDF" Width="120" Margin="0,0,8,0" IsEnabled="False" Click="ExportSelectedCustomerPdf_Click"/>
                         <Button x:Name="MergeCustomersButton" Content="Zusammenführen" Width="130" Margin="0,0,8,0" IsEnabled="False" Click="MergeCustomers_Click"/>
                         <Button Content="Kundenliste als PDF exportieren" Width="230" Margin="0,0,8,0" Click="ExportCustomersPdf_Click"/>
                         <Button Content="Preis speichern" Width="130" Click="SaveCustomerPrice_Click"/>
@@ -262,6 +263,7 @@
                               CanUserDeleteRows="False"
                               ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              SelectionChanged="CustomersGrid_SelectionChanged"
                               MouseDoubleClick="CustomersGrid_MouseDoubleClick">
                         <DataGrid.Columns>
                             <DataGridCheckBoxColumn Header="" Binding="{Binding IsMarked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
