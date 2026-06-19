@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\XdtDeviceBridge.Core\XdtDeviceBridge.Core.csproj" />
+    <ProjectReference Include="..\XdtDeviceBridge.Infrastructure\XdtDeviceBridge.Infrastructure.csproj" />
+    <ProjectReference Include="..\XdtBox.LicenseIssuer\XdtBox.LicenseIssuer.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>0.1.0-web-v1</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <InformationalVersion>0.1.0-web-v1</InformationalVersion>
+  </PropertyGroup>
+
+</Project>

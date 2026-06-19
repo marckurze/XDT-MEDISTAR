@@ -1,0 +1,81 @@
+@page "{id}"
+@model XdtBox.LicenseWeb.Pages.Customers.DetailsModel
+@{
+    ViewData["Title"] = "Kundendetails";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">@Model.Customer.CustomerName</h1>
+    <a class="btn btn-outline-primary" asp-page-handler="Pdf" asp-route-id="@Model.Customer.Id">PDF exportieren</a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Kundendaten</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Kundennummer</dt><dd class="col-sm-8">@Model.Customer.CustomerNumber</dd>
+                <dt class="col-sm-4">Adresse</dt><dd class="col-sm-8">@Model.Customer.Address</dd>
+                <dt class="col-sm-4">Telefon</dt><dd class="col-sm-8">@Model.Customer.Phone</dd>
+                <dt class="col-sm-4">E-Mail</dt><dd class="col-sm-8">@Model.Customer.Email</dd>
+                <dt class="col-sm-4">Ansprechpartner</dt><dd class="col-sm-8">@Model.Customer.ContactPerson</dd>
+            </dl>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Abrechnung</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Rechnungs-E-Mail</dt><dd class="col-sm-8">@Model.Customer.InvoiceEmail</dd>
+                <dt class="col-sm-4">Zahlungsart</dt><dd class="col-sm-8">@Model.Customer.PaymentMethod</dd>
+                <dt class="col-sm-4">IBAN</dt><dd class="col-sm-8">@Model.Customer.Iban</dd>
+                <dt class="col-sm-4">Monatsbetrag</dt><dd class="col-sm-8 fw-semibold">@Model.Customer.MonthlyTotal</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<div class="xdt-card mb-3">
+    <h2 class="h5">Installationen / Arbeitsplätze</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Status</th><th>InstallationId</th><th>Computername</th><th>Gerätestandorte</th><th class="text-end">Geräte</th><th>Gültig bis</th></tr></thead>
+            <tbody>
+            @foreach (var row in Model.Installations)
+            {
+                <tr><td>@row.Status</td><td>@row.InstallationId</td><td>@row.MachineName</td><td>@row.Locations</td><td class="text-end">@row.DeviceCount</td><td>@row.ValidUntil</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="xdt-card mb-3">
+    <h2 class="h5">Aktive lizenzierte Geräteanbindungen</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Anbindung</th><th>Gerät</th><th>Standort</th><th>Quelle</th></tr></thead>
+            <tbody>
+            @foreach (var row in Model.Devices)
+            {
+                <tr><td>@row.DisplayName</td><td>@row.DeviceDisplayName</td><td>@row.Location</td><td>@row.ConnectionKind</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="xdt-card">
+    <h2 class="h5">Lizenzhistorie</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Ausgestellt</th><th>InstallationId</th><th>Geräte</th><th>Gerätestandorte</th><th>Gültig bis</th><th>Datei</th></tr></thead>
+            <tbody>
+            @foreach (var row in Model.History)
+            {
+                <tr><td>@row.IssuedAt</td><td>@row.InstallationId</td><td>@row.DeviceCount</td><td>@row.Locations</td><td>@row.ValidUntil</td><td>@row.FileName</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

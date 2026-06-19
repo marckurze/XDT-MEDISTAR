@@ -1,0 +1,41 @@
+@page
+@model XdtBox.LicenseWeb.Pages.Settings.IndexModel
+@{
+    ViewData["Title"] = "Einstellungen";
+}
+
+<h1 class="h3 mb-3">Einstellungen</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Abrechnung</h2>
+            <form method="post">
+                <div class="mb-3">
+                    <label asp-for="PricePerDeviceNet" class="form-label">Einzelpreis netto pro Geräteanbindung</label>
+                    <input asp-for="PricePerDeviceNet" class="form-control" />
+                </div>
+                <button class="btn btn-primary" type="submit">Speichern</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Serverstatus</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Datenroot</dt><dd class="col-sm-8"><code>@Model.DataRoot</code></dd>
+                <dt class="col-sm-4">Private Key</dt><dd class="col-sm-8">@Model.PrivateKeyStatus</dd>
+                <dt class="col-sm-4">Issuer</dt><dd class="col-sm-8">@Model.Issuer</dd>
+            </dl>
+        </div>
+    </div>
+</div>

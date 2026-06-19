@@ -50,6 +50,8 @@ Assembly-/Dateiversionen:
 
 Der XDTBox Lizenzmanager fuehrt eine eigene Version und steht aktuell bei `1.11` (`FileVersion` `1.11.0.0`). Kunden-App und Lizenzmanager duerfen unterschiedliche Setup-Versionen haben. Setups werden nur gebaut, wenn Marc dies ausdruecklich beauftragt. Das Kunden-Setup wird ueber Inno Setup 6 vorbereitet und schuetzt Kundendaten nach Deinstallationsvariante B.
 
+Zusaetzlich ist `XdtBox.LicenseWeb` als interne Web-V1 im Hauptrepo vorbereitet. Die ASP.NET-Core-8-Razor-Pages-Anwendung nutzt Cookie-Login, serverseitigen Datenroot ausserhalb von `wwwroot`, die vorhandenen Lizenzmanager-Modelle/Repositories/PDF-Exporter und die serverseitige `LicenseIssuerService`-Signaturlogik. Sie bietet Dashboard, Kundenliste, Kundendetails, Einzelkunden-PDF, Gesamt-PDF, Lizenzanfrage-Import, Lizenzdatei-Download bei konfiguriertem Private Key, Backup/Restore und Einstellungen. Die statische `Webseite XDTBox` wurde nicht geaendert; produktives Hosting bleibt offen bis Sicherheits- und Hostingabnahme.
+
 ## 3. Praktisch validierter Kernworkflow
 
 Praktisch validiert ist weiterhin der Workflow:

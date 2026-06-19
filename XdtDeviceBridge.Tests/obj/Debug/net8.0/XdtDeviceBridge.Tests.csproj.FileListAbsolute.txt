@@ -442,3 +442,12 @@ C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Tests.dep
 C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Tests.runtimeconfig.json
 C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Tests.dll
 C:\GitHub\XDT-MEDISTAR\artifacts\verify-build\solution\XdtDeviceBridge.Tests.pdb
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseWeb.deps.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseWeb.runtimeconfig.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\appsettings.Development.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\appsettings.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseWeb.staticwebassets.runtime.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseWeb.staticwebassets.endpoints.json
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseWeb.exe
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseWeb.dll
+C:\GitHub\XDT-MEDISTAR\XdtDeviceBridge.Tests\bin\Debug\net8.0\XdtBox.LicenseWeb.pdb

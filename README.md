@@ -15,6 +15,8 @@ Aktuelle Versionen:
 - XDTBox Kunden-App: `1.12`
 - XDTBox Lizenzmanager: `1.11`
 
+Neu vorbereitet ist `XdtBox.LicenseWeb`, eine interne ASP.NET-Core-8-Razor-Pages-Web-V1 fuer den Hersteller-Lizenzmanager. Sie laeuft serverseitig mit Cookie-Login, Datenroot ausserhalb von `wwwroot`, Einzelkunden-PDF, Gesamt-PDF, Lizenzanfrage-Import, serverseitiger Lizenz-Erstellung bei konfiguriertem Private Key, Backup/Restore und Einstellungen. Die statische Website `Webseite XDTBox` wird dadurch nicht veraendert; eine spaetere Verlinkung oder ein produktives Hosting benoetigt eine separate Sicherheits- und Hostingabnahme. Details stehen in [`docs/LICENSEMANAGER_WEB_V1.md`](docs/LICENSEMANAGER_WEB_V1.md).
+
 Der XDTBox Lizenzmanager bleibt ein separates internes Herstellerwerkzeug. Neben dem Gesamt-PDF der Kundenliste kann er fuer einen ausgewaehlten Kunden ein eigenes PDF mit Stammdaten, Installationen, Geraetestandorten, aktiven Anbindungen, Lizenzhistorie und monatlichen Netto-Summen erzeugen; Private Keys und Signaturdaten werden dabei nicht exportiert.
 
 Die Setup-Versionen von Kunden-App und Lizenzmanager duerfen auseinanderlaufen. Setups werden ab diesem Stand nur auf ausdruecklichen Auftrag neu gebaut. XDTBox bleibt eine lokale Windows-Desktop-App ohne Cloudpflicht, ohne Windows-Dienst, ohne Windows-Autostart und ohne FileSystemWatcher. Der validierte Kernworkflow MEDISTAR + NIDEK ARK1S + XDT-Anhang-Link wurde am 2026-05-11 praktisch geprüft; externe Anhänge können über `6302`, `6303`, optional `6304` und `6305` in das AIS übernommen und aus der Karteikarte geöffnet werden.

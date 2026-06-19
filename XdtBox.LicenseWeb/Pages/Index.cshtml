@@ -1,0 +1,31 @@
+@page
+@model XdtBox.LicenseWeb.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1 class="h3 mb-3">Dashboard</h1>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="xdt-card metric"><div class="text-muted">Kunden</div><div class="fs-3 fw-semibold">@Model.CustomerCount</div></div></div>
+    <div class="col-md-3"><div class="xdt-card metric"><div class="text-muted">Aktive Installationen</div><div class="fs-3 fw-semibold">@Model.ActiveInstallationCount</div></div></div>
+    <div class="col-md-3"><div class="xdt-card metric"><div class="text-muted">Aktive Geräte</div><div class="fs-3 fw-semibold">@Model.ActiveDeviceCount</div></div></div>
+    <div class="col-md-3"><div class="xdt-card metric"><div class="text-muted">Monatlich netto</div><div class="fs-3 fw-semibold">@Model.MonthlyTotalDisplay</div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Sicherheit</h2>
+            <p>Private Key: <strong>@Model.PrivateKeyStatus</strong></p>
+            <p>Datenroot: <code>@Model.DataRoot</code></p>
+            <p class="text-muted mb-0">Kundendaten, Backups und Lizenzdateien liegen serverseitig außerhalb von wwwroot.</p>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">V1-Hinweis</h2>
+            <p class="mb-0">Diese Webanwendung ist eine interne Hersteller-V1. Produktives Hosting braucht eine separate Sicherheits- und Hostingabnahme.</p>
+        </div>
+    </div>
+</div>

@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XdtBox.LicenseIssuer", "Xdt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XdtBox.LicenseManager", "XdtBox.LicenseManager\XdtBox.LicenseManager.csproj", "{8A30E4F9-8CCF-43A4-A7F5-7DAE3D01846D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XdtBox.LicenseWeb", "XdtBox.LicenseWeb\XdtBox.LicenseWeb.csproj", "{73DFCEC3-2742-4431-96AD-79A2809ED390}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{8A30E4F9-8CCF-43A4-A7F5-7DAE3D01846D}.Release|x64.Build.0 = Release|Any CPU
 		{8A30E4F9-8CCF-43A4-A7F5-7DAE3D01846D}.Release|x86.ActiveCfg = Release|Any CPU
 		{8A30E4F9-8CCF-43A4-A7F5-7DAE3D01846D}.Release|x86.Build.0 = Release|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Debug|x64.Build.0 = Debug|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Debug|x86.Build.0 = Debug|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Release|x64.ActiveCfg = Release|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Release|x64.Build.0 = Release|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Release|x86.ActiveCfg = Release|Any CPU
+		{73DFCEC3-2742-4431-96AD-79A2809ED390}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

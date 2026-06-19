@@ -10,6 +10,7 @@
         "dependencies": {
           "Microsoft.NET.Test.Sdk": "17.11.1",
           "XdtBox.LicenseIssuer": "1.12.0",
+          "XdtBox.LicenseWeb": "0.1.0-web-v1",
           "XdtDeviceBridge.Core": "1.12.0",
           "XdtDeviceBridge.Infrastructure": "1.12.0",
           "coverlet.collector": "6.0.2",
@@ -355,6 +356,19 @@
           }
         }
       },
+      "XdtBox.LicenseWeb/0.1.0-web-v1": {
+        "dependencies": {
+          "XdtBox.LicenseIssuer": "1.12.0",
+          "XdtDeviceBridge.Core": "1.12.0",
+          "XdtDeviceBridge.Infrastructure": "1.12.0"
+        },
+        "runtime": {
+          "XdtBox.LicenseWeb.dll": {
+            "assemblyVersion": "0.1.0.0",
+            "fileVersion": "0.1.0.0"
+          }
+        }
+      },
       "XdtDeviceBridge.Core/1.12.0": {
         "runtime": {
           "XdtDeviceBridge.Core.dll": {
@@ -488,6 +502,11 @@
       "hashPath": "xunit.runner.visualstudio.2.8.2.nupkg.sha512"
     },
     "XdtBox.LicenseIssuer/1.12.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "XdtBox.LicenseWeb/0.1.0-web-v1": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

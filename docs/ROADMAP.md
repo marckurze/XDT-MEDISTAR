@@ -10,12 +10,14 @@ Projekt: XdtDeviceBridge / XDT Verwaltung
 
 - Aktuelle XDTBox Kunden-App-Version: `1.12`
 - Aktuelle XDTBox Lizenzmanager-Version: `1.11`
+- Interne Web-V1: `XdtBox.LicenseWeb` als ASP.NET-Core-8-Razor-Pages-Projekt ohne bestehende App-Versionsanhebung
 - `VERSION` und `Directory.Build.props` fuehren die Kunden-App:
   - `Version`: `1.12`
   - `AssemblyVersion`: `1.12.0.0`
   - `FileVersion`: `1.12.0.0`
   - `InformationalVersion`: `1.12`
 - Der Lizenzmanager fuehrt eigene Assembly-/FileVersionen und darf von der Kunden-App abweichen. XDTBox 1.12 ist die aktuelle Kundeninstaller-Version; der Lizenzmanager steht bei 1.11. Setups werden nur neu gebaut, wenn Marc dies ausdruecklich beauftragt.
+- Die Web-V1 des Lizenzmanagers ist noch kein produktives Hosting. Sie bleibt intern/lokal, nutzt serverseitigen Login, Datenroot ausserhalb von `wwwroot`, Private-Key-Konfiguration nur serverseitig und wiederverwendet vorhandene PDF-/Backup-/Issuer-Bausteine. Eine spaetere Einbindung in die statische Website erfolgt nur per Link nach Sicherheits- und Hostingabnahme.
 
 ### Projektleitlinie ab 2026-05-12
 

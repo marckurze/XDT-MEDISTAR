@@ -18,6 +18,7 @@
     <ProjectReference Include="..\XdtDeviceBridge.Core\XdtDeviceBridge.Core.csproj" />
     <ProjectReference Include="..\XdtDeviceBridge.Infrastructure\XdtDeviceBridge.Infrastructure.csproj" />
     <ProjectReference Include="..\XdtBox.LicenseIssuer\XdtBox.LicenseIssuer.csproj" />
+    <ProjectReference Include="..\XdtBox.LicenseWeb\XdtBox.LicenseWeb.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="TestData\sample-gdt-ansi.gdt">

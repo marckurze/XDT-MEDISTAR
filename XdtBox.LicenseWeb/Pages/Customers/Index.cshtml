@@ -1,0 +1,54 @@
+@page
+@model XdtBox.LicenseWeb.Pages.Customers.IndexModel
+@{
+    ViewData["Title"] = "Kunden";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Kunden</h1>
+    <a class="btn btn-outline-primary" asp-page-handler="TotalPdf">Gesamt-PDF</a>
+</div>
+
+@if (!Model.Customers.Any())
+{
+    <div class="alert alert-info">Noch keine Kunden im konfigurierten Datenroot vorhanden.</div>
+}
+else
+{
+    <div class="table-responsive xdt-card">
+        <table class="table table-hover align-middle">
+            <thead>
+            <tr>
+                <th>Kundennummer</th>
+                <th>Kunde / Praxis / Firma</th>
+                <th>Ort</th>
+                <th>Rechnungs-E-Mail</th>
+                <th>Zahlungsart</th>
+                <th class="text-end">Installationen</th>
+                <th class="text-end">Geräte aktiv</th>
+                <th class="text-end">Monatssumme netto</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var customer in Model.Customers)
+            {
+                <tr>
+                    <td>@customer.CustomerNumber</td>
+                    <td>@customer.CustomerName</td>
+                    <td>@customer.City</td>
+                    <td>@customer.InvoiceEmail</td>
+                    <td>@customer.PaymentMethod</td>
+                    <td class="text-end">@customer.ActiveInstallationCount</td>
+                    <td class="text-end">@customer.ActiveDeviceCount</td>
+                    <td class="text-end">@customer.MonthlyTotal</td>
+                    <td class="text-nowrap">
+                        <a class="btn btn-sm btn-outline-primary" asp-page="/Customers/Details" asp-route-id="@customer.Id">Details</a>
+                        <a class="btn btn-sm btn-outline-secondary" asp-page-handler="CustomerPdf" asp-route-id="@customer.Id">Kunden-PDF</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

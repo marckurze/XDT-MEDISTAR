@@ -1,0 +1,48 @@
+@page
+@model XdtBox.LicenseWeb.Pages.Import.IndexModel
+@{
+    ViewData["Title"] = "Lizenzanfrage importieren";
+}
+
+<h1 class="h3 mb-3">Lizenzanfrage importieren</h1>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Upload</h2>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="Upload">
+                <div class="mb-3">
+                    <label class="form-label">Lizenzanfrage-Datei</label>
+                    <input class="form-control" type="file" asp-for="UploadFile" />
+                </div>
+                <button class="btn btn-primary" type="submit">Importieren</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Lizenz erzeugen</h2>
+            <p>Private-Key-Status: <strong>@Model.PrivateKeyStatus</strong></p>
+            @if (!string.IsNullOrWhiteSpace(Model.RequestFile))
+            {
+                <form method="post" asp-page-handler="CreateLicense">
+                    <input type="hidden" asp-for="RequestFile" />
+                    <button class="btn btn-outline-primary" type="submit" disabled="@(!Model.PrivateKeyReady)">Lizenz erzeugen und herunterladen</button>
+                </form>
+            }
+            else
+            {
+                <p class="text-muted mb-0">Nach einem erfolgreichen Upload kann aus der Anfrage eine Lizenzdatei erzeugt werden.</p>
+            }
+        </div>
+    </div>
+</div>
