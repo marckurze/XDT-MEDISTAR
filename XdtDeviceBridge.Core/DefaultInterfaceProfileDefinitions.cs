@@ -1083,6 +1083,66 @@ public static class DefaultInterfaceProfileDefinitions
             timestamp: new DateTimeOffset(2026, 6, 5, 12, 0, 0, TimeSpan.Zero));
     }
 
+    public static InterfaceProfileDefinition CreateMedistarRodenstockPhoromat2000Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 18, 12, 0, 0, TimeSpan.Zero);
+        var description = "Beta-BuiltIn, standardmaessig inaktiv: MEDISTAR + Rodenstock Phoromat 2000 RS232. Live-Test erforderlich; XDTBox formatiert nur vorhandene FN-/PD-/WD-Daten.";
+
+        return new InterfaceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "interface-medistar-rodenstock-phoromat2000-default",
+                Name: "MEDISTAR + Rodenstock Phoromat 2000",
+                ProfileKind: ProfileKind.InterfaceProfile,
+                Description: description,
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/Rodenstock Phoromat 2000",
+                Version: "0.1.0-beta",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            AisProfileId: "ais-medistar-default",
+            DeviceProfileId: "device-rodenstock-phoromat2000-default",
+            ExportProfileId: "export-medistar-rodenstock-phoromat2000-default",
+            FolderOptions: new InterfaceFolderOptions(
+                AisImportFolder: string.Empty,
+                DeviceImportFolder: string.Empty,
+                ExportFolder: string.Empty,
+                ArchiveFolder: string.Empty,
+                ErrorFolder: string.Empty,
+                ClearAisImportFolderBeforeProcessing: true,
+                ClearDeviceImportFolderBeforeProcessing: false,
+                ClearExportFolderAfterSuccessfulTransfer: false,
+                ArchiveProcessedFiles: false,
+                MoveFailedFilesToErrorFolder: true),
+            IsActive: false,
+            IsLicenseRequired: true,
+            Description: description,
+            DeviceOutput: new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: RodenstockPhoromat2000OutputWriter.DefaultFileNameTemplate,
+                Format: RodenstockPhoromat2000OutputWriter.DeviceOutputFormat),
+            SerialSettings: CreateRodenstockPhoromat2000SerialSettings());
+    }
+
+    private static SerialCommunicationSettings CreateRodenstockPhoromat2000SerialSettings()
+    {
+        return new SerialCommunicationSettings(
+            BaudRate: 9600,
+            DataBits: 8,
+            StopBits: SerialStopBitsSetting.One,
+            Parity: SerialParitySetting.None,
+            Handshake: SerialHandshakeSetting.None,
+            DtrEnable: false,
+            RtsEnable: false,
+            IsBidirectional: true,
+            LineTerminator: SerialLineTerminatorSetting.LF,
+            ReadTimeoutMilliseconds: 30000,
+            WriteTimeoutMilliseconds: 1000);
+    }
+
     private static InterfaceProfileDefinition CreateMedistarReferenceTextSerialDefault(
         string id,
         string name,

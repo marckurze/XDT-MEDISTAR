@@ -1984,6 +1984,40 @@ public static class DefaultExportProfileDefinitions
         return rules;
     }
 
+    public static ExportProfileDefinition CreateMedistarRodenstockPhoromat2000Default()
+    {
+        var timestamp = new DateTimeOffset(2026, 6, 18, 12, 0, 0, TimeSpan.Zero);
+
+        return new ExportProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: "export-medistar-rodenstock-phoromat2000-default",
+                Name: "MEDISTAR + Rodenstock Phoromat 2000 Export",
+                ProfileKind: ProfileKind.ExportProfile,
+                Description: "Beta-BuiltIn MEDISTAR export profile for Rodenstock Phoromat 2000 RS232 returns. FN final values map to 6228 and WD maps to 6227. VA is available as a placeholder but not exported automatically.",
+                Vendor: "XdtDeviceBridge",
+                Product: "MEDISTAR/Rodenstock Phoromat 2000",
+                Version: "0.1.0-beta",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            TargetAisProfileId: "ais-medistar-default",
+            SourceDeviceProfileId: "device-rodenstock-phoromat2000-default",
+            OutputEncoding: "Windows-1252",
+            Rules: CreateMedistarRodenstockPhoromat2000Rules());
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateMedistarRodenstockPhoromat2000Rules()
+    {
+        var rules = CreateMedistarBaseRules();
+        var sortOrder = rules.Count + 1;
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "PhoropterFinalRight", ExportRuleType.Template, "Device.Measure[@Type='PHOROMAT2000']/FN/R/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 right-eye FN line from Rodenstock Phoromat 2000 data."));
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6228", "PhoropterFinalLeft", ExportRuleType.Template, "Device.Measure[@Type='PHOROMAT2000']/FN/L/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6228 left-eye FN line from Rodenstock Phoromat 2000 data."));
+        rules.Add(new ExportRuleDefinition(sortOrder.ToString(), "6227", "WorkingDistance", ExportRuleType.Template, "Device.Measure[@Type='PHOROMAT2000']/WD/MedistarLine", "{value}", sortOrder++, true, "MEDISTAR 6227 WD line from Rodenstock Phoromat 2000 data."));
+        return rules;
+    }
+
     private static List<ExportRuleDefinition> CreateMedistarBaseRules()
     {
         return new List<ExportRuleDefinition>

@@ -12,6 +12,7 @@ public sealed class XdtBaukastenPreviewService
     private readonly NidekRt6100InputXmlWriter _rt6100Writer;
     private readonly NidekRt6100InputSourceXmlReader _rt6100InputReader;
     private readonly NidekRtSerialPhoropterOutputWriter _rtSerialWriter = new();
+    private readonly RodenstockPhoromat2000OutputWriter _rodenstockPhoromat2000Writer = new();
     private readonly XdtBaukastenDeviceCompatibilityService _compatibilityService;
 
     public XdtBaukastenPreviewService()
@@ -301,6 +302,37 @@ public sealed class XdtBaukastenPreviewService
                     state.DeviceProfile);
                 messages.AddRange(rulePreview.Warnings.Select(warning => $"Geräteausgabe NIDEK RT Serial: {warning}"));
                 return "NIDEK RT-2100/3100/5100 RS232 ist vorbereitet. Bitte echte Praxis-Mitschnitte prüfen, bevor produktiv gesendet wird."
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + result.VisibleContent
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + "Hexdump:"
+                    + Environment.NewLine
+                    + result.HexDump
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + "Baukasten-Regelwerte:"
+                    + Environment.NewLine
+                    + rulePreview.Content;
+            }
+
+            if (XdtBaukastenDeviceOutputRuleService.IsRodenstockPhoromat2000(state.DeviceProfile))
+            {
+                var selected = _historyParser.CreateDefaultCv5000Selection(history.Records);
+                var result = _rodenstockPhoromat2000Writer.BuildFrame(history.Patient, selected, timestamp);
+                if (!result.Success)
+                {
+                    return result.ErrorMessage ?? "Rodenstock-Phoromat-2000-RS232-Geraeteausgabe konnte nicht erzeugt werden.";
+                }
+
+                var rulePreview = XdtBaukastenDeviceOutputRuleService.BuildRuleTextPreview(
+                    state.WorkingDeviceOutputRules,
+                    history.Patient,
+                    selected,
+                    state.DeviceProfile);
+                messages.AddRange(rulePreview.Warnings.Select(warning => $"Geraeteausgabe Rodenstock Phoromat 2000: {warning}"));
+                return "Rodenstock Phoromat 2000 RS232 ist als Beta vorbereitet. Bitte echte Praxis-Mitschnitte pruefen, bevor produktiv gesendet wird."
                     + Environment.NewLine
                     + Environment.NewLine
                     + result.VisibleContent

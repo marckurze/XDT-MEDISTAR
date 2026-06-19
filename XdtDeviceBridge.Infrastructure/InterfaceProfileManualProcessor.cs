@@ -13,6 +13,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     private readonly ShinNipponDeviceParser _shinNipponParser = new();
     private readonly ReichertDeviceParser _reichertParser = new();
     private readonly RodenstockDeviceParser _rodenstockParser = new();
+    private readonly RodenstockPhoromat2000Parser _rodenstockPhoromat2000Parser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixParser = new();
@@ -43,6 +44,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         var usesHuvitzTextParser = UsesHuvitzTextParser(interfaceProfile, exportProfile);
         var usesShinNipponParser = UsesShinNipponParser(interfaceProfile, exportProfile);
         var usesReichertParser = UsesReichertParser(interfaceProfile, exportProfile);
+        var usesRodenstockPhoromat2000Parser = UsesRodenstockPhoromat2000Parser(interfaceProfile, exportProfile);
         var usesRodenstockParser = UsesRodenstockParser(interfaceProfile, exportProfile);
         var usesTomeyEmParser = UsesTomeyEmParser(interfaceProfile, exportProfile);
         var usesTomeyParser = UsesTomeyParser(interfaceProfile, exportProfile);
@@ -68,6 +70,7 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
             && !usesHuvitzTextParser
             && !usesShinNipponParser
             && !usesReichertParser
+            && !usesRodenstockPhoromat2000Parser
             && !usesRodenstockParser
             && !usesTomeyEmParser
             && !usesTomeyParser
@@ -114,17 +117,19 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
                         ? _shinNipponParser.ParseFile(deviceFilePath)
                         : usesReichertParser
                             ? _reichertParser.ParseFile(deviceFilePath)
-                            : usesRodenstockParser
-                                ? _rodenstockParser.ParseFile(deviceFilePath)
-                                : usesTomeyEmParser
+                            : usesRodenstockPhoromat2000Parser
+                                ? _rodenstockPhoromat2000Parser.ParseFile(deviceFilePath)
+                                : usesRodenstockParser
+                                    ? _rodenstockParser.ParseFile(deviceFilePath)
+                                    : usesTomeyEmParser
                                     ? _tomeyEmParser.ParseFile(deviceFilePath)
-                                : usesTomeyParser
-                                    ? _tomeyParser.ParseFile(deviceFilePath)
-                                    : usesZeissIolMaster700Parser
-                                        ? _zeissIolMaster700Parser.ParseFile(deviceFilePath)
-                                        : usesCanonZeissVisionixParser
-                                            ? _canonZeissVisionixParser.ParseFile(deviceFilePath)
-                                            : _xmlDeviceParser.ParseFile(deviceFilePath);
+                                    : usesTomeyParser
+                                        ? _tomeyParser.ParseFile(deviceFilePath)
+                                        : usesZeissIolMaster700Parser
+                                            ? _zeissIolMaster700Parser.ParseFile(deviceFilePath)
+                                            : usesCanonZeissVisionixParser
+                                                ? _canonZeissVisionixParser.ParseFile(deviceFilePath)
+                                                : _xmlDeviceParser.ParseFile(deviceFilePath);
         if (!isAttachmentOnlyMode)
         {
             issues.AddRange(deviceResult.Issues.Select(issue => new ProcessingIssue(
@@ -304,9 +309,14 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile: null)
             || InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null)
             || IsNidekRtSerialId(interfaceProfile.DeviceProfileId)
-            || IsNidekRtSerialId(interfaceProfile.ExportProfileId))
+            || IsNidekRtSerialId(interfaceProfile.ExportProfileId)
+            || IsRodenstockPhoromat2000Id(interfaceProfile.DeviceProfileId)
+            || IsRodenstockPhoromat2000Id(interfaceProfile.ExportProfileId))
         {
-            var label = IsNidekRtSerialId(interfaceProfile.DeviceProfileId)
+            var label = IsRodenstockPhoromat2000Id(interfaceProfile.DeviceProfileId)
+                || IsRodenstockPhoromat2000Id(interfaceProfile.ExportProfileId)
+                ? "Rodenstock Phoromat 2000"
+                : IsNidekRtSerialId(interfaceProfile.DeviceProfileId)
                 || IsNidekRtSerialId(interfaceProfile.ExportProfileId)
                 ? "NIDEK RT-RS232"
                 : InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile: null)
@@ -902,8 +912,19 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
         InterfaceProfileDefinition interfaceProfile,
         ExportProfileDefinition exportProfile)
     {
-        return IsRodenstockId(interfaceProfile.DeviceProfileId)
-            || IsRodenstockId(exportProfile.SourceDeviceProfileId);
+        return (IsRodenstockId(interfaceProfile.DeviceProfileId)
+                || IsRodenstockId(exportProfile.SourceDeviceProfileId))
+            && !UsesRodenstockPhoromat2000Parser(interfaceProfile, exportProfile);
+    }
+
+    private static bool UsesRodenstockPhoromat2000Parser(
+        InterfaceProfileDefinition interfaceProfile,
+        ExportProfileDefinition exportProfile)
+    {
+        return IsRodenstockPhoromat2000Id(interfaceProfile.DeviceProfileId)
+            || IsRodenstockPhoromat2000Id(interfaceProfile.ExportProfileId)
+            || IsRodenstockPhoromat2000Id(exportProfile.SourceDeviceProfileId)
+            || IsRodenstockPhoromat2000Id(exportProfile.Metadata.Id);
     }
 
     private static bool UsesTomeyParser(
@@ -967,6 +988,13 @@ public sealed class InterfaceProfileManualProcessor : IInterfaceProfileManualPro
     {
         return !string.IsNullOrWhiteSpace(value)
             && value.Contains("rodenstock", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRodenstockPhoromat2000Id(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Contains("rodenstock", StringComparison.OrdinalIgnoreCase)
+            && value.Contains("phoromat2000", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsTomeyId(string? value)

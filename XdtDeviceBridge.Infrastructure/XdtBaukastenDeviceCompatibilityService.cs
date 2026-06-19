@@ -14,6 +14,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
     private readonly ShinNipponDeviceParser _shinNipponParser = new();
     private readonly ReichertDeviceParser _reichertParser = new();
     private readonly RodenstockDeviceParser _rodenstockParser = new();
+    private readonly RodenstockPhoromat2000Parser _rodenstockPhoromat2000Parser = new();
     private readonly TomeyDeviceParser _tomeyParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmParser = new();
     private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixParser = new();
@@ -128,6 +129,21 @@ public sealed class XdtBaukastenDeviceCompatibilityService
                 }
 
                 return EvaluateForWorkbench(deviceProfile, rodenstockResult.Measurements);
+            }
+
+            if (RodenstockPhoromat2000Parser.IsParserMode(deviceProfile.ParserMode))
+            {
+                var phoromatResult = _rodenstockPhoromat2000Parser.ParseFile(deviceFilePath);
+                if (phoromatResult.HasErrors)
+                {
+                    return XdtBaukastenDeviceCompatibilityResult.Malformed(
+                        "Die GerÃ¤tedatei konnte nicht gelesen oder ausgewertet werden. Bitte prÃ¼fen Sie Datei und Format.",
+                        phoromatResult.Measurements,
+                        FindCompany(phoromatResult.Measurements),
+                        FindModelName(phoromatResult.Measurements));
+                }
+
+                return EvaluateForWorkbench(deviceProfile, phoromatResult.Measurements);
             }
 
             if (TomeyDeviceParser.IsParserMode(deviceProfile.ParserMode))
@@ -405,6 +421,7 @@ public sealed class XdtBaukastenDeviceCompatibilityService
         AddAliasIfContains(aliases, normalizedProfileText, "7CR", "7CR", "7CRNCT");
         AddAliasIfContains(aliases, normalizedProfileText, "LENSCHEKPLUS", "LensChek Plus", "LensChek", "LCHECKP");
         AddAliasIfContains(aliases, normalizedProfileText, "CX800", "CX800", "CX-800", "CX 800");
+        AddAliasIfContains(aliases, normalizedProfileText, "PHOROMAT2000", "Phoromat 2000", "Phoromat2000");
         AddAliasIfContains(aliases, normalizedProfileText, "IOLMASTER700", "IOLMaster 700", "IOL Master 700", "IOLM700");
     }
 

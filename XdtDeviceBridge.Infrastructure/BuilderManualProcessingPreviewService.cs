@@ -12,6 +12,7 @@ public sealed class BuilderManualProcessingPreviewService
     private readonly ShinNipponDeviceParser _shinNipponDeviceParser = new();
     private readonly ReichertDeviceParser _reichertDeviceParser = new();
     private readonly RodenstockDeviceParser _rodenstockDeviceParser = new();
+    private readonly RodenstockPhoromat2000Parser _rodenstockPhoromat2000Parser = new();
     private readonly TomeyDeviceParser _tomeyDeviceParser = new();
     private readonly TomeyEmDeviceParser _tomeyEmDeviceParser = new();
     private readonly CanonZeissVisionixDeviceParser _canonZeissVisionixDeviceParser = new();
@@ -177,6 +178,23 @@ public sealed class BuilderManualProcessingPreviewService
                     new[]
                     {
                         new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
+                });
+            }
+        }
+
+        if (RodenstockPhoromat2000Parser.IsParserMode(parserMode))
+        {
+            try
+            {
+                return _rodenstockPhoromat2000Parser.ParseFile(deviceFilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                return new DeviceParseResult(
+                    Array.Empty<MeasurementValue>(),
+                    new[]
+                    {
+                        new DeviceParseIssue(DeviceParseIssueSeverity.Error, CreateDeviceReadExceptionMessage(ex, deviceFilePath), deviceFilePath, null)
                     });
             }
         }
@@ -317,9 +335,12 @@ public sealed class BuilderManualProcessingPreviewService
         }
 
         if (InterfaceProfileUiPolicy.IsCv5000(interfaceProfile, deviceProfile)
-            || InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile))
+            || InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile)
+            || InterfaceProfileUiPolicy.IsRodenstockPhoromat2000(interfaceProfile, deviceProfile))
         {
-            var label = InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile)
+            var label = InterfaceProfileUiPolicy.IsRodenstockPhoromat2000(interfaceProfile, deviceProfile)
+                ? "Rodenstock Phoromat 2000"
+                : InterfaceProfileUiPolicy.IsNidekRt6100(interfaceProfile, deviceProfile)
                 ? "RT-6100"
                 : "CV-5000";
             return ReadPhoropterHistoryAisPatientData(aisFilePath, gdtResult, label);

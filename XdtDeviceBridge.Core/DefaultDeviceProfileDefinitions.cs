@@ -1848,6 +1848,84 @@ public static class DefaultDeviceProfileDefinitions
                 WriteTimeoutMilliseconds: 1000));
     }
 
+    public static DeviceProfileDefinition CreateRodenstockPhoromat2000Default()
+    {
+        var id = "device-rodenstock-phoromat2000-default";
+        var timestamp = new DateTimeOffset(2026, 6, 18, 12, 0, 0, TimeSpan.Zero);
+
+        return new DeviceProfileDefinition(
+            Metadata: new ProfileMetadata(
+                Id: id,
+                Name: "Rodenstock Phoromat 2000",
+                ProfileKind: ProfileKind.DeviceProfile,
+                Description: "Beta-BuiltIn fuer Rodenstock Phoromat 2000 RS232. Das Profil ist fuer Live-Tests vorbereitet, bleibt standardmaessig inaktiv und erzeugt nur aus vorhandenen Phoropter-Tokens MEDISTAR-Werte.",
+                Vendor: "Rodenstock",
+                Product: "Phoromat 2000",
+                Version: "0.1.0-beta",
+                CreatedAt: timestamp,
+                UpdatedAt: timestamp,
+                CreatedBy: "XdtDeviceBridge",
+                IsBuiltIn: true,
+                IsUserDefined: false),
+            Manufacturer: "Rodenstock",
+            Model: "Phoromat 2000",
+            DeviceType: "Phoropter",
+            ParserMode: RodenstockPhoromat2000Constants.ParserMode,
+            Measurements: CreateRodenstockPhoromat2000Measurements(),
+            SupportedExaminationTypes: new[] { "FN", "PD", "WD", "Phoropter" },
+            CanContainMultipleExaminationTypes: true,
+            IsBidirectional: true,
+            DeviceImagePath: InterfaceProfileUiPolicy.GetBuiltInDeviceImagePathForDeviceProfileId(id),
+            ConnectionKind: DeviceConnectionKind.SerialRs232,
+            SerialSettings: CreateRodenstockPhoromat2000SerialSettings());
+    }
+
+    private static SerialCommunicationSettings CreateRodenstockPhoromat2000SerialSettings()
+    {
+        return new SerialCommunicationSettings(
+            BaudRate: 9600,
+            DataBits: 8,
+            StopBits: SerialStopBitsSetting.One,
+            Parity: SerialParitySetting.None,
+            Handshake: SerialHandshakeSetting.None,
+            DtrEnable: false,
+            RtsEnable: false,
+            IsBidirectional: true,
+            LineTerminator: SerialLineTerminatorSetting.LF,
+            ReadTimeoutMilliseconds: 30000,
+            WriteTimeoutMilliseconds: 1000);
+    }
+
+    private static IReadOnlyList<DeviceMeasurementDefinition> CreateRodenstockPhoromat2000Measurements()
+    {
+        var prefix = "rodenstock-phoromat2000";
+        var measurements = new List<DeviceMeasurementDefinition>
+        {
+            new($"{prefix}-company", "Company", "Common/Company", "Common", string.Empty, string.Empty, true, "Rodenstock common company field."),
+            new($"{prefix}-model-name", "ModelName", "Common/ModelName", "Common", string.Empty, string.Empty, true, "Rodenstock Phoromat 2000 model name."),
+            new($"{prefix}-pd", "PD", "Measure[@Type='PHOROMAT2000']/PD", "PD", string.Empty, "mm", false, "Phoromat 2000 binocular PD, if delivered."),
+            new($"{prefix}-pd-r", "PD R", "Measure[@Type='PHOROMAT2000']/PD/R", "PD", "R", "mm", false, "Phoromat 2000 right PD, if delivered."),
+            new($"{prefix}-pd-l", "PD L", "Measure[@Type='PHOROMAT2000']/PD/L", "PD", "L", "mm", false, "Phoromat 2000 left PD, if delivered."),
+            new($"{prefix}-wd", "WD", "Measure[@Type='PHOROMAT2000']/WD", "WD", string.Empty, "cm", false, "Phoromat 2000 working distance, if delivered."),
+            new($"{prefix}-wd-medistar-line", "WD MEDISTAR-Zeile", "Measure[@Type='PHOROMAT2000']/WD/MedistarLine", "WD", string.Empty, string.Empty, false, "Prepared MEDISTAR 6227 WD line.")
+        };
+
+        foreach (var eye in new[] { "R", "L" })
+        {
+            var eyePrefix = $"{prefix}-fn-{eye.ToLowerInvariant()}";
+            measurements.Add(new($"{eyePrefix}-sp", $"FN {eye} SP", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/SP", "FN", eye, "dpt", false, "Final phoropter sphere from Rodenstock Phoromat 2000 data."));
+            measurements.Add(new($"{eyePrefix}-cy", $"FN {eye} CY", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/CY", "FN", eye, "dpt", false, "Final phoropter cylinder from Rodenstock Phoromat 2000 data."));
+            measurements.Add(new($"{eyePrefix}-ax", $"FN {eye} AX", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/AX", "FN", eye, "deg", false, "Final phoropter axis from Rodenstock Phoromat 2000 data."));
+            measurements.Add(new($"{eyePrefix}-ad", $"FN {eye} AD", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/AD", "FN", eye, "dpt", false, "Final phoropter addition from Rodenstock Phoromat 2000 data."));
+            measurements.Add(new($"{eyePrefix}-ph", $"FN {eye} PH", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/PH", "FN", eye, "pdpt", false, "Final horizontal prism from Rodenstock Phoromat 2000 data."));
+            measurements.Add(new($"{eyePrefix}-pv", $"FN {eye} PV", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/PV", "FN", eye, "pdpt", false, "Final vertical prism from Rodenstock Phoromat 2000 data."));
+            measurements.Add(new($"{eyePrefix}-va", $"FN {eye} VA", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/VA", "FN", eye, string.Empty, false, "Final visual acuity placeholder from Rodenstock Phoromat 2000 data; not automatically exported."));
+            measurements.Add(new($"{eyePrefix}-medistar-line", $"FN {eye} MEDISTAR-Zeile", $"Measure[@Type='PHOROMAT2000']/FN/{eye}/MedistarLine", "FN", eye, string.Empty, false, "Prepared MEDISTAR 6228 final phoropter line."));
+        }
+
+        return measurements;
+    }
+
     private static IReadOnlyList<DeviceMeasurementDefinition> CreateRodenstockCx800Measurements()
     {
         var prefix = "rodenstock-cx800";

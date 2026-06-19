@@ -109,7 +109,7 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | TOPCON | EZ-200 Advance | serielle/RDD-Logik mit `CLM`/`SD`-Handshake und Lensmeter-Ziel `6228`, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen Parser umsetzen |
 | TOPCON | RM-8000 | serielle/RDD-Logik mit `6228`/`6227`-Hinweisen, aber keine echte Rohdatenfixture | erst nach echter Rohdaten-/Frameprobe als seriellen REF/SBJ-Parser entscheiden |
 | NIDEK | AR-600, AR-660A, ARK-500A, LM-970, LM-1000P, NT-2000 | vorwiegend RDD-/COM- beziehungsweise scriptnahe Logik ohne ausreichend belastbare neutrale Rohfixture | Folge-Batch mit eigener Parserklasse erst starten, wenn die Rohstruktur oder ein synthetisch eindeutig herleitbares Frame abgesichert werden kann |
-| Rodenstock | Phoromat 2000 | Phoropterhinweise mit widerspruechlicher Hersteller-/Modellzuordnung und bidirektionaler Relevanz | erst nach klarer Rueckgabe- und PC->Geraet-Frameprobe als Phoropter-BuiltIn entscheiden |
+| Rodenstock | Phoromat 2000 | Beta-BuiltIn mit isoliertem RS232-Parser/Writer, synthetischem Frame-Test und inaktiver MEDISTAR-Profilkette vorbereitet | echte Rueckgabe- und PC->Geraet-Frameprobe sowie MEDISTAR-Abnahme nachziehen |
 | Möller-Wedel | Visutron Plus, Visutron 900 Plus, Visutron 900 Touch | COM-/Parserhinweise und ACK/NAK-nahe bidirektionale Logik, aber keine ausreichend belastbare neutrale Rohfixture fuer MEDISTAR-Ausgabe | Parserdetails, Anschlussart und echte Rueckgabe-/Sendeframes nachziehen |
 
 ## Nicht implementiert wegen unzureichender oder widerspruechlicher Datenlage
@@ -126,7 +126,6 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 | TOMEY | AP-2500 | Keine ausreichend belastbare Messwertrohstruktur fuer einen XDTBox-Parser. |
 | TOMEY | TAP-2000 | Phoropter-/Sendeframe-Workflow waere zu risikoreich ohne echte Rueckgabe- und PC->Geraet-Validierung. Die statisch sichtbaren COM-/Framefragmente werden dokumentiert, aber noch nicht produktiv freigegeben. |
 | Shin-Nippon | DR-900 | Refraktions-/Phoropterkandidat mit bidirektionaler Relevanz; Anschluss- und Sendeframe-Datenlage reicht nicht fuer ein sicheres BuiltIn. Kein halbfertiger produktiver Parser ohne getrennte Rueckgabe- und PC->Geraet-Validierung. |
-| Rodenstock | Phoromat 2000 | Die Datenlage enthaelt Phoropter-Token, aber auch eine widerspruechliche Hersteller-/Modellzuordnung. Ohne echte Rueckgabe und PC->Geraet-Frameprobe bleibt das Geraet Kandidat. |
 | Möller-Wedel | Visutron Plus / Visutron 900 Plus / Visutron 900 Touch | Die COM-Parameter und STX/ETX-Hinweise sind sichtbar, die Messwertrohstruktur und bidirektionalen Sendeframes sind aber noch nicht belastbar genug fuer ein BuiltIn. |
 | Canon | OCT A-1 Xephilo | OCT-/Bildworkflow wurde gemaess Auftrag bewusst ausgeschlossen. Kein Parser, kein BuiltIn, kein Templatepaket. |
 | Visionix | Optovue iVue 80 / Optovue iVue 100 | OCT-/Bildworkflow wurde gemaess Auftrag bewusst ausgeschlossen. Kein Parser, kein BuiltIn, kein Templatepaket. |
@@ -156,7 +155,7 @@ Diese Geraete besitzen auswertbare Parser- oder COM-Logik, aber keine vollstaend
 4. Echte Shin-Nippon-Praxisrohdateien fuer Accuref R-800/K-900, DL-1000/DL-800/DL-900, NCT-200 und SLM-4000 sammeln und gegen `ShinNipponDeviceParser` validieren.
 5. Shin-Nippon DR-900 erst nach klarer Rueckgabe- und PC->Geraet-Frame-Struktur entscheiden.
 6. Echte Reichert-7CR-/LensChek-Plus- und Rodenstock-CX-800-Praxisrohdateien sammeln und gegen die synthetischen Fixtures validieren.
-7. Rodenstock Phoromat 2000 und Möller-Wedel Visutron erst nach klarer Rueckgabe- und PC->Geraet-Frame-Struktur entscheiden.
+7. Rodenstock Phoromat 2000 live validieren: echte RS232-Rueckgabeframes aufnehmen, PC->Geraet-Sendeframe am Geraet pruefen und MEDISTAR-Import fuer die vorbereitete `6228`-/`6227`-Ausgabe abnehmen. Möller-Wedel Visutron erst nach klarer Rueckgabe- und PC->Geraet-Frame-Struktur entscheiden.
 8. TOPCON EZ-200 Advance und RM-8000 erst mit echter serieller Rohdatenprobe oder eindeutigem Framefixture als Parser umsetzen.
 9. Canon RK-F2/TX-20P, ZEISS VISULENS 550/VISUPLAN 500/VISUREF 100 sowie Visionix Retinomax 5/VX 120/VX 650 mit echten Praxisrohdateien gegen die synthetischen Fixtures validieren.
 10. Widerspruechliche TOPCON-/NIDEK-Aliasfaelle erst mit echter Rohdatei oder eindeutiger Herstellerstruktur entscheiden.

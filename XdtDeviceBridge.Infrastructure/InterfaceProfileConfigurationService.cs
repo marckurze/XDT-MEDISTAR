@@ -313,6 +313,16 @@ public sealed class InterfaceProfileConfigurationService
                 Format: NidekRt6100InputXmlWriter.DeviceOutputFormat);
         }
 
+        if (string.Equals(exportProfile.SourceDeviceProfileId, "device-rodenstock-phoromat2000-default", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfile.Metadata.Id, "export-medistar-rodenstock-phoromat2000-default", StringComparison.OrdinalIgnoreCase))
+        {
+            return new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: RodenstockPhoromat2000OutputWriter.DefaultFileNameTemplate,
+                Format: RodenstockPhoromat2000OutputWriter.DeviceOutputFormat);
+        }
+
         return null;
     }
 

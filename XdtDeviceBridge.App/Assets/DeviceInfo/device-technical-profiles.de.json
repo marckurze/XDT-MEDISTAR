@@ -1238,6 +1238,65 @@
       "technicianNote": ""
     },
     {
+      "deviceProfileId": "device-rodenstock-phoromat2000-default",
+      "manufacturer": "Rodenstock",
+      "model": "Phoromat 2000",
+      "deviceType": "Phoropter",
+      "connectionType": "Seriell RS232",
+      "isBidirectional": true,
+      "imagePath": "pack://application:,,,/Assets/Devices/device-document-attachment-default.png",
+      "shortDescription": "Rodenstock Phoromat 2000 ist ein serieller Phoropter f\u00FCr Refraktionswerte im Beta-Betrieb.",
+      "measurements": [
+        {
+          "name": "Sph\u00E4re",
+          "description": "Dioptrischer Hauptwert der Refraktion.",
+          "usedFor": "Dokumentation der sph\u00E4rischen Refraktionsanteile."
+        },
+        {
+          "name": "Zylinder",
+          "description": "Astigmatische Komponente der Refraktion.",
+          "usedFor": "Dokumentation zylindrischer Refraktionsanteile."
+        },
+        {
+          "name": "Achse",
+          "description": "Lage der Zylinderachse in Grad.",
+          "usedFor": "Zuordnung der Zylinderwirkung."
+        },
+        {
+          "name": "Addition",
+          "description": "Nahzusatz f\u00FCr die Refraktion.",
+          "usedFor": "Dokumentation der Nahwirkung."
+        },
+        {
+          "name": "Prisma",
+          "description": "Prismatische Wirkung mit Richtung oder Basisangabe.",
+          "usedFor": "Dokumentation prismatischer Anteile."
+        },
+        {
+          "name": "Pupillendistanz",
+          "description": "Abstandswert in Millimetern.",
+          "usedFor": "Dokumentation von Zentrierwerten."
+        },
+        {
+          "name": "Arbeitsabstand",
+          "description": "Abstandswert der Untersuchung.",
+          "usedFor": "Dokumentation der Untersuchungsbedingung."
+        },
+        {
+          "name": "Visus",
+          "description": "Vom Geraet gelieferter Sehsch\u00E4rfewert.",
+          "usedFor": "Anzeige als Einzelwert im Baukasten."
+        }
+      ],
+      "technicalNotes": [
+        "Anschlussart: Seriell RS232.",
+        "Voreinstellung: 9600 Baud, 8 Datenbits, keine Paritaet, 1 Stopbit, kein Handshake.",
+        "Das Profil ist bidirektional vorbereitet und standardmaessig inaktiv.",
+        "Produktive Freigabe erfolgt erst nach Praxisvalidierung."
+      ],
+      "technicianNote": ""
+    },
+    {
       "deviceProfileId": "device-shin-nippon-accuref-k900-default",
       "manufacturer": "Shin-Nippon",
       "model": "Accuref K-900",

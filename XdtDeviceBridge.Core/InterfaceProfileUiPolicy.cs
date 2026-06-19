@@ -18,6 +18,8 @@ public static class InterfaceProfileUiPolicy
         "device-nidek-rt3100-serial-default",
         "device-nidek-rt5100-serial-default"
     };
+    private const string RodenstockPhoromat2000InterfaceProfileId = "interface-medistar-rodenstock-phoromat2000-default";
+    private const string RodenstockPhoromat2000DeviceProfileId = "device-rodenstock-phoromat2000-default";
     public const double PilotMonitoringCardWidth = 576;
     public const double PilotFloatingWindowMinWidth = 672;
     public const double PilotFloatingWindowDefaultWidth = 744;
@@ -403,6 +405,17 @@ public static class InterfaceProfileUiPolicy
                 && ContainsNidekRtSerialModel(deviceProfile.Model, deviceProfile.Metadata.Product));
     }
 
+    public static bool IsRodenstockPhoromat2000(
+        InterfaceProfileDefinition? interfaceProfile,
+        DeviceProfileDefinition? deviceProfile)
+    {
+        return string.Equals(interfaceProfile?.Metadata.Id, RodenstockPhoromat2000InterfaceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(interfaceProfile?.DeviceProfileId, RodenstockPhoromat2000DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(deviceProfile?.Metadata.Id, RodenstockPhoromat2000DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || ContainsRodenstockPhoromat2000(deviceProfile?.Model)
+            || ContainsRodenstockPhoromat2000(deviceProfile?.Metadata.Product);
+    }
+
     private static bool ContainsCv5000(string? value)
     {
         return !string.IsNullOrWhiteSpace(value)
@@ -423,6 +436,13 @@ public static class InterfaceProfileUiPolicy
             && (ContainsAny(value, "RT-2100", "RT2100")
                 || ContainsAny(value, "RT-3100", "RT3100")
                 || ContainsAny(value, "RT-5100", "RT5100")));
+    }
+
+    private static bool ContainsRodenstockPhoromat2000(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && (ContainsAny(value, "Phoromat 2000", "Phoromat2000")
+                || ContainsAny(value, "Rodenstock Phoromat"));
     }
 
     private static bool ContainsId(IReadOnlyList<string> ids, string? value)

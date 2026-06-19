@@ -36,6 +36,11 @@ public static class XdtBaukastenDeviceOutputRuleService
             return CreateNidekRtSerialRules();
         }
 
+        if (IsRodenstockPhoromat2000(profile))
+        {
+            return CreateRodenstockPhoromat2000Rules();
+        }
+
         if (IsCv5000(profile))
         {
             return CreateCv5000Rules();
@@ -87,6 +92,12 @@ public static class XdtBaukastenDeviceOutputRuleService
             return CreatePlaceholders(CreateNidekRtSerialPlaceholderSpecs(), patient, selected, isRt6100: false);
         }
 
+        if (IsRodenstockPhoromat2000(profile))
+        {
+            var selected = SelectRodenstockPhoromat2000Records(historicalRecords);
+            return CreatePlaceholders(CreateRodenstockPhoromat2000PlaceholderSpecs(), patient, selected, isRt6100: false, isRodenstockPhoromat2000: true);
+        }
+
         if (IsCv5000(profile))
         {
             var selected = SelectCv5000Records(historicalRecords);
@@ -135,7 +146,7 @@ public static class XdtBaukastenDeviceOutputRuleService
             target?.Remove();
         }
 
-        var tokenValues = CreateTokenValueMap(patient, selectedRecords, IsRt6100(profile));
+        var tokenValues = CreateTokenValueMap(patient, selectedRecords, IsRt6100(profile), IsRodenstockPhoromat2000(profile));
         foreach (var rule in activeRules)
         {
             if (string.IsNullOrWhiteSpace(rule.TargetFieldCode))
@@ -177,8 +188,14 @@ public static class XdtBaukastenDeviceOutputRuleService
                 Array.Empty<string>());
         }
 
-        var selectedRecords = IsRt6100(profile) ? SelectRt6100Records(records) : SelectCv5000Records(records);
-        var tokenValues = CreateTokenValueMap(patient, selectedRecords, IsRt6100(profile));
+        var isRt6100 = IsRt6100(profile);
+        var isRodenstockPhoromat2000 = IsRodenstockPhoromat2000(profile);
+        var selectedRecords = isRt6100
+            ? SelectRt6100Records(records)
+            : isRodenstockPhoromat2000
+                ? SelectRodenstockPhoromat2000Records(records)
+                : SelectCv5000Records(records);
+        var tokenValues = CreateTokenValueMap(patient, selectedRecords, isRt6100, isRodenstockPhoromat2000);
         var lines = activeRules
             .Select(rule => $"{rule.TargetFieldCode}: {ResolveRuleValue(rule, tokenValues)}".TrimEnd())
             .Where(line => !string.IsNullOrWhiteSpace(line))
@@ -227,6 +244,32 @@ public static class XdtBaukastenDeviceOutputRuleService
         AddRtSerialEyeRules(rules, "LM", "Lensmeter", "PhoropterInput.Lensmeter");
         AddRtSerialEyeRules(rules, "AR", "Autoref", "PhoropterInput.Autoref");
         return rules;
+    }
+
+    private static IReadOnlyList<ExportRuleDefinition> CreateRodenstockPhoromat2000Rules()
+    {
+        var rules = new List<ExportRuleDefinition>();
+        AddRule(rules, "rodenstock-phoromat2000-pd", "Serial/PD", "PD", "PhoromatInput.PD", "PD fuer Rodenstock Phoromat 2000, sofern in der AIS-Historie vorhanden.");
+        AddRule(rules, "rodenstock-phoromat2000-wd", "Serial/WD", "WD", "PhoromatInput.WD", "Arbeitsabstand fuer Rodenstock Phoromat 2000, sofern vorhanden.");
+        AddRodenstockPhoromatEyeRules(rules, "LM", "Lensmeter", "PhoromatInput.LM");
+        AddRodenstockPhoromatEyeRules(rules, "AR", "Autoref", "PhoromatInput.AR");
+        AddRodenstockPhoromatEyeRules(rules, "FN", "Phoropter final", "PhoromatInput.FN");
+        return rules;
+    }
+
+    private static void AddRodenstockPhoromatEyeRules(
+        List<ExportRuleDefinition> rules,
+        string targetPrefix,
+        string namePrefix,
+        string sourcePrefix)
+    {
+        foreach (var eye in new[] { ("R", "rechts"), ("L", "links") })
+        {
+            AddRule(rules, CreateId("rodenstock-phoromat2000", targetPrefix, eye.Item1, "sp"), $"Serial/{targetPrefix}/{eye.Item1}/SP", $"{namePrefix} {eye.Item2} SP", $"{sourcePrefix}.{eye.Item1}.SP", $"{namePrefix} {eye.Item2} Sphaere.");
+            AddRule(rules, CreateId("rodenstock-phoromat2000", targetPrefix, eye.Item1, "cy"), $"Serial/{targetPrefix}/{eye.Item1}/CY", $"{namePrefix} {eye.Item2} CY", $"{sourcePrefix}.{eye.Item1}.CY", $"{namePrefix} {eye.Item2} Zylinder.");
+            AddRule(rules, CreateId("rodenstock-phoromat2000", targetPrefix, eye.Item1, "ax"), $"Serial/{targetPrefix}/{eye.Item1}/AX", $"{namePrefix} {eye.Item2} AX", $"{sourcePrefix}.{eye.Item1}.AX", $"{namePrefix} {eye.Item2} Achse.");
+            AddRule(rules, CreateId("rodenstock-phoromat2000", targetPrefix, eye.Item1, "ad"), $"Serial/{targetPrefix}/{eye.Item1}/AD", $"{namePrefix} {eye.Item2} AD", $"{sourcePrefix}.{eye.Item1}.AD", $"{namePrefix} {eye.Item2} Addition.");
+        }
     }
 
     private static void AddRtSerialEyeRules(List<ExportRuleDefinition> rules, string targetPrefix, string namePrefix, string sourcePrefix)
@@ -330,13 +373,23 @@ public static class XdtBaukastenDeviceOutputRuleService
             .ToArray();
     }
 
+    private static IReadOnlyList<PlaceholderSpec> CreateRodenstockPhoromat2000PlaceholderSpecs()
+    {
+        return CreateRodenstockPhoromat2000Rules()
+            .GroupBy(rule => rule.SourcePath ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key))
+            .Select(group => new PlaceholderSpec(group.First().TargetName, group.Key, group.First().Description ?? group.Key))
+            .ToArray();
+    }
+
     private static IReadOnlyList<XdtBaukastenPlaceholder> CreatePlaceholders(
         IReadOnlyList<PlaceholderSpec> specs,
         PatientData? patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> records,
-        bool isRt6100)
+        bool isRt6100,
+        bool isRodenstockPhoromat2000 = false)
     {
-        var tokenValues = CreateTokenValueMap(patient ?? EmptyPatient(), records, isRt6100);
+        var tokenValues = CreateTokenValueMap(patient ?? EmptyPatient(), records, isRt6100, isRodenstockPhoromat2000);
         return specs
             .Select(spec => new XdtBaukastenPlaceholder(
                 Category,
@@ -464,17 +517,23 @@ public static class XdtBaukastenDeviceOutputRuleService
     private static Dictionary<string, string> CreateTokenValueMap(
         PatientData patient,
         IReadOnlyList<AisHistoricalMeasurementRecord> records,
-        bool isRt6100)
+        bool isRt6100,
+        bool isRodenstockPhoromat2000 = false)
     {
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         AddPatientValues(values, patient, isRt6100);
 
         foreach (var record in records)
         {
-            foreach (var prefix in CreateRecordPrefixes(record, isRt6100))
+            foreach (var prefix in CreateRecordPrefixes(record, isRt6100, isRodenstockPhoromat2000))
             {
                 AddRecordValues(values, prefix, record);
             }
+        }
+
+        if (isRodenstockPhoromat2000)
+        {
+            AddRodenstockPhoromat2000SharedValues(values, records);
         }
 
         return values;
@@ -511,8 +570,22 @@ public static class XdtBaukastenDeviceOutputRuleService
         AddValue(values, "CV5000Input.Patient.DOB", patient.BirthDate);
     }
 
-    private static IEnumerable<string> CreateRecordPrefixes(AisHistoricalMeasurementRecord record, bool isRt6100)
+    private static IEnumerable<string> CreateRecordPrefixes(
+        AisHistoricalMeasurementRecord record,
+        bool isRt6100,
+        bool isRodenstockPhoromat2000 = false)
     {
+        if (isRodenstockPhoromat2000)
+        {
+            return record.SourceKind switch
+            {
+                AisHistoricalMeasurementSourceKind.Lensmeter => new[] { "PhoromatInput.LM" },
+                AisHistoricalMeasurementSourceKind.Autorefraction => new[] { "PhoromatInput.AR" },
+                AisHistoricalMeasurementSourceKind.Phoropter => new[] { "PhoromatInput.FN" },
+                _ => Array.Empty<string>()
+            };
+        }
+
         if (isRt6100)
         {
             return record.SourceKind switch
@@ -542,6 +615,12 @@ public static class XdtBaukastenDeviceOutputRuleService
         AddValue(values, $"{prefix}.PD", record.Pd);
         AddValue(values, $"{prefix}.VD", record.Vd);
         AddValue(values, $"{prefix}.WorkingDistance", record.WorkingDistance);
+
+        if (prefix.StartsWith("PhoromatInput.", StringComparison.OrdinalIgnoreCase))
+        {
+            AddPhoromatEyeValues(values, prefix, "R", record.RightEye, record.Pd);
+            AddPhoromatEyeValues(values, prefix, "L", record.LeftEye, null);
+        }
     }
 
     private static void AddEyeValues(
@@ -564,6 +643,35 @@ public static class XdtBaukastenDeviceOutputRuleService
         AddValue(values, $"{prefix}.{eye}.ADD", refraction.Add);
         AddValue(values, $"{prefix}.{eye}.Add", refraction.Add);
         AddValue(values, $"{prefix}.{eye}.PD", pd);
+    }
+
+    private static void AddPhoromatEyeValues(
+        Dictionary<string, string> values,
+        string prefix,
+        string eye,
+        AisHistoricalEyeRefraction? refraction,
+        string? pd)
+    {
+        if (refraction is null)
+        {
+            return;
+        }
+
+        AddValue(values, $"{prefix}.{eye}.SP", refraction.Sphere);
+        AddValue(values, $"{prefix}.{eye}.CY", refraction.Cylinder);
+        AddValue(values, $"{prefix}.{eye}.AX", refraction.Axis);
+        AddValue(values, $"{prefix}.{eye}.AD", refraction.Add);
+        AddValue(values, $"{prefix}.{eye}.PD", pd);
+    }
+
+    private static void AddRodenstockPhoromat2000SharedValues(
+        Dictionary<string, string> values,
+        IReadOnlyList<AisHistoricalMeasurementRecord> records)
+    {
+        var pd = records.FirstOrDefault(record => !string.IsNullOrWhiteSpace(record.Pd))?.Pd;
+        var wd = records.FirstOrDefault(record => !string.IsNullOrWhiteSpace(record.WorkingDistance))?.WorkingDistance;
+        AddValue(values, "PhoromatInput.PD", pd);
+        AddValue(values, "PhoromatInput.WD", wd);
     }
 
     private static void AddValue(Dictionary<string, string> values, string key, string? value)
@@ -599,6 +707,15 @@ public static class XdtBaukastenDeviceOutputRuleService
             AisHistoricalMeasurementSourceKind.Autorefraction);
     }
 
+    private static IReadOnlyList<AisHistoricalMeasurementRecord> SelectRodenstockPhoromat2000Records(IEnumerable<AisHistoricalMeasurementRecord> records)
+    {
+        return SelectRecords(
+            records,
+            AisHistoricalMeasurementSourceKind.Lensmeter,
+            AisHistoricalMeasurementSourceKind.Autorefraction,
+            AisHistoricalMeasurementSourceKind.Phoropter);
+    }
+
     private static IReadOnlyList<AisHistoricalMeasurementRecord> SelectRecords(
         IEnumerable<AisHistoricalMeasurementRecord> records,
         params AisHistoricalMeasurementSourceKind[] kinds)
@@ -630,6 +747,12 @@ public static class XdtBaukastenDeviceOutputRuleService
             || NormalizeProfileText(profile).Contains("RT2100", StringComparison.OrdinalIgnoreCase)
             || NormalizeProfileText(profile).Contains("RT3100", StringComparison.OrdinalIgnoreCase)
             || NormalizeProfileText(profile).Contains("RT5100", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool IsRodenstockPhoromat2000(DeviceProfileDefinition? profile)
+    {
+        return RodenstockPhoromat2000Parser.IsParserMode(profile?.ParserMode)
+            || NormalizeProfileText(profile).Contains("PHOROMAT2000", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeProfileText(DeviceProfileDefinition? profile)

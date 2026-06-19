@@ -4,7 +4,7 @@ namespace XdtDeviceBridge.Tests;
 
 public sealed class ProfileCatalogStartupInitializationTests
 {
-    private const int ExpectedBuiltInProfileCount = 64;
+    private const int ExpectedBuiltInProfileCount = 65;
 
     [Fact]
     public void StartupInitialization_ShouldEnsureDefaultsAndLoadCatalog()

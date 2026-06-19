@@ -48,6 +48,8 @@ public sealed class UserDefinedProfileCreationService
     private const string Cv5000ExportProfileId = "export-medistar-topcon-cv5000-default";
     private const string NidekRt6100DeviceProfileId = "device-nidek-rt6100-default";
     private const string NidekRt6100ExportProfileId = "export-medistar-nidek-rt6100-default";
+    private const string RodenstockPhoromat2000DeviceProfileId = "device-rodenstock-phoromat2000-default";
+    private const string RodenstockPhoromat2000ExportProfileId = "export-medistar-rodenstock-phoromat2000-default";
     private const string DocumentAttachmentDeviceProfileId = "device-document-attachment-default";
     private const string DocumentAttachmentExportProfileId = "export-medistar-document-attachment-default";
     private const string ManualDocumentSelectionDeviceProfileId = "device-manual-document-selection-default";
@@ -422,6 +424,16 @@ public sealed class UserDefinedProfileCreationService
                 OutputFolder: string.Empty,
                 FileNameTemplate: NidekRt6100InputXmlWriter.DefaultFileNameTemplate,
                 Format: NidekRt6100InputXmlWriter.DeviceOutputFormat);
+        }
+
+        if (string.Equals(deviceProfileId, RodenstockPhoromat2000DeviceProfileId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exportProfileId, RodenstockPhoromat2000ExportProfileId, StringComparison.OrdinalIgnoreCase))
+        {
+            return new DeviceOutputConfiguration(
+                IsEnabled: false,
+                OutputFolder: string.Empty,
+                FileNameTemplate: RodenstockPhoromat2000OutputWriter.DefaultFileNameTemplate,
+                Format: RodenstockPhoromat2000OutputWriter.DeviceOutputFormat);
         }
 
         return null;

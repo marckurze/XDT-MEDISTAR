@@ -5,7 +5,7 @@ namespace XdtDeviceBridge.Tests;
 
 public sealed class ProfileCatalogServiceTests
 {
-    private const int ExpectedBuiltInProfileCount = 64;
+    private const int ExpectedBuiltInProfileCount = 65;
 
     private readonly ProfileCatalogService _service = new();
 
@@ -105,6 +105,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-tomey-top1000-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-tomey-em3000-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-tomey-em4000-default");
+        Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-rodenstock-phoromat2000-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-cl300-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-solos-default");
         Assert.Contains(catalog.InterfaceProfiles, profile => profile.Metadata.Id == "interface-medistar-topcon-kr800-default");
@@ -864,6 +865,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("device-topcon-ct1p-default", ids);
         Assert.Contains("device-topcon-ct800a-default", ids);
         Assert.Contains("device-topcon-cv5000-default", ids);
+        Assert.Contains("device-rodenstock-phoromat2000-default", ids);
         Assert.Contains("device-document-attachment-default", ids);
         Assert.Contains("device-manual-document-selection-default", ids);
     }
@@ -922,6 +924,7 @@ public sealed class ProfileCatalogServiceTests
         Assert.Contains("export-medistar-topcon-ct1p-default", ids);
         Assert.Contains("export-medistar-topcon-ct800a-default", ids);
         Assert.Contains("export-medistar-topcon-cv5000-default", ids);
+        Assert.Contains("export-medistar-rodenstock-phoromat2000-default", ids);
         Assert.Contains("export-medistar-document-attachment-default", ids);
         Assert.Contains("export-medistar-manual-document-transfer-default", ids);
     }
