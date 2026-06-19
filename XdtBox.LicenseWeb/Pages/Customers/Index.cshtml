@@ -6,8 +6,22 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Kunden</h1>
-    <a class="btn btn-outline-primary" asp-page-handler="TotalPdf">Gesamt-PDF</a>
+    <div class="d-flex gap-2">
+        <form id="mergeForm" method="post" asp-page-handler="MergeSelected" onsubmit="return confirm('Markierte Kunden zusammenführen? Der erste markierte Kunde bleibt der Zielkunde.');">
+            <button class="btn btn-outline-primary" type="submit">Markierte Kunden zusammenführen</button>
+        </form>
+        <a class="btn btn-outline-primary" asp-page-handler="TotalPdf">Gesamt-PDF</a>
+    </div>
 </div>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
 
 @if (!Model.Customers.Any())
 {
@@ -19,6 +33,7 @@ else
         <table class="table table-hover align-middle">
             <thead>
             <tr>
+                <th class="xdt-select-column"></th>
                 <th>Kundennummer</th>
                 <th>Kunde / Praxis / Firma</th>
                 <th>Ort</th>
@@ -33,7 +48,10 @@ else
             <tbody>
             @foreach (var customer in Model.Customers)
             {
-                <tr>
+                <tr class="customer-row" data-href="@Url.Page("/Customers/Details", new { id = customer.Id })" tabindex="0" aria-label="Kunde @customer.CustomerName öffnen">
+                    <td>
+                        <input class="form-check-input customer-select" type="checkbox" name="SelectedCustomerIds" value="@customer.Id" form="mergeForm" aria-label="Kunde @customer.CustomerName markieren" />
+                    </td>
                     <td>@customer.CustomerNumber</td>
                     <td>@customer.CustomerName</td>
                     <td>@customer.City</td>
@@ -42,9 +60,11 @@ else
                     <td class="text-end">@customer.ActiveInstallationCount</td>
                     <td class="text-end">@customer.ActiveDeviceCount</td>
                     <td class="text-end">@customer.MonthlyTotal</td>
-                    <td class="text-nowrap">
-                        <a class="btn btn-sm btn-outline-primary" asp-page="/Customers/Details" asp-route-id="@customer.Id">Details</a>
-                        <a class="btn btn-sm btn-outline-secondary" asp-page-handler="CustomerPdf" asp-route-id="@customer.Id">Kunden-PDF</a>
+                    <td class="text-nowrap text-end customer-actions">
+                        <a class="btn btn-sm btn-outline-secondary" asp-page-handler="CustomerPdf" asp-route-id="@customer.Id" download>Kunden-PDF</a>
+                        <form class="d-inline" method="post" asp-page-handler="Delete" asp-route-id="@customer.Id" onsubmit="return confirm('Diesen Kunden wirklich löschen?');">
+                            <button class="btn btn-sm btn-outline-danger" type="submit" title="Kunden löschen" aria-label="Kunden löschen">&#128465;</button>
+                        </form>
                     </td>
                 </tr>
             }

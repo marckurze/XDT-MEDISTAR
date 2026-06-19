@@ -19,13 +19,48 @@ public sealed class IndexModel : PageModel
 
     public IReadOnlyList<CustomerRow> Customers { get; private set; } = Array.Empty<CustomerRow>();
 
+    [BindProperty]
+    public List<string> SelectedCustomerIds { get; set; } = new();
+
+    [TempData]
+    public string? StatusMessage { get; set; }
+
+    [TempData]
+    public string? ErrorMessage { get; set; }
+
     public async Task OnGetAsync()
     {
-        var snapshot = await _store.LoadSnapshotAsync();
-        Customers = snapshot.Customers
-            .OrderBy(customer => customer.CustomerName, StringComparer.CurrentCultureIgnoreCase)
-            .Select(customer => CustomerRow.From(customer, snapshot.Settings.PricePerDeviceNet))
-            .ToArray();
+        await LoadAsync();
+    }
+
+    public async Task<IActionResult> OnPostDeleteAsync(string id)
+    {
+        try
+        {
+            var customer = await _store.DeleteCustomerAsync(id);
+            StatusMessage = $"Kunde \"{customer.CustomerName}\" wurde gelöscht.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostMergeSelectedAsync()
+    {
+        try
+        {
+            var result = await _store.MergeCustomersAsync(SelectedCustomerIds);
+            StatusMessage = $"{result.MergedCustomerCount} Kunden wurden zu \"{result.TargetCustomer.CustomerName}\" zusammengeführt.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+
+        return RedirectToPage();
     }
 
     public async Task<IActionResult> OnGetCustomerPdfAsync(string id)
@@ -38,6 +73,15 @@ public sealed class IndexModel : PageModel
     {
         var download = await _licenseService.CreateTotalPdfAsync();
         return File(download.Content, download.ContentType, download.FileName);
+    }
+
+    private async Task LoadAsync()
+    {
+        var snapshot = await _store.LoadSnapshotAsync();
+        Customers = snapshot.Customers
+            .OrderBy(customer => customer.CustomerName, StringComparer.CurrentCultureIgnoreCase)
+            .Select(customer => CustomerRow.From(customer, snapshot.Settings.PricePerDeviceNet))
+            .ToArray();
     }
 
     public sealed record CustomerRow(

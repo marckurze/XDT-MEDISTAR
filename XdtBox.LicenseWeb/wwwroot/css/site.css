@@ -36,6 +36,24 @@ body {
   background: #fff;
 }
 
+.customer-row {
+  cursor: pointer;
+}
+
+.customer-row:focus {
+  outline: 2px solid #0a5b8f;
+  outline-offset: -2px;
+}
+
+.customer-actions,
+.xdt-select-column {
+  width: 1%;
+}
+
+.customer-select {
+  cursor: pointer;
+}
+
 .btn-primary {
   background: #0a5b8f;
   border-color: #0a5b8f;

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -108,8 +109,279 @@ public sealed class LicenseWebTests
         var backupText = System.Text.Encoding.UTF8.GetString(backup);
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateLicenseFromRequestAsync(requestFile));
 
+        Assert.DoesNotContain("PrivateKeyPath", backupText);
         Assert.DoesNotContain("private.pem", backupText);
         Assert.Contains("kein serverseitiger Private Key", exception.Message);
+    }
+
+    [Fact]
+    public async Task LicenseWeb_ShouldRejectUnsafePrivateKeyPath()
+    {
+        var contentRoot = CreateTempFolder();
+        var webRoot = Path.Combine(contentRoot, "wwwroot");
+        Directory.CreateDirectory(webRoot);
+        var dataRoot = CreateTempFolder();
+        var keyPath = Path.Combine(webRoot, "downloads", "private.pem");
+        Directory.CreateDirectory(Path.GetDirectoryName(keyPath)!);
+        await File.WriteAllTextAsync(keyPath, "PRIVATE KEY");
+        var store = new LicenseWebDataStore(
+            new TestWebHostEnvironment(contentRoot, webRoot),
+            CreateOptions(new LicenseWebOptions { DataRoot = dataRoot, PrivateKeyPath = keyPath }));
+
+        var snapshot = await store.LoadSnapshotAsync();
+        var exception = Assert.Throws<InvalidOperationException>(() => store.GetPrivateKeyPathForSigning());
+        var diagnostics = await store.CreateDiagnosticsAsync(isHttps: false, adminConfigured: true);
+
+        Assert.False(snapshot.Runtime.PrivateKeyPathSafe);
+        Assert.False(snapshot.Runtime.LicenseSignatureAvailable);
+        Assert.Contains("unsicher", exception.Message);
+        Assert.Contains(diagnostics, item => item.Name == "Private-Key-Pfad" && !item.IsOk);
+    }
+
+    [Fact]
+    public async Task LicenseWeb_ShouldCreateLicenseWithServerSideTestKeyAndPersistHistory()
+    {
+        var dataRoot = CreateTempFolder();
+        var keyRoot = CreateTempFolder();
+        var keyPath = Path.Combine(keyRoot, "test-private.pem");
+        using (var rsa = RSA.Create(2048))
+        {
+            await File.WriteAllTextAsync(keyPath, rsa.ExportPkcs8PrivateKeyPem());
+        }
+
+        var store = CreateStore(dataRoot, new LicenseWebOptions
+        {
+            DataRoot = dataRoot,
+            PrivateKeyPath = keyPath,
+            KeyId = "xdtbox-test-key",
+            Issuer = "XDTBox Lizenzmanager Web Test",
+            GraceDays = 9
+        });
+        var paths = store.Paths;
+        Directory.CreateDirectory(paths.RequestsFolder);
+        var requestFile = Path.Combine(paths.RequestsFolder, "license-request.json");
+        new LicenseRequestFileRepository().Save(requestFile, CreateRequest() with
+        {
+            Devices = new[]
+            {
+                new LicenseRequestDevice(
+                    Id: "kr800s-1",
+                    Name: "TOPCON KR-800S",
+                    Manufacturer: "TOPCON",
+                    Model: "KR-800S",
+                    ProfileId: "interface-topcon-kr800s",
+                    IsActive: true,
+                    IsLicenseRequired: true,
+                    InterfaceProfileId: "interface-topcon-kr800s",
+                    DisplayName: "MEDISTAR + TOPCON KR-800S",
+                    DeviceProfileId: "device-topcon-kr800s-default",
+                    DeviceDisplayName: "TOPCON KR-800S",
+                    ConnectionKind: DeviceConnectionKind.NetworkLan,
+                    Location: "Raum 7")
+            }
+        });
+        var service = new LicenseWebLicenseService(store);
+
+        var result = await service.CreateLicenseFromRequestAsync(requestFile);
+        var envelope = new LicenseEnvelopeReader().ReadFile(result.OutputFile).Envelope;
+        var history = new IssuedLicenseHistoryRepository().LoadOrEmpty(paths.HistoryFile);
+        var customers = new LicenseManagerCustomerRepository().LoadOrEmpty(paths.CustomersFile);
+        var licenseText = await File.ReadAllTextAsync(result.OutputFile);
+
+        Assert.True(File.Exists(result.OutputFile));
+        Assert.NotNull(envelope);
+        Assert.Equal("xdtbox-test-key", envelope!.KeyId);
+        Assert.Single(history);
+        Assert.Equal(9, history[0].GraceDays);
+        Assert.Equal("Raum 7", history[0].Devices.Single().Location);
+        Assert.Single(customers);
+        Assert.Equal("Raum 7", customers[0].EffectiveDevices.Single().Location);
+        Assert.DoesNotContain(keyPath, licenseText);
+        Assert.DoesNotContain("PRIVATE KEY", licenseText);
+    }
+
+    [Fact]
+    public async Task LicenseWeb_ShouldImportOnlyRequestedCustomerFromSourceDataRoot()
+    {
+        var sourceRoot = CreateTempFolder();
+        var targetRoot = CreateTempFolder();
+        var sourcePaths = new LicenseManagerPathProvider().GetPaths(sourceRoot);
+        var targetStore = CreateStore(targetRoot);
+        var targetPaths = targetStore.Paths;
+        var maxi = CreateCustomer("installation-10172") with
+        {
+            CustomerNumber = "10172",
+            CustomerName = "Maxi Augenarzte",
+            Devices = new[] { CreateDevice("TOPCON KR-800S", "Nuernberg EG") },
+            ActiveLicensedDeviceCount = 1
+        };
+        var other = CreateCustomer("installation-other") with
+        {
+            CustomerNumber = "99999",
+            CustomerName = "Andere Praxis"
+        };
+        var maxiHistory = CreateRecord("license-10172") with
+        {
+            CustomerNumber = "10172",
+            CustomerName = "Maxi Augenarzte",
+            InstallationId = "installation-10172",
+            Devices = new[] { CreateDevice("TOPCON KR-800S", "Nuernberg EG") }
+        };
+        var otherHistory = CreateRecord("license-other") with
+        {
+            CustomerNumber = "99999",
+            CustomerName = "Andere Praxis",
+            InstallationId = "installation-other"
+        };
+        new LicenseManagerCustomerRepository().Save(sourcePaths.CustomersFile, new[] { maxi, other });
+        new IssuedLicenseHistoryRepository().Save(sourcePaths.HistoryFile, new[] { maxiHistory, otherHistory });
+        new LicenseManagerCustomerRepository().Save(targetPaths.CustomersFile, new[]
+        {
+            CreateCustomer("installation-alt") with
+            {
+                CustomerNumber = "10172",
+                CustomerName = "Maxi Bestand"
+            }
+        });
+
+        var result = await targetStore.ImportSingleCustomerFromDataRootAsync(sourceRoot, "10172");
+        var targetCustomers = new LicenseManagerCustomerRepository().LoadOrEmpty(targetPaths.CustomersFile);
+        var targetHistory = new IssuedLicenseHistoryRepository().LoadOrEmpty(targetPaths.HistoryFile);
+
+        Assert.Equal("10172", result.Customer.CustomerNumber);
+        Assert.Single(targetCustomers);
+        Assert.Contains(targetCustomers[0].EffectiveInstallations, installation => installation.InstallationId == "installation-10172");
+        Assert.Contains(targetCustomers[0].EffectiveInstallations, installation => installation.InstallationId == "installation-alt");
+        Assert.DoesNotContain(targetCustomers, customer => customer.CustomerNumber == "99999");
+        Assert.Single(targetHistory);
+        Assert.Equal("license-10172", targetHistory[0].LicenseId);
+        Assert.Equal("Nuernberg EG", targetHistory[0].Devices.Single().Location);
+    }
+
+    [Fact]
+    public async Task LicenseWeb_ShouldUpdateCustomerDataLocationsAndPdf()
+    {
+        var dataRoot = CreateTempFolder();
+        var store = CreateStore(dataRoot);
+        var paths = store.Paths;
+        var customer = CreateCustomer("installation-web-1");
+        var device = customer.EffectiveDevices.Single();
+        new LicenseManagerCustomerRepository().Save(paths.CustomersFile, new[] { customer });
+        new IssuedLicenseHistoryRepository().Save(paths.HistoryFile, new[]
+        {
+            CreateRecord("license-web-1") with
+            {
+                InstallationId = "installation-web-1",
+                Devices = new[] { device }
+            }
+        });
+
+        var updated = await store.UpdateCustomerAsync(customer.Id, new LicenseWebCustomerUpdate(
+            CustomerNumber: "K-901",
+            CustomerName: "Praxis Neu Web",
+            Street: "Neue Strasse 2",
+            PostalCode: "54321",
+            City: "Bonn",
+            Phone: "0228",
+            Email: "neu@example.test",
+            ContactPerson: "Herr Neu",
+            InvoiceEmail: "rechnung-neu@example.test",
+            Iban: "DE00999999990000000000",
+            Bic: "NEUDEFFXXX",
+            AccountHolder: "Praxis Neu Web",
+            PaymentMethod: LicenseManagerPaymentMethod.SepaDirectDebit,
+            DeviceLocations: new[]
+            {
+                new LicenseWebCustomerDeviceLocationUpdate(
+                    LicenseWebDataStore.CreateDeviceLocationKey("installation-web-1", device),
+                    "OP 1")
+            }));
+        var snapshot = await store.LoadSnapshotAsync();
+        var service = new LicenseWebLicenseService(store);
+        var customerPdf = await service.CreateCustomerPdfAsync(updated.Id);
+        var customerText = System.Text.Encoding.Latin1.GetString(customerPdf.Content);
+
+        Assert.Equal("K-901", snapshot.Customers.Single().CustomerNumber);
+        Assert.Equal("Praxis Neu Web", snapshot.Customers.Single().CustomerName);
+        Assert.Equal("OP 1", snapshot.Customers.Single().EffectiveDevices.Single().Location);
+        Assert.Equal("OP 1", snapshot.History.Single().Devices.Single().Location);
+        Assert.Contains("Praxis Neu Web", customerText);
+        Assert.Contains("OP 1", customerText);
+    }
+
+    [Fact]
+    public async Task LicenseWeb_ShouldDeleteCustomerAndRelatedHistory()
+    {
+        var dataRoot = CreateTempFolder();
+        var store = CreateStore(dataRoot);
+        var paths = store.Paths;
+        var customer = CreateCustomer("installation-web-1");
+        new LicenseManagerCustomerRepository().Save(paths.CustomersFile, new[] { customer });
+        new IssuedLicenseHistoryRepository().Save(paths.HistoryFile, new[] { CreateRecord("license-web-1") });
+
+        var deleted = await store.DeleteCustomerAsync(customer.Id);
+        var snapshot = await store.LoadSnapshotAsync();
+
+        Assert.Equal(customer.Id, deleted.Id);
+        Assert.Empty(snapshot.Customers);
+        Assert.Empty(snapshot.History);
+    }
+
+    [Fact]
+    public async Task LicenseWeb_ShouldMergeSelectedCustomersIntoFirstTarget()
+    {
+        var dataRoot = CreateTempFolder();
+        var store = CreateStore(dataRoot);
+        var paths = store.Paths;
+        var target = CreateCustomer("installation-web-1") with
+        {
+            CustomerNumber = "K-900",
+            CustomerName = "Zielpraxis"
+        };
+        var source = CreateCustomer("installation-web-2") with
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            CustomerNumber = "K-901",
+            CustomerName = "Quellpraxis",
+            Devices = new[] { CreateDevice("TOPCON KR-800S", "Raum 3") },
+            ActiveLicensedDeviceCount = 1
+        };
+        new LicenseManagerCustomerRepository().Save(paths.CustomersFile, new[] { target, source });
+
+        var result = await store.MergeCustomersAsync(new[] { target.Id, source.Id });
+        var snapshot = await store.LoadSnapshotAsync();
+
+        Assert.Equal("Zielpraxis", result.TargetCustomer.CustomerName);
+        Assert.Single(snapshot.Customers);
+        Assert.Equal("Zielpraxis", snapshot.Customers.Single().CustomerName);
+        Assert.Equal(2, snapshot.Customers.Single().EffectiveInstallations.Count);
+        Assert.Contains(source.Id, result.RemovedCustomerIds);
+    }
+
+    [Fact]
+    public async Task LicenseWebAuth_ShouldPersistChangedAdminPasswordInDataRoot()
+    {
+        var dataRoot = CreateTempFolder();
+        var store = CreateStore(dataRoot);
+        var hasher = new LicenseWebPasswordHasher();
+        var hash = hasher.HashPassword("StartPasswort123!");
+        var options = CreateOptions(new LicenseWebOptions
+        {
+            DataRoot = dataRoot,
+            Admin = new LicenseWebOptions.AdminOptions
+            {
+                Username = "admin",
+                PasswordHash = hash.HashBase64,
+                PasswordSalt = hash.SaltBase64
+            }
+        });
+        var auth = new LicenseWebAuthService(hasher, options, store);
+
+        await auth.ChangePasswordAsync("StartPasswort123!", "NeuesPasswort123!", "NeuesPasswort123!");
+
+        Assert.False(auth.ValidateCredentials("admin", "StartPasswort123!"));
+        Assert.True(auth.ValidateCredentials("admin", "NeuesPasswort123!"));
+        Assert.NotNull(store.LoadAdminCredentialOverride());
     }
 
     [Fact]
@@ -137,14 +409,14 @@ public sealed class LicenseWebTests
         Assert.Contains("safeSettings = settings with { PrivateKeyPath = null }", backup);
     }
 
-    private static LicenseWebDataStore CreateStore(string dataRoot)
+    private static LicenseWebDataStore CreateStore(string dataRoot, LicenseWebOptions? options = null)
     {
         var contentRoot = CreateTempFolder();
         var webRoot = Path.Combine(contentRoot, "wwwroot");
         Directory.CreateDirectory(webRoot);
         return new LicenseWebDataStore(
             new TestWebHostEnvironment(contentRoot, webRoot),
-            CreateOptions(new LicenseWebOptions { DataRoot = dataRoot }));
+            CreateOptions(options ?? new LicenseWebOptions { DataRoot = dataRoot }));
     }
 
     private static TestOptionsMonitor<LicenseWebOptions> CreateOptions(LicenseWebOptions options)

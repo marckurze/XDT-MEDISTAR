@@ -6,34 +6,126 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">@Model.Customer.CustomerName</h1>
-    <a class="btn btn-outline-primary" asp-page-handler="Pdf" asp-route-id="@Model.Customer.Id">PDF exportieren</a>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-page="/Customers/Index">Zurück</a>
+        <a class="btn btn-outline-primary" asp-page-handler="Pdf" asp-route-id="@Model.Customer.Id" download>PDF exportieren</a>
+    </div>
 </div>
 
-<div class="row g-3 mb-3">
-    <div class="col-lg-6">
-        <div class="xdt-card">
-            <h2 class="h5">Kundendaten</h2>
-            <dl class="row mb-0">
-                <dt class="col-sm-4">Kundennummer</dt><dd class="col-sm-8">@Model.Customer.CustomerNumber</dd>
-                <dt class="col-sm-4">Adresse</dt><dd class="col-sm-8">@Model.Customer.Address</dd>
-                <dt class="col-sm-4">Telefon</dt><dd class="col-sm-8">@Model.Customer.Phone</dd>
-                <dt class="col-sm-4">E-Mail</dt><dd class="col-sm-8">@Model.Customer.Email</dd>
-                <dt class="col-sm-4">Ansprechpartner</dt><dd class="col-sm-8">@Model.Customer.ContactPerson</dd>
-            </dl>
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="alert alert-info">@Model.StatusMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<form method="post" asp-page-handler="Save" asp-route-id="@Model.Customer.Id">
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="xdt-card h-100">
+                <h2 class="h5">Kundendaten</h2>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label asp-for="Edit.CustomerNumber" class="form-label">Kundennummer</label>
+                        <input asp-for="Edit.CustomerNumber" class="form-control" />
+                    </div>
+                    <div class="col-md-7">
+                        <label asp-for="Edit.CustomerName" class="form-label">Kunde / Praxis / Firma</label>
+                        <input asp-for="Edit.CustomerName" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Edit.Street" class="form-label">Straße / Hausnummer</label>
+                        <input asp-for="Edit.Street" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Edit.PostalCode" class="form-label">PLZ</label>
+                        <input asp-for="Edit.PostalCode" class="form-control" />
+                    </div>
+                    <div class="col-md-8">
+                        <label asp-for="Edit.City" class="form-label">Ort</label>
+                        <input asp-for="Edit.City" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Edit.Phone" class="form-label">Telefon</label>
+                        <input asp-for="Edit.Phone" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Edit.Email" class="form-label">E-Mail</label>
+                        <input asp-for="Edit.Email" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Edit.ContactPerson" class="form-label">Ansprechpartner</label>
+                        <input asp-for="Edit.ContactPerson" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="xdt-card h-100">
+                <h2 class="h5">Abrechnung</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Edit.InvoiceEmail" class="form-label">Rechnungs-E-Mail</label>
+                        <input asp-for="Edit.InvoiceEmail" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Edit.PaymentMethod" class="form-label">Zahlungsart</label>
+                        <select asp-for="Edit.PaymentMethod" class="form-select">
+                            <option value="BankTransfer">Banküberweisung</option>
+                            <option value="SepaDirectDebit">SEPA-Lastschrift</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Edit.AccountHolder" class="form-label">Kontoinhaber</label>
+                        <input asp-for="Edit.AccountHolder" class="form-control" />
+                    </div>
+                    <div class="col-md-8">
+                        <label asp-for="Edit.Iban" class="form-label">IBAN</label>
+                        <input asp-for="Edit.Iban" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Edit.Bic" class="form-label">BIC</label>
+                        <input asp-for="Edit.Bic" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <div class="fw-semibold">Monatsbetrag netto</div>
+                        <div>@Model.Customer.MonthlyTotal</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-lg-6">
-        <div class="xdt-card">
-            <h2 class="h5">Abrechnung</h2>
-            <dl class="row mb-0">
-                <dt class="col-sm-4">Rechnungs-E-Mail</dt><dd class="col-sm-8">@Model.Customer.InvoiceEmail</dd>
-                <dt class="col-sm-4">Zahlungsart</dt><dd class="col-sm-8">@Model.Customer.PaymentMethod</dd>
-                <dt class="col-sm-4">IBAN</dt><dd class="col-sm-8">@Model.Customer.Iban</dd>
-                <dt class="col-sm-4">Monatsbetrag</dt><dd class="col-sm-8 fw-semibold">@Model.Customer.MonthlyTotal</dd>
-            </dl>
+
+    <div class="xdt-card mb-3">
+        <h2 class="h5">Geräteanbindungen / Standorte</h2>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead><tr><th>Anbindung</th><th>Gerät</th><th>Quelle</th><th>Standort</th></tr></thead>
+                <tbody>
+                @for (var i = 0; i < Model.Devices.Count; i++)
+                {
+                    var row = Model.Devices[i];
+                    <tr>
+                        <td>@row.DisplayName</td>
+                        <td>@row.DeviceDisplayName</td>
+                        <td>@row.ConnectionKind</td>
+                        <td>
+                            <input type="hidden" asp-for="Edit.DeviceLocations[i].Key" />
+                            <input asp-for="Edit.DeviceLocations[i].Location" class="form-control form-control-sm" />
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
+
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-primary" type="submit">Speichern</button>
+    </div>
+</form>
 
 <div class="xdt-card mb-3">
     <h2 class="h5">Installationen / Arbeitsplätze</h2>
@@ -44,21 +136,6 @@
             @foreach (var row in Model.Installations)
             {
                 <tr><td>@row.Status</td><td>@row.InstallationId</td><td>@row.MachineName</td><td>@row.Locations</td><td class="text-end">@row.DeviceCount</td><td>@row.ValidUntil</td></tr>
-            }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="xdt-card mb-3">
-    <h2 class="h5">Aktive lizenzierte Geräteanbindungen</h2>
-    <div class="table-responsive">
-        <table class="table table-sm align-middle">
-            <thead><tr><th>Anbindung</th><th>Gerät</th><th>Standort</th><th>Quelle</th></tr></thead>
-            <tbody>
-            @foreach (var row in Model.Devices)
-            {
-                <tr><td>@row.DisplayName</td><td>@row.DeviceDisplayName</td><td>@row.Location</td><td>@row.ConnectionKind</td></tr>
             }
             </tbody>
         </table>

@@ -21,8 +21,15 @@ public sealed class LicenseWebLicenseService
         var customer = FindCustomer(snapshot.Customers, customerId);
         var fileName = LicenseManagerCustomerPdfExporter.CreateSuggestedCustomerPdfFileName(customer, DateTime.Now);
         var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".pdf");
-        _pdfExporter.ExportCustomer(tempFile, customer, snapshot.History, snapshot.Settings.PricePerDeviceNet, DateTime.Now);
-        return new DownloadFile(fileName, "application/pdf", await File.ReadAllBytesAsync(tempFile).ConfigureAwait(false));
+        try
+        {
+            _pdfExporter.ExportCustomer(tempFile, customer, snapshot.History, snapshot.Settings.PricePerDeviceNet, DateTime.Now);
+            return new DownloadFile(fileName, "application/pdf", await File.ReadAllBytesAsync(tempFile).ConfigureAwait(false));
+        }
+        finally
+        {
+            TryDelete(tempFile);
+        }
     }
 
     public async Task<DownloadFile> CreateTotalPdfAsync()
@@ -30,18 +37,20 @@ public sealed class LicenseWebLicenseService
         var snapshot = await _store.LoadSnapshotAsync().ConfigureAwait(false);
         var fileName = $"XDTBox_Kunden_Lizenzuebersicht_{DateTime.Today:yyyyMMdd}.pdf";
         var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".pdf");
-        _pdfExporter.ExportCustomers(tempFile, snapshot.Customers, snapshot.Settings.PricePerDeviceNet, DateTime.Now);
-        return new DownloadFile(fileName, "application/pdf", await File.ReadAllBytesAsync(tempFile).ConfigureAwait(false));
+        try
+        {
+            _pdfExporter.ExportCustomers(tempFile, snapshot.Customers, snapshot.Settings.PricePerDeviceNet, DateTime.Now);
+            return new DownloadFile(fileName, "application/pdf", await File.ReadAllBytesAsync(tempFile).ConfigureAwait(false));
+        }
+        finally
+        {
+            TryDelete(tempFile);
+        }
     }
 
     public async Task<LicenseWebCreateLicenseResult> CreateLicenseFromRequestAsync(string requestFile)
     {
-        var privateKeyPath = _store.ResolvePrivateKeyPath();
-        if (string.IsNullOrWhiteSpace(privateKeyPath) || !File.Exists(privateKeyPath))
-        {
-            throw new InvalidOperationException("Lizenz-Erstellung ist deaktiviert, weil kein serverseitiger Private Key konfiguriert ist.");
-        }
-
+        var privateKeyPath = _store.GetPrivateKeyPathForSigning();
         var snapshot = await _store.LoadSnapshotAsync().ConfigureAwait(false);
         var request = new LicenseRequestFileRepository().Load(requestFile);
         var customer = LicenseManagerCustomerRecord.FromRequest(request);
@@ -127,6 +136,21 @@ public sealed class LicenseWebLicenseService
     {
         return customers.FirstOrDefault(customer => string.Equals(customer.Id, customerId, StringComparison.Ordinal))
             ?? throw new InvalidOperationException("Kunde wurde nicht gefunden.");
+    }
+
+    private static void TryDelete(string filePath)
+    {
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup only; download creation must not fail because temp cleanup failed.
+        }
     }
 }
 

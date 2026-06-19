@@ -8,18 +8,30 @@ namespace XdtBox.LicenseWeb.Pages.Settings;
 public sealed class IndexModel : PageModel
 {
     private readonly LicenseWebDataStore _store;
+    private readonly LicenseWebAuthService _authService;
 
-    public IndexModel(LicenseWebDataStore store)
+    public IndexModel(LicenseWebDataStore store, LicenseWebAuthService authService)
     {
         _store = store;
+        _authService = authService;
     }
 
     [BindProperty]
     public string PricePerDeviceNet { get; set; } = string.Empty;
 
+    [BindProperty]
+    public string CurrentAdminPassword { get; set; } = string.Empty;
+
+    [BindProperty]
+    public string NewAdminPassword { get; set; } = string.Empty;
+
+    [BindProperty]
+    public string RepeatAdminPassword { get; set; } = string.Empty;
+
     public string DataRoot { get; private set; } = string.Empty;
     public string PrivateKeyStatus { get; private set; } = string.Empty;
     public string Issuer { get; private set; } = string.Empty;
+    public IReadOnlyList<LicenseWebDiagnosticItem> Diagnostics { get; private set; } = Array.Empty<LicenseWebDiagnosticItem>();
     public string? StatusMessage { get; private set; }
     public string? ErrorMessage { get; private set; }
 
@@ -44,14 +56,32 @@ public sealed class IndexModel : PageModel
         return Page();
     }
 
+    public async Task<IActionResult> OnPostChangePasswordAsync()
+    {
+        try
+        {
+            await _authService.ChangePasswordAsync(CurrentAdminPassword, NewAdminPassword, RepeatAdminPassword);
+            StatusMessage = "Admin-Passwort gespeichert.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+
+        CurrentAdminPassword = string.Empty;
+        NewAdminPassword = string.Empty;
+        RepeatAdminPassword = string.Empty;
+        await LoadAsync();
+        return Page();
+    }
+
     private async Task LoadAsync()
     {
         var snapshot = await _store.LoadSnapshotAsync();
         PricePerDeviceNet = snapshot.Settings.PricePerDeviceNet.ToString("N2", CultureInfo.GetCultureInfo("de-DE"));
         DataRoot = snapshot.Runtime.DataRoot;
-        PrivateKeyStatus = snapshot.Runtime.PrivateKeyFileExists
-            ? "konfiguriert"
-            : snapshot.Runtime.PrivateKeyConfigured ? "Pfad konfiguriert, Datei nicht gefunden" : "nicht konfiguriert";
+        PrivateKeyStatus = snapshot.Runtime.PrivateKeyStatus;
         Issuer = snapshot.Settings.DefaultIssuer;
+        Diagnostics = await _store.CreateDiagnosticsAsync(Request?.IsHttps ?? false, _authService.IsConfigured);
     }
 }

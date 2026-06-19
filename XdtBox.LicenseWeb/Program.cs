@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using XdtBox.LicenseWeb.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,12 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/");
@@ -31,12 +38,22 @@ builder.Services.AddRazorPages(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsProduction())
+{
+    var authService = app.Services.GetRequiredService<LicenseWebAuthService>();
+    if (!authService.IsConfigured)
+    {
+        throw new InvalidOperationException("XDTBox Lizenzmanager Web ist im Produktionsmodus ohne Admin-Konfiguration nicht startbereit.");
+    }
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

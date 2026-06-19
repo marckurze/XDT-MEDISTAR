@@ -73,7 +73,7 @@
       }
     },
     "C:\\GitHub\\XDT-MEDISTAR\\XdtBox.LicenseWeb\\XdtBox.LicenseWeb.csproj": {
-      "version": "0.1.0-web-v1",
+      "version": "0.2.0-web-production-prep",
       "restore": {
         "projectUniqueName": "C:\\GitHub\\XDT-MEDISTAR\\XdtBox.LicenseWeb\\XdtBox.LicenseWeb.csproj",
         "projectName": "XdtBox.LicenseWeb",

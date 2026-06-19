@@ -8,6 +8,7 @@ Stand: 2026-06-19
 
 - Webframework: ASP.NET Core 8 Razor Pages
 - Projekt: `XdtBox.LicenseWeb`
+- interne Web-Version: `0.2.0-web-production-prep`
 - Solution: `XdtDeviceBridge.sln`
 - WPF-Lizenzmanager bleibt parallel bei Version `1.11`
 - XDTBox Kunden-App bleibt bei Version `1.12`
@@ -24,6 +25,8 @@ Razor Pages wurde gewaehlt, weil die Lizenzverwaltung serverseitig bleiben muss.
 
 Der lokale WPF-Lizenzmanager wird nicht entfernt und bleibt funktional.
 
+Die produktive Hosting- und IONOS-Einordnung steht separat in [`docs/LICENSEMANAGER_WEB_PRODUKTIVBETRIEB_IONOS.md`](LICENSEMANAGER_WEB_PRODUKTIVBETRIEB_IONOS.md).
+
 ## Login und Schutz
 
 Die Webanwendung nutzt Cookie-Authentifizierung. Alle Lizenzmanager-Seiten sind geschuetzt; nur `/Account/Login` ist anonym erreichbar. Logout entfernt das Auth-Cookie.
@@ -36,6 +39,8 @@ Der Adminzugang wird serverseitig konfiguriert:
 
 Das Passwort wird nicht im Klartext gespeichert. V1 nutzt PBKDF2-SHA256 mit Salt. Wenn keine Admin-Konfiguration vorhanden ist, zeigt die Login-Seite einen klaren Hinweis und erlaubt keine Anmeldung.
 
+Im Produktionsmodus startet die Webanwendung nur noch, wenn der Adminzugang per Hash/Salt konfiguriert ist.
+
 ## Datenroot
 
 Der Datenroot kommt aus `LicenseWeb:DataRoot`. Ist kein Wert konfiguriert, verwendet die Webanwendung `%LocalAppData%\XDTBox\LicenseWeb`.
@@ -47,6 +52,8 @@ Der Datenroot darf nicht liegen in:
 - dem statischen Website-Projekt
 
 Die Webanwendung blockiert DataRoot-Konfigurationen unterhalb von `wwwroot` oder dem Projektverzeichnis. Kundendaten, Lizenzdateien und Backups werden serverseitig abgelegt.
+
+Ergaenzend werden oeffentliche Pfadsegmente wie `download`, `downloads`, `assets`, `htdocs` und `public_html` fuer DataRoot und Private-Key-Pfad als unsicher behandelt.
 
 ## Private-Key-Regeln
 
@@ -64,6 +71,8 @@ Harte Regeln:
 
 Ist kein Private Key konfiguriert oder die Datei nicht vorhanden, bleiben Kundenliste, PDFs und Backup nutzbar. Die Lizenz-Erstellung ist dann deaktiviert und meldet verstaendlich, dass kein serverseitiger Private Key konfiguriert ist.
 
+Vor jeder Lizenzsignatur prueft die Webanwendung den Private-Key-Pfad erneut. Liegt der Schluessel im Webroot, Publish-/Projektverzeichnis oder in einem oeffentlichen Download-/Asset-Ordner, wird keine Lizenz erzeugt. Die Oberflaeche zeigt nur einen Status, nicht den geheimen Pfad.
+
 ## Seiten und Funktionen
 
 - Dashboard mit Kunden-, Installations-, Geraete- und Monatssummen
@@ -72,7 +81,8 @@ Ist kein Private Key konfiguriert oder die Datei nicht vorhanden, bleiben Kunden
 - Lizenzanfrage-Upload mit Zuordnung ueber Kundennummer oder InstallationId
 - serverseitige Lizenzdatei-Erzeugung und Download bei konfiguriertem Private Key
 - Backup-Download und Restore-Upload ohne Private-Key-Daten
-- Einstellungen fuer Einzelpreis netto, Datenroot-Status und Private-Key-Status
+- Einzelkunden-Uebernahme aus LicenseManager-Backup oder Desktop-Datenroot anhand Kundennummer, ohne Voll-Restore
+- Einstellungen fuer Einzelpreis netto, Datenroot-Status, Private-Key-Status und Produktivdiagnose
 
 ## Offene Punkte vor produktivem Hosting
 

@@ -36,3 +36,38 @@
         </div>
     </div>
 </div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Einzelkunde aus Backup uebernehmen</h2>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="ImportCustomer">
+                <div class="mb-3">
+                    <label class="form-label">Backup-Datei</label>
+                    <input class="form-control" type="file" asp-for="CustomerBackupFile" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="CustomerNumber" class="form-label">Kundennummer</label>
+                    <input asp-for="CustomerNumber" class="form-control" />
+                </div>
+                <button class="btn btn-outline-primary" type="submit">Einzelkunden uebernehmen</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Einzelkunde aus Desktop-Datenroot uebernehmen</h2>
+            <form method="post" asp-page-handler="ImportCustomerFromDataRoot">
+                <div class="mb-3">
+                    <label asp-for="SourceDataRoot" class="form-label">Quell-Datenroot</label>
+                    <input asp-for="SourceDataRoot" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="SourceCustomerNumber" class="form-label">Kundennummer</label>
+                    <input asp-for="SourceCustomerNumber" class="form-control" />
+                </div>
+                <button class="btn btn-outline-primary" type="submit">Aus Datenroot uebernehmen</button>
+            </form>
+        </div>
+    </div>
+</div>

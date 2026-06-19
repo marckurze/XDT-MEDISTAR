@@ -29,9 +29,7 @@ public sealed class IndexModel : PageModel
         ActiveDeviceCount = snapshot.Customers.Sum(customer => customer.BillableDeviceCount);
         var total = LicenseManagerCostCalculator.CalculateNetTotal(ActiveDeviceCount, snapshot.Settings.PricePerDeviceNet);
         MonthlyTotalDisplay = total.ToString("N2", CultureInfo.GetCultureInfo("de-DE")) + " EUR";
-        PrivateKeyStatus = snapshot.Runtime.PrivateKeyFileExists
-            ? "konfiguriert"
-            : snapshot.Runtime.PrivateKeyConfigured ? "Pfad konfiguriert, Datei nicht gefunden" : "nicht konfiguriert";
+        PrivateKeyStatus = snapshot.Runtime.PrivateKeyStatus;
         DataRoot = snapshot.Runtime.DataRoot;
     }
 }

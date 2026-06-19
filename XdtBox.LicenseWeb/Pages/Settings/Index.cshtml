@@ -38,4 +38,51 @@
             </dl>
         </div>
     </div>
+    <div class="col-lg-6">
+        <div class="xdt-card">
+            <h2 class="h5">Admin-Passwort</h2>
+            <form method="post" asp-page-handler="ChangePassword">
+                <div class="mb-3">
+                    <label asp-for="CurrentAdminPassword" class="form-label">Aktuelles Passwort</label>
+                    <input asp-for="CurrentAdminPassword" class="form-control" type="password" autocomplete="current-password" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="NewAdminPassword" class="form-label">Neues Passwort</label>
+                    <input asp-for="NewAdminPassword" class="form-control" type="password" autocomplete="new-password" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="RepeatAdminPassword" class="form-label">Neues Passwort wiederholen</label>
+                    <input asp-for="RepeatAdminPassword" class="form-control" type="password" autocomplete="new-password" />
+                </div>
+                <button class="btn btn-primary" type="submit">Passwort ändern</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="xdt-card mt-3">
+    <h2 class="h5">Produktivdiagnose</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Pruefung</th>
+                    <th>Status</th>
+                    <th>Hinweis</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.Diagnostics)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>
+                        <span class="badge @(item.IsOk ? "text-bg-success" : "text-bg-warning")">@item.Status</span>
+                    </td>
+                    <td>@item.Detail</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
 </div>

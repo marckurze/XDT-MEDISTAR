@@ -79,9 +79,7 @@ public sealed class IndexModel : PageModel
     private async Task LoadRuntimeAsync()
     {
         var snapshot = await _store.LoadSnapshotAsync();
-        PrivateKeyReady = snapshot.Runtime.PrivateKeyFileExists;
-        PrivateKeyStatus = snapshot.Runtime.PrivateKeyFileExists
-            ? "konfiguriert"
-            : snapshot.Runtime.PrivateKeyConfigured ? "Pfad konfiguriert, Datei nicht gefunden" : "nicht konfiguriert";
+        PrivateKeyReady = snapshot.Runtime.LicenseSignatureAvailable;
+        PrivateKeyStatus = snapshot.Runtime.PrivateKeyStatus;
     }
 }

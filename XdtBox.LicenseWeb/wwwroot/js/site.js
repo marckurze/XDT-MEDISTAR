@@ -1,4 +1,24 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".customer-row[data-href]").forEach((row) => {
+    const open = () => {
+      const href = row.getAttribute("data-href");
+      if (href) {
+        window.location.href = href;
+      }
+    };
+    const isControl = (target) => target.closest("a, button, input, label, select, textarea, form");
 
-// Write your JavaScript code.
+    row.addEventListener("click", (event) => {
+      if (!isControl(event.target)) {
+        open();
+      }
+    });
+
+    row.addEventListener("keydown", (event) => {
+      if ((event.key === "Enter" || event.key === " ") && !isControl(event.target)) {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
+});

@@ -426,7 +426,7 @@
           "bin/placeholder/XdtBox.LicenseIssuer.dll": {}
         }
       },
-      "XdtBox.LicenseWeb/0.1.0-web-v1": {
+      "XdtBox.LicenseWeb/0.2.0-web-production-prep": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
@@ -993,7 +993,7 @@
       "path": "../XdtBox.LicenseIssuer/XdtBox.LicenseIssuer.csproj",
       "msbuildProject": "../XdtBox.LicenseIssuer/XdtBox.LicenseIssuer.csproj"
     },
-    "XdtBox.LicenseWeb/0.1.0-web-v1": {
+    "XdtBox.LicenseWeb/0.2.0-web-production-prep": {
       "type": "project",
       "path": "../XdtBox.LicenseWeb/XdtBox.LicenseWeb.csproj",
       "msbuildProject": "../XdtBox.LicenseWeb/XdtBox.LicenseWeb.csproj"
@@ -1013,7 +1013,7 @@
     "net8.0": [
       "Microsoft.NET.Test.Sdk >= 17.11.1",
       "XdtBox.LicenseIssuer >= 1.12.0",
-      "XdtBox.LicenseWeb >= 0.1.0-web-v1",
+      "XdtBox.LicenseWeb >= 0.2.0-web-production-prep",
       "XdtDeviceBridge.Core >= 1.12.0",
       "XdtDeviceBridge.Infrastructure >= 1.12.0",
       "coverlet.collector >= 6.0.2",
